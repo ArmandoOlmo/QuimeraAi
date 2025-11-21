@@ -1,0 +1,454 @@
+
+import React, { useState, useRef, useEffect } from 'react';
+import { AiAssistantConfig, Project } from '../../../types';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
+import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff } from 'lucide-react';
+import { useEditor } from '../../../contexts/EditorContext';
+
+interface ChatSimulatorProps {
+    config: AiAssistantConfig;
+    project: Project;
+}
+
+interface Message {
+    role: 'user' | 'model';
+    text: string;
+}
+
+// --- Audio Utilities ---
+
+function base64ToBytes(base64: string) {
+    const binaryString = atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+async function decodeAudioData(
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number
+): Promise<AudioBuffer> {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
+    }
+    return buffer;
+}
+
+function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    let offset = 0;
+    for (let i = 0; i < float32Array.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buffer;
+}
+
+// --- Component ---
+
+const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
+    const { hasApiKey, promptForKeySelection } = useEditor();
+    
+    // UI State
+    const [input, setInput] = useState('');
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [isLiveActive, setIsLiveActive] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    
+    // Audio Refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const inputAudioContextRef = useRef<AudioContext | null>(null);
+    const processorRef = useRef<ScriptProcessorNode | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const nextStartTimeRef = useRef<number>(0);
+    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const sessionRef = useRef<any>(null); 
+    const visualizerIntervalRef = useRef<number | null>(null);
+    
+    // Connection Safety Ref
+    const isConnectedRef = useRef(false);
+
+    useEffect(() => {
+        setMessages([{ role: 'model', text: `Hola, soy ${config.agentName}. ¿En qué puedo ayudarte?` }]); 
+    }, [config.agentName]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // --- Cleanup on Unmount ---
+    useEffect(() => {
+        return () => {
+            stopLiveSession();
+        };
+    }, []);
+
+    // --- Visualizer Effect ---
+    useEffect(() => {
+        if (isLiveActive) {
+            visualizerIntervalRef.current = window.setInterval(() => {
+                setVisualizerLevels([
+                    Math.random() * 20 + 10,
+                    Math.random() * 40 + 10,
+                    Math.random() * 30 + 10,
+                    Math.random() * 20 + 10,
+                ]);
+            }, 100);
+        } else {
+            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+            setVisualizerLevels([4, 4, 4, 4]);
+        }
+        return () => {
+             if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+        };
+    }, [isLiveActive]);
+
+    const startLiveSession = async () => {
+        if (hasApiKey === false) {
+            await promptForKeySelection();
+            return;
+        }
+        
+        if (!process.env.API_KEY) return;
+
+        setIsConnecting(true);
+
+        try {
+            // 1. Initialize Audio Contexts
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const outputCtx = new AudioContextClass({ sampleRate: 24000 });
+            const inputCtx = new AudioContextClass({ sampleRate: 16000 });
+            
+            audioContextRef.current = outputCtx;
+            inputAudioContextRef.current = inputCtx;
+            nextStartTimeRef.current = outputCtx.currentTime;
+
+            // 2. Initialize GenAI Client
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            
+            // 3. Connect to Live API
+            const sessionPromise = ai.live.connect({
+                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } },
+                    },
+                    systemInstruction: `
+                        You are ${config.agentName}, an AI assistant for ${project.brandIdentity.name} (${project.brandIdentity.industry}).
+                        Tone: ${config.tone}.
+                        Context: ${config.businessProfile}. Products: ${config.productsServices}.
+                        
+                        CRITICAL INSTRUCTION:
+                        You must DETECT the language the user is speaking (e.g., English, Spanish, French) and reply in that EXACT SAME LANGUAGE.
+                        Do not switch languages unless the user does.
+                        Be concise, helpful, and conversational.
+                    `,
+                },
+                callbacks: {
+                    onopen: async () => {
+                        setIsConnecting(false);
+                        setIsLiveActive(true);
+                        isConnectedRef.current = true; // Strictly mark connected
+                        console.log("Gemini Live Session Opened");
+                        
+                        // Start Mic Stream
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            streamRef.current = stream;
+                            const source = inputCtx.createMediaStreamSource(stream);
+                            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+                            processorRef.current = processor;
+
+                            processor.onaudioprocess = (e) => {
+                                // CRITICAL: Stop processing if disconnected to prevent "Internal Error"
+                                if (!isConnectedRef.current) return;
+
+                                const inputData = e.inputBuffer.getChannelData(0);
+                                const pcm16 = floatTo16BitPCM(inputData);
+                                const base64Data = bytesToBase64(new Uint8Array(pcm16));
+                                
+                                sessionPromise.then(session => {
+                                     // Check again inside promise resolution
+                                     if (!isConnectedRef.current) return;
+                                     try {
+                                         session.sendRealtimeInput({
+                                            media: {
+                                                mimeType: 'audio/pcm;rate=16000',
+                                                data: base64Data
+                                            }
+                                        });
+                                     } catch (err) {
+                                         console.warn("Error sending audio frame:", err);
+                                     }
+                                });
+                            };
+
+                            source.connect(processor);
+                            processor.connect(inputCtx.destination);
+                        } catch (micErr) {
+                            console.error("Mic Error:", micErr);
+                            stopLiveSession();
+                            alert("Could not access microphone.");
+                        }
+                    },
+                    onmessage: async (message: LiveServerMessage) => {
+                         // 1. Handle Interruption
+                         if (message.serverContent?.interrupted) {
+                            console.log("Model interrupted");
+                            // Stop all currently playing audio
+                            activeSourcesRef.current.forEach(source => {
+                                try { source.stop(); } catch (e) {}
+                            });
+                            activeSourcesRef.current = [];
+                            
+                            // Reset timeline logic
+                            if (audioContextRef.current) {
+                                nextStartTimeRef.current = audioContextRef.current.currentTime;
+                            }
+                            return;
+                        }
+
+                        // 2. Handle Audio Output
+                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                        if (audioData && audioContextRef.current) {
+                            const ctx = audioContextRef.current;
+                            const bytes = base64ToBytes(audioData);
+                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+                            
+                            const source = ctx.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(ctx.destination);
+                            
+                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                            source.start(startTime);
+                            nextStartTimeRef.current = startTime + buffer.duration;
+                            
+                            activeSourcesRef.current.push(source);
+                            source.onended = () => {
+                                activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
+                            };
+                        }
+                    },
+                    onclose: () => {
+                        console.log("Session closed");
+                        stopLiveSession();
+                    },
+                    onerror: (err) => {
+                        console.error("Session error:", err);
+                        stopLiveSession();
+                    }
+                }
+            });
+            
+            sessionRef.current = sessionPromise;
+
+        } catch (error) {
+            console.error("Connection failed:", error);
+            setIsConnecting(false);
+            alert("Failed to start voice session.");
+        }
+    };
+
+    const stopLiveSession = () => {
+        isConnectedRef.current = false; // Immediately stop data transmission
+
+        // 1. Stop Mic
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+        if (processorRef.current && inputAudioContextRef.current) {
+            processorRef.current.disconnect();
+            processorRef.current = null;
+        }
+        if (inputAudioContextRef.current) {
+            inputAudioContextRef.current.close();
+            inputAudioContextRef.current = null;
+        }
+
+        // 2. Stop Speakers
+        activeSourcesRef.current.forEach(source => source.stop());
+        activeSourcesRef.current = [];
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+
+        // 3. Close Session
+        // We cannot invoke .close() on the promise directly, but setting strict flag handles logic
+        if (sessionRef.current) {
+             sessionRef.current = null;
+        }
+
+        setIsLiveActive(false);
+        setIsConnecting(false);
+        nextStartTimeRef.current = 0;
+    };
+
+    // --- Text Chat Fallback ---
+    const handleTextSend = async () => {
+        if (!input.trim()) return;
+        const userMsg = input;
+        setInput('');
+        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        
+        // Fallback to standard generation if not live
+        if (!isLiveActive) {
+            if (hasApiKey === false) { await promptForKeySelection(); return; }
+            try {
+                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                 const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: `User said: "${userMsg}". Context: ${config.businessProfile}. Respond as ${config.agentName} in same language.`,
+                 });
+                 setMessages(prev => [...prev, { role: 'model', text: response.text || "..." }]);
+            } catch (e) { console.error(e); }
+        }
+    };
+
+    return (
+        <div className="absolute bottom-0 right-0 w-full h-full z-30 flex flex-col justify-end p-4 pointer-events-auto font-sans">
+            {/* Chat Window */}
+            <div 
+                className={`
+                    w-full bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800 transition-all duration-500
+                    ${isLiveActive ? 'h-[550px] ring-4 ring-primary/20' : 'h-[500px]'}
+                `}
+            >
+                {/* Header */}
+                <div className="p-4 flex justify-between items-center text-white transition-colors duration-500" style={{ backgroundColor: isLiveActive ? '#ef4444' : config.widgetColor }}>
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${isLiveActive ? 'bg-white/20 animate-pulse' : 'bg-white/20'}`}>
+                            {isLiveActive ? <Mic size={20} /> : <MessageSquare size={20} />}
+                        </div>
+                        <div>
+                            <span className="font-bold text-sm block leading-tight">{config.agentName}</span>
+                            <span className="text-[10px] opacity-80 block leading-tight">
+                                {isLiveActive ? 'Live Voice Session' : 'Chat Online'}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="p-1.5 hover:bg-white/20 rounded-full transition-colors">
+                            <Minimize2 size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 relative bg-gray-50 dark:bg-black overflow-hidden">
+                    
+                    {/* Live Mode Visualizer Overlay */}
+                    {isLiveActive ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black z-10 text-white animate-fade-in-up">
+                            <div className="w-32 h-32 rounded-full bg-red-500/10 flex items-center justify-center mb-8 relative">
+                                <div className="absolute inset-0 rounded-full border border-red-500/30 animate-ping opacity-20"></div>
+                                <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm">
+                                     <Mic size={32} className="text-red-500" />
+                                </div>
+                            </div>
+
+                            {/* Audio Waveform Visualizer */}
+                            <div className="flex items-center gap-1 h-12 mb-6">
+                                {visualizerLevels.map((height, i) => (
+                                    <div 
+                                        key={i} 
+                                        className="w-1.5 bg-white rounded-full transition-all duration-100"
+                                        style={{ height: `${height}px`, opacity: 0.6 + (height/50) }}
+                                    />
+                                ))}
+                            </div>
+                            
+                            <p className="text-lg font-medium mb-2">Listening...</p>
+                            <p className="text-xs text-gray-500 max-w-[200px] text-center mb-8">Speak naturally. I'm listening in {config.languages || 'your language'}.</p>
+                            
+                            <button 
+                                onClick={stopLiveSession}
+                                className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full text-sm font-bold text-white transition-colors shadow-lg flex items-center"
+                            >
+                                <PhoneOff size={18} className="mr-2" /> End Call
+                            </button>
+                        </div>
+                    ) : (
+                        /* Text Chat History (Standard View) */
+                        <div className="h-full p-4 overflow-y-auto custom-scrollbar space-y-3">
+                             {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div 
+                                        className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                                            msg.role === 'user' 
+                                                ? 'text-white rounded-tr-sm' 
+                                                : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-tl-sm'
+                                        }`}
+                                        style={msg.role === 'user' ? { backgroundColor: config.widgetColor } : {}}
+                                    >
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer / Input Controls */}
+                {!isLiveActive && (
+                    <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2">
+                        {config.enableLiveVoice && (
+                            <button 
+                                onClick={startLiveSession}
+                                disabled={isConnecting}
+                                className={`p-2.5 rounded-full transition-all shadow-sm ${isConnecting ? 'bg-gray-100 text-gray-400' : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-200'}`}
+                                title="Start Real-time Voice"
+                            >
+                                {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
+                            </button>
+                        )}
+                        <input 
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleTextSend()}
+                            placeholder="Type a message..."
+                            className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                        />
+                        <button 
+                            onClick={handleTextSend}
+                            disabled={!input.trim()}
+                            className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: config.widgetColor }}
+                        >
+                            <Send size={18} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default ChatSimulator;

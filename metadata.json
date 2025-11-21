@@ -1,0 +1,7 @@
+{
+  "name": "Quimera.ai",
+  "description": "A modern and visually stunning landing page template built with React, TypeScript, and Tailwind CSS, featuring placeholder sections for AI-generated imagery from 'Quimera.ai'.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

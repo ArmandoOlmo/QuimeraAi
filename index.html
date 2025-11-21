@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quimera.ai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Abel&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Narrow:wght@400;700&family=Arimo:wght@400;700&family=Arvo:wght@400;700&family=Asap:wght@400;700&family=Bitter:wght@400;700&family=Bree+Serif&family=Cabin:wght@400;700&family=Cardo:wght@400;700&family=Crimson+Text:wght@400;700&family=Dancing+Script:wght@400;700&family=Dosis:wght@400;700&family=Exo+2:wght@400;700&family=Fira+Sans:wght@400;700&family=Francois+One&family=Inconsolata:wght@400;700&family=Indie+Flower&family=Josefin+Sans:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700;900&family=Mulish:wght@400;700&family=Nobile:wght@400;700&family=Noticia+Text:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Serif:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Oxygen:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Questrial&family=Quicksand:wght@400;700&family=Raleway:wght@400;700;900&family=Roboto:wght@400;700&family=Signika:wght@400;700&family=Slabo+27px&family=Source+Sans+Pro:wght@400;700&family=Titillium+Web:wght@400;700&family=Ubuntu:wght@300;400;500;700&family=Varela+Round&family=Vollkorn:wght@400;700&family=Yanone+Kaffeesatz:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <style>
+      :root {
+        /* QUIMERA THEME - Light Mode (Porcelain & Slate) */
+        /* Background: Very subtle Cool Gray to reduce eye strain compared to pure white */
+        --background: 210 40% 98%;  /* #F8FAFC */
+        --foreground: 222 47% 11%;  /* #0F172A - Deep Slate, readable & professional */
+        
+        /* Cards: Pure White to pop against the light gray background */
+        --card: 0 0% 100%;          /* #FFFFFF */
+        --card-foreground: 222 47% 11%;
+        
+        /* Popovers */
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        
+        /* Primary: Amber/Gold (Brand Identity) - adjusted slightly for visibility on light bg */
+        --primary: 35 90% 50%;      /* #F59E0B */
+        --primary-foreground: 0 0% 100%; /* White text on orange buttons */
+        
+        /* Secondary: Light Slate for subtle elements/hovers */
+        --secondary: 210 40% 96.1%; /* #F1F5F9 */
+        --secondary-foreground: 222 47% 11.2%;
+        
+        /* Muted */
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215 16% 47%; /* #64748B - Slate 500 */
+        
+        /* Accent */
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222 47% 11.2%;
+        
+        /* Destructive */
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        
+        /* Borders - Soft Slate */
+        --border: 214 32% 91%;      /* #E2E8F0 */
+        --input: 214 32% 91%;
+        --ring: 35 90% 50%;         /* Matches Primary */
+        --radius: 0.75rem;
+        
+        /* Editor Specific Mappings - Explicit Hex for Consistency */
+        --editor-bg: #F3F4F6;       /* Gray 100 - The canvas background */
+        --editor-panel-bg: #FFFFFF; /* White - The sidebar/panels */
+        --editor-border: #E5E7EB;   /* Gray 200 */
+        --editor-accent: #F59E0B;   /* Amber 500 */
+        --editor-text-primary: #111827;   /* Gray 900 */
+        --editor-text-secondary: #6B7280; /* Gray 500 */
+      }
+  
+      .dark {
+        /* QUIMERA THEME (Dark Mode - The Real Deal) */
+        /* Background: Deep Violet Black */
+        --background: 272 47% 10%; /* #1A0D26 - Deep Purple Base */
+        --foreground: 0 0% 95%;     /* White text */
+        
+        /* Cards: Slightly lighter purple */
+        --card: 266 28% 18%;        /* #2C1A3D */
+        --card-foreground: 0 0% 95%;
+        
+        /* Popovers */
+        --popover: 266 28% 18%;
+        --popover-foreground: 0 0% 95%;
+        
+        /* Primary: Acid Orange/Gold */
+        --primary: 45 100% 50%;     /* #FFB800 / #FCAE00 */
+        --primary-foreground: 272 47% 10%;
+        
+        /* Secondary: Muted Purple */
+        --secondary: 268 34% 30%;   /* #4E3366 */
+        --secondary-foreground: 0 0% 98%;
+        
+        /* Muted */
+        --muted: 268 20% 20%;
+        --muted-foreground: 265 10% 70%;
+        
+        /* Accent */
+        --accent: 268 40% 40%;      /* #6B4B85 */
+        --accent-foreground: 0 0% 98%;
+        
+        /* Destructive */
+        --destructive: 0 62% 30%;
+        --destructive-foreground: 0 0% 98%;
+        
+        /* Borders & Inputs */
+        --border: 266 28% 25%;      /* Subtle purple border */
+        --input: 266 28% 25%;
+        --ring: 45 100% 50%;        /* Focus ring matches primary */
+
+        /* Editor Mapping for existing components */
+        --editor-bg: hsl(272, 47%, 10%);
+        --editor-panel-bg: hsl(266, 28%, 18%);
+        --editor-border: hsl(266, 28%, 25%);
+        --editor-accent: hsl(45, 100%, 50%);
+        --editor-text-primary: hsl(0, 0%, 95%);
+        --editor-text-secondary: hsl(265, 10%, 70%);
+      }
+
+      /* BLACK MODE - Pure Black & Yellow */
+      .black {
+        --background: 0 0% 0%;        /* #000000 */
+        --foreground: 0 0% 100%;      /* #FFFFFF */
+        
+        /* Cards: Pure Black for a true OLED feel */
+        --card: 0 0% 0%;             /* #000000 */
+        --card-foreground: 0 0% 100%;
+        
+        /* Popovers */
+        --popover: 0 0% 3%;
+        --popover-foreground: 0 0% 100%;
+        
+        /* Primary: Bright Yellow (Quimera brand) */
+        --primary: 45 100% 50%;      /* #FFB800 */
+        --primary-foreground: 0 0% 0%;
+        
+        /* Secondary: Dark Gray */
+        --secondary: 0 0% 12%;       /* #1F1F1F */
+        --secondary-foreground: 0 0% 100%;
+        
+        /* Muted */
+        --muted: 0 0% 12%;
+        --muted-foreground: 0 0% 60%; /* #999999 */
+        
+        /* Accent */
+        --accent: 45 100% 50%;
+        --accent-foreground: 0 0% 0%;
+        
+        /* Destructive */
+        --destructive: 0 62% 30%;
+        --destructive-foreground: 0 0% 98%;
+        
+        /* Borders & Inputs: Dark Gray */
+        --border: 0 0% 15%;          /* #262626 */
+        --input: 0 0% 15%;
+        --ring: 45 100% 50%;
+
+        /* Editor Mappings */
+        --editor-bg: #000000;
+        --editor-panel-bg: #000000;
+        --editor-border: #262626;
+        --editor-accent: #FFB800;
+        --editor-text-primary: #FFFFFF;
+        --editor-text-secondary: #888888;
+      }
+
+      body {
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+      }
+
+      /* Custom Scrollbar for the Quimera look */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: hsl(var(--background)); 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: hsl(var(--border)); 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--primary)); 
+      }
+
+      /* Utility Classes for Drag & Drop */
+      .drag-container:active { cursor: grabbing; }
+      .drag-container.dragging { opacity: 0.4; background: hsl(var(--accent)); }
+      .drag-container.drag-over > div { outline: 2px dashed hsl(var(--primary)); outline-offset: -2px; background-color: hsla(var(--primary), 0.1); }
+      .editing-section > section { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; box-shadow: 0 0 15px hsla(var(--primary), 0.4); transition: all 0.3s ease-in-out; }
+      .editable-section:hover > section { outline: 2px dashed hsl(var(--primary)); outline-offset: 2px; transition: outline 0.2s ease-in-out; }
+      
+      /* Image Styles */
+      .img-style-float { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+      .img-style-float:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px hsla(var(--primary), 0.2); }
+      .img-style-hexagon { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+      .img-style-polaroid { background: white; padding: 1rem 1rem 3rem 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: rotate(-3deg); transition: transform 0.3s ease-in-out; }
+      .img-style-polaroid:hover { transform: rotate(0deg) scale(1.05); }
+
+      /* Site Content Colors - Default Mappings */
+      :root {
+        --site-heading-color: #111827;
+        --site-body-color: #4B5563;
+      }
+      html.dark {
+        --site-heading-color: #F9FAFB;
+        --site-body-color: #9CA3AF;
+      }
+      /* Site Content Colors for Black Mode */
+      html.black {
+        --site-heading-color: #FFFFFF;
+        --site-body-color: #A1A1AA;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        plugins: [
+          function({ addVariant }) {
+            addVariant('black', '.black &');
+          }
+        ],
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: {
+                DEFAULT: "hsl(var(--primary))",
+                foreground: "hsl(var(--primary-foreground))",
+              },
+              secondary: {
+                DEFAULT: "hsl(var(--secondary))",
+                foreground: "hsl(var(--secondary-foreground))",
+              },
+              destructive: {
+                DEFAULT: "hsl(var(--destructive))",
+                foreground: "hsl(var(--destructive-foreground))",
+              },
+              muted: {
+                DEFAULT: "hsl(var(--muted))",
+                foreground: "hsl(var(--muted-foreground))",
+              },
+              accent: {
+                DEFAULT: "hsl(var(--accent))",
+                foreground: "hsl(var(--accent-foreground))",
+              },
+              popover: {
+                DEFAULT: "hsl(var(--popover))",
+                foreground: "hsl(var(--popover-foreground))",
+              },
+              card: {
+                DEFAULT: "hsl(var(--card))",
+                foreground: "hsl(var(--card-foreground))",
+              },
+              // Legacy Editor Mapping
+              editor: {
+                bg: "var(--editor-bg)",
+                'panel-bg': "var(--editor-panel-bg)",
+                border: "var(--editor-border)",
+                accent: "var(--editor-accent)",
+                'accent-hover': "hsl(var(--primary) / 0.8)",
+                text: {
+                    primary: "var(--editor-text-primary)",
+                    secondary: "var(--editor-text-secondary)",
+                }
+              },
+              // Site Colors
+              'site-heading': 'var(--site-heading-color)',
+              'site-body': 'var(--site-body-color)',
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+            fontFamily: {
+              sans: ['Ubuntu', 'sans-serif'],
+              header: 'var(--font-header)',
+              body: 'var(--font-body)',
+              button: 'var(--font-button)',
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: 0, transform: 'translateY(20px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <div id="portal-root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
