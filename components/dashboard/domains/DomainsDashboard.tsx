@@ -4,8 +4,10 @@ import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings } from 'lucide-react';
 import Modal from '../../ui/Modal';
+import InfoBubble from '../../ui/InfoBubble';
+import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { Domain } from '../../../types';
-import { GoogleGenAI } from '@google/genai';
+import { getGoogleGenAI } from '../../../utils/genAiClient';
 
 // --- DNS CONFIG COMPONENT ---
 const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
@@ -14,50 +16,85 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
         alert(`Copied: ${text}`);
     };
 
+    // Use DNS records from deployment or show defaults
+    const dnsRecords = domain.dnsRecords || [
+        { type: 'A' as const, host: '@', value: '76.76.21.21', verified: false },
+        { type: 'CNAME' as const, host: 'www', value: 'cname.vercel-dns.com', verified: false }
+    ];
+
+    const getRecordColor = (type: string) => {
+        switch (type) {
+            case 'A': return 'blue';
+            case 'CNAME': return 'purple';
+            case 'TXT': return 'green';
+            default: return 'gray';
+        }
+    };
+
     return (
-        <div className="bg-secondary/20 rounded-xl p-6 border border-border mt-4">
+        <div className="bg-secondary/20 rounded-xl p-6 border border-border">
             <h4 className="font-bold text-foreground mb-2 flex items-center">
                 <Settings size={16} className="mr-2 text-primary" /> DNS Configuration
             </h4>
             <p className="text-sm text-muted-foreground mb-6">
-                To connect <strong>{domain.name}</strong>, log in to your domain provider (GoDaddy, Namecheap, Google, etc.) and add the following records to your DNS settings.
+                To connect <strong>{domain.name}</strong>, log in to your domain provider (GoDaddy, Namecheap, Google Domains, etc.) and add the following records to your DNS settings.
             </p>
 
             <div className="space-y-4">
-                {/* A Record */}
-                <div className="bg-card border border-border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-blue-500/10 text-blue-500 font-bold px-2 py-1 rounded text-xs border border-blue-500/20">A Record</div>
-                        <div className="text-sm text-muted-foreground">
-                            Host: <span className="text-foreground font-mono bg-secondary px-1 rounded">@</span>
+                {dnsRecords.map((record, index) => {
+                    const color = getRecordColor(record.type);
+                    return (
+                        <div 
+                            key={index} 
+                            className={`bg-card border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+                                record.verified 
+                                    ? 'border-green-500/50 bg-green-500/5' 
+                                    : 'border-border'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className={`bg-${color}-500/10 text-${color}-500 font-bold px-2 py-1 rounded text-xs border border-${color}-500/20`}>
+                                    {record.type}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Host: <span className="text-foreground font-mono bg-secondary px-1 rounded">{record.host}</span>
+                                </div>
+                                {record.verified && (
+                                    <div className="flex items-center text-green-500 text-xs font-bold">
+                                        <CheckCircle size={14} className="mr-1" /> Verified
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <code className="flex-1 md:flex-none bg-secondary px-3 py-1.5 rounded text-sm font-mono text-foreground border border-border max-w-xs truncate" title={record.value}>
+                                    {record.value}
+                                </code>
+                                <button 
+                                    onClick={() => copyToClipboard(record.value)} 
+                                    className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors" 
+                                    title="Copy Value"
+                                >
+                                    <Copy size={16} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <code className="flex-1 md:flex-none bg-secondary px-3 py-1.5 rounded text-sm font-mono text-foreground border border-border">76.76.21.21</code>
-                        <button onClick={() => copyToClipboard('76.76.21.21')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors" title="Copy Value">
-                            <Copy size={16} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* CNAME Record */}
-                <div className="bg-card border border-border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-purple-500/10 text-purple-500 font-bold px-2 py-1 rounded text-xs border border-purple-500/20">CNAME</div>
-                        <div className="text-sm text-muted-foreground">
-                            Host: <span className="text-foreground font-mono bg-secondary px-1 rounded">www</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <code className="flex-1 md:flex-none bg-secondary px-3 py-1.5 rounded text-sm font-mono text-foreground border border-border">cname.quimera.ai</code>
-                        <button onClick={() => copyToClipboard('cname.quimera.ai')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors" title="Copy Value">
-                            <Copy size={16} />
-                        </button>
-                    </div>
-                </div>
+                    );
+                })}
             </div>
             
-            <div className="mt-6 flex justify-end">
+            {domain.deployment?.provider && (
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                        ℹ️ These DNS records are configured for <strong>{domain.deployment.provider}</strong> deployment. 
+                        After updating your DNS, click "Verify DNS" to check the configuration.
+                    </p>
+                </div>
+            )}
+            
+            <div className="mt-6 flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                    💡 DNS changes can take 24-48 hours to propagate
+                </p>
                 <a 
                     href="https://support.google.com/domains/answer/3290350?hl=en" 
                     target="_blank" 
@@ -73,9 +110,12 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
 
 // --- DOMAIN CARD COMPONENT ---
 const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
-    const { deleteDomain, verifyDomain, projects, updateDomain } = useEditor();
+    const { deleteDomain, verifyDomain, projects, updateDomain, deployDomain, getDomainDeploymentLogs } = useEditor();
     const [isVerifying, setIsVerifying] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [showLogs, setShowLogs] = useState(false);
+    const [deployProvider, setDeployProvider] = useState<'vercel' | 'cloudflare' | 'netlify'>('vercel');
 
     const handleVerify = async () => {
         setIsVerifying(true);
@@ -87,29 +127,72 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
         updateDomain(domain.id, { projectId });
     };
 
+    const handleDeploy = async () => {
+        if (!domain.projectId) {
+            alert('Please connect a project first');
+            return;
+        }
+        
+        if (!window.confirm(`Deploy to ${deployProvider}? This will make your website live.`)) {
+            return;
+        }
+
+        setIsDeploying(true);
+        const success = await deployDomain(domain.id, deployProvider);
+        setIsDeploying(false);
+        
+        if (success) {
+            alert('Deployment successful! Check deployment logs for details.');
+        } else {
+            alert('Deployment failed. Check deployment logs for details.');
+        }
+    };
+
     const connectedProject = projects.find(p => p.id === domain.projectId);
+    const deploymentLogs = getDomainDeploymentLogs(domain.id);
+    const isDeploymentInProgress = domain.status === 'deploying';
 
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden transition-all hover:shadow-md">
             <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                    <div>
+                    <div className="flex-1">
                         <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                             {domain.name}
-                            <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary"><ExternalLink size={14}/></a>
+                            {domain.deployment?.deploymentUrl && (
+                                <a href={domain.deployment.deploymentUrl} target="_blank" rel="noreferrer" 
+                                   className="text-muted-foreground hover:text-primary" title="View deployment">
+                                    <ExternalLink size={14}/>
+                                </a>
+                            )}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {domain.status === 'active' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1"/> Connected</span>}
                             {domain.status === 'pending' && <span className="text-xs font-bold text-yellow-500 flex items-center bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20"><Clock size={12} className="mr-1"/> DNS Pending</span>}
-                            {domain.status === 'error' && <span className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20"><AlertTriangle size={12} className="mr-1"/> Configuration Error</span>}
+                            {domain.status === 'deploying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin"/> Deploying</span>}
+                            {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1"/> Deployed</span>}
+                            {domain.status === 'error' && <span className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20"><AlertTriangle size={12} className="mr-1"/> Error</span>}
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
+                            {domain.deployment?.provider && (
+                                <span className="text-xs text-muted-foreground">• {domain.deployment.provider}</span>
+                            )}
                         </div>
+                        {domain.deployment?.deploymentUrl && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                🌐 {domain.deployment.deploymentUrl}
+                            </p>
+                        )}
+                        {domain.deployment?.lastDeployedAt && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Last deployed: {new Date(domain.deployment.lastDeployedAt).toLocaleString()}
+                            </p>
+                        )}
                     </div>
                     <div className="flex gap-2">
                         <button 
                             onClick={handleVerify} 
-                            disabled={isVerifying}
-                            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors" 
+                            disabled={isVerifying || isDeploymentInProgress}
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50" 
                             title="Verify DNS"
                         >
                             <RefreshCw size={18} className={isVerifying ? 'animate-spin' : ''} />
@@ -117,6 +200,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <button 
                             onClick={() => {if(window.confirm('Delete domain?')) deleteDomain(domain.id)}} 
                             className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            disabled={isDeploymentInProgress}
                         >
                             <Trash2 size={18} />
                         </button>
@@ -127,9 +211,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                     <div>
                          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Connected Project</label>
                          <select 
-                            className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                             value={domain.projectId || ''}
                             onChange={(e) => handleProjectChange(e.target.value)}
+                            disabled={isDeploymentInProgress}
                         >
                             <option value="">-- No Project --</option>
                             {projects.filter(p => p.status !== 'Template').map(p => (
@@ -144,18 +229,109 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* Deployment Section */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-bold text-foreground mb-3 flex items-center">
+                        <Globe size={14} className="mr-2 text-primary" />
+                        Deployment
+                    </h4>
+                    <div className="grid md:grid-cols-[1fr_auto] gap-3 items-end">
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                                Deployment Provider
+                            </label>
+                            <select 
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                value={deployProvider}
+                                onChange={(e) => setDeployProvider(e.target.value as any)}
+                                disabled={isDeploying || isDeploymentInProgress || !domain.projectId}
+                            >
+                                <option value="vercel">Vercel</option>
+                                <option value="cloudflare">Cloudflare Pages</option>
+                                <option value="netlify">Netlify</option>
+                            </select>
+                        </div>
+                        <button
+                            onClick={handleDeploy}
+                            disabled={isDeploying || isDeploymentInProgress || !domain.projectId}
+                            className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {isDeploying ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Deploying...
+                                </>
+                            ) : (
+                                <>
+                                    <Globe size={16} />
+                                    Deploy
+                                </>
+                            )}
+                        </button>
+                    </div>
+                    {!domain.projectId && (
+                        <p className="text-xs text-yellow-600 mt-2">⚠️ Connect a project to enable deployment</p>
+                    )}
+                    {domain.deployment?.error && (
+                        <p className="text-xs text-red-500 mt-2">❌ {domain.deployment.error}</p>
+                    )}
+                </div>
                 
-                <button 
-                    onClick={() => setShowDetails(!showDetails)}
-                    className="text-sm font-medium text-primary hover:underline flex items-center"
-                >
-                    {showDetails ? 'Hide DNS Settings' : 'Show DNS Settings'}
-                </button>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => setShowDetails(!showDetails)}
+                        className="text-sm font-medium text-primary hover:underline flex items-center"
+                    >
+                        {showDetails ? 'Hide DNS Settings' : 'Show DNS Settings'}
+                    </button>
+                    {deploymentLogs.length > 0 && (
+                        <button 
+                            onClick={() => setShowLogs(!showLogs)}
+                            className="text-sm font-medium text-primary hover:underline flex items-center"
+                        >
+                            {showLogs ? 'Hide Deployment Logs' : 'Show Deployment Logs'} ({deploymentLogs.length})
+                        </button>
+                    )}
+                </div>
             </div>
             
             {showDetails && (
                 <div className="border-t border-border p-6 bg-background/50">
                     <DNSConfig domain={domain} />
+                </div>
+            )}
+
+            {showLogs && deploymentLogs.length > 0 && (
+                <div className="border-t border-border p-6 bg-background/50">
+                    <h4 className="text-sm font-bold text-foreground mb-3 flex items-center">
+                        <Settings size={14} className="mr-2 text-primary" />
+                        Deployment Logs
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {deploymentLogs.slice().reverse().map((log) => (
+                            <div 
+                                key={log.id} 
+                                className={`text-xs p-3 rounded-lg border ${
+                                    log.status === 'success' 
+                                        ? 'bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-400'
+                                        : log.status === 'failed'
+                                        ? 'bg-red-500/5 border-red-500/20 text-red-700 dark:text-red-400'
+                                        : 'bg-blue-500/5 border-blue-500/20 text-blue-700 dark:text-blue-400'
+                                }`}
+                            >
+                                <div className="flex justify-between items-start mb-1">
+                                    <span className="font-bold">{log.message}</span>
+                                    <span className="text-muted-foreground">
+                                        {new Date(log.timestamp).toLocaleTimeString()}
+                                    </span>
+                                </div>
+                                {log.details && (
+                                    <div className="text-muted-foreground mt-1">{log.details}</div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
@@ -164,7 +340,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
 // --- DOMAIN SEARCH & BUY COMPONENT ---
 const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const { addDomain, hasApiKey, promptForKeySelection } = useEditor();
+    const { addDomain, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [results, setResults] = useState<{ name: string, price: number, available: boolean }[]>([]);
@@ -174,9 +350,15 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setIsSearching(true);
         
         // Simulate AI Suggestion Logic
+        if (hasApiKey === false) {
+            await promptForKeySelection();
+            setIsSearching(false);
+            return;
+        }
+
         if (hasApiKey) {
             try {
-                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                 const ai = await getGoogleGenAI();
                  const prompt = `Generate 5 creative available domain names for a business related to "${query}". Return ONLY a JSON array of strings. Example: ["mybusiness.com", "getmybusiness.io"]`;
                  const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
@@ -196,6 +378,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                  setResults([exactMatch, ...mappedResults]);
 
             } catch (e) {
+                handleApiError(e);
                 console.error("AI Search failed, falling back", e);
                  // Fallback simulation
                 setResults([
@@ -338,6 +521,7 @@ const DomainsDashboard: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-3">
+                        <InfoBubble bubbleId="domains" content={INFO_BUBBLE_CONTENT.domains} inline defaultExpanded={false} />
                         <button 
                             onClick={() => setIsConnectModalOpen(true)}
                             className="bg-secondary hover:bg-secondary/80 text-foreground font-bold py-2 px-4 rounded-lg transition-all text-sm hidden sm:flex items-center"

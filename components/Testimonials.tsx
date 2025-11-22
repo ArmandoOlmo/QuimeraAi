@@ -12,6 +12,10 @@ interface TestimonialCardProps {
   textColor: string;
   borderRadius: BorderRadiusSize;
   borderColor: string;
+  cardBackground: string;
+  cardShadow: string;
+  borderStyle: string;
+  cardPadding: number;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -47,26 +51,89 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-full',
 };
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, title, avatar, delay = '0s', accentColor, textColor, borderRadius, borderColor }) => (
-  <div className={`bg-dark-800 p-8 shadow-lg border flex flex-col justify-between animate-fade-in-up ${borderRadiusClasses[borderRadius]}`} style={{ animationDelay: delay, borderColor: borderColor }}>
-    <blockquote className="mb-6 italic font-body" style={{ color: textColor }}>
-      "{quote}"
-    </blockquote>
-    <div className="flex items-center">
-      <img src={avatar} alt={name} style={{ borderColor: accentColor }} className="w-12 h-12 rounded-full mr-4 border-2" key={avatar} />
-      <div>
-        <p className="font-bold text-site-heading font-body">{name}</p>
-        <p className="text-sm font-body" style={{ color: textColor }}>{title}</p>
+const shadowClasses: Record<string, string> = {
+  none: 'shadow-none',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+  xl: 'shadow-xl shadow-purple-500/10',
+};
+
+const TestimonialCard: React.FC<TestimonialCardProps> = ({ 
+  quote, 
+  name, 
+  title, 
+  avatar, 
+  delay = '0s', 
+  accentColor, 
+  textColor, 
+  borderRadius, 
+  borderColor,
+  cardBackground,
+  cardShadow,
+  borderStyle,
+  cardPadding
+}) => {
+  const getBorderClass = () => {
+    switch(borderStyle) {
+      case 'none':
+        return 'border-0';
+      case 'solid':
+        return 'border';
+      case 'gradient':
+        return 'border-2 bg-gradient-to-br from-purple-500/20 to-blue-500/20';
+      case 'glow':
+        return 'border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]';
+      default:
+        return 'border';
+    }
+  };
+
+  return (
+    <div 
+      className={`flex flex-col justify-between animate-fade-in-up ${borderRadiusClasses[borderRadius]} ${shadowClasses[cardShadow || 'lg']} ${getBorderClass()}`} 
+      style={{ 
+        animationDelay: delay, 
+        borderColor: borderStyle === 'solid' || borderStyle === 'glow' ? borderColor : undefined,
+        backgroundColor: cardBackground,
+        padding: `${cardPadding}px`
+      }}
+    >
+      <blockquote className="mb-6 italic font-body" style={{ color: textColor }}>
+        "{quote}"
+      </blockquote>
+      <div className="flex items-center">
+        <img src={avatar} alt={name} style={{ borderColor: accentColor }} className="w-12 h-12 rounded-full mr-4 border-2" key={avatar} />
+        <div>
+          <p className="font-bold text-site-heading font-body">{name}</p>
+          <p className="text-sm font-body" style={{ color: textColor }}>{title}</p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface TestimonialsProps extends TestimonialsData {
-    borderRadius: BorderRadiusSize;
+    borderRadius?: BorderRadiusSize;
+    cardShadow?: string;
+    borderStyle?: string;
+    cardPadding?: number;
 }
 
-const Testimonials: React.FC<TestimonialsProps> = ({ title, description, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+const Testimonials: React.FC<TestimonialsProps> = ({ 
+  title, 
+  description, 
+  items, 
+  paddingY, 
+  paddingX, 
+  colors, 
+  borderRadius = 'xl', 
+  cardShadow = 'lg',
+  borderStyle = 'solid',
+  cardPadding = 32,
+  titleFontSize = 'md', 
+  descriptionFontSize = 'md' 
+}) => {
   return (
     <section id="testimonials" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div>
@@ -86,6 +153,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({ title, description, items, 
                 textColor={colors.text}
                 borderRadius={borderRadius}
                 borderColor={colors.borderColor}
+                cardBackground={colors.cardBackground || '#1f2937'}
+                cardShadow={cardShadow}
+                borderStyle={borderStyle}
+                cardPadding={cardPadding}
             />
           ))}
         </div>

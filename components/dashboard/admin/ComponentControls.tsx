@@ -1,10 +1,12 @@
 
-import React from 'react';
-import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit } from '../../../types';
+import React, { useState } from 'react';
+import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, ResponsiveStyles, AnimationConfig } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { componentStyles } from '../../../data/componentStyles';
 import ColorControl from '../../ui/ColorControl';
 import { Type } from 'lucide-react';
+import ResponsiveConfigEditor from './ResponsiveConfigEditor';
+import AnimationConfigurator from './AnimationConfigurator';
 
 // Simple re-usable controls from Controls.tsx
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -19,7 +21,10 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
             role="switch"
             aria-checked={checked}
             aria-label={label || 'Toggle'}
-            onClick={() => onChange(!checked)}
+            onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onDragStart={(e) => e.preventDefault()}
+            draggable={false}
             className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
         >
             <span
@@ -178,7 +183,8 @@ interface ComponentControlsProps {
 }
 
 const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponentId }) => {
-    const { componentStyles: contextStyles, customComponents, updateComponentStyle } = useEditor();
+    const { componentStyles: contextStyles, customComponents, updateComponentStyle, activeProject, saveProject } = useEditor();
+    const [activeTab, setActiveTab] = useState<'styles' | 'responsive' | 'animation'>('styles');
 
     const isCustom = !Object.keys(contextStyles).includes(selectedComponentId);
     
@@ -199,7 +205,29 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         updateComponentStyle(selectedComponentId, { colors: newColors }, isCustom);
     };
 
+    const handleResponsiveStylesUpdate = async (responsiveStyles: ResponsiveStyles) => {
+        if (!activeProject) return;
+        
+        const updatedProject = {
+            ...activeProject,
+            responsiveStyles: {
+                ...(activeProject.responsiveStyles || {}),
+                [selectedComponentId]: responsiveStyles
+            }
+        };
+        
+        // Update local state through saveProject
+        await saveProject();
+    };
+
     if (!styles) return null;
+
+    const currentResponsiveStyles = activeProject?.responsiveStyles?.[selectedComponentId] || {};
+    const currentAnimation = (styles as any)?.animation as AnimationConfig | undefined;
+
+    const handleAnimationUpdate = async (animationConfig: AnimationConfig) => {
+        await updateComponentStyle(selectedComponentId, { animation: animationConfig }, isCustom);
+    };
 
     const renderHeroControls = () => {
         const heroStyles = styles as typeof componentStyles['hero'];
@@ -464,11 +492,230 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         );
     };
 
+    const renderHeaderControls = () => {
+        const s = styles as any;
+        const colors = (s.colors || {}) as any;
+        
+        return (
+            <div className="space-y-4">
+                <h4 className="font-semibold text-editor-text-primary">Layout & Style</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>Layout</Label>
+                        <select 
+                            value={s.layout || 'classic'} 
+                            onChange={(e) => handleStyleChange('layout', e.target.value)}
+                            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                        >
+                            <option value="classic">Classic (Left)</option>
+                            <option value="minimal">Minimal</option>
+                            <option value="center">Center</option>
+                            <option value="stack">Stack</option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label>Style</Label>
+                        <select 
+                            value={s.style || 'sticky-solid'} 
+                            onChange={(e) => handleStyleChange('style', e.target.value)}
+                            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                        >
+                            <option value="sticky-solid">Solid</option>
+                            <option value="sticky-transparent">Transparent</option>
+                            <option value="floating">Floating</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <ToggleControl label="Sticky" checked={s.isSticky !== false} onChange={(v) => handleStyleChange('isSticky', v)} />
+                    <ToggleControl label="Glass Effect" checked={s.glassEffect || false} onChange={(v) => handleStyleChange('glassEffect', v)} />
+                </div>
+
+                <div>
+                    <div className="flex justify-between items-center">
+                        <Label>Height</Label>
+                        <span className="text-sm font-medium text-editor-text-primary">{s.height || 70}px</span>
+                    </div>
+                    <input
+                        type="range" min="50" max="120" step="5"
+                        value={s.height || 70}
+                        onChange={e => handleStyleChange('height', parseInt(e.target.value, 10))}
+                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                    />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Logo</h4>
+                <div>
+                    <Label>Logo Type</Label>
+                    <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                        {['text', 'image', 'both'].map(type => (
+                            <button 
+                                key={type}
+                                onClick={() => handleStyleChange('logoType', type)}
+                                className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors capitalize ${
+                                    (s.logoType || 'text') === type 
+                                        ? 'bg-editor-accent text-editor-bg' 
+                                        : 'text-editor-text-secondary hover:bg-editor-border'
+                                }`}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {((s.logoType || 'text') === 'image' || (s.logoType || 'text') === 'both') && (
+                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
+                        <div>
+                            <Label>Logo Image URL</Label>
+                            <input
+                                type="text"
+                                value={s.logoImageUrl || ''}
+                                onChange={(e) => handleStyleChange('logoImageUrl', e.target.value)}
+                                placeholder="https://example.com/logo.png"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                            <p className="text-xs text-editor-text-secondary mt-1">
+                                💡 Tip: Upload through Assets Manager or paste URL
+                            </p>
+                        </div>
+                        
+                        {s.logoImageUrl && (
+                            <div className="border border-editor-border rounded-md p-2 bg-editor-bg">
+                                <img 
+                                    src={s.logoImageUrl} 
+                                    alt="Logo preview" 
+                                    className="max-h-16 mx-auto"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E❌%3C/text%3E%3C/svg%3E';
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        <div>
+                            <div className="flex justify-between items-center">
+                                <Label>Logo Width</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{s.logoWidth || 120}px</span>
+                            </div>
+                            <input
+                                type="range" min="40" max="300" step="5"
+                                value={s.logoWidth || 120}
+                                onChange={e => handleStyleChange('logoWidth', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {((s.logoType || 'text') === 'text' || (s.logoType || 'text') === 'both') && (
+                    <div>
+                        <Label>Logo Text</Label>
+                        <input
+                            type="text"
+                            value={s.logoText || 'Brand'}
+                            onChange={(e) => handleStyleChange('logoText', e.target.value)}
+                            className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                        />
+                    </div>
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Call-to-Action Button</h4>
+                <ToggleControl label="Show CTA Button" checked={s.showCta !== false} onChange={(v) => handleStyleChange('showCta', v)} />
+                
+                {s.showCta !== false && (
+                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
+                        <div>
+                            <Label>Button Text</Label>
+                            <input
+                                type="text"
+                                value={s.ctaText || 'Get Started'}
+                                onChange={(e) => handleStyleChange('ctaText', e.target.value)}
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                        
+                        <BorderRadiusControl 
+                            label="Button Radius" 
+                            value={s.buttonBorderRadius || 'md'} 
+                            onChange={(v) => handleStyleChange('buttonBorderRadius', v)} 
+                        />
+                    </div>
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Login Button</h4>
+                <ToggleControl label="Show Login Button" checked={s.showLogin !== false} onChange={(v) => handleStyleChange('showLogin', v)} />
+                
+                {s.showLogin !== false && (
+                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label>Login Text</Label>
+                                <input
+                                    type="text"
+                                    value={s.loginText || 'Login'}
+                                    onChange={(e) => handleStyleChange('loginText', e.target.value)}
+                                    className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                />
+                            </div>
+                            <div>
+                                <Label>Login URL</Label>
+                                <input
+                                    type="text"
+                                    value={s.loginUrl || '#'}
+                                    onChange={(e) => handleStyleChange('loginUrl', e.target.value)}
+                                    className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Navigation Links</h4>
+                <div>
+                    <Label>Hover Style</Label>
+                    <select 
+                        value={s.hoverStyle || 'underline'} 
+                        onChange={(e) => handleStyleChange('hoverStyle', e.target.value)}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                    >
+                        <option value="underline">Underline</option>
+                        <option value="bold">Bold</option>
+                        <option value="scale">Scale</option>
+                        <option value="glow">Glow</option>
+                    </select>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#ffffff'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Text" value={colors.text || '#000000'} onChange={v => handleColorChange('text', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Border" value={colors.border || 'transparent'} onChange={v => handleColorChange('border', v)} />
+                </div>
+            </div>
+        );
+    };
+
     const renderControls = () => {
         switch (baseComponent) {
             case 'hero': return renderHeroControls();
             case 'features': return renderFeaturesControls();
             case 'cta': return renderCtaControls();
+            case 'header': return renderHeaderControls();
             // Standard handlers for all other components that share similar structure
             case 'services':
             case 'team':
@@ -488,7 +735,66 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         }
     };
 
-    return <div className="p-4">{renderControls()}</div>;
+    return (
+        <div className="flex flex-col h-full">
+            {/* Tabs */}
+            <div className="border-b border-editor-border flex-shrink-0">
+                <div className="px-4">
+                    <nav className="-mb-px flex space-x-6">
+                        <button
+                            onClick={() => setActiveTab('styles')}
+                            className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${
+                                activeTab === 'styles'
+                                    ? 'border-editor-accent text-editor-accent'
+                                    : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                        >
+                            Styles
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('responsive')}
+                            className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${
+                                activeTab === 'responsive'
+                                    ? 'border-editor-accent text-editor-accent'
+                                    : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                        >
+                            Responsive
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('animation')}
+                            className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${
+                                activeTab === 'animation'
+                                    ? 'border-editor-accent text-editor-accent'
+                                    : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                        >
+                            Animation
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+                {activeTab === 'styles' && renderControls()}
+                {activeTab === 'responsive' && (
+                    <ResponsiveConfigEditor
+                        componentId={selectedComponentId}
+                        currentStyles={currentResponsiveStyles}
+                        onUpdate={handleResponsiveStylesUpdate}
+                    />
+                )}
+                {activeTab === 'animation' && (
+                    <AnimationConfigurator
+                        componentId={selectedComponentId}
+                        currentConfig={currentAnimation}
+                        onUpdate={handleAnimationUpdate}
+                    />
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default ComponentControls;

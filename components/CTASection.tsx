@@ -42,7 +42,7 @@ interface CTASectionProps extends CtaData {
 
 const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
   return (
-    <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: '#0f172a' /* bg-dark-900 */ }}>
+    <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background || '#0f172a' }}>
       <div>
         <div 
             className={`relative p-12 shadow-2xl text-center overflow-hidden ${borderRadiusClasses[cardBorderRadius]}`}
@@ -55,7 +55,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                 </h2>
                 <p 
                     className={`${descriptionSizeClasses[descriptionFontSize]} mb-8 max-w-2xl mx-auto font-body`}
-                    style={{ color: colors.text }}
+                    style={{ color: colors.text || '#ffffff' }}
                 >
                     {description}
                 </p>

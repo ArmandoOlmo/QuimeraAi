@@ -12,9 +12,11 @@ import {
     ChevronDown, Table, Palette, 
     Heading1, Heading2, Heading3, Quote, Check, X as XIcon, Upload as UploadIcon, Hash
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGoogleGenAI } from '../../utils/genAiClient';
 import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
+import InfoBubble from '../ui/InfoBubble';
+import { INFO_BUBBLE_CONTENT } from '../../data/infoBubbleContent';
 
 interface CMSEditorProps {
     post: CMSPost | null;
@@ -295,7 +297,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
         setIsAiWorking(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const ai = await getGoogleGenAI();
             let promptConfig;
             let populatedPrompt = "";
             
@@ -339,7 +341,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsAiWorking(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const ai = await getGoogleGenAI();
             const contentPreview = editorRef.current?.innerText.substring(0, 2000) || '';
             
             const promptConfig = getPrompt('cms-generate-seo');
@@ -363,7 +365,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
             const data = JSON.parse(response.text);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
-        } catch (error) { console.error(error); } finally { setIsAiWorking(false); }
+        } catch (error) { handleApiError(error); console.error(error); } finally { setIsAiWorking(false); }
     };
 
     return (

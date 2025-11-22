@@ -91,7 +91,8 @@ const Header: React.FC<HeaderData> = ({
     links, hoverStyle,
     ctaText, showCta, buttonBorderRadius, 
     showLogin, loginText, loginUrl,
-    colors 
+    colors,
+    isPreviewMode = false
 }) => {
   const { previewRef } = useEditor();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -128,8 +129,9 @@ const Header: React.FC<HeaderData> = ({
   const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
 
   // Floating Bar Style Override
+  // In preview mode, use absolute instead of fixed to stay within preview container
   const containerClasses = style === 'floating' 
-    ? 'fixed top-6 left-6 right-6 rounded-2xl shadow-xl border border-white/10 max-w-7xl mx-auto'
+    ? `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl shadow-xl border border-white/10 max-w-7xl mx-auto`
     : 'w-full border-b border-transparent';
 
   const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
@@ -220,7 +222,7 @@ const Header: React.FC<HeaderData> = ({
   const computedHeight = layout === 'stack' ? 'auto' : `${height}px`;
   const computedMinHeight = layout === 'stack' ? `${height + 40}px` : `${height}px`;
 
-  const positionClass = (isSticky || style === 'floating') ? 'sticky' : 'relative';
+  const positionClass = (isSticky || style === 'floating') ? (isPreviewMode ? 'relative' : 'sticky') : 'relative';
 
   return (
     <header 

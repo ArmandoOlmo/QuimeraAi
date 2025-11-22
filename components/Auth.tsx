@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
     auth, 
     storage, 
@@ -16,6 +17,7 @@ import {
     getDownloadURL
 } from '../firebase';
 import { Eye, EyeOff, ArrowRight, Zap, Layout, Image as ImageIcon, Sparkles, CheckCircle, X, PlayCircle, Hexagon, ChevronDown, HelpCircle } from 'lucide-react';
+import LanguageSelector from './ui/LanguageSelector';
 
 // --- Brand Assets ---
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -69,6 +71,7 @@ interface AuthProps {
 type AuthMode = 'login' | 'register' | 'forgotPassword';
 
 const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
+    const { t } = useTranslation();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState<AuthMode>('register');
     
@@ -112,9 +115,9 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
             setResetEmailSentTo(email);
         } catch (err: any) {
              if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
-                 setError("Could not find an account with that email address.");
+                 setError(t('auth.errors.userNotFound'));
             } else {
-                 setError("Failed to send reset link. Please try again.");
+                 setError(t('auth.errors.resetFailed'));
             }
         } finally {
             setIsLoading(false);
@@ -128,7 +131,7 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         try {
             await signInWithPopup(auth, provider);
         } catch (err: any) {
-            setError("Failed to sign in with Google. Please try again.");
+            setError(t('auth.errors.googleSignInFailed'));
             setIsLoading(false);
         }
     };
@@ -151,16 +154,16 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 }
             } catch (err: any) {
                 if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                     setError("Incorrect email or password.");
+                     setError(t('auth.errors.incorrectCredentials'));
                 } else {
-                     setError("An unknown error occurred. Please try again.");
+                     setError(t('auth.errors.unknownError'));
                 }
             } finally {
                 setIsLoading(false);
             }
         } else if (authMode === 'register') {
             if (password !== repeatPassword) {
-                setError("Passwords do not match.");
+                setError(t('auth.errors.passwordMismatch'));
                 setIsLoading(false);
                 return;
             }
@@ -186,9 +189,9 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 onVerificationEmailSent(email);
             } catch (err: any) {
                  if (err.code === 'auth/email-already-in-use') {
-                    setError("User already exists. Sign in?");
+                    setError(t('auth.errors.emailInUse'));
                  } else {
-                    setError("Failed to create an account. Please try again.");
+                    setError(t('auth.errors.createAccountFailed'));
                  }
             } finally {
                 setIsLoading(false);
@@ -212,10 +215,10 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 <div className="text-center mb-6 sm:mb-8">
                     <Logo size="lg" />
                     <h2 className="text-xl sm:text-2xl font-bold text-white mt-4 sm:mt-6 mb-2">
-                        {authMode === 'login' ? 'Welcome Back' : authMode === 'register' ? 'Start Creating' : 'Reset Password'}
+                        {authMode === 'login' ? t('auth.welcomeBack') : authMode === 'register' ? t('auth.startCreating') : t('auth.resetPassword')}
                     </h2>
                     <p className="text-gray-400 text-xs sm:text-sm">
-                        {authMode === 'login' ? 'Enter your details to access your workspace.' : authMode === 'register' ? 'Join thousands of creators building with AI.' : 'We’ll email you instructions to reset your password.'}
+                        {authMode === 'login' ? t('auth.loginSubtitle') : authMode === 'register' ? t('auth.registerSubtitle') : t('auth.resetSubtitle')}
                     </p>
                 </div>
 
@@ -230,35 +233,35 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                         <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <CheckCircle size={32} />
                         </div>
-                        <p className="text-white mb-6">We sent a link to <strong className="text-yellow-400">{resetEmailSentTo}</strong>.</p>
-                        <button onClick={() => setAuthMode('login')} className="text-sm text-gray-400 hover:text-white underline">Back to Login</button>
+                        <p className="text-white mb-6">{t('auth.resetLinkSent')} <strong className="text-yellow-400">{resetEmailSentTo}</strong>.</p>
+                        <button onClick={() => setAuthMode('login')} className="text-sm text-gray-400 hover:text-white underline">{t('auth.backToLogin')}</button>
                     </div>
                 ) : (
                     <form onSubmit={handleAuthAction} className="space-y-3 sm:space-y-4">
                         {authMode === 'register' && (
                             <div className="space-y-3 sm:space-y-4 animate-fade-in-up">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Username</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.username')}</label>
                                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="DesignGuru"/>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Profile Photo (Optional)</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.profilePhotoOptional')}</label>
                                     <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"/>
                                 </div>
                             </div>
                         )}
                         
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.email')}</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="you@example.com"/>
                         </div>
 
                         {authMode !== 'forgotPassword' && (
                             <div>
                                 <div className="flex justify-between items-center mb-1">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase">Password</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('auth.password')}</label>
                                     {authMode === 'login' && (
-                                        <button type="button" onClick={() => setAuthMode('forgotPassword')} className="text-xs text-yellow-500 hover:text-yellow-400 hover:underline">Forgot?</button>
+                                        <button type="button" onClick={() => setAuthMode('forgotPassword')} className="text-xs text-yellow-500 hover:text-yellow-400 hover:underline">{t('auth.forgot')}</button>
                                     )}
                                 </div>
                                 <div className="relative">
@@ -272,21 +275,21 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
 
                         {authMode === 'register' && (
                             <div className="animate-fade-in-up">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Repeat Password</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.repeatPassword')}</label>
                                 <input type="password" value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="••••••••"/>
                             </div>
                         )}
 
                         <button type="submit" disabled={isLoading} className="w-full bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:bg-yellow-400 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6">
                             {isLoading && <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2"></div>}
-                            {isLoading ? 'Processing...' : authMode === 'login' ? 'Sign In' : authMode === 'register' ? 'Create Account' : 'Send Reset Link'}
+                            {isLoading ? t('auth.processing') : authMode === 'login' ? t('auth.signIn') : authMode === 'register' ? t('auth.createAccount') : t('auth.sendResetLink')}
                         </button>
 
                         {authMode !== 'forgotPassword' && (
                             <>
                                 <div className="relative my-6">
                                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                                    <div className="relative flex justify-center text-xs"><span className="bg-[#1A0D26] px-2 text-gray-500">OR CONTINUE WITH</span></div>
+                                    <div className="relative flex justify-center text-xs"><span className="bg-[#1A0D26] px-2 text-gray-500">{t('auth.orContinueWith')}</span></div>
                                 </div>
                                 <button type="button" onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center bg-white text-gray-900 font-bold py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50">
                                     <img src="https://storage.googleapis.com/quimera_assets/google.svg" alt="Google" className="w-5 h-5 mr-3"/>
@@ -299,12 +302,12 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
 
                 <div className="mt-6 text-center">
                     <p className="text-sm text-gray-400">
-                        {authMode === 'login' ? "New here?" : "Already have an account?"}
+                        {authMode === 'login' ? t('auth.newHere') : t('auth.alreadyHaveAccount')}
                         <button 
                             onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} 
                             className="ml-1 font-bold text-yellow-400 hover:underline"
                         >
-                            {authMode === 'login' ? 'Create Account' : 'Sign In'}
+                            {authMode === 'login' ? t('auth.createAccount') : t('auth.signIn')}
                         </button>
                     </p>
                 </div>
@@ -326,16 +329,17 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 <div className="container mx-auto px-6 flex justify-between items-center">
                     <Logo />
                     <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
-                        <a href="#features" className="hover:text-white transition-colors">Features</a>
-                        <a href="#showcase" className="hover:text-white transition-colors">Showcase</a>
-                        <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+                        <a href="#features" className="hover:text-white transition-colors">{t('auth.navFeatures')}</a>
+                        <a href="#showcase" className="hover:text-white transition-colors">{t('auth.navShowcase')}</a>
+                        <a href="#faq" className="hover:text-white transition-colors">{t('auth.navFAQ')}</a>
                     </div>
                     <div className="flex items-center space-x-3 sm:space-x-4">
+                        <LanguageSelector variant="minimal" />
                         <button onClick={() => openAuth('login')} className="text-sm font-bold text-white hover:text-yellow-400 transition-colors">
-                            Log In
+                            {t('auth.login')}
                         </button>
                         <button onClick={() => openAuth('register')} className="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-sm font-bold transition-all">
-                            Sign Up
+                            {t('auth.signUp')}
                         </button>
                     </div>
                 </div>
@@ -357,12 +361,12 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                     </div>
                     
                     <h1 className="text-4xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-gray-500 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                        Websites that <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Design Themselves.</span>
+                        {t('auth.heroTitle1')} <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{t('auth.heroTitle2')}</span>
                     </h1>
                     
                     <p className="text-base md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        Forget boring code. Quimera.ai acts as your creative co-pilot, building stunning, responsive websites in seconds while you sip your coffee.
+                        {t('auth.heroSubtitle')}
                     </p>
                     
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -370,10 +374,10 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                             onClick={() => openAuth('register')}
                             className="group bg-yellow-500 text-black px-8 py-4 rounded-full text-lg font-bold hover:bg-yellow-400 hover:scale-105 transition-all shadow-[0_0_30px_rgba(234,179,8,0.4)] flex items-center"
                         >
-                            Start for Free <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                            {t('auth.startForFree')} <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                         </button>
                         <button className="px-8 py-4 rounded-full text-lg font-bold text-white border border-white/20 hover:bg-white/10 transition-all flex items-center">
-                            <PlayCircle size={20} className="mr-2" /> Watch Demo
+                            <PlayCircle size={20} className="mr-2" /> {t('auth.watchDemo')}
                         </button>
                     </div>
 

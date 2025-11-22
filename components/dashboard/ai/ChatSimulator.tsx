@@ -1,9 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { AiAssistantConfig, Project } from '../../../types';
-import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
+import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff } from 'lucide-react';
 import { useEditor } from '../../../contexts/EditorContext';
+import { getGoogleGenAI } from '../../../utils/genAiClient';
+import InfoBubble from '../../ui/InfoBubble';
+import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -69,11 +72,90 @@ function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
 // --- Component ---
 
 const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
-    const { hasApiKey, promptForKeySelection } = useEditor();
+    const { hasApiKey, promptForKeySelection, handleApiError } = useEditor();
+    
+    // Get appearance config with fallbacks
+    const appearance = config.appearance || {
+        colors: {
+            primaryColor: config.widgetColor || '#6366f1',
+            headerBackground: config.widgetColor || '#6366f1',
+            userBubbleColor: config.widgetColor || '#6366f1',
+            userTextColor: '#ffffff',
+            botBubbleColor: '#ffffff',
+            botTextColor: '#1f2937',
+            backgroundColor: '#f9fafb',
+            inputBackground: '#f3f4f6'
+        },
+        branding: {
+            logoType: 'none',
+            logoEmoji: '💬',
+            logoUrl: '',
+            botAvatarEmoji: '🤖',
+            showBotAvatar: true
+        },
+        messages: {
+            welcomeMessage: `Hi! I'm ${config.agentName}, how can I help you today?`,
+            inputPlaceholder: 'Type a message...',
+            quickReplies: []
+        }
+    };
+    
+    // Build comprehensive system instruction
+    const buildSystemInstruction = () => {
+        const businessContext = `
+            BUSINESS NAME: ${project.name}
+            
+            BUSINESS PROFILE:
+            ${config.businessProfile}
+            
+            PRODUCTS & SERVICES:
+            ${config.productsServices}
+            
+            POLICIES & CONTACT INFO:
+            ${config.policiesContact}
+            
+            ${config.faqs && config.faqs.length > 0 ? `
+            FREQUENTLY ASKED QUESTIONS:
+            ${config.faqs.map((faq, idx) => `
+            Q${idx + 1}: ${faq.question}
+            A${idx + 1}: ${faq.answer}
+            `).join('\n')}
+            ` : ''}
+            
+            ${config.knowledgeDocuments && config.knowledgeDocuments.length > 0 ? `
+            ADDITIONAL KNOWLEDGE BASE (from uploaded documents):
+            ${config.knowledgeDocuments.map((doc, idx) => `
+            [Document ${idx + 1}: ${doc.name}]
+            ${doc.content.slice(0, 5000)}${doc.content.length > 5000 ? '...(content truncated)' : ''}
+            `).join('\n\n')}
+            ` : ''}
+            
+            ${config.specialInstructions ? `SPECIAL INSTRUCTIONS:\n${config.specialInstructions}` : ''}
+        `;
+
+        return `
+            You are ${config.agentName}, a ${config.tone.toLowerCase()} AI assistant for ${project.brandIdentity.name} (${project.brandIdentity.industry}).
+            Languages: ${config.languages}. Automatically detect the user's language and respond in the same language.
+            
+            YOUR KNOWLEDGE BASE:
+            ${businessContext}
+
+            CRITICAL INSTRUCTIONS:
+            1. DETECT the language the user is speaking (e.g., English, Spanish, French) and reply in that EXACT SAME LANGUAGE
+            2. Answer questions based ONLY on the knowledge base above
+            3. Be ${config.tone.toLowerCase()}, helpful, and conversational
+            4. Keep answers concise unless detailed explanation is needed
+            5. If the answer is not in the knowledge base, politely say you don't have that information
+            6. When answering from FAQs, provide the exact answer but feel free to rephrase naturally
+            7. When citing information from uploaded documents, provide accurate information without mentioning the document source unless asked
+        `;
+    };
     
     // UI State
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([
+        { role: 'model', text: appearance.messages.welcomeMessage }
+    ]);
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
@@ -93,8 +175,8 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     const isConnectedRef = useRef(false);
 
     useEffect(() => {
-        setMessages([{ role: 'model', text: `Hola, soy ${config.agentName}. ¿En qué puedo ayudarte?` }]); 
-    }, [config.agentName]);
+        setMessages([{ role: 'model', text: appearance.messages.welcomeMessage }]); 
+    }, [appearance.messages.welcomeMessage]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,11 +215,10 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             return;
         }
         
-        if (!process.env.API_KEY) return;
-
         setIsConnecting(true);
 
         try {
+            const ai = await getGoogleGenAI();
             // 1. Initialize Audio Contexts
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
@@ -147,10 +228,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
 
-            // 2. Initialize GenAI Client
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            // 3. Connect to Live API
+            // 2. Connect to Live API
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
@@ -158,16 +236,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     speechConfig: {
                         voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } },
                     },
-                    systemInstruction: `
-                        You are ${config.agentName}, an AI assistant for ${project.brandIdentity.name} (${project.brandIdentity.industry}).
-                        Tone: ${config.tone}.
-                        Context: ${config.businessProfile}. Products: ${config.productsServices}.
-                        
-                        CRITICAL INSTRUCTION:
-                        You must DETECT the language the user is speaking (e.g., English, Spanish, French) and reply in that EXACT SAME LANGUAGE.
-                        Do not switch languages unless the user does.
-                        Be concise, helpful, and conversational.
-                    `,
+                    systemInstruction: buildSystemInstruction(),
                 },
                 callbacks: {
                     onopen: async () => {
@@ -268,6 +337,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             sessionRef.current = sessionPromise;
 
         } catch (error) {
+            handleApiError(error);
             console.error("Connection failed:", error);
             setIsConnecting(false);
             alert("Failed to start voice session.");
@@ -321,13 +391,22 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
         if (!isLiveActive) {
             if (hasApiKey === false) { await promptForKeySelection(); return; }
             try {
-                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                 const ai = await getGoogleGenAI();
                  const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
-                    contents: `User said: "${userMsg}". Context: ${config.businessProfile}. Respond as ${config.agentName} in same language.`,
+                    contents: [
+                        ...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+                        { role: 'user', parts: [{ text: userMsg }] }
+                    ],
+                    config: {
+                        systemInstruction: buildSystemInstruction(),
+                    }
                  });
                  setMessages(prev => [...prev, { role: 'model', text: response.text || "..." }]);
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                handleApiError(e);
+                console.error(e);
+            }
         }
     };
 
@@ -341,11 +420,23 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 `}
             >
                 {/* Header */}
-                <div className="p-4 flex justify-between items-center text-white transition-colors duration-500" style={{ backgroundColor: isLiveActive ? '#ef4444' : config.widgetColor }}>
+                <div className="p-4 flex justify-between items-center text-white transition-colors duration-500" style={{ backgroundColor: isLiveActive ? '#ef4444' : appearance.colors.headerBackground }}>
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${isLiveActive ? 'bg-white/20 animate-pulse' : 'bg-white/20'}`}>
-                            {isLiveActive ? <Mic size={20} /> : <MessageSquare size={20} />}
-                        </div>
+                        {isLiveActive ? (
+                            <div className="p-2 rounded-full bg-white/20 animate-pulse">
+                                <Mic size={20} />
+                            </div>
+                        ) : appearance.branding.logoType === 'emoji' ? (
+                            <div className="w-10 h-10 flex items-center justify-center text-2xl">
+                                {appearance.branding.logoEmoji}
+                            </div>
+                        ) : appearance.branding.logoType === 'image' && appearance.branding.logoUrl ? (
+                            <img src={appearance.branding.logoUrl} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                            <div className="p-2 rounded-full bg-white/20">
+                                <MessageSquare size={20} />
+                            </div>
+                        )}
                         <div>
                             <span className="font-bold text-sm block leading-tight">{config.agentName}</span>
                             <span className="text-[10px] opacity-80 block leading-tight">
@@ -361,7 +452,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 relative bg-gray-50 dark:bg-black overflow-hidden">
+                <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
                     
                     {/* Live Mode Visualizer Overlay */}
                     {isLiveActive ? (
@@ -398,27 +489,85 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                         /* Text Chat History (Standard View) */
                         <div className="h-full p-4 overflow-y-auto custom-scrollbar space-y-3">
                              {messages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
+                                    {msg.role === 'model' && appearance.branding.showBotAvatar && (
+                                        <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center text-base mb-1">
+                                            {appearance.branding.botAvatarEmoji}
+                                        </div>
+                                    )}
                                     <div 
                                         className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
                                             msg.role === 'user' 
-                                                ? 'text-white rounded-tr-sm' 
-                                                : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-tl-sm'
+                                                ? 'rounded-tr-sm' 
+                                                : 'rounded-tl-sm'
                                         }`}
-                                        style={msg.role === 'user' ? { backgroundColor: config.widgetColor } : {}}
+                                        style={
+                                            msg.role === 'user' 
+                                                ? { 
+                                                    backgroundColor: appearance.colors.userBubbleColor,
+                                                    color: appearance.colors.userTextColor
+                                                } 
+                                                : { 
+                                                    backgroundColor: appearance.colors.botBubbleColor,
+                                                    color: appearance.colors.botTextColor
+                                                }
+                                        }
                                     >
                                         {msg.text}
                                     </div>
                                 </div>
                             ))}
                             <div ref={messagesEndRef} />
+                            
+                            {/* Quick Replies */}
+                            {appearance.messages.quickReplies && appearance.messages.quickReplies.length > 0 && messages.length <= 2 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                    {appearance.messages.quickReplies.map((qr) => (
+                                        <button
+                                            key={qr.id}
+                                            onClick={async () => {
+                                                const quickReplyText = qr.text;
+                                                setMessages(prev => [...prev, { role: 'user', text: quickReplyText }]);
+                                                
+                                                if (hasApiKey === false) { await promptForKeySelection(); return; }
+                                                try {
+                                                    const ai = await getGoogleGenAI();
+                                                    const response = await ai.models.generateContent({
+                                                        model: 'gemini-2.5-flash',
+                                                        contents: [
+                                                            ...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+                                                            { role: 'user', parts: [{ text: quickReplyText }] }
+                                                        ],
+                                                        config: {
+                                                            systemInstruction: buildSystemInstruction(),
+                                                        }
+                                                    });
+                                                    setMessages(prev => [...prev, { role: 'model', text: response.text || "..." }]);
+                                                } catch (e) {
+                                                    handleApiError(e);
+                                                    console.error(e);
+                                                }
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all hover:shadow-md hover:scale-105"
+                                            style={{
+                                                backgroundColor: appearance.colors.primaryColor + '15',
+                                                color: appearance.colors.primaryColor,
+                                                border: `1px solid ${appearance.colors.primaryColor}40`
+                                            }}
+                                        >
+                                            {qr.emoji && <span>{qr.emoji}</span>}
+                                            <span>{qr.text}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
 
                 {/* Footer / Input Controls */}
                 {!isLiveActive && (
-                    <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2">
+                    <div className="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2" style={{ backgroundColor: appearance.colors.inputBackground }}>
                         {config.enableLiveVoice && (
                             <button 
                                 onClick={startLiveSession}
@@ -433,20 +582,26 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleTextSend()}
-                            placeholder="Type a message..."
-                            className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                            placeholder={appearance.messages.inputPlaceholder}
+                            className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border border-gray-200 dark:border-gray-700"
+                            style={{ 
+                                '--tw-ring-color': appearance.colors.primaryColor + '40'
+                            } as React.CSSProperties}
                         />
                         <button 
                             onClick={handleTextSend}
                             disabled={!input.trim()}
                             className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: config.widgetColor }}
+                            style={{ backgroundColor: appearance.colors.primaryColor }}
                         >
                             <Send size={18} />
                         </button>
                     </div>
                 )}
             </div>
+            
+            {/* Info Bubble */}
+            <InfoBubble bubbleId="chatSimulator" content={INFO_BUBBLE_CONTENT.chatSimulator} position="bottom-left" />
         </div>
     );
 };

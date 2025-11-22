@@ -1,7 +1,11 @@
-import React from 'react';
-import { EditableComponentID, PreviewDevice } from '../../../types';
+import React, { useState } from 'react';
+import { EditableComponentID, PreviewDevice, AnimationConfig } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { initialData } from '../../../data/initialData';
+import PreviewStatesSelector, { PreviewState } from './PreviewStatesSelector';
+import AnimatedPreviewWrapper from './AnimatedPreviewWrapper';
+import { Loader2, AlertCircle, FileQuestion } from 'lucide-react';
+import Header from '../../Header';
 import Hero from '../../Hero';
 import Features from '../../Features';
 import Testimonials from '../../Testimonials';
@@ -31,6 +35,7 @@ const widthClasses: Record<PreviewDevice, string> = {
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice }) => {
     const { componentStyles, customComponents, theme } = useEditor();
+    const [previewState, setPreviewState] = useState<PreviewState>('normal');
     
     const isCustom = !Object.keys(componentStyles).includes(selectedComponentId);
     
@@ -44,6 +49,48 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
 
     const { baseComponent, styles } = componentData;
     const mockContent = initialData.data[baseComponent];
+    const animationConfig = (styles as any)?.animation as AnimationConfig | undefined;
+
+    // Render state overlays
+    const renderStateOverlay = () => {
+        if (previewState === 'normal') return null;
+
+        const stateConfig = {
+            loading: {
+                icon: <Loader2 size={48} className="animate-spin text-blue-400" />,
+                title: 'Loading...',
+                description: 'Please wait while content is being loaded'
+            },
+            error: {
+                icon: <AlertCircle size={48} className="text-red-400" />,
+                title: 'Error',
+                description: 'Something went wrong. Please try again later.'
+            },
+            empty: {
+                icon: <FileQuestion size={48} className="text-yellow-400" />,
+                title: 'No Content',
+                description: 'No data available to display'
+            },
+            success: {
+                icon: <AlertCircle size={48} className="text-green-400" />,
+                title: 'Success!',
+                description: 'Operation completed successfully'
+            }
+        };
+
+        const config = stateConfig[previewState as keyof typeof stateConfig];
+        if (!config) return null;
+
+        return (
+            <div className="absolute inset-0 bg-editor-bg/90 backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="text-center p-8">
+                    {config.icon}
+                    <h3 className="text-xl font-bold text-editor-text-primary mt-4">{config.title}</h3>
+                    <p className="text-sm text-editor-text-secondary mt-2">{config.description}</p>
+                </div>
+            </div>
+        );
+    };
 
     const renderComponent = () => {
         if (!styles || !mockContent) {
@@ -51,6 +98,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         }
 
         switch (baseComponent) {
+            case 'header':
+                return <Header {...mockContent as any} {...styles} isPreviewMode={true} />;
             case 'hero':
                 return <Hero {...mockContent as any} {...styles} borderRadius={theme.buttonBorderRadius} />;
             case 'features':
@@ -89,15 +138,26 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
     return (
         <div className={`w-full h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice]}`}>
             <div className="bg-dark-900 rounded-lg p-4 border border-editor-border">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary mb-4 pl-2">Live Preview</h3>
-                <div className="bg-white dark:bg-transparent rounded-md overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary pl-2">Live Preview</h3>
+                    <PreviewStatesSelector currentState={previewState} onStateChange={setPreviewState} />
+                </div>
+                <div className="bg-white dark:bg-transparent rounded-md overflow-hidden relative min-h-[300px]">
+                    {/* State overlay */}
+                    {renderStateOverlay()}
                     {/* This wrapper mimics the structure of LandingPage.tsx for font variables */}
-                    <div style={{
-                        '--font-header': `var(--font-${theme.fontFamilyHeader})`,
-                        '--font-body': `var(--font-${theme.fontFamilyBody})`,
-                        '--font-button': `var(--font-${theme.fontFamilyButton})`,
-                    } as React.CSSProperties}>
-                        {renderComponent()}
+                    <div 
+                        data-component-preview={selectedComponentId}
+                        className="relative"
+                        style={{
+                            '--font-header': `var(--font-${theme.fontFamilyHeader})`,
+                            '--font-body': `var(--font-${theme.fontFamilyBody})`,
+                            '--font-button': `var(--font-${theme.fontFamilyButton})`,
+                        } as React.CSSProperties}
+                    >
+                        <AnimatedPreviewWrapper animation={animationConfig}>
+                            {renderComponent()}
+                        </AnimatedPreviewWrapper>
                     </div>
                 </div>
             </div>

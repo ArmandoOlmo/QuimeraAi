@@ -113,9 +113,9 @@ export const initialProjects: Project[] = [
       pricing: {
           title: 'Tasting Menus', description: 'Curated experiences for the adventurous palate.', paddingY: 'lg', paddingX: 'md',
           tiers: [
-              { name: 'The Classic', price: '$85', frequency: '/person', description: '3 Courses + Wine Pairing', features: ['Appetizer', 'Main Course', 'Dessert', 'House Wine'], buttonText: 'Book Now', featured: false },
-              { name: 'The Chef\'s Table', price: '$150', frequency: '/person', description: '7 Courses + Premium Wine', features: ['Amuse-bouche', 'Fish & Meat', 'Cheese Platter', 'Reserve Wine'], buttonText: 'Book Now', featured: true },
-              { name: 'Vegetarian', price: '$75', frequency: '/person', description: 'Plant-based excellence', features: ['Seasonal Salad', 'Vegetable Risotto', 'Fruit Sorbet', 'Herbal Tea'], buttonText: 'Book Now', featured: false }
+              { name: 'The Classic', price: '$85', frequency: '/person', description: '3 Courses + Wine Pairing', features: ['Appetizer', 'Main Course', 'Dessert', 'House Wine'], buttonText: 'Book Now', buttonLink: '#contact', featured: false },
+              { name: 'The Chef\'s Table', price: '$150', frequency: '/person', description: '7 Courses + Premium Wine', features: ['Amuse-bouche', 'Fish & Meat', 'Cheese Platter', 'Reserve Wine'], buttonText: 'Book Now', buttonLink: '#contact', featured: true },
+              { name: 'Vegetarian', price: '$75', frequency: '/person', description: 'Plant-based excellence', features: ['Seasonal Salad', 'Vegetable Risotto', 'Fruit Sorbet', 'Herbal Tea'], buttonText: 'Book Now', buttonLink: '#contact', featured: false }
           ],
           colors: { background: '#18100A', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD', buttonBackground: '#D4A373', buttonText: '#000000' }
       },
@@ -393,9 +393,9 @@ export const initialProjects: Project[] = [
       pricing: {
         title: 'Membership Options', description: 'No contracts. Just results.', paddingY: 'lg', paddingX: 'md',
         tiers: [
-            { name: 'Day Pass', price: '$15', frequency: '/day', description: 'Access for one day.', features: ['Full Gym Access', 'Locker Room'], buttonText: 'Buy Pass', featured: false },
-            { name: 'Unlimited', price: '$59', frequency: '/month', description: 'Total access, anytime.', features: ['24/7 Access', 'All Classes', 'Guest Privileges', 'Free Saunas'], buttonText: 'Join Now', featured: true },
-            { name: 'Personal Training', price: '$199', frequency: '/month', description: 'Includes 4 sessions.', features: ['Unlimited Membership', '4 PT Sessions', 'Nutrition Plan'], buttonText: 'Get Started', featured: false },
+            { name: 'Day Pass', price: '$15', frequency: '/day', description: 'Access for one day.', features: ['Full Gym Access', 'Locker Room'], buttonText: 'Buy Pass', buttonLink: '#contact', featured: false },
+            { name: 'Unlimited', price: '$59', frequency: '/month', description: 'Total access, anytime.', features: ['24/7 Access', 'All Classes', 'Guest Privileges', 'Free Saunas'], buttonText: 'Join Now', buttonLink: '#contact', featured: true },
+            { name: 'Personal Training', price: '$199', frequency: '/month', description: 'Includes 4 sessions.', features: ['Unlimited Membership', '4 PT Sessions', 'Nutrition Plan'], buttonText: 'Get Started', buttonLink: '#contact', featured: false },
         ],
         colors: { background: '#000000', accent: '#ccff00', borderColor: '#333', text: '#ffffff', heading: '#ffffff' }
       },
@@ -712,9 +712,9 @@ export const initialProjects: Project[] = [
       pricing: {
           title: 'Lease Specials', description: 'Limited time offers on select models.', paddingY: 'lg', paddingX: 'md',
           tiers: [
-              { name: 'Sedan Special', price: '$299', frequency: '/mo', description: '36 months, $2k down', features: ['Maintenance Included', 'Roadside Assistance'], buttonText: 'View Details', featured: false },
-              { name: 'SUV Special', price: '$459', frequency: '/mo', description: '36 months, $3k down', features: ['All-Wheel Drive', 'Premium Sound'], buttonText: 'View Details', featured: true },
-              { name: 'Sports Car', price: '$699', frequency: '/mo', description: '36 months, $5k down', features: ['Performance Package', 'Track Day Invite'], buttonText: 'View Details', featured: false }
+              { name: 'Sedan Special', price: '$299', frequency: '/mo', description: '36 months, $2k down', features: ['Maintenance Included', 'Roadside Assistance'], buttonText: 'View Details', buttonLink: '#contact', featured: false },
+              { name: 'SUV Special', price: '$459', frequency: '/mo', description: '36 months, $3k down', features: ['All-Wheel Drive', 'Premium Sound'], buttonText: 'View Details', buttonLink: '#contact', featured: true },
+              { name: 'Sports Car', price: '$699', frequency: '/mo', description: '36 months, $5k down', features: ['Performance Package', 'Track Day Invite'], buttonText: 'View Details', buttonLink: '#contact', featured: false }
           ],
           colors: { background: '#1f2937', accent: '#ef4444', borderColor: '#374151', text: '#d1d5db', heading: '#ffffff', buttonBackground: '#ef4444', buttonText: '#ffffff' }
       },

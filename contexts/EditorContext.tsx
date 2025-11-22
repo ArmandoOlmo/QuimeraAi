@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
-import { PageData, ThemeData, PageSection, PreviewDevice, View, Project, ThemeMode, UserDocument, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, Domain } from '../types';
+import { PageData, ThemeData, PageSection, PreviewDevice, View, Project, ThemeMode, UserDocument, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
+import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialProjects } from '../data/templates';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -29,7 +30,9 @@ import {
     serverTimestamp,
     onSnapshot
 } from '../firebase';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { Modality } from '@google/genai';
+import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey } from '../utils/genAiClient';
+import { deploymentService } from '../utils/deploymentService';
 
 
 // Helper to generate HTML. This is a simplification.
@@ -83,6 +86,7 @@ interface EditorContextType {
     activeProjectId: string | null;
     activeProject: Project | null;
     projects: Project[];
+    isLoadingProjects: boolean;
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean) => void;
     data: PageData | null;
     setData: React.Dispatch<React.SetStateAction<PageData | null>>;
@@ -137,8 +141,25 @@ interface EditorContextType {
     setAdminView: React.Dispatch<React.SetStateAction<AdminView>>;
     allUsers: UserDocument[];
     fetchAllUsers: () => Promise<void>;
-    updateUserRole: (userId: string, role: 'user' | 'superadmin') => Promise<void>;
+    updateUserRole: (userId: string, role: UserRole) => Promise<void>;
     deleteUserRecord: (userId: string) => Promise<void>;
+    
+    // Sistema de permisos
+    userPermissions: RolePermissions;
+    canPerform: (permission: keyof RolePermissions) => boolean;
+    isUserOwner: boolean;
+    
+    // Gestión de administradores
+    createAdmin: (email: string, name: string, role: UserRole) => Promise<void>;
+    
+    // Tenant Management
+    tenants: Tenant[];
+    fetchTenants: () => Promise<void>;
+    createTenant: (data: { type: 'individual' | 'agency'; name: string; email: string; plan: string; companyName?: string }) => Promise<string>;
+    updateTenant: (tenantId: string, data: Partial<Tenant>) => Promise<void>;
+    deleteTenant: (tenantId: string) => Promise<void>;
+    updateTenantStatus: (tenantId: string, status: TenantStatus) => Promise<void>;
+    updateTenantLimits: (tenantId: string, limits: Partial<TenantLimits>) => Promise<void>;
     prompts: LLMPrompt[];
     getPrompt: (name: string) => LLMPrompt | undefined;
     fetchAllPrompts: () => Promise<void>;
@@ -159,8 +180,19 @@ interface EditorContextType {
     componentStyles: ComponentStyles;
     customComponents: CustomComponent[];
     updateComponentStyle: (componentId: string, newStyles: any, isCustom: boolean) => Promise<void>;
-    saveComponent: (componentId: string) => Promise<void>;
+    saveComponent: (componentId: string, changeDescription?: string) => Promise<void>;
     createNewCustomComponent: (name: string, baseComponent: EditableComponentID) => Promise<CustomComponent>;
+    deleteCustomComponent: (componentId: string) => Promise<void>;
+    duplicateComponent: (componentId: string) => Promise<CustomComponent>;
+    updateComponentVariants: (componentId: string, variants: ComponentVariant[], activeVariant?: string) => Promise<void>;
+    exportComponent: (componentId: string) => string;
+    importComponent: (jsonString: string) => Promise<CustomComponent>;
+    revertToVersion: (componentId: string, versionNumber: number) => Promise<void>;
+    trackComponentUsage: (projectId: string, componentIds: string[]) => Promise<void>;
+
+    // Design Tokens
+    designTokens: DesignTokens | null;
+    updateDesignTokens: (tokens: DesignTokens) => Promise<void>;
 
     // Global Component Status
     componentStatus: Record<PageSection, boolean>;
@@ -195,6 +227,18 @@ interface EditorContextType {
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
+    
+    // Lead Activities
+    leadActivities: LeadActivity[];
+    addLeadActivity: (leadId: string, activity: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => Promise<void>;
+    getLeadActivities: (leadId: string) => LeadActivity[];
+    
+    // Lead Tasks
+    leadTasks: LeadTask[];
+    addLeadTask: (leadId: string, task: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => Promise<void>;
+    updateLeadTask: (taskId: string, data: Partial<LeadTask>) => Promise<void>;
+    deleteLeadTask: (taskId: string) => Promise<void>;
+    getLeadTasks: (leadId: string) => LeadTask[];
 
     // Domain Management
     domains: Domain[];
@@ -202,11 +246,22 @@ interface EditorContextType {
     updateDomain: (id: string, data: Partial<Domain>) => Promise<void>;
     deleteDomain: (id: string) => Promise<void>;
     verifyDomain: (id: string) => Promise<boolean>;
+    deployDomain: (domainId: string, provider?: 'vercel' | 'cloudflare' | 'netlify') => Promise<boolean>;
+    getDomainDeploymentLogs: (domainId: string) => DeploymentLog[];
 
     // API Key Management
     hasApiKey: boolean | null;
     promptForKeySelection: () => Promise<void>;
     handleApiError: (error: any) => void;
+    
+    // Usage & Billing
+    usage: { used: number; limit: number; plan: string } | null;
+    isLoadingUsage: boolean;
+
+    // SEO Configuration
+    seoConfig: SEOConfig | null;
+    setSeoConfig: React.Dispatch<React.SetStateAction<SEOConfig | null>>;
+    updateSeoConfig: (updates: Partial<SEOConfig>) => Promise<void>;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -243,6 +298,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Project state
     const [projects, setProjects] = useState<Project[]>(initialProjects);
+    const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
@@ -269,6 +325,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         policiesContact: '',
         specialInstructions: '',
         faqs: [],
+        knowledgeDocuments: [],
         widgetColor: '#4f46e5',
         isActive: true,
         leadCaptureEnabled: true,
@@ -307,6 +364,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Global component status
     const [componentStatus, setComponentStatus] = useState<Record<PageSection, boolean>>(defaultComponentStatus);
 
+    // Design Tokens
+    const [designTokens, setDesignTokens] = useState<DesignTokens | null>(null);
+
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
     const [isLoadingCMS, setIsLoadingCMS] = useState(false);
@@ -314,6 +374,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Leads State
     const [leads, setLeads] = useState<Lead[]>([]);
     const [isLoadingLeads, setIsLoadingLeads] = useState(false);
+    const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
+    const [leadTasks, setLeadTasks] = useState<LeadTask[]>([]);
 
     // Theme mode
     const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
@@ -329,6 +391,11 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Super Admin State
     const [adminView, setAdminView] = useState<AdminView>('main');
     const [allUsers, setAllUsers] = useState<UserDocument[]>([]);
+    const [tenants, setTenants] = useState<Tenant[]>([]);
+    
+    // Sistema de permisos
+    const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
+    const [isUserOwner, setIsUserOwner] = useState(false);
     const [prompts, setPrompts] = useState<LLMPrompt[]>([]);
 
     // Component Studio State
@@ -345,11 +412,30 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         audience: '',
         offerings: '',
         tone: 'Professional',
-        goal: 'Generate Leads'
+        goal: 'Generate Leads',
+        aesthetic: 'Minimalist',
+        colorVibe: 'Trustworthy Blue',
+        // Nuevos campos opcionales
+        companyHistory: undefined,
+        uniqueValueProposition: undefined,
+        coreValues: undefined,
+        yearsInBusiness: undefined,
+        products: undefined,
+        contactInfo: undefined,
+        brandGuidelines: undefined,
+        testimonials: undefined,
+        designPlan: undefined
     });
 
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
+    
+    // SEO Configuration State
+    const [seoConfig, setSeoConfig] = useState<SEOConfig | null>(null);
+    
+    // Usage & Billing State
+    const [usage, setUsage] = useState<{ used: number; limit: number; plan: string } | null>(null);
+    const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
     // API Key State
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -358,11 +444,29 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Effects
     useEffect(() => {
         const checkApiKey = async () => {
-            if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
-                const keyStatus = await (window as any).aistudio.hasSelectedApiKey();
-                setHasApiKey(keyStatus);
-            } else {
-                setHasApiKey(true); // Fallback for environments where aistudio is not available
+            try {
+                if (process.env.API_KEY) {
+                    setCachedApiKey(process.env.API_KEY);
+                    setHasApiKey(true);
+                    return;
+                }
+
+                const syncedKey = await syncApiKeyFromAiStudio();
+                if (syncedKey) {
+                    setHasApiKey(true);
+                    return;
+                }
+
+                const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
+                if (typeof aiStudio?.hasSelectedApiKey === 'function') {
+                    const keyStatus = await aiStudio.hasSelectedApiKey();
+                    setHasApiKey(keyStatus);
+                } else {
+                    setHasApiKey(false);
+                }
+            } catch (error) {
+                console.warn('Error while checking API key', error);
+                setHasApiKey(Boolean(process.env.API_KEY));
             }
         };
         
@@ -379,23 +483,36 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 if (assistantDoc.exists()) {
                     setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
                 }
+
+                const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
+                if (tokensDoc.exists()) {
+                    setDesignTokens(tokensDoc.data() as DesignTokens);
+                }
             } catch (error) {
                 console.warn("Error fetching global settings:", error);
             }
         };
 
-        const fetchComponentDefaults = async () => {
+        const setupComponentDefaultsListener = () => {
             try {
-                const querySnapshot = await getDocs(collection(db, "component_defaults"));
-                const loadedStyles: any = {};
-                querySnapshot.forEach((doc) => {
-                    loadedStyles[doc.id] = doc.data().styles;
+                // Real-time listener for component defaults
+                const componentDefaultsCol = collection(db, "component_defaults");
+                const unsubscribe = onSnapshot(componentDefaultsCol, (snapshot) => {
+                    const loadedStyles: any = {};
+                    snapshot.forEach((doc) => {
+                        loadedStyles[doc.id] = doc.data().styles;
+                    });
+                    if (Object.keys(loadedStyles).length > 0) {
+                        setComponentStyles(prev => ({ ...prev, ...loadedStyles }));
+                        console.log("✅ Component defaults updated in real-time");
+                    }
+                }, (error) => {
+                    console.error("Error in component defaults listener:", error);
                 });
-                if (Object.keys(loadedStyles).length > 0) {
-                    setComponentStyles(prev => ({ ...prev, ...loadedStyles }));
-                }
+                return unsubscribe;
             } catch (e) {
-                console.error("Error loading component defaults:", e);
+                console.error("Error setting up component defaults listener:", e);
+                return () => {};
             }
         };
 
@@ -428,6 +545,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         };
 
         const loadUserProjects = async (userId: string) => {
+            setIsLoadingProjects(true);
             try {
                 const projectsCol = collection(db, 'users', userId, 'projects');
                 const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
@@ -438,28 +556,43 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             } catch (error) {
                 console.error("Error loading user projects:", error);
                 setProjects(initialProjects);
+            } finally {
+                setIsLoadingProjects(false);
             }
         };
 
-        const fetchCustomComponents = async () => {
+        const setupCustomComponentsListener = () => {
             try {
+                // Real-time listener for custom components
                 const customComponentsCol = collection(db, 'customComponents');
                 const q = query(customComponentsCol, orderBy('createdAt', 'desc'));
-                const snapshot = await getDocs(q);
-                const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
-                setCustomComponents(components);
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
+                    setCustomComponents(components);
+                    console.log("✅ Custom components updated in real-time");
+                }, (error) => {
+                    console.error("Error in custom components listener:", error);
+                });
+                return unsubscribe;
             } catch (error) {
-                console.error("Error fetching custom components:", error);
+                console.error("Error setting up custom components listener:", error);
+                return () => {};
             }
         };
         
+        // Store cleanup functions for real-time listeners
+        let unsubscribeComponentDefaults: (() => void) | null = null;
+        let unsubscribeCustomComponents: (() => void) | null = null;
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             try {
                 setUser(currentUser);
                 if (currentUser) {
                     // Fetch global configs only when authenticated to avoid permission errors
                     fetchGlobalSettings();
-                    fetchComponentDefaults();
+                    
+                    // Setup real-time listeners for component defaults
+                    unsubscribeComponentDefaults = setupComponentDefaultsListener();
 
                     const userDocRef = doc(db, 'users', currentUser.uid);
                     
@@ -487,12 +620,13 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                         };
                     }
                     
-                    if (currentUser.email === 'armandoolmomiranda@gmail.com' && finalUserDoc.role !== 'superadmin') {
+                    // Auto-asignar rol de owner al email del creador
+                    if (isOwner(currentUser.email!) && finalUserDoc.role !== 'owner') {
                          try {
-                             finalUserDoc.role = 'superadmin';
-                             await updateDoc(userDocRef, { role: 'superadmin' });
+                             finalUserDoc.role = 'owner';
+                             await updateDoc(userDocRef, { role: 'owner' });
                          } catch (e) {
-                             console.warn("Failed to auto-promote superadmin (permission error):", e);
+                             console.warn("Failed to auto-promote owner (permission error):", e);
                          }
                     }
 
@@ -503,13 +637,25 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     fetchGlobalFiles();
                     fetchAllPrompts(); // Fetch prompts for all users to ensure dynamic system behavior
 
-                    if (finalUserDoc.role === 'superadmin') {
-                        fetchCustomComponents();
+                    if (['owner', 'superadmin'].includes(finalUserDoc.role || '')) {
+                        // Setup real-time listener for custom components
+                        unsubscribeCustomComponents = setupCustomComponentsListener();
                     }
 
                 } else {
+                    // Cleanup listeners when user logs out
+                    if (unsubscribeComponentDefaults) {
+                        unsubscribeComponentDefaults();
+                        unsubscribeComponentDefaults = null;
+                    }
+                    if (unsubscribeCustomComponents) {
+                        unsubscribeCustomComponents();
+                        unsubscribeCustomComponents = null;
+                    }
+                    
                     setUserDocument(null);
                     setProjects(initialProjects);
+                    setIsLoadingProjects(false);
                     setFiles([]);
                     setDomains([]);
                     setCustomComponents([]);
@@ -522,8 +668,30 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 setLoadingAuth(false);
             }
         });
-        return () => unsubscribe();
+        
+        // Cleanup function to unsubscribe from all listeners
+        return () => {
+            unsubscribe();
+            if (unsubscribeComponentDefaults) {
+                unsubscribeComponentDefaults();
+            }
+            if (unsubscribeCustomComponents) {
+                unsubscribeCustomComponents();
+            }
+        };
     }, []);
+
+    // Actualizar permisos cuando cambia userDocument
+    useEffect(() => {
+        if (userDocument) {
+            const effectiveRole = determineRole(userDocument.email, userDocument.role || 'user');
+            setUserPermissions(getPermissions(effectiveRole));
+            setIsUserOwner(isOwner(userDocument.email));
+        } else {
+            setUserPermissions(getPermissions('user'));
+            setIsUserOwner(false);
+        }
+    }, [userDocument]);
 
     // CMS Real-time Subscription
     useEffect(() => {
@@ -595,6 +763,124 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             if (unsubscribe) unsubscribe();
         };
     }, [user]);
+    
+    // Usage & Billing Real-time Subscription
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined;
+
+        if (user) {
+            setIsLoadingUsage(true);
+            try {
+                const usageRef = doc(db, 'users', user.uid, 'usage', 'current');
+                
+                unsubscribe = onSnapshot(usageRef, 
+                    (snapshot) => {
+                        if (snapshot.exists()) {
+                            const usageData = snapshot.data();
+                            setUsage({
+                                used: usageData.used || 0,
+                                limit: usageData.limit || 1000,
+                                plan: usageData.plan || 'Pro'
+                            });
+                        } else {
+                            // Set default usage if document doesn't exist
+                            setUsage({
+                                used: 0,
+                                limit: 1000,
+                                plan: 'Pro'
+                            });
+                        }
+                        setIsLoadingUsage(false);
+                    },
+                    (error) => {
+                        console.error("Usage Snapshot Error:", error);
+                        // Set default on error
+                        setUsage({
+                            used: 0,
+                            limit: 1000,
+                            plan: 'Pro'
+                        });
+                        setIsLoadingUsage(false);
+                    }
+                );
+            } catch (e) {
+                console.error("Error setting up Usage subscription:", e);
+                setUsage({
+                    used: 0,
+                    limit: 1000,
+                    plan: 'Pro'
+                });
+                setIsLoadingUsage(false);
+            }
+        } else {
+            setUsage(null);
+            setIsLoadingUsage(false);
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [user]);
+    
+    // Lead Activities Real-time Subscription
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined;
+
+        if (user) {
+            try {
+                const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+                const q = query(activitiesCol, orderBy('createdAt', 'desc'));
+                
+                unsubscribe = onSnapshot(q, 
+                    (snapshot) => {
+                        const activitiesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadActivity));
+                        setLeadActivities(activitiesData);
+                    },
+                    (error) => {
+                        console.error("Lead Activities Snapshot Error:", error);
+                    }
+                );
+            } catch (e) {
+                console.error("Error setting up Lead Activities subscription:", e);
+            }
+        } else {
+            setLeadActivities([]);
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [user]);
+    
+    // Lead Tasks Real-time Subscription
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined;
+
+        if (user) {
+            try {
+                const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+                const q = query(tasksCol, orderBy('createdAt', 'desc'));
+                
+                unsubscribe = onSnapshot(q, 
+                    (snapshot) => {
+                        const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadTask));
+                        setLeadTasks(tasksData);
+                    },
+                    (error) => {
+                        console.error("Lead Tasks Snapshot Error:", error);
+                    }
+                );
+            } catch (e) {
+                console.error("Error setting up Lead Tasks subscription:", e);
+            }
+        } else {
+            setLeadTasks([]);
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [user]);
 
 
     useEffect(() => {
@@ -626,10 +912,34 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             // Also ensure that if data.chatbot is missing (old projects), we provide default
             const loadedData = projectToLoad.data;
             const defaultChatbot = initialData.data.chatbot;
+            const defaultTestimonials = initialData.data.testimonials;
+            
+            // Merge testimonials with defaults for new fields
+            const mergedTestimonials = loadedData.testimonials ? {
+                ...defaultTestimonials,
+                ...loadedData.testimonials,
+                colors: {
+                    ...defaultTestimonials.colors,
+                    ...loadedData.testimonials.colors
+                }
+            } : defaultTestimonials;
+            
+            // Merge CTA with defaults for new fields
+            const defaultCta = initialData.data.cta;
+            const mergedCta = loadedData.cta ? {
+                ...defaultCta,
+                ...loadedData.cta,
+                colors: {
+                    ...defaultCta.colors,
+                    ...loadedData.cta.colors
+                }
+            } : defaultCta;
             
             const mergedData = {
                  ...loadedData,
-                 chatbot: loadedData.chatbot || defaultChatbot
+                 chatbot: loadedData.chatbot || defaultChatbot,
+                 testimonials: mergedTestimonials,
+                 cta: mergedCta
             };
             
             setData(mergedData);
@@ -654,9 +964,45 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setSectionVisibility(projectToLoad.sectionVisibility);
             setMenus(Array.isArray(projectToLoad.menus) ? projectToLoad.menus : [{ id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }]);
             
-            // Load AI Config if exists
+            // Load AI Config if exists, otherwise use defaults
             if (projectToLoad.aiAssistantConfig) {
                 setAiAssistantConfig(projectToLoad.aiAssistantConfig);
+            } else {
+                // Reset to defaults for projects without AI config
+                setAiAssistantConfig({
+                    agentName: 'Quimera Bot',
+                    tone: 'Professional',
+                    languages: 'English, Spanish',
+                    businessProfile: '',
+                    productsServices: '',
+                    policiesContact: '',
+                    specialInstructions: '',
+                    faqs: [],
+                    knowledgeDocuments: [],
+                    widgetColor: '#4f46e5',
+                    isActive: true,
+                    leadCaptureEnabled: true,
+                    enableLiveVoice: false,
+                    voiceName: 'Zephyr'
+                });
+            }
+
+            // Load SEO Config if exists, otherwise use defaults
+            if (projectToLoad.seoConfig) {
+                setSeoConfig(projectToLoad.seoConfig);
+            } else {
+                // Set default SEO config for projects without one
+                setSeoConfig({
+                    title: projectToLoad.name || 'My Website',
+                    description: loadedData.hero?.subheadline || 'Powered by Quimera.ai',
+                    keywords: [],
+                    language: 'es',
+                    ogType: 'website',
+                    twitterCard: 'summary_large_image',
+                    schemaType: 'WebSite',
+                    robots: 'index, follow',
+                    aiCrawlable: true,
+                } as SEOConfig);
             }
 
             if (navigateToEditor) {
@@ -814,12 +1160,26 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const template = projects.find(p => p.id === templateId);
         if (template) {
             const { id, ...templateData } = template;
+            
+            // Filter disabled components
+            const validComponentOrder = templateData.componentOrder.filter(
+                (comp: PageSection) => componentStatus[comp] !== false
+            );
+            
+            const validSectionVisibility = Object.keys(templateData.sectionVisibility).reduce((acc, key) => {
+                const section = key as PageSection;
+                acc[section] = templateData.sectionVisibility[section] && componentStatus[section];
+                return acc;
+            }, {} as Record<PageSection, boolean>);
+            
             const newProjectData = {
                 ...templateData,
                 name: `${template.name} Copy`,
                 status: 'Draft' as 'Draft',
                 lastUpdated: new Date().toISOString(),
                 sourceTemplateId: template.id,
+                componentOrder: validComponentOrder,
+                sectionVisibility: validSectionVisibility,
             };
 
             try {
@@ -842,8 +1202,19 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
     
-    const addNewProject = async (project: Project) => {
-        if (!user) return;
+    const addNewProject = async (project: Project): Promise<string> => {
+        console.log("🚀 [addNewProject] Starting...", {
+            projectId: project.id,
+            projectName: project.name,
+            hasUser: !!user,
+            userId: user?.uid
+        });
+
+        if (!user) {
+            const error = new Error("❌ User not authenticated - cannot save project");
+            console.error(error.message);
+            throw error;
+        }
 
         const { id, ...projectData } = project;
         const dataToSave = {
@@ -852,21 +1223,52 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         };
 
         try {
+            console.log("💾 [addNewProject] Saving to Firebase...", {
+                userId: user.uid,
+                projectName: project.name
+            });
+
             const projectsCol = collection(db, 'users', user.uid, 'projects');
             const docRef = await addDoc(projectsCol, dataToSave);
 
+            console.log("✅ [addNewProject] Saved successfully!", {
+                docId: docRef.id,
+                projectName: project.name
+            });
+
             const newProjectWithId: Project = { ...dataToSave, id: docRef.id };
 
-            setProjects(prev => [newProjectWithId, ...prev]);
+            setProjects(prev => {
+                console.log("📋 [addNewProject] Updating projects state...", {
+                    previousCount: prev.length,
+                    newCount: prev.length + 1
+                });
+                return [newProjectWithId, ...prev];
+            });
+
+            console.log("🔄 [addNewProject] Loading project into editor...");
             loadProject(newProjectWithId.id);
 
             // Trigger Image Auto-Generation for Wizard-created projects
             if (newProjectWithId.imagePrompts && Object.keys(newProjectWithId.imagePrompts).length > 0) {
+                console.log("🖼️ [addNewProject] Starting image generation...", {
+                    promptCount: Object.keys(newProjectWithId.imagePrompts).length
+                });
                 hydrateProjectImages(newProjectWithId);
             }
 
+            console.log("🎉 [addNewProject] Complete! Project ID:", docRef.id);
+            return docRef.id;
+
         } catch (error) {
-            console.error("Error adding new project:", error);
+            console.error("❌ [addNewProject] CRITICAL ERROR:", error);
+            console.error("❌ [addNewProject] Error details:", {
+                message: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : 'No stack trace',
+                userId: user.uid,
+                projectName: project.name
+            });
+            throw error; // Re-throw to let caller handle it
         }
     };
 
@@ -1054,14 +1456,17 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const handleApiError = (error: any) => {
         if (error?.message?.includes('API key not valid') || error?.message?.includes('Requested entity was not found')) {
             console.warn('API key error detected. Resetting key state.');
+            setCachedApiKey(null);
             setHasApiKey(false);
         }
     };
     
     const promptForKeySelection = async () => {
-        if (typeof (window as any).aistudio?.openSelectKey === 'function') {
-            await (window as any).aistudio.openSelectKey();
-            setHasApiKey(true);
+        const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
+        if (typeof aiStudio?.openSelectKey === 'function') {
+            await aiStudio.openSelectKey();
+            const key = await syncApiKeyFromAiStudio();
+            setHasApiKey(Boolean(key));
         }
     };
 
@@ -1086,7 +1491,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
             const populatedPrompt = summaryPrompt.template.replace('{{fileContent}}', fileContent);
             
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const ai = await getGoogleGenAI();
             const response = await ai.models.generateContent({ model: summaryPrompt.model, contents: populatedPrompt });
             
             const summary = response.text.trim();
@@ -1126,7 +1531,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             throw new Error("Please select an API key.");
         }
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+        const ai = await getGoogleGenAI();
         try {
              const enhancerPrompt = getPrompt('image-prompt-enhancer');
              let model = 'gemini-3-pro-preview';
@@ -1164,7 +1569,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
              throw new Error("Unauthorized: Only admins can generate global images.");
         }
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+        const ai = await getGoogleGenAI();
         
         const galleryPromptConfig = getPrompt('image-generation-gallery');
         let modelName = 'imagen-4.0-generate-001';
@@ -1355,6 +1760,22 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
+    // SEO Configuration Logic
+    const updateSeoConfig = async (updates: Partial<SEOConfig>) => {
+        if (!activeProjectId || !user) return;
+        
+        const newConfig = { ...seoConfig, ...updates } as SEOConfig;
+        setSeoConfig(newConfig);
+        
+        try {
+            const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+            await updateDoc(projectDocRef, { seoConfig: newConfig });
+            console.log('SEO configuration updated successfully');
+        } catch (error) {
+            console.error('Error updating SEO config:', error);
+        }
+    };
+
     // Leads & CRM Logic
     const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
         if (!user) return;
@@ -1393,9 +1814,97 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         try {
             const leadRef = doc(db, 'users', user.uid, 'leads', leadId);
             await deleteDoc(leadRef);
+            
+            // Also delete all activities and tasks associated with this lead
+            const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+            const activitiesSnapshot = await getDocs(query(activitiesCol));
+            const deleteActivitiesPromises = activitiesSnapshot.docs
+                .filter(doc => doc.data().leadId === leadId)
+                .map(doc => deleteDoc(doc.ref));
+            
+            const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+            const tasksSnapshot = await getDocs(query(tasksCol));
+            const deleteTasksPromises = tasksSnapshot.docs
+                .filter(doc => doc.data().leadId === leadId)
+                .map(doc => deleteDoc(doc.ref));
+            
+            await Promise.all([...deleteActivitiesPromises, ...deleteTasksPromises]);
         } catch (error) {
              console.error("Error deleting lead:", error);
         }
+    };
+    
+    // Lead Activities
+    const addLeadActivity = async (leadId: string, activityData: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => {
+        if (!user) return;
+        try {
+            const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+            const now = serverTimestamp();
+            await addDoc(activitiesCol, {
+                ...activityData,
+                leadId,
+                createdAt: now,
+                createdBy: user.uid
+            });
+            // Will be updated via listener
+        } catch (error) {
+            console.error("Error adding lead activity:", error);
+        }
+    };
+    
+    const getLeadActivities = (leadId: string): LeadActivity[] => {
+        return leadActivities
+            .filter(activity => activity.leadId === leadId)
+            .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+    };
+    
+    // Lead Tasks
+    const addLeadTask = async (leadId: string, taskData: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => {
+        if (!user) return;
+        try {
+            const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+            const now = serverTimestamp();
+            await addDoc(tasksCol, {
+                ...taskData,
+                leadId,
+                createdAt: now
+            });
+            // Will be updated via listener
+        } catch (error) {
+            console.error("Error adding lead task:", error);
+        }
+    };
+    
+    const updateLeadTask = async (taskId: string, data: Partial<LeadTask>) => {
+        if (!user) return;
+        try {
+            const taskRef = doc(db, 'users', user.uid, 'leadTasks', taskId);
+            await updateDoc(taskRef, data);
+        } catch (error) {
+            console.error("Error updating lead task:", error);
+        }
+    };
+    
+    const deleteLeadTask = async (taskId: string) => {
+        if (!user) return;
+        try {
+            const taskRef = doc(db, 'users', user.uid, 'leadTasks', taskId);
+            await deleteDoc(taskRef);
+        } catch (error) {
+            console.error("Error deleting lead task:", error);
+        }
+    };
+    
+    const getLeadTasks = (leadId: string): LeadTask[] => {
+        return leadTasks
+            .filter(task => task.leadId === leadId)
+            .sort((a, b) => {
+                // Sort by completed status, then by due date
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                return a.dueDate.seconds - b.dueDate.seconds;
+            });
     };
     
     // Domain Logic
@@ -1435,16 +1944,132 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     const verifyDomain = async (id: string): Promise<boolean> => {
         if (!user) return false;
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const success = Math.random() > 0.3; // Simulate success chance
         
-        if (success) {
-            updateDomain(id, { status: 'active' });
-        } else {
-            updateDomain(id, { status: 'error' });
+        const domain = domains.find(d => d.id === id);
+        if (!domain) return false;
+        
+        try {
+            // Use deployment service for real DNS verification
+            const result = await deploymentService.verifyDNS(domain.name);
+            
+            if (result.verified) {
+                await updateDomain(id, { 
+                    status: 'active',
+                    dnsRecords: result.records
+                });
+                return true;
+            } else {
+                await updateDomain(id, { 
+                    status: 'pending',
+                    dnsRecords: result.records
+                });
+                return false;
+            }
+        } catch (error) {
+            console.error('Domain verification error:', error);
+            await updateDomain(id, { status: 'error' });
+            return false;
         }
-        return success;
+    };
+
+    const deployDomain = async (
+        domainId: string, 
+        provider: 'vercel' | 'cloudflare' | 'netlify' = 'vercel'
+    ): Promise<boolean> => {
+        if (!user) return false;
+        
+        const domain = domains.find(d => d.id === domainId);
+        if (!domain || !domain.projectId) {
+            console.error('Domain or project not found');
+            return false;
+        }
+        
+        const project = projects.find(p => p.id === domain.projectId);
+        if (!project) {
+            console.error('Project not found');
+            return false;
+        }
+        
+        try {
+            // Update status to deploying
+            await updateDomain(domainId, { 
+                status: 'deploying',
+                deployment: {
+                    provider,
+                    status: 'deploying'
+                },
+                deploymentLogs: [
+                    ...(domain.deploymentLogs || []),
+                    deploymentService.createDeploymentLog(
+                        'started',
+                        `Starting deployment to ${provider}...`,
+                        `Project: ${project.name}`
+                    )
+                ]
+            });
+            
+            // Perform actual deployment
+            const result = await deploymentService.deployProject(project, domain, provider);
+            
+            if (result.success) {
+                // Update with success
+                await updateDomain(domainId, {
+                    status: 'deployed',
+                    deployment: {
+                        provider,
+                        deploymentUrl: result.deploymentUrl,
+                        deploymentId: result.deploymentId,
+                        lastDeployedAt: new Date().toISOString(),
+                        status: 'success'
+                    },
+                    dnsRecords: result.dnsRecords,
+                    deploymentLogs: [
+                        ...(domain.deploymentLogs || []),
+                        deploymentService.createDeploymentLog(
+                            'success',
+                            'Deployment completed successfully!',
+                            `URL: ${result.deploymentUrl}`
+                        )
+                    ]
+                });
+                return true;
+            } else {
+                // Update with failure
+                await updateDomain(domainId, {
+                    status: 'error',
+                    deployment: {
+                        provider,
+                        status: 'failed',
+                        error: result.error
+                    },
+                    deploymentLogs: [
+                        ...(domain.deploymentLogs || []),
+                        deploymentService.createDeploymentLog(
+                            'failed',
+                            'Deployment failed',
+                            result.error
+                        )
+                    ]
+                });
+                return false;
+            }
+        } catch (error) {
+            console.error('Deployment error:', error);
+            await updateDomain(domainId, {
+                status: 'error',
+                deployment: {
+                    provider,
+                    status: 'failed',
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                }
+            });
+            return false;
+        }
+    };
+
+    const getDomainDeploymentLogs = (domainId: string): DeploymentLog[] => {
+        const domain = domains.find(d => d.id === domainId);
+        return domain?.deploymentLogs || [];
     };
 
     // Global Assistant Save (Super Admin)
@@ -1460,27 +2085,241 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Super Admin Functions
     const fetchAllUsers = async () => {
-        if (userDocument?.role !== 'superadmin') return;
+        if (!canPerform('canViewUsers')) return;
         const usersCol = collection(db, 'users');
         const userSnapshot = await getDocs(usersCol);
         const userList = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserDocument));
         setAllUsers(userList);
     };
 
-    const updateUserRole = async (userId: string, role: 'user' | 'superadmin') => {
-        if (userDocument?.role !== 'superadmin') return;
-        const userDocRef = doc(db, 'users', userId);
-        await updateDoc(userDocRef, { role });
-        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
+    const updateUserRole = async (userId: string, newRole: UserRole) => {
+        if (!userPermissions.canManageRoles) {
+            throw new Error('No tienes permiso para cambiar roles');
+        }
+        
+        const targetUser = allUsers.find(u => u.id === userId);
+        if (!targetUser) return;
+        
+        // No se puede cambiar el rol del owner
+        if (isOwner(targetUser.email)) {
+            throw new Error('No se puede cambiar el rol del Owner');
+        }
+        
+        // Solo owner puede asignar/desasignar superadmin
+        if ((newRole === 'superadmin' || targetUser.role === 'superadmin') && !isUserOwner) {
+            throw new Error('Solo el Owner puede gestionar Super Admins');
+        }
+        
+        // No se puede asignar rol de owner
+        if (newRole === 'owner') {
+            throw new Error('No se puede asignar el rol de Owner');
+        }
+        
+        try {
+            const userDocRef = doc(db, 'users', userId);
+            await updateDoc(userDocRef, { role: newRole });
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        } catch (error) {
+            console.error('Error updating role:', error);
+            throw error;
+        }
     };
 
     const deleteUserRecord = async (userId: string) => {
-        if (userDocument?.role !== 'superadmin') return;
+        if (!userPermissions.canDeleteUsers) {
+            throw new Error('No tienes permiso para eliminar usuarios');
+        }
+        
+        const targetUser = allUsers.find(u => u.id === userId);
+        if (targetUser && isOwner(targetUser.email)) {
+            throw new Error('No se puede eliminar al Owner');
+        }
+        
         // This only deletes the Firestore record, not the Auth user.
         // This is a simplification for the current feature scope.
         const userDocRef = doc(db, 'users', userId);
         await deleteDoc(userDocRef);
         setAllUsers(prev => prev.filter(u => u.id !== userId));
+    };
+
+    // Helper para verificar permisos
+    const canPerform = (permission: keyof RolePermissions): boolean => {
+        return userPermissions[permission] || false;
+    };
+    
+    // Helper para verificar si tiene rol administrativo
+    const isAdmin = (): boolean => {
+        return ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
+    };
+
+    // Función para crear administrador
+    const createAdmin = async (email: string, name: string, role: UserRole) => {
+        if (!canPerform('canManageRoles')) {
+            throw new Error('No tienes permiso para crear administradores');
+        }
+        
+        // Solo owner puede crear superadmins
+        if (role === 'superadmin' && !isUserOwner) {
+            throw new Error('Solo el Owner puede crear Super Admins');
+        }
+        
+        // No se puede crear otro owner
+        if (role === 'owner') {
+            throw new Error('Solo puede haber un Owner en el sistema');
+        }
+        
+        try {
+            // Verificar si el usuario ya existe
+            const existingUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            if (existingUser) {
+                throw new Error('Ya existe un usuario con este email');
+            }
+            
+            const newAdminDoc = {
+                email,
+                name,
+                photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3f3f46&color=e4e4e7`,
+                role: determineRole(email, role),
+                createdBy: userDocument?.email,
+                createdAt: serverTimestamp()
+            };
+            
+            // Crear documento en Firestore
+            // Nota: En producción necesitarás una Cloud Function para crear el usuario en Auth
+            const usersCol = collection(db, 'users');
+            await addDoc(usersCol, newAdminDoc);
+            
+            await fetchAllUsers(); // Refresh lista
+        } catch (error) {
+            console.error('Error creating admin:', error);
+            throw error;
+        }
+    };
+
+    // Tenant Management Functions
+    const fetchTenants = async () => {
+        if (!canPerform('canViewTenants')) return;
+        try {
+            const tenantsCol = collection(db, 'tenants');
+            const q = query(tenantsCol, orderBy('createdAt', 'desc'));
+            const tenantSnapshot = await getDocs(q);
+            const tenantList = tenantSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant));
+            setTenants(tenantList);
+        } catch (error) {
+            console.error("Error fetching tenants:", error);
+        }
+    };
+
+    const getDefaultLimits = (plan: string): TenantLimits => {
+        switch (plan) {
+            case 'free':
+                return { maxProjects: 3, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 100 };
+            case 'pro':
+                return { maxProjects: 20, maxUsers: 5, maxStorageGB: 50, maxAiCredits: 1000 };
+            case 'enterprise':
+                return { maxProjects: 100, maxUsers: 50, maxStorageGB: 500, maxAiCredits: 10000 };
+            default:
+                return { maxProjects: 3, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 100 };
+        }
+    };
+
+    const createTenant = async (data: { 
+        type: 'individual' | 'agency'; 
+        name: string; 
+        email: string; 
+        plan: string;
+        companyName?: string;
+    }): Promise<string> => {
+        if (!canPerform('canEditTenants')) throw new Error('No tienes permiso para crear tenants');
+        
+        try {
+            const tenantDoc = {
+                type: data.type,
+                name: data.name,
+                email: data.email,
+                companyName: data.companyName || '',
+                status: 'trial' as TenantStatus,
+                subscriptionPlan: data.plan,
+                limits: getDefaultLimits(data.plan),
+                usage: {
+                    projectCount: 0,
+                    userCount: data.type === 'agency' ? 1 : 1,
+                    storageUsedGB: 0,
+                    aiCreditsUsed: 0
+                },
+                ownerUserId: '',
+                memberUserIds: [],
+                projectIds: [],
+                createdAt: serverTimestamp(),
+                settings: {
+                    allowMemberInvites: data.type === 'agency',
+                    requireTwoFactor: false,
+                    brandingEnabled: false
+                }
+            };
+            
+            const docRef = await addDoc(collection(db, 'tenants'), tenantDoc);
+            await fetchTenants(); // Refresh list
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating tenant:", error);
+            throw error;
+        }
+    };
+
+    const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
+        if (!canPerform('canEditTenants')) return;
+        
+        try {
+            const tenantRef = doc(db, 'tenants', tenantId);
+            await updateDoc(tenantRef, data);
+            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, ...data } : t));
+        } catch (error) {
+            console.error("Error updating tenant:", error);
+        }
+    };
+
+    const deleteTenant = async (tenantId: string) => {
+        if (!canPerform('canDeleteTenants')) return;
+        
+        try {
+            const tenantRef = doc(db, 'tenants', tenantId);
+            await deleteDoc(tenantRef);
+            setTenants(prev => prev.filter(t => t.id !== tenantId));
+        } catch (error) {
+            console.error("Error deleting tenant:", error);
+        }
+    };
+
+    const updateTenantStatus = async (tenantId: string, status: TenantStatus) => {
+        if (!canPerform('canEditTenants')) return;
+        
+        try {
+            const tenantRef = doc(db, 'tenants', tenantId);
+            await updateDoc(tenantRef, { 
+                status,
+                lastStatusChangeAt: serverTimestamp()
+            });
+            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, status } : t));
+        } catch (error) {
+            console.error("Error updating tenant status:", error);
+        }
+    };
+
+    const updateTenantLimits = async (tenantId: string, limits: Partial<TenantLimits>) => {
+        if (!canPerform('canManageTenantLimits')) return;
+        
+        try {
+            const tenant = tenants.find(t => t.id === tenantId);
+            if (!tenant) return;
+            
+            const updatedLimits = { ...tenant.limits, ...limits };
+            const tenantRef = doc(db, 'tenants', tenantId);
+            await updateDoc(tenantRef, { limits: updatedLimits });
+            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, limits: updatedLimits } : t));
+        } catch (error) {
+            console.error("Error updating tenant limits:", error);
+        }
     };
 
     const getPrompt = (name: string): LLMPrompt | undefined => {
@@ -1495,8 +2334,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const promptSnapshot = await getDocs(q);
 
             if (promptSnapshot.empty) {
-                // Only seed if superadmin
-                if (userDocument?.role === 'superadmin') {
+                // Only seed if admin
+                if (isAdmin()) {
                     console.log('No prompts found, seeding database with defaults...');
                     const seedPromises = defaultPrompts.map(promptData => {
                         const dataToSave = { 
@@ -1560,17 +2399,51 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    const saveComponent = async (componentId: string) => {
+    const saveComponent = async (componentId: string, changeDescription?: string) => {
         if (userDocument?.role !== 'superadmin') return;
         
         try {
             // Check if Custom
             const customComp = customComponents.find(c => c.id === componentId);
             if (customComp) {
-                 const docRef = doc(db, 'customComponents', componentId);
-                 await updateDoc(docRef, { styles: customComp.styles });
-                 console.log("Saved custom component", componentId);
-                 return;
+                // Create version history entry
+                const newVersion: ComponentVersion = {
+                    version: (customComp.version || 1) + 1,
+                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    author: user?.uid || 'unknown',
+                    changes: changeDescription || 'Component updated',
+                    snapshot: customComp.styles
+                };
+
+                const updatedVersionHistory = [
+                    ...(customComp.versionHistory || []),
+                    newVersion
+                ].slice(-10); // Keep only last 10 versions
+
+                const docRef = doc(db, 'customComponents', componentId);
+                await updateDoc(docRef, { 
+                    styles: customComp.styles,
+                    version: newVersion.version,
+                    versionHistory: updatedVersionHistory,
+                    lastModified: serverTimestamp(),
+                    modifiedBy: user?.uid || ''
+                });
+
+                // Update local state
+                setCustomComponents(prev => prev.map(c => 
+                    c.id === componentId 
+                        ? { 
+                            ...c, 
+                            version: newVersion.version,
+                            versionHistory: updatedVersionHistory,
+                            lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                            modifiedBy: user?.uid || ''
+                        } 
+                        : c
+                ));
+
+                console.log("Saved custom component", componentId);
+                return;
             }
 
             // Check if Standard
@@ -1598,22 +2471,283 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             name,
             baseComponent,
             styles: componentStyles[baseComponent],
+            version: 1,
+            versionHistory: [],
+            category: 'other',
+            tags: [],
+            variants: [],
+            isPublic: false,
+            createdBy: user?.uid || '',
+            usageCount: 0,
+            projectsUsing: [],
+            permissions: {
+                canEdit: [],
+                canView: [],
+                isPublic: false
+            }
         };
 
         try {
             const customComponentsCol = collection(db, 'customComponents');
-            const docRef = await addDoc(customComponentsCol, { ...newComponentData, createdAt: serverTimestamp() });
+            const docRef = await addDoc(customComponentsCol, { ...newComponentData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
 
             const createdComponent: CustomComponent = {
                 id: docRef.id,
                 ...newComponentData,
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 }
+                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
             };
             
             setCustomComponents(prev => [createdComponent, ...prev]);
             return createdComponent;
         } catch (error) {
             console.error("Error creating custom component:", error);
+            throw error;
+        }
+    };
+
+    const deleteCustomComponent = async (componentId: string): Promise<void> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can delete custom components.");
+        }
+
+        try {
+            const docRef = doc(db, 'customComponents', componentId);
+            await deleteDoc(docRef);
+            
+            setCustomComponents(prev => prev.filter(c => c.id !== componentId));
+        } catch (error) {
+            console.error("Error deleting custom component:", error);
+            throw error;
+        }
+    };
+
+    const duplicateComponent = async (componentId: string): Promise<CustomComponent> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can duplicate components.");
+        }
+
+        const original = customComponents.find(c => c.id === componentId);
+        if (!original) {
+            throw new Error('Component not found');
+        }
+
+        const duplicateData: Omit<CustomComponent, 'id' | 'createdAt'> = {
+            ...original,
+            name: `${original.name} Copy`,
+            version: 1,
+            versionHistory: [],
+            usageCount: 0,
+            projectsUsing: [],
+            createdBy: user?.uid || '',
+        };
+
+        try {
+            const customComponentsCol = collection(db, 'customComponents');
+            const docRef = await addDoc(customComponentsCol, { ...duplicateData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
+
+            const newComponent: CustomComponent = {
+                ...duplicateData,
+                id: docRef.id,
+                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
+            };
+
+            setCustomComponents(prev => [newComponent, ...prev]);
+            return newComponent;
+        } catch (error) {
+            console.error("Error duplicating component:", error);
+            throw error;
+        }
+    };
+
+    const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string): Promise<void> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can update component variants.");
+        }
+
+        try {
+            const updateData: any = {
+                variants,
+                lastModified: serverTimestamp(),
+                modifiedBy: user?.uid || '',
+            };
+
+            if (activeVariant !== undefined) {
+                updateData.activeVariant = activeVariant;
+            }
+
+            const docRef = doc(db, 'customComponents', componentId);
+            await updateDoc(docRef, updateData);
+
+            setCustomComponents(prev => prev.map(c =>
+                c.id === componentId
+                    ? { ...c, variants, activeVariant: activeVariant ?? c.activeVariant, lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 } }
+                    : c
+            ));
+        } catch (error) {
+            console.error("Error updating component variants:", error);
+            throw error;
+        }
+    };
+
+    const exportComponent = (componentId: string): string => {
+        const component = customComponents.find(c => c.id === componentId);
+        if (!component) {
+            throw new Error('Component not found');
+        }
+
+        // Remove sensitive/unnecessary data for export
+        const exportData = {
+            name: component.name,
+            description: component.description,
+            baseComponent: component.baseComponent,
+            styles: component.styles,
+            category: component.category,
+            tags: component.tags,
+            variants: component.variants,
+            documentation: component.documentation,
+            version: component.version,
+        };
+
+        return JSON.stringify(exportData, null, 2);
+    };
+
+    const importComponent = async (jsonString: string): Promise<CustomComponent> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can import components.");
+        }
+
+        try {
+            const importedData = JSON.parse(jsonString);
+
+            // Validate required fields
+            if (!importedData.name || !importedData.baseComponent) {
+                throw new Error('Invalid component data: missing required fields');
+            }
+
+            const newComponentData: Omit<CustomComponent, 'id' | 'createdAt'> = {
+                name: importedData.name,
+                description: importedData.description,
+                baseComponent: importedData.baseComponent,
+                styles: importedData.styles || {},
+                version: 1,
+                versionHistory: [],
+                category: importedData.category || 'other',
+                tags: importedData.tags || [],
+                variants: importedData.variants || [],
+                isPublic: false,
+                createdBy: user?.uid || '',
+                usageCount: 0,
+                projectsUsing: [],
+                permissions: {
+                    canEdit: [],
+                    canView: [],
+                    isPublic: false
+                },
+                documentation: importedData.documentation
+            };
+
+            const customComponentsCol = collection(db, 'customComponents');
+            const docRef = await addDoc(customComponentsCol, { ...newComponentData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
+
+            const createdComponent: CustomComponent = {
+                id: docRef.id,
+                ...newComponentData,
+                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
+            };
+
+            setCustomComponents(prev => [createdComponent, ...prev]);
+            return createdComponent;
+        } catch (error) {
+            console.error("Error importing component:", error);
+            throw error;
+        }
+    };
+
+    const revertToVersion = async (componentId: string, versionNumber: number): Promise<void> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can revert components.");
+        }
+
+        const component = customComponents.find(c => c.id === componentId);
+        if (!component) {
+            throw new Error('Component not found');
+        }
+
+        const targetVersion = component.versionHistory?.find(v => v.version === versionNumber);
+        if (!targetVersion) {
+            throw new Error('Version not found');
+        }
+
+        // Update component with old snapshot
+        const docRef = doc(db, 'customComponents', componentId);
+        await updateDoc(docRef, { 
+            styles: targetVersion.snapshot,
+            lastModified: serverTimestamp(),
+            modifiedBy: user?.uid || ''
+        });
+
+        // Update local state
+        setCustomComponents(prev => prev.map(c => 
+            c.id === componentId 
+                ? { 
+                    ...c, 
+                    styles: targetVersion.snapshot,
+                    lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    modifiedBy: user?.uid || ''
+                } 
+                : c
+        ));
+    };
+
+    const trackComponentUsage = async (projectId: string, componentIds: string[]): Promise<void> => {
+        if (!user) return;
+
+        // Track custom components usage
+        const customComponentIds = componentIds.filter(id => 
+            customComponents.some(c => c.id === id)
+        );
+
+        for (const compId of customComponentIds) {
+            const component = customComponents.find(c => c.id === compId);
+            if (!component) continue;
+
+            const projectsUsing = component.projectsUsing || [];
+            if (!projectsUsing.includes(projectId)) {
+                try {
+                    const docRef = doc(db, 'customComponents', compId);
+                    const updatedProjects = [...projectsUsing, projectId];
+                    await updateDoc(docRef, {
+                        projectsUsing: updatedProjects,
+                        usageCount: updatedProjects.length
+                    });
+
+                    // Update local state
+                    setCustomComponents(prev => prev.map(c =>
+                        c.id === compId
+                            ? { ...c, projectsUsing: updatedProjects, usageCount: updatedProjects.length }
+                            : c
+                    ));
+                } catch (error) {
+                    console.error(`Error tracking component usage for ${compId}:`, error);
+                }
+            }
+        }
+    };
+
+    const updateDesignTokens = async (tokens: DesignTokens): Promise<void> => {
+        if (userDocument?.role !== 'superadmin') {
+            throw new Error("Only superadmins can update design tokens.");
+        }
+
+        try {
+            const docRef = doc(db, 'settings', 'designTokens');
+            await setDoc(docRef, tokens);
+            setDesignTokens(tokens);
+        } catch (error) {
+            console.error("Error updating design tokens:", error);
             throw error;
         }
     };
@@ -1726,6 +2860,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         activeProjectId,
         activeProject,
         projects,
+        isLoadingProjects,
         loadProject,
         data, setData,
         theme, setTheme,
@@ -1768,6 +2903,19 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         fetchAllUsers,
         updateUserRole,
         deleteUserRecord,
+        // Sistema de permisos
+        userPermissions,
+        canPerform,
+        isUserOwner,
+        createAdmin,
+        // Tenants
+        tenants,
+        fetchTenants,
+        createTenant,
+        updateTenant,
+        deleteTenant,
+        updateTenantStatus,
+        updateTenantLimits,
         prompts,
         getPrompt,
         fetchAllPrompts,
@@ -1785,6 +2933,15 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         updateComponentStyle,
         saveComponent,
         createNewCustomComponent,
+        deleteCustomComponent,
+        duplicateComponent,
+        updateComponentVariants,
+        exportComponent,
+        importComponent,
+        revertToVersion,
+        trackComponentUsage,
+        designTokens,
+        updateDesignTokens,
         componentStatus,
         updateComponentStatus,
         cmsPosts,
@@ -1809,12 +2966,31 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         updateLeadStatus,
         updateLead,
         deleteLead,
+        // Lead Activities
+        leadActivities,
+        addLeadActivity,
+        getLeadActivities,
+        // Lead Tasks
+        leadTasks,
+        addLeadTask,
+        updateLeadTask,
+        deleteLeadTask,
+        getLeadTasks,
         // Domains
         domains,
         addDomain,
         updateDomain,
         deleteDomain,
-        verifyDomain
+        verifyDomain,
+        deployDomain,
+        getDomainDeploymentLogs,
+        // Usage & Billing
+        usage,
+        isLoadingUsage,
+        // SEO Configuration
+        seoConfig,
+        setSeoConfig,
+        updateSeoConfig
     };
     
     return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

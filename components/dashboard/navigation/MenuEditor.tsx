@@ -28,15 +28,22 @@ const SECTION_LINKS = [
     { label: 'Newsletter', value: '#newsletter' },
     { label: 'Video', value: '#video' },
     { label: 'How It Works', value: '#howItWorks' },
+    { label: 'Stats', value: '#stats' },
+    { label: 'CTA Section', value: '#cta' },
+    { label: 'Logo Cloud', value: '#logoCloud' },
 ];
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
-    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts } = useEditor();
+    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, data } = useEditor();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
     const [items, setItems] = useState<MenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // Check where this menu is being used
+    const usedInHeader = data?.header?.menuId === menu.id;
+    const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
 
     // Item Editing State
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -71,13 +78,33 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
     };
 
     const handleSave = async () => {
-        if (!title) return alert("Menu title is required");
+        // Validaciones
+        if (!title.trim()) {
+            return alert("Menu title is required");
+        }
+        
+        // Validar que todos los items tengan texto
+        const invalidItems = items.filter(item => !item.text.trim());
+        if (invalidItems.length > 0) {
+            return alert("All menu items must have a name");
+        }
+        
+        // Validar que todos los items tengan href
+        const itemsWithoutLinks = items.filter(item => !item.href.trim());
+        if (itemsWithoutLinks.length > 0) {
+            return alert("All menu items must have a link");
+        }
+        
         setIsSaving(true);
         const updatedMenu: Menu = {
             ...menu,
-            title,
-            handle: handle || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            items
+            title: title.trim(),
+            handle: (handle || title).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            items: items.map(item => ({
+                ...item,
+                text: item.text.trim(),
+                href: item.href.trim()
+            }))
         };
         await saveMenu(updatedMenu);
         setIsSaving(false);
@@ -85,7 +112,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
     };
 
     const handleDeleteMenu = async () => {
-        if (window.confirm("Are you sure you want to delete this menu?")) {
+        let confirmMessage = "Are you sure you want to delete this menu?";
+        
+        if (usedInHeader || usedInFooter) {
+            const locations = [];
+            if (usedInHeader) locations.push("Header");
+            if (usedInFooter) locations.push("Footer");
+            confirmMessage = `⚠️ This menu is currently being used in: ${locations.join(", ")}.\n\nDeleting it will remove these navigation links from your website.\n\nAre you sure you want to continue?`;
+        }
+        
+        if (window.confirm(confirmMessage)) {
             await deleteMenu(menu.id);
             onClose();
         }
@@ -307,6 +343,20 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                         <h1 className="text-xl font-bold">
                             {isNew ? 'Add menu' : title}
                         </h1>
+                        {!isNew && (usedInHeader || usedInFooter) && (
+                            <div className="flex gap-2 ml-3">
+                                {usedInHeader && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                        Used in Header
+                                    </span>
+                                )}
+                                {usedInFooter && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                        Used in Footer
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <div className="flex gap-2">
                          {!isNew && (
@@ -354,6 +404,31 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Preview Section */}
+                        {items.length > 0 && (
+                            <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-md font-semibold text-foreground">Preview</h3>
+                                    <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
+                                </div>
+                                <div className="p-4 bg-secondary/10 rounded-lg border border-border">
+                                    <div className="flex gap-6 flex-wrap items-center">
+                                        {items.map(item => (
+                                            <a 
+                                                key={item.id}
+                                                href={item.href}
+                                                onClick={(e) => e.preventDefault()}
+                                                className="text-sm font-medium text-primary hover:underline transition-all"
+                                                title={item.href}
+                                            >
+                                                {item.text || '(No name)'}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Menu Items Section */}
                         <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm overflow-hidden">

@@ -94,7 +94,15 @@ const Hero: React.FC<HeroProps> = ({
     imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
     imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
     paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors, borderRadius,
-    headlineFontSize = 'lg', subheadlineFontSize = 'lg'
+    headlineFontSize = 'lg', subheadlineFontSize = 'lg',
+    showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
+    badgeColor, badgeBackgroundColor,
+    showStats = true, stats = [
+        { value: '10K+', label: 'Artworks Created' },
+        { value: '5K+', label: 'Happy Users' },
+        { value: '4.9★', label: 'User Rating' }
+    ],
+    statsValueColor, statsLabelColor
 }) => {
   // Create a modified headline for styling the gradient part specifically
   const styledHeadline = headline.replace(
@@ -160,6 +168,22 @@ const Hero: React.FC<HeroProps> = ({
       <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
       
       <div className={`md:w-1/2 animate-fade-in-up text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
+        {/* Badge/Kicker */}
+        {showBadge && (
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
+               style={{ 
+                 backgroundColor: badgeBackgroundColor || `${colors.primary}15`, 
+                 borderColor: badgeColor ? `${badgeColor}30` : `${colors.primary}30` 
+               }}>
+            <span className="text-sm font-semibold animate-pulse" style={{ color: badgeColor || colors.primary }}>
+              {badgeIcon}
+            </span>
+            <span className="text-sm font-semibold" style={{ color: badgeColor || colors.primary }}>
+              {badgeText}
+            </span>
+          </div>
+        )}
+        
         <h1 
             className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
             style={{ color: colors.heading }}
@@ -171,25 +195,43 @@ const Hero: React.FC<HeroProps> = ({
         >
           {subheadline}
         </p>
-        <div className={`flex justify-center space-x-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
+        <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a 
             href="#cta" 
             style={{ backgroundColor: colors.buttonBackground || colors.primary, color: colors.buttonText || '#ffffff' }} 
-            className={`text-white font-bold py-3 px-8 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
-            {primaryCta}
+            <span className="relative z-10">{primaryCta}</span>
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
           <a 
             href="#features" 
-            className={`text-white font-bold py-3 px-8 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
             style={{ backgroundColor: colors.secondaryButtonBackground || '#334155', color: colors.secondaryButtonText || '#ffffff' }}
           >
-            {secondaryCta}
+            <span className="relative z-10">{secondaryCta}</span>
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
         </div>
+        
+        {/* Social Proof / Stats */}
+        {showStats && stats && stats.length > 0 && (
+          <div className={`flex flex-wrap gap-6 mt-8 justify-center ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'} opacity-90`}>
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center md:text-left">
+                <div className="text-2xl md:text-3xl font-bold font-header" style={{ color: statsValueColor || colors.primary }}>
+                  {stat.value}
+                </div>
+                <div className="text-xs md:text-sm font-body" style={{ color: statsLabelColor || colors.text, opacity: 0.7 }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className={`md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]} animate-fade-in-up`} style={{ animationDelay: '0.2s' }}>
-        <div className="relative" style={imageContainerStyle}>
+        <div className="relative animate-hero-float" style={imageContainerStyle}>
             <div className={imageStyle === 'polaroid' || imageAspectRatio === 'auto' ? '' : aspectRatioClasses[imageAspectRatio]}>
               {imageStyle === 'polaroid' ? (
                 <div className="img-style-polaroid">

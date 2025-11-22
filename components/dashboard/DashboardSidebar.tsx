@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search } from 'lucide-react';
 
 interface DashboardSidebarProps {
   isMobileOpen: boolean;
@@ -11,7 +12,8 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false }) => {
-  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode } = useEditor();
+  const { t } = useTranslation();
+  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage } = useEditor();
   // Default to expanded on desktop
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -31,19 +33,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         }
         ${isActive 
           ? (isCollapsed 
-              ? 'text-yellow-600 dark:text-yellow-400' 
-              : 'bg-yellow-400 text-black font-bold shadow-[0_0_15px_rgba(250,204,21,0.4)]' 
+              ? 'text-primary dark:text-primary' 
+              : 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]' 
             ) 
           : (isCollapsed
-              ? 'text-gray-500 dark:text-muted-foreground hover:text-black dark:hover:text-foreground'
-              : 'text-gray-500 dark:text-muted-foreground hover:bg-gray-100 dark:hover:bg-white/5 hover:text-black dark:hover:text-foreground'
+              ? 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             )
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
+      aria-label={label}
+      aria-current={isActive ? 'page' : undefined}
       title={isCollapsed ? label : undefined}
     >
-      <Icon size={20} className={`${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
+      <Icon size={20} className={`${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} aria-hidden="true" />
       
       {!isCollapsed && (
         <span className="text-sm whitespace-nowrap overflow-hidden transition-all">
@@ -63,11 +67,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
       <aside 
         className={`
-            fixed lg:relative z-40 h-screen bg-white dark:bg-[#1A0D26] black:bg-black border-r border-gray-200 dark:border-white/10 black:border-white/10 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
+            fixed lg:relative z-40 h-screen bg-background border-r border-border shadow-xl flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
             ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             ${isCollapsed ? 'w-[80px]' : 'w-72'}
             ${hiddenOnDesktop ? 'lg:hidden' : ''}
         `}
+        role="navigation"
+        aria-label="Main navigation"
       >
         {/* Header / Logo */}
         <div className="relative h-[80px] flex items-center justify-center">
@@ -79,78 +85,86 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     className="w-10 h-10 object-contain flex-shrink-0" 
                 />
                  {/* Text Logo (Hidden when collapsed) */}
-                <span className={`text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white black:text-white whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
-                    Quimera<span className="text-yellow-400">.ai</span>
+                <span className={`text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
+                    Quimera<span className="text-primary">.ai</span>
                 </span>
             </div>
              {/* Toggle Button (Centered vertically relative to header height, always on the line) */}
             <div className="hidden lg:block absolute top-[calc(50%-3px)] -translate-y-1/2 z-50 -right-3">
                 <button 
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="w-6 h-6 bg-gray-100 dark:bg-[#2C1A3D] black:bg-[#262626] border border-gray-200 dark:border-white/10 black:border-white/10 rounded-full flex items-center justify-center text-gray-500 dark:text-muted-foreground hover:text-black dark:hover:text-white transition-all shadow-sm"
+                    className="w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                    aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
+                    aria-expanded={!isCollapsed}
                 >
-                    {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                    {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
                 </button>
             </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar" role="navigation" aria-label="Main navigation">
             <NavItem 
                 icon={LayoutDashboard} 
-                label="Dashboard" 
+                label={t('dashboard.title')} 
                 isActive={view === 'dashboard'} 
                 onClick={() => setView('dashboard')} 
             />
             <NavItem 
                 icon={Globe} 
-                label="My Websites" 
+                label={t('dashboard.myWebsites')} 
                 isActive={view === 'websites'} 
                 onClick={() => setView('websites')} 
             />
             <NavItem 
                 icon={Link2} 
-                label="Domains" 
+                label={t('domains.title')} 
                 isActive={view === 'domains'} 
                 onClick={() => setView('domains')} 
             />
             <NavItem 
                 icon={MessageSquare} 
-                label="Quimera Chat" 
+                label={t('dashboard.quimeraChat')} 
                 isActive={view === 'ai-assistant'} 
                 onClick={() => setView('ai-assistant')} 
             />
             <NavItem 
                 icon={Users} 
-                label="Leads CRM" 
+                label={t('leads.title')} 
                 isActive={view === 'leads'} 
                 onClick={() => setView('leads')} 
             />
             <NavItem 
                 icon={MenuIcon} 
-                label="Navigation" 
+                label={t('dashboard.navigation')} 
                 isActive={view === 'navigation'} 
                 onClick={() => setView('navigation')} 
             />
              <NavItem 
                 icon={PenTool} 
-                label="Content Manager" 
+                label={t('dashboard.contentManager')} 
                 isActive={view === 'cms'} 
                 onClick={() => setView('cms')} 
             />
             <NavItem 
+                icon={Search} 
+                label={t('dashboard.seoAndMeta')} 
+                isActive={view === 'seo'} 
+                onClick={() => setView('seo')} 
+            />
+            <NavItem 
                 icon={Images} 
-                label="Asset Library" 
+                label={t('dashboard.assetLibrary')} 
                 isActive={view === 'assets'} 
                 onClick={() => setView('assets')} 
             />
              
-            {userDocument?.role === 'superadmin' && (
+            {['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '') && (
                 <>
-                    <div className={`my-4 border-t border-gray-200 dark:border-white/10 black:border-white/10 ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
+                    <div className={`my-4 border-t border-border ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
                     <NavItem 
                         icon={Settings} 
-                        label="Super Admin" 
+                        label={t('dashboard.superAdmin')} 
                         isActive={view === 'superadmin'} 
                         onClick={() => {
                             setView('superadmin');
@@ -162,30 +176,30 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         </nav>
 
         {/* Footer / User Profile / Theme */}
-        <div className="p-4 border-t border-gray-200 dark:border-white/10 black:border-white/10 bg-gray-50 dark:bg-[#2C1A3D]/30 black:bg-black">
+        <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
             
             {/* Theme Selector Section */}
             <div className={`mb-4 ${isCollapsed ? 'hidden' : ''}`}>
-                 <p className="text-xs font-bold text-gray-500 dark:text-white/40 uppercase tracking-wider mb-2">Theme Color</p>
-                 <div className="flex gap-2 bg-gray-200 dark:bg-white/5 black:bg-white/5 p-1 rounded-lg">
+                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('common.themeColor')}</p>
+                 <div className="flex gap-2 bg-muted p-1 rounded-lg">
                      <button 
                         onClick={() => setThemeMode('light')}
-                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'light' ? 'bg-white text-yellow-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-white'}`}
-                        title="Light Mode"
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'light' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={t('common.lightMode')}
                      >
                          <Sun size={16} />
                      </button>
                      <button 
                         onClick={() => setThemeMode('dark')}
-                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'dark' ? 'bg-[#2C1A3D] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-white'}`}
-                        title="Dark Mode"
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'dark' ? 'bg-card text-primary shadow-sm border border-border' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={t('common.darkMode')}
                      >
                          <Moon size={16} />
                      </button>
                      <button 
                         onClick={() => setThemeMode('black')}
-                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'black' ? 'bg-black text-yellow-400 border border-yellow-400/30 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-white'}`}
-                        title="Black Mode"
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md transition-all ${themeMode === 'black' ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={t('common.blackMode')}
                      >
                          <Circle size={16} fill="currentColor" />
                      </button>
@@ -198,18 +212,25 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <div className="flex justify-between items-end mb-2 px-1">
                         <div className="flex items-center gap-1.5">
                             <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400"/> 
-                            <span className="text-xs font-bold text-gray-700 dark:text-white tracking-wide">Pro Plan</span>
+                            <span className="text-xs font-bold text-gray-700 dark:text-white tracking-wide">
+                                {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
+                            </span>
                         </div>
-                        <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">850/1k</span>
+                        <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
+                            {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
+                        </span>
                     </div>
                     
-                    <div className="h-1.5 w-full bg-gray-200 dark:bg-white/10 black:bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full w-[85%] bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500" 
+                            style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
+                        />
                     </div>
                     
                     <div className="mt-2 flex justify-between items-center px-1">
-                         <span className="text-[10px] text-gray-400 dark:text-white/40 font-medium">Monthly credits</span>
-                         <button className="text-[10px] font-bold text-gray-700 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">Upgrade</button>
+                         <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
+                         <button className="text-[10px] font-bold text-gray-700 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('common.upgrade')}</button>
                     </div>
                  </div>
             )}
@@ -217,26 +238,30 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <div className={`flex items-center ${isCollapsed ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
                 <div className="relative group cursor-pointer">
                      {user?.photoURL ? (
-                        <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-white/10 black:border-white/10 group-hover:border-yellow-400 transition-colors" />
+                        <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-secondary black:bg-secondary flex items-center justify-center border-2 border-gray-200 dark:border-border black:border-border group-hover:border-yellow-400 transition-colors">
-                            <UserIcon size={20} className="text-gray-400 dark:text-muted-foreground" />
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                            <UserIcon size={20} className="text-muted-foreground" />
                         </div>
                      )}
-                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1A0D26] black:border-black rounded-full"></div>
+                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
                 </div>
                 
-                {!isCollapsed && (
-                    <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{userDocument?.name || 'Creator'}</p>
-                        <p className="text-xs text-gray-500 dark:text-white/50 truncate">{user?.email}</p>
-                    </div>
-                )}
+            {!isCollapsed && (
+                <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-bold text-foreground truncate">{userDocument?.name || t('common.creator')}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
+            )}
 
                 <div className={`${isCollapsed ? '' : 'flex flex-col gap-1'}`}>
                      {!isCollapsed && (
-                        <button onClick={handleSignOut} className="p-1.5 text-gray-400 dark:text-white/50 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Sign Out">
-                            <LogOut size={16} />
+                        <button 
+                          onClick={handleSignOut} 
+                          className="p-1.5 text-muted-foreground hover:text-destructive transition-colors" 
+                          aria-label={t('auth.logout')}
+                        >
+                            <LogOut size={16} aria-hidden="true" />
                         </button>
                      )}
                 </div>

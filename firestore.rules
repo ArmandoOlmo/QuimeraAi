@@ -1,1 +1,87 @@
-��^��ޮȨ�
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // User projects
+      match /projects/{projectId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User files
+      match /files/{fileId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User CMS posts
+      match /posts/{postId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User leads
+      match /leads/{leadId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Lead activities
+      match /leadActivities/{activityId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Lead tasks
+      match /leadTasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User domains
+      match /domains/{domainId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User usage/billing (NEW)
+      match /usage/{document} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // Only backend/admin can write
+      }
+    }
+    
+    // Global settings (superadmin only for write)
+    match /globalSettings/{settingId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
+    // Global files (superadmin only)
+    match /globalFiles/{fileId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
+    // Component defaults (superadmin only for write)
+    match /componentDefaults/{componentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
+    // Custom components (superadmin only)
+    match /customComponents/{componentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
+    // LLM Prompts (superadmin only for write)
+    match /prompts/{promptId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
+    // Design tokens (superadmin only for write)
+    match /designTokens/{tokenId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+  }
+}

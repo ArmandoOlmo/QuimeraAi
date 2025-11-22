@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Controls from './components/Controls';
 import LandingPage from './components/LandingPage';
 import BrowserPreview from './components/BrowserPreview';
 import EditorHeader from './components/EditorHeader';
 import { EditorProvider, useEditor } from './contexts/EditorContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Dashboard from './components/dashboard/Dashboard';
 import SuperAdminDashboard from './components/dashboard/SuperAdminDashboard';
 import Auth from './components/Auth';
@@ -18,14 +19,20 @@ import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
 import OnboardingWizard from './components/ui/OnboardingWizard';
 import LeadsDashboard from './components/dashboard/leads/LeadsDashboard';
 import DomainsDashboard from './components/dashboard/domains/DomainsDashboard';
+import SEODashboard from './components/dashboard/SEODashboard';
+import GlobalSEO from './components/GlobalSEO';
+import { useSEO } from './hooks/useSEO';
+import ErrorBoundary from './components/ErrorBoundary';
+import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
 
 
 const AppContent: React.FC = () => {
   const { isSidebarOpen, setIsSidebarOpen, view, previewRef, activeProjectId, data, userDocument, isOnboardingOpen, setIsOnboardingOpen } = useEditor();
+  const seoConfig = useSEO();
 
   // Helper to render the correct main view
   const renderMainView = () => {
-      if (view === 'superadmin' && userDocument?.role === 'superadmin') {
+      if (view === 'superadmin' && ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '')) {
         return <SuperAdminDashboard />;
       }
 
@@ -47,6 +54,10 @@ const AppContent: React.FC = () => {
       
       if (view === 'domains') {
           return <DomainsDashboard />;
+      }
+
+      if (view === 'seo') {
+          return <SEODashboard />;
       }
 
       if (view === 'dashboard' || view === 'websites' || view === 'assets' || !activeProjectId || !data) {
@@ -77,6 +88,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
+        <GlobalSEO config={seoConfig} />
         {renderMainView()}
         <GlobalAiAssistant />
         <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
@@ -85,7 +97,20 @@ const AppContent: React.FC = () => {
 };
 
 const AuthGate: React.FC = () => {
-  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal } = useEditor();
+  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument } = useEditor();
+
+  // Set user context for monitoring when user changes
+  useEffect(() => {
+    if (user && userDocument) {
+      setUserContext({
+        id: user.uid,
+        email: user.email || undefined,
+        role: userDocument.role,
+      });
+    } else {
+      clearUserContext();
+    }
+  }, [user, userDocument]);
 
   if (loadingAuth) {
     return (
@@ -121,10 +146,19 @@ const AuthGate: React.FC = () => {
 
 
 const App: React.FC = () => {
+  // Initialize monitoring on app start
+  useEffect(() => {
+    initializeMonitoring();
+  }, []);
+
   return (
-    <EditorProvider>
-      <AuthGate />
-    </EditorProvider>
+    <ErrorBoundary>
+      <EditorProvider>
+        <ToastProvider>
+          <AuthGate />
+        </ToastProvider>
+      </EditorProvider>
+    </ErrorBoundary>
   );
 };
 

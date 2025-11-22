@@ -65,6 +65,19 @@ const pageData: PageData = {
       secondaryButtonBackground: '#334155', // slate-700
       secondaryButtonText: '#ffffff',
     },
+    showBadge: true,
+    badgeText: 'AI-Powered Generation',
+    badgeIcon: '✨',
+    badgeColor: '#4f46e5',
+    badgeBackgroundColor: '#4f46e515',
+    showStats: true,
+    stats: [
+      { value: '10K+', label: 'Artworks Created' },
+      { value: '5K+', label: 'Happy Users' },
+      { value: '4.9★', label: 'User Rating' }
+    ],
+    statsValueColor: '#4f46e5',
+    statsLabelColor: '#94a3b8',
   },
   features: {
     paddingY: 'lg',
@@ -104,6 +117,12 @@ const pageData: PageData = {
     paddingX: 'md',
     title: "Loved by Creatives Worldwide",
     description: "Don't just take our word for it. Here's what our users are saying about their experience with Quimera.ai.",
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    borderRadius: 'xl',
+    cardShadow: 'lg',
+    borderStyle: 'solid',
+    cardPadding: 32,
     items: [
       {
         quote: "Quimera.ai has completely transformed my workflow. I can now visualize concepts in seconds that used to take hours. It's an indispensable tool for any creative professional.",
@@ -130,6 +149,7 @@ const pageData: PageData = {
       borderColor: '#334155',
       text: '#d1d5db', // slate-300
       heading: '#F9FAFB',
+      cardBackground: '#1f2937',
     },
   },
   slideshow: {
@@ -151,6 +171,9 @@ const pageData: PageData = {
     description: "Simple, transparent pricing. No hidden fees. Choose the plan that's right for you and start creating today.",
     paddingY: 'lg',
     paddingX: 'md',
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    cardBorderRadius: 'xl',
     tiers: [
       {
         name: 'Starter',
@@ -159,6 +182,7 @@ const pageData: PageData = {
         description: 'For individuals and hobbyists getting started.',
         features: ['1,000 credits/month', 'Basic image generation', 'Standard resolution', 'Community support'],
         buttonText: 'Get Started',
+        buttonLink: '#pricing',
         featured: false,
       },
       {
@@ -168,6 +192,7 @@ const pageData: PageData = {
         description: 'For professionals and small teams who need more power.',
         features: ['5,000 credits/month', 'Advanced generation tools', 'High-resolution images', 'Priority support', 'Commercial license'],
         buttonText: 'Choose Pro',
+        buttonLink: '#pricing',
         featured: true,
       },
       {
@@ -177,6 +202,7 @@ const pageData: PageData = {
         description: 'For large organizations with custom needs.',
         features: ['Unlimited credits', 'Custom model training', 'API access', 'Dedicated support', 'Team management'],
         buttonText: 'Contact Us',
+        buttonLink: 'mailto:sales@example.com',
         featured: false,
       },
     ],
@@ -188,6 +214,8 @@ const pageData: PageData = {
       heading: '#F9FAFB',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      checkmarkColor: '#10b981',
+      cardBackground: '#1f2937',
     }
   },
   faq: {
@@ -264,7 +292,10 @@ const pageData: PageData = {
     title: "Ready to Create?",
     description: "Join thousands of creators and start bringing your ideas to life today. No credit card required to start.",
     buttonText: "Start for Free",
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
     colors: {
+        background: '#0f172a',
         gradientStart: '#4f46e5',
         gradientEnd: '#10b981',
         text: 'rgba(255, 255, 255, 0.8)',

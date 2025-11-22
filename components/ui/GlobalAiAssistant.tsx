@@ -1,11 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
-import { GoogleGenAI, FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
-import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, Wand2, X, User as UserIcon, Shield } from 'lucide-react';
+import { FunctionDeclaration, Type, LiveServerMessage, Modality, FunctionCallingConfigMode } from '@google/genai';
+import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, Wand2, X, User as UserIcon, Shield, KeyRound } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { initialData } from '../../data/initialData';
-import { LeadStatus, CMSPost, Lead } from '../../types';
+import { LeadStatus, CMSPost, Lead, PageData } from '../../types';
+import { getGoogleGenAI } from '../../utils/genAiClient';
+import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 
 // --- Types ---
 interface Message {
@@ -166,23 +168,389 @@ const TOOLS: FunctionDeclaration[] = [
             },
             required: ['businessName', 'industry', 'description']
         }
+    },
+    {
+        name: 'manage_section_items',
+        description: 'Add, update, or remove items from section arrays (features, testimonials, pricing tiers, FAQ items, portfolio items, services, team members, slides, how-it-works steps).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                section: { 
+                    type: Type.STRING, 
+                    enum: ['features', 'testimonials', 'pricing', 'faq', 'portfolio', 'services', 'team', 'slideshow', 'howItWorks'],
+                    description: 'Section containing items to manage'
+                },
+                action: { 
+                    type: Type.STRING, 
+                    enum: ['add', 'update', 'delete'],
+                    description: 'Action to perform on items'
+                },
+                index: { 
+                    type: Type.NUMBER, 
+                    description: 'Item index (0-based, required for update/delete)' 
+                },
+                itemData: { 
+                    type: Type.OBJECT, 
+                    description: 'Item data as JSON object (required for add/update). Structure depends on section type.'
+                }
+            },
+            required: ['section', 'action']
+        }
+    },
+    {
+        name: 'update_brand_identity',
+        description: 'Update brand identity settings (business name, industry, target audience, tone of voice, core values, language).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                name: { type: Type.STRING, description: 'Business/brand name' },
+                industry: { type: Type.STRING, description: 'Industry or business sector' },
+                targetAudience: { type: Type.STRING, description: 'Target audience description' },
+                toneOfVoice: { 
+                    type: Type.STRING, 
+                    enum: ['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'],
+                    description: 'Brand tone of voice'
+                },
+                coreValues: { type: Type.STRING, description: 'Core brand values' },
+                language: { type: Type.STRING, description: 'Primary language' }
+            }
+        }
+    },
+    {
+        name: 'manage_sections',
+        description: 'Show/hide sections or change their display order on the website.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { 
+                    type: Type.STRING, 
+                    enum: ['show', 'hide', 'reorder'],
+                    description: 'Action to perform'
+                },
+                section: { 
+                    type: Type.STRING,
+                    description: 'Section name (required for show/hide)'
+                },
+                newOrder: { 
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: 'New section order as array of section names (required for reorder)'
+                }
+            },
+            required: ['action']
+        }
     }
 ];
 
+const TOOL_NAMES = TOOLS.map(tool => tool.name);
+
 const DATA_SCHEMA_HINT = `
-*** PATHS GUIDE (update_site_content) ***
-Theme: theme.fontFamilyHeader, theme.fontFamilyBody, theme.cardBorderRadius
-Header: header.layout, header.style, header.logoText, header.colors.background
-Sections: hero.headline, hero.primaryCta, pricing.tiers, footer.copyrightText, etc.
-Chatbot: chatbot.welcomeMessage, chatbot.isActive
+*** COMPLETE PATHS GUIDE (update_site_content) ***
+
+THEME (Global):
+- theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton
+- theme.cardBorderRadius, theme.buttonBorderRadius
+
+HEADER:
+- header.logoText, header.style, header.layout, header.logoType
+- header.colors.background, header.colors.text, header.colors.accent
+- header.showCta, header.ctaText, header.showLogin
+
+HERO:
+- hero.headline, hero.subheadline, hero.primaryCta, hero.secondaryCta
+- hero.headlineFontSize, hero.subheadlineFontSize
+- hero.colors.primary, hero.colors.secondary, hero.colors.background, hero.colors.heading, hero.colors.text
+- hero.colors.buttonBackground, hero.colors.buttonText
+- hero.imageUrl, hero.imageStyle, hero.paddingY, hero.paddingX
+
+FEATURES:
+- features.title, features.description, features.titleFontSize, features.descriptionFontSize
+- features.colors.background, features.colors.accent, features.colors.borderColor, features.colors.text, features.colors.heading
+- features.gridColumns, features.paddingY, features.paddingX
+- features.imageHeight, features.imageObjectFit
+
+TESTIMONIALS:
+- testimonials.title, testimonials.description, testimonials.titleFontSize, testimonials.descriptionFontSize
+- testimonials.colors.background, testimonials.colors.accent, testimonials.colors.borderColor, testimonials.colors.text, testimonials.colors.heading
+- testimonials.paddingY, testimonials.paddingX
+
+SLIDESHOW:
+- slideshow.title, slideshow.titleFontSize
+- slideshow.colors.background, slideshow.colors.heading
+- slideshow.paddingY, slideshow.paddingX
+
+PRICING:
+- pricing.title, pricing.description, pricing.titleFontSize, pricing.descriptionFontSize
+- pricing.colors.background, pricing.colors.accent, pricing.colors.borderColor, pricing.colors.text, pricing.colors.heading
+- pricing.colors.buttonBackground, pricing.colors.buttonText
+- pricing.paddingY, pricing.paddingX
+
+FAQ:
+- faq.title, faq.description, faq.titleFontSize, faq.descriptionFontSize
+- faq.colors.background, faq.colors.accent, faq.colors.borderColor, faq.colors.text, faq.colors.heading
+- faq.paddingY, faq.paddingX
+
+LEADS (Contact Form):
+- leads.title, leads.description, leads.buttonText, leads.titleFontSize, leads.descriptionFontSize
+- leads.colors.background, leads.colors.accent, leads.colors.borderColor, leads.colors.text, leads.colors.heading
+- leads.colors.buttonBackground, leads.colors.buttonText
+- leads.paddingY, leads.paddingX
+
+NEWSLETTER:
+- newsletter.title, newsletter.description, newsletter.buttonText, newsletter.placeholderText
+- newsletter.titleFontSize, newsletter.descriptionFontSize
+- newsletter.colors.background, newsletter.colors.accent, newsletter.colors.borderColor, newsletter.colors.text, newsletter.colors.heading
+- newsletter.colors.buttonBackground, newsletter.colors.buttonText
+- newsletter.paddingY, newsletter.paddingX
+
+CTA (Call to Action):
+- cta.title, cta.description, cta.buttonText, cta.titleFontSize, cta.descriptionFontSize
+- cta.colors.gradientStart, cta.colors.gradientEnd, cta.colors.text, cta.colors.heading
+- cta.colors.buttonBackground, cta.colors.buttonText
+- cta.paddingY, cta.paddingX
+
+PORTFOLIO:
+- portfolio.title, portfolio.description, portfolio.titleFontSize, portfolio.descriptionFontSize
+- portfolio.colors.background, portfolio.colors.accent, portfolio.colors.borderColor, portfolio.colors.text, portfolio.colors.heading
+- portfolio.paddingY, portfolio.paddingX
+
+SERVICES:
+- services.title, services.description, services.titleFontSize, services.descriptionFontSize
+- services.colors.background, services.colors.accent, services.colors.borderColor, services.colors.text, services.colors.heading
+- services.paddingY, services.paddingX
+
+TEAM:
+- team.title, team.description, team.titleFontSize, team.descriptionFontSize
+- team.colors.background, team.colors.text, team.colors.heading
+- team.paddingY, team.paddingX
+
+VIDEO:
+- video.title, video.description, video.titleFontSize, video.descriptionFontSize
+- video.source, video.videoId, video.videoUrl, video.autoplay, video.loop, video.showControls
+- video.colors.background, video.colors.text, video.colors.heading
+- video.paddingY, video.paddingX
+
+HOWITWORKS:
+- howItWorks.title, howItWorks.description, howItWorks.steps, howItWorks.titleFontSize, howItWorks.descriptionFontSize
+- howItWorks.colors.background, howItWorks.colors.accent, howItWorks.colors.text, howItWorks.colors.heading
+- howItWorks.paddingY, howItWorks.paddingX
+
+FOOTER:
+- footer.title, footer.description, footer.copyrightText, footer.titleFontSize, footer.descriptionFontSize
+- footer.colors.background, footer.colors.border, footer.colors.text, footer.colors.linkHover, footer.colors.heading
+
+CHATBOT:
+- chatbot.welcomeMessage, chatbot.placeholderText, chatbot.knowledgeBase, chatbot.position, chatbot.isActive
+- chatbot.colors.primary, chatbot.colors.text, chatbot.colors.background
+
+EXAMPLES:
+- Change hero headline: path="hero.headline", value="Welcome to Our Site!"
+- Change title size: path="hero.headlineFontSize", value="6xl"
+- Change background: path="hero.colors.background", value="#1a1a1a"
+- Change padding: path="hero.paddingY", value="xl"
+- Change font family: path="theme.fontFamilyHeader", value="playfair-display"
+- Change button color: path="hero.colors.buttonBackground", value="#ff6b6b"
+- Enable chatbot: path="chatbot.isActive", value="true"
+- Change grid columns: path="features.gridColumns", value="3"
 `;
 
 const ACTION_PROTOCOL = `
-*** STRICT EXECUTION PROTOCOL ***
-1.  **SILENCE BEFORE ACTION:** If the user asks for an action (navigate, update, create, change theme), you MUST output the function call IMMEDIATELY.
-2.  **NO CHATTER:** Do NOT generate text like "Sure, I'll do that" or "Navigating now..." before calling the tool. Be completely silent until the tool is called.
-3.  **VERIFY THEN SPEAK:** Only generate a text response AFTER the tool has executed and you have received the result.
-4.  **CONFIRMATION:** Once the tool returns "Done" or a result, confirm to the user that the action is complete.
+*** EXECUTION PROTOCOL ***
+
+YOU ARE A HELPFUL, INTELLIGENT ASSISTANT WITH DEEP ACCESS TO THE ENTIRE APP.
+
+CORE BEHAVIOR:
+1. **UNDERSTAND INTENT**: Interpret what the user wants even if poorly written, with typos, or incomplete
+2. **BE SMART**: Use context clues and common sense to figure out ambiguous requests
+3. **ASK WHEN UNCLEAR**: If you genuinely don't understand or need critical info, ask clarifying questions
+4. **EXECUTE CONFIDENTLY**: When you understand the request, execute immediately without asking permission
+5. **BE CONVERSATIONAL**: Respond naturally - you're helpful, not robotic
+
+CAPABILITIES:
+1. Navigate: dashboard, websites, editor, cms, leads, domains, superadmin
+2. Edit Content: All 17 sections (hero, features, testimonials, pricing, faq, cta, services, team, portfolio, video, slideshow, newsletter, leads, howItWorks, header, footer, chatbot)
+3. Edit Styling: fonts, colors, sizes, padding, borders for ANY section
+4. Manage Data: CMS posts, Leads, Domains, Chatbot config, Brand Identity
+5. Manage Arrays: Add/edit/delete items in features, testimonials, pricing, FAQ, portfolio, services, team, slides, steps
+6. Section Control: Show/hide sections, reorder sections
+7. Create: New websites, leads, posts, domains, images
+8. Admin: Access all Super Admin panels (only for authorized users)
+
+UNDERSTANDING USER INTENT:
+- "cambia el titulo" = "change the hero title" → execute it
+- "pon el hero azul" = "make hero background blue" → execute it
+- "agrega una cosa en features" = "add a feature" → ASK what feature details they want
+- "quiero cambiar algo" = too vague → ASK what they want to change
+- "abre el editor" / "ve al editor" / "editor" → navigate to editor
+- "hazlo mas grande" (with context of title) → increase font size
+- "cambiar color" → ASK which element and which color
+
+WHEN TO ASK CLARIFYING QUESTIONS:
+❓ Missing critical information (e.g., "add a feature" - need title/description)
+❓ Truly ambiguous (e.g., "change it" - change what?)
+❓ Multiple valid interpretations (e.g., "make it blue" - background? text? button?)
+❓ User says "something" or "thing" without clear context
+
+WHEN TO EXECUTE WITHOUT ASKING:
+✅ Clear intent even with typos ("cambia el titlo del hero" → change hero title)
+✅ Context makes it obvious ("make it bigger" after discussing hero title)
+✅ Common/obvious requests ("open editor", "show me leads", "change background to dark")
+✅ You have all the info needed
+
+EXECUTION PATTERNS:
+- Editing content/style → use update_site_content with path
+- Managing list items → use manage_section_items
+- Navigation → use change_view or navigate_admin
+- Brand changes → use update_brand_identity
+- Section visibility → use manage_sections
+
+PATH EXAMPLES (update_site_content):
+- "Change hero title" → path="hero.headline", value="New Title"
+- "Make hero title bigger" → path="hero.headlineFontSize", value="6xl"
+- "Change hero background to dark" → path="hero.colors.background", value="#1a1a1a"
+- "Change main font to Playfair" → path="theme.fontFamilyHeader", value="playfair-display"
+- "Update CTA button text" → path="cta.buttonText", value="Get Started Now"
+- "Enable chatbot" → path="chatbot.isActive", value="true"
+
+ARRAY OPERATIONS (manage_section_items):
+- "Add a new feature" → section="features", action="add", itemData={title, description, imageUrl}
+- "Delete second testimonial" → section="testimonials", action="delete", index=1
+
+COMMON COMMAND VARIATIONS (all variations = same action):
+
+CHANGE/EDIT/MODIFY/UPDATE:
+- "cambia" / "cambiar" / "change"
+- "edita" / "editar" / "edit"
+- "modifica" / "modificar" / "modify"
+- "actualiza" / "actualizar" / "update"
+- "pon" / "poner" / "put" / "set"
+
+MAKE BIGGER/SMALLER:
+- "mas grande" / "más grande" / "bigger" / "larger" / "increase size" / "hazlo mas grande" / "agrandar"
+- "mas pequeño" / "más pequeño" / "smaller" / "reduce size" / "hazlo mas pequeño" / "achicar"
+
+NAVIGATE/OPEN/GO TO:
+- "abre" / "abrir" / "open"
+- "ve a" / "ir a" / "go to"
+- "muestra" / "mostrar" / "show"
+- "lleva" / "llevar" / "take me to"
+- "quiero ver" / "want to see"
+
+ADD/CREATE/NEW:
+- "agrega" / "agregar" / "add"
+- "añade" / "añadir" / "append"
+- "crea" / "crear" / "create"
+- "nuevo" / "nueva" / "new"
+
+DELETE/REMOVE/HIDE:
+- "elimina" / "eliminar" / "delete"
+- "borra" / "borrar" / "erase"
+- "quita" / "quitar" / "remove"
+- "oculta" / "ocultar" / "hide"
+- "esconde" / "esconder" / "conceal"
+
+COMMON TYPOS/ABBREVIATIONS:
+- "titulo"/"titlo"/"tit"/"title" → headline or title
+- "hero"/"heroe"/"inicio"/"header" → hero section (note: header is different but users may confuse)
+- "fondo"/"fonfo"/"backgrnd"/"bg" → background
+- "color"/"colour"/"col" → color
+- "fuente"/"fuente"/"font"/"letra" → font family
+- "tamaño"/"tamanio"/"size"/"tam" → size
+- "boton"/"botón"/"btn"/"button" → button
+- "imagen"/"img"/"image"/"pic" → image
+- "seccion"/"sección"/"section"/"sec" → section
+
+SECTION NAME VARIATIONS:
+- "caracteristicas"/"features"/"feat" → features section
+- "testimonios"/"testimonials"/"reviews" → testimonials section
+- "precios"/"pricing"/"plans"/"prices" → pricing section
+- "equipo"/"team"/"nosotros" → team section
+- "servicios"/"services"/"serv" → services section
+- "contacto"/"contact"/"leads"/"formulario" → leads/contact section
+- "pie de pagina"/"footer"/"pie" → footer section
+
+*** MULTILINGUAL TERM MAPPING (Spanish ↔ English) ***
+
+ACTIONS (all equivalents):
+- cambiar/cambia/change/modify/modifica/edit/edita/update/actualiza
+- agregar/agrega/add/añade/añadir/create/crea/crear
+- eliminar/elimina/delete/remove/quita/quitar/borrar/borra
+- ocultar/oculta/hide/esconder/esconde
+- mostrar/muestra/show/display/enseñar
+- abrir/abre/open/go to/ve a/ir a
+- hacer/haz/make/do
+
+PROPERTIES (Spanish ↔ English):
+- titulo/title → headline or title
+- subtitulo/subtitle → subheadline
+- fondo/background/bg → background
+- color/colour/col → color
+- texto/text → text
+- fuente/font/letra/typeface → font family
+- tamaño/size/tam → size
+- grande/big/bigger/large/larger → increase size
+- pequeño/small/smaller/chico → decrease size
+- imagen/image/img/picture/foto → image
+- boton/button/btn → button
+- seccion/section/sec → section
+- pagina/page/pag → page
+- menu/menú → menu
+- estilo/style → style
+- padding/espaciado/espacio → padding
+- margen/margin → margin
+- borde/border → border
+- ancho/width → width
+- alto/height → height
+- alinear/align/alineacion → alignment
+
+SECTIONS (Spanish ↔ English):
+- inicio/hero/heroe/header/portada → hero section
+- caracteristicas/features/feat/ventajas → features
+- testimonios/testimonials/reviews/opiniones/reseñas → testimonials
+- precios/pricing/planes/plans/tarifas → pricing
+- preguntas/faq/faqs/preguntas frecuentes → faq
+- contacto/contact/formulario/leads/form → leads/contact
+- equipo/team/nosotros/about us → team
+- servicios/services/serv → services
+- portafolio/portfolio/trabajos/galeria/gallery → portfolio
+- llamada a accion/cta/call to action → cta
+- pie de pagina/footer/pie → footer
+- cabecera/header/encabezado/navegacion → header
+- boletin/newsletter/suscripcion → newsletter
+- video/vídeo → video
+- carrusel/slideshow/slider/galeria → slideshow
+- como funciona/how it works/proceso → howItWorks
+- chatbot/chat/asistente → chatbot
+
+COLORS (Spanish ↔ English):
+- azul/blue → blue
+- rojo/red → red
+- verde/green → green
+- amarillo/yellow → yellow
+- negro/black/oscuro/dark → black/dark
+- blanco/white/claro/light → white/light
+- gris/gray/grey → gray
+- naranja/orange → orange
+- morado/purple/violeta → purple
+- rosa/pink → pink
+- celeste/cyan/aqua → cyan
+- turquesa/teal → teal
+
+COMMON PHRASES (Spanish → English):
+- "hazlo más grande" → "make it bigger"
+- "ponlo azul" → "make it blue"
+- "ve al editor" → "go to editor"
+- "abre el cms" → "open cms"
+- "cambia el titulo" → "change the title"
+- "agrega una característica" → "add a feature"
+- "elimina la segunda" → "delete the second one"
+- "oculta la sección" → "hide the section"
+- "muestra los precios" → "show pricing"
+- "actualiza el texto" → "update the text"
+
+FONT SIZES: xs, sm, base, lg, xl, 2xl, 3xl, 4xl, 5xl, 6xl, 7xl, 8xl, 9xl
+PADDING SIZES: none, xs, sm, md, lg, xl, 2xl, 3xl
+FONT FAMILIES: roboto, open-sans, lato, montserrat, playfair-display, oswald, source-sans-pro, raleway, poppins, inter
 `;
 
 const cleanJson = (text: string) => {
@@ -263,7 +631,12 @@ const GlobalAiAssistant: React.FC = () => {
         aiAssistantConfig, saveAiAssistantConfig,
         domains, addDomain, deleteDomain, verifyDomain,
         generateImage,
-        projects, setView, view, user
+        projects, setView, view, user,
+        brandIdentity, setBrandIdentity,
+        componentOrder, setComponentOrder,
+        sectionVisibility, setSectionVisibility,
+        // Component system
+        componentStatus, customComponents
     } = useEditor();
 
     // State
@@ -272,6 +645,7 @@ const GlobalAiAssistant: React.FC = () => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([{ role: 'model', text: globalAssistantConfig.greeting }]);
     const [isThinking, setIsThinking] = useState(false);
+    const [isExecutingCommands, setIsExecutingCommands] = useState(false);
     
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
@@ -304,6 +678,9 @@ const GlobalAiAssistant: React.FC = () => {
     const setThemeRef = useRef(setTheme);
     const userDocumentRef = useRef(userDocument);
     const getPromptRef = useRef(getPrompt);
+    const componentStatusRef = useRef(componentStatus);
+    const customComponentsRef = useRef(customComponents);
+    const lastToolCallRef = useRef<{ name: string; args: string; timestamp: number } | null>(null);
     const addNewProjectRef = useRef(addNewProject);
     const setIsOnboardingOpenRef = useRef(setIsOnboardingOpen);
     const isOnboardingOpenRef = useRef(isOnboardingOpen);
@@ -326,6 +703,12 @@ const GlobalAiAssistant: React.FC = () => {
     const generateImageRef = useRef(generateImage);
     const activeProjectRef = useRef(activeProject);
     const viewRef = useRef(view);
+    const brandIdentityRef = useRef(brandIdentity);
+    const setBrandIdentityRef = useRef(setBrandIdentity);
+    const componentOrderRef = useRef(componentOrder);
+    const setComponentOrderRef = useRef(setComponentOrder);
+    const sectionVisibilityRef = useRef(sectionVisibility);
+    const setSectionVisibilityRef = useRef(setSectionVisibility);
 
     // Sync Refs
     useEffect(() => { dataRef.current = data; }, [data]);
@@ -340,6 +723,8 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { setThemeRef.current = setTheme; }, [setTheme]);
     useEffect(() => { userDocumentRef.current = userDocument; }, [userDocument]);
     useEffect(() => { getPromptRef.current = getPrompt; }, [getPrompt]);
+    useEffect(() => { componentStatusRef.current = componentStatus; }, [componentStatus]);
+    useEffect(() => { customComponentsRef.current = customComponents; }, [customComponents]);
     useEffect(() => { addNewProjectRef.current = addNewProject; }, [addNewProject]);
     useEffect(() => { setIsOnboardingOpenRef.current = setIsOnboardingOpen; }, [setIsOnboardingOpen]);
     useEffect(() => { isOnboardingOpenRef.current = isOnboardingOpen; }, [isOnboardingOpen]);
@@ -362,6 +747,12 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { generateImageRef.current = generateImage; }, [generateImage]);
     useEffect(() => { activeProjectRef.current = activeProject; }, [activeProject]);
     useEffect(() => { viewRef.current = view; }, [view]);
+    useEffect(() => { brandIdentityRef.current = brandIdentity; }, [brandIdentity]);
+    useEffect(() => { setBrandIdentityRef.current = setBrandIdentity; }, [setBrandIdentity]);
+    useEffect(() => { componentOrderRef.current = componentOrder; }, [componentOrder]);
+    useEffect(() => { setComponentOrderRef.current = setComponentOrder; }, [setComponentOrder]);
+    useEffect(() => { sectionVisibilityRef.current = sectionVisibility; }, [sectionVisibility]);
+    useEffect(() => { setSectionVisibilityRef.current = setSectionVisibility; }, [setSectionVisibility]);
 
     const isConnectedRef = useRef(false);
 
@@ -392,8 +783,7 @@ const GlobalAiAssistant: React.FC = () => {
     }, [isLiveActive]);
 
     const performHeadlessGeneration = async (businessName: string, industry: string, description: string, tone: string) => {
-        if (!process.env.API_KEY) throw new Error("API Key missing");
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = await getGoogleGenAI();
         const getPrompt = getPromptRef.current;
 
         const designPrompt = getPrompt('onboarding-design-plan');
@@ -454,6 +844,21 @@ const GlobalAiAssistant: React.FC = () => {
             componentOrder: result.pageConfig?.componentOrder || designPlan.componentOrder || initialData.componentOrder,
             sectionVisibility: result.pageConfig?.sectionVisibility || initialData.sectionVisibility,
             imagePrompts: generatedPrompts,
+            aiAssistantConfig: {
+                agentName: `${businessName} Assistant`,
+                tone: tone || 'Professional',
+                languages: 'English, Spanish',
+                businessProfile: description,
+                productsServices: '',
+                policiesContact: '',
+                specialInstructions: '',
+                faqs: [],
+                widgetColor: designPlan.palette?.primary || '#4f46e5',
+                isActive: true,
+                leadCaptureEnabled: true,
+                enableLiveVoice: false,
+                voiceName: 'Zephyr' as const
+            }
         };
 
         await addNewProjectRef.current(newProject);
@@ -497,33 +902,71 @@ const GlobalAiAssistant: React.FC = () => {
     };
 
     const executeTool = async (name: string, args: any): Promise<{ result?: string, error?: string }> => {
-        console.log(`Executing Tool: ${name}`, args);
+        console.log(`[Tool Execution] ${name}`, {
+            args,
+            timestamp: new Date().toISOString()
+        });
         try {
+            const serializedArgs = JSON.stringify(args ?? {});
+            const now = Date.now();
+            const lastCall = lastToolCallRef.current;
+            if (lastCall && lastCall.name === name && lastCall.args === serializedArgs && now - lastCall.timestamp < 2000) {
+                console.log(`[Tool Execution] Duplicate call ignored: ${name}`);
+                return { result: `Ignored duplicate ${name} call.` };
+            }
+
+            lastToolCallRef.current = { name, args: serializedArgs, timestamp: now };
+
             if (name === 'change_view') {
                 const newView = args['viewName'] as any;
+                if (viewRef.current === newView) {
+                    const result = { result: `Already in ${newView}.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
                 setViewRef.current(newView);
-                return { result: `Navigated to ${newView}.` };
+                const result = { result: `Navigated to ${newView}.` };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
             }
             else if (name === 'navigate_admin') {
                 const adminViewName = args['adminViewName'] as any;
-                if (userDocumentRef.current?.role !== 'superadmin') return { error: "Unauthorized: Only Super Admins can access admin panels." };
+                if (userDocumentRef.current?.role !== 'superadmin') {
+                    const result = { error: "Unauthorized: Only Super Admins can access admin panels." };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
                 setViewRef.current('superadmin');
                 setAdminViewRef.current(adminViewName);
-                return { result: `Navigated to Super Admin > ${adminViewName}.` };
+                const result = { result: `Navigated to Super Admin > ${adminViewName}.` };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
             }
             else if (name === 'change_theme') {
                 const mode = args['mode'] as any;
                 if (['light', 'dark', 'black'].includes(mode)) {
                     setThemeModeRef.current(mode);
-                    return { result: `Switched theme to ${mode}.` };
+                    const result = { result: `Switched theme to ${mode}.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
                 }
-                return { error: 'Invalid theme mode.' };
+                const result = { error: 'Invalid theme mode.' };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
             }
             else if (name === 'update_site_content') {
-                if (!dataRef.current) return { error: "No active project loaded. Tell user to open a project first." };
+                if (!dataRef.current) {
+                    const result = { error: "No active project loaded. Tell user to open a project first." };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
                 const path = args['path'] as string;
                 let val: any = args['value'];
-                if (val === undefined || val === null) return { error: "Value required." };
+                if (val === undefined || val === null) {
+                    const result = { error: "Value required." };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
                 if (typeof val === 'string') {
                     const lowerVal = val.toLowerCase().trim();
                     if (lowerVal === 'true') val = true;
@@ -537,11 +980,15 @@ const GlobalAiAssistant: React.FC = () => {
                     const themeKey = path.split('.')[1];
                     if (themeKey && themeRef.current) {
                         setThemeRef.current(prev => ({...prev, [themeKey]: val}));
-                        return { result: `Updated global theme ${themeKey}.` };
+                        const result = { result: `Updated global theme ${themeKey}.` };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
                     }
                 }
                 const success = updateDataPath(path, val);
-                return { result: success ? `Updated ${path}.` : `Path ${path} not found.` };
+                const result = { result: success ? `Updated ${path}.` : `Path ${path} not found.` };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
             }
             else if (name === 'load_project') {
                 const identifier = args['identifier'];
@@ -551,19 +998,30 @@ const GlobalAiAssistant: React.FC = () => {
                     return p.id === identifier || pName === target || pName.includes(target) || target.includes(pName);
                 });
                 if (project) {
+                    if (activeProjectRef.current?.id === project.id) {
+                        const result = { result: `Project '${project.name}' is already active.` };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
                     loadProjectRef.current(project.id);
                     activeProjectRef.current = project;
                     dataRef.current = project.data;
-                    return { result: `Project '${project.name}' loaded.` };
+                    const result = { result: `Project '${project.name}' loaded.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
                 } else {
                     const available = projectsRef.current.slice(0, 5).map(p => p.name).join(', ');
-                    return { error: `Project not found. Available: ${available}...` };
+                    const result = { error: `Project not found. Available: ${available}...` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
                 }
             }
             else if (name === 'create_website') {
                 const { businessName, industry, description, tone } = args;
                 await performHeadlessGeneration(businessName, industry, description, tone);
-                return { result: `Website '${businessName}' created.` };
+                const result = { result: `Website '${businessName}' created.` };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
             }
             
             // --- CONTENT MANAGER TOOLS ---
@@ -667,21 +1125,162 @@ const GlobalAiAssistant: React.FC = () => {
                 return { result: `Image generated: ${url}` };
             }
 
-            return { error: `Unknown tool: ${name}` };
+            // --- SECTION ITEMS MANAGEMENT ---
+            else if (name === 'manage_section_items') {
+                if (!dataRef.current) {
+                    const result = { error: "No active project loaded." };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
+                const { section, action, index, itemData } = args;
+                
+                const sectionData = dataRef.current[section as keyof PageData] as any;
+                if (!sectionData || !sectionData.items) {
+                    const result = { error: `Section '${section}' not found or has no items array.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
+
+                if (action === 'add') {
+                    if (!itemData) {
+                        const result = { error: "itemData required for add action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    const newItems = [...sectionData.items, itemData];
+                    const success = updateDataPath(`${section}.items`, newItems);
+                    const result = { result: success ? `Added item to ${section}.` : `Failed to add item.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                } 
+                else if (action === 'update') {
+                    if (index === undefined || index === null) {
+                        const result = { error: "index required for update action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    if (!itemData) {
+                        const result = { error: "itemData required for update action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    if (index < 0 || index >= sectionData.items.length) {
+                        const result = { error: "Index out of range." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    const newItems = [...sectionData.items];
+                    newItems[index] = { ...newItems[index], ...itemData };
+                    const success = updateDataPath(`${section}.items`, newItems);
+                    const result = { result: success ? `Updated item ${index} in ${section}.` : `Failed to update item.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                } 
+                else if (action === 'delete') {
+                    if (index === undefined || index === null) {
+                        const result = { error: "index required for delete action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    if (index < 0 || index >= sectionData.items.length) {
+                        const result = { error: "Index out of range." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    const newItems = sectionData.items.filter((_: any, i: number) => i !== index);
+                    const success = updateDataPath(`${section}.items`, newItems);
+                    const result = { result: success ? `Deleted item ${index} from ${section}.` : `Failed to delete item.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
+                const result = { error: "Invalid action for manage_section_items." };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
+            }
+
+            // --- BRAND IDENTITY MANAGEMENT ---
+            else if (name === 'update_brand_identity') {
+                const updates = args;
+                const currentIdentity = brandIdentityRef.current;
+                const newIdentity = { ...currentIdentity, ...updates };
+                setBrandIdentityRef.current(newIdentity);
+                
+                const updatedFields = Object.keys(updates).join(', ');
+                const result = { result: `Brand identity updated: ${updatedFields}.` };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
+            }
+
+            // --- SECTION VISIBILITY & ORDER ---
+            else if (name === 'manage_sections') {
+                const { action, section, newOrder } = args;
+                
+                if (action === 'show') {
+                    if (!section) {
+                        const result = { error: "section required for show action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    const newVisibility = { ...sectionVisibilityRef.current, [section]: true };
+                    setSectionVisibilityRef.current(newVisibility);
+                    const result = { result: `Section '${section}' is now visible.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                } 
+                else if (action === 'hide') {
+                    if (!section) {
+                        const result = { error: "section required for hide action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    const newVisibility = { ...sectionVisibilityRef.current, [section]: false };
+                    setSectionVisibilityRef.current(newVisibility);
+                    const result = { result: `Section '${section}' is now hidden.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                } 
+                else if (action === 'reorder') {
+                    if (!newOrder || !Array.isArray(newOrder)) {
+                        const result = { error: "newOrder array required for reorder action." };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                    setComponentOrderRef.current(newOrder as any);
+                    const result = { result: `Section order updated.` };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
+                const result = { error: "Invalid action for manage_sections." };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
+            }
+
+            const unknownResult = { error: `Unknown tool: ${name}` };
+            console.log(`[Tool Result] ${name}`, unknownResult);
+            return unknownResult;
         } catch (err: any) {
-            console.error(`Tool execution error (${name}):`, err);
-            return { error: `Failed: ${err.message}` };
+            console.error(`[Tool Execution Error] ${name}:`, err);
+            const errorResult = { error: `Failed: ${err.message}` };
+            console.log(`[Tool Result] ${name}`, errorResult);
+            return errorResult;
         }
     };
 
     const getEffectiveSystemInstruction = (mode: 'chat' | 'voice') => {
-        const promptConfig = getPromptRef.current('global-assistant-main');
-        const baseInstruction = promptConfig ? promptConfig.template : globalAssistantConfig.systemInstruction;
+        const config = globalAssistantConfig;
         
-        const permissions = globalAssistantConfig.permissions || {};
+        // 1. Start with base system instruction (editable by user)
+        const promptConfig = getPromptRef.current('global-assistant-main');
+        const baseInstruction = promptConfig ? promptConfig.template : config.systemInstruction;
+        
+        // 2. Get enabled templates (or use defaults if not set)
+        const enabledTemplates = config.enabledTemplates || getDefaultEnabledTemplates();
+        const templatesInstruction = compileTemplates(enabledTemplates, config.customInstructions);
+        
+        // 3. Build scope and permissions text
+        const permissions = config.permissions || {};
         const allowedScopes = Object.keys(permissions).filter(key => permissions[key]?.[mode] === true);
         const isSuperAdmin = userDocumentRef.current?.role === 'superadmin';
-        const activeProject = activeProjectRef.current;
         
         let scopeText = "";
         if (isSuperAdmin) {
@@ -693,8 +1292,9 @@ const GlobalAiAssistant: React.FC = () => {
              } else scopeText = "ACCESS: OWNER.";
         }
 
-        // --- FAST CONTEXT INJECTION (Truncated for speed) ---
+        // 4. Inject contextual data (fast, truncated for speed)
         const LIMIT = 20;
+        const activeProject = activeProjectRef.current;
 
         const cmsContext = cmsPostsRef.current.length > 0 
             ? `Recent Posts: ${cmsPostsRef.current.slice(0, LIMIT).map(p => `"${p.title}" (ID:${p.id})`).join(', ')}.`
@@ -713,8 +1313,238 @@ const GlobalAiAssistant: React.FC = () => {
 
         const activeContext = `STATE: Active Project: ${activeProject ? activeProject.name : "None"}. View: ${viewRef.current}.`;
 
-        return `${baseInstruction}\n${ACTION_PROTOCOL}\n${scopeText}\n${projectContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${activeContext}\n${DATA_SCHEMA_HINT}`;
+        // Components context
+        const enabledComponents = Object.entries(componentStatusRef.current || {})
+            .filter(([_, enabled]) => enabled)
+            .map(([key, _]) => key)
+            .join(', ');
+        const componentsContext = enabledComponents 
+            ? `Available Components: ${enabledComponents}.`
+            : "Components: All standard components available.";
+
+        const customComponentsList = (customComponentsRef.current || [])
+            .slice(0, 10)
+            .map(c => `"${c.name}" (based on ${c.baseComponent})`)
+            .join(', ');
+        const customContext = customComponentsList 
+            ? `Custom Components: ${customComponentsList}.`
+            : "";
+
+        // 5. Compile final instruction
+        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${projectContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
     };
+
+    // DEPRECATED: Old hardcoded content (now in prompt templates)
+    // Kept here temporarily for reference, will be removed
+    const _DEPRECATED_intelligenceNote = `
+*** CRITICAL: MULTILINGUAL INTELLIGENT UNDERSTANDING ***
+
+LANGUAGE CAPABILITIES:
+- FULL BILINGUAL: Understand and respond in Spanish and English fluently
+- AUTO-DETECT: Automatically detect user's language and respond in the same language
+- MIXED LANGUAGES: Handle Spanglish and code-switching seamlessly
+- TRANSLATE INTENT: Map concepts between languages intelligently
+
+UNDERSTANDING RULES:
+1. Focus on INTENT, not exact words
+2. Recognize synonyms and similar concepts across languages
+3. Handle typos, spelling mistakes, and abbreviations in both languages
+4. Understand Spanish, English, and mixes (Spanglish)
+5. Use context from previous messages
+6. Infer missing details when reasonable
+7. ALWAYS respond in the user's language (or match their language)
+
+COMMON VARIATIONS YOU MUST UNDERSTAND:
+
+NAVIGATION REQUESTS (all mean: go to editor):
+- "abre el editor" / "abrir editor" / "open editor"
+- "ve al editor" / "ir al editor" / "go to editor"
+- "muestra el editor" / "show editor" / "editor"
+- "quiero editar" / "want to edit"
+- "lleva al editor" / "take me to editor"
+
+CHANGE HERO TITLE (all mean: change hero headline):
+- "cambia el titulo del hero" / "cambiar titulo hero"
+- "modifica el titulo del hero" / "modificar titulo"
+- "edita el titulo del hero" / "editar titulo"
+- "pon el titulo del hero" / "poner titulo"
+- "actualiza el titulo del hero" / "update hero title"
+- "change hero title" / "change the hero title"
+- WITH TYPOS: "cambia el titlo", "canbia el titulo", "titulo heroe"
+
+CHANGE BACKGROUND COLOR (all mean: change background):
+- "cambia el fondo a azul" / "cambiar fondo azul"
+- "pon el fondo azul" / "poner fondo azul"
+- "fondo azul" / "background blue"
+- "color de fondo azul" / "background color blue"
+- "hazlo azul" (with context) / "make it blue"
+- WITH TYPOS: "cambia el fonfo", "ponlo asul", "cambiar el findo"
+
+MAKE TEXT BIGGER (all mean: increase font size):
+- "hazlo mas grande" / "make it bigger"
+- "aumenta el tamaño" / "increase size"
+- "pon el texto mas grande" / "make text bigger"
+- "mas grande" / "bigger"
+- "agrandar" / "agrandar texto"
+- WITH TYPOS: "haslo mas grande", "mas grnade", "texto mas grannde"
+
+ADD FEATURE (all mean: add feature item):
+- "agrega una caracteristica" / "add a feature"
+- "añade una feature" / "add feature"
+- "crea una nueva caracteristica" / "create new feature"
+- "pon una caracteristica" / "put a feature"
+- "nueva feature" / "new feature"
+- WITH TYPOS: "agrega una carateristica", "agregar feture"
+
+HIDE SECTION (all mean: hide section):
+- "oculta la seccion de precios" / "hide pricing section"
+- "esconde los precios" / "hide pricing"
+- "no mostrar precios" / "don't show pricing"
+- "quita los precios" / "remove pricing"
+- WITH TYPOS: "oculatar la seccion", "esconder los presios"
+
+CHANGE FONT (all mean: change font family):
+- "cambia la fuente a roboto" / "change font to roboto"
+- "pon la letra en roboto" / "put font in roboto"
+- "usa la fuente roboto" / "use roboto font"
+- "fuente roboto" / "font roboto"
+- WITH TYPOS: "cambiar la funte", "fuenta roboto"
+
+KEY INSIGHT: If the user's intent is about EDITING, CHANGING, MODIFYING, UPDATING something → extract WHAT and TO WHAT, then execute.
+
+EXAMPLE REASONING:
+User: "ponlo mas grande"
+→ Intent: increase size
+→ Context needed: of what? (check previous messages or current view)
+→ If talking about hero title: increase hero.headlineFontSize
+→ Execute immediately
+
+User: "cambia el fonfo del heroe a verde"
+→ Intent: change background color (fonfo = typo for fondo)
+→ Target: hero section
+→ New value: green/verde
+→ Execute: update hero.colors.background to green
+
+WHEN TO ASK vs EXECUTE:
+❓ ASK if: Truly don't know WHAT to change (e.g., "cambia algo")
+✅ EXECUTE if: You know WHAT to change, even if request has typos/variations
+✅ EXECUTE if: Context makes it obvious (they're in editor, discussing hero)
+✅ EXECUTE if: It's a common reasonable interpretation
+
+LANGUAGE DETECTION & RESPONSE RULES:
+1. **AUTO-DETECT**: Identify if user is speaking Spanish, English, or mixed
+2. **MATCH LANGUAGE**: Always respond in the same language as the user
+3. **SPANGLISH OK**: If user mixes languages, pick dominant language or match their style
+4. **CONSISTENCY**: Once you detect user's preferred language, keep using it
+5. **NATURAL TONE**: Sound fluent and natural in both languages
+
+RESPONSE STYLE:
+- Match user's language (Spanish/English/Spanglish)
+- Be brief and natural
+- Confirm actions clearly in their language
+- Ask SHORT clarifying questions when needed
+- Use appropriate punctuation (¿? ¡! for Spanish)
+- Cultural awareness (formal "usted" vs informal "tú" - use "tú" by default)
+
+SPANISH RESPONSE PATTERNS:
+- "✓ Cambié..." / "✓ Actualicé..." / "✓ Agregué..."
+- "¿Qué [noun] quieres...?" / "¿Cuál es...?"
+- "Listo" / "Hecho" / "Perfecto"
+
+ENGLISH RESPONSE PATTERNS:
+- "✓ Changed..." / "✓ Updated..." / "✓ Added..."
+- "What [noun] would you like...?" / "Which...?"
+- "Done" / "Complete" / "Perfect"
+`;
+        
+        const conversationExamples = `
+*** EXAMPLE CONVERSATIONS (learn from these) ***
+
+Example 1: Spanish - Clear intent with typo
+User: "cambia el titlo del hero a Bienvenido"
+You: *calls update_site_content(path="hero.headline", value="Bienvenido")*
+You: "✓ Cambié el título del hero a 'Bienvenido'"
+
+Example 2: English - Same action
+User: "change the hero title to Welcome"
+You: *calls update_site_content(path="hero.headline", value="Welcome")*
+You: "✓ Changed hero title to 'Welcome'"
+
+Example 3: Spanish - Vague with context
+User: "ponlo mas grande"
+[Context: Just discussed hero title]
+You: *calls update_site_content(path="hero.headlineFontSize", value="5xl")*
+You: "✓ Aumenté el tamaño del título del hero"
+
+Example 4: English - Vague with context
+User: "make it bigger"
+[Context: Discussing features title]
+You: *calls update_site_content(path="features.titleFontSize", value="4xl")*
+You: "✓ Increased the features title size"
+
+Example 5: Spanish - Missing info, ask in Spanish
+User: "agrega una feature"
+You: "¿Qué característica quieres agregar? Necesito al menos el título y la descripción."
+
+Example 6: English - Missing info, ask in English
+User: "add a testimonial"
+You: "What testimonial would you like to add? I need at least the quote and the person's name."
+
+Example 7: Spanglish - Mixed language
+User: "abre el editor please"
+You: *calls change_view(viewName="editor")*
+You: "✓ Abrí el editor"
+
+Example 8: Spanish - Multiple variations
+User: "esconde la seccion de precios"
+You: *calls manage_sections(action="hide", section="pricing")*
+You: "✓ Oculté la sección de precios"
+
+Example 9: English - Same action
+User: "hide the pricing section"
+You: *calls manage_sections(action="hide", section="pricing")*
+You: "✓ Hidden the pricing section"
+
+Example 10: Spanish - Color change
+User: "hazlo azul oscuro"
+[Context: Discussing hero background]
+You: *calls update_site_content(path="hero.colors.background", value="#1a2a4a")*
+You: "✓ Cambié el fondo del hero a azul oscuro"
+
+Example 11: English - Color change
+User: "make it dark blue"
+[Context: Discussing hero background]
+You: *calls update_site_content(path="hero.colors.background", value="#1a2a4a")*
+You: "✓ Changed hero background to dark blue"
+
+Example 12: Spanish - Truly ambiguous
+User: "cambia eso"
+You: "¿Qué quieres cambiar? Por ejemplo:
+- El título o texto de alguna sección
+- Los colores o estilo
+- El orden de las secciones
+- La configuración del chatbot"
+
+Example 13: English - Truly ambiguous
+User: "change that"
+You: "What would you like to change? For example:
+- The title or text of a section
+- Colors or styling
+- Section order
+- Chatbot configuration"
+
+Example 14: Spanish - Navigate with typos
+User: "llevame al edidor"
+You: *calls change_view(viewName="editor")*
+You: "✓ Te llevé al editor"
+
+Example 15: English - Complex request
+User: "increase the hero button size and make it green"
+You: *calls update_site_content(path="hero.colors.buttonBackground", value="#22c55e")*
+You: *calls update_site_content(path="hero.buttonSize", value="lg")* [if exists]
+You: "✓ Made the hero button green and increased its size"
+`;
+    // END DEPRECATED
 
     const stopLiveSession = () => {
         isConnectedRef.current = false;
@@ -746,9 +1576,9 @@ const GlobalAiAssistant: React.FC = () => {
 
     const startLiveSession = async () => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
-        if (!process.env.API_KEY) return;
         setIsConnecting(true);
         try {
+            const ai = await getGoogleGenAI();
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
             const inputCtx = new AudioContextClass({ sampleRate: 16000 });
@@ -756,7 +1586,6 @@ const GlobalAiAssistant: React.FC = () => {
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
 
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
@@ -792,21 +1621,28 @@ const GlobalAiAssistant: React.FC = () => {
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.interrupted) {
+                            console.log('[Voice Mode] Audio interrupted');
                             activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
                             activeSourcesRef.current = [];
                             if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
                             return;
                         }
                         if (message.toolCall) {
+                            console.log('[Voice Mode] Function calls detected:', message.toolCall.functionCalls.map(fc => ({
+                                name: fc.name,
+                                args: fc.args
+                            })));
                             const functionResponses = [];
                             for (const fc of message.toolCall.functionCalls) {
                                 const { result, error } = await executeTool(fc.name, fc.args);
                                 functionResponses.push({ id: fc.id, name: fc.name, response: { result: result || error || "Done" } });
                             }
+                            console.log('[Voice Mode] Sending tool responses back to model');
                             sessionPromise.then(session => { if (isConnectedRef.current) session.sendToolResponse({ functionResponses }); });
                         }
                         const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                         if (audioData && audioContextRef.current) {
+                            console.log('[Voice Mode] Received audio response from model');
                             const ctx = audioContextRef.current;
                             const bytes = base64ToBytes(audioData);
                             const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
@@ -825,7 +1661,11 @@ const GlobalAiAssistant: React.FC = () => {
                 }
             });
             sessionRef.current = sessionPromise;
-        } catch (error) { setIsConnecting(false); alert("Failed to start voice session."); }
+        } catch (error) { 
+            handleApiError(error);
+            setIsConnecting(false); 
+            alert("Failed to start voice session."); 
+        }
     };
 
     const handleTextSend = async () => {
@@ -838,49 +1678,81 @@ const GlobalAiAssistant: React.FC = () => {
             if (hasApiKey === false) { await promptForKeySelection(); return; }
             setIsThinking(true);
             try {
-                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                 const ai = await getGoogleGenAI();
                  const chat = ai.chats.create({
-                    // Use gemini-2.5-flash for faster text interactions and tool use obedience
-                    model: 'gemini-2.5-flash', 
-                    config: { systemInstruction: getEffectiveSystemInstruction('chat'), tools: [{ functionDeclarations: TOOLS }] },
+                    // Use gemini-2.5-pro for better function calling obedience
+                    model: 'gemini-2.5-pro', 
+                    config: { 
+                        systemInstruction: getEffectiveSystemInstruction('chat'), 
+                        tools: [{ functionDeclarations: TOOLS }],
+                        toolConfig: {
+                            functionCallingConfig: {
+                                mode: FunctionCallingConfigMode.AUTO,
+                            }
+                        }
+                    },
                     history: messages.filter(m => !m.isToolOutput).map(m => ({ role: m.role, parts: [{ text: m.text }] }))
                  });
                  
                  let response = await chat.sendMessage({ message: userMsg });
+                 console.log('[Global Assistant] Model Response:', {
+                    text: response.text,
+                    hasFunctionCalls: !!response.functionCalls,
+                    functionCallsCount: response.functionCalls?.length || 0
+                 });
+                 
                  let functionCalls = response.functionCalls;
                  let turnCount = 0;
                  
                  // Loop for multi-step tool execution
                  while (functionCalls && functionCalls.length > 0 && turnCount < 5) {
                     turnCount++;
-                    // Process all function calls in parallel
+                    console.log(`[Global Assistant] Function calls detected (turn ${turnCount}):`, functionCalls.map(fc => ({
+                        name: fc.name,
+                        args: fc.args
+                    })));
                     const functionResponses = [];
-                    
-                    // Display a placeholder if not already shown, to indicate action
-                    if (turnCount === 1 && !response.text) {
-                         setMessages(prev => [...prev, { role: 'model', text: "_Executing commands..._", isToolOutput: true }]);
-                    }
+                    setIsExecutingCommands(true);
 
                     for (const call of functionCalls) {
                         const { result, error } = await executeTool(call.name, call.args);
-                        functionResponses.push({ id: call.id, name: call.name, response: { result: result || error || "Done" } });
+                        const feedback = result || error || "Done";
+                        // Don't show tool outputs in chat - just execute silently
+                        functionResponses.push({ id: call.id, name: call.name, response: { result: feedback } });
                     }
                     
                     // Send results back to model
                     const toolParts = functionResponses.map(resp => ({ functionResponse: { id: resp.id, name: resp.name, response: resp.response } }));
                     response = await chat.sendMessage({ message: toolParts });
+                    console.log('[Global Assistant] Model Response after tool execution:', {
+                        text: response.text,
+                        hasFunctionCalls: !!response.functionCalls,
+                        functionCallsCount: response.functionCalls?.length || 0
+                    });
                     functionCalls = response.functionCalls;
                  }
+                setIsExecutingCommands(false);
 
                  // Final response from model after tools are done
                  if (response.text) {
                      setMessages(prev => [...prev, { role: 'model', text: response.text }]);
                  } else if (turnCount > 0) {
                      // If model executed tools but returned no text, confirm completion
-                     setMessages(prev => [...prev, { role: 'model', text: "Done." }]);
+                     setMessages(prev => [...prev, { role: 'model', text: "✓ Listo" }]);
+                 } else {
+                     // No tools called and no text response - shouldn't happen with AUTO mode
+                     setMessages(prev => [...prev, { role: 'model', text: "Lo siento, no pude procesar esa solicitud." }]);
                  }
 
-            } catch (e) { console.error(e); setMessages(prev => [...prev, { role: 'model', text: "Error processing request." }]); } finally { setIsThinking(false); }
+            } catch (e: any) { 
+                console.error(e); 
+                handleApiError(e); 
+                const errorMessage = typeof e?.message === 'string' ? e.message : "Error processing request.";
+                setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMessage}` }]); 
+            } finally { 
+                setIsThinking(false); 
+                setIsExecutingCommands(false);
+            }
         }
     };
 
@@ -907,6 +1779,21 @@ const GlobalAiAssistant: React.FC = () => {
                 </div>
             </div>
             <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
+                {hasApiKey === false && (
+                    <div className="absolute inset-0 z-30 bg-background/95 backdrop-blur flex flex-col items-center justify-center text-center p-6 gap-3">
+                        <KeyRound size={40} className="text-primary" />
+                        <h3 className="text-lg font-semibold">API key required</h3>
+                        <p className="text-sm text-muted-foreground max-w-sm">
+                            Selecciona una clave de Google AI Studio para que el asistente pueda ejecutar acciones y responder.
+                        </p>
+                        <button
+                            onClick={promptForKeySelection}
+                            className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-semibold shadow hover:opacity-90 transition"
+                        >
+                            Seleccionar API key
+                        </button>
+                    </div>
+                )}
                 {isLiveActive && (
                     <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-foreground animate-fade-in-up">
                         <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-8 relative"><div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-30"></div><img src={LOGO_URL} alt="Quimera Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" /></div>
@@ -926,15 +1813,26 @@ const GlobalAiAssistant: React.FC = () => {
                              {msg.role === 'user' && <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">{user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}</div>}
                         </div>
                     ))}
+                    {isExecutingCommands && (
+                        <div className="flex justify-start">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
+                                <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
+                            </div>
+                            <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
+                                <Loader2 size={14} className="animate-spin text-primary" />
+                                <span>Ejecutando acciones...</span>
+                            </div>
+                        </div>
+                    )}
                     {isThinking && <div className="flex justify-start"><div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden"><img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" /></div><div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground"><Loader2 size={14} className="animate-spin text-primary" /><span>Thinking...</span></div></div>}
                     <div ref={messagesEndRef} />
                 </div>
-                <div className="p-4 bg-card border-t border-border shrink-0">
+                <div className="p-4 bg-card border-t border-border shrink-0 opacity-100 transition-opacity" style={{ opacity: hasApiKey === false ? 0.4 : 1 }}>
                     <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
                          <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat"><Trash2 size={18} /></button>
                         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleTextSend()} placeholder="Type a message..." className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50" disabled={isLiveActive} />
                         {globalAssistantConfig.enableLiveVoice && <button onClick={startLiveSession} disabled={isConnecting || isLiveActive} className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} title="Start Voice Mode">{isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}</button>}
-                        <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
+                        <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive || hasApiKey === false} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
                     </div>
                      <div className="mt-2 flex justify-between items-center px-2">
                          <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>

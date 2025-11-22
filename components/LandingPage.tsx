@@ -75,7 +75,7 @@ const fontStacks: Record<FontFamily, string> = {
 };
 
 const LandingPage: React.FC = () => {
-  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus } = useEditor();
+  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents } = useEditor();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
 
@@ -133,10 +133,64 @@ const LandingPage: React.FC = () => {
       // This triggers hashchange, which sets activePost(null)
   };
   
+  // Helper function to render custom components
+  const renderCustomComponent = (customComponentId: string) => {
+    const customComp = customComponents.find(c => c.id === customComponentId);
+    if (!customComp) return null;
+
+    // Merge custom component styles with base data
+    const baseComponentData = data[customComp.baseComponent];
+    const mergedData = {
+      ...baseComponentData,
+      ...customComp.styles,
+      colors: {
+        ...baseComponentData?.colors,
+        ...customComp.styles?.colors
+      }
+    };
+
+    // Render the base component with custom styles
+    const borderRadius = theme.cardBorderRadius;
+    const buttonBorderRadius = theme.buttonBorderRadius;
+
+    switch (customComp.baseComponent) {
+      case 'hero':
+        return <Hero {...mergedData} borderRadius={buttonBorderRadius} />;
+      case 'features':
+        return <Features {...mergedData} borderRadius={borderRadius} />;
+      case 'testimonials':
+        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} />;
+      case 'slideshow':
+        return <Slideshow {...mergedData} borderRadius={borderRadius} />;
+      case 'pricing':
+        return <Pricing {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+      case 'faq':
+        return <Faq {...mergedData} borderRadius={borderRadius} />;
+      case 'leads':
+        return <Leads {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+      case 'newsletter':
+        return <Newsletter {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+      case 'cta':
+        return <CTASection {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+      case 'portfolio':
+        return <Portfolio {...mergedData} borderRadius={borderRadius} />;
+      case 'services':
+        return <Services {...mergedData} borderRadius={borderRadius} />;
+      case 'team':
+        return <Team {...mergedData} borderRadius={borderRadius} />;
+      case 'video':
+        return <Video {...mergedData} borderRadius={borderRadius} />;
+      case 'howItWorks':
+        return <HowItWorks {...mergedData} borderRadius={borderRadius} />;
+      default:
+        return null;
+    }
+  };
+
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: <Hero {...data.hero} borderRadius={theme.buttonBorderRadius} />,
     features: <Features {...data.features} borderRadius={theme.cardBorderRadius} />,
-    testimonials: <Testimonials {...data.testimonials} borderRadius={theme.cardBorderRadius} />,
+    testimonials: <Testimonials {...data.testimonials} borderRadius={data.testimonials.borderRadius || theme.cardBorderRadius} cardShadow={data.testimonials.cardShadow} borderStyle={data.testimonials.borderStyle} cardPadding={data.testimonials.cardPadding} />,
     slideshow: <Slideshow {...data.slideshow} borderRadius={theme.cardBorderRadius} />,
     pricing: <Pricing {...data.pricing} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     faq: <Faq {...data.faq} borderRadius={theme.cardBorderRadius} />,
@@ -148,7 +202,7 @@ const LandingPage: React.FC = () => {
     team: <Team {...data.team} borderRadius={theme.cardBorderRadius} />,
     video: <Video {...data.video} borderRadius={theme.cardBorderRadius} />,
     howItWorks: <HowItWorks {...data.howItWorks} borderRadius={theme.cardBorderRadius} />,
-    chatbot: <ChatbotWidget {...data.chatbot} />,
+    chatbot: <ChatbotWidget />,
     footer: <Footer {...data.footer} />,
     header: null,
     typography: null,

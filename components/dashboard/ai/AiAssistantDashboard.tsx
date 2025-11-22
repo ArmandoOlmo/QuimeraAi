@@ -5,12 +5,18 @@ import DashboardSidebar from '../DashboardSidebar';
 import { 
     Menu, Bot, MessageSquare, Settings, Sliders, FileText, 
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
-    Mic, Radio
+    Mic, Radio, BookOpen
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
+import InfoBubble from '../../ui/InfoBubble';
+import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { AiAssistantConfig } from '../../../types';
+import FAQManager from './FAQManager';
+import KnowledgeDocumentUploader from './KnowledgeDocumentUploader';
+import LeadCaptureSettings from './LeadCaptureSettings';
+import ChatCustomizationSettings from './ChatCustomizationSettings';
 
-type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'settings';
+type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'settings';
 
 const voices: { name: AiAssistantConfig['voiceName']; description: string; gender: string }[] = [
     { name: 'Zephyr', description: 'Calm, balanced, professional.', gender: 'Female' },
@@ -185,6 +191,34 @@ const AiAssistantDashboard: React.FC = () => {
                                 onChange={(e) => updateForm('policiesContact', e.target.value)}
                             />
                         </div>
+
+                        {/* FAQs Section */}
+                        <div className="pt-6 border-t border-border">
+                            <div className="flex items-center gap-2 mb-4">
+                                <BookOpen size={20} className="text-primary" />
+                                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                                    Frequently Asked Questions
+                                </h3>
+                            </div>
+                            <FAQManager 
+                                faqs={formData.faqs} 
+                                onFAQsChange={(faqs) => updateForm('faqs', faqs)} 
+                            />
+                        </div>
+
+                        {/* Knowledge Documents Section */}
+                        <div className="pt-6 border-t border-border">
+                            <div className="flex items-center gap-2 mb-4">
+                                <FileText size={20} className="text-primary" />
+                                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                                    Knowledge Documents
+                                </h3>
+                            </div>
+                            <KnowledgeDocumentUploader
+                                documents={formData.knowledgeDocuments || []}
+                                onDocumentsChange={(docs) => updateForm('knowledgeDocuments', docs)}
+                            />
+                        </div>
                     </div>
                 );
             
@@ -282,6 +316,20 @@ const AiAssistantDashboard: React.FC = () => {
                     </div>
                 );
 
+            case 'leadCapture':
+                return (
+                    <div className="animate-fade-in-up">
+                        <LeadCaptureSettings />
+                    </div>
+                );
+
+            case 'customization':
+                return (
+                    <div className="animate-fade-in-up">
+                        <ChatCustomizationSettings />
+                    </div>
+                );
+
             case 'settings':
                 return (
                      <div className="space-y-6 animate-fade-in-up">
@@ -343,6 +391,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <InfoBubble bubbleId="chatSimulator" content={INFO_BUBBLE_CONTENT.chatSimulator} inline defaultExpanded={false} />
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
@@ -369,6 +418,8 @@ const AiAssistantDashboard: React.FC = () => {
                                     { id: 'knowledge', label: 'Knowledge' },
                                     { id: 'personality', label: 'Personality' },
                                     { id: 'voice', label: 'Voice & Live' },
+                                    { id: 'leadCapture', label: 'Lead Capture' },
+                                    { id: 'customization', label: 'Customization' },
                                     { id: 'settings', label: 'Settings' },
                                 ].map(tab => (
                                     <button

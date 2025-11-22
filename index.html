@@ -25,9 +25,9 @@
         --popover: 0 0% 100%;
         --popover-foreground: 222 47% 11%;
         
-        /* Primary: Amber/Gold (Brand Identity) - adjusted slightly for visibility on light bg */
-        --primary: 35 90% 50%;      /* #F59E0B */
-        --primary-foreground: 0 0% 100%; /* White text on orange buttons */
+        /* Primary: Cadmium Yellow (Brand Identity) */
+        --primary: 41 96% 58%;      /* #FBB92B - Cadmium Yellow */
+        --primary-foreground: 0 0% 100%; /* White text on yellow buttons */
         
         /* Secondary: Light Slate for subtle elements/hovers */
         --secondary: 210 40% 96.1%; /* #F1F5F9 */
@@ -48,111 +48,112 @@
         /* Borders - Soft Slate */
         --border: 214 32% 91%;      /* #E2E8F0 */
         --input: 214 32% 91%;
-        --ring: 35 90% 50%;         /* Matches Primary */
+        --ring: 41 96% 58%;         /* Matches Primary - Cadmium Yellow */
         --radius: 0.75rem;
         
         /* Editor Specific Mappings - Explicit Hex for Consistency */
         --editor-bg: #F3F4F6;       /* Gray 100 - The canvas background */
         --editor-panel-bg: #FFFFFF; /* White - The sidebar/panels */
         --editor-border: #E5E7EB;   /* Gray 200 */
-        --editor-accent: #F59E0B;   /* Amber 500 */
+        --editor-accent: #FBB92B;   /* Cadmium Yellow */
         --editor-text-primary: #111827;   /* Gray 900 */
         --editor-text-secondary: #6B7280; /* Gray 500 */
       }
   
       .dark {
-        /* QUIMERA THEME (Dark Mode - The Real Deal) */
-        /* Background: Deep Violet Black */
-        --background: 272 47% 10%; /* #1A0D26 - Deep Purple Base */
-        --foreground: 0 0% 95%;     /* White text */
+        /* QUIMERA THEME (Dark Mode - Improved Contrast) */
+        /* Background: Purple más claro para reducir fatiga visual */
+        --background: 272 45% 14%;  /* #251636 - Más claro, menos cansancio */
+        --foreground: 0 0% 98%;     /* Texto casi blanco para mejor contraste */
         
-        /* Cards: Slightly lighter purple */
-        --card: 266 28% 18%;        /* #2C1A3D */
-        --card-foreground: 0 0% 95%;
-        
-        /* Popovers */
-        --popover: 266 28% 18%;
-        --popover-foreground: 0 0% 95%;
-        
-        /* Primary: Acid Orange/Gold */
-        --primary: 45 100% 50%;     /* #FFB800 / #FCAE00 */
-        --primary-foreground: 272 47% 10%;
-        
-        /* Secondary: Muted Purple */
-        --secondary: 268 34% 30%;   /* #4E3366 */
-        --secondary-foreground: 0 0% 98%;
-        
-        /* Muted */
-        --muted: 268 20% 20%;
-        --muted-foreground: 265 10% 70%;
-        
-        /* Accent */
-        --accent: 268 40% 40%;      /* #6B4B85 */
-        --accent-foreground: 0 0% 98%;
-        
-        /* Destructive */
-        --destructive: 0 62% 30%;
-        --destructive-foreground: 0 0% 98%;
-        
-        /* Borders & Inputs */
-        --border: 266 28% 25%;      /* Subtle purple border */
-        --input: 266 28% 25%;
-        --ring: 45 100% 50%;        /* Focus ring matches primary */
-
-        /* Editor Mapping for existing components */
-        --editor-bg: hsl(272, 47%, 10%);
-        --editor-panel-bg: hsl(266, 28%, 18%);
-        --editor-border: hsl(266, 28%, 25%);
-        --editor-accent: hsl(45, 100%, 50%);
-        --editor-text-primary: hsl(0, 0%, 95%);
-        --editor-text-secondary: hsl(265, 10%, 70%);
-      }
-
-      /* BLACK MODE - Pure Black & Yellow */
-      .black {
-        --background: 0 0% 0%;        /* #000000 */
-        --foreground: 0 0% 100%;      /* #FFFFFF */
-        
-        /* Cards: Pure Black for a true OLED feel */
-        --card: 0 0% 0%;             /* #000000 */
-        --card-foreground: 0 0% 100%;
+        /* Cards: Mayor diferencia con el fondo */
+        --card: 268 35% 22%;        /* #382952 - Mucho mejor contraste */
+        --card-foreground: 0 0% 98%;
         
         /* Popovers */
-        --popover: 0 0% 3%;
-        --popover-foreground: 0 0% 100%;
+        --popover: 268 35% 22%;
+        --popover-foreground: 0 0% 98%;
         
-        /* Primary: Bright Yellow (Quimera brand) */
-        --primary: 45 100% 50%;      /* #FFB800 */
-        --primary-foreground: 0 0% 0%;
+        /* Primary: Cadmium Yellow */
+        --primary: 41 96% 58%;      /* #FBB92B - Cadmium Yellow */
+        --primary-foreground: 272 47% 10%; /* Purple text on yellow */
         
-        /* Secondary: Dark Gray */
-        --secondary: 0 0% 12%;       /* #1F1F1F */
+        /* Secondary: Purple más visible */
+        --secondary: 268 38% 35%;   /* #5C3D7A - Más claro y visible */
         --secondary-foreground: 0 0% 100%;
         
-        /* Muted */
-        --muted: 0 0% 12%;
-        --muted-foreground: 0 0% 60%; /* #999999 */
+        /* Muted: Más contraste */
+        --muted: 268 25% 25%;       /* Más claro */
+        --muted-foreground: 265 12% 75%; /* Texto más claro y legible */
         
-        /* Accent */
-        --accent: 45 100% 50%;
-        --accent-foreground: 0 0% 0%;
+        /* Accent: Purple vibrante */
+        --accent: 268 45% 45%;      /* #7A569D - Más visible */
+        --accent-foreground: 0 0% 100%;
         
         /* Destructive */
-        --destructive: 0 62% 30%;
-        --destructive-foreground: 0 0% 98%;
+        --destructive: 0 65% 50%;   /* Más brillante y visible */
+        --destructive-foreground: 0 0% 100%;
         
-        /* Borders & Inputs: Dark Gray */
-        --border: 0 0% 15%;          /* #262626 */
-        --input: 0 0% 15%;
-        --ring: 45 100% 50%;
+        /* Borders: Mucho más visibles */
+        --border: 266 30% 32%;      /* #4F3B66 - Borders claramente visibles */
+        --input: 266 30% 32%;
+        --ring: 41 96% 58%;         /* Focus ring - Cadmium Yellow */
+
+        /* Editor Mapping for existing components */
+        --editor-bg: hsl(272, 45%, 14%);
+        --editor-panel-bg: hsl(268, 35%, 22%);
+        --editor-border: hsl(266, 30%, 32%);
+        --editor-accent: hsl(41, 96%, 58%);  /* Cadmium Yellow */
+        --editor-text-primary: hsl(0, 0%, 98%);
+        --editor-text-secondary: hsl(265, 12%, 75%);
+      }
+
+      /* BLACK MODE - OLED Optimized */
+      .black {
+        /* Background: Negro puro para OLED */
+        --background: 0 0% 0%;        /* #000000 - True Black OLED */
+        --foreground: 0 0% 100%;      /* #FFFFFF - Blanco puro */
+        
+        /* Cards: Gris muy oscuro pero visible sobre negro */
+        --card: 0 0% 6%;              /* #0F0F0F - Se diferencia claramente */
+        --card-foreground: 0 0% 100%;
+        
+        /* Popovers: Ligeramente más claro que cards */
+        --popover: 0 0% 8%;           /* #141414 */
+        --popover-foreground: 0 0% 100%;
+        
+        /* Primary: Cadmium Yellow (Quimera brand) */
+        --primary: 41 96% 58%;        /* #FBB92B - Cadmium Yellow */
+        --primary-foreground: 0 0% 0%; /* Black text on bright yellow */
+        
+        /* Secondary: Gris oscuro claramente visible */
+        --secondary: 0 0% 18%;        /* #2E2E2E - Mucho más visible */
+        --secondary-foreground: 0 0% 100%;
+        
+        /* Muted: Mayor contraste */
+        --muted: 0 0% 18%;
+        --muted-foreground: 0 0% 70%; /* #B3B3B3 - Más legible */
+        
+        /* Accent: Cadmium Yellow para coherencia */
+        --accent: 41 96% 58%;         /* Cadmium Yellow */
+        --accent-foreground: 0 0% 0%;
+        
+        /* Destructive: Rojo más visible */
+        --destructive: 0 70% 55%;
+        --destructive-foreground: 0 0% 100%;
+        
+        /* Borders: Grises claramente visibles */
+        --border: 0 0% 20%;           /* #333333 - Muy visibles */
+        --input: 0 0% 20%;
+        --ring: 41 96% 58%;           /* Cadmium Yellow */
 
         /* Editor Mappings */
-        --editor-bg: #000000;
-        --editor-panel-bg: #000000;
-        --editor-border: #262626;
-        --editor-accent: #FFB800;
+        --editor-bg: #000000;         /* True Black */
+        --editor-panel-bg: #0F0F0F;   /* Panels visibles */
+        --editor-border: #333333;     /* Borders claramente visibles */
+        --editor-accent: #FBB92B;     /* Cadmium Yellow */
         --editor-text-primary: #FFFFFF;
-        --editor-text-secondary: #888888;
+        --editor-text-secondary: #B3B3B3; /* Más legible */
       }
 
       body {
@@ -190,6 +191,20 @@
       .img-style-hexagon { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
       .img-style-polaroid { background: white; padding: 1rem 1rem 3rem 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: rotate(-3deg); transition: transform 0.3s ease-in-out; }
       .img-style-polaroid:hover { transform: rotate(0deg) scale(1.05); }
+      
+      /* Hero Float Animation */
+      @keyframes heroFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      .animate-hero-float { animation: heroFloat 6s ease-in-out infinite; }
+      
+      /* Shimmer Animation for Skeleton Loading */
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .animate-shimmer { animation: shimmer 2s infinite linear; }
 
       /* Site Content Colors - Default Mappings */
       :root {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { GoogleGenAI } from '@google/genai';
+import { getGoogleGenAI } from '../../utils/genAiClient';
 import { Sparkles, X, KeyRound, Wand2, Languages, AlignLeft, Type } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
 
@@ -57,7 +57,7 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
     setIsLoading(true);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+      const ai = await getGoogleGenAI();
       
       // Prepare replacement variables including Brand Identity
       let populatedPrompt = promptTemplate.template

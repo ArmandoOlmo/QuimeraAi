@@ -1,96 +1,415 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectCard from './ProjectCard';
+import ProjectCardSkeleton from './ProjectCardSkeleton';
+import ProjectListItem from './ProjectListItem';
 import StatCard from './StatCard';
 import FileHistory from './FileHistory';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images } from 'lucide-react';
+import InfoBubble from '../ui/InfoBubble';
+import FilterChip from './FilterChip';
+import EmptyState from './EmptyState';
+import LanguageSelector from '../ui/LanguageSelector';
+import { INFO_BUBBLE_CONTENT } from '../../data/infoBubbleContent';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2 } from 'lucide-react';
+import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
+import { importProjectFromFile } from '../../utils/projectImporter';
+import { downloadMultipleProjectsAsJSON } from '../../utils/projectExporter';
+import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { 
-    userDocument, 
+    userDocument,
+    user,
     projects, 
+    isLoadingProjects,
     view, 
     setView, 
-    setIsOnboardingOpen
+    setIsOnboardingOpen,
+    addNewProject
   } = useEditor();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Filters & Sorting
+  const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
+  const [sortBy, setSortBy] = useState<'lastUpdated' | 'name'>('lastUpdated');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Infinite Scroll
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+  
+  // Track dashboard view changes
+  useEffect(() => {
+    if (view === 'dashboard' || view === 'websites' || view === 'assets') {
+      trackDashboardView(view);
+    }
+  }, [view]);
   
   // View States
   const isDashboard = view === 'dashboard';
   const isWebsites = view === 'websites';
   const isAssets = view === 'assets';
 
-  // Filter projects
-  const userProjects = projects.filter(p => p.status !== 'Template' && p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Filter and sort projects
+  const userProjects = useMemo(() => {
+    let filtered = projects.filter(p => 
+      p.status !== 'Template' && 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    // Filter by status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(p => p.status === filterStatus);
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      if (sortBy === 'name') {
+        comparison = a.name.localeCompare(b.name);
+      } else {
+        comparison = new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime();
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [projects, searchQuery, filterStatus, sortBy, sortOrder]);
+
   const templates = projects.filter(p => p.status === 'Template');
+  const allUserProjects = projects.filter(p => p.status !== 'Template');
+  const publishedCount = allUserProjects.filter(p => p.status === 'Published').length;
+  const draftCount = allUserProjects.filter(p => p.status === 'Draft').length;
+  
+  // Track search queries with debounce
+  useEffect(() => {
+    if (searchQuery.length > 2) {
+      const timeoutId = setTimeout(() => {
+        trackSearchPerformed(searchQuery, userProjects.length);
+      }, 1000); // Debounce for 1 second
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery, userProjects.length]);
+  
+  // Track filter changes
+  useEffect(() => {
+    if (filterStatus !== 'all') {
+      trackFilterApplied('status', filterStatus, userProjects.length);
+    }
+  }, [filterStatus]);
+  
+  // Track sort changes
+  useEffect(() => {
+    trackSortChanged(sortBy, sortOrder);
+  }, [sortBy, sortOrder]);
+  
+  // Track view mode changes
+  useEffect(() => {
+    trackViewModeChanged(viewMode);
+  }, [viewMode]);
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterStatus, sortBy, sortOrder]);
+  
+  // Paginated projects for infinite scroll
+  const paginatedProjects = useMemo(() => {
+    return paginateArray(userProjects, currentPage, ITEMS_PER_PAGE);
+  }, [userProjects, currentPage]);
+  
+  // Check if there are more projects to load
+  const hasMore = hasMoreItems(userProjects.length, currentPage, ITEMS_PER_PAGE);
+  
+  // Load more projects
+  const loadMore = () => {
+    if (hasMore && !isLoadingProjects) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+  
+  // Infinite scroll hook
+  const observerTarget = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore,
+    isLoading: isLoadingProjects,
+    threshold: 200,
+  });
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return t('dashboard.goodMorning');
+    if (hour < 18) return t('dashboard.goodAfternoon');
+    return t('dashboard.goodEvening');
+  };
+  
+  // Handle project import
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    
+    setIsImporting(true);
+    try {
+      const { projects: importedProjects, warnings } = await importProjectFromFile(file, user.uid);
+      
+      // Add all imported projects
+      for (const project of importedProjects) {
+        await addNewProject(project);
+      }
+      
+      // Show success message
+      alert(t('messages.importSuccess', { count: importedProjects.length }) + (warnings.length > 0 ? '\n\n' + t('common.warnings') + ':\n' + warnings.join('\n') : ''));
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      alert(t('messages.importError'));
+    } finally {
+      setIsImporting(false);
+    }
+  };
+  
+  // Handle export all projects
+  const handleExportAll = () => {
+    if (!user) return;
+    downloadMultipleProjectsAsJSON(userProjects, user.email || 'unknown');
   };
 
   // Header Config
   let HeaderIcon = LayoutGrid;
-  let headerTitle = 'Dashboard';
+  let headerTitle = t('dashboard.title');
 
   if (isWebsites) {
       HeaderIcon = Globe;
-      headerTitle = 'My Websites';
+      headerTitle = t('dashboard.myWebsites');
   } else if (isAssets) {
       HeaderIcon = Images;
-      headerTitle = 'Asset Library';
+      headerTitle = t('dashboard.assets');
   }
 
   return (
     <div className="flex h-screen bg-background text-foreground">
+       {/* Skip to content link for accessibility */}
+       <a 
+         href="#main-content" 
+         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-bold"
+       >
+         {t('common.skipToContent')}
+       </a>
+       
        <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
        
        <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Standardized Header */}
-          <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+          <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
              <div className="flex items-center gap-4">
-                <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
+                <button 
+                   onClick={() => setIsMobileMenuOpen(true)} 
+                   className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
+                   aria-label="Open navigation menu"
+                   aria-expanded={isMobileMenuOpen}
+                >
                    <Menu />
                 </button>
                 <div className="flex items-center gap-2">
-                    <HeaderIcon className="text-primary" size={24} />
+                    <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
                     <h1 className="text-xl font-bold text-foreground">{headerTitle}</h1>
                 </div>
              </div>
 
              <div className="flex items-center gap-4 flex-1 justify-end">
-                {/* Search Bar - Visible on Dashboard & Websites */}
+                {/* Search Bar - Desktop */}
                 {(isDashboard || isWebsites) && (
-                    <div className="relative group max-w-md w-full hidden md:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                    <div className="relative group max-w-md w-full hidden md:block" role="search">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} aria-hidden="true" />
                         <input 
-                            type="text" 
-                            placeholder="Search projects..." 
+                            type="search" 
+                            placeholder={t('dashboard.searchProjects')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border-transparent focus:bg-card focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
+                            className="w-full bg-secondary/50 border-transparent focus:bg-card focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm focus:ring-2 focus:ring-primary/30"
+                            aria-label={t('dashboard.searchProjects')}
                         />
                     </div>
                 )}
 
+                {/* Mobile Search Button */}
+                {(isDashboard || isWebsites) && (
+                    <button 
+                        onClick={() => setShowMobileSearch(true)}
+                        className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Open search"
+                        aria-expanded={showMobileSearch}
+                    >
+                        <Search size={20} />
+                    </button>
+                )}
+
+                {/* View Mode Toggle - Only on Websites view */}
+                {isWebsites && (
+                    <div className="hidden sm:flex items-center gap-1 bg-secondary/50 rounded-lg p-1" role="group" aria-label="View mode">
+                        <button 
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                            aria-label={t('dashboard.gridView')}
+                            aria-pressed={viewMode === 'grid'}
+                        >
+                            <LayoutGrid size={16} aria-hidden="true" />
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                            aria-label={t('dashboard.listView')}
+                            aria-pressed={viewMode === 'list'}
+                        >
+                            <List size={16} aria-hidden="true" />
+                        </button>
+                    </div>
+                )}
+
+                {/* Sort Button - Only on Websites view */}
+                {isWebsites && (
+                    <button 
+                        onClick={() => {
+                            if (sortBy === 'lastUpdated') {
+                                setSortBy('name');
+                                setSortOrder('asc');
+                            } else if (sortBy === 'name' && sortOrder === 'asc') {
+                                setSortOrder('desc');
+                            } else {
+                                setSortBy('lastUpdated');
+                                setSortOrder('desc');
+                            }
+                        }}
+                        className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm"
+                        aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
+                    >
+                        <ArrowUpDown size={14} aria-hidden="true" />
+                        <span className="hidden lg:inline">
+                            {sortBy === 'name' ? t('common.name') : t('common.updated')}
+                        </span>
+                    </button>
+                )}
+
+                {/* Import/Export buttons - Only on Websites view */}
+                {isWebsites && userProjects.length > 0 && (
+                    <>
+                        <button 
+                            onClick={handleExportAll}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm"
+                            title={t('common.export')}
+                            aria-label={t('dashboard.exportAllProjects')}
+                        >
+                            <Download size={14} aria-hidden="true" />
+                            <span className="hidden lg:inline">{t('common.export')}</span>
+                        </button>
+                        
+                        <button 
+                            onClick={handleImportClick}
+                            disabled={isImporting}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm disabled:opacity-50"
+                            title={t('common.import')}
+                            aria-label={t('dashboard.importProjects')}
+                        >
+                            <Upload size={14} aria-hidden="true" />
+                            <span className="hidden lg:inline">{isImporting ? t('common.importing') : t('common.import')}</span>
+                        </button>
+                        
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".json"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            aria-label="File input for importing projects"
+                        />
+                    </>
+                )}
+                
+                {/* Info Bubble - Inline in header */}
+                {isDashboard && <InfoBubble bubbleId="dashboard" content={INFO_BUBBLE_CONTENT.dashboard} inline defaultExpanded={false} />}
+                {isWebsites && <InfoBubble bubbleId="websites" content={INFO_BUBBLE_CONTENT.websites} inline defaultExpanded={false} />}
+                {isAssets && <InfoBubble bubbleId="assets" content={INFO_BUBBLE_CONTENT.assets} inline defaultExpanded={false} />}
+
+                {/* Language Selector */}
+                <LanguageSelector />
+
                 <button 
                     onClick={() => setIsOnboardingOpen(true)}
-                    className="bg-yellow-400 text-black font-bold py-1.5 px-4 rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] hover:scale-105 transition-all flex items-center text-sm"
+                    className="bg-primary text-white font-bold py-1.5 px-4 rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] hover:scale-105 transition-all flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                    aria-label="Create new project"
                 >
-                    <Plus size={18} className="mr-2" />
+                    <Plus size={18} className="mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">New Project</span>
                     <span className="sm:hidden">New</span>
                 </button>
              </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
+          {/* Mobile Search Overlay */}
+          {showMobileSearch && (
+              <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 md:hidden flex items-start justify-center pt-20"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Search projects"
+              >
+                  <div className="bg-card border border-border rounded-2xl shadow-2xl w-[90%] max-w-md p-4 animate-fade-in-up">
+                      <div className="flex items-center gap-2 mb-2" role="search">
+                          <Search className="text-muted-foreground" size={20} aria-hidden="true" />
+                          <input 
+                              type="search" 
+                              placeholder="Search projects..." 
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                              autoFocus
+                              aria-label="Search projects"
+                          />
+                          <button 
+                              onClick={() => setShowMobileSearch(false)}
+                              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label="Close search"
+                          >
+                              <X size={20} aria-hidden="true" />
+                          </button>
+                      </div>
+                      {searchQuery && (
+                          <div className="text-xs text-muted-foreground" role="status" aria-live="polite">
+                              {userProjects.length} results found
+                          </div>
+                      )}
+                  </div>
+              </div>
+          )}
+
+          {/* Skip to content link for accessibility */}
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-yellow-400 focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold"
+          >
+            Skip to main content
+          </a>
+
+          <main id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth" role="main">
              <div className="max-w-7xl mx-auto space-y-10 h-full">
              
                 {/* Hero / Welcome Section - Only on Dashboard */}
@@ -109,18 +428,18 @@ const Dashboard: React.FC = () => {
                                 </span>
                             </h1>
                             <p className="text-lg text-muted-foreground max-w-3xl mb-8 leading-relaxed">
-                                Ready to design the future? You have <span className="text-foreground font-semibold">{userProjects.length} active projects</span> and your creative energy is high.
+                                {t('dashboard.heroSubtitlePart1')} <span className="text-foreground font-semibold">{allUserProjects.length} {t('dashboard.heroSubtitlePart2')}</span> {t('dashboard.heroSubtitlePart3')}
                             </p>
                             
                             {/* Inline Stats */}
                             <div className="flex items-center gap-8 mt-2">
                                  <div className="flex items-center gap-3 group cursor-default">
-                                    <div className="p-2.5 rounded-xl bg-yellow-400/10 text-yellow-400 group-hover:bg-yellow-400 group-hover:text-black transition-colors duration-300">
+                                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                                         <LayoutGrid size={22} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-3xl font-extrabold text-foreground leading-none">{userProjects.length}</span>
-                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Total Projects</span>
+                                        <span className="text-3xl font-extrabold text-foreground leading-none">{allUserProjects.length}</span>
+                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.totalProjects')}</span>
                                     </div>
                                  </div>
 
@@ -131,11 +450,56 @@ const Dashboard: React.FC = () => {
                                         <Globe size={22} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-3xl font-extrabold text-foreground leading-none">{userProjects.filter(p => p.status === 'Published').length}</span>
-                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Published</span>
+                                        <span className="text-3xl font-extrabold text-foreground leading-none">{publishedCount}</span>
+                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.published')}</span>
                                     </div>
                                  </div>
                             </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* Statistics Section - Only on Websites view */}
+                {isWebsites && (
+                    <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 rounded-lg bg-blue-500/20">
+                                    <Globe className="text-blue-500" size={20} />
+                                </div>
+                            </div>
+                            <div className="text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Total Websites</div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 rounded-lg bg-green-500/20">
+                                    <CheckCircle className="text-green-500" size={20} />
+                                </div>
+                            </div>
+                            <div className="text-3xl font-extrabold text-foreground">{publishedCount}</div>
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Published</div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 rounded-lg bg-slate-500/20">
+                                    <FileEdit className="text-slate-400" size={20} />
+                                </div>
+                            </div>
+                            <div className="text-3xl font-extrabold text-foreground">{draftCount}</div>
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Drafts</div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 rounded-lg bg-purple-500/20">
+                                    <LayoutGrid className="text-purple-500" size={20} />
+                                </div>
+                            </div>
+                            <div className="text-3xl font-extrabold text-foreground">{userProjects.length}</div>
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Filtered</div>
                         </div>
                     </section>
                 )}
@@ -147,43 +511,127 @@ const Dashboard: React.FC = () => {
                         {isDashboard && (
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-foreground flex items-center">
-                                Recent Projects
+                                {t('dashboard.recentProjects')}
                                 </h2>
-                                {userProjects.length > 0 && (
+                                {allUserProjects.length > 0 && (
                                 <button onClick={() => setView('websites')} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
-                                    View All <Globe size={14} className="ml-1" />
+                                    {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
                                 </button>
                                 )}
                             </div>
                         )}
                         
+                        {/* Filter Chips - Only on Websites view */}
                         {isWebsites && (
-                            <div className="mb-6 flex items-center">
-                                <span className="px-2 py-1 bg-secondary/50 text-xs rounded-full text-muted-foreground">
-                                    {userProjects.length} Projects Found
-                                </span>
+                            <div className="mb-6 space-y-4">
+                                <div className="flex flex-wrap gap-3">
+                                    <FilterChip 
+                                        label={t('dashboard.allStatus')} 
+                                        active={filterStatus === 'all'} 
+                                        count={allUserProjects.length}
+                                        onClick={() => setFilterStatus('all')}
+                                    />
+                                    <FilterChip 
+                                        label={t('dashboard.published')} 
+                                        active={filterStatus === 'Published'} 
+                                        count={publishedCount}
+                                        onClick={() => setFilterStatus('Published')}
+                                        color="green"
+                                    />
+                                    <FilterChip 
+                                        label={t('dashboard.draft')} 
+                                        active={filterStatus === 'Draft'} 
+                                        count={draftCount}
+                                        onClick={() => setFilterStatus('Draft')}
+                                        color="slate"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                        Showing {userProjects.length} of {allUserProjects.length} projects
+                                    </span>
+                                    {/* Mobile controls */}
+                                    <div className="flex items-center gap-2 sm:hidden">
+                                        <button 
+                                            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                                            className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
-                        {userProjects.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                               {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
-                                  <ProjectCard key={project.id} project={project} />
-                               ))}
-                            </div>
+                        {isLoadingProjects ? (
+                            <>
+                                {/* Grid View Skeleton */}
+                                {viewMode === 'grid' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                       {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                          <ProjectCardSkeleton key={i} />
+                                       ))}
+                                    </div>
+                                )}
+                                
+                                {/* List View Skeleton */}
+                                {viewMode === 'list' && isWebsites && (
+                                    <div className="space-y-4">
+                                       {[1, 2, 3, 4].map(i => (
+                                          <ProjectCardSkeleton key={i} />
+                                       ))}
+                                    </div>
+                                )}
+                            </>
+                        ) : userProjects.length > 0 ? (
+                            <>
+                                {/* Grid View */}
+                                {viewMode === 'grid' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                       {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
+                                          <ProjectCard key={project.id} project={project} />
+                                       ))}
+                                    </div>
+                                )}
+                                
+                                {/* List View */}
+                                {viewMode === 'list' && isWebsites && (
+                                    <div className="space-y-4">
+                                       {userProjects.map(project => (
+                                          <ProjectListItem key={project.id} project={project} />
+                                       ))}
+                                    </div>
+                                )}
+                            </>
                         ) : (
-                            <div className="text-center py-16 bg-card/30 rounded-3xl border border-dashed border-border/50">
-                               <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <LayoutGrid className="text-muted-foreground opacity-50" />
-                                </div>
-                               <p className="text-muted-foreground">No projects found.</p>
-                               <button 
-                                    onClick={() => setIsOnboardingOpen(true)}
-                                    className="mt-4 text-yellow-400 font-bold hover:underline"
-                               >
-                                   Create New Project
-                               </button>
-                            </div>
+                            <EmptyState
+                              icon={searchQuery ? Search : Globe}
+                              title={searchQuery ? 'No projects found' : 'No websites yet'}
+                              description={
+                                searchQuery 
+                                  ? `No projects match "${searchQuery}". Try adjusting your search or clear filters.`
+                                  : 'Start building your online presence. Create your first website in minutes with our AI-powered builder.'
+                              }
+                              illustration={searchQuery ? 'search' : 'website'}
+                              action={searchQuery ? undefined : {
+                                label: 'Create Your First Website',
+                                onClick: () => setIsOnboardingOpen(true),
+                                icon: Plus
+                              }}
+                              secondaryAction={searchQuery ? {
+                                label: 'Clear Search',
+                                onClick: () => setSearchQuery('')
+                              } : undefined}
+                              tips={!searchQuery ? [
+                                'Choose from professional templates or start from scratch',
+                                'AI-powered design suggestions adapt to your business',
+                                'Publish instantly with one click - no coding required'
+                              ] : [
+                                'Try searching by project name or status',
+                                'Use filters to narrow down results',
+                                'Check if you\'re viewing the right tab (All/Published/Drafts)'
+                              ]}
+                            />
                         )}
                     </section>
                 )}
@@ -193,7 +641,7 @@ const Dashboard: React.FC = () => {
                    <section>
                       <div className="flex items-center justify-between mb-6">
                           <h2 className="text-2xl font-bold text-foreground flex items-center">
-                              Start from Template
+                              {t('dashboard.startFromTemplate')}
                           </h2>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -208,7 +656,7 @@ const Dashboard: React.FC = () => {
                 {isDashboard && (
                     <section>
                         <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
-                            <Images size={20} className="mr-2 text-primary" /> Recent Assets
+                            <Images size={20} className="mr-2 text-primary" /> {t('dashboard.recentAssets')}
                         </h2>
                         <FileHistory variant="widget" />
                     </section>

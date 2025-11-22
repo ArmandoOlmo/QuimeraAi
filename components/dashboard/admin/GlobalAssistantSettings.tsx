@@ -2,8 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X } from 'lucide-react';
 import { GlobalAssistantConfig, ScopePermission } from '../../../types';
+import { PROMPT_TEMPLATES, getDefaultEnabledTemplates, compileTemplates } from '../../../data/promptTemplates';
+import InfoBubble from '../../ui/InfoBubble';
+import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 
 interface GlobalAssistantSettingsProps {
     onBack: () => void;
@@ -47,6 +50,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
     const [formData, setFormData] = useState<GlobalAssistantConfig>(globalAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
+    const [showFinalPreview, setShowFinalPreview] = useState(false);
 
     useEffect(() => {
         // Ensure defaults for new fields if missing from DB
@@ -56,7 +61,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
             temperature: globalAssistantConfig.temperature ?? 0.7,
             maxTokens: globalAssistantConfig.maxTokens ?? 500,
             autoDetectLanguage: globalAssistantConfig.autoDetectLanguage ?? true,
-            supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish, French'
+            supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish, French',
+            enabledTemplates: globalAssistantConfig.enabledTemplates || getDefaultEnabledTemplates(),
+            customInstructions: globalAssistantConfig.customInstructions || ''
         });
     }, [globalAssistantConfig]);
 
@@ -91,6 +98,21 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
         });
     };
 
+    const toggleTemplate = (templateId: string, enabled: boolean) => {
+        setFormData(prev => {
+            const current = prev.enabledTemplates || [];
+            const updated = enabled 
+                ? [...current, templateId]
+                : current.filter(id => id !== templateId);
+            return { ...prev, enabledTemplates: updated };
+        });
+        setShowSuccess(false);
+    };
+
+    const isTemplateEnabled = (templateId: string) => {
+        return formData.enabledTemplates?.includes(templateId) ?? false;
+    };
+
     const handleSave = async () => {
         setIsSaving(true);
         await saveGlobalAssistantConfig(formData);
@@ -121,6 +143,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                  <CheckCircle size={16} className="mr-1.5" /> Saved
                              </span>
                          )}
+                        <InfoBubble bubbleId="globalSettings" content={INFO_BUBBLE_CONTENT.globalSettings} inline defaultExpanded={false} />
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
@@ -349,9 +372,88 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
                         </div>
 
+                        {/* Instruction Templates */}
+                        <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
+                            <div className="flex items-center gap-2 border-b border-editor-border pb-2">
+                                <Sparkles size={20} className="text-editor-accent" />
+                                <h3 className="font-bold text-lg">Instruction Templates</h3>
+                            </div>
+                            <p className="text-sm text-editor-text-secondary">
+                                Enable pre-built instruction sets to enhance the assistant's capabilities. These templates add advanced features like multilingual understanding, data schema knowledge, and conversation examples.
+                            </p>
+
+                            <div className="space-y-3">
+                                {Object.values(PROMPT_TEMPLATES).map(template => (
+                                    <div key={template.id} className="border border-editor-border rounded-lg p-4 hover:border-editor-accent/50 transition-colors">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h4 className="font-medium text-editor-text-primary">{template.name}</h4>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded ${
+                                                        template.category === 'core' ? 'bg-blue-500/20 text-blue-400' :
+                                                        template.category === 'multilingual' ? 'bg-green-500/20 text-green-400' :
+                                                        template.category === 'technical' ? 'bg-purple-500/20 text-purple-400' :
+                                                        'bg-orange-500/20 text-orange-400'
+                                                    }`}>
+                                                        {template.category}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-editor-text-secondary mb-2">{template.description}</p>
+                                                <button
+                                                    onClick={() => setPreviewTemplate(template.id)}
+                                                    className="text-xs text-editor-accent hover:underline"
+                                                >
+                                                    <Eye size={12} className="inline mr-1" />
+                                                    Preview Template Content
+                                                </button>
+                                            </div>
+                                            
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={isTemplateEnabled(template.id)}
+                                                    onChange={(e) => toggleTemplate(template.id, e.target.checked)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-editor-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-editor-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-editor-accent"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Preview Final Instructions Button */}
+                            <div className="pt-4 border-t border-editor-border">
+                                <button
+                                    onClick={() => setShowFinalPreview(true)}
+                                    className="w-full flex items-center justify-center gap-2 bg-editor-accent/10 hover:bg-editor-accent/20 text-editor-accent font-semibold py-3 px-4 rounded-lg transition-colors border border-editor-accent/30"
+                                >
+                                    <Eye size={18} />
+                                    Preview Final Compiled Instructions
+                                </button>
+                                <p className="text-xs text-editor-text-secondary mt-2 text-center">
+                                    See exactly what instructions will be sent to the AI model
+                                </p>
+                            </div>
+
+                            {/* Custom Instructions */}
+                            <div className="pt-4 border-t border-editor-border">
+                                <label className="block text-sm font-bold text-editor-text-primary mb-2">Additional Custom Instructions</label>
+                                <p className="text-xs text-editor-text-secondary mb-3">
+                                    Add your own specific instructions that will be appended after the enabled templates.
+                                </p>
+                                <textarea 
+                                    className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
+                                    value={formData.customInstructions || ''}
+                                    onChange={(e) => updateForm('customInstructions', e.target.value)}
+                                    placeholder="Example: Always respond with enthusiasm and use examples from the tech industry..."
+                                />
+                            </div>
+                        </div>
+
                         {/* Instructions & Personality */}
                         <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                            <h3 className="font-bold text-lg border-b border-editor-border pb-2">Personality & Logic</h3>
+                            <h3 className="font-bold text-lg border-b border-editor-border pb-2">Base System Instruction</h3>
                             
                             <div>
                                 <label className="block text-sm font-bold text-editor-text-primary mb-2">Initial Greeting</label>
@@ -365,12 +467,15 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-editor-text-primary mb-2">System Instruction (Prompt)</label>
-                                <p className="text-xs text-editor-text-secondary mb-3">Define the AI's behavior, tone, and strict rules. The language detection logic and scope permissions are appended automatically.</p>
+                                <label className="block text-sm font-bold text-editor-text-primary mb-2">Base System Instruction</label>
+                                <p className="text-xs text-editor-text-secondary mb-3">
+                                    Define the core personality and behavior rules. This instruction is combined with enabled templates above, plus scope permissions and contextual data automatically.
+                                </p>
                                 <textarea 
                                     className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
                                     value={formData.systemInstruction}
                                     onChange={(e) => updateForm('systemInstruction', e.target.value)}
+                                    placeholder="You are the Quimera.ai Global Assistant. You have FULL CONTROL over the application..."
                                 />
                             </div>
                         </div>
@@ -378,6 +483,63 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                     </div>
                 </main>
             </div>
+
+            {/* Template Preview Modal */}
+            {previewTemplate && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
+                    <div className="bg-editor-panel-bg border border-editor-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-6 border-b border-editor-border">
+                            <div>
+                                <h3 className="text-xl font-bold text-editor-text-primary">{PROMPT_TEMPLATES[previewTemplate]?.name}</h3>
+                                <p className="text-sm text-editor-text-secondary mt-1">{PROMPT_TEMPLATES[previewTemplate]?.description}</p>
+                            </div>
+                            <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-editor-bg rounded-lg transition-colors">
+                                <X size={20} className="text-editor-text-secondary" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            <pre className="bg-editor-bg border border-editor-border rounded-lg p-4 text-xs text-editor-text-primary font-mono whitespace-pre-wrap leading-relaxed">
+                                {PROMPT_TEMPLATES[previewTemplate]?.content}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Final Instructions Preview Modal */}
+            {showFinalPreview && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFinalPreview(false)}>
+                    <div className="bg-editor-panel-bg border border-editor-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-6 border-b border-editor-border">
+                            <div>
+                                <h3 className="text-xl font-bold text-editor-text-primary">Final Compiled Instructions</h3>
+                                <p className="text-sm text-editor-text-secondary mt-1">This is exactly what will be sent to the AI model</p>
+                            </div>
+                            <button onClick={() => setShowFinalPreview(false)} className="p-2 hover:bg-editor-bg rounded-lg transition-colors">
+                                <X size={20} className="text-editor-text-secondary" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            <div className="mb-4 flex items-center gap-2 text-sm text-editor-text-secondary">
+                                <Sparkles size={14} className="text-editor-accent" />
+                                <span>Base Instruction + Enabled Templates + Custom Instructions</span>
+                            </div>
+                            <pre className="bg-editor-bg border border-editor-border rounded-lg p-4 text-xs text-editor-text-primary font-mono whitespace-pre-wrap leading-relaxed">
+                                {formData.systemInstruction}
+                                {'\n\n'}
+                                {'='.repeat(80)}
+                                {'\n\n'}
+                                {compileTemplates(formData.enabledTemplates || getDefaultEnabledTemplates(), formData.customInstructions)}
+                            </pre>
+                            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                                <p className="text-xs text-blue-400">
+                                    <strong>Note:</strong> Scope permissions and contextual data (projects, leads, etc.) are added automatically at runtime and are not shown here.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
