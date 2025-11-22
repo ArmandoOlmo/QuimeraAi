@@ -69,18 +69,25 @@ cd quimera-ai
 npm install
 ```
 
-3. **Configurar Firebase**
+3. **Configurar Firebase y API de Google**
 
 Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
+# Firebase Configuration
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
+
+# Google Gemini API Key (requerido para funciones de IA)
+VITE_GEMINI_API_KEY=tu_api_key_de_google_aqui
+# O usa: VITE_GOOGLE_AI_API_KEY=tu_api_key_de_google_aqui
 ```
+
+**Importante para Deployment:** Las variables de entorno en deployment deben tener el prefijo `VITE_` para que sean accesibles en el cliente. Configura `VITE_GEMINI_API_KEY` o `VITE_GOOGLE_AI_API_KEY` en tu plataforma de deployment (Vercel, Netlify, Firebase Hosting, etc.).
 
 4. **Configurar Firestore**
 
