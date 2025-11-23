@@ -3,6 +3,11 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Declarar ARG para la API key (disponible durante el build)
+# Esta variable debe pasarse con --build-arg durante docker build o gcloud deploy
+ARG VITE_GEMINI_API_KEY
+ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
+
 # Copy package files
 COPY package*.json ./
 
@@ -12,7 +17,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (ahora con la variable de entorno disponible)
 RUN npm run build
 
 # Production stage

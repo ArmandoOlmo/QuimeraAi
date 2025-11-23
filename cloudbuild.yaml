@@ -1,0 +1,63 @@
+# Google Cloud Build configuration for QuimeraAI
+# This file defines the build and deployment process for Google Cloud Run
+
+steps:
+  # Step 1: Build the container image with API key
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/quimeraai:latest'
+      - '.'
+
+  # Step 2: Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+
+  # Step 3: Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'quimeraai'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '512Mi'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '10'
+
+# Substitutions (valores por defecto)
+substitutions:
+  _VITE_GEMINI_API_KEY: ''  # Debe proporcionarse durante el deploy
+  _REGION: 'us-central1'    # Región por defecto
+
+# Images to push to Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/quimeraai:latest'
+
+# Timeout for the entire build (20 minutes)
+timeout: '1200s'
+
+# Build options
+options:
+  machineType: 'N1_HIGHCPU_8'  # Máquina más potente para builds rápidos
+  logging: CLOUD_LOGGING_ONLY
+

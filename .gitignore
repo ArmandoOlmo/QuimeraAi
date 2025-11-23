@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Cloud Build con secrets (si se crea)
+cloudbuild-secure.yaml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

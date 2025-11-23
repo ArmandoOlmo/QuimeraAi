@@ -351,11 +351,33 @@ npm run build
 
 Genera archivos optimizados en `/dist`
 
-### Deploy a Firebase Hosting
+### Plataformas de Deployment
+
+#### Google Cloud Run (Recomendado)
+
+Para deployment en Google Cloud Run con la API de Google Gemini correctamente configurada, consulta la guía completa:
+
+📖 **[GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md)**
+
+Quick start:
+```bash
+gcloud run deploy quimeraai \
+  --source . \
+  --build-arg VITE_GEMINI_API_KEY=tu_api_key_aqui \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+#### Firebase Hosting
 
 ```bash
 npm run deploy
 ```
+
+#### Vercel / Netlify
+
+Asegúrate de configurar las variables de entorno en tu plataforma. Ver: [DEPLOYMENT_API_KEY_SETUP.md](DEPLOYMENT_API_KEY_SETUP.md)
 
 ### Variables de Entorno
 
@@ -363,7 +385,7 @@ npm run deploy
 ```env
 VITE_FIREBASE_API_KEY=prod_key
 VITE_FIREBASE_PROJECT_ID=prod_project
-VITE_API_URL=https://api.quimeraai.com
+VITE_GEMINI_API_KEY=tu_api_key_de_google
 ```
 
 ---
