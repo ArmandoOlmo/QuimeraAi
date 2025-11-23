@@ -445,28 +445,40 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     useEffect(() => {
         const checkApiKey = async () => {
             try {
-                if (process.env.API_KEY) {
-                    setCachedApiKey(process.env.API_KEY);
+                // Verificar si hay una API key en process.env (inyectada por Vite)
+                const processKey = typeof process !== 'undefined' && process.env.API_KEY 
+                    ? (process.env.API_KEY.trim() !== '' ? process.env.API_KEY : null)
+                    : null;
+                
+                if (processKey) {
+                    setCachedApiKey(processKey);
                     setHasApiKey(true);
                     return;
                 }
 
+                // Intentar sincronizar con AI Studio
                 const syncedKey = await syncApiKeyFromAiStudio();
                 if (syncedKey) {
                     setHasApiKey(true);
                     return;
                 }
 
+                // Verificar si AI Studio tiene una key seleccionada
                 const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
                 if (typeof aiStudio?.hasSelectedApiKey === 'function') {
                     const keyStatus = await aiStudio.hasSelectedApiKey();
                     setHasApiKey(keyStatus);
                 } else {
+                    // Si no hay AI Studio y no hay process key, no hay API key disponible
                     setHasApiKey(false);
                 }
             } catch (error) {
                 console.warn('Error while checking API key', error);
-                setHasApiKey(Boolean(process.env.API_KEY));
+                // Fallback: verificar si hay una API key en process.env
+                const hasKey = typeof process !== 'undefined' && 
+                              process.env.API_KEY && 
+                              process.env.API_KEY.trim() !== '';
+                setHasApiKey(hasKey);
             }
         };
         
