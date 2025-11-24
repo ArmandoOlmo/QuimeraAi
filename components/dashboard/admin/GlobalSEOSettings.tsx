@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import { useEditor } from '../../../contexts/EditorContext';
+import { doc, setDoc, getDoc } from '../../../firebase';
+import { db } from '../../../firebase';
 
 interface GlobalSEOSettingsProps {
     onBack: () => void;
 }
 
+interface GlobalSEOConfig {
+    defaultLanguage: string;
+    defaultRobots: string;
+    defaultSchemaType: string;
+    aiCrawlingEnabled: boolean;
+    defaultOgType: string;
+    defaultTwitterCard: string;
+    googleVerification: string;
+    bingVerification: string;
+    aiDescriptionTemplate: string;
+    defaultAiTopics: string;
+}
+
 const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
     const [activeTab, setActiveTab] = useState<'defaults' | 'templates' | 'verifications' | 'ai'>('defaults');
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Default Settings State
     const [defaultLanguage, setDefaultLanguage] = useState('es');
     const [defaultRobots, setDefaultRobots] = useState('index, follow');
     const [defaultSchemaType, setDefaultSchemaType] = useState('WebSite');
+    const [defaultOgType, setDefaultOgType] = useState('website');
+    const [defaultTwitterCard, setDefaultTwitterCard] = useState('summary_large_image');
     const [aiCrawlingEnabled, setAiCrawlingEnabled] = useState(true);
 
     // Verifications State
@@ -25,13 +44,62 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
     const [aiDescriptionTemplate, setAiDescriptionTemplate] = useState('Built with Quimera.ai, a powerful no-code website builder. ');
     const [defaultAiTopics, setDefaultAiTopics] = useState('AI, Website Builder, No-Code');
 
+    // Load settings from Firebase
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settingsRef = doc(db, 'globalSettings', 'seo');
+                const settingsSnap = await getDoc(settingsRef);
+                
+                if (settingsSnap.exists()) {
+                    const data = settingsSnap.data() as GlobalSEOConfig;
+                    setDefaultLanguage(data.defaultLanguage || 'es');
+                    setDefaultRobots(data.defaultRobots || 'index, follow');
+                    setDefaultSchemaType(data.defaultSchemaType || 'WebSite');
+                    setDefaultOgType(data.defaultOgType || 'website');
+                    setDefaultTwitterCard(data.defaultTwitterCard || 'summary_large_image');
+                    setAiCrawlingEnabled(data.aiCrawlingEnabled !== undefined ? data.aiCrawlingEnabled : true);
+                    setGoogleVerification(data.googleVerification || '');
+                    setBingVerification(data.bingVerification || '');
+                    setAiDescriptionTemplate(data.aiDescriptionTemplate || 'Built with Quimera.ai, a powerful no-code website builder. ');
+                    setDefaultAiTopics(data.defaultAiTopics || 'AI, Website Builder, No-Code');
+                }
+            } catch (error) {
+                console.error('Error loading SEO settings:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadSettings();
+    }, []);
+
     const handleSaveAll = async () => {
         setIsSaving(true);
-        // TODO: Implement save to Firebase
-        setTimeout(() => {
+        try {
+            const config: GlobalSEOConfig = {
+                defaultLanguage,
+                defaultRobots,
+                defaultSchemaType,
+                defaultOgType,
+                defaultTwitterCard,
+                aiCrawlingEnabled,
+                googleVerification,
+                bingVerification,
+                aiDescriptionTemplate,
+                defaultAiTopics,
+            };
+            
+            const settingsRef = doc(db, 'globalSettings', 'seo');
+            await setDoc(settingsRef, config, { merge: true });
+            
+            alert('✅ Settings saved successfully!');
+        } catch (error) {
+            console.error('Error saving SEO settings:', error);
+            alert('❌ Error saving settings. Please try again.');
+        } finally {
             setIsSaving(false);
-            alert('Settings saved successfully!');
-        }, 1000);
+        }
     };
 
     return (
@@ -103,6 +171,16 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
             {/* Content */}
             <div className="flex-1 overflow-auto p-6">
                 <div className="max-w-5xl mx-auto">
+                    
+                    {/* Loading State */}
+                    {isLoading && (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="w-12 h-12 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    )}
+                    
+                    {!isLoading && (<>
+                        
                     
                     {/* Default Settings Tab */}
                     {activeTab === 'defaults' && (
@@ -194,7 +272,11 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                         <label className="block text-sm font-medium text-editor-text-primary mb-2">
                                             Default OG Type
                                         </label>
-                                        <select className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent">
+                                        <select 
+                                            value={defaultOgType}
+                                            onChange={(e) => setDefaultOgType(e.target.value)}
+                                            className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        >
                                             <option value="website">Website</option>
                                             <option value="article">Article</option>
                                             <option value="product">Product</option>
@@ -206,7 +288,11 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                         <label className="block text-sm font-medium text-editor-text-primary mb-2">
                                             Default Twitter Card Type
                                         </label>
-                                        <select className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent">
+                                        <select 
+                                            value={defaultTwitterCard}
+                                            onChange={(e) => setDefaultTwitterCard(e.target.value)}
+                                            className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        >
                                             <option value="summary">Summary</option>
                                             <option value="summary_large_image">Summary Large Image</option>
                                             <option value="app">App</option>
@@ -486,7 +572,8 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                             </div>
                         </div>
                     )}
-
+                    
+                    </>)}
                 </div>
             </div>
             </div>

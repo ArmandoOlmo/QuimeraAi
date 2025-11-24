@@ -52,51 +52,50 @@ types/
 
 ## 📝 TODOs Identificados
 
-### 1. GlobalSEOSettings - Guardar en Firebase
+### 1. GlobalSEOSettings - Guardar en Firebase ✅ RESUELTO
 
 **Archivo:** `components/dashboard/admin/GlobalSEOSettings.tsx:30`
 
-```typescript
-// TODO: Implement save to Firebase
-```
+**Status:** ✅ Completado (Nov 24, 2025)
 
-**Contexto:** El componente GlobalSEOSettings permite configurar SEO global pero falta la implementación de guardado en Firebase.
+**Implementación:**
+- Creada interfaz `GlobalSEOConfig` con todos los campos
+- Implementado guardado en Firestore: `globalSettings/seo`
+- Agregado carga automática de configuración al montar componente
+- Implementado estado de loading y mensajes de éxito/error
+- Persistencia completa de:
+  - Configuración por defecto (idioma, robots, schema type)
+  - Verificaciones de Google y Bing
+  - Configuración de AI Bot (descripción, topics)
 
-**Prioridad:** 🟡 Media
-
-**Acciones sugeridas:**
-- Implementar función `saveGlobalSEOConfig` en EditorContext
-- Conectar con colección de Firestore (ej: `globalSettings/seo`)
-- Agregar validación de datos antes de guardar
-- Implementar feedback de éxito/error con ToastContext
-
-**Esfuerzo estimado:** 2-3 horas
+**Resultado:** Funcionalidad completa implementada y probada
 
 ---
 
-### 2. ThumbnailGenerator - Upload a Firebase Storage
+### 2. ThumbnailGenerator - Upload a Firebase Storage ✅ DOCUMENTADO
 
 **Archivo:** `utils/thumbnailGenerator.ts:111`
 
-```typescript
-// TODO: Implement Firebase Storage upload if needed
-```
+**Status:** ✅ Documentado (Nov 24, 2025)
 
-**Contexto:** El generador de thumbnails crea imágenes pero podría subirlas directamente a Firebase Storage.
+**Decisión Técnica:**
+Se mantiene el uso de base64 Data URLs en lugar de Firebase Storage.
 
-**Prioridad:** 🟢 Baja (funciona con Data URLs)
+**Razón:**
+- Thumbnails son pequeños (300x200px, ~10-30KB)
+- Base64 en Firestore es aceptable para imágenes pequeñas
+- Implementación más simple, sin gestión de cuotas de Storage
+- Carga más rápida (sin request adicional)
+- Documentos de Firestore soportan hasta 1MB, thumbnails ~2-3%
 
-**Acciones sugeridas:**
-- Evaluar si es necesario (Data URLs funcionan bien para thumbnails pequeños)
-- Si se implementa:
-  - Crear función `uploadThumbnailToStorage`
-  - Usar ruta: `thumbnails/{projectId}/{timestamp}.png`
-  - Retornar URL pública
-  - Limpiar thumbnails antiguos
+**Optimización Futura (si necesario):**
+Si los thumbnails se vuelven un problema de rendimiento:
+1. Upload a Firebase Storage: `storage/thumbnails/{componentId}.png`
+2. Guardar URL de descarga en vez de base64
+3. Implementar limpieza de thumbnails huérfanos
+4. Agregar headers de caché CDN
 
-**Esfuerzo estimado:** 1-2 horas
-
-**Nota:** No es urgente. Los Data URLs funcionan bien para el caso de uso actual.
+**Conclusión:** Base64 es la elección pragmática para este caso de uso.
 
 ---
 

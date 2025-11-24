@@ -100,16 +100,32 @@ export const generateComponentThumbnail = async (
 };
 
 /**
- * Uploads thumbnail to Firebase Storage (if needed)
- * For now, we'll store thumbnails as base64 in Firestore
- * In production, you might want to upload to Storage for better performance
+ * Uploads thumbnail to Firebase Storage
+ * 
+ * DESIGN DECISION: Using base64 Data URLs instead of Firebase Storage
+ * 
+ * Rationale:
+ * - Thumbnails are small (300x200px, ~10-30KB as PNG)
+ * - Base64 in Firestore is acceptable for small images
+ * - Simpler implementation, no storage quota management
+ * - Faster to load (no additional network request)
+ * - Firestore document limit is 1MB, thumbnails ~2-3% of that
+ * 
+ * Future Optimization (if needed):
+ * If thumbnails become a performance issue (many components, large sizes):
+ * 1. Upload to Firebase Storage: storage/thumbnails/{componentId}.png
+ * 2. Store download URL in Firestore instead of base64
+ * 3. Implement cleanup for orphaned thumbnails
+ * 4. Add CDN caching headers
+ * 
+ * For now, base64 is the pragmatic choice for this use case.
  */
 export const uploadThumbnailToStorage = async (
   thumbnail: string,
   componentId: string
 ): Promise<string> => {
-  // TODO: Implement Firebase Storage upload if needed
-  // For now, just return the base64 string
+  // Return base64 data URL - stores directly in Firestore
+  // This is intentional and optimal for small thumbnails
   return thumbnail;
 };
 
