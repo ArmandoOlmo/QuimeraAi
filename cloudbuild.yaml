@@ -2,6 +2,25 @@
 # This file defines the build and deployment process for Google Cloud Run
 
 steps:
+  # Step 0: Validate that API key is provided
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Validating environment variables..."
+        if [ -z "${_VITE_GEMINI_API_KEY}" ]; then
+          echo "❌ ERROR: _VITE_GEMINI_API_KEY is not set!"
+          echo "Please provide it using: --substitutions=_VITE_GEMINI_API_KEY=your_api_key"
+          exit 1
+        fi
+        echo "✅ VITE_GEMINI_API_KEY is set (length: $${#_VITE_GEMINI_API_KEY})"
+        if [ -z "${_VITE_FIREBASE_PROJECT_ID}" ]; then
+          echo "⚠️  WARNING: Firebase variables not set, will use fallbacks"
+        else
+          echo "✅ Firebase variables are set"
+        fi
+
   # Step 1: Build the container image with API keys
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -24,18 +43,21 @@ steps:
       - 'VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}'
       - '--build-arg'
       - 'VITE_FIREBASE_MEASUREMENT_ID=${_VITE_FIREBASE_MEASUREMENT_ID}'
+      # Cache busting
+      - '--build-arg'
+      - 'CACHEBUST=$BUILD_ID'
       # Image tags
       - '-t'
-      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/quimeraai:latest'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025:latest'
       - '.'
 
   # Step 2: Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
 
   # Step 3: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -43,9 +65,9 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'quimeraai'
+      - 'quimeraai2025'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -59,6 +81,12 @@ steps:
       - '0'
       - '--max-instances'
       - '10'
+      - '--timeout'
+      - '300'
+      - '--cpu'
+      - '1'
+      - '--set-env-vars'
+      - 'NODE_ENV=production,DEPLOYED_AT=$BUILD_ID'
 
 # Substitutions (valores por defecto)
 substitutions:
@@ -79,8 +107,8 @@ substitutions:
 
 # Images to push to Container Registry
 images:
-  - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/quimeraai:latest'
+  - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/quimeraai2025:latest'
 
 # Timeout for the entire build (20 minutes)
 timeout: '1200s'

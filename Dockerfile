@@ -62,7 +62,13 @@ RUN echo "VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}" > .env && \
 RUN echo "Contents of .env:" && cat .env | sed 's/AIza.*/AIza***REDACTED***/g' | sed 's/1:.*/1:***REDACTED***/g'
 
 # Build the application - pass ENV variables explicitly to Node.js process
-RUN echo "Building with environment variables..." && \
+# Verificar que VITE_GEMINI_API_KEY no esté vacía antes de hacer build
+RUN if [ -z "$VITE_GEMINI_API_KEY" ]; then \
+        echo "❌ ERROR: VITE_GEMINI_API_KEY is empty! Build will fail."; \
+        exit 1; \
+    fi && \
+    echo "Building with environment variables..." && \
+    echo "  VITE_GEMINI_API_KEY length: $(echo -n $VITE_GEMINI_API_KEY | wc -c)" && \
     VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY} \
     VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY} \
     VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN} \
@@ -74,23 +80,39 @@ RUN echo "Building with environment variables..." && \
     npm run build && \
     echo "Build complete!"
 
-# Verificar que el build generó archivos
-RUN ls -la dist/
+# Verificar que el build generó archivos y buscar la API key en el código
+RUN ls -la dist/ && \
+    echo "🔍 Verificando que la API key está en el código compilado..." && \
+    if grep -r "AIza" dist/ > /dev/null 2>&1; then \
+        echo "✅ API key found in compiled code"; \
+    else \
+        echo "⚠️  WARNING: API key NOT found in compiled code - this might cause issues"; \
+    fi
 
-# Production stage
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Install serve globally
-RUN npm install -g serve
+# Production stage - Use nginx for better reliability
+FROM nginx:alpine
 
 # Copy built files from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Create nginx configuration
+RUN echo 'server { \
+    listen 8080; \
+    server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    # Security headers \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header X-Content-Type-Options "nosniff" always; \
+    add_header X-XSS-Protection "1; mode=block" always; \
+}' > /etc/nginx/conf.d/default.conf
 
 # Expose port 8080 (Cloud Run default)
 EXPOSE 8080
 
-# Use PORT environment variable or default to 8080
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-8080}"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
 

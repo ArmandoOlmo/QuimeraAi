@@ -29,6 +29,11 @@ cloudbuild-secure.yaml
 *.backup
 .env.local.backup
 
+# Google Cloud service account keys - NEVER COMMIT THESE
+github-key.json
+*-key.json
+service-account*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
