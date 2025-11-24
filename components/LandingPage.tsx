@@ -21,6 +21,8 @@ import Video from './Video';
 import HowItWorks from './HowItWorks';
 import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
+import BusinessMap from './BusinessMap';
+import Menu from './Menu';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 
@@ -209,6 +211,10 @@ const LandingPage: React.FC = () => {
         return <Video {...mergedData} borderRadius={borderRadius} />;
       case 'howItWorks':
         return <HowItWorks {...mergedData} borderRadius={borderRadius} />;
+      case 'map':
+        return <BusinessMap {...mergedData} borderRadius={borderRadius} />;
+      case 'menu':
+        return <Menu {...mergedData} borderRadius={borderRadius} />;
       default:
         return null;
     }
@@ -235,7 +241,9 @@ const LandingPage: React.FC = () => {
     team: <Team {...data.team} borderRadius={theme.cardBorderRadius} />,
     video: <Video {...data.video} borderRadius={theme.cardBorderRadius} />,
     howItWorks: <HowItWorks {...data.howItWorks} borderRadius={theme.cardBorderRadius} />,
-    chatbot: <ChatbotWidget />,
+    map: <BusinessMap {...data.map} borderRadius={theme.cardBorderRadius} />,
+    menu: <Menu {...data.menu} borderRadius={theme.cardBorderRadius} />,
+    chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
     footer: <Footer {...data.footer} />,
     header: null,
     typography: null,
@@ -377,6 +385,9 @@ const LandingPage: React.FC = () => {
             <Footer {...resolvedFooterData} />
         </div>
       )}
+
+      {/* Chatbot Widget - Renders independently outside component order */}
+      <ChatbotWidget />
     </div>
   );
 };

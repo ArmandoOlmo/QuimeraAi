@@ -11,12 +11,13 @@ import {
     Trash2, Plus, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, 
     Layout, Image, List, Star, PlaySquare, Users, DollarSign, 
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon
 } from 'lucide-react';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
 import ComponentTree from './ui/ComponentTree';
 import TabbedControls from './ui/TabbedControls';
+import AnimationControls from './ui/AnimationControls';
 
 // --- Helper Components ---
 
@@ -1279,58 +1280,86 @@ const Controls: React.FC = () => {
   }
 
   const renderChatbotControls = () => {
-      if (!data?.chatbot) return null;
       return (
           <div className="space-y-4">
-              <Input label="Welcome Message" value={data.chatbot.welcomeMessage} onChange={(e) => setNestedData('chatbot.welcomeMessage', e.target.value)} />
-              <Input label="Placeholder Text" value={data.chatbot.placeholderText} onChange={(e) => setNestedData('chatbot.placeholderText', e.target.value)} />
-              
-              <div className="mb-4">
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Position</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                      <button onClick={() => setNestedData('chatbot.position', 'bottom-left')} className={`flex-1 py-1 text-xs font-medium rounded-sm ${data.chatbot.position === 'bottom-left' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}>Left</button>
-                      <button onClick={() => setNestedData('chatbot.position', 'bottom-right')} className={`flex-1 py-1 text-xs font-medium rounded-sm ${data.chatbot.position === 'bottom-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}>Right</button>
+              <div className="bg-gradient-to-br from-purple-600/10 to-blue-600/10 p-6 rounded-xl border border-purple-600/30">
+                  <div className="flex items-start gap-3 mb-4">
+                      <div className="p-2 bg-purple-600/20 rounded-lg">
+                          <MessageSquare size={24} className="text-purple-400" />
+                      </div>
+                      <div>
+                          <h4 className="font-bold text-editor-text-primary text-base mb-1">
+                              AI Chatbot Configuration
+                          </h4>
+                          <p className="text-sm text-editor-text-secondary">
+                              The chatbot has been upgraded! Configure it in the AI Assistant Dashboard for advanced features.
+                          </p>
+                      </div>
                   </div>
-              </div>
-
-              <hr className="border-editor-border/50" />
-              
-              <div className="space-y-2">
-                  <h4 className="font-bold text-editor-text-primary text-sm flex items-center"><FileText size={14} className="mr-2 text-editor-accent"/> Knowledge Base</h4>
-                  <p className="text-xs text-editor-text-secondary">
-                      Upload documents (TXT, MD) or paste text below to train your chatbot. The more info you provide, the smarter it gets.
-                  </p>
                   
-                  <div className="relative">
-                        <input 
-                            type="file" 
-                            accept=".txt,.md,.json,.csv" 
-                            onChange={handleKnowledgeUpload} 
-                            className="hidden" 
-                            ref={fileInputRef}
-                        />
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploadingKnowledge}
-                            className="w-full flex items-center justify-center py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent transition-colors text-xs font-bold mb-2 disabled:opacity-50"
-                        >
-                            {isUploadingKnowledge ? 'Training...' : 'Upload Training File'} <Upload size={12} className="ml-2"/>
-                        </button>
+                  <div className="space-y-3 mb-4">
+                      <h5 className="text-sm font-semibold text-editor-text-primary">Available Features:</h5>
+                      <ul className="space-y-2 text-sm text-editor-text-secondary">
+                          <li className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">✓</span>
+                              <span>Agent name, tone, and personality customization</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">✓</span>
+                              <span>Complete appearance customization (colors, branding, position)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">✓</span>
+                              <span>Business profile, FAQs, and knowledge base documents</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">✓</span>
+                              <span>Advanced lead capture system</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">✓</span>
+                              <span>Voice chat with Gemini Live API</span>
+                          </li>
+                      </ul>
                   </div>
-
-                  <TextArea 
-                    label="Raw Context" 
-                    value={data.chatbot.knowledgeBase} 
-                    onChange={(e) => setNestedData('chatbot.knowledgeBase', e.target.value)} 
-                    rows={6}
-                    placeholder="Paste business info, policies, or FAQs here..."
-                  />
+                  
+                  <button
+                      onClick={() => {
+                          // Navigate to AI Assistant Dashboard
+                          setView('ai-assistant');
+                      }}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  >
+                      <Settings size={18} />
+                      Open AI Assistant Dashboard
+                  </button>
               </div>
-
-              <hr className="border-editor-border/50" />
-              <ColorControl label="Primary Color" value={data.chatbot.colors.primary} onChange={(v) => setNestedData('chatbot.colors.primary', v)} />
-              <ColorControl label="Background" value={data.chatbot.colors.background} onChange={(v) => setNestedData('chatbot.colors.background', v)} />
-              <ColorControl label="Text" value={data.chatbot.colors.text} onChange={(v) => setNestedData('chatbot.colors.text', v)} />
+              
+              <div className="bg-yellow-600/10 p-4 rounded-lg border border-yellow-600/30">
+                  <p className="text-sm text-yellow-300 flex items-start gap-2">
+                      <span className="text-lg">⚠️</span>
+                      <span>
+                          <strong>Note:</strong> This component is deprecated. The chatbot now uses the unified AI Assistant system.
+                          Settings from this panel are no longer used.
+                      </span>
+                  </p>
+              </div>
+              
+              {/* Legacy fields kept for backwards compatibility but disabled */}
+              <div className="opacity-50 pointer-events-none space-y-4">
+                  <Input label="Welcome Message (Deprecated)" value={data?.chatbot?.welcomeMessage || ''} onChange={() => {}} />
+                  <Input label="Placeholder Text (Deprecated)" value={data?.chatbot?.placeholderText || ''} onChange={() => {}} />
+                  <TextArea 
+                    label="Knowledge Base (Deprecated)" 
+                    value={data?.chatbot?.knowledgeBase || ''} 
+                    onChange={() => {}} 
+                    rows={4}
+                    placeholder="Use AI Assistant Dashboard instead..."
+                  />
+                  <ColorControl label="Primary Color (Deprecated)" value={data?.chatbot?.colors?.primary || '#6366f1'} onChange={() => {}} />
+                  <ColorControl label="Background (Deprecated)" value={data?.chatbot?.colors?.background || '#ffffff'} onChange={() => {}} />
+                  <ColorControl label="Text (Deprecated)" value={data?.chatbot?.colors?.text || '#000000'} onChange={() => {}} />
+              </div>
           </div>
       );
   };
@@ -2031,12 +2060,125 @@ const Controls: React.FC = () => {
       slideshow: 'Slideshow',
       video: 'Video',
       howItWorks: 'How It Works',
+      map: 'Location Map',
+      menu: 'Restaurant Menu',
       chatbot: 'AI Chatbot',
       footer: 'Footer',
       header: 'Navigation',
       typography: 'Typography'
     };
     return labels[section] || section;
+  };
+
+  const renderMapControls = () => {
+    const contentTab = (
+      <div className="space-y-4">
+         <Input label="Title" value={data?.map.title} onChange={(e) => setNestedData('map.title', e.target.value)} />
+         <FontSizeSelector label="Title Size" value={data?.map.titleFontSize || 'md'} onChange={(v) => setNestedData('map.titleFontSize', v)} />
+         
+         <TextArea label="Description" value={data?.map.description} onChange={(e) => setNestedData('map.description', e.target.value)} rows={2} />
+         <FontSizeSelector label="Description Size" value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
+         
+         <hr className="border-editor-border/50" />
+         
+         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+             <MapPin size={14} />
+             Location
+         </label>
+         <Input label="Address (Display)" value={data?.map.address} onChange={(e) => setNestedData('map.address', e.target.value)} placeholder="e.g. 123 Main St, City" />
+         
+         <div className="grid grid-cols-2 gap-3">
+             <Input label="Latitude" type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
+             <Input label="Longitude" type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
+         </div>
+         
+         <div className="mt-2">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Zoom Level: {data?.map.zoom}</label>
+            <input 
+                type="range" min="1" max="20" 
+                value={data?.map.zoom || 14} 
+                onChange={(e) => setNestedData('map.zoom', parseInt(e.target.value))}
+                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+         </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Map Variant */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Map Style
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: 'modern', label: '🏢 Modern Split', desc: 'Info card + map' },
+              { value: 'minimal', label: '✨ Minimal', desc: 'Clean with badge' },
+              { value: 'dark-tech', label: '🌃 Dark Tech', desc: 'Tech overlay' },
+              { value: 'night', label: '🌙 Night Bar', desc: 'Bottom info bar' }
+            ].map((variant) => (
+              <button
+                key={variant.value}
+                onClick={() => setNestedData('map.mapVariant', variant.value)}
+                className={`px-3 py-3 rounded-md border text-left transition-all ${
+                  (data?.map.mapVariant || 'modern') === variant.value
+                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+              >
+                <div className="text-xs font-medium mb-0.5">{variant.label}</div>
+                <div className="text-[10px] opacity-70">{variant.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Map Height */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Map Height</label>
+              <span className="text-xs text-editor-text-primary">{data?.map.height || 400}px</span>
+            </div>
+            <input 
+                type="range" min="200" max="800" step="50"
+                value={data?.map.height || 400} 
+                onChange={(e) => setNestedData('map.height', parseInt(e.target.value))}
+                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+        </div>
+
+        {/* Spacing */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Settings size={14} />
+            Spacing
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <PaddingSelector label="Vertical" value={data?.map.paddingY || 'md'} onChange={(v) => setNestedData('map.paddingY', v)} />
+            <PaddingSelector label="Horizontal" value={data?.map.paddingX || 'md'} onChange={(v) => setNestedData('map.paddingX', v)} />
+          </div>
+        </div>
+
+        {/* Section Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Colors
+          </label>
+          <ColorControl label="Background" value={data?.map.colors.background || '#0f172a'} onChange={(v) => setNestedData('map.colors.background', v)} />
+          <ColorControl label="Title" value={data?.map.colors.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
+          <ColorControl label="Text" value={data?.map.colors.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
+          <ColorControl label="Marker/Accent" value={data?.map.colors.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
+          {data?.map.mapVariant === 'card-overlay' && (
+             <ColorControl label="Card Background" value={data?.map.colors.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
+          )}
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
   };
 
   const sectionConfig: Record<PageSection, { label: string, icon: React.ElementType, renderer: () => React.ReactNode }> = {
@@ -2246,6 +2388,92 @@ const Controls: React.FC = () => {
       slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: renderSlideshowControls },
       video: { label: 'Video', icon: MonitorPlay, renderer: renderVideoControls },
       howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderListSectionControls('howItWorks', 'Step', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'icon', label: 'Icon', type: 'select', options: ['upload', 'process', 'magic-wand', 'download', 'share', 'search']}]) },
+      map: { label: 'Map', icon: MapIcon, renderer: renderMapControls },
+      menu: { label: 'Restaurant Menu', icon: MenuIcon, renderer: () => (
+          <div className="space-y-4">
+              {/* Menu Variant Selector */}
+              <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+                  <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <Layout size={14} />
+                      Menu Style
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                      {[
+                          { value: 'classic', label: '🍽️ Classic' },
+                          { value: 'modern-grid', label: '✨ Modern' },
+                          { value: 'elegant-list', label: '📋 Elegant' }
+                      ].map((variant) => (
+                          <button
+                              key={variant.value}
+                              onClick={() => setNestedData('menu.menuVariant', variant.value)}
+                              className={`px-2 py-2 rounded-md border text-xs transition-all ${
+                                  (data?.menu?.menuVariant || 'classic') === variant.value
+                                      ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                                      : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                              }`}
+                          >
+                              {variant.label}
+                          </button>
+                      ))}
+                  </div>
+                  <p className="text-xs text-editor-text-secondary mt-2 italic">
+                     {(data?.menu?.menuVariant || 'classic') === 'classic' && '🍽️ Traditional grid cards with images on top.'}
+                     {(data?.menu?.menuVariant || 'classic') === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
+                     {(data?.menu?.menuVariant || 'classic') === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
+                  </p>
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Content Controls */}
+              <div className="space-y-3">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Content</label>
+                  <Input label="Title" value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
+                  <FontSizeSelector label="Title Size" value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
+                  <TextArea label="Description" value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
+                  <FontSizeSelector label="Description Size" value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Padding Controls */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
+                  </div>
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Colors */}
+              <div className="space-y-3">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+                      <Palette size={14} />
+                      Colors
+                  </label>
+                  <ColorControl label="Background" value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
+                  <ColorControl label="Title" value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
+                  <ColorControl label="Text" value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
+                  <ColorControl label="Accent" value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
+                  <ColorControl label="Border Color" value={data?.menu?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('menu.colors.borderColor', v)} />
+                  <ColorControl label="Price Color" value={data?.menu?.colors?.priceColor || '#10b981'} onChange={(v) => setNestedData('menu.colors.priceColor', v)} />
+                  <ColorControl label="Card Background" value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Menu Items */}
+              {renderListSectionControls('menu', 'Dish', [
+                  {key: 'name', label: 'Dish Name', type: 'input'}, 
+                  {key: 'description', label: 'Description', type: 'textarea'}, 
+                  {key: 'price', label: 'Price', type: 'input'},
+                  {key: 'imageUrl', label: 'Photo', type: 'image'}, 
+                  {key: 'category', label: 'Category', type: 'input'}
+              ])}
+          </div>
+      ) },
       chatbot: { label: 'AI Chatbot', icon: MessageSquare, renderer: renderChatbotControls },
       footer: { label: 'Footer', icon: Type, renderer: renderFooterControls },
       header: { label: 'Navigation Bar', icon: AlignJustify, renderer: renderHeaderControls },
@@ -2257,8 +2485,9 @@ const Controls: React.FC = () => {
   const sortableSections = componentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
   
   // Get available components to add (those that are enabled globally but not in current page)
+  // Allow adding header if it's missing, but keep typography and footer as strictly fixed
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
-    section => !componentOrder.includes(section) && componentStatus[section] && section !== 'header' && section !== 'typography' && section !== 'footer'
+    section => !componentOrder.includes(section) && componentStatus[section] && section !== 'typography' && section !== 'footer'
   );
   
   const handleAddComponent = (section: PageSection) => {
@@ -3066,6 +3295,14 @@ const Controls: React.FC = () => {
           <ColorControl label="Accent" value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
           <ColorControl label="Border" value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
         </div>
+
+        {/* Animations */}
+        <AnimationControls
+          animationType={data.features.animationType || 'fade-in-up'}
+          enableCardAnimation={data.features.enableCardAnimation !== false}
+          onChangeAnimationType={(type) => setNestedData('features.animationType', type)}
+          onToggleAnimation={(enabled) => setNestedData('features.enableCardAnimation', enabled)}
+        />
       </div>
     );
 
@@ -3283,6 +3520,7 @@ const Controls: React.FC = () => {
           onToggleVisibility={toggleVisibility}
           onReorder={setComponentOrder}
           onAddComponent={handleAddComponent}
+          onRemoveComponent={handleRemoveComponent}
           availableComponents={availableComponentsToAdd}
         />
       </div>

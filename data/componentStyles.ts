@@ -284,6 +284,26 @@ export const componentStyles: ComponentStyles = {
       border: 'transparent',
     },
   },
+  menu: {
+    menuVariant: 'classic',
+    paddingY: 'lg',
+    paddingX: 'md',
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    borderRadius: 'xl',
+    showCategories: true,
+    showIcon: true,
+    icon: 'utensils-crossed',
+    colors: {
+      background: '#0f172a',
+      accent: '#4f46e5',
+      borderColor: '#334155',
+      text: '#94a3b8',
+      heading: '#F9FAFB',
+      cardBackground: '#1e293b',
+      priceColor: '#10b981',
+    },
+  },
   chatbot: {
     // Chatbot is configured through AI Assistant Dashboard
     // This placeholder ensures the component can be selected in Studio

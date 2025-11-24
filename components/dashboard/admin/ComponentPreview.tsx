@@ -25,6 +25,8 @@ import Video from '../../Video';
 import HowItWorks from '../../HowItWorks';
 import Footer from '../../Footer';
 import ChatbotWidget from '../../ChatbotWidget';
+import BusinessMap from '../../BusinessMap';
+import Menu from '../../Menu';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;
@@ -148,6 +150,10 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <Video {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'howItWorks':
                 return <HowItWorks {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+            case 'map':
+                return <BusinessMap {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+            case 'menu':
+                return <Menu {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'footer':
                 return <Footer {...mockContent as any} {...styles} />;
             case 'chatbot':

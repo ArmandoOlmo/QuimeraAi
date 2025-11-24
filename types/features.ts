@@ -234,7 +234,7 @@ export interface ABTestExperiment {
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography';
+export type EditableComponentID = 'hero' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu';
 export type ComponentStyles = Record<EditableComponentID, any>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 

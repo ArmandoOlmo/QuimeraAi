@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
+import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize, AnimationType } from '../types';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -10,6 +11,8 @@ interface PortfolioCardProps {
   textColor: string;
   borderRadius: BorderRadiusSize;
   borderColor: string;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -45,23 +48,52 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-full',
 };
 
-const PortfolioCard: React.FC<PortfolioCardProps> = ({ imageUrl, title, description, delay = '0s', textColor, borderRadius, borderColor }) => (
-  <div className={`bg-dark-800 shadow-lg border transform hover:-translate-y-2 transition-all duration-300 animate-fade-in-up overflow-hidden group ${borderRadiusClasses[borderRadius]}`} style={{ animationDelay: delay, borderColor: borderColor }}>
-    <div className="aspect-[4/3] overflow-hidden">
-        <img src={imageUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" key={imageUrl} />
+const PortfolioCard: React.FC<PortfolioCardProps> = ({ 
+  imageUrl, 
+  title, 
+  description, 
+  delay = '0s', 
+  textColor, 
+  borderRadius, 
+  borderColor,
+  animationType = 'fade-in-up',
+  enableAnimation = true
+}) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
+  
+  return (
+    <div 
+      className={`bg-dark-800 shadow-lg border transform hover:-translate-y-2 transition-all duration-300 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
+      style={{ animationDelay: delay, borderColor: borderColor }}
+    >
+      <div className="aspect-[4/3] overflow-hidden">
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" key={imageUrl} />
+      </div>
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-site-heading mb-2 font-header">{title}</h3>
+        <p className="font-body text-sm" style={{ color: textColor }}>{description}</p>
+      </div>
     </div>
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-site-heading mb-2 font-header">{title}</h3>
-      <p className="font-body text-sm" style={{ color: textColor }}>{description}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 interface PortfolioProps extends PortfolioData {
     borderRadius: BorderRadiusSize;
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ title, description, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ 
+  title, 
+  description, 
+  items, 
+  paddingY, 
+  paddingX, 
+  colors, 
+  borderRadius, 
+  titleFontSize = 'md', 
+  descriptionFontSize = 'md',
+  animationType = 'fade-in-up',
+  enableCardAnimation = true
+}) => {
   return (
     <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div>
@@ -78,10 +110,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ title, description, items, paddin
                 imageUrl={item.imageUrl}
                 title={item.title}
                 description={item.description}
-                delay={`${(index + 1) * 0.2}s`}
+                delay={getAnimationDelay(index)}
                 textColor={colors.text}
                 borderRadius={borderRadius}
                 borderColor={colors.borderColor}
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
             />
           ))}
         </div>

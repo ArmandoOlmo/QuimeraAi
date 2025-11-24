@@ -1056,6 +1056,105 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         );
     };
 
+    const renderMenuControls = () => {
+        const s = styles as typeof componentStyles['menu'];
+        const colors = (s.colors || {}) as any;
+        const currentVariant = s.menuVariant || 'classic';
+
+        return (
+            <div className="space-y-4">
+                 {/* --- VARIANT SELECTOR --- */}
+                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                         <Layout size={14} />
+                         Menu Style
+                     </label>
+                     <div className="grid grid-cols-3 gap-2">
+                         {['classic', 'modern-grid', 'elegant-list'].map((variant) => (
+                             <button
+                                 key={variant}
+                                 onClick={() => handleStyleChange('menuVariant', variant)}
+                                 className={`px-2 py-2 rounded-md border text-xs transition-all ${
+                                     currentVariant === variant
+                                         ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                                         : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                 }`}
+                             >
+                                 {variant === 'classic' && '🍽️ Classic'}
+                                 {variant === 'modern-grid' && '✨ Modern'}
+                                 {variant === 'elegant-list' && '📋 Elegant'}
+                             </button>
+                         ))}
+                     </div>
+                     <p className="text-xs text-editor-text-secondary mt-2 italic">
+                        {currentVariant === 'classic' && '🍽️ Traditional grid cards with images on top.'}
+                        {currentVariant === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
+                        {currentVariant === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
+                     </p>
+                 </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- ICON CONTROLS --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                        <Settings size={14} />
+                        Icon Settings
+                    </h4>
+                    <div className="space-y-3">
+                        <ToggleControl 
+                            label="Show Icon" 
+                            checked={s.showIcon !== false} 
+                            onChange={(v) => handleStyleChange('showIcon', v)} 
+                        />
+                        {s.showIcon !== false && (
+                            <div className="animate-fade-in-up">
+                                <IconSelector 
+                                    label="Menu Icon"
+                                    value={(s as any).icon || 'utensils-crossed'} 
+                                    onChange={(v) => handleStyleChange('icon', v)} 
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- STANDARD CONTROLS --- */}
+                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Border Color" value={colors.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
+                    <ColorControl label="Price Color" value={colors.priceColor || '#10b981'} onChange={v => handleColorChange('priceColor', v)} />
+                </div>
+                <div>
+                    <ColorControl label="Card Background" value={colors.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+                </div>
+            </div>
+        );
+    };
+
     const renderServicesControls = () => {
         const s = styles as typeof componentStyles['services'];
         const colors = (s.colors || {}) as any;
@@ -1369,6 +1468,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'cta': return renderCtaControls();
             case 'header': return renderHeaderControls();
             case 'services': return renderServicesControls();
+            case 'menu': return renderMenuControls();
             case 'team': return renderTeamControls();
             case 'testimonials': return renderTestimonialsControls();
             case 'faq': return renderFaqControls();

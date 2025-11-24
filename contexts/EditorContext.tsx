@@ -505,7 +505,19 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const fetchGlobalSettings = async () => {
             try {
                 const compDoc = await getDoc(doc(db, 'settings', 'components'));
-                if (compDoc.exists()) setComponentStatus(compDoc.data().status);
+                if (compDoc.exists()) {
+                    const status = compDoc.data().status;
+                    // Merge saved status with defaults, ensuring new components are enabled by default
+                    // This allows new components to be automatically available when added to the system
+                    const mergedStatus = { ...defaultComponentStatus };
+                    Object.keys(status).forEach(key => {
+                        mergedStatus[key as PageSection] = status[key];
+                    });
+                    setComponentStatus(mergedStatus);
+                } else {
+                    // If no document exists, use defaults
+                    setComponentStatus(defaultComponentStatus);
+                }
 
                 const assistantDoc = await getDoc(doc(db, 'settings', 'global_assistant'));
                 if (assistantDoc.exists()) {
@@ -1034,6 +1046,17 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const loadedData = projectToLoad.data;
             const defaultChatbot = initialData.data.chatbot;
             const defaultTestimonials = initialData.data.testimonials;
+            const defaultHeader = initialData.data.header;
+            
+            // Merge header with defaults for new fields (ensure header always exists)
+            const mergedHeader = loadedData.header ? {
+                ...defaultHeader,
+                ...loadedData.header,
+                colors: {
+                    ...defaultHeader.colors,
+                    ...loadedData.header.colors
+                }
+            } : defaultHeader;
             
             // Merge testimonials with defaults for new fields
             const mergedTestimonials = loadedData.testimonials ? {
@@ -1056,11 +1079,36 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             } : defaultCta;
             
+            // Merge Map with defaults for new fields (ensure map always exists)
+            const defaultMap = initialData.data.map;
+            const mergedMap = loadedData.map ? {
+                ...defaultMap,
+                ...loadedData.map,
+                colors: {
+                    ...defaultMap.colors,
+                    ...loadedData.map?.colors
+                }
+            } : defaultMap;
+            
+            // Merge Menu with defaults for new fields (ensure menu always exists)
+            const defaultMenu = initialData.data.menu;
+            const mergedMenu = loadedData.menu ? {
+                ...defaultMenu,
+                ...loadedData.menu,
+                colors: {
+                    ...defaultMenu.colors,
+                    ...loadedData.menu?.colors
+                }
+            } : defaultMenu;
+            
             const mergedData = {
                  ...loadedData,
+                 header: mergedHeader,
                  chatbot: loadedData.chatbot || defaultChatbot,
                  testimonials: mergedTestimonials,
-                 cta: mergedCta
+                 cta: mergedCta,
+                 map: mergedMap,
+                 menu: mergedMenu
             };
             
             // Validate and fix critical fields to prevent runtime errors
@@ -1104,8 +1152,66 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setTheme(projectToLoad.theme);
             setBrandIdentity(projectToLoad.brandIdentity || initialData.brandIdentity);
             
-            // Ensure 'chatbot' is in componentOrder for legacy projects
+            // Ensure 'header' is in componentOrder for legacy projects
             let order = projectToLoad.componentOrder;
+            if (!order.includes('header' as PageSection)) {
+                // Header should be at the beginning (after typography if it exists)
+                const typographyIndex = order.indexOf('typography' as PageSection);
+                if (typographyIndex !== -1) {
+                    // Insert after typography
+                    const newOrder = [...order];
+                    newOrder.splice(typographyIndex + 1, 0, 'header' as PageSection);
+                    order = newOrder;
+                } else {
+                    // Insert at the very beginning
+                    order = ['header' as PageSection, ...order];
+                }
+            }
+            
+            // Ensure 'map' is in componentOrder for legacy projects
+            if (!order.includes('map' as PageSection)) {
+                // Insert before chatbot if it exists, otherwise before footer
+                const chatbotIndex = order.indexOf('chatbot' as PageSection);
+                const footerIndex = order.indexOf('footer' as PageSection);
+                
+                if (chatbotIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(chatbotIndex, 0, 'map' as PageSection);
+                    order = newOrder;
+                } else if (footerIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(footerIndex, 0, 'map' as PageSection);
+                    order = newOrder;
+                } else {
+                    order = [...order, 'map' as PageSection];
+                }
+            }
+            
+            // Ensure 'menu' is in componentOrder for legacy projects
+            if (!order.includes('menu' as PageSection)) {
+                // Insert after map and before chatbot if they exist, otherwise before footer
+                const mapIndex = order.indexOf('map' as PageSection);
+                const chatbotIndex = order.indexOf('chatbot' as PageSection);
+                const footerIndex = order.indexOf('footer' as PageSection);
+                
+                if (mapIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(mapIndex + 1, 0, 'menu' as PageSection);
+                    order = newOrder;
+                } else if (chatbotIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(chatbotIndex, 0, 'menu' as PageSection);
+                    order = newOrder;
+                } else if (footerIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(footerIndex, 0, 'menu' as PageSection);
+                    order = newOrder;
+                } else {
+                    order = [...order, 'menu' as PageSection];
+                }
+            }
+            
+            // Ensure 'chatbot' is in componentOrder for legacy projects
             if (!order.includes('chatbot')) {
                 // Insert before footer or at end
                 const footerIndex = order.indexOf('footer');
@@ -1120,16 +1226,19 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             
             // Ensure 'typography' is in componentOrder for legacy projects
             if (!order.includes('typography' as PageSection)) {
-                // Add at the very end (after footer)
-                order = [...order, 'typography' as PageSection];
+                // Add at the very beginning (before header)
+                order = ['typography' as PageSection, ...order];
             }
             
             setComponentOrder(order);
             
-            // Ensure sectionVisibility includes typography
+            // Ensure sectionVisibility includes header, typography, map and menu
             const visibility = {
                 ...projectToLoad.sectionVisibility,
-                typography: projectToLoad.sectionVisibility.typography ?? true
+                header: projectToLoad.sectionVisibility.header ?? true,
+                typography: projectToLoad.sectionVisibility.typography ?? true,
+                map: projectToLoad.sectionVisibility.map ?? true,
+                menu: projectToLoad.sectionVisibility.menu ?? false  // Default to false for legacy projects
             };
             setSectionVisibility(visibility);
             setMenus(Array.isArray(projectToLoad.menus) ? projectToLoad.menus : [{ id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }]);

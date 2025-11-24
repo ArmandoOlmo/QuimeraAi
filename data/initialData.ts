@@ -80,6 +80,7 @@ const pageData: PageData = {
     statsValueColor: '#4f46e5',
     statsLabelColor: '#94a3b8',
     buttonBorderRadius: 'xl',
+    animationType: 'fade-in-up',
   },
   features: {
     paddingY: 'lg',
@@ -106,6 +107,8 @@ const pageData: PageData = {
     gridColumns: 3,
     imageHeight: 200,
     imageObjectFit: 'cover',
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -128,6 +131,8 @@ const pageData: PageData = {
     cardPadding: 32,
     avatarBorderWidth: 2,
     avatarBorderColor: '#4f46e5',
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
     items: [
       {
         quote: "Quimera.ai has completely transformed my workflow. I can now visualize concepts in seconds that used to take hours. It's an indispensable tool for any creative professional.",
@@ -243,7 +248,9 @@ const pageData: PageData = {
       cardBackground: '#1f2937',
       gradientStart: '#4f46e5',
       gradientEnd: '#10b981',
-    }
+    },
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
   },
   faq: {
     title: "Frequently Asked Questions",
@@ -364,6 +371,8 @@ const pageData: PageData = {
         imageUrl: 'https://picsum.photos/seed/projectgamma/500/400',
       },
     ],
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -395,6 +404,8 @@ const pageData: PageData = {
         description: 'Creating and executing strategic marketing campaigns to boost your online presence and grow your audience.',
       },
     ],
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
     colors: {
       background: '#1e293b', // bg-dark-800
       accent: '#4f46e5',
@@ -430,6 +441,8 @@ const pageData: PageData = {
         imageUrl: 'https://picsum.photos/seed/team4/400/400',
       },
     ],
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
     colors: {
       background: '#0f172a',
       text: '#94a3b8',
@@ -482,6 +495,98 @@ const pageData: PageData = {
         text: '#ffffff',
         background: '#0f172a'
     }
+  },
+  map: {
+    title: "Visit Us",
+    description: "Come visit our headquarters. We're located in the heart of the city, easily accessible by public transport.",
+    address: "123 Innovation Drive, Tech City, TC 90210",
+    lat: 40.7128,
+    lng: -74.0060,
+    zoom: 14,
+    mapVariant: 'modern',
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY || '', // Reads from .env file
+    paddingY: 'lg',
+    paddingX: 'md',
+    height: 400,
+    colors: {
+        background: '#0f172a',
+        text: '#94a3b8',
+        heading: '#F9FAFB',
+        accent: '#4f46e5',
+        cardBackground: '#1e293b'
+    },
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    borderRadius: 'xl'
+  },
+  menu: {
+    menuVariant: 'classic',
+    title: "Nuestro Menú",
+    description: "Descubre nuestros platillos elaborados con ingredientes frescos y recetas tradicionales con un toque moderno.",
+    paddingY: 'lg',
+    paddingX: 'md',
+    items: [
+      {
+        name: 'Pasta Carbonara Premium',
+        description: 'Auténtica pasta italiana con pancetta artesanal, huevo orgánico y parmesano reggiano envejecido.',
+        price: '$24.99',
+        imageUrl: 'https://picsum.photos/seed/carbonara/600/400',
+        category: 'Pastas',
+        isSpecial: true,
+      },
+      {
+        name: 'Salmón a la Parrilla',
+        description: 'Filete de salmón fresco con costra de hierbas, acompañado de vegetales asados y salsa de limón.',
+        price: '$32.99',
+        imageUrl: 'https://picsum.photos/seed/salmon/600/400',
+        category: 'Pescados',
+        isSpecial: true,
+      },
+      {
+        name: 'Risotto de Hongos',
+        description: 'Cremoso risotto con mezcla de hongos silvestres, trufa y parmesano.',
+        price: '$28.99',
+        imageUrl: 'https://picsum.photos/seed/risotto/600/400',
+        category: 'Vegetarianos',
+      },
+      {
+        name: 'Filete Mignon',
+        description: 'Corte premium de res, cocción perfecta, con papas gratinadas y reducción de vino tinto.',
+        price: '$42.99',
+        imageUrl: 'https://picsum.photos/seed/filet/600/400',
+        category: 'Carnes',
+        isSpecial: true,
+      },
+      {
+        name: 'Ensalada César Gourmet',
+        description: 'Lechuga romana fresca, crutones artesanales, pollo a la parrilla y aderezo César casero.',
+        price: '$18.99',
+        imageUrl: 'https://picsum.photos/seed/caesar/600/400',
+        category: 'Ensaladas',
+      },
+      {
+        name: 'Tiramisú Artesanal',
+        description: 'Postre italiano clásico con capas de café espresso, mascarpone y cacao belga.',
+        price: '$12.99',
+        imageUrl: 'https://picsum.photos/seed/tiramisu/600/400',
+        category: 'Postres',
+      },
+    ],
+    colors: {
+      background: '#0f172a',
+      accent: '#4f46e5',
+      borderColor: '#334155',
+      text: '#94a3b8',
+      heading: '#F9FAFB',
+      cardBackground: '#1e293b',
+      priceColor: '#10b981',
+    },
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    borderRadius: 'xl',
+    showCategories: true,
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
   },
   footer: {
     title: 'Quimera.ai',
@@ -544,7 +649,7 @@ const brandIdentity: BrandIdentity = {
     language: 'English',
 };
 
-const componentOrder: PageSection[] = ['hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'chatbot', 'footer', 'typography'];
+const componentOrder: PageSection[] = ['typography', 'header', 'hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
 
 const sectionVisibility = componentOrder.reduce((acc, section) => {
     (acc as any)[section] = true;

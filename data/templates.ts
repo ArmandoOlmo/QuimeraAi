@@ -2,7 +2,7 @@
 import { initialData } from './initialData';
 import { Project, PageSection } from '../types';
 
-const ALL_SECTIONS: PageSection[] = ['hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'footer', 'typography'];
+const ALL_SECTIONS: PageSection[] = ['typography', 'header', 'hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'map', 'menu', 'chatbot', 'footer'];
 const ALL_SECTIONS_VISIBLE = ALL_SECTIONS.reduce((acc, section) => {
     acc[section] = true;
     return acc;
@@ -32,7 +32,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Authenticity, Taste, Atmosphere',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer', 'typography'],
+    componentOrder: ['typography', 'header', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'md',
@@ -200,7 +200,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Integrity, Experience, Justice',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
+    componentOrder: ['typography', 'header', 'hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',
@@ -353,7 +353,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Strength, Discipline, Community',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
+    componentOrder: ['typography', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',
@@ -508,7 +508,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Style, Comfort, Sustainability',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
+    componentOrder: ['typography', 'header', 'hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'xl',
@@ -672,7 +672,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Quality, Trust, Performance',
         language: 'English',
     },
-    componentOrder: ['hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer', 'typography'],
+    componentOrder: ['typography', 'header', 'hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',

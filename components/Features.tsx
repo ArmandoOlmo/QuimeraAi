@@ -1,6 +1,7 @@
 import React from 'react';
-import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit } from '../types';
+import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit, AnimationType } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -13,6 +14,8 @@ interface FeatureCardProps {
   borderColor: string;
   imageHeight: number;
   imageObjectFit: ObjectFit;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -56,21 +59,40 @@ const objectFitClasses: Record<ObjectFit, string> = {
   'scale-down': 'object-scale-down',
 };
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ imageUrl, title, description, delay = '0s', textColor, borderRadius, borderColor, imageHeight, imageObjectFit }) => (
-  <div className={`bg-dark-800 shadow-lg border transform hover:-translate-y-2 transition-transform duration-300 animate-fade-in-up overflow-hidden ${borderRadiusClasses[borderRadius]}`} style={{ animationDelay: delay, borderColor: borderColor }}>
-    <img 
-        src={imageUrl} 
-        alt={title} 
-        className={`w-full ${objectFitClasses[imageObjectFit]}`} 
-        style={{ height: `${imageHeight}px` }}
-        key={imageUrl} 
-    />
-    <div className="p-8">
-      <h3 className="text-2xl font-bold text-site-heading mb-3 font-header">{title}</h3>
-      <p className="font-body" style={{ color: textColor }}>{description}</p>
+const FeatureCard: React.FC<FeatureCardProps> = ({ 
+  imageUrl, 
+  title, 
+  description, 
+  delay = '0s', 
+  textColor, 
+  borderRadius, 
+  borderColor, 
+  imageHeight, 
+  imageObjectFit,
+  animationType = 'fade-in-up',
+  enableAnimation = true
+}) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
+  
+  return (
+    <div 
+      className={`bg-dark-800 shadow-lg border transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
+      style={{ animationDelay: delay, borderColor: borderColor }}
+    >
+      <img 
+          src={imageUrl} 
+          alt={title} 
+          className={`w-full ${objectFitClasses[imageObjectFit]}`} 
+          style={{ height: `${imageHeight}px` }}
+          key={imageUrl} 
+      />
+      <div className="p-8">
+        <h3 className="text-2xl font-bold text-site-heading mb-3 font-header">{title}</h3>
+        <p className="font-body" style={{ color: textColor }}>{description}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- NUEVO: Componente para la Tarjeta Moderna (Bento Style) ---
 const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: any, index: number, colors: any, borderRadius: string }) => {
@@ -116,7 +138,9 @@ const Features: React.FC<FeaturesProps> = ({
     gridColumns = 3, 
     imageHeight = 200, 
     imageObjectFit = 'cover',
-    featuresVariant = 'classic' 
+    featuresVariant = 'classic',
+    animationType = 'fade-in-up',
+    enableCardAnimation = true
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -182,13 +206,15 @@ const Features: React.FC<FeaturesProps> = ({
                 imageUrl={feature.imageUrl}
                 title={feature.title}
                 description={feature.description}
-                delay={`${(index + 1) * 0.2}s`}
+                delay={getAnimationDelay(index)}
                 accentColor={actualColors.accent}
                 textColor={actualColors.text}
                 borderRadius={borderRadius}
                 borderColor={actualColors.borderColor}
                 imageHeight={imageHeight}
                 imageObjectFit={imageObjectFit}
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
             />
           ))}
         </div>

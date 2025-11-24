@@ -5,7 +5,7 @@ import {
     Briefcase, Mail, Send, MessageCircle, PlaySquare, 
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronRight, ChevronDown, Eye, EyeOff,
-    GripVertical, Plus, Search, X
+    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed
 } from 'lucide-react';
 
 interface ComponentTreeProps {
@@ -17,6 +17,7 @@ interface ComponentTreeProps {
     onToggleVisibility: (section: PageSection) => void;
     onReorder: (newOrder: PageSection[]) => void;
     onAddComponent: (section: PageSection) => void;
+    onRemoveComponent: (section: PageSection) => void;
     availableComponents: PageSection[];
 }
 
@@ -35,6 +36,8 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     slideshow: PlaySquare,
     video: MonitorPlay,
     howItWorks: Grid,
+    map: MapPin,
+    menu: UtensilsCrossed,
     chatbot: MessageSquare,
     footer: Type,
     header: AlignJustify,
@@ -56,6 +59,8 @@ const sectionLabels: Record<PageSection, string> = {
     slideshow: 'Slideshow',
     video: 'Video',
     howItWorks: 'How It Works',
+    map: 'Location Map',
+    menu: 'Restaurant Menu',
     chatbot: 'AI Chatbot',
     footer: 'Footer',
     header: 'Navigation',
@@ -71,6 +76,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     onToggleVisibility,
     onReorder,
     onAddComponent,
+    onRemoveComponent,
     availableComponents
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -113,7 +119,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     // Group sections by category
     const structureSections = componentOrder.filter(s => 
-        ['header', 'hero', 'footer'].includes(s)
+        ['typography', 'header', 'hero', 'footer'].includes(s)
     );
     
     const contentSections = componentOrder.filter(s => 
@@ -122,7 +128,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     );
     
     const integrationSections = componentOrder.filter(s => 
-        ['chatbot', 'leads', 'newsletter'].includes(s) &&
+        ['chatbot', 'leads', 'newsletter', 'map'].includes(s) &&
         componentStatus[s]
     );
 
@@ -135,7 +141,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        const isFixed = ['header', 'footer', 'typography'].includes(section);
+        // Only typography and footer are truly fixed - header can be reordered if needed
+        const isFixed = ['footer', 'typography'].includes(section);
 
         return (
             <div
@@ -174,20 +181,38 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 </span>
 
                 {!isFixed && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleVisibility(section);
-                        }}
-                        className={`flex-shrink-0 p-1 rounded transition-colors ${
-                            isActive 
-                                ? 'hover:bg-white/20 text-white' 
-                                : 'hover:bg-editor-border text-editor-text-secondary'
-                        }`}
-                        title={isVisible ? 'Hide section' : 'Show section'}
-                    >
-                        {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleVisibility(section);
+                            }}
+                            className={`flex-shrink-0 p-1 rounded transition-colors ${
+                                isActive 
+                                    ? 'hover:bg-white/20 text-white' 
+                                    : 'hover:bg-editor-border text-editor-text-secondary'
+                            }`}
+                            title={isVisible ? 'Hide section' : 'Show section'}
+                        >
+                            {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`¿Estás seguro de que quieres eliminar la sección "${sectionLabels[section]}"?`)) {
+                                    onRemoveComponent(section);
+                                }
+                            }}
+                            className={`flex-shrink-0 p-1 rounded transition-colors ${
+                                isActive 
+                                    ? 'hover:bg-red-500/20 text-white' 
+                                    : 'hover:bg-red-500/10 text-editor-text-secondary hover:text-red-500'
+                            }`}
+                            title="Delete section"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
                 )}
             </div>
         );
@@ -305,13 +330,6 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         {renderGroup('Structure', structureSections, 'structure', false)}
                         {renderGroup('Content', contentSections, 'content', true)}
                         {renderGroup('Integrations', integrationSections, 'integrations', true)}
-                        
-                        {/* Global Typography - Always at bottom */}
-                        {componentOrder.includes('typography' as PageSection) && (
-                            <div className="pt-2 border-t border-editor-border mt-4">
-                                {renderSection('typography' as PageSection, false)}
-                            </div>
-                        )}
                     </>
                 )}
             </div>

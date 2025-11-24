@@ -1,5 +1,6 @@
 import React from 'react';
-import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize } from '../types';
+import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize, AnimationType } from '../types';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { 
     // Base icons
     Code, Paintbrush2, Megaphone, BarChart, Scissors, Camera, ArrowRight,
@@ -23,6 +24,8 @@ import {
     Clock, Calendar, Timer, Watch, Hourglass,
     // Security & Protection
     Shield, Lock, Key, EyeOff, CheckCircle, AlertCircle,
+    // Food & Hospitality
+    Utensils, Coffee, Wine, Beer, UtensilsCrossed, ChefHat, CakeSlice, Pizza, Soup, Salad,
     // Other
     Zap, Award, Trophy, Rocket, Lightbulb, Sparkles, CircleDot, Hexagon, Layers
 } from 'lucide-react';
@@ -154,6 +157,17 @@ const serviceIcons: Record<ServiceIcon, React.ReactNode> = {
     'eye-off': <EyeOff size={32} />,
     'check-circle': <CheckCircle size={32} />,
     'alert-circle': <AlertCircle size={32} />,
+    // Food & Hospitality
+    utensils: <Utensils size={32} />,
+    coffee: <Coffee size={32} />,
+    wine: <Wine size={32} />,
+    beer: <Beer size={32} />,
+    'utensils-crossed': <UtensilsCrossed size={32} />,
+    'chef-hat': <ChefHat size={32} />,
+    'cake-slice': <CakeSlice size={32} />,
+    pizza: <Pizza size={32} />,
+    soup: <Soup size={32} />,
+    salad: <Salad size={32} />,
     // Other
     zap: <Zap size={32} />,
     award: <Award size={32} />,
@@ -176,17 +190,33 @@ interface ServiceCardProps {
   borderColor: string;
   variant: 'cards' | 'grid' | 'minimal';
   index: number;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
+  delay?: string;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description, accentColor, textColor, borderRadius, borderColor, variant }) => {
+const ServiceCard: React.FC<ServiceCardProps> = ({ 
+  icon, 
+  title, 
+  description, 
+  accentColor, 
+  textColor, 
+  borderRadius, 
+  borderColor, 
+  variant,
+  animationType = 'fade-in-up',
+  enableAnimation = true,
+  delay = '0s'
+}) => {
     const radiusClass = borderRadiusClasses[borderRadius];
+    const animationClass = getAnimationClass(animationType, enableAnimation);
 
     // VARIANT 1: CLASSIC CARDS
     if (variant === 'cards') {
         return (
             <div 
-                className={`bg-white/5 p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} relative overflow-hidden`}
-                style={{ borderColor: borderColor }}
+                className={`bg-white/5 p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} ${animationClass} relative overflow-hidden`}
+                style={{ borderColor: borderColor, animationDelay: delay }}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
@@ -210,10 +240,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description, acc
     if (variant === 'grid') {
         return (
             <div 
-                className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl ${radiusClass}`}
+                className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl ${radiusClass} ${animationClass}`}
                 style={{ 
                     backgroundColor: 'rgba(255,255,255,0.03)', 
-                    borderLeft: `4px solid ${accentColor}` 
+                    borderLeft: `4px solid ${accentColor}`,
+                    animationDelay: delay
                 }}
             >
                 <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{'--accent': accentColor} as any}>
@@ -232,7 +263,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description, acc
     // VARIANT 3: MINIMAL LIST
     if (variant === 'minimal') {
         return (
-            <div className={`flex gap-6 p-6 transition-all duration-300 hover:bg-white/5 ${radiusClass}`}>
+            <div className={`flex gap-6 p-6 transition-all duration-300 hover:bg-white/5 ${radiusClass} ${animationClass}`} style={{ animationDelay: delay }}>
                 <div className="flex-shrink-0 mt-1">
                     <div className="w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: `${accentColor}15`, color: accentColor }}>
                         {React.cloneElement(icon as React.ReactElement, { size: 20 })}
@@ -265,7 +296,9 @@ const Services: React.FC<ServicesProps> = ({
     borderRadius, 
     titleFontSize = 'md', 
     descriptionFontSize = 'md',
-    servicesVariant = 'cards' // Default
+    servicesVariant = 'cards', // Default
+    animationType = 'fade-in-up',
+    enableCardAnimation = true
 }) => {
   return (
     <section id="services" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
@@ -297,6 +330,9 @@ const Services: React.FC<ServicesProps> = ({
                     borderRadius={borderRadius}
                     borderColor={colors.borderColor}
                     variant={servicesVariant}
+                    animationType={animationType}
+                    enableAnimation={enableCardAnimation}
+                    delay={getAnimationDelay(index)}
                 />
             ))}
         </div>

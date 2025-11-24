@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant } from '../types';
+import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant, AnimationType } from '../types';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 
 interface TeamMemberCardProps {
   imageUrl: string;
@@ -10,6 +11,8 @@ interface TeamMemberCardProps {
   variant?: TeamVariant;
   accentColor?: string;
   cardBackground?: string;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -45,13 +48,16 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   delay = '0s', 
   variant = 'classic',
   accentColor = '#4f46e5',
-  cardBackground = 'transparent'
+  cardBackground = 'transparent',
+  animationType = 'fade-in-up',
+  enableAnimation = true
 }) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
   
   // Classic variant - simple circular images with text below
   if (variant === 'classic') {
     return (
-      <div className="text-center animate-fade-in-up" style={{ animationDelay: delay }}>
+      <div className={`text-center ${animationClass}`} style={{ animationDelay: delay }}>
         <img 
           src={imageUrl} 
           alt={name} 
@@ -69,7 +75,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'cards') {
     return (
       <div 
-        className="rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 animate-fade-in-up" 
+        className={`rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${animationClass}`}
         style={{ 
           animationDelay: delay,
           backgroundColor: cardBackground
@@ -98,7 +104,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   // Minimal variant - clean modern layout with square images
   if (variant === 'minimal') {
     return (
-      <div className="group animate-fade-in-up" style={{ animationDelay: delay }}>
+      <div className={`group ${animationClass}`} style={{ animationDelay: delay }}>
         <div className="relative overflow-hidden rounded-lg mb-4">
           <img 
             src={imageUrl} 
@@ -128,7 +134,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'overlay') {
     return (
       <div 
-        className="group relative overflow-hidden rounded-2xl shadow-xl animate-fade-in-up cursor-pointer" 
+        className={`group relative overflow-hidden rounded-2xl shadow-xl cursor-pointer ${animationClass}`}
         style={{ animationDelay: delay }}
       >
         <div className="aspect-[3/4] relative">
@@ -185,7 +191,9 @@ const Team: React.FC<TeamProps> = ({
   colors, 
   titleFontSize = 'md', 
   descriptionFontSize = 'md',
-  teamVariant = 'classic'
+  teamVariant = 'classic',
+  animationType = 'fade-in-up',
+  enableCardAnimation = true
 }) => {
   // Grid columns based on variant
   const gridClasses = {
@@ -223,10 +231,12 @@ const Team: React.FC<TeamProps> = ({
                 imageUrl={member.imageUrl}
                 name={member.name}
                 role={member.role}
-                delay={`${(index + 1) * 0.15}s`}
+                delay={getAnimationDelay(index, 0.15)}
                 variant={teamVariant}
                 accentColor={colors.accent || '#4f46e5'}
                 cardBackground={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'}
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
             />
           ))}
         </div>

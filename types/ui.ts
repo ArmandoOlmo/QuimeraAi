@@ -20,6 +20,9 @@ export type ObjectFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 export type ThemeMode = 'light' | 'dark' | 'black';
 export type ImageStyle = 'default' | 'rounded-full' | 'glow' | 'float' | 'hexagon' | 'polaroid';
 
+// Animation Types
+export type AnimationType = 'none' | 'fade-in' | 'fade-in-up' | 'fade-in-down' | 'slide-up' | 'slide-down' | 'scale-in' | 'bounce-in';
+
 // Font Families
 export type FontFamily = 
   'roboto' | 'open-sans' | 'lato' | 'slabo-27px' | 'oswald' | 'source-sans-pro' |
@@ -37,7 +40,7 @@ export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets'
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo';
 
 // Page Section Types
-export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography';
+export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'map' | 'menu';
 
 // Theme Data
 export interface ThemeData {

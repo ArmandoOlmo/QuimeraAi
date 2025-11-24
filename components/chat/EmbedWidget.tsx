@@ -1,64 +1,69 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, X } from 'lucide-react';
-import { useEditor } from '../contexts/EditorContext';
-import { Lead } from '../types';
-import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
-import ChatCore from './chat/ChatCore';
+import { AiAssistantConfig, Project, ChatAppearanceConfig } from '../../types';
+import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../../utils/chatThemes';
+import ChatCore from './ChatCore';
 
-interface ChatbotWidgetProps {
-    isPreview?: boolean;
+interface EmbedWidgetProps {
+    projectId: string;
+    apiUrl?: string;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
-    isPreview = false
+const EmbedWidget: React.FC<EmbedWidgetProps> = ({ 
+    projectId,
+    apiUrl = 'https://quimera.app/api/widget'
 }) => {
-    const { aiAssistantConfig, addLead, activeProject } = useEditor();
-    
-    // Get appearance config with defaults
-    const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
-    
-    // Widget State
+    const [config, setConfig] = useState<AiAssistantConfig | null>(null);
+    const [project, setProject] = useState<Project | null>(null);
+    const [appearance, setAppearance] = useState<ChatAppearanceConfig>(getDefaultAppearanceConfig());
     const [isOpen, setIsOpen] = useState(false);
-    const [exitIntentShown, setExitIntentShown] = useState(false);
-    const [leadCaptured, setLeadCaptured] = useState(false);
-    const messagesRef = useRef<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Don't render if not active and not in preview
-    if (!aiAssistantConfig.isActive && !isPreview) return null;
+    // Load configuration from API
+    useEffect(() => {
+        const loadConfig = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/${projectId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load widget configuration');
+                }
+                
+                const data = await response.json();
+                
+                setConfig(data.config);
+                setProject(data.project);
+                setAppearance(data.config.appearance || getDefaultAppearanceConfig());
+                setIsLoading(false);
+            } catch (err) {
+                console.error('Error loading widget config:', err);
+                setError('Failed to load chat widget');
+                setIsLoading(false);
+            }
+        };
 
-    // Get lead capture config with defaults
-    const leadConfig = aiAssistantConfig.leadCaptureConfig || {
-        enabled: aiAssistantConfig.leadCaptureEnabled !== false,
-        preChatForm: false,
-        triggerAfterMessages: 3,
-        requireEmailForAdvancedInfo: true,
-        exitIntentEnabled: true,
-        exitIntentOffer: '🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento',
-        intentKeywords: [],
-        progressiveProfilingEnabled: true
-    };
+        loadConfig();
+    }, [projectId, apiUrl]);
 
-    // Handle lead capture
-    const handleLeadCapture = async (leadData: Partial<Lead>) => {
-        await addLead({
-            ...leadData,
-            source: 'chatbot-widget',
-            status: 'new',
-            tags: ['chatbot-widget', ...(leadData.tags || [])]
-        });
-        setLeadCaptured(true);
-    };
-
-    // Handle close with exit intent
-    const handleChatClose = () => {
-        // Exit intent: offer one last chance to capture lead
-        if (leadConfig.enabled && leadConfig.exitIntentEnabled && !leadCaptured && messagesRef.current.length > 2 && !exitIntentShown) {
-            setExitIntentShown(true);
-            // The ChatCore will handle showing the lead capture modal
-            return;
+    // Handle lead capture for embedded widget
+    const handleLeadCapture = async (leadData: any) => {
+        try {
+            await fetch(`${apiUrl}/${projectId}/leads`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...leadData,
+                    source: 'embedded-widget',
+                    status: 'new',
+                    tags: ['embedded-widget', ...(leadData.tags || [])]
+                })
+            });
+        } catch (err) {
+            console.error('Error capturing lead:', err);
         }
-        
-        setIsOpen(false);
     };
 
     // Apply custom position
@@ -73,10 +78,20 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         return positionMap[position] || positionMap['bottom-right'];
     };
 
+    // Don't render if loading or error
+    if (isLoading) return null;
+    if (error || !config || !project) {
+        console.error('Widget error:', error);
+        return null;
+    }
+
+    // Don't render if not active
+    if (!config.isActive) return null;
+
     const sizeClasses = getSizeClasses(appearance.behavior.width);
 
     return (
-        <div className={`fixed z-50 flex flex-col items-end font-body`} style={getPositionStyle()}>
+        <div className={`fixed z-50 flex flex-col items-end font-sans`} style={getPositionStyle()}>
             {/* Chat Window */}
             <div 
                 className={`
@@ -89,16 +104,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     borderColor: appearance.colors.inputBorder
                 }}
             >
-                {isOpen && activeProject && (
+                {isOpen && (
                     <ChatCore
-                        config={aiAssistantConfig}
-                        project={activeProject}
+                        config={config}
+                        project={project}
                         appearance={appearance}
                         onLeadCapture={handleLeadCapture}
-                        onClose={handleChatClose}
+                        onClose={() => setIsOpen(false)}
                         className="w-full h-full flex flex-col"
                         showHeader={true}
                         autoOpen={isOpen}
+                        isEmbedded={true}
                     />
                 )}
             </div>
@@ -139,4 +155,5 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     );
 };
 
-export default ChatbotWidget;
+export default EmbedWidget;
+

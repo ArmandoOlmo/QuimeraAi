@@ -3,7 +3,7 @@
  * Tipos para todos los componentes de la página
  */
 
-import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit } from './ui';
+import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType } from './ui';
 
 // =============================================================================
 // HEADER
@@ -90,6 +90,7 @@ export interface HeroData {
     statsValueColor?: string;
     statsLabelColor?: string;
     buttonBorderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
 }
 
 // =============================================================================
@@ -114,6 +115,8 @@ export interface FeaturesData {
     imageObjectFit: ObjectFit;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -144,6 +147,8 @@ export interface TestimonialsData {
     cardPadding?: number;
     avatarBorderWidth?: number;
     avatarBorderColor?: string;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -229,6 +234,8 @@ export interface PricingData {
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -360,6 +367,8 @@ export interface PortfolioData {
     colors: { background: string; accent: string; borderColor: string; text: string; heading: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -386,6 +395,8 @@ export type ServiceIcon =
     | 'clock' | 'calendar' | 'timer' | 'watch' | 'hourglass'
     // Security & Protection
     | 'shield' | 'lock' | 'key' | 'eye-off' | 'check-circle' | 'alert-circle'
+    // Food & Hospitality
+    | 'utensils' | 'coffee' | 'wine' | 'beer' | 'utensils-crossed' | 'chef-hat' | 'cake-slice' | 'pizza' | 'soup' | 'salad'
     // Other
     | 'zap' | 'award' | 'trophy' | 'rocket' | 'lightbulb' | 'sparkles' | 'circle-dot' | 'hexagon' | 'layers';
 
@@ -405,6 +416,8 @@ export interface ServicesData {
     colors: { background: string; accent: string; borderColor: string; text: string; heading: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -428,6 +441,8 @@ export interface TeamData {
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     teamVariant?: TeamVariant;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 // =============================================================================
@@ -473,8 +488,13 @@ export interface HowItWorksData {
 }
 
 // =============================================================================
-// CHATBOT
+// CHATBOT (DEPRECATED)
 // =============================================================================
+/**
+ * @deprecated This interface is deprecated. Use AiAssistantConfig from types/ai-assistant.ts instead.
+ * The chatbot is now configured through the AI Assistant Dashboard.
+ * This interface is kept for backwards compatibility with existing projects.
+ */
 export interface ChatbotData {
     welcomeMessage: string;
     placeholderText: string;
@@ -517,6 +537,75 @@ export interface FooterData {
 }
 
 // =============================================================================
+// MAP
+// =============================================================================
+export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night';
+
+export interface MapData {
+    title: string;
+    description: string;
+    address: string;
+    lat: number;
+    lng: number;
+    zoom: number;
+    mapVariant: MapVariant;
+    apiKey: string; // In a real app, this might be global, but allowing per-component override or placeholder
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: {
+        background: string;
+        text: string;
+        heading: string;
+        accent: string;
+        cardBackground?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    height: number;
+    borderRadius?: BorderRadiusSize;
+}
+
+// =============================================================================
+// MENU (RESTAURANT)
+// =============================================================================
+export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list';
+
+export interface MenuItem {
+    name: string;
+    description: string;
+    price: string;
+    imageUrl: string;
+    category?: string;
+    isSpecial?: boolean;
+}
+
+export interface MenuData {
+    menuVariant?: MenuVariant;
+    title: string;
+    description: string;
+    items: MenuItem[];
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: { 
+        background: string; 
+        accent: string; 
+        borderColor: string; 
+        text: string; 
+        heading: string;
+        cardBackground?: string;
+        priceColor?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    showCategories?: boolean;
+    showIcon?: boolean;
+    icon?: ServiceIcon;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 export interface PageData {
@@ -537,5 +626,7 @@ export interface PageData {
     howItWorks: HowItWorksData;
     chatbot: ChatbotData;
     footer: FooterData;
+    map: MapData;
+    menu: MenuData;
 }
 

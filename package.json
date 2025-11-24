@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
+    "@react-google-maps/api": "^2.20.7",
     "@tiptap/extension-bubble-menu": "^3.11.0",
     "@tiptap/extension-color": "^3.11.0",
     "@tiptap/extension-highlight": "^3.11.0",

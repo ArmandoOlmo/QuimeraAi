@@ -29,6 +29,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
     { id: 'faq', name: 'FAQ', icon: <HelpCircle size={18} /> },
     { id: 'portfolio', name: 'Portfolio', icon: <Briefcase size={18} /> },
     { id: 'leads', name: 'Leads Form', icon: <Mail size={18} /> },
+    { id: 'menu', name: 'Restaurant Menu', icon: <Menu size={18} /> },
     { id: 'newsletter', name: 'Newsletter', icon: <FilePenLine size={18} /> },
     { id: 'video', name: 'Video', icon: <Video size={18} /> },
     { id: 'howItWorks', name: 'How It Works', icon: <Puzzle size={18} /> },
