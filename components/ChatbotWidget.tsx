@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { MessageSquare, X } from 'lucide-react';
 import { useEditor } from '../contexts/EditorContext';
 import { Lead } from '../types';
@@ -12,7 +13,7 @@ interface ChatbotWidgetProps {
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
     isPreview = false
 }) => {
-    const { aiAssistantConfig, addLead, activeProject } = useEditor();
+    const { aiAssistantConfig, addLead, activeProject, data, componentOrder, sectionVisibility } = useEditor();
     
     // Get appearance config with defaults
     const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
@@ -22,9 +23,45 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [leadCaptured, setLeadCaptured] = useState(false);
     const messagesRef = useRef<any[]>([]);
+    const [currentSection, setCurrentSection] = useState<string>('hero');
 
     // Don't render if not active and not in preview
     if (!aiAssistantConfig.isActive && !isPreview) return null;
+
+    // Detect current section in viewport
+    useEffect(() => {
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -20% 0px',
+            threshold: 0.1
+        };
+
+        const observerCallback = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    if (sectionId) {
+                        console.log(`[ChatbotWidget] 📍 User scrolled to: ${sectionId}`);
+                        setCurrentSection(sectionId);
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+        // Observe all sections
+        const sections = document.querySelectorAll('section[id], div[id]');
+        sections.forEach((section) => {
+            if (section.id && !section.id.includes('headlessui')) {
+                observer.observe(section);
+            }
+        });
+
+        return () => {
+            sections.forEach((section) => observer.unobserve(section));
+        };
+    }, []);
 
     // Get lead capture config with defaults
     const leadConfig = aiAssistantConfig.leadCaptureConfig || {
@@ -75,8 +112,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     const sizeClasses = getSizeClasses(appearance.behavior.width);
 
-    return (
-        <div className={`fixed z-50 flex flex-col items-end font-body`} style={getPositionStyle()}>
+    // Widget content
+    const widgetContent = (
+        <div className={`fixed z-[9999] flex flex-col items-end font-body`} style={getPositionStyle()}>
             {/* Chat Window */}
             <div 
                 className={`
@@ -85,6 +123,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 `}
                 style={{ 
                     maxHeight: sizeClasses.height,
+                    height: sizeClasses.height,
                     backgroundColor: appearance.colors.backgroundColor,
                     borderColor: appearance.colors.inputBorder
                 }}
@@ -99,6 +138,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         className="w-full h-full flex flex-col"
                         showHeader={true}
                         autoOpen={isOpen}
+                        currentPageContext={{
+                            section: currentSection,
+                            pageData: data,
+                            visibleSections: componentOrder?.filter(sec => sectionVisibility?.[sec] !== false) || []
+                        }}
                     />
                 )}
             </div>
@@ -137,6 +181,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             </button>
         </div>
     );
+
+    // Render the widget using a portal to ensure it's always on top
+    return typeof document !== 'undefined' 
+        ? ReactDOM.createPortal(widgetContent, document.body)
+        : null;
 };
 
 export default ChatbotWidget;

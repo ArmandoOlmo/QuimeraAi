@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead } from '../../types';
+import ReactMarkdown from 'react-markdown';
+import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
@@ -9,6 +10,12 @@ import { logApiCall } from '../../services/apiLoggingService';
 // =============================================================================
 // INTERFACES
 // =============================================================================
+
+interface PageContext {
+    section: string;
+    pageData: PageData | null;
+    visibleSections: PageSection[];
+}
 
 export interface ChatCoreProps {
     config: AiAssistantConfig;
@@ -21,6 +28,7 @@ export interface ChatCoreProps {
     onClose?: () => void;
     autoOpen?: boolean;
     isEmbedded?: boolean;
+    currentPageContext?: PageContext;
 }
 
 interface Message {
@@ -141,7 +149,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     headerActions,
     onClose,
     autoOpen = false,
-    isEmbedded = false
+    isEmbedded = false,
+    currentPageContext
 }) => {
     const { hasApiKey, promptForKeySelection, handleApiError, user, activeProject } = useEditor();
     
@@ -193,17 +202,22 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // =============================================================================
 
     const buildSystemInstruction = () => {
+        // Log current viewing section
+        if (currentPageContext?.section) {
+            console.log(`[ChatCore] 📍 Building instruction for section: ${currentPageContext.section}`);
+        }
+
         const businessContext = `
             BUSINESS NAME: ${project?.name || 'Unknown Business'}
             
             BUSINESS PROFILE:
-            ${config.businessProfile || 'No business profile provided'}
+            ${config.businessProfile || 'No business profile provided. Just be a helpful AI assistant.'}
             
             PRODUCTS & SERVICES:
-            ${config.productsServices || 'No products/services information provided'}
+            ${config.productsServices || 'No specific products/services information provided. Answer general questions helpfully.'}
             
             POLICIES & CONTACT INFO:
-            ${config.policiesContact || 'No policies/contact information provided'}
+            ${config.policiesContact || 'No policies/contact information provided.'}
             
             ${config.faqs && config.faqs.length > 0 ? `
             FREQUENTLY ASKED QUESTIONS:
@@ -227,22 +241,29 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         const brandName = project?.brandIdentity?.name || project?.name || 'our business';
         const brandIndustry = project?.brandIdentity?.industry || 'various services';
 
-        return `
+        const systemInstruction = `
             You are ${config.agentName || 'AI Assistant'}, a ${(config.tone || 'Professional').toLowerCase()} AI assistant for ${brandName} (${brandIndustry}).
-            Languages: ${config.languages || 'English'}. Automatically detect the user's language and respond in the same language.
             
             YOUR KNOWLEDGE BASE:
             ${businessContext}
 
-            CRITICAL INSTRUCTIONS:
-            1. DETECT the language the user is speaking (e.g., English, Spanish, French) and reply in that EXACT SAME LANGUAGE
-            2. Answer questions based ONLY on the knowledge base above
+            INSTRUCTIONS:
+            1. Always respond in the SAME language the user is using
+            2. When you receive [SYSTEM CONTEXT] in a message, use that information to answer about what the user is viewing
             3. Be ${(config.tone || 'Professional').toLowerCase()}, helpful, and conversational
-            4. Keep answers concise unless detailed explanation is needed
-            5. If the answer is not in the knowledge base, politely say you don't have that information
-            6. When answering from FAQs, provide the exact answer but feel free to rephrase naturally
-            7. When citing information from uploaded documents, provide accurate information without mentioning the document source unless asked
+            4. When asked "what am I seeing?" or "what's this section?", describe the specific content from the SYSTEM CONTEXT
+            5. Available sections: ${currentPageContext?.visibleSections?.join(', ') || 'various sections'}
+            
+            FORMATTING:
+            - Use **bold** for emphasis on important points
+            - Use bullet points (- or *) for lists
+            - Use numbered lists (1. 2. 3.) when order matters
+            - Keep paragraphs short and readable
+            - Use line breaks between different topics
+            - Structure your responses clearly with headings if needed (## Heading)
         `;
+        
+        return systemInstruction;
     };
 
     // =============================================================================
@@ -426,18 +447,37 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         setIsLoading(true);
 
         try {
-            if (!hasApiKey) {
+            if (hasApiKey === false) {
                 promptForKeySelection();
+                setIsLoading(false);
                 return;
             }
 
             const genai = await getGoogleGenAI();
             const systemContext = buildSystemInstruction();
 
+            // Build conversation history
             const conversationHistory = newMessages.map(m => ({
                 role: m.role === 'user' ? 'user' : 'model',
                 parts: [{ text: m.text }]
             }));
+
+            // Add page context as a system message at the start if available
+            if (currentPageContext?.pageData && currentPageContext.section) {
+                const sectionData = (currentPageContext.pageData as any)[currentPageContext.section];
+                if (sectionData) {
+                    const contextMessage = `[SYSTEM CONTEXT] The user is currently viewing the "${currentPageContext.section}" section. Content: ${JSON.stringify(sectionData).slice(0, 1500)}`;
+                    
+                    // Prepend context to the latest user message
+                    const lastMessageIndex = conversationHistory.length - 1;
+                    if (lastMessageIndex >= 0 && conversationHistory[lastMessageIndex].role === 'user') {
+                        conversationHistory[lastMessageIndex].parts[0].text = 
+                            contextMessage + '\n\n' + conversationHistory[lastMessageIndex].parts[0].text;
+                        
+                        console.log('[ChatCore] 🎯 Page context injected into user message');
+                    }
+                }
+            }
 
             const result = await genai.models.generateContent({
                 model: 'gemini-2.5-flash',
@@ -456,7 +496,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 });
             }
 
-            const botResponse = result.response.text();
+            const botResponse = result.text;
             setMessages(prev => [...prev, { role: 'model', text: botResponse }]);
 
             // Check if we should trigger lead capture
@@ -475,7 +515,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 });
             }
             handleApiError(error);
-            console.error("Error:", error);
+            console.error('ChatCore Error:', error);
             setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error. Please try again.' }]);
         } finally {
             setIsLoading(false);
@@ -671,7 +711,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // =============================================================================
 
     return (
-        <div className={`flex flex-col ${className}`}>
+        <div className={`flex flex-col h-full ${className}`}>
             {/* Header */}
             {showHeader && (
                 <div 
@@ -719,7 +759,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             )}
 
             {/* Content Area */}
-            <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
+            <div className="flex-1 relative flex flex-col overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
                 
                 {/* Pre-Chat Form */}
                 {showPreChatForm && (
@@ -861,7 +901,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     </div>
                 ) : (
                     /* Text Chat History */
-                    <div className="h-full p-4 overflow-y-auto custom-scrollbar space-y-3">
+                    <div className="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-3">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                                 {msg.role === 'model' && appearance.branding.showBotAvatar && (
@@ -873,7 +913,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                     className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
                                         msg.role === 'user' 
                                             ? 'rounded-tr-sm' 
-                                            : 'rounded-tl-sm'
+                                            : 'rounded-tl-sm markdown-content'
                                     }`}
                                     style={
                                         msg.role === 'user' 
@@ -887,7 +927,34 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                             }
                                     }
                                 >
-                                    {msg.text}
+                                    {msg.role === 'model' ? (
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                                                li: ({node, ...props}) => <li className="ml-2" {...props} />,
+                                                strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                                                em: ({node, ...props}) => <em className="italic" {...props} />,
+                                                code: ({node, inline, ...props}) => 
+                                                    inline ? (
+                                                        <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono" {...props} />
+                                                    ) : (
+                                                        <code className="block bg-black/10 p-2 rounded my-2 text-xs font-mono overflow-x-auto" {...props} />
+                                                    ),
+                                                a: ({node, ...props}) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2" {...props} />,
+                                                h2: ({node, ...props}) => <h2 className="text-sm font-bold mb-2" {...props} />,
+                                                h3: ({node, ...props}) => <h3 className="text-xs font-bold mb-1" {...props} />,
+                                                blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-current pl-2 italic my-2 opacity-80" {...props} />,
+                                                hr: ({node, ...props}) => <hr className="my-2 border-current opacity-20" {...props} />,
+                                            }}
+                                        >
+                                            {msg.text}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        msg.text
+                                    )}
                                 </div>
                             </div>
                         ))}

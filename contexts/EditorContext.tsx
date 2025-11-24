@@ -341,7 +341,23 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         isEnabled: true,
         enableLiveVoice: true,
         voiceName: 'Puck',
-        greeting: "Hi! I'm your Quimera Assistant. I have full control over the app.",
+        greeting: `👋 **¡Hola! Soy tu Asistente Quimera** 🤖
+
+Tengo control total sobre la aplicación y puedo ayudarte con:
+
+### 🧭 Navegación
+Ir a cualquier sección (Editor, CMS, Leads, Dominios)
+
+### 🎨 Diseño & Contenido
+✏️ Textos · 🖌️ Colores · 📐 Estilos · 🖼️ Imágenes
+
+### 📊 Gestión de Datos
+📰 Blog Posts · 💼 Leads CRM · 🌐 Dominios
+
+### ⚡ Creación
+🚀 Nuevos sitios web · 🎨 Imágenes con IA
+
+💬 **¿En qué te ayudo hoy?**`,
         systemInstruction: `You are the Quimera.ai Global Assistant. You have FULL CONTROL over the application via tools.
         
         YOUR MANDATE:
@@ -351,8 +367,15 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         4. **Content Editing:** You can DIRECTLY modify the website content using 'update_site_content'.
         5. **Project Management:** Use 'load_project' to switch websites.
         
-        IMPORTANT:
-        - Be concise.
+        🎯 FORMATTING REQUIREMENTS:
+        - ✨ ALWAYS use emojis generously (make responses engaging and scannable)
+        - 📝 ALWAYS use markdown: headers (##), lists, **bold**, \`code\`
+        - 🎨 Match emojis to context (navigation 🧭, design 🎨, data 📊, etc)
+        - 💡 Add helpful tips when relevant
+        - ✅ Confirm actions with visual structure
+        - 🌐 Match user's language (Spanish/English)
+        
+        Remember: Rich formatting with emojis = Better UX! 🚀
         `,
         permissions: {}, // Initialize empty, components will handle defaults
         temperature: 0.7,
