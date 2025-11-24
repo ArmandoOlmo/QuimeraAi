@@ -1,97 +1,47 @@
-
 import React, { useEffect } from 'react';
-import Controls from './components/Controls';
-import LandingPage from './components/LandingPage';
-import BrowserPreview from './components/BrowserPreview';
-import EditorHeader from './components/EditorHeader';
 import { EditorProvider, useEditor } from './contexts/EditorContext';
 import { ToastProvider } from './contexts/ToastContext';
-import Dashboard from './components/dashboard/Dashboard';
-import SuperAdminDashboard from './components/dashboard/SuperAdminDashboard';
 import Auth from './components/Auth';
 import VerificationScreen from './components/VerificationScreen';
 import { auth, signOut } from './firebase';
 import ProfileModal from './components/dashboard/ProfileModal';
-import CMSDashboard from './components/cms/CMSDashboard';
-import NavigationDashboard from './components/dashboard/navigation/NavigationDashboard';
-import AiAssistantDashboard from './components/dashboard/ai/AiAssistantDashboard';
 import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
 import OnboardingWizard from './components/ui/OnboardingWizard';
-import LeadsDashboard from './components/dashboard/leads/LeadsDashboard';
-import DomainsDashboard from './components/dashboard/domains/DomainsDashboard';
-import SEODashboard from './components/dashboard/SEODashboard';
 import GlobalSEO from './components/GlobalSEO';
 import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
+import ViewRouter from './components/ViewRouter';
 
 
 const AppContent: React.FC = () => {
-  const { isSidebarOpen, setIsSidebarOpen, view, previewRef, activeProjectId, data, userDocument, isOnboardingOpen, setIsOnboardingOpen } = useEditor();
+  const { 
+    isSidebarOpen, 
+    setIsSidebarOpen, 
+    view, 
+    previewRef, 
+    activeProjectId, 
+    data, 
+    userDocument, 
+    isOnboardingOpen, 
+    setIsOnboardingOpen 
+  } = useEditor();
   const seoConfig = useSEO();
-
-  // Helper to render the correct main view
-  const renderMainView = () => {
-      if (view === 'superadmin' && ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '')) {
-        return <SuperAdminDashboard />;
-      }
-
-      if (view === 'cms') {
-          return <CMSDashboard />;
-      }
-
-      if (view === 'navigation') {
-          return <NavigationDashboard />;
-      }
-      
-      if (view === 'ai-assistant') {
-          return <AiAssistantDashboard />;
-      }
-      
-      if (view === 'leads') {
-          return <LeadsDashboard />;
-      }
-      
-      if (view === 'domains') {
-          return <DomainsDashboard />;
-      }
-
-      if (view === 'seo') {
-          return <SEODashboard />;
-      }
-
-      if (view === 'dashboard' || view === 'websites' || view === 'assets' || !activeProjectId || !data) {
-        return <Dashboard />;
-      }
-
-      // Editor View
-      return (
-        <div className="flex flex-col h-screen bg-editor-bg text-editor-text-primary">
-          <EditorHeader />
-          <div className="flex flex-1 overflow-hidden relative">
-            <Controls />
-            {/* Backdrop for mobile sidebar */}
-            <div 
-              aria-hidden="true"
-              onClick={() => setIsSidebarOpen(false)} 
-              className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-            />
-            <main className="flex-1 p-4 sm:p-8 flex justify-center">
-              <BrowserPreview ref={previewRef}>
-                <LandingPage />
-              </BrowserPreview>
-            </main>
-          </div>
-        </div>
-      );
-  };
 
   return (
     <>
-        <GlobalSEO config={seoConfig} />
-        {renderMainView()}
-        <GlobalAiAssistant />
-        <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
+      <GlobalSEO config={seoConfig} />
+      <ViewRouter
+        view={view}
+        userDocument={userDocument}
+        activeProjectId={activeProjectId}
+        data={data}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        previewRef={previewRef}
+      />
+      <GlobalAiAssistant />
+      <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
     </>
   );
 };
