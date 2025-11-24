@@ -5,15 +5,18 @@ import { PageSection, PricingTier } from '../types';
 import ColorControl from './ui/ColorControl';
 import FontManager from './ui/FontManager';
 import ImagePicker from './ui/ImagePicker';
+import IconSelector from './ui/IconSelector';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { 
     Trash2, Plus, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, 
     Layout, Image, List, Star, PlaySquare, Users, DollarSign, 
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles
 } from 'lucide-react';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
+import ComponentTree from './ui/ComponentTree';
+import TabbedControls from './ui/TabbedControls';
 
 // --- Helper Components ---
 
@@ -199,6 +202,7 @@ const Controls: React.FC = () => {
       sectionVisibility, setSectionVisibility, 
       componentOrder, setComponentOrder,
       componentStatus,
+      componentStyles, // Access global defaults
       isSidebarOpen,
       uploadImageAndGetURL,
       menus,
@@ -267,7 +271,7 @@ const Controls: React.FC = () => {
   
   // Drag and Drop Handlers
   const handleDragStart = (e: React.DragEvent, sectionKey: PageSection) => {
-      const sections = componentOrder.filter(k => k !== 'footer');
+      const sections = componentOrder.filter(k => k !== ('footer' as PageSection));
       setDraggedIndex(sections.indexOf(sectionKey));
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", sectionKey); 
@@ -283,7 +287,7 @@ const Controls: React.FC = () => {
       
       if (draggedIndex === null) return;
       
-      const sections = componentOrder.filter(k => k !== 'footer');
+      const sections = componentOrder.filter(k => k !== ('footer' as PageSection));
       const targetIndex = sections.indexOf(targetSection);
       if (draggedIndex === targetIndex) return;
 
@@ -292,7 +296,7 @@ const Controls: React.FC = () => {
       newOrder.splice(targetIndex, 0, movedItem);
 
       // Always keep footer at the end if it exists in current setup
-      setComponentOrder([...newOrder, 'footer']);
+      setComponentOrder([...newOrder, 'footer' as PageSection] as PageSection[]);
       setDraggedIndex(null);
   };
   
@@ -565,297 +569,457 @@ const Controls: React.FC = () => {
 
   const renderHeroControls = () => {
       if (!data?.hero) return null;
+      const currentVariant = data.hero.heroVariant || 'classic';
+      
       return (
           <div className="space-y-4">
-              <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
-                  <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
-              </AIFormControl>
-              <FontSizeSelector label="Headline Size" value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
-              
-              <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
-                  <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
-              </AIFormControl>
-              <FontSizeSelector label="Subheadline Size" value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
-              
-              <div className="grid grid-cols-2 gap-4">
-                  <Input label="Primary CTA" value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
-                  <Input label="Secondary CTA" value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
-              </div>
-
-              <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Badge</h4>
-              <ToggleControl 
-                  label="Show Badge" 
-                  checked={data.hero.showBadge !== false} 
-                  onChange={(v) => setNestedData('hero.showBadge', v)} 
-              />
-              {data.hero.showBadge !== false && (
-                  <div className="space-y-3 animate-fade-in-up">
-                      <div className="grid grid-cols-2 gap-3">
-                          <Input 
-                              label="Badge Icon" 
-                              value={data.hero.badgeIcon || '✨'} 
-                              onChange={(e) => setNestedData('hero.badgeIcon', e.target.value)} 
-                              className="mb-0" 
-                          />
-                          <Input 
-                              label="Badge Text" 
-                              value={data.hero.badgeText || 'AI-Powered Generation'} 
-                              onChange={(e) => setNestedData('hero.badgeText', e.target.value)} 
-                              className="mb-0" 
-                          />
-                      </div>
-                      <ColorControl 
-                          label="Badge Color" 
-                          value={data.hero.badgeColor || data.hero.colors.primary || '#4f46e5'} 
-                          onChange={(v) => setNestedData('hero.badgeColor', v)} 
-                      />
-                      <ColorControl 
-                          label="Badge Background" 
-                          value={data.hero.badgeBackgroundColor || `${data.hero.colors.primary}15`} 
-                          onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} 
-                      />
-                  </div>
-              )}
-
-              <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Statistics</h4>
-              <ToggleControl 
-                  label="Show Statistics" 
-                  checked={data.hero.showStats !== false} 
-                  onChange={(v) => setNestedData('hero.showStats', v)} 
-              />
-              {data.hero.showStats !== false && (
-                  <div className="space-y-3 animate-fade-in-up">
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                          <ColorControl 
-                              label="Stats Value Color" 
-                              value={data.hero.statsValueColor || data.hero.colors.primary || '#4f46e5'} 
-                              onChange={(v) => setNestedData('hero.statsValueColor', v)} 
-                          />
-                          <ColorControl 
-                              label="Stats Label Color" 
-                              value={data.hero.statsLabelColor || data.hero.colors.text || '#94a3b8'} 
-                              onChange={(v) => setNestedData('hero.statsLabelColor', v)} 
-                          />
-                      </div>
-                      {(data.hero.stats || [
-                          { value: '10K+', label: 'Artworks Created' },
-                          { value: '5K+', label: 'Happy Users' },
-                          { value: '4.9★', label: 'User Rating' }
-                      ]).map((stat, index) => (
-                          <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                              <div className="flex justify-between items-center mb-2">
-                                  <span className="text-xs font-bold text-editor-text-secondary">Stat #{index + 1}</span>
-                                  <button 
-                                      onClick={() => {
-                                          const newStats = (data.hero.stats || []).filter((_, i) => i !== index);
-                                          setNestedData('hero.stats', newStats.length > 0 ? newStats : undefined);
-                                      }}
-                                      className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                                  >
-                                      <Trash2 size={14} />
-                                  </button>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                  <input 
-                                      placeholder="Value (e.g., 10K+)" 
-                                      value={stat.value} 
-                                      onChange={(e) => setNestedData(`hero.stats.${index}.value`, e.target.value)} 
-                                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                                  />
-                                  <input 
-                                      placeholder="Label" 
-                                      value={stat.label} 
-                                      onChange={(e) => setNestedData(`hero.stats.${index}.label`, e.target.value)} 
-                                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                                  />
-                              </div>
-                          </div>
-                      ))}
-                      <button 
-                          onClick={() => {
-                              const currentStats = data.hero.stats || [
-                                  { value: '10K+', label: 'Artworks Created' },
-                                  { value: '5K+', label: 'Happy Users' },
-                                  { value: '4.9★', label: 'User Rating' }
-                              ];
-                              setNestedData('hero.stats', [...currentStats, { value: '0', label: 'New Stat' }]);
-                          }}
-                          className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+              {/* ========== HERO VARIANT ========== */}
+              <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                  <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                      <Layout size={14} />
+                      Hero Style
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                      <button
+                          onClick={() => setNestedData('hero.heroVariant', 'classic')}
+                          className={`px-3 py-3 rounded-md border transition-all ${
+                              currentVariant === 'classic'
+                                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                          }`}
                       >
-                          <Plus size={14} /> Add Statistic
+                          <div className="font-semibold text-sm">Classic</div>
+                          <div className="text-xs opacity-70">Two Column</div>
+                      </button>
+                      <button
+                          onClick={() => setNestedData('hero.heroVariant', 'modern')}
+                          className={`px-3 py-3 rounded-md border transition-all ${
+                              currentVariant === 'modern'
+                                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                          }`}
+                      >
+                          <div className="font-semibold text-sm">Modern</div>
+                          <div className="text-xs opacity-70">Full Screen</div>
+                      </button>
+                      <button
+                          onClick={() => setNestedData('hero.heroVariant', 'gradient')}
+                          className={`px-3 py-3 rounded-md border transition-all ${
+                              currentVariant === 'gradient'
+                                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                          }`}
+                      >
+                          <div className="font-semibold text-sm">Gradient</div>
+                          <div className="text-xs opacity-70">Futuristic</div>
+                      </button>
+                      <button
+                          onClick={() => setNestedData('hero.heroVariant', 'fitness')}
+                          className={`px-3 py-3 rounded-md border transition-all ${
+                              currentVariant === 'fitness'
+                                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                          }`}
+                      >
+                          <div className="font-semibold text-sm">Fitness</div>
+                          <div className="text-xs opacity-70">Bold & Dynamic</div>
                       </button>
                   </div>
-              )}
-
-              <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Layout & Spacing</h4>
-              <div className="grid grid-cols-2 gap-4">
-                  <PaddingSelector label="Vertical Padding" value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
-                  <PaddingSelector label="Horizontal Padding" value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
+                  <p className="text-xs text-editor-text-secondary mt-2">
+                      {currentVariant === 'modern' 
+                          ? '✨ Full-screen hero with image background' 
+                          : currentVariant === 'gradient'
+                            ? '🎨 Modern layout with gradient effects & floating elements'
+                            : currentVariant === 'fitness'
+                              ? '💪 Bold design with energy and impact for gyms/sports'
+                              : '📐 Traditional side-by-side layout'}
+                  </p>
               </div>
 
               <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
-              <ColorControl label="Background" value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
-              <ColorControl label="Title" value={data.hero.colors.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
-              <ColorControl label="Text" value={data.hero.colors.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
-              
-              <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-2">Primary Button</h5>
-              <div className="grid grid-cols-2 gap-4">
-                  <ColorControl label="Background" value={data.hero.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
-                  <ColorControl label="Text" value={data.hero.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
-              </div>
 
-              <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-2">Secondary Button</h5>
-              <div className="grid grid-cols-2 gap-4">
-                  <ColorControl label="Background" value={data.hero.colors.secondaryButtonBackground || '#334155'} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
-                  <ColorControl label="Text" value={data.hero.colors.secondaryButtonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+              {/* ========== CONTENT ========== */}
+              <div>
+                  <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+                      <Type size={14} />
+                      Content
+                  </h4>
+                  
+                  <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
+                      <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
+                  </AIFormControl>
+                  <FontSizeSelector label="Headline Size" value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+                  
+                  <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
+                      <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
+                  </AIFormControl>
+                  <FontSizeSelector label="Subheadline Size" value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                      <Input label="Primary CTA" value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
+                      <Input label="Secondary CTA" value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+                  </div>
               </div>
 
               <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Hero Image</h4>
-              <ImagePicker label="Image URL" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
-              
+
+              {/* ========== BADGE ========== */}
               <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Image Style</label>
-                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                      {['default', 'rounded-full', 'glow', 'float', 'hexagon', 'polaroid'].map(style => (
-                          <button 
-                              key={style}
-                              onClick={() => setNestedData('hero.imageStyle', style)}
-                              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageStyle === style ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                          >
-                              {style === 'rounded-full' ? 'Circle' : style}
-                          </button>
-                      ))}
-                  </div>
-              </div>
-
-              <ToggleControl label="Drop Shadow" checked={data.hero.imageDropShadow || false} onChange={(v) => setNestedData('hero.imageDropShadow', v)} />
-
-              <div className="grid grid-cols-2 gap-4">
-                  <div>
-                      <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Position</label>
-                      <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                          {['left', 'right'].map(pos => (
-                              <button 
-                                  key={pos}
-                                  onClick={() => setNestedData('hero.imagePosition', pos)}
-                                  className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imagePosition === pos ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                              >
-                                  {pos}
-                              </button>
-                          ))}
-                      </div>
-                  </div>
-                  <div>
-                      <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Alignment</label>
-                      <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                          {['start', 'center', 'end'].map(align => (
-                              <button 
-                                  key={align}
-                                  onClick={() => setNestedData('hero.imageJustification', align)}
-                                  className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imageJustification === align ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                              >
-                                  {align}
-                              </button>
-                          ))}
-                      </div>
-                  </div>
-              </div>
-
-              <div>
-                  <BorderRadiusSelector label="Corner Radius (for 'Default' style)" value={data.hero.imageBorderRadius || 'md'} onChange={(v) => setNestedData('hero.imageBorderRadius', v)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                  <div>
-                      <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Border Size</label>
-                      <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                          {['none', 'sm', 'md', 'lg'].map(size => (
-                              <button 
-                                  key={size}
-                                  onClick={() => setNestedData('hero.imageBorderSize', size)}
-                                  className={`flex-1 py-1 text-xs font-medium rounded-sm uppercase ${data.hero.imageBorderSize === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                              >
-                                  {size}
-                              </button>
-                          ))}
-                      </div>
-                  </div>
-                  <ColorControl label="Border Color" value={data.hero.imageBorderColor || 'transparent'} onChange={(v) => setNestedData('hero.imageBorderColor', v)} />
-              </div>
-
-              <div>
-                  <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Width</label>
-                      <span className="text-xs text-editor-text-primary">{data.hero.imageWidth || 100}%</span>
-                  </div>
-                  <input
-                      type="range" min="25" max="100" step="5"
-                      value={data.hero.imageWidth || 100}
-                      onChange={(e) => setNestedData('hero.imageWidth', parseInt(e.target.value))}
-                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                  />
-              </div>
-
-              <ToggleControl
-                  label="Set Max Height"
-                  checked={data.hero.imageHeightEnabled || false}
-                  onChange={(v) => setNestedData('hero.imageHeightEnabled', v)}
-              />
-              {data.hero.imageHeightEnabled && (
-                  <div className="animate-fade-in-up">
-                      <div className="flex justify-between items-center mb-1">
-                          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Max Height</label>
-                          <span className="text-xs text-editor-text-primary">{data.hero.imageHeight || 500}px</span>
-                      </div>
-                      <input
-                          type="range" min="200" max="800" step="10"
-                          value={data.hero.imageHeight || 500}
-                          onChange={(e) => setNestedData('hero.imageHeight', parseInt(e.target.value))}
-                          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                  <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+                          <Star size={14} />
+                          Badge
+                      </h4>
+                      <ToggleControl 
+                          label="" 
+                          checked={data.hero.showBadge !== false} 
+                          onChange={(v) => setNestedData('hero.showBadge', v)} 
                       />
                   </div>
+                  {data.hero.showBadge !== false && (
+                      <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
+                          <div className="grid grid-cols-2 gap-3">
+                              <Input 
+                                  label="Icon" 
+                                  value={data.hero.badgeIcon || '✨'} 
+                                  onChange={(e) => setNestedData('hero.badgeIcon', e.target.value)} 
+                                  className="mb-0" 
+                              />
+                              <Input 
+                                  label="Text" 
+                                  value={data.hero.badgeText || 'AI-Powered Generation'} 
+                                  onChange={(e) => setNestedData('hero.badgeText', e.target.value)} 
+                                  className="mb-0" 
+                              />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                              <ColorControl 
+                                  label="Color" 
+                                  value={data.hero.badgeColor || data.hero.colors.primary || '#4f46e5'} 
+                                  onChange={(v) => setNestedData('hero.badgeColor', v)} 
+                              />
+                              <ColorControl 
+                                  label="Background" 
+                                  value={data.hero.badgeBackgroundColor || `${data.hero.colors.primary}15`} 
+                                  onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} 
+                              />
+                          </div>
+                      </div>
+                  )}
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* ========== STATISTICS ========== */}
+              <div>
+                  <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+                          <DollarSign size={14} />
+                          Statistics
+                      </h4>
+                      <ToggleControl 
+                          label="" 
+                          checked={data.hero.showStats !== false} 
+                          onChange={(v) => setNestedData('hero.showStats', v)} 
+                      />
+                  </div>
+                  {data.hero.showStats !== false && (
+                      <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
+                          {currentVariant === 'fitness' && (
+                              <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
+                                  <p className="text-xs text-orange-200 flex items-center gap-2">
+                                      <Star size={14} className="flex-shrink-0" />
+                                      <span><strong>Fitness Stats:</strong> Stats display with dynamic icons (Target, TrendingUp, Award, Zap) and angled card design with hover effects.</span>
+                                  </p>
+                              </div>
+                          )}
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                              <ColorControl 
+                                  label="Value Color" 
+                                  value={data.hero.statsValueColor || data.hero.colors.primary || '#4f46e5'} 
+                                  onChange={(v) => setNestedData('hero.statsValueColor', v)} 
+                              />
+                              <ColorControl 
+                                  label="Label Color" 
+                                  value={data.hero.statsLabelColor || data.hero.colors.text || '#94a3b8'} 
+                                  onChange={(v) => setNestedData('hero.statsLabelColor', v)} 
+                              />
+                          </div>
+                          {(data.hero.stats || [
+                              { value: '10K+', label: 'Artworks Created' },
+                              { value: '5K+', label: 'Happy Users' },
+                              { value: '4.9★', label: 'User Rating' }
+                          ]).map((stat, index) => (
+                              <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                                  <div className="flex justify-between items-center mb-2">
+                                      <span className="text-xs font-bold text-editor-text-secondary">Stat #{index + 1}</span>
+                                      <button 
+                                          onClick={() => {
+                                              const newStats = (data.hero.stats || []).filter((_, i) => i !== index);
+                                              setNestedData('hero.stats', newStats.length > 0 ? newStats : undefined);
+                                          }}
+                                          className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                                      >
+                                          <Trash2 size={14} />
+                                      </button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <input 
+                                          placeholder="Value (e.g., 10K+)" 
+                                          value={stat.value} 
+                                          onChange={(e) => setNestedData(`hero.stats.${index}.value`, e.target.value)} 
+                                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                      />
+                                      <input 
+                                          placeholder="Label" 
+                                          value={stat.label} 
+                                          onChange={(e) => setNestedData(`hero.stats.${index}.label`, e.target.value)} 
+                                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                      />
+                                  </div>
+                              </div>
+                          ))}
+                          <button 
+                              onClick={() => {
+                                  const currentStats = data.hero.stats || [
+                                      { value: '10K+', label: 'Artworks Created' },
+                                      { value: '5K+', label: 'Happy Users' },
+                                      { value: '4.9★', label: 'User Rating' }
+                                  ];
+                                  setNestedData('hero.stats', [...currentStats, { value: '0', label: 'New Stat' }]);
+                              }}
+                              className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                              <Plus size={14} /> Add Statistic
+                          </button>
+                      </div>
+                  )}
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* ========== LAYOUT & SPACING (Only for Classic) ========== */}
+              {currentVariant === 'classic' && (
+                  <>
+                      <div>
+                          <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                  <AlignJustify size={12} className="text-editor-accent" />
+                                  <label className="text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                  <PaddingSelector label="Vertical" value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
+                                  <PaddingSelector label="Horizontal" value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
+                              </div>
+                          </div>
+                      </div>
+
+                      <hr className="border-editor-border/50" />
+                  </>
               )}
 
+              {/* ========== COLORS ========== */}
               <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Aspect Ratio</label>
-                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                      {['auto', '1:1', '4:3', '3:4', '16:9', '9:16'].map(ratio => (
-                          <button 
-                              key={ratio}
-                              onClick={() => setNestedData('hero.imageAspectRatio', ratio)}
-                              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors ${data.hero.imageAspectRatio === ratio ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                          >
-                              {ratio}
-                          </button>
-                      ))}
+                  <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+                      <Settings size={14} />
+                      Colors
+                  </h4>
+                  
+                  <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+                      <ColorControl label="Background" value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
+                      <ColorControl label="Title" value={data.hero.colors.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
+                      <ColorControl label="Text" value={data.hero.colors.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
+                      
+                      <div className="pt-2">
+                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Primary Button</h5>
+                          <div className="grid grid-cols-2 gap-3">
+                              <ColorControl label="Background" value={data.hero.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
+                              <ColorControl label="Text" value={data.hero.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
+                          </div>
+                      </div>
+
+                      <div className="pt-2">
+                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Secondary Button</h5>
+                          <div className="grid grid-cols-2 gap-3">
+                              <ColorControl label="Background" value={data.hero.colors.secondaryButtonBackground || '#334155'} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
+                              <ColorControl label="Text" value={data.hero.colors.secondaryButtonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+                          </div>
+                      </div>
                   </div>
               </div>
 
-              <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
-                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                      {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
-                          <button 
-                              key={fit}
-                              onClick={() => setNestedData('hero.imageObjectFit', fit)}
-                              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                          >
-                              {fit === 'scale-down' ? 'Scale' : fit}
-                          </button>
-                      ))}
+              {/* ========== IMAGE (Only for Classic) ========== */}
+              {currentVariant === 'classic' && (
+                  <>
+                      <hr className="border-editor-border/50" />
+                      <div>
+                          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+                              <Image size={14} />
+                              Hero Image
+                          </h4>
+                          
+                          <ImagePicker label="Image URL" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+                          
+                          {/* Image Style */}
+                          <div className="mb-3">
+                              <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Image Style</label>
+                              <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                  {['default', 'rounded-full', 'glow', 'float', 'hexagon', 'polaroid'].map(style => (
+                                      <button 
+                                          key={style}
+                                          onClick={() => setNestedData('hero.imageStyle', style)}
+                                          className={`py-1.5 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageStyle === style ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                                      >
+                                          {style === 'rounded-full' ? 'Circle' : style}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+
+                          <ToggleControl label="Drop Shadow" checked={data.hero.imageDropShadow || false} onChange={(v) => setNestedData('hero.imageDropShadow', v)} />
+
+                          {/* Position & Alignment */}
+                          <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Position</label>
+                                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                                      {['left', 'right'].map(pos => (
+                                          <button 
+                                              key={pos}
+                                              onClick={() => setNestedData('hero.imagePosition', pos)}
+                                              className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imagePosition === pos ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+                                          >
+                                              {pos}
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Alignment</label>
+                                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                                      {['start', 'center', 'end'].map(align => (
+                                          <button 
+                                              key={align}
+                                              onClick={() => setNestedData('hero.imageJustification', align)}
+                                              className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imageJustification === align ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+                                          >
+                                              {align}
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Border Controls */}
+                          <div className="mb-3">
+                              <BorderRadiusSelector label="Corner Radius" value={data.hero.imageBorderRadius || 'md'} onChange={(v) => setNestedData('hero.imageBorderRadius', v)} />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Border Size</label>
+                                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                                      {['none', 'sm', 'md', 'lg'].map(size => (
+                                          <button 
+                                              key={size}
+                                              onClick={() => setNestedData('hero.imageBorderSize', size)}
+                                              className={`flex-1 py-1 text-xs font-medium rounded-sm uppercase ${data.hero.imageBorderSize === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+                                          >
+                                              {size}
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+                              <ColorControl label="Border Color" value={data.hero.imageBorderColor || 'transparent'} onChange={(v) => setNestedData('hero.imageBorderColor', v)} />
+                          </div>
+
+                          {/* Image Sizing */}
+                          <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+                              <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                      <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Width</label>
+                                      <span className="text-xs text-editor-text-primary">{data.hero.imageWidth || 100}%</span>
+                                  </div>
+                                  <input
+                                      type="range" min="25" max="100" step="5"
+                                      value={data.hero.imageWidth || 100}
+                                      onChange={(e) => setNestedData('hero.imageWidth', parseInt(e.target.value))}
+                                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                  />
+                              </div>
+
+                              <ToggleControl
+                                  label="Set Max Height"
+                                  checked={data.hero.imageHeightEnabled || false}
+                                  onChange={(v) => setNestedData('hero.imageHeightEnabled', v)}
+                              />
+                              {data.hero.imageHeightEnabled && (
+                                  <div className="animate-fade-in-up">
+                                      <div className="flex justify-between items-center mb-1">
+                                          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Max Height</label>
+                                          <span className="text-xs text-editor-text-primary">{data.hero.imageHeight || 500}px</span>
+                                      </div>
+                                      <input
+                                          type="range" min="200" max="800" step="10"
+                                          value={data.hero.imageHeight || 500}
+                                          onChange={(e) => setNestedData('hero.imageHeight', parseInt(e.target.value))}
+                                          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                      />
+                                  </div>
+                              )}
+
+                              <div>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Aspect Ratio</label>
+                                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                      {['auto', '1:1', '4:3', '3:4', '16:9', '9:16'].map(ratio => (
+                                          <button 
+                                              key={ratio}
+                                              onClick={() => setNestedData('hero.imageAspectRatio', ratio)}
+                                              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors ${data.hero.imageAspectRatio === ratio ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                                          >
+                                              {ratio}
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+
+                              <div>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
+                                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                      {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
+                                          <button 
+                                              key={fit}
+                                              onClick={() => setNestedData('hero.imageObjectFit', fit)}
+                                              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                                          >
+                                              {fit === 'scale-down' ? 'Scale' : fit}
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </>
+              )}
+
+              {/* Modern variant info */}
+              {currentVariant === 'modern' && (
+                  <div className="bg-editor-bg/50 p-4 rounded-lg border border-dashed border-editor-border">
+                      <p className="text-xs text-editor-text-secondary text-center">
+                          💡 <strong>Modern variant</strong> uses the hero image as a full-screen background. Upload image above in the main image picker.
+                      </p>
                   </div>
-              </div>
+              )}
           </div>
       );
   };
 
   const renderFeaturesControls = () => {
       if (!data?.features) return null;
+      
+      // Get current variant from data, fallback to classic
+      const currentVariant = (data.features as any).featuresVariant || 'classic';
+
       return (
           <div className="space-y-4">
               <Input label="Title" value={data.features.title} onChange={(e) => setNestedData('features.title', e.target.value)} />
@@ -864,6 +1028,25 @@ const Controls: React.FC = () => {
               <TextArea label="Description" value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
               <FontSizeSelector label="Description Size" value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
               
+              <hr className="border-editor-border/50" />
+              <h4 className="font-bold text-editor-text-primary text-sm">Section Style</h4>
+              <div>
+                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                      <button
+                          onClick={() => setNestedData('features.featuresVariant', 'classic')}
+                          className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                      >
+                          Classic
+                      </button>
+                      <button
+                          onClick={() => setNestedData('features.featuresVariant', 'modern')}
+                          className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                      >
+                          Bento / Modern
+                      </button>
+                  </div>
+              </div>
+
               <hr className="border-editor-border/50" />
               <h4 className="font-bold text-editor-text-primary text-sm">Grid Layout</h4>
               <div>
@@ -912,10 +1095,12 @@ const Controls: React.FC = () => {
               </div>
 
               <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Layout & Spacing</h4>
-              <div className="grid grid-cols-2 gap-4">
-                  <PaddingSelector label="Vertical Padding" value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
-                  <PaddingSelector label="Horizontal Padding" value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
+                  </div>
               </div>
 
               <hr className="border-editor-border/50" />
@@ -969,7 +1154,7 @@ const Controls: React.FC = () => {
       );
   };
 
-  const renderListSectionControls = (sectionKey: string, itemLabel: string, fields: { key: string, label: string, type: 'input' | 'textarea' | 'select' | 'image', options?: string[] }[]) => {
+  const renderListSectionControls = (sectionKey: string, itemLabel: string, fields: { key: string, label: string, type: 'input' | 'textarea' | 'select' | 'image' | 'icon-selector', options?: string[] }[]) => {
        if (!data) return null;
        const sectionData = (data as any)[sectionKey];
        if (!sectionData) return null;
@@ -1002,6 +1187,21 @@ const Controls: React.FC = () => {
               )}
 
               <hr className="border-editor-border/50" />
+              
+              {/* Padding Controls */}
+              {sectionData.paddingY !== undefined && sectionData.paddingX !== undefined && (
+                  <>
+                      <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                          <div className="grid grid-cols-2 gap-3">
+                              <PaddingSelector label="Vertical" value={sectionData.paddingY || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingY`, v)} />
+                              <PaddingSelector label="Horizontal" value={sectionData.paddingX || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingX`, v)} />
+                          </div>
+                      </div>
+                      <hr className="border-editor-border/50" />
+                  </>
+              )}
+              
               <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{itemLabel}s</h4>
               {(sectionData.items || []).map((item: any, index: number) => (
                   <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
@@ -1026,6 +1226,13 @@ const Controls: React.FC = () => {
                                     onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)} 
                                     rows={2} 
                                     className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                 />
+                             ) : field.type === 'icon-selector' ? (
+                                 <IconSelector
+                                    label={field.label}
+                                    value={item[field.key]}
+                                    onChange={(icon) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, icon)}
+                                    size="sm"
                                  />
                              ) : field.type === 'select' ? (
                                  <select
@@ -1130,8 +1337,44 @@ const Controls: React.FC = () => {
 
   const renderPricingControls = () => {
       if (!data?.pricing) return null;
+      const currentVariant = data.pricing.pricingVariant || 'classic';
+      
       return (
         <div className="space-y-4">
+            {/* Variant Selector */}
+            <div className="mb-4">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Style Variant</label>
+                <div className="grid grid-cols-2 gap-2">
+                    {[
+                        { value: 'classic', label: 'Classic', desc: 'Traditional card layout' },
+                        { value: 'gradient', label: 'Gradient', desc: 'Vibrant gradients' },
+                        { value: 'glassmorphism', label: 'Glass', desc: 'Frosted glass effect' },
+                        { value: 'minimalist', label: 'Minimal', desc: 'Clean & simple' }
+                    ].map((variant) => (
+                        <button
+                            key={variant.value}
+                            onClick={() => setNestedData('pricing.pricingVariant', variant.value)}
+                            className={`
+                                p-3 text-left rounded-lg border transition-all
+                                ${currentVariant === variant.value 
+                                    ? 'bg-editor-accent border-editor-accent text-editor-bg' 
+                                    : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                                }
+                            `}
+                        >
+                            <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-editor-bg' : 'text-editor-text-primary'}`}>
+                                {variant.label}
+                            </div>
+                            <div className={`text-[10px] ${currentVariant === variant.value ? 'text-editor-bg/80' : 'text-editor-text-secondary'}`}>
+                                {variant.desc}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <hr className="border-editor-border/50" />
+
             <Input label="Title" value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
             <FontSizeSelector label="Title Size" value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
@@ -1139,10 +1382,12 @@ const Controls: React.FC = () => {
             <FontSizeSelector label="Description Size" value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
             
             <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm">Layout & Spacing</h4>
-            <div className="grid grid-cols-2 gap-4">
-                <PaddingSelector label="Vertical Padding" value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
-                <PaddingSelector label="Horizontal Padding" value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
+            <div className="space-y-2">
+                <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <PaddingSelector label="Vertical" value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
+                    <PaddingSelector label="Horizontal" value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
+                </div>
             </div>
             
             <BorderRadiusSelector label="Card Corners" value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
@@ -1152,6 +1397,26 @@ const Controls: React.FC = () => {
             <ColorControl label="Background" value={data.pricing.colors.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
             <ColorControl label="Title" value={data.pricing.colors.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
             <ColorControl label="Text" value={data.pricing.colors.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
+            
+            {/* Gradient Colors - Only for gradient variant */}
+            {currentVariant === 'gradient' && (
+                <>
+                    <hr className="border-editor-border/50" />
+                    <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+                        <Sparkles size={14} className="text-editor-accent" />
+                        Gradient Colors
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                        <ColorControl label="Start" value={data.pricing.colors.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
+                        <ColorControl label="End" value={data.pricing.colors.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
+                    </div>
+                    <div className="mt-2 p-3 rounded-lg" style={{
+                        backgroundImage: `linear-gradient(135deg, ${data.pricing.colors.gradientStart || '#4f46e5'}, ${data.pricing.colors.gradientEnd || '#10b981'})`
+                    }}>
+                        <p className="text-xs text-white font-semibold text-center">Gradient Preview</p>
+                    </div>
+                </>
+            )}
             
             <hr className="border-editor-border/50" />
             <h4 className="font-bold text-editor-text-primary text-sm">Card Colors</h4>
@@ -1311,10 +1576,12 @@ const Controls: React.FC = () => {
               </div>
 
               <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Layout & Spacing</h4>
-              <div className="grid grid-cols-2 gap-4">
-                  <PaddingSelector label="Vertical Padding" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
-                  <PaddingSelector label="Horizontal Padding" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
+                  </div>
               </div>
 
               <hr className="border-editor-border/50" />
@@ -1379,6 +1646,236 @@ const Controls: React.FC = () => {
       );
   }
 
+  const renderSlideshowControls = () => {
+      if (!data?.slideshow) return null;
+      return (
+          <div className="space-y-4">
+            <Input label="Title" value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
+            <FontSizeSelector label="Title Size" value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
+            
+            <hr className="border-editor-border/50" />
+            
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Style Variant</label>
+                <select 
+                    value={data.slideshow.slideshowVariant || 'classic'} 
+                    onChange={(e) => setNestedData('slideshow.slideshowVariant', e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                >
+                    <option value="classic">Classic Slide</option>
+                    <option value="kenburns">Ken Burns Effect</option>
+                    <option value="cards3d">3D Cards Stack</option>
+                    <option value="thumbnails">Thumbnail Gallery</option>
+                </select>
+            </div>
+
+            <BorderRadiusSelector 
+                label="Border Radius" 
+                value={data.slideshow.borderRadius || 'xl'} 
+                onChange={(v) => setNestedData('slideshow.borderRadius', v)} 
+            />
+
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
+
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Effect</label>
+                <select 
+                    value={data.slideshow.transitionEffect || 'slide'} 
+                    onChange={(e) => setNestedData('slideshow.transitionEffect', e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                >
+                    <option value="slide">Slide</option>
+                    <option value="fade">Fade</option>
+                    <option value="zoom">Zoom</option>
+                </select>
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+                <input
+                    type="number"
+                    min="200"
+                    max="2000"
+                    step="100"
+                    value={data.slideshow.transitionDuration || 500}
+                    onChange={(e) => setNestedData('slideshow.transitionDuration', parseInt(e.target.value))}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                />
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+                <input
+                    type="number"
+                    min="1000"
+                    max="10000"
+                    step="500"
+                    value={data.slideshow.autoPlaySpeed || 5000}
+                    onChange={(e) => setNestedData('slideshow.autoPlaySpeed', parseInt(e.target.value))}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                />
+            </div>
+
+            {(data.slideshow.slideshowVariant === 'kenburns') && (
+                <div>
+                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Ken Burns Intensity</label>
+                    <select 
+                        value={data.slideshow.kenBurnsIntensity || 'medium'} 
+                        onChange={(e) => setNestedData('slideshow.kenBurnsIntensity', e.target.value)}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                    >
+                        <option value="low">Low (5% zoom)</option>
+                        <option value="medium">Medium (10% zoom)</option>
+                        <option value="high">High (25% zoom)</option>
+                    </select>
+                </div>
+            )}
+
+            {(data.slideshow.slideshowVariant === 'thumbnails') && (
+                <div>
+                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Thumbnail Height (px)</label>
+                    <input
+                        type="number"
+                        min="60"
+                        max="150"
+                        step="10"
+                        value={data.slideshow.thumbnailSize || 80}
+                        onChange={(e) => setNestedData('slideshow.thumbnailSize', parseInt(e.target.value))}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                    />
+                </div>
+            )}
+
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
+
+            <div className="space-y-2">
+                <ToggleControl label="Show Arrows" checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
+                <ToggleControl label="Show Dots" checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
+                <ToggleControl label="Show Captions" checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
+            </div>
+
+            {(data.slideshow.showArrows ?? true) && (
+                <div>
+                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Arrow Style</label>
+                    <select 
+                        value={data.slideshow.arrowStyle || 'rounded'} 
+                        onChange={(e) => setNestedData('slideshow.arrowStyle', e.target.value)}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                    >
+                        <option value="rounded">Rounded</option>
+                        <option value="square">Square</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="floating">Floating</option>
+                    </select>
+                </div>
+            )}
+
+            {(data.slideshow.showDots ?? true) && (
+                <div>
+                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Dot Style</label>
+                    <select 
+                        value={data.slideshow.dotStyle || 'circle'} 
+                        onChange={(e) => setNestedData('slideshow.dotStyle', e.target.value)}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                    >
+                        <option value="circle">Circle</option>
+                        <option value="line">Line</option>
+                        <option value="square">Square</option>
+                        <option value="pill">Pill</option>
+                    </select>
+                </div>
+            )}
+
+            <hr className="border-editor-border/50" />
+            <div className="space-y-2">
+                <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <PaddingSelector label="Vertical" value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
+                    <PaddingSelector label="Horizontal" value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
+                </div>
+            </div>
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+            <ColorControl label="Background" value={data.slideshow.colors.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
+            <ColorControl label="Title" value={data.slideshow.colors.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
+            
+            {(data.slideshow.showArrows ?? true) && (
+                <>
+                    <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Arrows</h5>
+                    <ColorControl label="Arrow Background" value={data.slideshow.colors.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
+                    <ColorControl label="Arrow Icon" value={data.slideshow.colors.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
+                </>
+            )}
+
+            {(data.slideshow.showDots ?? true) && (
+                <>
+                    <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Dots</h5>
+                    <ColorControl label="Active Dot" value={data.slideshow.colors.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
+                    <ColorControl label="Inactive Dot" value={data.slideshow.colors.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
+                </>
+            )}
+
+            {(data.slideshow.showCaptions ?? false) && (
+                <>
+                    <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Captions</h5>
+                    <ColorControl label="Caption Background" value={data.slideshow.colors.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
+                    <ColorControl label="Caption Text" value={data.slideshow.colors.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
+                </>
+            )}
+
+            <hr className="border-editor-border/50" />
+            <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Slides</h4>
+            {(data.slideshow.items || []).map((item: any, index: number) => (
+                <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-editor-text-secondary">Slide #{index + 1}</span>
+                        <button 
+                            onClick={() => {
+                                const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
+                                setNestedData('slideshow.items', newItems);
+                            }}
+                            className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                    <ImagePicker
+                        label="Image"
+                        value={item.imageUrl}
+                        onChange={(url) => setNestedData(`slideshow.items.${index}.imageUrl`, url)}
+                    />
+                    <input
+                        placeholder="Alt Text"
+                        value={item.altText}
+                        onChange={(e) => setNestedData(`slideshow.items.${index}.altText`, e.target.value)}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mt-2"
+                    />
+                    {(data.slideshow.showCaptions ?? false) && (
+                        <input
+                            placeholder="Caption (optional)"
+                            value={item.caption || ''}
+                            onChange={(e) => setNestedData(`slideshow.items.${index}.caption`, e.target.value)}
+                            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mt-2"
+                        />
+                    )}
+                </div>
+            ))}
+            <button 
+                onClick={() => {
+                    const newItems = [...(data.slideshow.items || []), { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
+                    setNestedData('slideshow.items', newItems);
+                }}
+                className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium"
+            >
+                <Plus size={16} /> Add Slide
+            </button>
+        </div>
+      )
+  }
+
   const renderVideoControls = () => {
       if (!data?.video) return null;
       return (
@@ -1411,7 +1908,18 @@ const Controls: React.FC = () => {
                 <ToggleControl label="Loop" checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
                 <ToggleControl label="Show Controls" checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
             </div>
+            
             <hr className="border-editor-border/50" />
+            <div className="space-y-2">
+                <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <PaddingSelector label="Vertical" value={data.video.paddingY || 'md'} onChange={(v) => setNestedData('video.paddingY', v)} />
+                    <PaddingSelector label="Horizontal" value={data.video.paddingX || 'md'} onChange={(v) => setNestedData('video.paddingX', v)} />
+                </div>
+            </div>
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
             <ColorControl label="Background" value={data.video.colors.background} onChange={(v) => setNestedData('video.colors.background', v)} />
             <ColorControl label="Title" value={data.video.colors.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
             <ColorControl label="Text" value={data.video.colors.text} onChange={(v) => setNestedData('video.colors.text', v)} />
@@ -1486,12 +1994,14 @@ const Controls: React.FC = () => {
                 </div>
                  <div className="space-y-4">
                      <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Social Links</h4>
-                     {(data.footer.socialLinks || []).map((link, index) => (
+                     {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
                          <div key={index} className="flex items-center gap-2 mb-2">
                             <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
                             <Input value={link.href} onChange={(e) => setNestedData(`footer.socialLinks.${index}.href`, e.target.value)} className="mb-0 flex-1" />
                          </div>
-                     ))}
+                     )) : (
+                         <p className="text-xs text-editor-text-secondary">No social links configured</p>
+                     )}
                  </div>
                  <hr className="border-editor-border/50" />
                  <div className="space-y-2">
@@ -1504,17 +2014,119 @@ const Controls: React.FC = () => {
   }
   
   // Map section IDs to Icons and Renderers
+  // Helper to get section label
+  const getSectionLabel = (section: PageSection): string => {
+    const labels: Record<PageSection, string> = {
+      hero: 'Hero Section',
+      features: 'Features',
+      testimonials: 'Testimonials',
+      services: 'Services',
+      team: 'Team',
+      pricing: 'Pricing',
+      faq: 'FAQ',
+      portfolio: 'Portfolio',
+      leads: 'Lead Form',
+      newsletter: 'Newsletter',
+      cta: 'Call to Action',
+      slideshow: 'Slideshow',
+      video: 'Video',
+      howItWorks: 'How It Works',
+      chatbot: 'AI Chatbot',
+      footer: 'Footer',
+      header: 'Navigation',
+      typography: 'Typography'
+    };
+    return labels[section] || section;
+  };
+
   const sectionConfig: Record<PageSection, { label: string, icon: React.ElementType, renderer: () => React.ReactNode }> = {
       hero: { label: 'Hero Section', icon: Image, renderer: renderHeroControls },
       features: { label: 'Features', icon: List, renderer: renderFeaturesControls },
       testimonials: { label: 'Testimonials', icon: Star, renderer: renderTestimonialsControls },
-      services: { label: 'Services', icon: Layout, renderer: () => renderListSectionControls('services', 'Service', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'icon', label: 'Icon', type: 'select', options: ['code', 'brush', 'megaphone', 'chart', 'scissors', 'camera']}]) },
+      services: { label: 'Services', icon: Layout, renderer: () => (
+          <div className="space-y-4">
+              {/* Services Variant Selector */}
+              <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+                  <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
+                      Services Style
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                      {['cards', 'grid', 'minimal'].map((variant) => (
+                          <button
+                              key={variant}
+                              onClick={() => setNestedData('services.servicesVariant', variant)}
+                              className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${
+                                  (data?.services?.servicesVariant || 'cards') === variant
+                                      ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                                      : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                              }`}
+                          >
+                              {variant}
+                          </button>
+                      ))}
+                  </div>
+                  <p className="text-xs text-editor-text-secondary mt-2 italic">
+                     {(data?.services?.servicesVariant || 'cards') === 'cards' && '✨ Standard centered cards with hover effects.'}
+                     {(data?.services?.servicesVariant || 'cards') === 'grid' && '🎨 Modern bento-style grid with left alignment.'}
+                     {(data?.services?.servicesVariant || 'cards') === 'minimal' && '📋 Clean list layout for a professional look.'}
+                  </p>
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Padding Controls for Services */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data?.services?.paddingY || 'md'} onChange={(v) => setNestedData('services.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data?.services?.paddingX || 'md'} onChange={(v) => setNestedData('services.paddingX', v)} />
+                  </div>
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Standard List Controls */}
+              {renderListSectionControls('services', 'Service', [
+                  {key: 'title', label: 'Title', type: 'input'}, 
+                  {key: 'description', label: 'Description', type: 'textarea'}, 
+                  {key: 'icon', label: 'Icon', type: 'icon-selector'}
+              ])}
+          </div>
+      ) },
       team: { label: 'Team', icon: Users, renderer: () => renderListSectionControls('team', 'Member', [{key: 'name', label: 'Name', type: 'input'}, {key: 'role', label: 'Role', type: 'input'}, {key: 'imageUrl', label: 'Photo', type: 'image'}]) },
       pricing: { label: 'Pricing', icon: DollarSign, renderer: renderPricingControls },
       faq: { label: 'FAQ', icon: HelpCircle, renderer: () => renderListSectionControls('faq', 'Question', [{ key: 'question', label: 'Question', type: 'input' }, { key: 'answer', label: 'Answer', type: 'textarea' }]) },
       portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => renderListSectionControls('portfolio', 'Project', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'imageUrl', label: 'Image', type: 'image'}]) },
       leads: { label: 'Leads Form', icon: Mail, renderer: () => (
           <div className="space-y-4">
+             {/* Variant Selector */}
+             <div className="mb-4">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Estilo de Formulario</label>
+                <div className="grid grid-cols-2 gap-2">
+                   {[
+                      { value: 'classic', label: 'Clásico' },
+                      { value: 'split-gradient', label: 'Gradiente Dividido' },
+                      { value: 'floating-glass', label: 'Vidrio Flotante' },
+                      { value: 'minimal-border', label: 'Borde Minimalista' }
+                   ].map((variant) => (
+                      <button
+                         key={variant.value}
+                         onClick={() => setNestedData('leads.leadsVariant', variant.value)}
+                         className={`p-3 text-xs font-medium rounded-md border-2 transition-all ${
+                            (data?.leads?.leadsVariant || 'classic') === variant.value
+                               ? 'bg-editor-accent text-editor-bg border-editor-accent'
+                               : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
+                         }`}
+                      >
+                         {variant.label}
+                      </button>
+                   ))}
+                </div>
+             </div>
+
+             <hr className="border-editor-border/50" />
+
+             {/* Content */}
              <Input label="Title" value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
              <FontSizeSelector label="Title Size" value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
              
@@ -1522,11 +2134,54 @@ const Controls: React.FC = () => {
              <FontSizeSelector label="Description Size" value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
              
              <Input label="Button Text" value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
+             
              <hr className="border-editor-border/50" />
-             <ColorControl label="Background" value={data?.leads.colors.background || '#000000'} onChange={(v) => setNestedData('leads.colors.background', v)} />
-             <ColorControl label="Title" value={data?.leads.colors.heading || '#ffffff'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
+
+             {/* Border Radius Controls */}
+             <div className="space-y-2">
+                 <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
+                 <BorderRadiusSelector label="Card Radius" value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
+                 <BorderRadiusSelector label="Button Radius" value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
+             </div>
+
+             <hr className="border-editor-border/50" />
+
+             {/* Spacing */}
+             <div className="space-y-2">
+                 <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                 <div className="grid grid-cols-2 gap-3">
+                     <PaddingSelector label="Vertical" value={data?.leads?.paddingY || 'md'} onChange={(v) => setNestedData('leads.paddingY', v)} />
+                     <PaddingSelector label="Horizontal" value={data?.leads?.paddingX || 'md'} onChange={(v) => setNestedData('leads.paddingX', v)} />
+                 </div>
+             </div>
+             
+             <hr className="border-editor-border/50" />
+
+             {/* Colors */}
+             <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+             <ColorControl label="Background" value={data?.leads.colors.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
+             <ColorControl label="Card Background" value={data?.leads.colors.cardBackground || '#1e293b'} onChange={(v) => setNestedData('leads.colors.cardBackground', v)} />
+             <ColorControl label="Heading" value={data?.leads.colors.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
+             <ColorControl label="Text" value={data?.leads.colors.text || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.text', v)} />
+             <ColorControl label="Accent" value={data?.leads.colors.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
+             <ColorControl label="Border Color" value={data?.leads.colors.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
+             
+             <hr className="border-editor-border/50" />
+             
+             {/* Input Colors */}
+             <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Input Colors</label>
+             <ColorControl label="Input Background" value={data?.leads.colors.inputBackground || '#0f172a'} onChange={(v) => setNestedData('leads.colors.inputBackground', v)} />
+             <ColorControl label="Input Text" value={data?.leads.colors.inputText || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.inputText', v)} />
+             <ColorControl label="Input Border" value={data?.leads.colors.inputBorder || '#334155'} onChange={(v) => setNestedData('leads.colors.inputBorder', v)} />
+             
+             <hr className="border-editor-border/50" />
+             
+             {/* Button & Gradient Colors */}
+             <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Button & Gradient</label>
              <ColorControl label="Button Background" value={data?.leads.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
              <ColorControl label="Button Text" value={data?.leads.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
+             <ColorControl label="Gradient Start" value={data?.leads.colors.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
+             <ColorControl label="Gradient End" value={data?.leads.colors.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
           </div>
       ) },
       newsletter: { label: 'Newsletter', icon: Send, renderer: () => (
@@ -1538,7 +2193,18 @@ const Controls: React.FC = () => {
             <FontSizeSelector label="Description Size" value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
             
             <Input label="Button Text" value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
+            
             <hr className="border-editor-border/50" />
+            <div className="space-y-2">
+                <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <PaddingSelector label="Vertical" value={data?.newsletter?.paddingY || 'md'} onChange={(v) => setNestedData('newsletter.paddingY', v)} />
+                    <PaddingSelector label="Horizontal" value={data?.newsletter?.paddingX || 'md'} onChange={(v) => setNestedData('newsletter.paddingX', v)} />
+                </div>
+            </div>
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
             <ColorControl label="Background" value={data?.newsletter.colors.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
             <ColorControl label="Title" value={data?.newsletter.colors.heading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
             <ColorControl label="Button Background" value={data?.newsletter.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
@@ -1554,8 +2220,18 @@ const Controls: React.FC = () => {
              <FontSizeSelector label="Description Size" value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
 
              <Input label="Button Text" value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
+             
               <hr className="border-editor-border/50" />
-              <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
+                  </div>
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
               <ColorControl label="Section Background" value={data?.cta.colors.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
               <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Card Gradient</h5>
               <ColorControl label="Gradient Start" value={data?.cta.colors.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
@@ -1567,7 +2243,7 @@ const Controls: React.FC = () => {
               <ColorControl label="Button Text" value={data?.cta.colors.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
           </div>
       ) },
-      slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: () => renderListSectionControls('slideshow', 'Slide', [{key: 'imageUrl', label: 'Image', type: 'image'}, {key: 'altText', label: 'Alt Text', type: 'input'}]) },
+      slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: renderSlideshowControls },
       video: { label: 'Video', icon: MonitorPlay, renderer: renderVideoControls },
       howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderListSectionControls('howItWorks', 'Step', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'icon', label: 'Icon', type: 'select', options: ['upload', 'process', 'magic-wand', 'download', 'share', 'search']}]) },
       chatbot: { label: 'AI Chatbot', icon: MessageSquare, renderer: renderChatbotControls },
@@ -1587,9 +2263,39 @@ const Controls: React.FC = () => {
   
   const handleAddComponent = (section: PageSection) => {
     // Add component to the order (before footer)
-    const newOrder = [...componentOrder.filter(k => k !== 'footer'), section, 'footer'];
-    setComponentOrder(newOrder);
+    const newOrder = [...componentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
+    setComponentOrder(newOrder as PageSection[]);
     
+    // Apply global default styles if available (merging on top of existing data to preserve content but update style)
+    if (componentStyles && componentStyles[section]) {
+        const globalDefault = componentStyles[section];
+        // We merge globalDefault into the existing section data
+        // This ensures new/re-added components pick up the latest style choices (e.g. Bento Grid)
+        // while hopefully preserving user content if it exists.
+        // Note: setNestedData merges at the path, but here we want to merge properties of the section object.
+        
+        // We need to use setData directly for this merge to be clean
+        setData(prevData => {
+            if (!prevData) return null;
+            const newData = JSON.parse(JSON.stringify(prevData));
+            
+            // Merge global defaults deeply into the section data
+            // We prioritize global defaults for style properties, but we should be careful not to overwrite content.
+            // Actually, componentStyles usually only contains style props (colors, padding, variants), not content.
+            // So merging componentStyles[section] on top of newData[section] updates the style.
+            newData[section] = {
+                ...newData[section],
+                ...globalDefault,
+                colors: {
+                    ...newData[section]?.colors,
+                    ...globalDefault.colors
+                }
+            };
+            
+            return newData;
+        });
+    }
+
     // Make it visible
     setSectionVisibility(prev => ({
       ...prev,
@@ -1620,126 +2326,995 @@ const Controls: React.FC = () => {
     }
   };
 
-  return (
-    <aside className={`
-      fixed inset-y-0 left-0 z-40 w-80 bg-editor-bg border-r border-editor-border transform transition-transform duration-300 ease-in-out
-      md:translate-x-0 md:static md:h-full md:w-80 flex flex-col
-      ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-    `}>
-       <div className="p-4 border-b border-editor-border bg-editor-panel-bg">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-editor-text-primary flex items-center">
-                  <Settings size={20} className="mr-2 text-editor-accent" /> Page Settings
-              </h2>
-              {availableComponentsToAdd.length > 0 && (
-                <div className="relative" ref={addComponentRef}>
-                  <button
-                    onClick={() => setIsAddComponentOpen(!isAddComponentOpen)}
-                    className="p-2 rounded-md bg-editor-accent text-editor-bg hover:bg-editor-accent-hover transition-colors"
-                    title="Add Component"
-                  >
-                    {isAddComponentOpen ? <X size={16} /> : <PlusCircle size={16} />}
-                  </button>
-                  
-                  {isAddComponentOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-                      <div className="p-2">
-                        <div className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 px-2">
-                          Add Component
-                        </div>
-                        {availableComponentsToAdd.map(section => {
-                          const config = sectionConfig[section];
-                          if (!config) return null;
-                          const Icon = config.icon;
-                          
-                          return (
-                            <button
-                              key={section}
-                              onClick={() => handleAddComponent(section)}
-                              className="w-full flex items-center gap-3 px-2 py-2 hover:bg-editor-bg rounded-md text-left transition-colors group"
-                            >
-                              <Icon size={16} className="text-editor-text-secondary group-hover:text-editor-accent" />
-                              <span className="text-sm text-editor-text-primary group-hover:text-editor-accent font-medium">
-                                {config.label}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+  // Organize controls for specific sections into tabs
+  const renderHeroControlsWithTabs = () => {
+    if (!data?.hero) return null;
+    const currentVariant = data.hero.heroVariant || 'classic';
+    
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Hero Variant */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Hero Style
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'classic')}
+              className={`px-3 py-3 rounded-md border transition-all ${
+                currentVariant === 'classic'
+                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+              }`}
+            >
+              <div className="font-semibold text-sm">Classic</div>
+              <div className="text-xs opacity-70">Two Column</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'modern')}
+              className={`px-3 py-3 rounded-md border transition-all ${
+                currentVariant === 'modern'
+                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+              }`}
+            >
+              <div className="font-semibold text-sm">Modern</div>
+              <div className="text-xs opacity-70">Full Screen</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'gradient')}
+              className={`px-3 py-3 rounded-md border transition-all ${
+                currentVariant === 'gradient'
+                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+              }`}
+            >
+              <div className="font-semibold text-sm">Gradient</div>
+              <div className="text-xs opacity-70">Futuristic</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'fitness')}
+              className={`px-3 py-3 rounded-md border transition-all ${
+                currentVariant === 'fitness'
+                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                  : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+              }`}
+            >
+              <div className="font-semibold text-sm">Fitness</div>
+              <div className="text-xs opacity-70">Bold & Dynamic</div>
+            </button>
+          </div>
+          <p className="text-xs text-editor-text-secondary mt-2">
+            {currentVariant === 'modern' 
+              ? '✨ Full-screen hero with image background' 
+              : currentVariant === 'gradient'
+                ? '🎨 Modern layout with gradient effects & floating elements'
+                : currentVariant === 'fitness'
+                  ? '💪 Bold design with energy and impact for gyms/sports'
+                  : '📐 Traditional side-by-side layout'}
+          </p>
+        </div>
+
+        {/* Variant-Specific Info & Controls */}
+        {currentVariant === 'modern' && (
+          <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+            <div className="flex items-start gap-2">
+              <HelpCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-blue-200">
+                <p className="font-bold mb-1">Modern Hero (Full Screen)</p>
+                <ul className="space-y-1 text-blue-300/90">
+                  <li>• Image is used as full-screen background</li>
+                  <li>• Text colors are forced to white for readability</li>
+                  <li>• Content is centered on screen</li>
+                  <li>• Dark gradient overlay applied automatically</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentVariant === 'fitness' && (
+          <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-lg">
+            <div className="flex items-start gap-2">
+              <HelpCircle size={16} className="text-orange-400 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-orange-200">
+                <p className="font-bold mb-1">Fitness Hero (Bold & Dynamic)</p>
+                <ul className="space-y-1 text-orange-300/90">
+                  <li>• Image is used as full-screen background</li>
+                  <li>• Bold typography with 3D text shadow effects</li>
+                  <li>• Animated diagonal energy lines</li>
+                  <li>• Stats display with angled cards & icons</li>
+                  <li>• Floating action cards (Live Classes, Top Rated)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentVariant === 'gradient' && (
+          <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-lg">
+            <div className="flex items-start gap-2">
+              <HelpCircle size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-purple-200">
+                <p className="font-bold mb-1">Gradient Hero (Futuristic)</p>
+                <ul className="space-y-1 text-purple-300/90">
+                  <li>• Two-column layout with content left, image right</li>
+                  <li>• Animated gradient background orbs</li>
+                  <li>• Floating cards on image with glassmorphism</li>
+                  <li>• Stats in horizontal card format</li>
+                  <li>• Decorative rotating rings</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Content */}
+        <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2 mt-4">
+          <Type size={14} />
+          Content
+        </h4>
+        
+        <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
+          <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
+        </AIFormControl>
+        <FontSizeSelector label="Headline Size" value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+        
+        <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
+          <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
+        </AIFormControl>
+        <FontSizeSelector label="Subheadline Size" value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+        
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Primary CTA" value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
+          <Input label="Secondary CTA" value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+        </div>
+
+        {/* Badge */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+              <Star size={14} />
+              Badge
+            </h4>
+            <ToggleControl 
+              label="" 
+              checked={data.hero.showBadge !== false} 
+              onChange={(v) => setNestedData('hero.showBadge', v)} 
+            />
+          </div>
+          {data.hero.showBadge !== false && (
+            <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Icon" value={data.hero.badgeIcon || '✨'} onChange={(e) => setNestedData('hero.badgeIcon', e.target.value)} className="mb-0" />
+                <Input label="Text" value={data.hero.badgeText || ''} onChange={(e) => setNestedData('hero.badgeText', e.target.value)} className="mb-0" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Image */}
+        <ImagePicker 
+          label="Hero Image" 
+          value={data.hero.imageUrl} 
+          onChange={(url) => setNestedData('hero.imageUrl', url)} 
+        />
+
+        {/* Image Position & Layout - Only for Classic variant */}
+        {currentVariant === 'classic' && (
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+              <Layout size={14} />
+              Image Layout
+            </label>
+            
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Position</label>
+                <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                  {[
+                    { value: 'left', label: 'Left', icon: '←' },
+                    { value: 'right', label: 'Right', icon: '→' }
+                  ].map(pos => (
+                    <button 
+                      key={pos.value}
+                      onClick={() => setNestedData('hero.imagePosition', pos.value)}
+                      className={`flex-1 py-2 text-xs font-medium rounded-sm transition-all ${
+                        data.hero.imagePosition === pos.value 
+                          ? 'bg-editor-accent text-editor-bg' 
+                          : 'text-editor-text-secondary hover:bg-editor-border'
+                      }`}
+                    >
+                      <span className="mr-1">{pos.icon}</span>
+                      {pos.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Alignment</label>
+                <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                  {[
+                    { value: 'start', label: 'Start', icon: '⊣' },
+                    { value: 'center', label: 'Center', icon: '⊢⊣' },
+                    { value: 'end', label: 'End', icon: '⊢' }
+                  ].map(align => (
+                    <button 
+                      key={align.value}
+                      onClick={() => setNestedData('hero.imageJustification', align.value)}
+                      className={`flex-1 py-2 text-[10px] font-medium rounded-sm transition-all ${
+                        data.hero.imageJustification === align.value 
+                          ? 'bg-editor-accent text-editor-bg' 
+                          : 'text-editor-text-secondary hover:bg-editor-border'
+                      }`}
+                    >
+                      <div className="text-xs mb-0.5">{align.icon}</div>
+                      <div>{align.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-editor-text-secondary/70 mt-2">
+              <strong>Position:</strong> Image on left or right side of content<br/>
+              <strong>Alignment:</strong> Vertical alignment of image within its column
+            </p>
+          </div>
+        )}
+
+        {/* Statistics Section */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+              <TrendingUp size={14} />
+              Statistics
+            </h4>
+            <ToggleControl 
+              label="" 
+              checked={data.hero.showStats !== false} 
+              onChange={(v) => setNestedData('hero.showStats', v)} 
+            />
+          </div>
+          {data.hero.showStats !== false && (
+            <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
+              {currentVariant === 'fitness' && (
+                <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
+                  <p className="text-xs text-orange-200 flex items-center gap-2">
+                    <Star size={14} className="flex-shrink-0" />
+                    <span><strong>Fitness Stats:</strong> Stats display with dynamic icons (Target, TrendingUp, Award, Zap) and angled card design with hover effects.</span>
+                  </p>
                 </div>
               )}
+              
+              {(data.hero.stats || [
+                { value: '10K+', label: 'Artworks Created' },
+                { value: '5K+', label: 'Happy Users' },
+                { value: '4.9★', label: 'User Rating' }
+              ]).map((stat, index) => (
+                <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-editor-text-secondary">Stat #{index + 1}</span>
+                    <button 
+                      onClick={() => {
+                        const newStats = (data.hero.stats || []).filter((_, i) => i !== index);
+                        setNestedData('hero.stats', newStats.length > 0 ? newStats : undefined);
+                      }}
+                      className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      placeholder="Value (e.g., 10K+)" 
+                      value={stat.value} 
+                      onChange={(e) => setNestedData(`hero.stats.${index}.value`, e.target.value)} 
+                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                    />
+                    <input 
+                      placeholder="Label" 
+                      value={stat.label} 
+                      onChange={(e) => setNestedData(`hero.stats.${index}.label`, e.target.value)} 
+                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                    />
+                  </div>
+                </div>
+              ))}
+              <button 
+                onClick={() => {
+                  const currentStats = data.hero.stats || [
+                    { value: '10K+', label: 'Artworks Created' },
+                    { value: '5K+', label: 'Happy Users' },
+                    { value: '4.9★', label: 'User Rating' }
+                  ];
+                  setNestedData('hero.stats', [...currentStats, { value: '0', label: 'New Stat' }]);
+                }}
+                className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+              >
+                <Plus size={14} /> Add Statistic
+              </button>
             </div>
-       </div>
-      
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-editor-border scrollbar-track-editor-bg">
-         {/* Navigation Section (Always Present) */}
-         <AccordionItem 
-            title="Navigation Bar" 
-            icon={AlignJustify}
-            isOpen={activeSection as any === 'header'}
-            onDoubleClick={() => toggleSection('header')}
-            isVisible={true} 
-            onToggleVisibility={() => {}} 
-         >
-             {renderHeaderControls()}
-         </AccordionItem>
-
-         {/* Global Typography (New) */}
-         <AccordionItem
-            title="Global Typography"
-            icon={Type}
-            isOpen={activeSection as any === 'typography'}
-            onDoubleClick={() => toggleSection('typography' as any)}
-            isVisible={true}
-            onToggleVisibility={() => {}}
-         >
-             <FontManager />
-         </AccordionItem>
-
-         {/* Dynamic Sections */}
-         {sortableSections.map((sectionKey, index) => {
-             const config = sectionConfig[sectionKey];
-             if (!config) return null;
-
-             return (
-                 <AccordionItem
-                    key={sectionKey}
-                    title={config.label}
-                    icon={config.icon}
-                    isOpen={activeSection === sectionKey}
-                    onDoubleClick={() => toggleSection(sectionKey)}
-                    isVisible={sectionVisibility[sectionKey]}
-                    onToggleVisibility={() => toggleVisibility(sectionKey)}
-                    dragHandlers={{
-                        draggable: true,
-                        onDragStart: (e) => handleDragStart(e, sectionKey),
-                        onDragOver: handleDragOver,
-                        onDrop: (e) => handleDrop(e, sectionKey),
-                        onDragEnd: handleDragEnd,
-                        style: { opacity: draggedIndex === index ? 0.4 : 1 }
-                    }}
-                    canRemove={true}
-                    onRemove={() => handleRemoveComponent(sectionKey)}
-                 >
-                     {config.renderer()}
-                 </AccordionItem>
-             );
-         })}
-
-         {/* Footer Section */}
-         <AccordionItem
-            title="Footer"
-            icon={Type}
-            isOpen={activeSection === 'footer'}
-            onDoubleClick={() => toggleSection('footer')}
-            isVisible={sectionVisibility['footer']}
-            onToggleVisibility={() => toggleVisibility('footer')}
-         >
-             {renderFooterControls()}
-         </AccordionItem>
+          )}
+        </div>
       </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Typography Section - Added as first section */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <Type size={14} />
+            Typography
+          </h4>
+          <FontManager />
+        </div>
+
+        <hr className="border-editor-border/50" />
+        
+        <h4 className="font-bold text-editor-text-primary text-sm">Spacing</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <PaddingSelector label="Vertical" value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
+          <PaddingSelector label="Horizontal" value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
+        </div>
+
+        <hr className="border-editor-border/50" />
+        
+        <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
+        
+        {currentVariant === 'modern' && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-lg mb-3">
+            <p className="text-xs text-yellow-200 flex items-center gap-2">
+              <AlertCircle size={14} className="flex-shrink-0" />
+              <span><strong>Modern Hero:</strong> Text colors (Heading/Text) are forced to white for contrast over the background image. Only Primary/Secondary colors affect gradients.</span>
+            </p>
+          </div>
+        )}
+        
+        <ColorControl label="Background" value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
+        <ColorControl label="Heading" value={data.hero.colors.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
+        <ColorControl label="Subheading" value={data.hero.colors.secondary} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
+        <ColorControl label="Primary Button BG" value={data.hero.colors.primaryButtonBg} onChange={(v) => setNestedData('hero.colors.primaryButtonBg', v)} />
+        <ColorControl label="Primary Button Text" value={data.hero.colors.primaryButtonText} onChange={(v) => setNestedData('hero.colors.primaryButtonText', v)} />
+        <ColorControl label="Secondary Button BG" value={data.hero.colors.secondaryButtonBg} onChange={(v) => setNestedData('hero.colors.secondaryButtonBg', v)} />
+        <ColorControl label="Secondary Button Text" value={data.hero.colors.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+        
+        {data.hero.showBadge !== false && (
+          <>
+            <hr className="border-editor-border/50" />
+            <h4 className="font-bold text-editor-text-primary text-sm">Badge Colors</h4>
+            
+            {currentVariant === 'fitness' && (
+              <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
+                <p className="text-xs text-orange-200">
+                  <strong>Fitness Badge:</strong> Features angular skew transformation and bold uppercase styling for maximum impact.
+                </p>
+              </div>
+            )}
+            
+            <ColorControl label="Badge Background" value={data.hero.badgeBackground || '#000000'} onChange={(v) => setNestedData('hero.badgeBackground', v)} />
+            <ColorControl label="Badge Text" value={data.hero.badgeColor || '#ffffff'} onChange={(v) => setNestedData('hero.badgeColor', v)} />
+          </>
+        )}
+
+        {/* Statistics Colors */}
+        {data.hero.showStats !== false && (
+          <>
+            <hr className="border-editor-border/50" />
+            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+              <TrendingUp size={14} />
+              Statistics Colors
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <ColorControl 
+                label="Value Color" 
+                value={data.hero.statsValueColor || data.hero.colors.primary || '#4f46e5'} 
+                onChange={(v) => setNestedData('hero.statsValueColor', v)} 
+              />
+              <ColorControl 
+                label="Label Color" 
+                value={data.hero.statsLabelColor || data.hero.colors.text || '#94a3b8'} 
+                onChange={(v) => setNestedData('hero.statsLabelColor', v)} 
+              />
+            </div>
+          </>
+        )}
+
+        {/* Image Style Controls - Only for Classic variant */}
+        {currentVariant === 'classic' && (
+          <>
+            <hr className="border-editor-border/50" />
+            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+              <Image size={14} />
+              Image Style
+            </h4>
+            
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+              {/* Image Style Selector */}
+              <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Style Preset</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'default', label: 'Default', icon: '▢' },
+                    { value: 'rounded-full', label: 'Circle', icon: '●' },
+                    { value: 'glow', label: 'Glow', icon: '✦' },
+                    { value: 'float', label: 'Float', icon: '⇡' },
+                    { value: 'hexagon', label: 'Hexagon', icon: '⬡' },
+                    { value: 'polaroid', label: 'Polaroid', icon: '▭' }
+                  ].map(style => (
+                    <button 
+                      key={style.value}
+                      onClick={() => setNestedData('hero.imageStyle', style.value)}
+                      className={`py-2.5 px-2 text-xs font-semibold rounded-md border transition-all ${
+                        data.hero.imageStyle === style.value 
+                          ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg' 
+                          : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
+                      }`}
+                    >
+                      <div className="text-lg mb-1">{style.icon}</div>
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Drop Shadow */}
+              <ToggleControl 
+                label="Drop Shadow" 
+                checked={data.hero.imageDropShadow || false} 
+                onChange={(v) => setNestedData('hero.imageDropShadow', v)} 
+              />
+
+              <hr className="border-editor-border/50" />
+
+              {/* Border Radius */}
+              <BorderRadiusSelector 
+                label="Corner Radius" 
+                value={data.hero.imageBorderRadius || 'xl'} 
+                onChange={(v) => setNestedData('hero.imageBorderRadius', v)} 
+              />
+
+              {/* Border Size & Color */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Border Size</label>
+                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                    {['none', 'sm', 'md', 'lg'].map(size => (
+                      <button 
+                        key={size}
+                        onClick={() => setNestedData('hero.imageBorderSize', size)}
+                        className={`flex-1 py-1.5 text-xs font-medium rounded-sm uppercase transition-all ${
+                          data.hero.imageBorderSize === size 
+                            ? 'bg-editor-accent text-editor-bg' 
+                            : 'text-editor-text-secondary hover:bg-editor-border'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <ColorControl 
+                  label="Border Color" 
+                  value={data.hero.imageBorderColor || '#4f46e5'} 
+                  onChange={(v) => setNestedData('hero.imageBorderColor', v)} 
+                />
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Image Sizing */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Width</label>
+                  <span className="text-xs text-editor-text-primary font-mono">{data.hero.imageWidth || 100}%</span>
+                </div>
+                <input
+                  type="range" 
+                  min="25" 
+                  max="100" 
+                  step="5"
+                  value={data.hero.imageWidth || 100}
+                  onChange={(e) => setNestedData('hero.imageWidth', parseInt(e.target.value))}
+                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                />
+              </div>
+
+              {/* Aspect Ratio & Object Fit */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Aspect Ratio</label>
+                  <select 
+                    value={data.hero.imageAspectRatio || 'auto'}
+                    onChange={(e) => setNestedData('hero.imageAspectRatio', e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="1:1">1:1 (Square)</option>
+                    <option value="4:3">4:3</option>
+                    <option value="3:4">3:4</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Object Fit</label>
+                  <select 
+                    value={data.hero.imageObjectFit || 'cover'}
+                    onChange={(e) => setNestedData('hero.imageObjectFit', e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                  >
+                    <option value="cover">Cover</option>
+                    <option value="contain">Contain</option>
+                    <option value="fill">Fill</option>
+                    <option value="none">None</option>
+                    <option value="scale-down">Scale Down</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <hr className="border-editor-border/50" />
+        <h4 className="font-bold text-editor-text-primary text-sm">Button Style</h4>
+        
+        {currentVariant === 'fitness' && (
+          <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
+            <p className="text-xs text-orange-200">
+              <strong>Fitness Buttons:</strong> Primary button includes Zap icon with scale hover effect. Secondary button has 4px border with hover overlay.
+            </p>
+          </div>
+        )}
+        
+        {currentVariant === 'modern' && (
+          <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded-lg mb-3">
+            <p className="text-xs text-blue-200">
+              <strong>Modern Buttons:</strong> Secondary button uses glassmorphism effect with transparent background.
+            </p>
+          </div>
+        )}
+        
+        <BorderRadiusSelector label="Button Radius" value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // Organize Features controls into tabs
+  const renderFeaturesControlsWithTabs = () => {
+    if (!data?.features) return null;
+    const currentVariant = (data.features as any).featuresVariant || 'classic';
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Title and Description */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            Section Header
+          </label>
+          <Input label="Title" value={data.features.title} onChange={(e) => setNestedData('features.title', e.target.value)} />
+          <FontSizeSelector label="Title Size" value={data.features.titleFontSize || 'md'} onChange={(v) => setNestedData('features.titleFontSize', v)} />
+          <TextArea label="Description" value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
+          <FontSizeSelector label="Description Size" value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
+        </div>
+
+        {/* Features Items */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+            <List size={14} />
+            Features List
+          </h4>
+          {(data.features.items || []).map((item, index) => (
+            <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-editor-text-secondary">Feature #{index + 1}</span>
+                <button 
+                  onClick={() => {
+                    const newItems = data.features.items.filter((_, i) => i !== index);
+                    setNestedData('features.items', newItems);
+                  }}
+                  className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <Input placeholder="Title" value={item.title} onChange={(e) => setNestedData(`features.items.${index}.title`, e.target.value)} className="mb-2" />
+              <textarea 
+                placeholder="Description" 
+                value={item.description} 
+                onChange={(e) => setNestedData(`features.items.${index}.description`, e.target.value)} 
+                rows={2} 
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+              />
+              <ImagePicker 
+                label="Image"
+                value={item.imageUrl}
+                onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
+              />
+            </div>
+          ))}
+          <button 
+            onClick={() => {
+              setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
+            }}
+            className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <Plus size={14} /> Add Feature
+          </button>
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Typography Section - Added as first section */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <Type size={14} />
+            Typography
+          </h4>
+          <FontManager />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Section Style */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Section Style
+          </label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            <button
+              onClick={() => setNestedData('features.featuresVariant', 'classic')}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            >
+              Classic
+            </button>
+            <button
+              onClick={() => setNestedData('features.featuresVariant', 'modern')}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            >
+              Bento / Modern
+            </button>
+          </div>
+        </div>
+
+        {/* Grid Layout */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Grid size={14} />
+            Grid Layout
+          </label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Columns (Desktop)</label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            {[2, 3, 4].map(cols => (
+              <button 
+                key={cols}
+                onClick={() => setNestedData('features.gridColumns', cols)}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+              >
+                {cols}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Card Image */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Image size={14} />
+            Card Image
+          </label>
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Height</label>
+              <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 200}px</span>
+            </div>
+            <input
+              type="range" min="100" max="600" step="10"
+              value={data.features.imageHeight || 200}
+              onChange={(e) => setNestedData('features.imageHeight', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
+            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+              {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
+                <button 
+                  key={fit}
+                  onClick={() => setNestedData('features.imageObjectFit', fit)}
+                  className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                >
+                  {fit === 'scale-down' ? 'Scale' : fit}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Spacing */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Settings size={14} />
+            Spacing
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <PaddingSelector label="Vertical" value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
+            <PaddingSelector label="Horizontal" value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
+          </div>
+        </div>
+
+        {/* Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Colors
+          </label>
+          <ColorControl label="Background" value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
+          <ColorControl label="Title" value={data.features.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('features.colors.heading', v)} />
+          <ColorControl label="Text" value={data.features.colors?.text || '#ffffff'} onChange={(v) => setNestedData('features.colors.text', v)} />
+          <ColorControl label="Accent" value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
+          <ColorControl label="Border" value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // Organize Testimonials controls into tabs
+  const renderTestimonialsControlsWithTabs = () => {
+    if (!data?.testimonials) return null;
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Title and Description */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            Section Header
+          </label>
+          <Input label="Title" value={data.testimonials.title} onChange={(e) => setNestedData('testimonials.title', e.target.value)} />
+          <FontSizeSelector label="Title Size" value={data.testimonials.titleFontSize || 'md'} onChange={(v) => setNestedData('testimonials.titleFontSize', v)} />
+          <TextArea label="Description" value={data.testimonials.description} onChange={(e) => setNestedData('testimonials.description', e.target.value)} rows={2} />
+          <FontSizeSelector label="Description Size" value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
+        </div>
+
+        {/* Testimonials Items */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+            <MessageSquare size={14} />
+            Testimonials List
+          </h4>
+          {(data.testimonials.items || []).map((item: any, index: number) => (
+            <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-editor-text-secondary">Testimonial #{index + 1}</span>
+                <button 
+                  onClick={() => {
+                    const newItems = (data.testimonials.items || []).filter((_: any, i: number) => i !== index);
+                    setNestedData('testimonials.items', newItems);
+                  }}
+                  className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <textarea 
+                placeholder="Quote" 
+                value={item.quote} 
+                onChange={(e) => setNestedData(`testimonials.items.${index}.quote`, e.target.value)} 
+                rows={3} 
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+              />
+              <Input placeholder="Name" value={item.name} onChange={(e) => setNestedData(`testimonials.items.${index}.name`, e.target.value)} className="mb-2" />
+              <Input placeholder="Title/Role" value={item.title} onChange={(e) => setNestedData(`testimonials.items.${index}.title`, e.target.value)} className="mb-2" />
+              <ImagePicker 
+                label="Avatar"
+                value={item.avatar}
+                onChange={(url) => setNestedData(`testimonials.items.${index}.avatar`, url)}
+              />
+            </div>
+          ))}
+          <button 
+            onClick={() => {
+              setNestedData('testimonials.items', [...(data.testimonials.items || []), { quote: '', name: '', title: '', avatar: '' }]);
+            }}
+            className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <Plus size={14} /> Add Testimonial
+          </button>
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Typography Section - Added as first section */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <Type size={14} />
+            Typography
+          </h4>
+          <FontManager />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Card Styling */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Card Styling
+          </label>
+          
+          <ColorControl label="Card Background" value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
+          
+          <BorderRadiusSelector label="Card Corners" value={data.testimonials.borderRadius || 'xl'} onChange={(v) => setNestedData('testimonials.borderRadius', v)} />
+          
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Card Shadow</label>
+            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
+                <button
+                  key={shadow}
+                  onClick={() => setNestedData('testimonials.cardShadow', shadow)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                >
+                  {shadow}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Border Style</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                {value: 'none', label: 'None'},
+                {value: 'solid', label: 'Solid'},
+                {value: 'gradient', label: 'Gradient'},
+                {value: 'glow', label: 'Glow'}
+              ].map(style => (
+                <button 
+                  key={style.value}
+                  onClick={() => setNestedData('testimonials.borderStyle', style.value)}
+                  className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <ColorControl label="Border Color" value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Padding</label>
+              <span className="text-xs text-editor-text-primary">{data.testimonials.cardPadding || 32}px</span>
+            </div>
+            <input
+              type="range" min="16" max="64" step="4"
+              value={data.testimonials.cardPadding || 32}
+              onChange={(e) => setNestedData('testimonials.cardPadding', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+        </div>
+
+        {/* Spacing */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Settings size={14} />
+            Spacing
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <PaddingSelector label="Vertical" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
+            <PaddingSelector label="Horizontal" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
+          </div>
+        </div>
+
+        {/* Section Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Section Colors
+          </label>
+          <ColorControl label="Background" value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
+          <ColorControl label="Title" value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
+          <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
+          <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // Render controls for active section with tabs
+  const renderActiveSectionControls = () => {
+    if (!activeSection) return null;
+    
+    const config = sectionConfig[activeSection];
+    if (!config) return null;
+
+    // Use tabbed controls for major sections
+    if (activeSection === 'hero') {
+      return renderHeroControlsWithTabs();
+    }
+    if (activeSection === 'features') {
+      return renderFeaturesControlsWithTabs();
+    }
+    if (activeSection === 'testimonials') {
+      return renderTestimonialsControlsWithTabs();
+    }
+
+    // For other sections, render normally (can be enhanced later)
+    const controls = config.renderer();
+    return controls;
+  };
+
+  return (
+    <div className={`
+      fixed inset-y-0 left-0 z-40 bg-editor-bg border-r border-editor-border transform transition-transform duration-300 ease-in-out
+      md:translate-x-0 md:static md:h-full flex
+      ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      ${activeSection ? 'w-full md:w-[600px] lg:w-[700px]' : 'w-64'}
+    `}>
+      {/* Left Panel: Component Tree */}
+      <div className="w-64 flex-shrink-0 border-r border-editor-border">
+        <ComponentTree
+          componentOrder={componentOrder}
+          activeSection={activeSection}
+          sectionVisibility={sectionVisibility}
+          componentStatus={componentStatus}
+          onSectionSelect={(section) => onSectionSelect(section as any)}
+          onToggleVisibility={toggleVisibility}
+          onReorder={setComponentOrder}
+          onAddComponent={handleAddComponent}
+          availableComponents={availableComponentsToAdd}
+        />
+      </div>
+
+      {/* Right Panel: Properties - Only shown when a component is selected */}
+      {activeSection && (
+        <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
+          {/* Header with Close Button */}
+          <div className="flex-shrink-0 p-4 border-b border-editor-border bg-editor-panel-bg/30">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                Properties
+              </h3>
+              <button
+                onClick={() => onSectionSelect(null as any)}
+                className="p-1 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded transition-colors"
+                title="Close properties panel"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-base font-semibold text-editor-text-primary">
+              {getSectionLabel(activeSection)}
+            </p>
+          </div>
+
+          {/* Controls */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {renderActiveSectionControls()}
+          </div>
+        </div>
+      )}
       
       <AIContentAssistant 
         isOpen={!!aiAssistField}
@@ -1748,7 +3323,7 @@ const Controls: React.FC = () => {
         initialText={aiAssistField?.value || ''}
         contextPrompt={aiAssistField?.context || ''}
       />
-    </aside>
+    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle } from 'lucide-react';
+import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle, ArrowLeft, Menu } from 'lucide-react';
+import DashboardSidebar from '../DashboardSidebar';
 
 interface LanguageManagementProps {
   onBack: () => void;
@@ -18,6 +19,7 @@ interface LanguageConfig {
 
 const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   const { i18n, t } = useTranslation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Estado de idiomas disponibles
   const [languages, setLanguages] = useState<LanguageConfig[]>([
@@ -149,25 +151,36 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   const availableLanguages = languages.filter(l => !l.enabled);
 
   return (
-    <div className="flex flex-col h-screen bg-editor-bg">
-      {/* Header */}
-      <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <Globe className="text-editor-accent" size={24} />
-          <div>
-            <h1 className="text-xl font-bold text-editor-text-primary">Language Management</h1>
-            <p className="text-xs text-editor-text-secondary">Configure platform languages</p>
+    <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+      <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+              title="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Globe className="text-editor-accent w-5 h-5" />
+              <div>
+                <h1 className="text-lg font-semibold text-editor-text-primary">Language Management</h1>
+                <p className="text-xs text-editor-text-secondary hidden sm:block">Configure platform languages</p>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           {saveStatus === 'success' && (
-            <div className="flex items-center gap-2 text-green-500 text-sm">
+            <div className="flex items-center gap-2 text-green-500 text-sm mr-2">
               <Check size={16} />
               <span>Saved successfully</span>
             </div>
           )}
           {saveStatus === 'error' && (
-            <div className="flex items-center gap-2 text-red-500 text-sm">
+            <div className="flex items-center gap-2 text-red-500 text-sm mr-2">
               <AlertCircle size={16} />
               <span>Error saving</span>
             </div>
@@ -175,16 +188,17 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
-            className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent-hover transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
           >
-            <Save size={16} />
-            {saveStatus === 'saving' ? 'Saving...' : 'Save Changes'}
+            <Save className="w-4 h-4" />
+            {saveStatus === 'saving' ? 'Saving...' : 'Save'}
           </button>
           <button
             onClick={onBack}
-            className="px-4 py-2 bg-editor-border text-editor-text-secondary rounded-lg hover:bg-editor-panel-bg transition-colors"
+            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
           >
-            Back
+            <ArrowLeft className="w-4 h-4" />
+            Back to Admin
           </button>
         </div>
       </header>
@@ -397,6 +411,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 };

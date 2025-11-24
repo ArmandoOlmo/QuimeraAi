@@ -128,10 +128,34 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         setError('');
         setIsLoading(true);
         const provider = new GoogleAuthProvider();
+        
+        // Configuraciones personalizadas para mejorar la experiencia
+        provider.setCustomParameters({
+            prompt: 'select_account', // Siempre mostrar selector de cuenta
+            display: 'popup' // Asegurar que se use popup
+        });
+        
         try {
-            await signInWithPopup(auth, provider);
+            console.log('🔐 Intentando login con Google...');
+            const result = await signInWithPopup(auth, provider);
+            console.log('✅ Login exitoso:', result.user.email);
         } catch (err: any) {
-            setError(t('auth.errors.googleSignInFailed'));
+            console.error('❌ Error en Google Sign In:', err);
+            console.error('Código de error:', err.code);
+            console.error('Mensaje:', err.message);
+            
+            // Manejo de errores específicos
+            if (err.code === 'auth/unauthorized-domain') {
+                setError('Dominio no autorizado. Por favor contacta al administrador.');
+            } else if (err.code === 'auth/popup-blocked') {
+                setError('El popup fue bloqueado. Por favor permite popups en tu navegador.');
+            } else if (err.code === 'auth/popup-closed-by-user') {
+                setError('Login cancelado. Por favor intenta de nuevo.');
+            } else if (err.code === 'auth/cancelled-popup-request') {
+                setError('Popup cancelado. Por favor intenta de nuevo.');
+            } else {
+                setError(t('auth.errors.googleSignInFailed') + ' (' + err.code + ')');
+            }
             setIsLoading(false);
         }
     };

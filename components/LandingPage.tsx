@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import Hero from './Hero';
+import HeroModern from './HeroModern';
+import HeroGradient from './HeroGradient';
+import HeroFitness from './HeroFitness';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -79,6 +82,24 @@ const LandingPage: React.FC = () => {
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
 
+  // Inject font variables into :root for Tailwind to use
+  useEffect(() => {
+    const root = document.documentElement;
+    const headerFont = fontStacks[theme.fontFamilyHeader];
+    const bodyFont = fontStacks[theme.fontFamilyBody];
+    const buttonFont = fontStacks[theme.fontFamilyButton];
+    
+    root.style.setProperty('--font-header', headerFont);
+    root.style.setProperty('--font-body', bodyFont);
+    root.style.setProperty('--font-button', buttonFont);
+    
+    console.log('🎨 Fonts Applied:', {
+      header: `${theme.fontFamilyHeader} → ${headerFont}`,
+      body: `${theme.fontFamilyBody} → ${bodyFont}`,
+      button: `${theme.fontFamilyButton} → ${buttonFont}`
+    });
+  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton]);
+
   // Handle Hash Routing for Articles
   useEffect(() => {
       const handleHashChange = () => {
@@ -155,11 +176,17 @@ const LandingPage: React.FC = () => {
 
     switch (customComp.baseComponent) {
       case 'hero':
-        return <Hero {...mergedData} borderRadius={buttonBorderRadius} />;
+        return mergedData.heroVariant === 'modern'
+          ? <HeroModern {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
+          : mergedData.heroVariant === 'gradient'
+            ? <HeroGradient {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
+            : mergedData.heroVariant === 'fitness'
+              ? <HeroFitness {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
+              : <Hero {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />;
       case 'features':
         return <Features {...mergedData} borderRadius={borderRadius} />;
       case 'testimonials':
-        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} />;
+        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} avatarBorderWidth={mergedData.avatarBorderWidth} avatarBorderColor={mergedData.avatarBorderColor} />;
       case 'slideshow':
         return <Slideshow {...mergedData} borderRadius={borderRadius} />;
       case 'pricing':
@@ -188,9 +215,15 @@ const LandingPage: React.FC = () => {
   };
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
-    hero: <Hero {...data.hero} borderRadius={theme.buttonBorderRadius} />,
+    hero: data.hero.heroVariant === 'modern' 
+      ? <HeroModern {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
+      : data.hero.heroVariant === 'gradient'
+        ? <HeroGradient {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
+        : data.hero.heroVariant === 'fitness'
+          ? <HeroFitness {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
+          : <Hero {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />,
     features: <Features {...data.features} borderRadius={theme.cardBorderRadius} />,
-    testimonials: <Testimonials {...data.testimonials} borderRadius={data.testimonials.borderRadius || theme.cardBorderRadius} cardShadow={data.testimonials.cardShadow} borderStyle={data.testimonials.borderStyle} cardPadding={data.testimonials.cardPadding} />,
+    testimonials: <Testimonials {...data.testimonials} borderRadius={data.testimonials.borderRadius || theme.cardBorderRadius} cardShadow={data.testimonials.cardShadow} borderStyle={data.testimonials.borderStyle} cardPadding={data.testimonials.cardPadding} avatarBorderWidth={data.testimonials.avatarBorderWidth} avatarBorderColor={data.testimonials.avatarBorderColor} />,
     slideshow: <Slideshow {...data.slideshow} borderRadius={theme.cardBorderRadius} />,
     pricing: <Pricing {...data.pricing} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     faq: <Faq {...data.faq} borderRadius={theme.cardBorderRadius} />,
@@ -208,11 +241,8 @@ const LandingPage: React.FC = () => {
     typography: null,
   };
   
-  const fontVars = {
-      '--font-header': fontStacks[theme.fontFamilyHeader],
-      '--font-body': fontStacks[theme.fontFamilyBody],
-      '--font-button': fontStacks[theme.fontFamilyButton],
-  } as React.CSSProperties;
+  // Font variables are now injected directly into :root via useEffect above
+  // This ensures Tailwind's font-header, font-body, and font-button classes work correctly
 
   // Dynamic Menu Resolution
   const headerLinks = data.header.menuId 
@@ -243,10 +273,10 @@ const LandingPage: React.FC = () => {
 
   return (
     <div 
-        style={fontVars} 
-        className={`text-slate-200 overflow-x-hidden font-body transition-colors duration-500`}
+        className={`text-slate-200 overflow-x-hidden transition-colors duration-500`}
         // Use inline style for background color to handle dynamic values safely
         // The `bg-[color]` utility doesn't handle undefined values gracefully in runtime CSS generation
+        // Note: Removed font-body class from here - each component applies its own font class
     >
         <style>{`
             body, .bg-site-base { background-color: ${pageBackgroundColor}; }

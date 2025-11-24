@@ -9,22 +9,22 @@ const DesignTokensEditor: React.FC = () => {
   
   const [localTokens, setLocalTokens] = useState<DesignTokens>(designTokens || {
     colors: {
-      primary: { main: '#8B5CF6', light: '#A78BFA', dark: '#7C3AED' },
-      secondary: { main: '#EC4899', light: '#F472B6', dark: '#DB2777' },
-      success: { main: '#10B981', light: '#34D399', dark: '#059669' },
-      warning: { main: '#F59E0B', light: '#FBBF24', dark: '#D97706' },
-      error: { main: '#EF4444', light: '#F87171', dark: '#DC2626' },
-      info: { main: '#3B82F6', light: '#60A5FA', dark: '#2563EB' },
+      primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
+      secondary: { main: '#10b981', light: '#34d399', dark: '#059669' },
+      success: { main: '#10b981', light: '#34d399', dark: '#059669' },
+      warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
+      error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
+      info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
       neutral: {
-        50: '#F9FAFB',
-        100: '#F3F4F6',
-        200: '#E5E7EB',
-        300: '#D1D5DB',
-        400: '#9CA3AF',
-        500: '#6B7280',
-        600: '#4B5563',
+        50: '#f9fafb',
+        100: '#f3f4f6',
+        200: '#e5e7eb',
+        300: '#d1d5db',
+        400: '#9ca3af',
+        500: '#6b7280',
+        600: '#4b5563',
         700: '#374151',
-        800: '#1F2937',
+        800: '#1f2937',
         900: '#111827',
       },
     },
@@ -36,11 +36,12 @@ const DesignTokensEditor: React.FC = () => {
       xl: '2rem',
       '2xl': '3rem',
       '3xl': '4rem',
+      '4xl': '5rem',
     },
     typography: {
       fontFamilies: {
-        sans: 'Inter, system-ui, sans-serif',
-        serif: 'Georgia, serif',
+        heading: 'Inter, system-ui, sans-serif',
+        body: 'Inter, system-ui, sans-serif',
         mono: 'Fira Code, monospace',
       },
       fontSizes: {
@@ -53,6 +54,7 @@ const DesignTokensEditor: React.FC = () => {
         '3xl': '1.875rem',
         '4xl': '2.25rem',
         '5xl': '3rem',
+        '6xl': '3.75rem',
       },
       fontWeights: {
         light: 300,
@@ -72,6 +74,7 @@ const DesignTokensEditor: React.FC = () => {
       md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
       lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
       xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+      '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
     },
     animations: {
       durations: {

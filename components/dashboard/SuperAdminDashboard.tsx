@@ -141,25 +141,25 @@ const SuperAdminDashboard = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                 <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                          <button 
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
                             title={t('common.openMenu')}
                         >
-                            <Menu />
+                            <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center space-x-2">
-                             <Shield className="text-editor-accent" />
-                             <h1 className="text-xl font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
+                        <div className="flex items-center gap-2">
+                             <Shield className="text-editor-accent w-5 h-5" />
+                             <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.title')}</h1>
                         </div>
                     </div>
                      <button 
                         onClick={() => setView('dashboard')}
-                        className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                        className="flex items-center text-sm font-medium h-9 px-4 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
                     >
-                        <ArrowLeft size={16} className="mr-1.5" />
+                        <ArrowLeft className="w-4 h-4 mr-1.5" />
                         {t('superadmin.backToDashboard')}
                     </button>
                 </header>

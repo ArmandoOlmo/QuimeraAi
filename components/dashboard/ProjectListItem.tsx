@@ -100,7 +100,11 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
   const handleDownloadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    downloadProjectAsJSON(project);
+    if (!user?.email) {
+      alert('User email is required to download project');
+      return;
+    }
+    downloadProjectAsJSON(project, user.email);
   };
 
   const formatDate = (dateString: string) => {

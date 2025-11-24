@@ -2,7 +2,7 @@
 import { initialData } from './initialData';
 import { Project, PageSection } from '../types';
 
-const ALL_SECTIONS: PageSection[] = ['hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'footer'];
+const ALL_SECTIONS: PageSection[] = ['hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'footer', 'typography'];
 const ALL_SECTIONS_VISIBLE = ALL_SECTIONS.reduce((acc, section) => {
     acc[section] = true;
     return acc;
@@ -17,6 +17,13 @@ export const initialProjects: Project[] = [
     status: 'Template',
     lastUpdated: 'Featured',
     isArchived: false,
+    category: 'Hospitality & Dining',
+    tags: ['Restaurant', 'Luxury', 'Fine Dining', 'Reservations'],
+    description: 'Elegant fine dining template perfect for upscale restaurants, featuring reservations system, menu showcase, and gallery.',
+    isFeatured: true,
+    author: 'Quimera AI',
+    version: '1.0.0',
+    createdAt: '2024-01-15',
     brandIdentity: {
         name: 'Savor & Vine',
         industry: 'Hospitality & Dining',
@@ -25,7 +32,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Authenticity, Taste, Atmosphere',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer'],
+    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer', 'typography'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'md',
@@ -120,13 +127,17 @@ export const initialProjects: Project[] = [
           colors: { background: '#18100A', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD', buttonBackground: '#D4A373', buttonText: '#000000' }
       },
       testimonials: {
+        testimonialsVariant: 'classic',
         title: 'Guest Experiences', description: 'Hear what our patrons have to say.', paddingY: 'md', paddingX: 'md',
+        titleFontSize: 'md', descriptionFontSize: 'md',
+        borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
+        avatarBorderWidth: 2, avatarBorderColor: '#D4A373',
         items: [
           { quote: "The best dining experience I've had in years. The ambiance is unmatched.", name: 'Eleanor R.', title: 'Food Critic', avatar: '' },
           { quote: "Exquisite flavors and impeccable service. Perfect for our anniversary.", name: 'James T.', title: 'Guest', avatar: '' },
           { quote: "The wine pairing was spot on. Highly recommend the tasting menu.", name: 'Sarah L.', title: 'Sommelier', avatar: '' },
         ],
-        colors: { background: '#241A15', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD' },
+        colors: { background: '#241A15', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD', cardBackground: '#1f2937' },
       },
       video: {
           title: 'Behind the Scenes', description: 'Watch our kitchen in action during Friday night service.', source: 'youtube', videoId: 'dQw4w9WgXcQ', autoplay: false, loop: true, showControls: true, paddingY: 'lg', paddingX: 'md',
@@ -174,6 +185,13 @@ export const initialProjects: Project[] = [
     status: 'Template',
     lastUpdated: 'Featured',
     isArchived: false,
+    category: 'Legal',
+    tags: ['Law Firm', 'Professional', 'Corporate', 'Legal Services'],
+    description: 'Professional law firm template with practice areas showcase, attorney profiles, and consultation booking system.',
+    isFeatured: true,
+    author: 'Quimera AI',
+    version: '1.0.0',
+    createdAt: '2024-01-18',
     brandIdentity: {
         name: 'Justice & Partners',
         industry: 'Legal',
@@ -182,7 +200,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Integrity, Experience, Justice',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',
@@ -258,13 +276,17 @@ export const initialProjects: Project[] = [
         colors: { background: '#ffffff', text: '#0f172a', heading: '#0f172a' },
       },
       testimonials: {
+        testimonialsVariant: 'classic',
         title: 'Client Testimonials', description: 'We let our record speak for itself.', paddingY: 'lg', paddingX: 'md',
+        titleFontSize: 'md', descriptionFontSize: 'md',
+        borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
+        avatarBorderWidth: 2, avatarBorderColor: '#c29d59',
         items: [
           { quote: "They handled my case with professionalism and achieved a result better than I expected.", name: 'John D.', title: 'Business Owner', avatar: '' },
           { quote: "Responsive, knowledgeable, and empathetic. I felt supported every step of the way.", name: 'Sarah M.', title: 'Client', avatar: '' },
           { quote: "Top-tier legal representation. Worth every penny for the peace of mind.", name: 'David K.', title: 'CEO', avatar: '' },
         ],
-        colors: { background: '#0f172a', accent: '#c29d59', borderColor: '#334155', text: '#f1f5f9', heading: '#ffffff' },
+        colors: { background: '#0f172a', accent: '#c29d59', borderColor: '#334155', text: '#f1f5f9', heading: '#ffffff', cardBackground: '#1f2937' },
       },
       howItWorks: {
           title: 'Our Process', description: 'From consultation to resolution.', steps: 3,
@@ -316,6 +338,13 @@ export const initialProjects: Project[] = [
     status: 'Template',
     lastUpdated: 'Featured',
     isArchived: false,
+    category: 'Health & Fitness',
+    tags: ['Gym', 'Fitness', 'Sports', 'Wellness', 'Training'],
+    description: 'Dynamic fitness center template featuring membership plans, class schedules, trainer profiles, and sign-up forms.',
+    isFeatured: true,
+    author: 'Quimera AI',
+    version: '1.0.0',
+    createdAt: '2024-01-20',
     brandIdentity: {
         name: 'Iron Pulse Fitness',
         industry: 'Health & Fitness',
@@ -324,7 +353,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Strength, Discipline, Community',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',
@@ -410,13 +439,17 @@ export const initialProjects: Project[] = [
         colors: { background: '#0a0a0a', text: '#ffffff', heading: '#ffffff' },
       },
       testimonials: {
+          testimonialsVariant: 'classic',
           title: 'Real Results', description: 'Our members crush their goals.', paddingY: 'md', paddingX: 'md',
+          titleFontSize: 'md', descriptionFontSize: 'md',
+          borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
+          avatarBorderWidth: 2, avatarBorderColor: '#ccff00',
           items: [
               { quote: "Lost 20lbs in 3 months. The community here keeps me going.", name: 'Mark P.', title: 'Member', avatar: '' },
               { quote: "Best equipment in the city. No waiting for racks.", name: 'Jenny L.', title: 'Powerlifter', avatar: '' },
               { quote: "The coaches actually care about your form. Highly recommend.", name: 'Chris R.', title: 'Member', avatar: '' }
           ],
-          colors: { background: '#000000', accent: '#ccff00', borderColor: '#333', text: '#ffffff', heading: '#ffffff' }
+          colors: { background: '#000000', accent: '#ccff00', borderColor: '#333', text: '#ffffff', heading: '#ffffff', cardBackground: '#1f2937' }
       },
       video: {
         title: 'Inside The Arena', description: 'See the energy. Feel the intensity.', source: 'youtube', videoId: 'dQw4w9WgXcQ', videoUrl: '', autoplay: false, loop: false, showControls: true, paddingY: 'lg', paddingX: 'md',
@@ -460,6 +493,13 @@ export const initialProjects: Project[] = [
     status: 'Template',
     lastUpdated: 'New',
     isArchived: false,
+    category: 'Retail & Fashion',
+    tags: ['Fashion', 'Boutique', 'E-commerce', 'Retail', 'Sustainable'],
+    description: 'Stylish fashion boutique template with product galleries, lookbooks, and newsletter integration for modern retailers.',
+    isFeatured: false,
+    author: 'Quimera AI',
+    version: '1.0.0',
+    createdAt: '2024-02-10',
     brandIdentity: {
         name: 'Lumina Fashion',
         industry: 'Retail & Fashion',
@@ -468,7 +508,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Style, Comfort, Sustainability',
         language: 'English',
     },
-    componentOrder: ['hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer', 'typography'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'xl',
@@ -567,13 +607,16 @@ export const initialProjects: Project[] = [
           colors: { background: '#fff1f2', text: '#881337', heading: '#881337' }
       },
       testimonials: {
+        testimonialsVariant: 'classic',
         title: 'Love Letters', description: 'Why our customers keep coming back.', paddingY: 'lg', paddingX: 'md',
+        titleFontSize: 'md', descriptionFontSize: 'md',
+        borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
         items: [
             { quote: "The fabric quality is amazing! It feels so expensive but the price was great.", name: 'Chloe', title: 'Verified Buyer', avatar: '' },
             { quote: "Fast shipping and the packaging was so cute. I'm obsessed with the dress.", name: 'Mia', title: 'Verified Buyer', avatar: '' },
             { quote: "Finally found jeans that fit perfectly. Lumina is my new go-to.", name: 'Zoe', title: 'Verified Buyer', avatar: '' },
         ],
-        colors: { background: '#ffffff', accent: '#fb7185', borderColor: '#fce7f3', text: '#4b5563', heading: '#1f2937' }
+        colors: { background: '#ffffff', accent: '#fb7185', borderColor: '#fce7f3', text: '#4b5563', heading: '#1f2937', cardBackground: '#ffffff' }
       },
       faq: {
           title: 'Shopping FAQ', description: 'Common questions.', paddingY: 'md', paddingX: 'md',
@@ -614,6 +657,13 @@ export const initialProjects: Project[] = [
     status: 'Template',
     lastUpdated: 'Featured',
     isArchived: false,
+    category: 'Automotive',
+    tags: ['Auto Dealer', 'Cars', 'Sales', 'Luxury Vehicles'],
+    description: 'Premium automotive dealership template with vehicle inventory showcase, financing options, and test drive booking.',
+    isFeatured: true,
+    author: 'Quimera AI',
+    version: '1.0.0',
+    createdAt: '2024-01-25',
     brandIdentity: {
         name: 'Prestige Motors',
         industry: 'Automotive',
@@ -622,7 +672,7 @@ export const initialProjects: Project[] = [
         coreValues: 'Quality, Trust, Performance',
         language: 'English',
     },
-    componentOrder: ['hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer'],
+    componentOrder: ['hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer', 'typography'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
       cardBorderRadius: 'none',
@@ -746,13 +796,16 @@ export const initialProjects: Project[] = [
         colors: { background: '#1f2937', accent: '#ef4444', text: '#d1d5db', heading: '#ffffff' },
       },
       testimonials: {
+        testimonialsVariant: 'classic',
         title: 'Happy Drivers', description: 'Join the Prestige family.', paddingY: 'lg', paddingX: 'md',
+        titleFontSize: 'md', descriptionFontSize: 'md',
+        borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
         items: [
           { quote: "Easiest car buying experience ever. No pressure, great price.", name: 'Tom H.', title: 'Customer', avatar: '' },
           { quote: "Love my new SUV! The service department is also top notch.", name: 'Karen P.', title: 'Customer', avatar: '' },
           { quote: "They found me the exact model I wanted. Highly recommended.", name: 'Greg S.', title: 'Customer', avatar: '' },
         ],
-        colors: { background: '#111827', accent: '#ef4444', borderColor: '#374151', text: '#f3f4f6', heading: '#ffffff' },
+        colors: { background: '#111827', accent: '#ef4444', borderColor: '#374151', text: '#f3f4f6', heading: '#ffffff', cardBackground: '#1f2937' },
       },
       cta: {
         title: 'Your Dream Car Awaits', description: 'Visit us today for a test drive.',

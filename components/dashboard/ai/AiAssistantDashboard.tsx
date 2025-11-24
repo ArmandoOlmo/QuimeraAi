@@ -61,14 +61,14 @@ const AiAssistantDashboard: React.FC = () => {
             <div className="flex h-screen bg-background text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                    <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
-                                <Menu />
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                                <Menu className="w-4 h-4" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <Bot className="text-primary" size={24} />
-                                <h1 className="text-xl font-bold text-foreground">Quimera Chat</h1>
+                                <Bot className="text-primary w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-foreground">Quimera Chat</h1>
                             </div>
                         </div>
                     </header>
@@ -380,26 +380,32 @@ const AiAssistantDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-[70px] px-8 border-b border-border flex items-center justify-between bg-card z-20 shrink-0">
+                <header className="h-14 px-8 border-b border-border flex items-center justify-between bg-card z-20 shrink-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
-                            <Menu />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center -ml-2 text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <Menu className="w-4 h-4" />
                         </button>
-                        <div>
-                            <h1 className="text-xl font-extrabold text-foreground tracking-tight">Quimera Chat</h1>
-                            <p className="text-xs text-muted-foreground flex items-center mt-0.5"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Active on {activeProject.name}</p>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-lg font-semibold text-foreground">Quimera Chat</h1>
+                            <span className="text-xs text-muted-foreground flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> {activeProject.name}</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
                         <InfoBubble bubbleId="chatSimulator" content={INFO_BUBBLE_CONTENT.chatSimulator} inline defaultExpanded={false} />
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-primary text-primary-foreground font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center text-sm disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
                         >
-                            {isSaving ? 'Saving...' : (
+                            {isSaving ? (
                                 <>
-                                    <Save size={18} className="mr-2" /> Save Changes
+                                    <Save className="w-4 h-4" />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    <span>Save</span>
                                 </>
                             )}
                         </button>

@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit } from '../types';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -72,11 +72,63 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ imageUrl, title, description,
   </div>
 );
 
+// --- NUEVO: Componente para la Tarjeta Moderna (Bento Style) ---
+const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: any, index: number, colors: any, borderRadius: string }) => {
+    // Patrón Bento: El 1º (0) y el 4º (3) ocupan 2 columnas
+    const isWide = index === 0 || index === 3 || index === 6;
+    
+    return (
+        <div className={`group relative overflow-hidden border bg-white/5 p-8 hover:bg-white/10 transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors.borderColor }}>
+            {/* Efecto Glow sutil */}
+            <div className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full bg-gradient-to-br from-purple-500/20 to-transparent blur-[100px] transition-all duration-500 group-hover:bg-purple-500/30" style={{ opacity: 0.5 }} />
+            
+            <div className="relative z-10 flex flex-col h-full justify-between">
+                <div className="mb-8">
+                    <div className={`mb-6 overflow-hidden rounded-2xl border shadow-2xl ${isWide ? 'aspect-[21/9]' : 'aspect-[4/3]'}`} style={{ borderColor: colors.borderColor }}>
+                        <img 
+                            src={feature.imageUrl} 
+                            alt={feature.title} 
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 transition-colors" style={{ color: colors.heading }}>{feature.title}</h3>
+                    <p className="leading-relaxed font-light" style={{ color: colors.text }}>{feature.description}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 interface FeaturesProps extends FeaturesData {
     borderRadius: BorderRadiusSize;
 }
 
-const Features: React.FC<FeaturesProps> = ({ title, description, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', gridColumns = 3, imageHeight = 200, imageObjectFit = 'cover' }) => {
+const Features: React.FC<FeaturesProps> = ({ 
+    title, 
+    description, 
+    items, 
+    paddingY, 
+    paddingX, 
+    colors, 
+    borderRadius, 
+    titleFontSize = 'md', 
+    descriptionFontSize = 'md', 
+    gridColumns = 3, 
+    imageHeight = 200, 
+    imageObjectFit = 'cover',
+    featuresVariant = 'classic' 
+}) => {
+  // Get design tokens with fallback to component colors
+  const { getColor } = useDesignTokens();
+  
+  // Merge Design Tokens with component colors
+  const actualColors = {
+    background: colors.background,
+    accent: getColor('primary.main', colors.accent),
+    borderColor: colors.borderColor,
+    text: colors.text,
+    heading: colors.heading,
+  };
   
   const gridColsClasses: Record<number, string> = {
       2: 'lg:grid-cols-2',
@@ -84,12 +136,42 @@ const Features: React.FC<FeaturesProps> = ({ title, description, items, paddingY
       4: 'lg:grid-cols-4',
   };
 
+  // --- RENDERIZADO MODERNO ---
+  if (featuresVariant === 'modern') {
+      return (
+        <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
+            <div className="relative z-10">
+                <div className="mb-20 max-w-3xl">
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: actualColors.heading }}>
+                        {title}
+                    </h2>
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: actualColors.text, borderColor: actualColors.accent }}>
+                        {description}
+                    </p>
+                </div>
+
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6`}>
+                    {items.map((feature, index) => (
+                        <ModernFeatureCard 
+                            key={index} 
+                            feature={feature} 
+                            index={index}
+                            colors={actualColors}
+                            borderRadius={borderRadiusClasses[borderRadius]}
+                        />
+                    ))}
+                </div>
+            </div>
+        </section>
+      );
+  }
+
   return (
-    <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+    <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
             {description}
           </p>
         </div>
@@ -101,10 +183,10 @@ const Features: React.FC<FeaturesProps> = ({ title, description, items, paddingY
                 title={feature.title}
                 description={feature.description}
                 delay={`${(index + 1) * 0.2}s`}
-                accentColor={colors.accent}
-                textColor={colors.text}
+                accentColor={actualColors.accent}
+                textColor={actualColors.text}
                 borderRadius={borderRadius}
-                borderColor={colors.borderColor}
+                borderColor={actualColors.borderColor}
                 imageHeight={imageHeight}
                 imageObjectFit={imageObjectFit}
             />

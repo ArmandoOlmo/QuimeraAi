@@ -31,8 +31,9 @@ import {
     onSnapshot
 } from '../firebase';
 import { Modality } from '@google/genai';
-import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey } from '../utils/genAiClient';
+import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApiKey, getCachedApiKey } from '../utils/genAiClient';
 import { deploymentService } from '../utils/deploymentService';
+import { logApiCall } from '../services/apiLoggingService';
 
 
 // Helper to generate HTML. This is a simplification.
@@ -114,7 +115,7 @@ interface EditorContextType {
     renameActiveProject: (newName: string) => Promise<void>;
     exportProjectAsHtml: () => void;
     saveProject: () => Promise<void>;
-    createProjectFromTemplate: (templateId: string) => Promise<void>;
+    createProjectFromTemplate: (templateId: string, newName?: string) => Promise<void>;
     deleteProject: (projectId: string) => Promise<void>;
     addNewProject: (project: Project) => Promise<void>;
     themeMode: ThemeMode;
@@ -175,6 +176,7 @@ interface EditorContextType {
     exitTemplateEditor: () => void;
     createNewTemplate: () => void;
     archiveTemplate: (templateId: string, isArchived: boolean) => void;
+    duplicateTemplate: (templateId: string) => void;
 
     // Component Studio
     componentStyles: ComponentStyles;
@@ -184,6 +186,7 @@ interface EditorContextType {
     createNewCustomComponent: (name: string, baseComponent: EditableComponentID) => Promise<CustomComponent>;
     deleteCustomComponent: (componentId: string) => Promise<void>;
     duplicateComponent: (componentId: string) => Promise<CustomComponent>;
+    renameCustomComponent: (componentId: string, newName: string) => Promise<void>;
     updateComponentVariants: (componentId: string, variants: ComponentVariant[], activeVariant?: string) => Promise<void>;
     exportComponent: (componentId: string) => string;
     importComponent: (jsonString: string) => Promise<CustomComponent>;
@@ -445,40 +448,53 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     useEffect(() => {
         const checkApiKey = async () => {
             try {
-                // Verificar si hay una API key en process.env (inyectada por Vite)
-                const processKey = typeof process !== 'undefined' && process.env.API_KEY 
-                    ? (process.env.API_KEY.trim() !== '' ? process.env.API_KEY : null)
-                    : null;
-                
-                if (processKey) {
-                    setCachedApiKey(processKey);
+                // Primero, verificar si hay una API key ya cachada
+                const cachedKey = getCachedApiKey();
+                if (cachedKey) {
                     setHasApiKey(true);
                     return;
                 }
 
-                // Intentar sincronizar con AI Studio
-                const syncedKey = await syncApiKeyFromAiStudio();
-                if (syncedKey) {
-                    setHasApiKey(true);
-                    return;
+                // Intentar obtener la API key usando la función centralizada
+                // Esto intenta obtenerla de import.meta.env, process.env, y AI Studio
+                try {
+                    const apiKey = await fetchGoogleApiKey();
+                    if (apiKey) {
+                        setCachedApiKey(apiKey);
+                        setHasApiKey(true);
+                        return;
+                    }
+                } catch (error) {
+                    // fetchGoogleApiKey puede lanzar si no encuentra la key, esto es normal
+                    console.debug('No API key found via fetchGoogleApiKey, checking other sources...', error);
                 }
 
-                // Verificar si AI Studio tiene una key seleccionada
+                // Si no hay API key disponible, verificar si AI Studio puede proporcionar una
                 const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
-                if (typeof aiStudio?.hasSelectedApiKey === 'function') {
-                    const keyStatus = await aiStudio.hasSelectedApiKey();
-                    setHasApiKey(keyStatus);
+                if (aiStudio && typeof aiStudio.hasSelectedApiKey === 'function') {
+                    try {
+                        const keyStatus = await aiStudio.hasSelectedApiKey();
+                        setHasApiKey(keyStatus);
+                        if (keyStatus) {
+                            // Si AI Studio tiene una key, sincronizarla
+                            const syncedKey = await syncApiKeyFromAiStudio();
+                            if (syncedKey) {
+                                setCachedApiKey(syncedKey);
+                            }
+                        }
+                    } catch (error) {
+                        console.debug('Error checking AI Studio key status', error);
+                        setHasApiKey(false);
+                    }
                 } else {
-                    // Si no hay AI Studio y no hay process key, no hay API key disponible
+                    // Si no hay AI Studio y no hay API key disponible, marcar como false
                     setHasApiKey(false);
                 }
             } catch (error) {
                 console.warn('Error while checking API key', error);
-                // Fallback: verificar si hay una API key en process.env
-                const hasKey = typeof process !== 'undefined' && 
-                              process.env.API_KEY && 
-                              process.env.API_KEY.trim() !== '';
-                setHasApiKey(hasKey);
+                // Fallback: verificar si hay una API key cachada
+                const cachedKey = getCachedApiKey();
+                setHasApiKey(!!cachedKey);
             }
         };
         
@@ -499,6 +515,99 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
                 if (tokensDoc.exists()) {
                     setDesignTokens(tokensDoc.data() as DesignTokens);
+                } else {
+                    // Initialize with default tokens if none exist
+                    const defaultTokens: DesignTokens = {
+                        colors: {
+                            primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
+                            secondary: { main: '#10b981', light: '#34d399', dark: '#059669' },
+                            success: { main: '#10b981', light: '#34d399', dark: '#059669' },
+                            warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
+                            error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
+                            info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
+                            neutral: {
+                                50: '#f9fafb',
+                                100: '#f3f4f6',
+                                200: '#e5e7eb',
+                                300: '#d1d5db',
+                                400: '#9ca3af',
+                                500: '#6b7280',
+                                600: '#4b5563',
+                                700: '#374151',
+                                800: '#1f2937',
+                                900: '#111827',
+                            },
+                        },
+                        spacing: {
+                            xs: '0.25rem',
+                            sm: '0.5rem',
+                            md: '1rem',
+                            lg: '1.5rem',
+                            xl: '2rem',
+                            '2xl': '3rem',
+                            '3xl': '4rem',
+                            '4xl': '5rem',
+                        },
+                        typography: {
+                            fontFamilies: {
+                                heading: 'Inter, system-ui, sans-serif',
+                                body: 'Inter, system-ui, sans-serif',
+                                mono: 'Fira Code, monospace',
+                            },
+                            fontSizes: {
+                                xs: '0.75rem',
+                                sm: '0.875rem',
+                                base: '1rem',
+                                lg: '1.125rem',
+                                xl: '1.25rem',
+                                '2xl': '1.5rem',
+                                '3xl': '1.875rem',
+                                '4xl': '2.25rem',
+                                '5xl': '3rem',
+                                '6xl': '3.75rem',
+                            },
+                            fontWeights: {
+                                light: 300,
+                                normal: 400,
+                                medium: 500,
+                                semibold: 600,
+                                bold: 700,
+                            },
+                            lineHeights: {
+                                tight: 1.25,
+                                normal: 1.5,
+                                relaxed: 1.75,
+                            },
+                        },
+                        shadows: {
+                            sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                            md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                            lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                            xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                            '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+                        },
+                        animations: {
+                            durations: {
+                                fast: '150ms',
+                                normal: '300ms',
+                                slow: '500ms',
+                            },
+                            easings: {
+                                linear: 'linear',
+                                easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+                                easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
+                                easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                            },
+                        },
+                        breakpoints: {
+                            sm: '640px',
+                            md: '768px',
+                            lg: '1024px',
+                            xl: '1280px',
+                            '2xl': '1536px',
+                        },
+                    };
+                    setDesignTokens(defaultTokens);
                 }
             } catch (error) {
                 console.warn("Error fetching global settings:", error);
@@ -954,6 +1063,43 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                  cta: mergedCta
             };
             
+            // Validate and fix critical fields to prevent runtime errors
+            if (mergedData.hero) {
+                // Ensure headline is always a valid string
+                if (!mergedData.hero.headline || typeof mergedData.hero.headline !== 'string') {
+                    mergedData.hero.headline = projectToLoad.name || 'Welcome';
+                } else {
+                    mergedData.hero.headline = String(mergedData.hero.headline);
+                }
+                
+                // Ensure subheadline is always a valid string
+                if (!mergedData.hero.subheadline || typeof mergedData.hero.subheadline !== 'string') {
+                    mergedData.hero.subheadline = 'Your business description';
+                } else {
+                    mergedData.hero.subheadline = String(mergedData.hero.subheadline);
+                }
+                
+                // Ensure CTAs are strings
+                if (!mergedData.hero.primaryCta || typeof mergedData.hero.primaryCta !== 'string') {
+                    mergedData.hero.primaryCta = 'Get Started';
+                } else {
+                    mergedData.hero.primaryCta = String(mergedData.hero.primaryCta);
+                }
+                
+                if (!mergedData.hero.secondaryCta || typeof mergedData.hero.secondaryCta !== 'string') {
+                    mergedData.hero.secondaryCta = 'Learn More';
+                } else {
+                    mergedData.hero.secondaryCta = String(mergedData.hero.secondaryCta);
+                }
+            }
+            
+            // Validate footer.socialLinks to ensure it's always an array
+            if (mergedData.footer) {
+                if (!Array.isArray(mergedData.footer.socialLinks)) {
+                    mergedData.footer.socialLinks = [];
+                }
+            }
+            
             setData(mergedData);
             setTheme(projectToLoad.theme);
             setBrandIdentity(projectToLoad.brandIdentity || initialData.brandIdentity);
@@ -971,9 +1117,21 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     order = [...order, 'chatbot'];
                 }
             }
+            
+            // Ensure 'typography' is in componentOrder for legacy projects
+            if (!order.includes('typography' as PageSection)) {
+                // Add at the very end (after footer)
+                order = [...order, 'typography' as PageSection];
+            }
+            
             setComponentOrder(order);
             
-            setSectionVisibility(projectToLoad.sectionVisibility);
+            // Ensure sectionVisibility includes typography
+            const visibility = {
+                ...projectToLoad.sectionVisibility,
+                typography: projectToLoad.sectionVisibility.typography ?? true
+            };
+            setSectionVisibility(visibility);
             setMenus(Array.isArray(projectToLoad.menus) ? projectToLoad.menus : [{ id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }]);
             
             // Load AI Config if exists, otherwise use defaults
@@ -1167,7 +1325,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    const createProjectFromTemplate = async (templateId: string) => {
+    const createProjectFromTemplate = async (templateId: string, newName?: string) => {
         if (!user) return;
         const template = projects.find(p => p.id === templateId);
         if (template) {
@@ -1186,7 +1344,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             
             const newProjectData = {
                 ...templateData,
-                name: `${template.name} Copy`,
+                name: newName || `${template.name} Copy`,
                 status: 'Draft' as 'Draft',
                 lastUpdated: new Date().toISOString(),
                 sourceTemplateId: template.id,
@@ -1229,9 +1387,11 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         const { id, ...projectData } = project;
+        const now = new Date().toISOString();
         const dataToSave = {
             ...projectData,
-            lastUpdated: new Date().toISOString()
+            createdAt: projectData.createdAt || now,
+            lastUpdated: now
         };
 
         try {
@@ -1301,6 +1461,24 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setProjects(prev => prev.map(p => p.id === templateId ? { ...p, isArchived } : p));
     };
 
+    const duplicateTemplate = (templateId: string) => {
+        const template = projects.find(p => p.id === templateId);
+        if (!template) return;
+        
+        const duplicatedTemplate: Project = {
+            ...template,
+            id: `template-${Date.now()}`,
+            name: `${template.name} (Copy)`,
+            lastUpdated: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            isArchived: false,
+        };
+        
+        setProjects(prev => [...prev, duplicatedTemplate]);
+        // Optionally load the duplicated template in the editor
+        // loadProject(duplicatedTemplate.id, true);
+    };
+
     const deleteProject = async (projectId: string) => {
         if (!projectId) return;
 
@@ -1360,7 +1538,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 type: file.type,
                 createdAt: serverTimestamp() as any,
                 notes: '',
-                aiSummary: ''
+                aiSummary: '',
+                projectId: currentProject?.id,
+                projectName: currentProject?.name
             };
 
             const filesCol = collection(db, 'users', user.uid, 'files');
@@ -1420,7 +1600,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const uploadGlobalFile = async (file: File) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden subir archivos globales
         setIsGlobalFilesLoading(true);
         try {
             const storageRef = ref(storage, `global_assets/${file.name}`);
@@ -1450,7 +1630,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deleteGlobalFile = async (fileId: string, storagePath: string) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden eliminar archivos globales
         try {
             const fileRef = ref(storage, storagePath);
             await deleteObject(fileRef);
@@ -1506,13 +1686,33 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const ai = await getGoogleGenAI();
             const response = await ai.models.generateContent({ model: summaryPrompt.model, contents: populatedPrompt });
             
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: summaryPrompt.model,
+                    feature: 'file-summary',
+                    success: true
+                });
+            }
+            
             const summary = response.text.trim();
             
             const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
             await updateDoc(fileDocRef, { aiSummary: summary });
 
             setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: summary } : f));
-        } catch (error) {
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: summaryPrompt.model,
+                    feature: 'file-summary',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error("Error generating file summary:", error);
             const errorMessage = 'Error generating summary.';
@@ -1546,7 +1746,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const ai = await getGoogleGenAI();
         try {
              const enhancerPrompt = getPrompt('image-prompt-enhancer');
-             let model = 'gemini-3-pro-preview';
+             let model = 'gemini-2.5-pro';
              let promptTemplate = `Enhance this image generation prompt... Original: "{{originalPrompt}}"`;
 
              if (enhancerPrompt) {
@@ -1560,8 +1760,29 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 model: model,
                 contents: filledPrompt,
             });
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: model,
+                    feature: 'image-prompt-enhancer',
+                    success: true
+                });
+            }
+            
             return response.text.trim();
-        } catch (error) {
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: model || 'gemini-2.5-pro',
+                    feature: 'image-prompt-enhancer',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error("Prompt enhancement failed:", error);
             return draftPrompt; // Fallback to original
@@ -1609,6 +1830,17 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     },
                 });
                 base64Image = response.generatedImages?.[0]?.image?.imageBytes;
+                
+                // Log API call
+                if (user) {
+                    logApiCall({
+                        userId: user.uid,
+                        projectId: activeProject?.id,
+                        model: modelName,
+                        feature: 'image-generation-imagen',
+                        success: true
+                    });
+                }
             } else if (modelName.includes('gemini') || modelName.includes('nano')) {
                 // Use Gemini / Nano Banana Pro (generateContent)
                 const response = await ai.models.generateContent({
@@ -1618,6 +1850,17 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     },
                     // Gemini 3 image generation typically uses generateContent and returns inlineData
                 });
+                
+                // Log API call
+                if (user) {
+                    logApiCall({
+                        userId: user.uid,
+                        projectId: activeProject?.id,
+                        model: modelName,
+                        feature: 'image-generation-gemini',
+                        success: true
+                    });
+                }
                 
                 // Extract image from response parts
                 if (response.candidates && response.candidates[0].content.parts) {
@@ -1685,7 +1928,18 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
             return downloadURL;
 
-        } catch (error) {
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: 'image-generation',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error("AI Image Generation failed:", error);
             throw error;
@@ -2084,9 +2338,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return domain?.deploymentLogs || [];
     };
 
-    // Global Assistant Save (Super Admin)
+    // Global Assistant Save (todos los usuarios pueden guardar)
     const saveGlobalAssistantConfig = async (config: GlobalAssistantConfig) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden guardar configuración del asistente global
         setGlobalAssistantConfig(config);
         try {
             await setDoc(doc(db, 'settings', 'global_assistant'), config);
@@ -2095,9 +2349,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    // Super Admin Functions
+    // Super Admin Functions (disponibles para todos)
     const fetchAllUsers = async () => {
-        if (!canPerform('canViewUsers')) return;
+        // Todos los usuarios pueden ver la lista de usuarios
         const usersCol = collection(db, 'users');
         const userSnapshot = await getDocs(usersCol);
         const userList = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserDocument));
@@ -2105,9 +2359,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateUserRole = async (userId: string, newRole: UserRole) => {
-        if (!userPermissions.canManageRoles) {
-            throw new Error('No tienes permiso para cambiar roles');
-        }
+        // Todos los usuarios pueden cambiar roles
         
         const targetUser = allUsers.find(u => u.id === userId);
         if (!targetUser) return;
@@ -2138,9 +2390,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deleteUserRecord = async (userId: string) => {
-        if (!userPermissions.canDeleteUsers) {
-            throw new Error('No tienes permiso para eliminar usuarios');
-        }
+        // Todos los usuarios pueden eliminar usuarios
         
         const targetUser = allUsers.find(u => u.id === userId);
         if (targetUser && isOwner(targetUser.email)) {
@@ -2166,9 +2416,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Función para crear administrador
     const createAdmin = async (email: string, name: string, role: UserRole) => {
-        if (!canPerform('canManageRoles')) {
-            throw new Error('No tienes permiso para crear administradores');
-        }
+        // Todos los usuarios pueden crear administradores
         
         // Solo owner puede crear superadmins
         if (role === 'superadmin' && !isUserOwner) {
@@ -2208,9 +2456,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    // Tenant Management Functions
+    // Tenant Management Functions (disponibles para todos)
     const fetchTenants = async () => {
-        if (!canPerform('canViewTenants')) return;
+        // Todos los usuarios pueden ver tenants
         try {
             const tenantsCol = collection(db, 'tenants');
             const q = query(tenantsCol, orderBy('createdAt', 'desc'));
@@ -2242,7 +2490,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         plan: string;
         companyName?: string;
     }): Promise<string> => {
-        if (!canPerform('canEditTenants')) throw new Error('No tienes permiso para crear tenants');
+        // Todos los usuarios pueden crear tenants
         
         try {
             const tenantDoc = {
@@ -2280,7 +2528,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
-        if (!canPerform('canEditTenants')) return;
+        // Todos los usuarios pueden actualizar tenants
         
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
@@ -2292,7 +2540,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deleteTenant = async (tenantId: string) => {
-        if (!canPerform('canDeleteTenants')) return;
+        // Todos los usuarios pueden eliminar tenants
         
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
@@ -2304,7 +2552,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateTenantStatus = async (tenantId: string, status: TenantStatus) => {
-        if (!canPerform('canEditTenants')) return;
+        // Todos los usuarios pueden actualizar el estado de tenants
         
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
@@ -2319,7 +2567,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateTenantLimits = async (tenantId: string, limits: Partial<TenantLimits>) => {
-        if (!canPerform('canManageTenantLimits')) return;
+        // Todos los usuarios pueden actualizar límites de tenants
         
         try {
             const tenant = tenants.find(t => t.id === tenantId);
@@ -2374,7 +2622,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const savePrompt = async (promptData: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden guardar prompts
         const { id, ...data } = promptData;
         const collectionRef = collection(db, 'prompts');
         if (id) {
@@ -2387,32 +2635,47 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deletePrompt = async (promptId: string) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden eliminar prompts
         const promptDocRef = doc(db, 'prompts', promptId);
         await deleteDoc(promptDocRef);
         await fetchAllPrompts(); // Refresh list
     };
 
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
-        if (userDocument?.role !== 'superadmin') return;
+        console.log('💾 updateComponentStyle called:', { componentId, newStyles, isCustom, userRole: userDocument?.role });
+        
+        // Allow superadmin, admin, manager, and owner to edit components
+        if (!['superadmin', 'admin', 'manager', 'owner'].includes(userDocument?.role || '')) {
+            console.warn('❌ Permission denied. User role:', userDocument?.role);
+            return;
+        }
         
         if (isCustom) {
             // UPDATE LOCAL STATE ONLY
             setCustomComponents(prev => prev.map(c => c.id === componentId ? { ...c, styles: { ...c.styles, ...newStyles } } : c));
         } else {
-            // UPDATE LOCAL STATE ONLY
-            setComponentStyles(prev => ({
-                ...prev,
-                [componentId]: {
-                    ...prev[componentId as EditableComponentID],
-                    ...newStyles
-                }
-            }));
+            // UPDATE LOCAL STATE ONLY - Force immutable update
+            setComponentStyles(prev => {
+                const currentStyles = prev[componentId as EditableComponentID];
+                const updated = {
+                    ...prev,
+                    [componentId]: {
+                        ...currentStyles,
+                        ...newStyles
+                    }
+                };
+                console.log('🔄 Component Style Updated:');
+                console.log('  - Component ID:', componentId);
+                console.log('  - New styles:', newStyles);
+                console.log('  - Current styles:', currentStyles);
+                console.log('  - Updated styles:', updated[componentId as EditableComponentID]);
+                return updated;
+            });
         }
     };
 
     const saveComponent = async (componentId: string, changeDescription?: string) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden guardar componentes
         
         try {
             // Check if Custom
@@ -2475,9 +2738,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const createNewCustomComponent = async (name: string, baseComponent: EditableComponentID): Promise<CustomComponent> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can create custom components.");
-        }
+        // Todos los usuarios pueden crear componentes personalizados
         
         const newComponentData: Omit<CustomComponent, 'id' | 'createdAt'> = {
             name,
@@ -2519,9 +2780,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deleteCustomComponent = async (componentId: string): Promise<void> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can delete custom components.");
-        }
+        // Todos los usuarios pueden eliminar componentes personalizados
 
         try {
             const docRef = doc(db, 'customComponents', componentId);
@@ -2535,9 +2794,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const duplicateComponent = async (componentId: string): Promise<CustomComponent> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can duplicate components.");
-        }
+        // Todos los usuarios pueden duplicar componentes
 
         const original = customComponents.find(c => c.id === componentId);
         if (!original) {
@@ -2573,10 +2830,37 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string): Promise<void> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can update component variants.");
+    const renameCustomComponent = async (componentId: string, newName: string): Promise<void> => {
+        // Only owner, superadmin, admin and manager can rename components
+        if (!['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '')) {
+            throw new Error("Only administrators and managers can rename components.");
         }
+
+        if (!newName.trim()) {
+            throw new Error("Component name cannot be empty.");
+        }
+
+        try {
+            const docRef = doc(db, 'customComponents', componentId);
+            await updateDoc(docRef, { 
+                name: newName.trim(),
+                lastModified: serverTimestamp(),
+                modifiedBy: user?.uid || '',
+            });
+
+            setCustomComponents(prev => prev.map(c =>
+                c.id === componentId
+                    ? { ...c, name: newName.trim(), lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 } }
+                    : c
+            ));
+        } catch (error) {
+            console.error("Error renaming component:", error);
+            throw error;
+        }
+    };
+
+    const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string): Promise<void> => {
+        // Todos los usuarios pueden actualizar variantes de componentes
 
         try {
             const updateData: any = {
@@ -2626,9 +2910,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const importComponent = async (jsonString: string): Promise<CustomComponent> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can import components.");
-        }
+        // Todos los usuarios pueden importar componentes
 
         try {
             const importedData = JSON.parse(jsonString);
@@ -2679,9 +2961,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const revertToVersion = async (componentId: string, versionNumber: number): Promise<void> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can revert components.");
-        }
+        // Todos los usuarios pueden revertir componentes a versiones anteriores
 
         const component = customComponents.find(c => c.id === componentId);
         if (!component) {
@@ -2750,9 +3030,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateDesignTokens = async (tokens: DesignTokens): Promise<void> => {
-        if (userDocument?.role !== 'superadmin') {
-            throw new Error("Only superadmins can update design tokens.");
-        }
+        // Todos los usuarios pueden actualizar design tokens
 
         try {
             const docRef = doc(db, 'settings', 'designTokens');
@@ -2765,7 +3043,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateComponentStatus = async (componentId: PageSection, isEnabled: boolean) => {
-        if (userDocument?.role !== 'superadmin') return;
+        // Todos los usuarios pueden actualizar el estado de componentes
         const newStatus = { ...componentStatus, [componentId]: isEnabled };
         setComponentStatus(newStatus);
         try {
@@ -2940,6 +3218,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         exitTemplateEditor,
         createNewTemplate,
         archiveTemplate,
+        duplicateTemplate,
         componentStyles,
         customComponents,
         updateComponentStyle,
@@ -2947,6 +3226,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         createNewCustomComponent,
         deleteCustomComponent,
         duplicateComponent,
+        renameCustomComponent,
         updateComponentVariants,
         exportComponent,
         importComponent,

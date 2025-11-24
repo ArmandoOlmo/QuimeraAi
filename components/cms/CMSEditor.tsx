@@ -17,6 +17,7 @@ import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
 import InfoBubble from '../ui/InfoBubble';
 import { INFO_BUBBLE_CONTENT } from '../../data/infoBubbleContent';
+import { logApiCall } from '../../services/apiLoggingService';
 
 interface CMSEditorProps {
     post: CMSPost | null;
@@ -36,7 +37,7 @@ const ToolbarButton: React.FC<{ onClick: () => void; isActive?: boolean; title: 
 const ToolbarDivider = () => <div className="w-px h-6 bg-gray-300 mx-1 self-center" />;
 
 const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
-    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt } = useEditor();
+    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, user, activeProject } = useEditor();
     
     // Form State
     const [title, setTitle] = useState(post?.title || '');
@@ -326,10 +327,32 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 contents: populatedPrompt,
             });
             
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: `cms-${instruction}`,
+                    success: true
+                });
+            }
+            
             const result = response.text.trim();
             execCmd('insertHTML', result);
 
-        } catch (error) {
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: promptConfig?.model || 'gemini-2.5-flash',
+                    feature: `cms-${instruction}`,
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error(error);
         } finally {
@@ -362,10 +385,38 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 contents: populatedPrompt,
                 config: { responseMimeType: "application/json" }
             });
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: 'cms-generate-seo',
+                    success: true
+                });
+            }
+            
             const data = JSON.parse(response.text);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
-        } catch (error) { handleApiError(error); console.error(error); } finally { setIsAiWorking(false); }
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: 'cms-generate-seo',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
+            handleApiError(error);
+            console.error(error);
+        } finally {
+            setIsAiWorking(false);
+        }
     };
 
     return (

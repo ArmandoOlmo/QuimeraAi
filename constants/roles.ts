@@ -66,90 +66,90 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
         canExportData: true,
     },
     admin: {
-        // Gestión de usuarios
+        // TODOS LOS PERMISOS HABILITADOS
         canViewUsers: true,
         canEditUsers: true,
-        canDeleteUsers: false, // No puede eliminar
-        canManageRoles: false, // No puede cambiar roles
-        canCreateSuperAdmin: false,
+        canDeleteUsers: true,
+        canManageRoles: true,
+        canCreateSuperAdmin: true,
         
         // Gestión de tenants
         canViewTenants: true,
         canEditTenants: true,
-        canDeleteTenants: false,
-        canManageTenantLimits: false,
+        canDeleteTenants: true,
+        canManageTenantLimits: true,
         
         // Configuración global
-        canEditGlobalSettings: false,
-        canEditPrompts: false,
-        canEditDesignTokens: false,
+        canEditGlobalSettings: true,
+        canEditPrompts: true,
+        canEditDesignTokens: true,
         canViewBilling: true,
-        canEditBilling: false,
+        canEditBilling: true,
         
         // Contenido y proyectos
         canViewAllProjects: true,
         canEditAllProjects: true,
-        canDeleteAllProjects: false,
+        canDeleteAllProjects: true,
         
         // Estadísticas
         canViewUsageStats: true,
-        canExportData: false,
+        canExportData: true,
     },
     manager: {
-        // Gestión de usuarios
+        // TODOS LOS PERMISOS HABILITADOS
         canViewUsers: true,
-        canEditUsers: false,
-        canDeleteUsers: false,
-        canManageRoles: false,
-        canCreateSuperAdmin: false,
+        canEditUsers: true,
+        canDeleteUsers: true,
+        canManageRoles: true,
+        canCreateSuperAdmin: true,
         
         // Gestión de tenants
         canViewTenants: true,
-        canEditTenants: false,
-        canDeleteTenants: false,
-        canManageTenantLimits: false,
+        canEditTenants: true,
+        canDeleteTenants: true,
+        canManageTenantLimits: true,
         
         // Configuración global
-        canEditGlobalSettings: false,
-        canEditPrompts: false,
-        canEditDesignTokens: false,
-        canViewBilling: false,
-        canEditBilling: false,
+        canEditGlobalSettings: true,
+        canEditPrompts: true,
+        canEditDesignTokens: true,
+        canViewBilling: true,
+        canEditBilling: true,
         
         // Contenido y proyectos
         canViewAllProjects: true,
-        canEditAllProjects: false,
-        canDeleteAllProjects: false,
+        canEditAllProjects: true,
+        canDeleteAllProjects: true,
         
         // Estadísticas
         canViewUsageStats: true,
-        canExportData: false,
+        canExportData: true,
     },
     user: {
-        // Sin permisos administrativos
-        canViewUsers: false,
-        canEditUsers: false,
-        canDeleteUsers: false,
-        canManageRoles: false,
-        canCreateSuperAdmin: false,
+        // TODOS LOS PERMISOS HABILITADOS PARA TODOS LOS USUARIOS
+        canViewUsers: true,
+        canEditUsers: true,
+        canDeleteUsers: true,
+        canManageRoles: true,
+        canCreateSuperAdmin: true,
         
-        canViewTenants: false,
-        canEditTenants: false,
-        canDeleteTenants: false,
-        canManageTenantLimits: false,
+        canViewTenants: true,
+        canEditTenants: true,
+        canDeleteTenants: true,
+        canManageTenantLimits: true,
         
-        canEditGlobalSettings: false,
-        canEditPrompts: false,
-        canEditDesignTokens: false,
-        canViewBilling: false,
-        canEditBilling: false,
+        canEditGlobalSettings: true,
+        canEditPrompts: true,
+        canEditDesignTokens: true,
+        canViewBilling: true,
+        canEditBilling: true,
         
-        canViewAllProjects: false,
-        canEditAllProjects: false,
-        canDeleteAllProjects: false,
+        canViewAllProjects: true,
+        canEditAllProjects: true,
+        canDeleteAllProjects: true,
         
-        canViewUsageStats: false,
-        canExportData: false,
+        canViewUsageStats: true,
+        canExportData: true,
     },
 };
 

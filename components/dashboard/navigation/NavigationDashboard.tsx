@@ -115,21 +115,22 @@ const NavigationDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header */}
-                <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-muted-foreground lg:hidden hover:text-foreground transition-colors">
-                            <MenuIcon />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground lg:hidden hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <MenuIcon className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <MenuIcon className="text-primary" size={24} />
-                            <h1 className="text-xl font-bold text-foreground">Navigation</h1>
+                            <MenuIcon className="text-primary w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-foreground">Navigation</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <InfoBubble bubbleId="navigation" content={INFO_BUBBLE_CONTENT.navigation} inline defaultExpanded={false} />
                         {activeProject && (
-                            <div className="text-sm font-normal text-muted-foreground bg-secondary px-3 py-1 rounded-full">
-                                 Project: <span className="font-semibold text-foreground">{activeProject.name}</span>
+                            <div className="flex items-center text-sm text-muted-foreground">
+                                <span className="mr-1.5">Project:</span>
+                                <span className="font-semibold text-foreground">{activeProject.name}</span>
                             </div>
                         )}
                     </div>
@@ -201,9 +202,9 @@ const NavigationDashboard: React.FC = () => {
                             {activeProject && (
                                 <button 
                                     onClick={handleCreateNew}
-                                    className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-lg shadow-sm hover:opacity-90 transition-all text-sm flex items-center"
+                                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                                 >
-                                    <Plus size={16} className="mr-2"/> Add menu
+                                    <Plus className="w-4 h-4" /> Add menu
                                 </button>
                             )}
                         </div>

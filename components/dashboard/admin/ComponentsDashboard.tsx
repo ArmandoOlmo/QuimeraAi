@@ -32,20 +32,20 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                 hiddenOnDesktop={activeTab === 'studio'}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
                     <div className="flex items-center">
                         {activeTab !== 'studio' && (
                             <button 
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="p-2 text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2"
+                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
                                 title="Open menu"
                             >
-                                <Menu />
+                                <Menu className="w-4 h-4" />
                             </button>
                         )}
-                        <div className="flex items-center space-x-2">
-                            <Puzzle className="text-editor-accent" />
-                            <h1 className="text-xl font-bold text-editor-text-primary">Components</h1>
+                        <div className="flex items-center gap-2">
+                            <Puzzle className="text-editor-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-editor-text-primary">Components</h1>
                         </div>
                     </div>
 
@@ -66,9 +66,9 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
 
                     <button 
                         onClick={onBack}
-                        className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                     >
-                        <ArrowLeft size={16} className="mr-1.5" />
+                        <ArrowLeft className="w-4 h-4" />
                         Back to Admin
                     </button>
                 </header>

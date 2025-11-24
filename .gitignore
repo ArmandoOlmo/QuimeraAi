@@ -10,10 +10,24 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+
+# Environment variables - SECURITY CRITICAL
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.development.local
+.env.production.local
+.env.test.local
 *.local
 
 # Cloud Build con secrets (si se crea)
 cloudbuild-secure.yaml
+
+# Backup files that might contain sensitive data
+*.backup
+.env.local.backup
 
 # Editor directories and files
 .vscode/*

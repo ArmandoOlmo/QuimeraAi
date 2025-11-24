@@ -1,13 +1,52 @@
 import { GoogleGenAI } from '@google/genai';
 
-// Helper para obtener la API key del proceso (después del build de Vite, esto será un string literal o null)
+// Helper para obtener la API key de las variables de entorno (Vite usa import.meta.env)
 const getProcessApiKey = (): string | null => {
-    if (typeof process === 'undefined') return null;
-    const key = process.env.API_KEY;
+    let key: string | undefined | null = null;
+    
+    try {
+        // Opción 1: Intentar obtener de import.meta.env (Vite standard para variables de entorno)
+        // Nota: Las variables definidas en vite.config.ts en 'define' no aparecen aquí,
+        // solo las variables de entorno con prefijo VITE_ que están disponibles en runtime
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            const metaEnv = import.meta.env as any;
+            key = metaEnv.VITE_GEMINI_API_KEY || 
+                  metaEnv.VITE_GOOGLE_AI_API_KEY ||
+                  metaEnv.GEMINI_API_KEY;
+        }
+    } catch (e) {
+        console.debug('Could not access import.meta.env', e);
+    }
+    
+    try {
+        // Opción 2: Intentar obtener de process.env (definido en vite.config.ts en 'define')
+        // Estas variables se reemplazan en tiempo de build como strings literales
+        if ((!key || key === 'null' || key === 'undefined' || key === '') && typeof process !== 'undefined' && process.env) {
+            const procEnv = process.env as any;
+            key = procEnv.GEMINI_API_KEY || 
+                  procEnv.API_KEY ||
+                  procEnv.VITE_GEMINI_API_KEY;
+        }
+    } catch (e) {
+        console.debug('Could not access process.env', e);
+    }
+    
     // Verificar que exista, no sea null, undefined, ni una cadena vacía
-    if (!key || key === 'null' || key === 'undefined') return null;
+    if (!key || key === 'null' || key === 'undefined' || key === '') {
+        return null;
+    }
+    
     const trimmed = String(key).trim();
-    return trimmed !== '' ? trimmed : null;
+    if (trimmed === '') {
+        return null;
+    }
+    
+    // Log para debugging (sin exponer la key completa)
+    if (trimmed.length > 10) {
+        console.debug(`✅ API Key encontrada (length: ${trimmed.length}, starts with: ${trimmed.substring(0, 8)}...)`);
+    }
+    
+    return trimmed;
 };
 
 let cachedApiKey: string | null = getProcessApiKey();

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
+import DashboardSidebar from '../DashboardSidebar';
 
 interface GlobalSEOSettingsProps {
     onBack: () => void;
@@ -8,6 +9,7 @@ interface GlobalSEOSettingsProps {
 const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
     const [activeTab, setActiveTab] = useState<'defaults' | 'templates' | 'verifications' | 'ai'>('defaults');
     const [isSaving, setIsSaving] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Default Settings State
     const [defaultLanguage, setDefaultLanguage] = useState('es');
@@ -33,38 +35,45 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-editor-bg">
-            {/* Header */}
-            <div className="bg-editor-panel-bg border-b border-editor-border px-6 py-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={onBack}
-                            className="p-2 hover:bg-editor-accent/10 rounded-lg transition-colors"
-                            title="Back to Super Admin"
+        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Header */}
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+                    <div className="flex items-center">
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+                            title="Open menu"
                         >
-                            <ArrowLeft className="w-5 h-5 text-editor-text-secondary" />
+                            <Menu className="w-4 h-4" />
                         </button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-editor-text-primary flex items-center gap-2">
-                                <Globe className="w-6 h-6" />
-                                Global SEO Settings
-                            </h1>
-                            <p className="text-editor-text-secondary mt-1">
-                                Configure system-wide SEO defaults and templates
-                            </p>
+                        <div className="flex items-center gap-2">
+                            <Globe className="text-editor-accent w-5 h-5" />
+                            <div>
+                                <h1 className="text-lg font-semibold text-editor-text-primary">Global SEO Settings</h1>
+                                <p className="text-xs text-editor-text-secondary hidden sm:block">Configure system-wide SEO defaults</p>
+                            </div>
                         </div>
                     </div>
-                    <button 
-                        onClick={handleSaveAll}
-                        disabled={isSaving}
-                        className="px-6 py-2 bg-editor-accent text-primary-foreground rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
-                    >
-                        <Save className="w-4 h-4" />
-                        {isSaving ? 'Saving...' : 'Save All Settings'}
-                    </button>
-                </div>
-            </div>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handleSaveAll}
+                            disabled={isSaving}
+                            className="h-9 px-4 bg-editor-accent text-white font-medium text-sm rounded-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 shadow-sm flex items-center gap-1.5"
+                        >
+                            <Save className="w-4 h-4" />
+                            {isSaving ? 'Saving...' : 'Save All'}
+                        </button>
+                        <button
+                            onClick={onBack}
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Admin
+                        </button>
+                    </div>
+                </header>
 
             {/* Tabs */}
             <div className="bg-editor-panel-bg border-b border-editor-border px-6">
@@ -479,6 +488,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                     )}
 
                 </div>
+            </div>
             </div>
         </div>
     );

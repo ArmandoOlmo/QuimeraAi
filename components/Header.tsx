@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 import { Box, Menu, X, ArrowRight } from 'lucide-react';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
@@ -97,6 +98,16 @@ const Header: React.FC<HeaderData> = ({
   const { previewRef } = useEditor();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Get design tokens with fallback to component colors
+  const { getColor } = useDesignTokens();
+  
+  // Merge Design Tokens with component colors
+  const actualColors = {
+    background: colors.background,
+    text: colors.text,
+    accent: getColor('primary.main', colors.accent),
+  };
 
   useEffect(() => {
     if (style === 'floating') {
@@ -119,10 +130,10 @@ const Header: React.FC<HeaderData> = ({
 
   // Visual State Calculations
   const isTransparent = style === 'sticky-transparent' && !isScrolled && !isMenuOpen;
-  const bgColor = isTransparent ? 'transparent' : colors.background;
+  const bgColor = isTransparent ? 'transparent' : actualColors.background;
   
   // Ensure contrast on transparent backgrounds by falling back to white if text is the default dark
-  const finalTextColor = (isTransparent && colors.text.toLowerCase() === '#e2e8f0') ? '#FFFFFF' : colors.text; 
+  const finalTextColor = (isTransparent && actualColors.text.toLowerCase() === '#e2e8f0') ? '#FFFFFF' : actualColors.text; 
   
   // Glass Effect
   const glassClasses = (glassEffect && !isTransparent) ? 'backdrop-blur-md bg-opacity-80 border-b border-white/10' : '';
@@ -136,14 +147,13 @@ const Header: React.FC<HeaderData> = ({
 
   const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
     <a href="#cta" className={`
-        inline-flex items-center justify-center font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 font-button
-        ${borderRadiusClasses[buttonBorderRadius]}
-        ${fullWidth ? 'w-full py-3' : 'px-6 py-2.5'}
+        inline-flex items-center justify-center font-semibold transition-all duration-300 hover:opacity-70 font-button
+        ${fullWidth ? 'w-full py-2' : ''}
     `}
-    style={{ backgroundColor: colors.accent, color: '#FFFFFF', boxShadow: `0 4px 14px 0 ${colors.accent}66` }}
+    style={{ color: actualColors.accent }}
     >
         {ctaText}
-        {!fullWidth && <ArrowRight size={16} className="ml-2" />}
+        <ArrowRight size={16} className="ml-2" />
     </a>
   );
 

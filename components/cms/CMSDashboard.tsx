@@ -178,27 +178,27 @@ const CMSDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header */}
-                <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
-                            <Menu />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <PenTool className="text-primary" size={24} />
-                            <h1 className="text-xl font-bold text-foreground">Content Manager</h1>
+                            <PenTool className="text-primary w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-foreground">Content Manager</h1>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 ml-auto flex-1 justify-end">
-                        {/* Búsqueda Desktop */}
-                        <div className="relative group max-w-md w-full hidden md:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                    <div className="flex items-center gap-2 ml-auto">
+                        {/* Búsqueda Desktop - Compacta */}
+                        <div className="relative group hidden md:block">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-4 h-4" />
                             <input 
                                 type="text" 
-                                placeholder="Search posts..." 
+                                placeholder="Search..." 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-secondary/50 border-transparent focus:bg-card focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
+                                className="w-40 focus:w-56 h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
                             />
                         </div>
 
@@ -228,9 +228,9 @@ const CMSDashboard: React.FC = () => {
                             ) : (
                                 <button
                                     onClick={() => setIsMobileSearchOpen(true)}
-                                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                    className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-md transition-colors"
                                 >
-                                    <Search size={20} />
+                                    <Search className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
@@ -239,18 +239,18 @@ const CMSDashboard: React.FC = () => {
                         {cmsPosts.length > 0 && (
                             <button 
                                 onClick={handleExport}
-                                className="hidden sm:flex px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-secondary/50 transition-colors items-center gap-1"
+                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                                 title="Export posts"
                             >
-                                <Download size={14} /> Export
+                                <Download className="w-4 h-4" />
                             </button>
                         )}
 
                         <button 
                             onClick={handleCreateNew}
-                            className="bg-yellow-400 text-black font-bold py-1.5 px-4 rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] hover:scale-105 transition-all flex items-center text-sm whitespace-nowrap"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         >
-                            <Plus size={18} className="mr-2" />
+                            <Plus className="w-4 h-4" />
                             <span className="hidden sm:inline">New Post</span>
                             <span className="sm:hidden">New</span>
                         </button>
@@ -353,24 +353,24 @@ const CMSDashboard: React.FC = () => {
                                 {/* Orden asc/desc */}
                                 <button
                                     onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                    className="p-2 bg-secondary/30 border border-border rounded-lg hover:bg-secondary/50 transition-colors"
+                                    className="h-9 w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
                                     title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                                 >
                                     {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
                                 </button>
 
                                 {/* Vista Grid/List */}
-                                <div className="flex bg-secondary/30 border border-border rounded-lg overflow-hidden">
+                                <div className="flex gap-1">
                                     <button
                                         onClick={() => setViewMode('grid')}
-                                        className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
+                                        className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                                         title="Grid View"
                                     >
                                         <Grid size={14} />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
+                                        className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                                         title="List View"
                                     >
                                         <List size={14} />

@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EditableComponentID, PreviewDevice, AnimationConfig } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { initialData } from '../../../data/initialData';
 import PreviewStatesSelector, { PreviewState } from './PreviewStatesSelector';
 import AnimatedPreviewWrapper from './AnimatedPreviewWrapper';
-import { Loader2, AlertCircle, FileQuestion } from 'lucide-react';
+import { Loader2, AlertCircle, FileQuestion, Type } from 'lucide-react';
 import Header from '../../Header';
 import Hero from '../../Hero';
+import HeroModern from '../../HeroModern';
+import HeroGradient from '../../HeroGradient';
+import HeroFitness from '../../HeroFitness';
 import Features from '../../Features';
 import Testimonials from '../../Testimonials';
 import CTASection from '../../CTASection';
@@ -21,6 +24,7 @@ import Newsletter from '../../Newsletter';
 import Video from '../../Video';
 import HowItWorks from '../../HowItWorks';
 import Footer from '../../Footer';
+import ChatbotWidget from '../../ChatbotWidget';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;
@@ -36,6 +40,12 @@ const widthClasses: Record<PreviewDevice, string> = {
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice }) => {
     const { componentStyles, customComponents, theme } = useEditor();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
+    const [renderKey, setRenderKey] = useState(0);
+    
+    // Force re-render when componentStyles change
+    React.useEffect(() => {
+        setRenderKey(prev => prev + 1);
+    }, [componentStyles, selectedComponentId]);
     
     const isCustom = !Object.keys(componentStyles).includes(selectedComponentId);
     
@@ -97,15 +107,25 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             return <div className="text-editor-text-secondary">Preview not available.</div>;
         }
 
+        const heroVariant = (styles as any).heroVariant;
+        console.log('🎨 Rendering component:', baseComponent, 'heroVariant:', heroVariant, 'Full styles:', styles);
+
         switch (baseComponent) {
             case 'header':
                 return <Header {...mockContent as any} {...styles} isPreviewMode={true} />;
             case 'hero':
-                return <Hero {...mockContent as any} {...styles} borderRadius={theme.buttonBorderRadius} />;
+                console.log('🔍 Hero check: heroVariant=', heroVariant);
+                return heroVariant === 'modern'
+                    ? <HeroModern {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
+                    : heroVariant === 'gradient'
+                        ? <HeroGradient {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
+                        : heroVariant === 'fitness'
+                            ? <HeroFitness {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
+                            : <Hero {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />;
             case 'features':
                 return <Features {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'testimonials':
-                return <Testimonials {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Testimonials {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} avatarBorderWidth={styles.avatarBorderWidth} avatarBorderColor={styles.avatarBorderColor} />;
             case 'cta':
                  return <CTASection {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'services':
@@ -130,6 +150,34 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <HowItWorks {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'footer':
                 return <Footer {...mockContent as any} {...styles} />;
+            case 'chatbot':
+                return <ChatbotWidget isPreview={true} />;
+            case 'typography':
+                return (
+                    <div className="p-8 text-center">
+                        <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="text-editor-text-secondary mb-4">
+                                <Type size={48} className="mx-auto mb-4 text-editor-accent" />
+                                <h3 className="text-xl font-bold text-editor-text-primary mb-2">Global Typography Settings</h3>
+                                <p className="text-sm">Typography is configured globally through Theme Settings, not as an individual component.</p>
+                            </div>
+                            <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border text-left space-y-4">
+                                <div>
+                                    <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-header)' }}>Header Font Preview</h1>
+                                    <p className="text-sm text-editor-text-secondary">Using: {theme.fontFamilyHeader}</p>
+                                </div>
+                                <div>
+                                    <p className="text-lg mb-2" style={{ fontFamily: 'var(--font-body)' }}>Body font preview with some sample text to show how it looks in paragraphs and longer content sections.</p>
+                                    <p className="text-sm text-editor-text-secondary">Using: {theme.fontFamilyBody}</p>
+                                </div>
+                                <div>
+                                    <button className="px-6 py-3 bg-editor-accent text-editor-bg rounded-md font-semibold" style={{ fontFamily: 'var(--font-button)' }}>Button Font Preview</button>
+                                    <p className="text-sm text-editor-text-secondary mt-2">Using: {theme.fontFamilyButton}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
             default:
                 return <div className="text-editor-text-secondary p-8 text-center">Preview not available for this component.</div>;
         }
@@ -147,6 +195,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                     {renderStateOverlay()}
                     {/* This wrapper mimics the structure of LandingPage.tsx for font variables */}
                     <div 
+                        key={renderKey}
                         data-component-preview={selectedComponentId}
                         className="relative"
                         style={{

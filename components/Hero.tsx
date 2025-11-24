@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HeroData, PaddingSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, FontSize } from '../types';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -104,13 +105,39 @@ const Hero: React.FC<HeroProps> = ({
     ],
     statsValueColor, statsLabelColor
 }) => {
+  console.log('🎯 Hero Classic rendering with imageUrl:', imageUrl);
+  // Get design tokens with fallback to component colors
+  const { getColor, colors: tokenColors } = useDesignTokens();
+  
+  // Merge Design Tokens with component colors (Design Tokens take priority)
+  const actualColors = {
+    primary: getColor('primary.main', colors.primary),
+    secondary: getColor('secondary.main', colors.secondary),
+    background: colors.background, // Keep component-specific background
+    text: colors.text,
+    heading: colors.heading,
+    buttonBackground: getColor('primary.main', colors.buttonBackground),
+    buttonText: colors.buttonText,
+    secondaryButtonBackground: colors.secondaryButtonBackground,
+    secondaryButtonText: colors.secondaryButtonText,
+  };
+  // Ensure headline is always a string - handle all edge cases
+  let safeHeadline: string;
+  if (typeof headline === 'string' && headline.length > 0) {
+    safeHeadline = headline;
+  } else if (headline && typeof headline.toString === 'function') {
+    safeHeadline = String(headline);
+  } else {
+    safeHeadline = 'Welcome';
+  }
+  
   // Create a modified headline for styling the gradient part specifically
-  const styledHeadline = headline.replace(
+  const styledHeadline = safeHeadline.replace(
       /(<span.*?>)(.*?)(<\/span>)/,
-      `<span style="background-image: linear-gradient(to right, ${colors.primary}, ${colors.secondary});" class="text-transparent bg-clip-text">$2</span>`
+      `<span style="background-image: linear-gradient(to right, ${actualColors.primary}, ${actualColors.secondary});" class="text-transparent bg-clip-text">$2</span>`
   );
   
-  const glowStyle = imageStyle === 'glow' && imageDropShadow ? { boxShadow: `0 10px 15px -3px ${colors.primary}40, 0 4px 6px -4px ${colors.primary}40` } : {};
+  const glowStyle = imageStyle === 'glow' && imageDropShadow ? { boxShadow: `0 10px 15px -3px ${actualColors.primary}40, 0 4px 6px -4px ${actualColors.primary}40` } : {};
   const shadowClass = imageDropShadow && ['default', 'rounded-full', 'glow'].includes(imageStyle) ? 'shadow-2xl' : '';
   
   const imageBorderRadiusClass = imageStyle === 'default' ? borderRadiusClasses[imageBorderRadius] : '';
@@ -162,7 +189,7 @@ const Hero: React.FC<HeroProps> = ({
   return (
     <section 
       className={`relative container mx-auto flex flex-col items-center ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} ${imagePosition === 'left' ? 'md:flex-row-reverse' : 'md:flex-row'} ${sectionBorderClass}`}
-      style={{ backgroundColor: colors.background, borderColor: sectionBorderColor }}
+      style={{ backgroundColor: actualColors.background, borderColor: sectionBorderColor }}
     >
       <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
       <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
@@ -172,13 +199,13 @@ const Hero: React.FC<HeroProps> = ({
         {showBadge && (
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
                style={{ 
-                 backgroundColor: badgeBackgroundColor || `${colors.primary}15`, 
-                 borderColor: badgeColor ? `${badgeColor}30` : `${colors.primary}30` 
+                 backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`, 
+                 borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30` 
                }}>
-            <span className="text-sm font-semibold animate-pulse" style={{ color: badgeColor || colors.primary }}>
+            <span className="text-sm font-semibold animate-pulse" style={{ color: badgeColor || actualColors.primary }}>
               {badgeIcon}
             </span>
-            <span className="text-sm font-semibold" style={{ color: badgeColor || colors.primary }}>
+            <span className="text-sm font-semibold" style={{ color: badgeColor || actualColors.primary }}>
               {badgeText}
             </span>
           </div>
@@ -186,19 +213,19 @@ const Hero: React.FC<HeroProps> = ({
         
         <h1 
             className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
-            style={{ color: colors.heading }}
+            style={{ color: actualColors.heading }}
             dangerouslySetInnerHTML={{ __html: styledHeadline }}
         />
         <p 
             className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body`}
-            style={{ color: colors.text }}
+            style={{ color: actualColors.text }}
         >
           {subheadline}
         </p>
         <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a 
             href="#cta" 
-            style={{ backgroundColor: colors.buttonBackground || colors.primary, color: colors.buttonText || '#ffffff' }} 
+            style={{ backgroundColor: actualColors.buttonBackground || actualColors.primary, color: actualColors.buttonText || '#ffffff' }} 
             className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
@@ -207,7 +234,7 @@ const Hero: React.FC<HeroProps> = ({
           <a 
             href="#features" 
             className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
-            style={{ backgroundColor: colors.secondaryButtonBackground || '#334155', color: colors.secondaryButtonText || '#ffffff' }}
+            style={{ backgroundColor: actualColors.secondaryButtonBackground || '#334155', color: actualColors.secondaryButtonText || '#ffffff' }}
           >
             <span className="relative z-10">{secondaryCta}</span>
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -219,10 +246,10 @@ const Hero: React.FC<HeroProps> = ({
           <div className={`flex flex-wrap gap-6 mt-8 justify-center ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'} opacity-90`}>
             {stats.map((stat, index) => (
               <div key={index} className="text-center md:text-left">
-                <div className="text-2xl md:text-3xl font-bold font-header" style={{ color: statsValueColor || colors.primary }}>
+                <div className="text-2xl md:text-3xl font-bold font-header" style={{ color: statsValueColor || actualColors.primary }}>
                   {stat.value}
                 </div>
-                <div className="text-xs md:text-sm font-body" style={{ color: statsLabelColor || colors.text, opacity: 0.7 }}>
+                <div className="text-xs md:text-sm font-body" style={{ color: statsLabelColor || actualColors.text, opacity: 0.7 }}>
                   {stat.label}
                 </div>
               </div>

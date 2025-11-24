@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import Modal from '../ui/Modal';
 import { 
@@ -25,6 +26,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
+    const { t } = useTranslation();
     const { user, userDocument, setUserDocument } = useEditor();
     const [name, setName] = useState('');
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -79,7 +81,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             onClose();
 
         } catch (err) {
-            setError('Failed to update profile. Please try again.');
+            setError(t('profile.errors.updateFailed'));
             console.error(err);
         } finally {
             setIsLoading(false);
@@ -107,9 +109,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
 
         } catch (err: any) {
             if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                setError('Incorrect password. Please try again.');
+                setError(t('profile.errors.incorrectPassword'));
             } else {
-                setError('Failed to delete account. Please try again later.');
+                setError(t('profile.errors.deleteFailed'));
             }
             console.error(err);
         } finally {
@@ -124,7 +126,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm">
                     <h2 className="text-xl font-bold text-foreground flex items-center">
-                        Settings & Profile
+                        {t('profile.title')}
                     </h2>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
                         <X size={20}/>
@@ -160,7 +162,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                             <h3 className="font-bold text-2xl text-foreground">{name || 'User'}</h3>
                             <p className="text-sm text-muted-foreground">{user?.email}</p>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 mt-2">
-                                Pro Plan
+                                {t('profile.proPlan')}
                             </span>
                         </div>
                     </div>
@@ -168,7 +170,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     {/* Form Section */}
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="display-name" className="block text-sm font-medium text-muted-foreground mb-2">Display Name</label>
+                            <label htmlFor="display-name" className="block text-sm font-medium text-muted-foreground mb-2">{t('profile.displayName')}</label>
                             <input 
                                 id="display-name" 
                                 type="text" 
@@ -190,7 +192,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                             ) : (
                                 <Save size={18} className="mr-2" />
                             )}
-                            Save Changes
+                            {t('profile.saveChanges')}
                         </button>
                     </div>
 
@@ -198,10 +200,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     <div className="mt-10 pt-8 border-t border-border">
                         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
                             <h3 className="font-bold text-destructive flex items-center">
-                                <Trash2 size={18} className="mr-2" /> Danger Zone
+                                <Trash2 size={18} className="mr-2" /> {t('profile.dangerZone')}
                             </h3>
                             <p className="text-sm text-muted-foreground mt-2 mb-4">
-                                Once you delete your account, there is no going back. Please be certain.
+                                {t('profile.deleteWarning')}
                             </p>
 
                             {!isDeleteConfirm ? (
@@ -209,7 +211,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     onClick={() => setIsDeleteConfirm(true)} 
                                     className="text-sm font-bold text-destructive hover:text-destructive/80 hover:underline transition-colors"
                                 >
-                                    Delete My Account
+                                    {t('profile.deleteAccount')}
                                 </button>
                             ) : (
                                 <form onSubmit={handleDeleteAccount} className="space-y-4 animate-fade-in-up">
@@ -218,7 +220,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                         value={deletePassword} 
                                         onChange={e => setDeletePassword(e.target.value)} 
                                         required 
-                                        placeholder="Confirm with your password" 
+                                        placeholder={t('profile.confirmWithPassword')}
                                         className="w-full bg-background text-foreground p-2 rounded-lg border border-destructive/50 focus:ring-2 focus:ring-destructive focus:outline-none text-sm" 
                                     />
                                      <div className="flex items-center space-x-4">
@@ -227,14 +229,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                             disabled={isLoading} 
                                             className="bg-destructive text-destructive-foreground font-bold py-2 px-4 rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-50 text-sm"
                                         >
-                                            Confirm Deletion
+                                            {t('profile.confirmDeletion')}
                                          </button>
                                          <button 
                                             type="button" 
                                             onClick={() => setIsDeleteConfirm(false)} 
                                             className="text-sm text-muted-foreground hover:text-foreground"
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                          </button>
                                      </div>
                                 </form>

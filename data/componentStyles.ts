@@ -3,6 +3,7 @@ import { ComponentStyles } from '../types';
 
 export const componentStyles: ComponentStyles = {
   hero: {
+    heroVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     imageStyle: 'default',
@@ -48,16 +49,24 @@ export const componentStyles: ComponentStyles = {
     },
   },
   testimonials: {
+    testimonialsVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
     descriptionFontSize: 'md',
+    borderRadius: 'xl',
+    cardShadow: 'lg',
+    borderStyle: 'solid',
+    cardPadding: 32,
+    avatarBorderWidth: 2,
+    avatarBorderColor: '#4f46e5',
     colors: {
       background: 'rgba(30, 41, 59, 0.5)',
       accent: '#4f46e5',
       borderColor: '#334155',
       text: '#d1d5db',
       heading: '#F9FAFB',
+      cardBackground: '#1f2937',
     },
   },
   cta: {
@@ -75,6 +84,7 @@ export const componentStyles: ComponentStyles = {
     },
   },
   services: {
+    servicesVariant: 'cards',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -88,6 +98,7 @@ export const componentStyles: ComponentStyles = {
     },
   },
   team: {
+    teamVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -96,18 +107,39 @@ export const componentStyles: ComponentStyles = {
       background: '#0f172a',
       text: '#94a3b8',
       heading: '#F9FAFB',
+      accent: '#4f46e5',
+      cardBackground: 'rgba(30, 41, 59, 0.5)',
     },
   },
   slideshow: {
+    slideshowVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
+    borderRadius: 'xl',
+    autoPlaySpeed: 5000,
+    transitionEffect: 'slide',
+    transitionDuration: 500,
+    showArrows: true,
+    showDots: true,
+    arrowStyle: 'rounded',
+    dotStyle: 'circle',
+    kenBurnsIntensity: 'medium',
+    thumbnailSize: 80,
+    showCaptions: false,
     colors: {
       background: '#1e293b',
       heading: '#F9FAFB',
+      arrowBackground: 'rgba(0, 0, 0, 0.5)',
+      arrowText: '#ffffff',
+      dotActive: '#ffffff',
+      dotInactive: 'rgba(255, 255, 255, 0.5)',
+      captionBackground: 'rgba(0, 0, 0, 0.7)',
+      captionText: '#ffffff',
     },
   },
   pricing: {
+    pricingVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -120,19 +152,26 @@ export const componentStyles: ComponentStyles = {
       heading: '#F9FAFB',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
     }
   },
   faq: {
+    faqVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
     descriptionFontSize: 'md',
+    borderRadius: 'xl',
     colors: {
       background: '#1e293b',
       accent: '#4f46e5',
       borderColor: '#334155',
       text: '#94a3b8',
       heading: '#F9FAFB',
+      cardBackground: 'rgba(30, 41, 59, 0.5)',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
     }
   },
   portfolio: {
@@ -149,10 +188,13 @@ export const componentStyles: ComponentStyles = {
     },
   },
   leads: {
+    leadsVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
     descriptionFontSize: 'md',
+    cardBorderRadius: 'xl',
+    buttonBorderRadius: 'md',
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -161,6 +203,12 @@ export const componentStyles: ComponentStyles = {
       heading: '#F9FAFB',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      cardBackground: '#1e293b',
+      inputBackground: '#0f172a',
+      inputText: '#F9FAFB',
+      inputBorder: '#334155',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
     },
   },
   newsletter: {
@@ -235,5 +283,17 @@ export const componentStyles: ComponentStyles = {
       accent: '#4f46e5',
       border: 'transparent',
     },
+  },
+  chatbot: {
+    // Chatbot is configured through AI Assistant Dashboard
+    // This placeholder ensures the component can be selected in Studio
+    isConfigurable: false,
+    configLocation: 'AI Assistant Dashboard',
+  },
+  typography: {
+    // Typography is configured globally through Theme Settings
+    // This placeholder ensures the component can be selected in Studio
+    isConfigurable: false,
+    configLocation: 'Theme Settings',
   },
 };

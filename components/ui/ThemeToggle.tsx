@@ -18,17 +18,17 @@ const ThemeToggle: React.FC = () => {
 
   const getIcon = () => {
       switch(themeMode) {
-          case 'light': return <Sun className="h-6 w-6" />;
-          case 'dark': return <Moon className="h-6 w-6" />;
-          case 'black': return <Circle className="h-6 w-6 fill-current" />; // Filled circle for black mode
+          case 'light': return <Sun className="w-4 h-4" />;
+          case 'dark': return <Moon className="w-4 h-4" />;
+          case 'black': return <Circle className="w-4 h-4 fill-current" />; // Filled circle for black mode
       }
   };
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border"
-      title={`Current: ${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} Mode. Click to cycle.`}
+      className="h-9 w-9 flex items-center justify-center rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+      title={`${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} Mode`}
     >
       <span className="sr-only">Toggle theme</span>
       {getIcon()}

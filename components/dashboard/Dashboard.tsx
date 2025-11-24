@@ -219,15 +219,15 @@ const Dashboard: React.FC = () => {
        
        <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Standardized Header */}
-          <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
+          <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
              <div className="flex items-center gap-4">
                 <button 
                    onClick={() => setIsMobileMenuOpen(true)} 
-                   className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
+                   className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
                    aria-label="Open navigation menu"
                    aria-expanded={isMobileMenuOpen}
                 >
-                   <Menu />
+                   <Menu className="w-4 h-4" />
                 </button>
                 <div className="flex items-center gap-2">
                     <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
                             placeholder={t('dashboard.searchProjects')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border-transparent focus:bg-card focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm focus:ring-2 focus:ring-primary/30"
+                            className="w-full bg-transparent border border-border/30 focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
                             aria-label={t('dashboard.searchProjects')}
                         />
                     </div>
@@ -265,10 +265,10 @@ const Dashboard: React.FC = () => {
 
                 {/* View Mode Toggle - Only on Websites view */}
                 {isWebsites && (
-                    <div className="hidden sm:flex items-center gap-1 bg-secondary/50 rounded-lg p-1" role="group" aria-label="View mode">
+                    <div className="hidden sm:flex items-center gap-1" role="group" aria-label="View mode">
                         <button 
                             onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                             aria-label={t('dashboard.gridView')}
                             aria-pressed={viewMode === 'grid'}
                         >
@@ -276,7 +276,7 @@ const Dashboard: React.FC = () => {
                         </button>
                         <button 
                             onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                             aria-label={t('dashboard.listView')}
                             aria-pressed={viewMode === 'list'}
                         >
@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
                                 setSortOrder('desc');
                             }
                         }}
-                        className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm"
+                        className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
                     >
                         <ArrowUpDown size={14} aria-hidden="true" />
@@ -314,22 +314,22 @@ const Dashboard: React.FC = () => {
                     <>
                         <button 
                             onClick={handleExportAll}
-                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm"
+                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                             title={t('common.export')}
                             aria-label={t('dashboard.exportAllProjects')}
                         >
-                            <Download size={14} aria-hidden="true" />
+                            <Download className="w-4 h-4" aria-hidden="true" />
                             <span className="hidden lg:inline">{t('common.export')}</span>
                         </button>
                         
                         <button 
                             onClick={handleImportClick}
                             disabled={isImporting}
-                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm disabled:opacity-50"
+                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                             title={t('common.import')}
                             aria-label={t('dashboard.importProjects')}
                         >
-                            <Upload size={14} aria-hidden="true" />
+                            <Upload className="w-4 h-4" aria-hidden="true" />
                             <span className="hidden lg:inline">{isImporting ? t('common.importing') : t('common.import')}</span>
                         </button>
                         
@@ -354,10 +354,10 @@ const Dashboard: React.FC = () => {
 
                 <button 
                     onClick={() => setIsOnboardingOpen(true)}
-                    className="bg-primary text-white font-bold py-1.5 px-4 rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] hover:scale-105 transition-all flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                     aria-label="Create new project"
                 >
-                    <Plus size={18} className="mr-2" aria-hidden="true" />
+                    <Plus className="w-4 h-4" aria-hidden="true" />
                     <span className="hidden sm:inline">New Project</span>
                     <span className="sm:hidden">New</span>
                 </button>

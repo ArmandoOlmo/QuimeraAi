@@ -2,12 +2,29 @@
 # This file defines the build and deployment process for Google Cloud Run
 
 steps:
-  # Step 1: Build the container image with API key
+  # Step 1: Build the container image with API keys
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      # Google Gemini API
       - '--build-arg'
       - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
+      # Firebase Configuration
+      - '--build-arg'
+      - 'VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_STORAGE_BUCKET=${_VITE_FIREBASE_STORAGE_BUCKET}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${_VITE_FIREBASE_MESSAGING_SENDER_ID}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}'
+      - '--build-arg'
+      - 'VITE_FIREBASE_MEASUREMENT_ID=${_VITE_FIREBASE_MEASUREMENT_ID}'
+      # Image tags
       - '-t'
       - 'gcr.io/$PROJECT_ID/quimeraai:$COMMIT_SHA'
       - '-t'
@@ -45,8 +62,20 @@ steps:
 
 # Substitutions (valores por defecto)
 substitutions:
+  # Google Gemini API (REQUERIDA)
   _VITE_GEMINI_API_KEY: ''  # Debe proporcionarse durante el deploy
-  _REGION: 'us-central1'    # Región por defecto
+  
+  # Firebase Configuration (OPCIONAL - tiene fallbacks en el código)
+  _VITE_FIREBASE_API_KEY: ''
+  _VITE_FIREBASE_AUTH_DOMAIN: ''
+  _VITE_FIREBASE_PROJECT_ID: ''
+  _VITE_FIREBASE_STORAGE_BUCKET: ''
+  _VITE_FIREBASE_MESSAGING_SENDER_ID: ''
+  _VITE_FIREBASE_APP_ID: ''
+  _VITE_FIREBASE_MEASUREMENT_ID: ''
+  
+  # Región de deployment
+  _REGION: 'us-central1'
 
 # Images to push to Container Registry
 images:

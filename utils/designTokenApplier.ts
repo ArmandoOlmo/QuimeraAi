@@ -19,13 +19,13 @@ export function applyTokensToComponent(
         if (tokens.colors) {
             // Map common color properties to tokens
             if (applied.colors.primary) {
-                applied.colors.primary = tokens.colors.primary?.[500] || applied.colors.primary;
+                applied.colors.primary = tokens.colors.primary?.main || applied.colors.primary;
             }
             if (applied.colors.secondary) {
-                applied.colors.secondary = tokens.colors.secondary?.[500] || applied.colors.secondary;
+                applied.colors.secondary = tokens.colors.secondary?.main || applied.colors.secondary;
             }
             if (applied.colors.accent) {
-                applied.colors.accent = tokens.colors.accent?.[500] || applied.colors.accent;
+                applied.colors.accent = tokens.colors.primary?.main || applied.colors.accent;
             }
             if (applied.colors.background) {
                 applied.colors.background = tokens.colors.neutral?.[50] || applied.colors.background;
@@ -193,11 +193,22 @@ export function replaceColorsWithTokens(
     const findClosestToken = (color: string): string | null => {
         if (!color || !color.startsWith('#')) return null;
 
-        // Try to find exact match
-        for (const [colorName, shades] of Object.entries(tokens.colors || {})) {
-            for (const [shade, tokenColor] of Object.entries(shades)) {
+        // Try to find exact match in ColorToken colors (main/light/dark)
+        const colorTokenNames = ['primary', 'secondary', 'success', 'warning', 'error', 'info'];
+        for (const colorName of colorTokenNames) {
+            const colorToken = tokens.colors[colorName as keyof typeof tokens.colors];
+            if (colorToken && typeof colorToken === 'object' && 'main' in colorToken) {
+                if (colorToken.main === color) return `tokens.colors.${colorName}.main`;
+                if (colorToken.light === color) return `tokens.colors.${colorName}.light`;
+                if (colorToken.dark === color) return `tokens.colors.${colorName}.dark`;
+            }
+        }
+
+        // Try to find exact match in ColorScale (neutral)
+        if (tokens.colors.neutral) {
+            for (const [shade, tokenColor] of Object.entries(tokens.colors.neutral)) {
                 if (tokenColor === color) {
-                    return `tokens.colors.${colorName}.${shade}`;
+                    return `tokens.colors.neutral.${shade}`;
                 }
             }
         }

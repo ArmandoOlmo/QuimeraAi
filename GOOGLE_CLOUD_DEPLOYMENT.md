@@ -38,11 +38,10 @@ Asegúrate de tener tu API key de Google Gemini lista. La obtienes en:
 # Desde la raíz del proyecto
 gcloud run deploy quimeraai \
   --source . \
-  --build-arg VITE_GEMINI_API_KEY=tu_api_key_aqui \
+  --set-build-env-vars VITE_GEMINI_API_KEY=tu_api_key_aqui \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
-  --port 8080 \
   --memory 512Mi
 ```
 
@@ -172,7 +171,7 @@ Para actualizar la aplicación después de hacer cambios:
 # Con gcloud directo
 gcloud run deploy quimeraai \
   --source . \
-  --build-arg VITE_GEMINI_API_KEY=tu_api_key_aqui \
+  --set-build-env-vars VITE_GEMINI_API_KEY=tu_api_key_aqui \
   --platform managed \
   --region us-central1
 
@@ -220,7 +219,7 @@ gcloud run services update quimeraai \
 **Causa:** La API key no se pasó correctamente durante el build.
 
 **Solución:**
-1. Verifica que estás usando `--build-arg VITE_GEMINI_API_KEY=tu_api_key`
+1. Verifica que estás usando `--set-build-env-vars VITE_GEMINI_API_KEY=tu_api_key`
 2. Asegúrate de que la API key es válida y no ha expirado
 3. Verifica que el Dockerfile tiene las líneas `ARG` y `ENV`
 

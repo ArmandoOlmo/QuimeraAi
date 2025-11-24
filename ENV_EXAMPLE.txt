@@ -1,28 +1,66 @@
 # ===========================================
 # QuimeraAI - Environment Variables Example
 # ===========================================
-# Copy this content to .env.local
+# INSTRUCTIONS:
+# 1. Copy this file to .env.local
+# 2. Replace all placeholder values with your actual keys
+# 3. NEVER commit .env.local to version control
+# 4. Use different keys for development and production
 
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_api_key_here
+# ===========================================
+# Firebase Configuration (REQUIRED)
+# ===========================================
+# Get these from: https://console.firebase.google.com
+# Project Settings > General > Your apps > Firebase SDK snippet
+
+VITE_FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
-VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef123456
+VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef123456789012
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
-# AI API Keys
-VITE_OPENAI_API_KEY=sk-proj-...
-VITE_ANTHROPIC_API_KEY=sk-ant-...
-# Google Gemini API Key (usa cualquiera de estos nombres)
-VITE_GEMINI_API_KEY=AIza...
-VITE_GOOGLE_AI_API_KEY=AIza...
-# Nota: Para deployment, usa VITE_GEMINI_API_KEY o VITE_GOOGLE_AI_API_KEY
+# ===========================================
+# Google Gemini API (REQUIRED)
+# ===========================================
+# Get your API key from: https://aistudio.google.com/app/apikey
+# Use VITE_GEMINI_API_KEY (recommended) or VITE_GOOGLE_AI_API_KEY
 
-# Sentry Error Tracking (Optional)
-VITE_SENTRY_DSN=https://examplePublicKey@o0.ingest.sentry.io/0
-VITE_APP_VERSION=1.0.0
+VITE_GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Alternative name (if you prefer):
+# VITE_GOOGLE_AI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-# Environment
+# ===========================================
+# Other AI API Keys (OPTIONAL)
+# ===========================================
+# Only needed if you integrate other AI services
+
+# VITE_OPENAI_API_KEY=sk-proj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# VITE_ANTHROPIC_API_KEY=sk-ant-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# ===========================================
+# Monitoring & Analytics (OPTIONAL)
+# ===========================================
+# Sentry for error tracking
+# Get DSN from: https://sentry.io
+
+# VITE_SENTRY_DSN=https://examplePublicKey@o0.ingest.sentry.io/0
+# VITE_APP_VERSION=1.0.0
+
+# ===========================================
+# Environment Settings
+# ===========================================
 VITE_ENVIRONMENT=development
+
+# ===========================================
+# SECURITY NOTES:
+# ===========================================
+# - All variables with VITE_ prefix are exposed to the client (browser)
+# - Never commit .env.local or any .env file with real keys
+# - Configure API restrictions in Google Cloud Console
+# - Use Firebase Security Rules to protect your database
+# - Rotate keys periodically
+# - Use different keys for dev/staging/production
+# ===========================================
 

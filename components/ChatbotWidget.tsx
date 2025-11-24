@@ -6,6 +6,7 @@ import { useEditor } from '../contexts/EditorContext';
 import { Modality, LiveServerMessage } from '@google/genai';
 import { Lead } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
+import { logApiCall } from '../services/apiLoggingService';
 
 // Note: In a real production environment, the API Key should be proxied through a backend
 // to prevent exposure. This demo relies on the client-selected key (env or AI Studio).
@@ -116,7 +117,7 @@ const calculateLeadScore = (
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
     isPreview = false
 }) => {
-    const { aiAssistantConfig, addLead, hasApiKey, promptForKeySelection, handleApiError, activeProject } = useEditor();
+    const { aiAssistantConfig, addLead, hasApiKey, promptForKeySelection, handleApiError, activeProject, user } = useEditor();
     
     // Get appearance config with defaults
     const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
@@ -375,10 +376,21 @@ Respond helpfully and naturally. Keep responses concise but informative.
             }));
 
             const result = await genai.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: 'gemini-2.5-flash',
                 systemInstruction: systemContext,
                 contents: conversationHistory
             });
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: 'gemini-2.5-flash',
+                    feature: 'chatbot-widget',
+                    success: true
+                });
+            }
 
             const botResponse = result.response.text();
             setMessages(prev => [...prev, { role: 'model', text: botResponse }]);
@@ -386,7 +398,18 @@ Respond helpfully and naturally. Keep responses concise but informative.
             // Check if we should trigger lead capture after this message
             setTimeout(() => checkLeadCaptureThreshold(), 500);
 
-        } catch (error) {
+        } catch (error: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: 'gemini-2.5-flash',
+                    feature: 'chatbot-widget',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error("Error:", error);
             setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error. Please try again.' }]);

@@ -118,31 +118,31 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                    <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
                             <button 
                                 onClick={onBack}
-                                className="p-2 text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2"
+                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors"
                                 title="Back to Admin"
                             >
-                                <ArrowLeft />
+                                <ArrowLeft className="w-4 h-4" />
                             </button>
-                            <div className="flex items-center space-x-2">
-                                <Bot className="text-editor-accent" />
-                                <h1 className="text-xl font-bold text-editor-text-primary">LLM Prompt Management</h1>
+                            <div className="flex items-center gap-2">
+                                <Bot className="text-editor-accent w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-editor-text-primary">LLM Prompt Management</h1>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center gap-1">
                             <button 
                                 onClick={handleCreate}
-                                className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-accent text-editor-bg hover:bg-editor-accent-hover transition-colors"
+                                className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                             >
-                                <Plus size={16} className="mr-1.5" />
-                                Create New Prompt
+                                <Plus className="w-4 h-4" />
+                                Create Prompt
                             </button>
                             <button 
                                 onClick={onBack}
-                                className="hidden sm:flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                             >
                                 <ArrowLeft size={16} className="mr-1.5" />
                                 Back to Admin

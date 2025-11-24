@@ -51,12 +51,10 @@ const InfoBubble: React.FC<InfoBubbleProps> = ({
       return (
         <button
           onClick={handleReopen}
-          className="hidden md:flex items-center gap-1.5 bg-gradient-to-br from-purple-600 to-yellow-400 rounded-lg px-2.5 py-1.5 shadow-md hover:shadow-lg transition-all hover:scale-105 relative group"
+          className="hidden md:flex h-9 w-9 items-center justify-center rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 group"
           title="Show tips"
         >
-          <img src={QUIMERA_LOGO} alt="Tips" className="w-4 h-4 object-contain" />
-          <span className="text-white font-bold text-xs">💡</span>
-          <div className="absolute inset-0 rounded-lg bg-purple-500/30 animate-ping opacity-75 group-hover:opacity-0"></div>
+          <span className="text-base">💡</span>
         </button>
       );
     }
@@ -65,12 +63,10 @@ const InfoBubble: React.FC<InfoBubbleProps> = ({
       return (
         <button
           onClick={handleToggleExpand}
-          className="hidden md:flex items-center gap-1.5 bg-gradient-to-br from-purple-600 to-yellow-400 rounded-lg px-2.5 py-1.5 shadow-md hover:shadow-lg transition-all hover:scale-105"
+          className="hidden md:flex h-9 w-9 items-center justify-center rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
           title="Expand tips"
         >
-          <img src={QUIMERA_LOGO} alt="Tips" className="w-4 h-4 object-contain" />
-          <span className="text-white font-bold text-xs">Tips</span>
-          <Maximize2 size={11} className="text-white/80" />
+          <span className="text-base">💡</span>
         </button>
       );
     }
@@ -80,11 +76,9 @@ const InfoBubble: React.FC<InfoBubbleProps> = ({
       <div className="relative hidden md:block">
         <button
           onClick={handleToggleExpand}
-          className="flex items-center gap-1.5 bg-gradient-to-br from-purple-600 to-yellow-400 rounded-lg px-2.5 py-1.5 shadow-md hover:shadow-lg transition-all"
+          className="h-9 w-9 flex items-center justify-center rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
         >
-          <img src={QUIMERA_LOGO} alt="Tips" className="w-4 h-4 object-contain" />
-          <span className="text-white font-bold text-xs">Tips</span>
-          <Minimize2 size={11} className="text-white/80" />
+          <span className="text-base">💡</span>
         </button>
         
         {/* Dropdown panel */}

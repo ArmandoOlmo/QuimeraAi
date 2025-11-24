@@ -332,10 +332,10 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
 
              <div className="flex-1 flex flex-col overflow-hidden relative bg-[#f6f6f7] dark:bg-background black:bg-background">
                 {/* Header */}
-                <header className="h-[72px] px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                         <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-muted-foreground lg:hidden">
-                            <MenuIcon />
+                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
+                            <MenuIcon className="w-4 h-4" />
                         </button>
                         <button onClick={onClose} className="p-2 -ml-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
                             <ArrowLeft size={20} />
@@ -367,9 +367,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                          <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-lg shadow-sm hover:opacity-90 transition-all text-sm flex items-center disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                         >
-                            {isSaving && <Loader2 size={16} className="animate-spin mr-2" />}
+                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                             Save
                         </button>
                     </div>

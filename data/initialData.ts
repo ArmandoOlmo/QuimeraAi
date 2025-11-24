@@ -33,6 +33,7 @@ const pageData: PageData = {
     buttonBorderRadius: 'xl',
   },
   hero: {
+    heroVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     headline: "Create Stunning Visuals with <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary\">Quimera.ai</span>",
@@ -78,6 +79,7 @@ const pageData: PageData = {
     ],
     statsValueColor: '#4f46e5',
     statsLabelColor: '#94a3b8',
+    buttonBorderRadius: 'xl',
   },
   features: {
     paddingY: 'lg',
@@ -113,6 +115,7 @@ const pageData: PageData = {
     },
   },
   testimonials: {
+    testimonialsVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     title: "Loved by Creatives Worldwide",
@@ -123,6 +126,8 @@ const pageData: PageData = {
     cardShadow: 'lg',
     borderStyle: 'solid',
     cardPadding: 32,
+    avatarBorderWidth: 2,
+    avatarBorderColor: '#4f46e5',
     items: [
       {
         quote: "Quimera.ai has completely transformed my workflow. I can now visualize concepts in seconds that used to take hours. It's an indispensable tool for any creative professional.",
@@ -153,20 +158,40 @@ const pageData: PageData = {
     },
   },
   slideshow: {
+    slideshowVariant: 'classic',
     title: "Our Work in Pixels",
     paddingY: 'lg',
     paddingX: 'md',
+    titleFontSize: 'md',
+    borderRadius: 'xl',
+    autoPlaySpeed: 5000,
+    transitionEffect: 'slide',
+    transitionDuration: 500,
+    showArrows: true,
+    showDots: true,
+    arrowStyle: 'rounded',
+    dotStyle: 'circle',
+    kenBurnsIntensity: 'medium',
+    thumbnailSize: 80,
+    showCaptions: false,
     items: [
-      { imageUrl: 'https://picsum.photos/seed/slide1/1200/800', altText: 'AI generated cityscape at night' },
-      { imageUrl: 'https://picsum.photos/seed/slide2/1200/800', altText: 'AI generated abstract art' },
-      { imageUrl: 'https://picsum.photos/seed/slide3/1200/800', altText: 'AI generated fantasy landscape' },
+      { imageUrl: 'https://picsum.photos/seed/slide1/1200/800', altText: 'AI generated cityscape at night', caption: 'Modern Cityscapes' },
+      { imageUrl: 'https://picsum.photos/seed/slide2/1200/800', altText: 'AI generated abstract art', caption: 'Abstract Creations' },
+      { imageUrl: 'https://picsum.photos/seed/slide3/1200/800', altText: 'AI generated fantasy landscape', caption: 'Fantasy Worlds' },
     ],
     colors: {
-      background: '#1e293b', // bg-dark-800
+      background: '#1e293b',
       heading: '#F9FAFB',
+      arrowBackground: 'rgba(0, 0, 0, 0.5)',
+      arrowText: '#ffffff',
+      dotActive: '#ffffff',
+      dotInactive: 'rgba(255, 255, 255, 0.5)',
+      captionBackground: 'rgba(0, 0, 0, 0.7)',
+      captionText: '#ffffff',
     },
   },
   pricing: {
+    pricingVariant: 'classic',
     title: "Choose Your Plan",
     description: "Simple, transparent pricing. No hidden fees. Choose the plan that's right for you and start creating today.",
     paddingY: 'lg',
@@ -216,6 +241,8 @@ const pageData: PageData = {
       buttonText: '#ffffff',
       checkmarkColor: '#10b981',
       cardBackground: '#1f2937',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
     }
   },
   faq: {
@@ -250,6 +277,7 @@ const pageData: PageData = {
     }
   },
   leads: {
+    leadsVariant: 'classic',
     title: "Let's Get in Touch",
     description: "Fill out the form below and we'll get back to you as soon as possible. We're excited to hear about your project!",
     namePlaceholder: "Your Full Name",
@@ -259,6 +287,10 @@ const pageData: PageData = {
     buttonText: "Send Message",
     paddingY: 'lg',
     paddingX: 'md',
+    cardBorderRadius: 'xl',
+    buttonBorderRadius: 'md',
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -267,6 +299,12 @@ const pageData: PageData = {
       heading: '#F9FAFB',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      cardBackground: '#1e293b',
+      inputBackground: '#0f172a',
+      inputText: '#F9FAFB',
+      inputBorder: '#334155',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
     },
   },
   newsletter: {
@@ -335,6 +373,7 @@ const pageData: PageData = {
     },
   },
   services: {
+    servicesVariant: 'cards',
     paddingY: 'lg',
     paddingX: 'md',
     title: "What We Offer",
@@ -505,7 +544,7 @@ const brandIdentity: BrandIdentity = {
     language: 'English',
 };
 
-const componentOrder: PageSection[] = ['hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'chatbot', 'footer'];
+const componentOrder: PageSection[] = ['hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'chatbot', 'footer', 'typography'];
 
 const sectionVisibility = componentOrder.reduce((acc, section) => {
     (acc as any)[section] = true;

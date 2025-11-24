@@ -7,7 +7,7 @@ import { Sparkles, ArrowRight, Wand2, Palette, Type, Layout, Loader2, X, Briefca
 import GeneratingState from './GeneratingState';
 import GuidedTour from './GuidedTour';
 import { initialData } from '../../data/initialData';
-import { OnboardingStep, AestheticType, ProductInfo, TestimonialInfo, ContactInfo } from '../../types';
+import { OnboardingStep, AestheticType, ProductInfo, TestimonialInfo, ContactInfo, PageSection } from '../../types';
 import { trackOnboardingStarted, trackOnboardingCompleted, trackProjectCreated } from '../../utils/analytics';
 
 interface OnboardingWizardProps {
@@ -404,27 +404,155 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             }
             console.log("✅ [generateWebsite] Data merged");
             
-            // Step 6.5: Apply Design Plan colors to sections that may have been missed
-            console.log("🎨 [generateWebsite] Step 6.5: Applying Design Plan colors to sections...");
-            if (generatedTheme?.palette) {
-                const palette = generatedTheme.palette;
+            // Step 6.4.5: Ensure critical fields have default values and are correct types
+            console.log("🔧 [generateWebsite] Step 6.4.5: Ensuring critical fields have defaults...");
+            if (safeData.hero) {
+                // Ensure headline is always a valid string
+                if (!safeData.hero.headline || typeof safeData.hero.headline !== 'string') {
+                    safeData.hero.headline = onboardingState.businessName || 'Welcome';
+                    console.log("   ✓ Set default headline:", safeData.hero.headline);
+                } else {
+                    // Convert to string if it's not already
+                    safeData.hero.headline = String(safeData.hero.headline);
+                }
+                
+                // Ensure subheadline is always a valid string
+                if (!safeData.hero.subheadline || typeof safeData.hero.subheadline !== 'string') {
+                    safeData.hero.subheadline = onboardingState.summary || 'Your business description';
+                    console.log("   ✓ Set default subheadline:", safeData.hero.subheadline);
+                } else {
+                    // Convert to string if it's not already
+                    safeData.hero.subheadline = String(safeData.hero.subheadline);
+                }
+                
+                // Ensure primaryCta and secondaryCta are strings
+                if (!safeData.hero.primaryCta || typeof safeData.hero.primaryCta !== 'string') {
+                    safeData.hero.primaryCta = onboardingState.goal === 'Generate Leads' ? 'Get Started' : onboardingState.goal === 'Sell Products' ? 'Shop Now' : 'Learn More';
+                } else {
+                    safeData.hero.primaryCta = String(safeData.hero.primaryCta);
+                }
+                
+                if (!safeData.hero.secondaryCta || typeof safeData.hero.secondaryCta !== 'string') {
+                    safeData.hero.secondaryCta = 'Learn More';
+                } else {
+                    safeData.hero.secondaryCta = String(safeData.hero.secondaryCta);
+                }
+            }
+            console.log("✅ [generateWebsite] Critical fields validated");
+            
+            // Step 6.5: Apply Design Plan colors ONLY to selected components (system decides which to use)
+            console.log("🎨 [generateWebsite] Step 6.5: Applying Design Plan colors to selected components...");
+            if (generatedTheme?.palette || onboardingState.designPlan?.palette) {
+                // Use Design Plan palette as source of truth
+                const palette = generatedTheme?.palette || onboardingState.designPlan?.palette;
                 console.log("🎨 [generateWebsite] Design Plan palette:", palette);
                 
-                // Apply palette to sections that should use theme colors
-                const sectionsToColorize = ['hero', 'features', 'testimonials', 'services', 'pricing', 'faq', 'cta', 'footer', 'leads'];
-                sectionsToColorize.forEach(section => {
-                    if (safeData[section] && !safeData[section].colors) {
-                        // Section exists but has no colors, apply palette
-                        safeData[section].colors = {
+                // Get components selected by Design Plan (the system decides which to use)
+                const designPlanComponents = result.pageConfig?.componentOrder || 
+                                             onboardingState.designPlan?.componentOrder || 
+                                             [];
+                
+                console.log("📋 [generateWebsite] Components selected by Design Plan:", designPlanComponents);
+                
+                // Apply palette ONLY to components selected by the Design Plan
+                designPlanComponents.forEach((section: string) => {
+                    if (safeData[section as PageSection]) {
+                        // FORCE Design Plan colors - do not preserve initialData colors
+                        const sectionData = safeData[section as PageSection];
+                        const existingColors = sectionData.colors || {};
+                        
+                        // Build new colors object with Design Plan as absolute priority
+                        const newColors: any = {
+                            // Core colors from Design Plan (mandatory - no fallback to initialData)
                             background: palette.background || '#0f172a',
                             text: palette.text || '#e2e8f0',
                             heading: palette.text || '#ffffff',
-                            accent: palette.primary || palette.accent || '#4f46e5'
+                            accent: palette.primary || palette.accent || '#4f46e5',
+                            primary: palette.primary,
+                            secondary: palette.secondary,
                         };
-                        console.log(`   ✓ Applied palette to ${section}`);
+                        
+                        // Preserve section-specific color properties that don't conflict with Design Plan
+                        // (like buttonBackground, buttonText, gradientStart, gradientEnd, border, linkHover)
+                        if (existingColors.buttonBackground) newColors.buttonBackground = existingColors.buttonBackground;
+                        if (existingColors.buttonText) newColors.buttonText = existingColors.buttonText;
+                        if (existingColors.gradientStart) newColors.gradientStart = existingColors.gradientStart;
+                        if (existingColors.gradientEnd) newColors.gradientEnd = existingColors.gradientEnd;
+                        if (existingColors.border) newColors.border = existingColors.border;
+                        if (existingColors.borderColor) newColors.borderColor = existingColors.borderColor;
+                        if (existingColors.linkHover) newColors.linkHover = existingColors.linkHover;
+                        
+                        sectionData.colors = newColors;
+                        console.log(`   ✓ Applied Design Plan palette to ${section}:`, {
+                            background: newColors.background,
+                            text: newColors.text,
+                            accent: newColors.accent
+                        });
                     }
                 });
-                console.log("✅ [generateWebsite] Design Plan colors applied to sections");
+                
+                // Always apply to header (it's always present)
+                if (safeData.header) {
+                    const headerBg = palette.background || '#0f172a';
+                    // Convert hex to rgba for header transparency
+                    const rgbMatch = headerBg.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+                    const rgbaBg = rgbMatch 
+                        ? `rgba(${parseInt(rgbMatch[1], 16)}, ${parseInt(rgbMatch[2], 16)}, ${parseInt(rgbMatch[3], 16)}, 0.7)`
+                        : 'rgba(15, 23, 42, 0.7)';
+                        
+                    safeData.header.colors = {
+                        background: rgbaBg,
+                        text: palette.text || '#E2E8F0',
+                        accent: palette.primary || '#4f46e5',
+                    };
+                    console.log(`   ✓ Applied Design Plan palette to header`);
+                }
+                
+                console.log("✅ [generateWebsite] Design Plan colors applied to selected components");
+            }
+            
+            // Step 6.6: Apply layoutStrategy from Design Plan
+            console.log("🎨 [generateWebsite] Step 6.6: Applying layoutStrategy from Design Plan...");
+            if (onboardingState.designPlan?.layoutStrategy) {
+                const layoutStrategy = onboardingState.designPlan.layoutStrategy;
+                
+                // Apply header layout and style
+                if (layoutStrategy.headerLayout && safeData.header) {
+                    safeData.header.layout = layoutStrategy.headerLayout;
+                    console.log(`   ✓ Applied headerLayout: ${layoutStrategy.headerLayout}`);
+                }
+                if (layoutStrategy.headerStyle && safeData.header) {
+                    safeData.header.style = layoutStrategy.headerStyle;
+                    console.log(`   ✓ Applied headerStyle: ${layoutStrategy.headerStyle}`);
+                }
+                
+                // Apply hero image style and position
+                if (layoutStrategy.heroImageStyle && safeData.hero) {
+                    safeData.hero.imageStyle = layoutStrategy.heroImageStyle;
+                    console.log(`   ✓ Applied heroImageStyle: ${layoutStrategy.heroImageStyle}`);
+                }
+                if (layoutStrategy.heroImagePosition && safeData.hero) {
+                    safeData.hero.imagePosition = layoutStrategy.heroImagePosition;
+                    console.log(`   ✓ Applied heroImagePosition: ${layoutStrategy.heroImagePosition}`);
+                }
+                
+                console.log("✅ [generateWebsite] layoutStrategy applied");
+            }
+            
+            // Step 6.7: Apply uiShapes from Design Plan to theme
+            console.log("🎨 [generateWebsite] Step 6.7: Applying uiShapes from Design Plan...");
+            let themeWithShapes = { ...generatedTheme };
+            if (onboardingState.designPlan?.uiShapes) {
+                const uiShapes = onboardingState.designPlan.uiShapes;
+                if (uiShapes.cardBorderRadius) {
+                    themeWithShapes.cardBorderRadius = uiShapes.cardBorderRadius;
+                    console.log(`   ✓ Applied cardBorderRadius: ${uiShapes.cardBorderRadius}`);
+                }
+                if (uiShapes.buttonBorderRadius) {
+                    themeWithShapes.buttonBorderRadius = uiShapes.buttonBorderRadius;
+                    console.log(`   ✓ Applied buttonBorderRadius: ${uiShapes.buttonBorderRadius}`);
+                }
+                console.log("✅ [generateWebsite] uiShapes applied");
             }
             
             console.log("🏗️ [generateWebsite] Step 7: Building project object...");
@@ -445,10 +573,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             
             // Build theme with potential brand color overrides
             const finalTheme = {
-                ...generatedTheme,
-                fontFamilyHeader: (generatedTheme.fontFamilyHeader || 'inter').toLowerCase().replace(/\s/g, '-'),
-                fontFamilyBody: (generatedTheme.fontFamilyBody || 'inter').toLowerCase().replace(/\s/g, '-'),
-                fontFamilyButton: (generatedTheme.fontFamilyButton || 'inter').toLowerCase().replace(/\s/g, '-'),
+                ...themeWithShapes,
+                fontFamilyHeader: (themeWithShapes.fontFamilyHeader || 'inter').toLowerCase().replace(/\s/g, '-'),
+                fontFamilyBody: (themeWithShapes.fontFamilyBody || 'inter').toLowerCase().replace(/\s/g, '-'),
+                fontFamilyButton: (themeWithShapes.fontFamilyButton || 'inter').toLowerCase().replace(/\s/g, '-'),
             };
             
             // Override palette with user's brand colors if provided
@@ -472,6 +600,48 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             
             console.log("✅ [generateWebsite] Brand guidelines applied");
             
+            // Step 7.2: Ensure ALL enabled components are included in componentOrder
+            console.log("📋 [generateWebsite] Step 7.2: Ensuring all enabled components are included...");
+            const designPlanOrder = result.pageConfig?.componentOrder || onboardingState.designPlan?.componentOrder || [];
+            const enabledComponents = Object.entries(componentStatus)
+                .filter(([_, enabled]) => enabled !== false)
+                .map(([key, _]) => key as PageSection);
+
+            // Merge: Start with Design Plan order, then add any missing enabled components
+            const mergedComponentOrder: PageSection[] = [];
+            const addedComponents = new Set<string>();
+
+            // First, add components from Design Plan (in order)
+            designPlanOrder.forEach((comp: string) => {
+                if (componentStatus[comp as PageSection] !== false && !addedComponents.has(comp)) {
+                    mergedComponentOrder.push(comp as PageSection);
+                    addedComponents.add(comp);
+                }
+            });
+
+            // Then, add any enabled components that weren't in the Design Plan
+            enabledComponents.forEach(comp => {
+                if (!addedComponents.has(comp)) {
+                    mergedComponentOrder.push(comp);
+                    addedComponents.add(comp);
+                }
+            });
+
+            // Always ensure header and footer are included (if enabled)
+            if (componentStatus.header !== false && !addedComponents.has('header')) {
+                mergedComponentOrder.unshift('header');
+            }
+            if (componentStatus.footer !== false && !addedComponents.has('footer')) {
+                mergedComponentOrder.push('footer');
+            }
+
+            console.log("✅ [generateWebsite] Component order merged:", {
+                designPlanCount: designPlanOrder.length,
+                enabledCount: enabledComponents.length,
+                finalCount: mergedComponentOrder.length,
+                finalOrder: mergedComponentOrder
+            });
+            
             const newProject = {
                 id: projectId,
                 name: onboardingState.businessName,
@@ -488,8 +658,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     coreValues: (onboardingState.coreValues || []).join(', ') || onboardingState.goal,
                     language: 'English'
                 },
-                componentOrder: (result.pageConfig?.componentOrder || onboardingState.designPlan.componentOrder || initialData.componentOrder)
-                    .filter((comp: string) => componentStatus[comp as any] !== false),
+                componentOrder: mergedComponentOrder,
                 sectionVisibility: Object.keys(initialData.sectionVisibility).reduce((acc: any, key) => {
                     const section = key as any;
                     // Ensure we always set a boolean value (never undefined) for Firebase

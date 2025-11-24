@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CtaData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -41,28 +42,42 @@ interface CTASectionProps extends CtaData {
 }
 
 const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+  // Get design tokens with fallback to component colors
+  const { getColor } = useDesignTokens();
+  
+  // Merge Design Tokens with component colors
+  const actualColors = {
+    background: colors.background || '#0f172a',
+    gradientStart: getColor('primary.main', colors.gradientStart),
+    gradientEnd: getColor('secondary.main', colors.gradientEnd),
+    text: colors.text || '#ffffff',
+    heading: colors.heading,
+    buttonBackground: colors.buttonBackground || '#ffffff',
+    buttonText: colors.buttonText || '#4f46e5',
+  };
+  
   return (
-    <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background || '#0f172a' }}>
+    <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div 
             className={`relative p-12 shadow-2xl text-center overflow-hidden ${borderRadiusClasses[cardBorderRadius]}`}
-            style={{ backgroundImage: `linear-gradient(to right, ${colors.gradientStart}, ${colors.gradientEnd})` }}
+            style={{ backgroundImage: `linear-gradient(to right, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
         >
             <div className="absolute inset-0 bg-black/20 mix-blend-multiply"></div>
             <div className="relative">
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-white mb-4 font-header`} style={{ color: colors.heading }}>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-white mb-4 font-header`} style={{ color: actualColors.heading }}>
                     {title}
                 </h2>
                 <p 
                     className={`${descriptionSizeClasses[descriptionFontSize]} mb-8 max-w-2xl mx-auto font-body`}
-                    style={{ color: colors.text || '#ffffff' }}
+                    style={{ color: actualColors.text }}
                 >
                     {description}
                 </p>
                 <a 
                     href="#" 
                     className={`inline-block font-bold py-4 px-10 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-                    style={{ backgroundColor: colors.buttonBackground || '#ffffff', color: colors.buttonText || '#4f46e5' }}
+                    style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
                 >
                     {buttonText}
                 </a>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { fetchUsageData } from '../../../data/mockUsageData';
+import { fetchRealUsageData } from '../../../services/usageStatisticsService';
 import { UsageData, MonthlyData, ApiCallStat, UserActivity, TemplateUsage } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, Menu, Users, BarChart3, Bot, Copy, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Menu, Users, BarChart3, Bot, Copy, LayoutTemplate, AlertCircle } from 'lucide-react';
 import StatCard from './StatCard';
 
 interface UsageStatisticsProps {
@@ -104,10 +104,55 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
 const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
     const [data, setData] = useState<UsageData | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchUsageData().then(setData);
+        const loadData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const usageData = await fetchRealUsageData();
+                setData(usageData);
+            } catch (err: any) {
+                console.error('Error loading usage statistics:', err);
+                setError(err.message || 'Failed to load usage statistics');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadData();
     }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-screen bg-editor-bg items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-editor-text-secondary">Loading statistics...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex h-screen bg-editor-bg items-center justify-center">
+                <div className="flex flex-col items-center gap-4 max-w-md text-center">
+                    <AlertCircle className="w-12 h-12 text-red-500" />
+                    <h3 className="text-xl font-semibold text-editor-text-primary">Error Loading Statistics</h3>
+                    <p className="text-editor-text-secondary">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (!data) {
         return (
@@ -121,18 +166,18 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button onClick={onBack} className="p-2 text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2" title="Back to Admin">
-                            <ArrowLeft />
+                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors" title="Back to Admin">
+                            <ArrowLeft className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center space-x-2">
-                            <BarChart3 className="text-editor-accent" />
-                            <h1 className="text-xl font-bold text-editor-text-primary">Usage Statistics</h1>
+                        <div className="flex items-center gap-2">
+                            <BarChart3 className="text-editor-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-editor-text-primary">Usage Statistics</h1>
                         </div>
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors">
-                        <ArrowLeft size={16} className="mr-1.5" />
+                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+                        <ArrowLeft className="w-4 h-4" />
                         Back to Admin
                     </button>
                 </header>

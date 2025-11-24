@@ -27,7 +27,7 @@ const STYLES = [
 ];
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => {
-    const { files, globalFiles, uploadFile, generateImage, enhancePrompt } = useEditor();
+    const { files, globalFiles, uploadFile, generateImage, enhancePrompt, projects } = useEditor();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'library' | 'generate'>('library');
@@ -37,6 +37,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
     // Library filters
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all');
     
     // Generator State
     const [prompt, setPrompt] = useState('');
@@ -99,6 +100,54 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
         
         return result;
     }, [sourceFiles, searchQuery]);
+
+    // Group images by project (only for user files)
+    const imagesByProject = useMemo(() => {
+        if (librarySource === 'global') {
+            return { 'global': imageFiles };
+        }
+
+        const grouped: { [key: string]: typeof imageFiles } = {
+            'no-project': []
+        };
+
+        imageFiles.forEach(file => {
+            const projectKey = file.projectId || 'no-project';
+            if (!grouped[projectKey]) {
+                grouped[projectKey] = [];
+            }
+            grouped[projectKey].push(file);
+        });
+
+        return grouped;
+    }, [imageFiles, librarySource]);
+
+    // Get project names for display
+    const projectNames = useMemo(() => {
+        const names: { [key: string]: string } = {
+            'no-project': 'Unassigned Images',
+            'global': 'Global Library'
+        };
+
+        projects.forEach(project => {
+            names[project.id] = project.name;
+        });
+
+        return names;
+    }, [projects]);
+
+    // Filter images by selected project
+    const filteredImagesByProject = useMemo(() => {
+        if (selectedProjectFilter === 'all') {
+            return imagesByProject;
+        }
+        
+        if (imagesByProject[selectedProjectFilter]) {
+            return { [selectedProjectFilter]: imagesByProject[selectedProjectFilter] };
+        }
+        
+        return {};
+    }, [imagesByProject, selectedProjectFilter]);
 
     return (
         <div className="mb-3">
@@ -169,84 +218,136 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                         {activeTab === 'library' && (
                             <div className="h-full flex flex-col">
                                 {/* Library Controls */}
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                                    <div className="flex space-x-2 bg-editor-panel-bg p-1 rounded-lg border border-editor-border">
-                                        <button 
-                                            onClick={() => setLibrarySource('user')}
-                                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                        >
-                                            My Uploads
-                                        </button>
-                                        <button 
-                                            onClick={() => setLibrarySource('global')}
-                                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center ${librarySource === 'global' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                        >
-                                            <Globe size={12} className="mr-1"/> Global Library
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="flex gap-2 w-full sm:w-auto">
-                                        {/* Search */}
-                                        <div className="relative flex-1 sm:flex-initial sm:w-48">
-                                            <input
-                                                type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="Search images..."
-                                                className="w-full pl-8 pr-3 py-1.5 text-xs bg-editor-panel-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
-                                            />
-                                            <Search size={14} className="absolute left-2.5 top-2 text-editor-text-secondary" />
+                                <div className="space-y-3 mb-4">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                        <div className="flex space-x-2 bg-editor-panel-bg p-1 rounded-lg border border-editor-border">
+                                            <button 
+                                                onClick={() => { setLibrarySource('user'); setSelectedProjectFilter('all'); }}
+                                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                            >
+                                                My Uploads
+                                            </button>
+                                            <button 
+                                                onClick={() => { setLibrarySource('global'); setSelectedProjectFilter('all'); }}
+                                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center ${librarySource === 'global' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                            >
+                                                <Globe size={12} className="mr-1"/> Global Library
+                                            </button>
                                         </div>
                                         
-                                        {/* Upload Button */}
-                                        <DragDropZone
-                                            onFileSelect={handleFileUpload}
-                                            accept="image/*"
-                                            maxSizeMB={10}
-                                            variant="compact"
-                                        >
-                                            <button className="flex items-center gap-2 bg-editor-accent text-editor-bg px-4 py-2 rounded-lg text-sm font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
-                                                <Upload size={16} /> Upload
+                                        <div className="flex gap-2 w-full sm:w-auto">
+                                            {/* Search */}
+                                            <div className="relative flex-1 sm:flex-initial sm:w-48">
+                                                <input
+                                                    type="text"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder="Search images..."
+                                                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-editor-panel-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
+                                                />
+                                                <Search size={14} className="absolute left-2.5 top-2 text-editor-text-secondary" />
+                                            </div>
+                                            
+                                            {/* Filter Button */}
+                                            <button
+                                                onClick={() => setShowFilters(!showFilters)}
+                                                className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${showFilters ? 'bg-editor-accent text-editor-bg' : 'bg-editor-panel-bg border border-editor-border hover:bg-editor-border/40 text-editor-text-secondary'}`}
+                                                title="Filter by Project"
+                                            >
+                                                <Filter size={14} />
                                             </button>
-                                        </DragDropZone>
+                                            
+                                            {/* Upload Button */}
+                                            <DragDropZone
+                                                onFileSelect={handleFileUpload}
+                                                accept="image/*"
+                                                maxSizeMB={10}
+                                                variant="compact"
+                                            >
+                                                <button className="flex items-center gap-2 bg-editor-accent text-editor-bg px-4 py-2 rounded-lg text-sm font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                                    <Upload size={16} /> Upload
+                                                </button>
+                                            </DragDropZone>
+                                        </div>
                                     </div>
+
+                                    {/* Project Filter */}
+                                    {showFilters && librarySource === 'user' && (
+                                        <div className="p-3 bg-editor-panel-bg rounded-lg border border-editor-border animate-fade-in-up">
+                                            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">Filter by Project</label>
+                                            <select
+                                                value={selectedProjectFilter}
+                                                onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                                                className="w-full px-3 py-1.5 text-xs bg-editor-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
+                                            >
+                                                <option value="all">All Projects</option>
+                                                {projects.map(project => (
+                                                    <option key={project.id} value={project.id}>{project.name}</option>
+                                                ))}
+                                                <option value="no-project">Unassigned Images</option>
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                                 
-                                {/* Images Grid */}
+                                {/* Images Grid - Grouped by Project */}
                                 <div className="flex-grow overflow-y-auto custom-scrollbar">
-                                    {imageFiles.length > 0 ? (
-                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                                            {imageFiles.map(file => (
-                                                <div 
-                                                    key={file.id} 
-                                                    onClick={() => { onChange(file.downloadURL); setIsLibraryOpen(false); success('Image selected'); }}
-                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
-                                                >
-                                                    <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                                    {value === file.downloadURL ? (
-                                                        <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
-                                                            <div className="bg-editor-accent text-editor-bg rounded-full p-2">
-                                                                <Check size={20} />
+                                    {Object.keys(filteredImagesByProject).length > 0 && Object.values(filteredImagesByProject).some(arr => arr.length > 0) ? (
+                                        <div className="space-y-6">
+                                            {Object.entries(filteredImagesByProject).map(([projectId, projectImages]) => {
+                                                if (projectImages.length === 0) return null;
+                                                
+                                                return (
+                                                    <div key={projectId} className="space-y-3">
+                                                        {/* Project Header (only show if user library and not filtered to single project) */}
+                                                        {librarySource === 'user' && selectedProjectFilter === 'all' && (
+                                                            <div className="flex items-center gap-2 pb-2 border-b border-editor-border/50">
+                                                                <h3 className="text-sm font-bold text-editor-text-primary">
+                                                                    {projectNames[projectId] || 'Unknown Project'}
+                                                                </h3>
+                                                                <span className="text-xs text-editor-text-secondary bg-editor-panel-bg px-2 py-0.5 rounded-md">
+                                                                    {projectImages.length} {projectImages.length === 1 ? 'image' : 'images'}
+                                                                </span>
                                                             </div>
+                                                        )}
+                                                        
+                                                        {/* Project Images Grid */}
+                                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                                            {projectImages.map(file => (
+                                                                <div 
+                                                                    key={file.id} 
+                                                                    onClick={() => { onChange(file.downloadURL); setIsLibraryOpen(false); success('Image selected'); }}
+                                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
+                                                                >
+                                                                    <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                                    {value === file.downloadURL ? (
+                                                                        <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
+                                                                            <div className="bg-editor-accent text-editor-bg rounded-full p-2">
+                                                                                <Check size={20} />
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <span className="text-white text-xs font-bold">Select</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    ) : (
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold">Select</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    ) : searchQuery ? (
+                                    ) : searchQuery || (selectedProjectFilter !== 'all' && librarySource === 'user') ? (
                                         <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary">
                                             <Search size={48} className="mb-4 opacity-50" />
                                             <p className="font-medium mb-2">No images found</p>
-                                            <p className="text-sm mb-4">Try a different search term</p>
+                                            <p className="text-sm mb-4">Try adjusting your search or filters</p>
                                             <button 
-                                                onClick={() => setSearchQuery('')}
+                                                onClick={() => { setSearchQuery(''); setSelectedProjectFilter('all'); }}
                                                 className="text-editor-accent hover:underline text-sm"
                                             >
-                                                Clear search
+                                                Clear filters
                                             </button>
                                         </div>
                                     ) : (

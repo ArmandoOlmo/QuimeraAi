@@ -9,13 +9,14 @@ interface DashboardSidebarProps {
   isMobileOpen: boolean;
   onClose: () => void;
   hiddenOnDesktop?: boolean;
+  defaultCollapsed?: boolean;
 }
 
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false }) => {
+const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
   const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage } = useEditor();
-  // Default to expanded on desktop
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Default to expanded on desktop, unless defaultCollapsed is true
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   const handleSignOut = () => {
     signOut(auth).catch((error) => console.error("Sign out error", error));
@@ -90,7 +91,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 </span>
             </div>
              {/* Toggle Button (Centered vertically relative to header height, always on the line) */}
-            <div className="hidden lg:block absolute top-[calc(50%-3px)] -translate-y-1/2 z-50 -right-3">
+            <div className="hidden lg:block absolute top-[calc(50%-12px)] -translate-y-1/2 z-50 -right-3">
                 <button 
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className="w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
@@ -159,27 +160,26 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 onClick={() => setView('assets')} 
             />
              
-            {['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '') && (
-                <>
-                    <div className={`my-4 border-t border-border ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
-                    <NavItem 
-                        icon={Settings} 
-                        label={t('dashboard.superAdmin')} 
-                        isActive={view === 'superadmin'} 
-                        onClick={() => {
-                            setView('superadmin');
-                            setAdminView('main');
-                        }} 
-                    />
-                </>
-            )}
+            {/* Panel de administración disponible para todos los usuarios */}
+            <>
+                <div className={`my-4 border-t border-border ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
+                <NavItem 
+                    icon={Settings} 
+                    label={t('dashboard.superAdmin')} 
+                    isActive={view === 'superadmin'} 
+                    onClick={() => {
+                        setView('superadmin');
+                        setAdminView('main');
+                    }} 
+                />
+            </>
         </nav>
 
         {/* Footer / User Profile / Theme */}
         <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
             
             {/* Theme Selector Section */}
-            <div className={`mb-4 ${isCollapsed ? 'hidden' : ''}`}>
+            <div className={`${isCollapsed ? 'hidden' : 'block mb-4'}`}>
                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('common.themeColor')}</p>
                  <div className="flex gap-2 bg-muted p-1 rounded-lg">
                      <button 
@@ -206,34 +206,32 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                  </div>
             </div>
 
-            {!isCollapsed && (
-                 /* REFINED PRO PLAN WIDGET */
-                 <div className="mb-6 px-1">
-                    <div className="flex justify-between items-end mb-2 px-1">
-                        <div className="flex items-center gap-1.5">
-                            <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400"/> 
-                            <span className="text-xs font-bold text-gray-700 dark:text-white tracking-wide">
-                                {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
-                            </span>
-                        </div>
-                        <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                            {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
+            {/* REFINED PRO PLAN WIDGET - Hidden when collapsed */}
+            <div className={`px-1 ${isCollapsed ? 'hidden' : 'block mb-6'}`}>
+                <div className="flex justify-between items-end mb-2 px-1">
+                    <div className="flex items-center gap-1.5">
+                        <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400"/> 
+                        <span className="text-xs font-bold text-gray-700 dark:text-white tracking-wide">
+                            {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
                         </span>
                     </div>
-                    
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                            className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500" 
-                            style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
-                        />
-                    </div>
-                    
-                    <div className="mt-2 flex justify-between items-center px-1">
-                         <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
-                         <button className="text-[10px] font-bold text-gray-700 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('common.upgrade')}</button>
-                    </div>
-                 </div>
-            )}
+                    <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
+                        {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
+                    </span>
+                </div>
+                
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div 
+                        className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500" 
+                        style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
+                    />
+                </div>
+                
+                <div className="mt-2 flex justify-between items-center px-1">
+                     <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
+                     <button className="text-[10px] font-bold text-gray-700 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('common.upgrade')}</button>
+                </div>
+            </div>
 
             <div className={`flex items-center ${isCollapsed ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
                 <div className="relative group cursor-pointer">

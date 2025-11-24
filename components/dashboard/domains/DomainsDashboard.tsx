@@ -509,30 +509,30 @@ const DomainsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <header className="h-[65px] px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
-                            <Menu />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Link2 className="text-primary" size={24} />
-                            <h1 className="text-xl font-bold text-foreground">Domains</h1>
+                            <Link2 className="text-primary w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-foreground">Domains</h1>
                         </div>
                     </div>
                     
-                    <div className="flex gap-3">
+                    <div className="flex gap-1">
                         <InfoBubble bubbleId="domains" content={INFO_BUBBLE_CONTENT.domains} inline defaultExpanded={false} />
                         <button 
                             onClick={() => setIsConnectModalOpen(true)}
-                            className="bg-secondary hover:bg-secondary/80 text-foreground font-bold py-2 px-4 rounded-lg transition-all text-sm hidden sm:flex items-center"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 hidden sm:flex"
                         >
-                            <Link2 size={16} className="mr-2" /> Connect Existing
+                            <Link2 className="w-4 h-4" /> Connect
                         </button>
                         <button 
                             onClick={() => setIsBuyModalOpen(true)}
-                            className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center text-sm"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         >
-                            <ShoppingCart size={16} className="mr-2" /> Buy Domain
+                            <ShoppingCart className="w-4 h-4" /> Buy Domain
                         </button>
                     </div>
                 </header>

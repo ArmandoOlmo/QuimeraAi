@@ -234,18 +234,62 @@ interface FileHistoryProps {
 }
 
 const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
-    const { files, isFilesLoading, uploadFile, deleteFile } = useEditor();
+    const { files, isFilesLoading, uploadFile, deleteFile, projects } = useEditor();
     const { success, error: showError } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all');
 
     // Use the custom hook for asset management
     const library = useAssetLibrary({ 
         files, 
         itemsPerPage: variant === 'widget' ? 12 : 24 
     });
+
+    // Group files by project
+    const filesByProject = React.useMemo(() => {
+        const grouped: { [key: string]: FileRecord[] } = {
+            'no-project': [] // Files without a project
+        };
+
+        library.allFiles.forEach(file => {
+            const projectKey = file.projectId || 'no-project';
+            if (!grouped[projectKey]) {
+                grouped[projectKey] = [];
+            }
+            grouped[projectKey].push(file);
+        });
+
+        return grouped;
+    }, [library.allFiles]);
+
+    // Get project names for display
+    const projectNames = React.useMemo(() => {
+        const names: { [key: string]: string } = {
+            'no-project': 'Unassigned Assets'
+        };
+
+        projects.forEach(project => {
+            names[project.id] = project.name;
+        });
+
+        return names;
+    }, [projects]);
+
+    // Filter files by selected project
+    const filteredFilesByProject = React.useMemo(() => {
+        if (selectedProjectFilter === 'all') {
+            return filesByProject;
+        }
+        
+        if (filesByProject[selectedProjectFilter]) {
+            return { [selectedProjectFilter]: filesByProject[selectedProjectFilter] };
+        }
+        
+        return {};
+    }, [filesByProject, selectedProjectFilter]);
 
     const handleFileUpload = async (file: File) => {
         try {
@@ -345,12 +389,12 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     </button>
 
                     {/* Selection Mode Toggle */}
-                    <button
+                    <button 
                         onClick={library.toggleSelectionMode}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${library.isSelectionMode ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80 text-foreground'}`}
+                        className={`flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all ${library.isSelectionMode ? 'bg-primary text-primary-foreground' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'}`}
                         title="Selection Mode"
                     >
-                        <CheckSquare size={14} />
+                        <CheckSquare className="w-4 h-4" />
                         {library.isSelectionMode && library.selectedIds.size > 0 && (
                             <span>({library.selectedIds.size})</span>
                         )}
@@ -359,10 +403,10 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     {/* AI Generate */}
                     <button
                         onClick={() => setIsGeneratorOpen(true)}
-                        className="flex items-center justify-center bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold py-1.5 px-3 rounded-lg transition-colors"
+                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         title="Generate Image"
                     >
-                        <Zap size={14} className="text-yellow-400 mr-1.5" />
+                        <Zap className="w-4 h-4" />
                         AI
                     </button>
 
@@ -373,8 +417,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         maxSizeMB={10}
                         variant="compact"
                     >
-                        <button className="flex items-center justify-center bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold py-1.5 px-3 rounded-lg transition-colors">
-                            <Upload size={14} className="mr-1.5" />
+                        <button className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+                            <Upload className="w-4 h-4" />
                             Upload
                         </button>
                     </DragDropZone>
@@ -384,7 +428,23 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
             {/* Filters Panel */}
             {showFilters && (
                 <div className="mb-4 p-4 bg-secondary/50 rounded-lg border border-border animate-fade-in-up">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Project Filter */}
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Project</label>
+                            <select
+                                value={selectedProjectFilter}
+                                onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                                className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                            >
+                                <option value="all">All Projects</option>
+                                {projects.map(project => (
+                                    <option key={project.id} value={project.id}>{project.name}</option>
+                                ))}
+                                <option value="no-project">Unassigned Assets</option>
+                            </select>
+                        </div>
+
                         {/* Type Filter */}
                         <div>
                             <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Type</label>
@@ -457,29 +517,50 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 </div>
             )}
 
-            {/* Files Grid */}
+            {/* Files Grid - Grouped by Project */}
             <div className={scrollContainerClasses}>
                 {isFilesLoading ? (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
                         <span className="text-xs">Syncing...</span>
                     </div>
-                ) : library.files.length > 0 ? (
-                    <div className={gridClasses}>
-                        {library.files.map(file => (
-                            <div key={file.id} className="h-full">
-                                <FileItem 
-                                    file={file} 
-                                    variant={variant} 
-                                    onPreview={setPreviewFile}
-                                    isSelected={library.isSelected(file.id)}
-                                    onToggleSelect={() => library.toggleSelection(file.id)}
-                                    isSelectionMode={library.isSelectionMode}
-                                />
-                            </div>
-                        ))}
+                ) : Object.keys(filteredFilesByProject).length > 0 ? (
+                    <div className="space-y-6">
+                        {Object.entries(filteredFilesByProject).map(([projectId, projectFiles]) => {
+                            if (projectFiles.length === 0) return null;
+                            
+                            return (
+                                <div key={projectId} className="space-y-3">
+                                    {/* Project Header */}
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                        <h3 className="text-sm font-bold text-editor-text-primary">
+                                            {projectNames[projectId] || 'Unknown Project'}
+                                        </h3>
+                                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-md">
+                                            {projectFiles.length} {projectFiles.length === 1 ? 'asset' : 'assets'}
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Project Files Grid */}
+                                    <div className={gridClasses}>
+                                        {projectFiles.map(file => (
+                                            <div key={file.id} className="h-full">
+                                                <FileItem 
+                                                    file={file} 
+                                                    variant={variant} 
+                                                    onPreview={setPreviewFile}
+                                                    isSelected={library.isSelected(file.id)}
+                                                    onToggleSelect={() => library.toggleSelection(file.id)}
+                                                    isSelectionMode={library.isSelectionMode}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                ) : library.searchQuery || library.typeFilter !== 'all' ? (
+                ) : library.searchQuery || library.typeFilter !== 'all' || selectedProjectFilter !== 'all' ? (
                     <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-secondary/20">
                         <Search size={32} className="mx-auto mb-2 text-muted-foreground opacity-50" />
                         <p className="text-sm font-medium text-foreground mb-1">No results found</p>
@@ -488,6 +569,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                             onClick={() => {
                                 library.setSearchQuery('');
                                 library.setTypeFilter('all');
+                                setSelectedProjectFilter('all');
                             }}
                             className="mt-3 text-xs text-primary hover:underline"
                         >
@@ -504,28 +586,16 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 )}
             </div>
 
-            {/* Pagination */}
-            {library.totalPages > 1 && (
+            {/* Summary Stats */}
+            {Object.keys(filteredFilesByProject).length > 0 && (
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                     <span className="text-xs text-muted-foreground">
-                        Page {library.currentPage} of {library.totalPages}
+                        Showing {library.stats.filtered} of {library.stats.total} assets
+                        {selectedProjectFilter !== 'all' && ` in ${projectNames[selectedProjectFilter] || 'selected project'}`}
                     </span>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={library.prevPage}
-                            disabled={!library.hasPrevPage}
-                            className="p-1.5 rounded-lg bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <button
-                            onClick={library.nextPage}
-                            disabled={!library.hasNextPage}
-                            className="p-1.5 rounded-lg bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
+                    <span className="text-xs text-muted-foreground">
+                        {Object.keys(filteredFilesByProject).length} {Object.keys(filteredFilesByProject).length === 1 ? 'project' : 'projects'}
+                    </span>
                 </div>
             )}
         </section>

@@ -8,6 +8,7 @@ import { initialData } from '../../data/initialData';
 import { LeadStatus, CMSPost, Lead, PageData } from '../../types';
 import { getGoogleGenAI } from '../../utils/genAiClient';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
+import { logApiCall } from '../../services/apiLoggingService';
 
 // --- Types ---
 interface Message {
@@ -789,79 +790,114 @@ const GlobalAiAssistant: React.FC = () => {
         const designPrompt = getPrompt('onboarding-design-plan');
         if (!designPrompt) throw new Error("Design prompt not found");
         
-        const designResponse = await ai.models.generateContent({
-            model: designPrompt.model,
-            contents: designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta"),
-            config: { responseMimeType: 'application/json' }
-        });
-        const designPlan = JSON.parse(cleanJson(designResponse.text));
-
-        const websitePrompt = getPrompt('onboarding-website-json');
-        if (!websitePrompt) throw new Error("Website generation prompt not found");
-
-        const websiteResponse = await ai.models.generateContent({
-            model: websitePrompt.model,
-            contents: websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription),
-            config: { responseMimeType: 'application/json' }
-        });
-
-        const result = JSON.parse(cleanJson(websiteResponse.text));
-        let generatedData = result.pageConfig?.data || result.data;
-        if (!generatedData && result.hero) generatedData = result;
-
-        const generatedTheme = result.pageConfig?.theme || result.theme || designPlan;
-        const generatedPrompts = result.imagePrompts || result.pageConfig?.imagePrompts || {};
-
-        const safeData = JSON.parse(JSON.stringify(initialData.data));
-        if (generatedData) {
-            Object.keys(generatedData).forEach((sectionKey: any) => {
-                if (safeData[sectionKey]) {
-                    const genSection = generatedData[sectionKey];
-                    const defaultColors = safeData[sectionKey].colors || {};
-                    const { colors: genColors, ...otherProps } = genSection;
-                    safeData[sectionKey] = { ...safeData[sectionKey], ...otherProps };
-                    if (genColors) { safeData[sectionKey].colors = { ...defaultColors, ...genColors }; }
-                }
+        try {
+            const designResponse = await ai.models.generateContent({
+                model: designPrompt.model,
+                contents: designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta"),
+                config: { responseMimeType: 'application/json' }
             });
-        }
-
-        const newProject = {
-            id: `proj_${Date.now()}`,
-            name: businessName,
-            thumbnailUrl: 'https://picsum.photos/seed/newproject/800/600',
-            status: 'Draft' as 'Draft',
-            lastUpdated: new Date().toISOString(),
-            data: safeData,
-            theme: {
-                ...generatedTheme,
-                fontFamilyHeader: (designPlan.typography?.header || 'Inter').toLowerCase().replace(/\s/g, '-'),
-                fontFamilyBody: (designPlan.typography?.body || 'Inter').toLowerCase().replace(/\s/g, '-'),
-                fontFamilyButton: (designPlan.typography?.button || 'Inter').toLowerCase().replace(/\s/g, '-'),
-                cardBorderRadius: generatedTheme?.cardBorderRadius || 'xl',
-                buttonBorderRadius: generatedTheme?.buttonBorderRadius || 'xl',
-            },
-            brandIdentity: { name: businessName, industry, targetAudience: 'General', toneOfVoice: tone as any, coreValues: 'Quality', language: 'English' },
-            componentOrder: result.pageConfig?.componentOrder || designPlan.componentOrder || initialData.componentOrder,
-            sectionVisibility: result.pageConfig?.sectionVisibility || initialData.sectionVisibility,
-            imagePrompts: generatedPrompts,
-            aiAssistantConfig: {
-                agentName: `${businessName} Assistant`,
-                tone: tone || 'Professional',
-                languages: 'English, Spanish',
-                businessProfile: description,
-                productsServices: '',
-                policiesContact: '',
-                specialInstructions: '',
-                faqs: [],
-                widgetColor: designPlan.palette?.primary || '#4f46e5',
-                isActive: true,
-                leadCaptureEnabled: true,
-                enableLiveVoice: false,
-                voiceName: 'Zephyr' as const
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: designPrompt.model,
+                    feature: 'onboarding-design-plan',
+                    success: true
+                });
             }
-        };
+            
+            const designPlan = JSON.parse(cleanJson(designResponse.text));
 
-        await addNewProjectRef.current(newProject);
+            const websitePrompt = getPrompt('onboarding-website-json');
+            if (!websitePrompt) throw new Error("Website generation prompt not found");
+
+            const websiteResponse = await ai.models.generateContent({
+                model: websitePrompt.model,
+                contents: websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription),
+                config: { responseMimeType: 'application/json' }
+            });
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: websitePrompt.model,
+                    feature: 'onboarding-website-generation',
+                    success: true
+                });
+            }
+
+            const result = JSON.parse(cleanJson(websiteResponse.text));
+            let generatedData = result.pageConfig?.data || result.data;
+            if (!generatedData && result.hero) generatedData = result;
+
+            const generatedTheme = result.pageConfig?.theme || result.theme || designPlan;
+            const generatedPrompts = result.imagePrompts || result.pageConfig?.imagePrompts || {};
+
+            const safeData = JSON.parse(JSON.stringify(initialData.data));
+            if (generatedData) {
+                Object.keys(generatedData).forEach((sectionKey: any) => {
+                    if (safeData[sectionKey]) {
+                        const genSection = generatedData[sectionKey];
+                        const defaultColors = safeData[sectionKey].colors || {};
+                        const { colors: genColors, ...otherProps } = genSection;
+                        safeData[sectionKey] = { ...safeData[sectionKey], ...otherProps };
+                        if (genColors) { safeData[sectionKey].colors = { ...defaultColors, ...genColors }; }
+                    }
+                });
+            }
+
+            const newProject = {
+                id: `proj_${Date.now()}`,
+                name: businessName,
+                thumbnailUrl: 'https://picsum.photos/seed/newproject/800/600',
+                status: 'Draft' as 'Draft',
+                lastUpdated: new Date().toISOString(),
+                data: safeData,
+                theme: {
+                    ...generatedTheme,
+                    fontFamilyHeader: (designPlan.typography?.header || 'Inter').toLowerCase().replace(/\s/g, '-'),
+                    fontFamilyBody: (designPlan.typography?.body || 'Inter').toLowerCase().replace(/\s/g, '-'),
+                    fontFamilyButton: (designPlan.typography?.button || 'Inter').toLowerCase().replace(/\s/g, '-'),
+                    cardBorderRadius: generatedTheme?.cardBorderRadius || 'xl',
+                    buttonBorderRadius: generatedTheme?.buttonBorderRadius || 'xl',
+                },
+                brandIdentity: { name: businessName, industry, targetAudience: 'General', toneOfVoice: tone as any, coreValues: 'Quality', language: 'English' },
+                componentOrder: result.pageConfig?.componentOrder || designPlan.componentOrder || initialData.componentOrder,
+                sectionVisibility: result.pageConfig?.sectionVisibility || initialData.sectionVisibility,
+                imagePrompts: generatedPrompts,
+                aiAssistantConfig: {
+                    agentName: `${businessName} Assistant`,
+                    tone: tone || 'Professional',
+                    languages: 'English, Spanish',
+                    businessProfile: description,
+                    productsServices: '',
+                    policiesContact: '',
+                    specialInstructions: '',
+                    faqs: [],
+                    widgetColor: designPlan.palette?.primary || '#4f46e5',
+                    isActive: true,
+                    leadCaptureEnabled: true,
+                    enableLiveVoice: false,
+                    voiceName: 'Zephyr' as const
+                }
+            };
+
+            await addNewProjectRef.current(newProject);
+        } catch (error: any) {
+            // Log failed API calls
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: designPrompt?.model || 'unknown',
+                    feature: 'onboarding-generation',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
+            throw error;
+        }
     };
 
     const updateDataPath = (path: string, value: any) => {

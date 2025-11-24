@@ -98,25 +98,25 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-[65px] bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                         <button 
                             onClick={onBack}
-                            className="p-2 text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors"
                             title="Volver"
                         >
-                            <ArrowLeft />
+                            <ArrowLeft className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center space-x-2">
-                            <Shield className="text-editor-accent" />
-                            <h1 className="text-xl font-bold">Gestión de Administradores</h1>
+                        <div className="flex items-center gap-2">
+                            <Shield className="text-editor-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold">Gestión de Administradores</h1>
                         </div>
                     </div>
                     <button 
                         onClick={onBack}
-                        className="hidden md:flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                     >
-                        <ArrowLeft size={16} className="mr-1.5" />
+                        <ArrowLeft className="w-4 h-4" />
                         Volver
                     </button>
                 </header>

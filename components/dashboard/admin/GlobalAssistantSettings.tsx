@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X, Menu } from 'lucide-react';
 import { GlobalAssistantConfig, ScopePermission } from '../../../types';
 import { PROMPT_TEMPLATES, getDefaultEnabledTemplates, compileTemplates } from '../../../data/promptTemplates';
 import InfoBubble from '../../ui/InfoBubble';
@@ -52,6 +52,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
     const [showSuccess, setShowSuccess] = useState(false);
     const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
     const [showFinalPreview, setShowFinalPreview] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         // Ensure defaults for new fields if missing from DB
@@ -123,23 +124,27 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
-            <DashboardSidebar isMobileOpen={false} onClose={() => {}} />
+            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-[65px] bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                         <button onClick={onBack} className="p-2 text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2">
-                            <ArrowLeft />
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+                            title="Open menu"
+                        >
+                            <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center space-x-2">
-                             <MessageSquare className="text-editor-accent" />
-                             <h1 className="text-xl font-bold text-editor-text-primary">Global Assistant Settings</h1>
+                        <div className="flex items-center gap-2">
+                             <MessageSquare className="text-editor-accent w-5 h-5" />
+                             <h1 className="text-lg font-semibold text-editor-text-primary">Global Assistant Settings</h1>
                         </div>
                     </div>
-                     <div className="flex items-center space-x-3">
+                     <div className="flex items-center gap-1">
                          {showSuccess && (
-                             <span className="text-sm text-green-400 flex items-center animate-fade-in-up">
+                             <span className="text-sm text-green-400 flex items-center animate-fade-in-up mr-2">
                                  <CheckCircle size={16} className="mr-1.5" /> Saved
                              </span>
                          )}
@@ -147,16 +152,16 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-accent text-editor-bg hover:bg-editor-accent-hover transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                         >
-                            <Save size={16} className="mr-1.5" />
-                            {isSaving ? 'Saving...' : 'Save Config'}
+                            <Save className="w-4 h-4" />
+                            {isSaving ? 'Saving...' : 'Save'}
                         </button>
                         <button 
                             onClick={onBack}
-                            className="hidden sm:flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         >
-                            <ArrowLeft size={16} className="mr-1.5" />
+                            <ArrowLeft className="w-4 h-4" />
                             Back
                         </button>
                      </div>

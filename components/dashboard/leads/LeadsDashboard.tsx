@@ -23,6 +23,7 @@ import LeadsFilters, { LeadsFiltersState } from './LeadsFilters';
 import LeadsTableView from './LeadsTableView';
 import LeadsListView from './LeadsListView';
 import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManager';
+import { logApiCall } from '../../../services/apiLoggingService';
 
 const LEAD_STAGES: { id: LeadStatus; label: string; color: string }[] = [
     { id: 'new', label: 'New Lead', color: 'bg-blue-500' },
@@ -228,7 +229,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
 
 const LeadsDashboard: React.FC = () => {
-    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, hasApiKey, promptForKeySelection, handleApiError, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks } = useEditor();
+    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, hasApiKey, promptForKeySelection, handleApiError, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, user } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -531,6 +532,16 @@ const LeadsDashboard: React.FC = () => {
                 config: { responseMimeType: 'application/json' }
             });
             
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-ai-analysis',
+                    success: true
+                });
+            }
+            
             const data = JSON.parse(response.text);
             
             await updateLead(selectedLead.id, {
@@ -542,7 +553,17 @@ const LeadsDashboard: React.FC = () => {
             // Update local state to reflect immediately
             setSelectedLead(prev => prev ? ({ ...prev, aiScore: data.score, aiAnalysis: data.analysis, recommendedAction: data.action }) : null);
             
-        } catch (e) {
+        } catch (e: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-ai-analysis',
+                    success: false,
+                    errorMessage: e.message || 'Unknown error'
+                });
+            }
             handleApiError(e);
             console.error("Analysis failed", e);
         } finally {
@@ -568,8 +589,29 @@ const LeadsDashboard: React.FC = () => {
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             });
+            
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-draft-email',
+                    success: true
+                });
+            }
+            
             setEmailDraft(response.text);
-        } catch (e) {
+        } catch (e: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-draft-email',
+                    success: false,
+                    errorMessage: e.message || 'Unknown error'
+                });
+            }
             handleApiError(e);
             console.error("Drafting failed", e);
         } finally {
@@ -584,20 +626,20 @@ const LeadsDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
-                <header className="h-[72px] px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
-                            <Menu />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <LayoutGrid className="text-primary" size={24} />
-                            <h1 className="text-xl font-bold text-foreground">Leads CRM</h1>
+                            <LayoutGrid className="text-primary w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-foreground">Leads CRM</h1>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                          {/* Stats Row (Hidden on small mobile) */}
-                        <div className="hidden md:flex items-center gap-6 mr-6 border-r border-border pr-6">
+                        <div className="hidden md:flex items-center gap-6">
                             <div>
                                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pipeline Value</p>
                                 <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
@@ -615,40 +657,40 @@ const LeadsDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             {/* View Mode Selector */}
-                            <div className="flex items-center bg-secondary/20 rounded-lg p-1">
+                            <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setViewMode('kanban')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                                     title="Kanban View"
                                 >
-                                    <Columns size={16} />
+                                    <Columns className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('table')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                                     title="Table View"
                                 >
-                                    <Table size={16} />
+                                    <Table className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
                                     title="List View"
                                 >
-                                    <List size={16} />
+                                    <List className="w-4 h-4" />
                                 </button>
                             </div>
                             
                             <div className="relative hidden sm:block">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                 <input 
                                     type="text" 
-                                    placeholder="Search pipeline..." 
+                                    placeholder="Search..." 
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="bg-secondary/20 border-transparent focus:bg-card focus:border-primary/50 rounded-lg py-2 pl-9 pr-4 text-sm outline-none w-64 transition-all placeholder:text-muted-foreground/70"
+                                    className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
                                 />
                             </div>
                             <InfoBubble bubbleId="leads" content={INFO_BUBBLE_CONTENT.leads} inline defaultExpanded={false} />
@@ -658,16 +700,16 @@ const LeadsDashboard: React.FC = () => {
                             />
                             <button 
                                 onClick={handleExportCSV}
-                                className="border border-border bg-card hover:bg-secondary text-foreground font-bold py-2 px-3 rounded-lg transition-all flex items-center text-sm whitespace-nowrap"
+                                className="h-9 w-9 flex items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                                 title="Export to CSV"
                             >
-                                <Download size={16} />
+                                <Download className="w-4 h-4" />
                             </button>
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
-                                className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center text-sm whitespace-nowrap"
+                                className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 whitespace-nowrap"
                             >
-                                <Plus size={16} className="mr-2" /> Add Lead
+                                <Plus className="w-4 h-4" /> Add Lead
                             </button>
                         </div>
                     </div>
@@ -675,7 +717,7 @@ const LeadsDashboard: React.FC = () => {
 
                 {/* Bulk Actions Bar */}
                 {selectedLeadIds.length > 0 && (
-                    <div className="sticky top-[72px] z-10 bg-primary text-primary-foreground px-6 py-3 border-b border-primary-foreground/20 flex items-center justify-between animate-slide-down">
+                    <div className="sticky top-14 z-10 bg-primary text-primary-foreground px-6 py-3 border-b border-primary-foreground/20 flex items-center justify-between animate-slide-down">
                         <div className="flex items-center gap-4">
                             <span className="font-bold text-sm">
                                 {selectedLeadIds.length} lead{selectedLeadIds.length > 1 ? 's' : ''} selected
