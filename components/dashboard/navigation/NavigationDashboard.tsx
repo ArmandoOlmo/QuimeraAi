@@ -90,12 +90,29 @@ const NavigationDashboard: React.FC = () => {
         loadProject(projectId, false, false);
     };
 
+    const menuStats = useMemo(() => {
+        const used = menus.filter(menu => {
+            const usedInHeader = data?.header?.menuId === menu.id;
+            const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
+            return usedInHeader || usedInFooter;
+        }).length;
+
+        const empty = menus.filter(menu => menu.items.length === 0).length;
+
+        return {
+            total: menus.length,
+            used,
+            unused: Math.max(menus.length - used, 0),
+            empty
+        };
+    }, [menus, data]);
+
     if (editingMenu) {
         return (
-            <MenuEditor 
-                menu={editingMenu} 
-                onClose={() => setEditingMenu(null)} 
-                isNew={isCreating} 
+            <MenuEditor
+                menu={editingMenu}
+                onClose={() => setEditingMenu(null)}
+                isNew={isCreating}
             />
         );
     }
@@ -157,52 +174,90 @@ const NavigationDashboard: React.FC = () => {
                             </div>
                         )}
 
+                        {activeProject && (
+                            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-5 mb-8 shadow-sm">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Navigation Hub</p>
+                                        <h2 className="text-2xl font-bold text-foreground mb-1">Diseña y organiza la navegación</h2>
+                                        <p className="text-sm text-muted-foreground max-w-2xl">Gestiona los menús que alimentan el header y el footer de tu sitio. Duplica, asigna y edita enlaces con un flujo más moderno y visual.</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3 justify-start md:justify-end">
+                                        <button
+                                            onClick={() => setView('editor')}
+                                            className="h-10 px-4 rounded-lg border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-all text-sm font-semibold flex items-center gap-2"
+                                        >
+                                            <Layout className="w-4 h-4" /> Ir al editor
+                                        </button>
+                                        <button
+                                            onClick={handleCreateNew}
+                                            className="h-10 px-4 rounded-lg bg-primary text-white hover:shadow-lg transition-all text-sm font-semibold flex items-center gap-2"
+                                        >
+                                            <Plus className="w-4 h-4" /> Nuevo menú
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeProject && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                {[{ label: 'Menús totales', value: menuStats.total, accent: 'text-primary', bg: 'bg-primary/10' },
+                                  { label: 'Asignados', value: menuStats.used, accent: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                                  { label: 'Sin asignar', value: menuStats.unused, accent: 'text-amber-500', bg: 'bg-amber-500/10' },
+                                  { label: 'Vacíos', value: menuStats.empty, accent: 'text-orange-500', bg: 'bg-orange-500/10' }].map((card, idx) => (
+                                    <div key={idx} className={`p-4 rounded-xl border border-border bg-card/80 backdrop-blur shadow-sm flex items-center justify-between ${card.bg}`}>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text-muted-foreground">{card.label}</p>
+                                            <p className={`text-2xl font-bold mt-1 ${card.accent}`}>{card.value}</p>
+                                        </div>
+                                        <div className="h-10 w-10 rounded-full bg-background/60 border border-border flex items-center justify-center text-muted-foreground">
+                                            <LayoutGrid className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Search and Filters */}
-                        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-lg font-semibold text-foreground">Menus</h2>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Menús disponibles</p>
+                                    <h3 className="text-lg font-semibold text-foreground">{filteredMenus.length} resultados</h3>
+                                </div>
                                 {menus.length > 0 && (
                                     <span className="px-2 py-1 text-xs font-medium bg-secondary rounded-full text-muted-foreground">
-                                        {filteredMenus.length} of {menus.length}
+                                        {filteredMenus.length} de {menus.length}
                                     </span>
                                 )}
                             </div>
-                            
+
                             {activeProject && menus.length > 0 && (
-                                <div className="flex items-center gap-3">
-                                    {/* Búsqueda */}
+                                <div className="flex flex-wrap gap-3 items-center">
                                     <div className="relative">
                                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                        <input 
+                                        <input
                                             type="text"
-                                            placeholder="Search menus..."
+                                            placeholder="Buscar menús..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-9 pr-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none w-48"
+                                            className="pl-9 pr-3 py-2 text-sm bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none w-52 shadow-sm"
                                         />
                                     </div>
-                                    
-                                    {/* Filtro */}
-                                    <select 
-                                        value={filterUsage}
-                                        onChange={(e) => setFilterUsage(e.target.value as any)}
-                                        className="px-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
-                                    >
-                                        <option value="all">All menus</option>
-                                        <option value="used">In use</option>
-                                        <option value="unused">Not in use</option>
-                                        <option value="empty">Empty</option>
-                                    </select>
-                                </div>
-                            )}
 
-                            {activeProject && (
-                                <button 
-                                    onClick={handleCreateNew}
-                                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                                >
-                                    <Plus className="w-4 h-4" /> Add menu
-                                </button>
+                                    <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-2 py-1.5 shadow-sm">
+                                        {[{ id: 'all', label: 'Todos' }, { id: 'used', label: 'En uso' }, { id: 'unused', label: 'Sin asignar' }, { id: 'empty', label: 'Vacíos' }].map(filter => (
+                                            <button
+                                                key={filter.id}
+                                                onClick={() => setFilterUsage(filter.id as any)}
+                                                className={`text-xs px-3 py-1 rounded-md transition-all ${filterUsage === filter.id ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'}`}
+                                            >
+                                                {filter.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </div>
 
@@ -267,116 +322,102 @@ const NavigationDashboard: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="border-b border-border bg-secondary/20">
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Title</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Items</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Usage</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground w-32">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border">
-                                                {filteredMenus.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                                                            {searchQuery || filterUsage !== 'all' 
-                                                                ? 'No menus match your filters.' 
-                                                                : 'No menus found. Create one to get started.'}
-                                                        </td>
-                                                    </tr>
-                                                ) : (
-                                                    filteredMenus.map((menu) => {
-                                                        const usedInHeader = data?.header?.menuId === menu.id;
-                                                        const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
-                                                        const isEmpty = menu.items.length === 0;
-                                                        
-                                                        return (
-                                                            <tr 
-                                                                key={menu.id} 
-                                                                onClick={() => handleEdit(menu)}
-                                                                className={`hover:bg-secondary/30 cursor-pointer transition-colors group ${isEmpty ? 'opacity-70' : ''}`}
-                                                            >
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="font-semibold text-foreground">{menu.title}</div>
-                                                                        {isEmpty && (
-                                                                            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">
-                                                                                Empty
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">Handle: {menu.handle}</div>}
-                                                                </td>
-                                                                <td className="p-4 text-sm">
-                                                                    {isEmpty ? (
-                                                                        <span className="text-orange-500 flex items-center gap-1">
-                                                                            <AlertCircle size={14} />
-                                                                            No items yet
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-muted-foreground">
-                                                                            {menu.items.length} {menu.items.length === 1 ? 'item' : 'items'}
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="p-4">
-                                                                    <div className="flex gap-2 flex-wrap">
-                                                                        {usedInHeader && (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                                                                                <Layout size={12} />
-                                                                                Header
-                                                                            </span>
-                                                                        )}
-                                                                        {usedInFooter && (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                                                                                <LayoutGrid size={12} />
-                                                                                Footer
-                                                                            </span>
-                                                                        )}
-                                                                        {!usedInHeader && !usedInFooter && (
-                                                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                                                <AlertCircle size={12} />
-                                                                                <span>Not assigned</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button 
-                                                                            onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
-                                                                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
-                                                                            title="Edit menu"
-                                                                        >
-                                                                            <Edit2 size={14} />
-                                                                        </button>
-                                                                        <button 
-                                                                            onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                                            className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
-                                                                            title="Duplicate"
-                                                                        >
-                                                                            <Copy size={14} />
-                                                                        </button>
-                                                                        <button 
-                                                                            onClick={(e) => handleDelete(e, menu.id)}
-                                                                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
-                                                                            title="Delete"
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                )}
-                                            </tbody>
-                                        </table>
+                                {filteredMenus.length === 0 ? (
+                                    <div className="p-10 border border-dashed border-border rounded-2xl text-center bg-card">
+                                        <div className="w-14 h-14 rounded-full bg-secondary/60 mx-auto mb-3 flex items-center justify-center">
+                                            <LayoutGrid className="w-6 h-6 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-foreground mb-1">No hay menús aún</h3>
+                                        <p className="text-sm text-muted-foreground mb-4">Crea tu primer menú o ajusta los filtros para ver resultados.</p>
+                                        <button
+                                            onClick={handleCreateNew}
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:shadow-lg transition-all"
+                                        >
+                                            <Plus className="w-4 h-4" /> Crear menú
+                                        </button>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {filteredMenus.map((menu) => {
+                                            const usedInHeader = data?.header?.menuId === menu.id;
+                                            const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
+                                            const isEmpty = menu.items.length === 0;
+
+                                            return (
+                                                <div
+                                                    key={menu.id}
+                                                    onClick={() => handleEdit(menu)}
+                                                    className={`group relative p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all cursor-pointer ${isEmpty ? 'opacity-90' : ''}`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h4 className="text-base font-semibold text-foreground">{menu.title}</h4>
+                                                                {isEmpty && (
+                                                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">Vacío</span>
+                                                                )}
+                                                            </div>
+                                                            {menu.handle && (
+                                                                <p className="text-xs text-muted-foreground">Handle: {menu.handle}</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
+                                                                className="p-2 rounded-lg border border-border hover:border-primary/50 hover:text-primary"
+                                                                title="Editar menú"
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
+                                                                className="p-2 rounded-lg border border-border hover:border-blue-400/70 hover:text-blue-500"
+                                                                title="Duplicar"
+                                                            >
+                                                                <Copy size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => handleDelete(e, menu.id)}
+                                                                className="p-2 rounded-lg border border-border hover:border-red-400/70 hover:text-red-500"
+                                                                title="Eliminar"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                                                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${isEmpty ? 'bg-orange-500/10 text-orange-500' : 'bg-secondary text-foreground'}`}>
+                                                            <LayoutGrid size={14} />
+                                                            {isEmpty ? 'Sin items' : `${menu.items.length} ${menu.items.length === 1 ? 'item' : 'items'}`}
+                                                        </div>
+
+                                                        {usedInHeader && (
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                                <Layout size={14} /> Header
+                                                            </span>
+                                                        )}
+                                                        {usedInFooter && (
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                                <LayoutGrid size={14} /> Footer
+                                                            </span>
+                                                        )}
+                                                        {!usedInHeader && !usedInFooter && (
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-secondary/60 text-muted-foreground">
+                                                                <AlertCircle size={14} /> Sin asignar
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                                                        <span>Última edición: {new Date(menu.updatedAt || menu.createdAt || Date.now()).toLocaleDateString()}</span>
+                                                        <span className="flex items-center gap-1">Abrir <ChevronRight size={12} /></span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </>
                         )}
                         
