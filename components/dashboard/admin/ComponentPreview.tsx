@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EditableComponentID, PreviewDevice, AnimationConfig } from '../../../types';
+import { EditableComponentID, PreviewDevice, PreviewOrientation, AnimationConfig } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { initialData } from '../../../data/initialData';
 import PreviewStatesSelector, { PreviewState } from './PreviewStatesSelector';
@@ -31,15 +31,25 @@ import Menu from '../../Menu';
 interface ComponentPreviewProps {
     selectedComponentId: string;
     previewDevice: PreviewDevice;
+    previewOrientation: PreviewOrientation;
 }
 
-const widthClasses: Record<PreviewDevice, string> = {
-  desktop: 'w-full',
-  tablet: 'w-full max-w-3xl',
-  mobile: 'w-full max-w-sm',
+const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = {
+  desktop: {
+    portrait: 'w-full',
+    landscape: 'w-full',
+  },
+  tablet: {
+    portrait: 'w-full max-w-3xl',
+    landscape: 'w-full max-w-4xl',
+  },
+  mobile: {
+    portrait: 'w-full max-w-sm',
+    landscape: 'w-full max-w-md',
+  },
 };
 
-const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice }) => {
+const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice, previewOrientation }) => {
     const { componentStyles, customComponents, theme } = useEditor();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
     const [renderKey, setRenderKey] = useState(0);
@@ -190,7 +200,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
     };
 
     return (
-        <div className={`w-full h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice]}`}>
+        <div className={`w-full h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
             <div className="bg-dark-900 rounded-lg p-4 border border-editor-border">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary pl-2">Live Preview</h3>

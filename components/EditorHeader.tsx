@@ -12,6 +12,7 @@ const EditorHeader: React.FC = () => {
   const { 
     isSidebarOpen, setIsSidebarOpen, 
     previewDevice, setPreviewDevice, 
+    previewOrientation, setPreviewOrientation,
     setView, 
     activeProject, renameActiveProject, saveProject,
     isEditingTemplate, exitTemplateEditor 
@@ -81,6 +82,13 @@ const EditorHeader: React.FC = () => {
     { name: 'mobile', icon: <Smartphone className="w-4 h-4" /> },
   ];
 
+  const orientationOptions = [
+    { value: 'portrait', label: 'Portrait', short: 'P' },
+    { value: 'landscape', label: 'Landscape', short: 'L' },
+  ] as const;
+
+  const orientationDisabled = previewDevice === 'desktop';
+
   return (
     <header className="bg-editor-bg border-b border-editor-border/50 h-14 flex-shrink-0 z-20">
       <div className="h-full flex items-center justify-between px-3 gap-3">
@@ -131,22 +139,43 @@ const EditorHeader: React.FC = () => {
           )}
         </div>
 
-        {/* CENTER SECTION - Device Preview */}
-        <div className="hidden md:flex items-center gap-1">
-          {deviceOptions.map(({ name, icon }) => (
-            <button
-              key={name}
-              title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
-              onClick={() => setPreviewDevice(name)}
-              className={`h-9 w-9 flex items-center justify-center rounded-md transition-all ${
-                previewDevice === name 
-                  ? 'bg-editor-accent text-white' 
-                  : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
-              }`}
-            >
-              {icon}
-            </button>
-          ))}
+        {/* CENTER SECTION - Device & Orientation */}
+        <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {deviceOptions.map(({ name, icon }) => (
+              <button
+                key={name}
+                title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
+                onClick={() => setPreviewDevice(name)}
+                className={`h-9 w-9 flex items-center justify-center rounded-md transition-all ${
+                  previewDevice === name 
+                    ? 'bg-editor-accent text-white' 
+                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                }`}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-editor-border/60 p-1">
+            {orientationOptions.map((option) => (
+              <button
+                key={option.value}
+                title={`${option.label}${orientationDisabled ? ' (Desktop only uses landscape)' : ''}`}
+                onClick={() => setPreviewOrientation(option.value)}
+                disabled={orientationDisabled}
+                className={`h-7 w-9 text-xs font-semibold rounded-md transition-all ${
+                  previewOrientation === option.value
+                    ? 'bg-editor-accent text-white'
+                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-pressed={previewOrientation === option.value}
+                aria-label={`Preview ${option.label}`}
+              >
+                {option.short}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* RIGHT SECTION - Actions */}

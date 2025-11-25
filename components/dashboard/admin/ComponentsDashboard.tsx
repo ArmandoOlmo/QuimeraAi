@@ -5,7 +5,7 @@ import ComponentLibrary from './ComponentLibrary';
 import ComponentDesigner from './ComponentDesigner';
 import { useEditor } from '../../../contexts/EditorContext';
 import { ArrowLeft, Menu, Puzzle, Monitor, Tablet, Smartphone } from 'lucide-react';
-import { PreviewDevice } from '../../../types';
+import { PreviewDevice, PreviewOrientation } from '../../../types';
 
 interface ComponentsDashboardProps {
     onBack: () => void;
@@ -17,6 +17,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<ActiveTab>('library');
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
+    const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
 
     const deviceOptions: { name: PreviewDevice; icon: React.ReactNode }[] = [
       { name: 'desktop', icon: <Monitor /> },
@@ -50,17 +51,36 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                     </div>
 
                     {activeTab === 'studio' && (
-                        <div className="hidden sm:flex items-center justify-center space-x-2 bg-editor-panel-bg p-1 rounded-lg">
-                            {deviceOptions.map(({ name, icon }) => (
-                                <button
-                                    key={name}
-                                    title={`Preview on ${name}`}
-                                    onClick={() => setPreviewDevice(name)}
-                                    className={`p-2 rounded-md transition-colors ${previewDevice === name ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'}`}
-                                >
-                                    {icon}
-                                </button>
-                            ))}
+                        <div className="hidden sm:flex items-center justify-center space-x-3">
+                            <div className="flex items-center space-x-2 bg-editor-panel-bg p-1 rounded-lg">
+                                {deviceOptions.map(({ name, icon }) => (
+                                    <button
+                                        key={name}
+                                        title={`Preview on ${name}`}
+                                        onClick={() => setPreviewDevice(name)}
+                                        className={`p-2 rounded-md transition-colors ${previewDevice === name ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'}`}
+                                    >
+                                        {icon}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-1 rounded-lg border border-editor-border/60 p-1">
+                                {(['portrait', 'landscape'] as PreviewOrientation[]).map((orientation) => (
+                                    <button
+                                        key={orientation}
+                                        onClick={() => setPreviewOrientation(orientation)}
+                                        disabled={previewDevice === 'desktop'}
+                                        className={`h-8 w-9 text-xs font-semibold rounded-md transition-all ${
+                                            previewOrientation === orientation
+                                                ? 'bg-editor-accent text-editor-bg'
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
+                                        } ${previewDevice === 'desktop' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        aria-label={`Preview ${orientation}`}
+                                    >
+                                        {orientation === 'portrait' ? 'P' : 'L'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -94,7 +114,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {activeTab === 'library' && <ComponentLibrary />}
-                    {activeTab === 'studio' && <ComponentDesigner previewDevice={previewDevice} />}
+                    {activeTab === 'studio' && <ComponentDesigner previewDevice={previewDevice} previewOrientation={previewOrientation} />}
                 </div>
             </div>
         </div>

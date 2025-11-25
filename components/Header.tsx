@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useEditor } from '../contexts/EditorContext';
-import { Box, Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -23,7 +23,6 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor }) => {
   const showImage = (logoType === 'image' || logoType === 'both') && logoImageUrl;
   const showText = (logoType === 'text' || logoType === 'both');
-  const showDefaultIcon = logoType === 'text'; // Only show default icon if strictly text mode
 
   return (
     <a href="#" className="flex items-center gap-3 flex-shrink-0 relative z-50 group">
@@ -34,9 +33,6 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
                 style={{ width: `${logoWidth}px`, height: 'auto', maxHeight: '100%' }}
                 className="object-contain"
             />
-        )}
-        {showDefaultIcon && !showImage && (
-             <Box className="h-8 w-8" style={{ color: textColor }} />
         )}
         {showText && (
             <span className="text-2xl font-bold font-header tracking-tight transition-colors" style={{ color: textColor }}>{logoText}</span>
@@ -61,7 +57,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
         if (isMobile) return '';
         switch(hoverStyle) {
             case 'underline': return 'after:content-[""] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-current after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left';
-            case 'highlight': return 'hover:bg-white/10 rounded-md px-3 py-1 transition-colors';
+            case 'highlight': return 'hover:opacity-70 transition-colors';
             case 'bracket': return 'before:content-["["] before:mr-1 before:opacity-0 hover:before:opacity-100 after:content-["]"] after:ml-1 after:opacity-0 hover:after:opacity-100 before:transition-all after:transition-all';
             case 'glow': return 'hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all';
             default: return 'hover:opacity-70';

@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
-import { PageData, ThemeData, PageSection, PreviewDevice, View, Project, ThemeMode, UserDocument, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
+import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialProjects } from '../data/templates';
 import { initialData } from '../data/initialData';
@@ -103,6 +103,8 @@ interface EditorContextType {
     onSectionSelect: (section: PageSection) => void;
     previewDevice: PreviewDevice;
     setPreviewDevice: React.Dispatch<React.SetStateAction<PreviewDevice>>;
+    previewOrientation: PreviewOrientation;
+    setPreviewOrientation: React.Dispatch<React.SetStateAction<PreviewOrientation>>;
     user: User | null;
     loadingAuth: boolean;
     userDocument: UserDocument | null;
@@ -289,6 +291,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [isDashboardSidebarCollapsed, setIsDashboardSidebarCollapsed] = useState(false);
     const [view, setView] = useState<View>('dashboard');
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
+    const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
     const previewRef = useRef<HTMLDivElement>(null);
     const [activeSection, setActiveSection] = useState<PageSection | null>(null);
     
@@ -3291,6 +3294,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         sectionVisibility, setSectionVisibility,
         activeSection, onSectionSelect,
         previewDevice, setPreviewDevice,
+        previewOrientation, setPreviewOrientation,
         user,
         loadingAuth,
         userDocument, setUserDocument,

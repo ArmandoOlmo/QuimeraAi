@@ -47,7 +47,7 @@ Tienes **DOS API keys diferentes**:
    - ⚠️ NO usar para Gemini
 
 2. **Gemini API Key** (pasada en deploy):
-   - `AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg`
+   - `TU_GEMINI_API_KEY_AQUI` (NO expongas la real)
    - Proyecto: `quimeraapp`
    - Uso: Para llamadas a la API de Gemini
    - ✅ Esta es la correcta para Gemini
@@ -76,7 +76,7 @@ gcloud run deploy quimera2025 \
   --source . \
   --region us-east1 \
   --allow-unauthenticated \
-  --set-build-env-vars VITE_GEMINI_API_KEY=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg
+  --set-build-env-vars VITE_GEMINI_API_KEY=TU_GEMINI_API_KEY_AQUI
 
 # 3. Restaurar .env.local
 mv .env.local.backup .env.local
@@ -91,7 +91,7 @@ Después del deploy, verifica:
 gcloud run services describe quimera2025 --region us-east1 --format="value(status.latestReadyRevisionName)"
 
 # Probar la API directamente
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=TU_GEMINI_API_KEY_AQUI" \
 -H 'Content-Type: application/json' \
 -d '{"contents":[{"parts":[{"text":"Di OK si funcionas"}]}]}'
 ```
@@ -130,7 +130,7 @@ Deberías ver una respuesta exitosa con "OK" en el contenido.
    curl -s "https://quimera2025-1034000853795.us-east1.run.app/assets/index-*.js" | grep -o "AIza[A-Za-z0-9_-]*"
    ```
    
-   Deberías ver: `AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg` (la correcta)
+   Deberías ver: `TU_GEMINI_API_KEY_AQUI` (tu API key real)
    NO: `AIzaSyBs_MbMSN6BCD1yrZ8SpCoa07DcZm2rmsM` (la de Firebase)
 
 ## 📞 Soporte

@@ -13,6 +13,7 @@ export type BorderSize = 'none' | 'sm' | 'md' | 'lg';
 export type JustifyContent = 'start' | 'center' | 'end';
 export type ImagePosition = 'left' | 'right';
 export type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
+export type PreviewOrientation = 'portrait' | 'landscape';
 export type AspectRatio = 'auto' | '1:1' | '4:3' | '3:4' | '16:9' | '9:16';
 export type ObjectFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -37,7 +38,7 @@ export type FontFamily =
 
 // View Types
 export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo';
-export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo';
+export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
 
 // Page Section Types
 export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'map' | 'menu';

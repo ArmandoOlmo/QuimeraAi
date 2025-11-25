@@ -4,7 +4,8 @@ import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageS
 import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
+import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
 
 // =============================================================================
@@ -447,13 +448,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         setIsLoading(true);
 
         try {
-            if (hasApiKey === false) {
+            if (hasApiKey === false && !isProxyMode()) {
                 promptForKeySelection();
                 setIsLoading(false);
                 return;
             }
 
-            const genai = await getGoogleGenAI();
             const systemContext = buildSystemInstruction();
 
             // Build conversation history
@@ -479,11 +479,44 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 }
             }
 
-            const result = await genai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                systemInstruction: systemContext,
-                contents: conversationHistory
-            });
+            let botResponse: string;
+
+            // Use proxy in production, direct API in development
+            if (isProxyMode()) {
+                console.log('[ChatCore] 🔄 Using proxy mode for Gemini API');
+                
+                // Build full prompt with system context and conversation history
+                const fullPrompt = systemContext + '\n\n' + 
+                    conversationHistory.map(msg => 
+                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
+                    ).join('\n\n');
+                
+                const proxyResponse = await generateContentViaProxy(
+                    project.id,
+                    fullPrompt,
+                    'gemini-2.5-flash',
+                    {
+                        temperature: 0.9,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 2048
+                    }
+                );
+                
+                botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text || 
+                             'Sorry, I could not generate a response.';
+            } else {
+                console.log('[ChatCore] 🔑 Using direct API mode');
+                
+                const genai = await getGoogleGenAI();
+                const result = await genai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    systemInstruction: systemContext,
+                    contents: conversationHistory
+                });
+                
+                botResponse = result.text;
+            }
             
             // Log API call
             if (user && activeProject) {
@@ -495,8 +528,6 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     success: true
                 });
             }
-
-            const botResponse = result.text;
             setMessages(prev => [...prev, { role: 'model', text: botResponse }]);
 
             // Check if we should trigger lead capture

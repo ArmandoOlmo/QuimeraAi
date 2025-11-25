@@ -28,7 +28,7 @@ cd /Users/armandoolmo/QuimeraAppCursor/QuimeraAi
 
 # Verificar que la API key está configurada
 echo $VITE_GEMINI_API_KEY
-# Debe mostrar: AIzaSyCkPaRaptGl8TBsCJiGFAk1bLHiSFiaEQA
+# Debe mostrar tu API key real (NO la expongas en archivos de Git)
 ```
 
 ### **2. Ejecutar el nuevo script de deploy:**
@@ -73,7 +73,7 @@ gcloud builds submit \
 
 ```bash
 # Configurar todas las variables
-export VITE_GEMINI_API_KEY="AIzaSyCkPaRaptGl8TBsCJiGFAk1bLHiSFiaEQA"
+export VITE_GEMINI_API_KEY="TU_GEMINI_API_KEY_AQUI"
 export VITE_FIREBASE_API_KEY="AIzaSyBs_MbMSN6BCD1yrZ8SpCoa07DcZm2rmsM"
 export VITE_FIREBASE_PROJECT_ID="quimeraai"
 export VITE_FIREBASE_AUTH_DOMAIN="quimeraai.firebaseapp.com"

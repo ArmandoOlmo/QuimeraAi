@@ -1,0 +1,60 @@
+# =============================================================================
+# QuimeraAI - Environment Variables para Gemini Proxy
+# =============================================================================
+# Copia estas variables a tu .env.local
+
+# -----------------------------------------------------------------------------
+# GEMINI API - Proxy Configuration
+# -----------------------------------------------------------------------------
+
+# URL base del proxy de Gemini (actualiza con tu proyecto)
+# Formato: https://REGION-PROJECT_ID.cloudfunctions.net/gemini
+VITE_GEMINI_PROXY_URL=https://us-central1-quimeraai.cloudfunctions.net/gemini
+
+# Forzar uso del proxy incluso en localhost (opcional)
+# true = siempre usa proxy
+# false = usa direct API en localhost, proxy en producción
+VITE_USE_GEMINI_PROXY=false
+
+# -----------------------------------------------------------------------------
+# GEMINI API - Direct API Key (solo para desarrollo local)
+# -----------------------------------------------------------------------------
+
+# API Key para llamadas directas (solo si no usas proxy en desarrollo)
+# Obtén tu key en: https://aistudio.google.com/app/apikey
+VITE_GEMINI_API_KEY=
+
+# -----------------------------------------------------------------------------
+# FIREBASE Configuration
+# -----------------------------------------------------------------------------
+
+VITE_FIREBASE_API_KEY=AIzaSyBs_MbMSN6BCD1yrZ8SpCoa07DcZm2rmsM
+VITE_FIREBASE_AUTH_DOMAIN=quimeraai.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=quimeraai
+VITE_FIREBASE_STORAGE_BUCKET=quimeraai.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=575386543550
+VITE_FIREBASE_APP_ID=1:575386543550:web:395114b8f43e810a7985ef
+VITE_FIREBASE_MEASUREMENT_ID=G-KQ26WWK4MD
+
+# -----------------------------------------------------------------------------
+# Notas de Configuración
+# -----------------------------------------------------------------------------
+
+# DESARROLLO (localhost):
+# - VITE_USE_GEMINI_PROXY=false
+# - Usa VITE_GEMINI_API_KEY para llamadas directas
+# - Más rápido, no hay rate limiting
+#
+# PRODUCCIÓN (Cloud Run):
+# - VITE_USE_GEMINI_PROXY automáticamente = true
+# - Usa el proxy para seguridad
+# - API key nunca se expone al cliente
+# - Rate limiting activo
+#
+# WIDGETS EMBEDIDOS:
+# - Siempre usan el proxy (no importa el valor de VITE_USE_GEMINI_PROXY)
+# - Obtienen projectId del contexto
+# - Funcionan en cualquier dominio
+
+# =============================================================================
+

@@ -22,7 +22,7 @@ Usar la sintaxis correcta de `gcloud run deploy`:
 
 ```bash
 # 1. Configura tu API key de Gemini
-export VITE_GEMINI_API_KEY="AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg"
+export VITE_GEMINI_API_KEY="TU_GEMINI_API_KEY_AQUI"
 
 # 2. Ejecuta el script de deploy
 ./deploy.sh
@@ -36,7 +36,7 @@ gcloud run deploy quimera2025 \
   --region us-east1 \
   --allow-unauthenticated \
   --platform managed \
-  --set-build-env-vars "VITE_GEMINI_API_KEY=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg"
+  --set-build-env-vars "VITE_GEMINI_API_KEY=TU_GEMINI_API_KEY_AQUI"
 ```
 
 ### Opción 3: Con todas las variables de Firebase

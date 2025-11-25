@@ -1,4 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
+import { 
+    shouldUseProxy, 
+    generateContentViaProxy, 
+    extractTextFromResponse,
+    type GeminiProxyConfig 
+} from './geminiProxyClient';
 
 // Helper para obtener la API key de las variables de entorno (Vite usa import.meta.env)
 const getProcessApiKey = (): string | null => {
@@ -121,6 +127,48 @@ export const fetchGoogleApiKey = async (): Promise<string> => {
 export const getGoogleGenAI = async () => {
     const apiKey = await fetchGoogleApiKey();
     return new GoogleGenAI({ apiKey });
+};
+
+/**
+ * Generate content using Gemini - automatically uses proxy in production
+ * @param prompt The prompt to send to Gemini
+ * @param projectId Project ID (required for proxy mode)
+ * @param model Model to use (default: gemini-1.5-flash)
+ * @param config Generation configuration
+ * @returns Generated text content
+ */
+export const generateContent = async (
+    prompt: string,
+    projectId?: string,
+    model: string = 'gemini-1.5-flash',
+    config: GeminiProxyConfig = {}
+): Promise<string> => {
+    const useProxy = shouldUseProxy();
+    
+    console.debug(`🤖 Using ${useProxy ? 'PROXY' : 'DIRECT'} mode for Gemini API`);
+    
+    if (useProxy) {
+        // Use proxy in production
+        if (!projectId) {
+            throw new Error('projectId is required when using Gemini proxy');
+        }
+        
+        const response = await generateContentViaProxy(projectId, prompt, model, config);
+        return extractTextFromResponse(response);
+    } else {
+        // Use direct API in development
+        const genAI = await getGoogleGenAI();
+        const modelInstance = genAI.getGenerativeModel({ model });
+        const result = await modelInstance.generateContent(prompt);
+        return result.response.text();
+    }
+};
+
+/**
+ * Check if proxy mode is active
+ */
+export const isProxyMode = (): boolean => {
+    return shouldUseProxy();
 };
 
 

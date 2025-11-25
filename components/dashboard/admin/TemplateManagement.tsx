@@ -7,24 +7,17 @@ import {
     LayoutTemplate, 
     Plus, 
     Edit, 
-    Trash2, 
-    EyeOff, 
+    Trash2,
     Eye,
     Search,
     Grid,
     List,
     Copy,
-    Star,
-    Users,
-    Clock,
     X,
     TrendingUp,
     Archive,
     Globe,
-    Filter,
-    SortAsc,
-    Download,
-    ExternalLink
+    Filter
 } from 'lucide-react';
 import { Project } from '../../../types';
 
@@ -46,9 +39,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     
-    // Preview and Selection States
+    // Preview and Filters States
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
-    const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
     const [showFilters, setShowFilters] = useState(false);
 
     const templates = projects.filter(p => p.status === 'Template');
@@ -126,26 +118,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     };
 
 
-    // Bulk actions
-    const handleBulkArchive = () => {
-        selectedTemplates.forEach(id => archiveTemplate(id, true));
-        setSelectedTemplates([]);
-    };
-
-    const handleBulkDelete = () => {
-        if (window.confirm(`Are you sure you want to delete ${selectedTemplates.length} templates?`)) {
-            selectedTemplates.forEach(id => deleteProject(id));
-            setSelectedTemplates([]);
-        }
-    };
-
-    const toggleSelectAll = () => {
-        if (selectedTemplates.length === filteredAndSortedTemplates.length) {
-            setSelectedTemplates([]);
-        } else {
-            setSelectedTemplates(filteredAndSortedTemplates.map(t => t.id));
-        }
-    };
 
     const totalSitesUsingTemplates = userProjects.filter(p => p.sourceTemplateId).length;
     const activeTemplates = templates.filter(t => !t.isArchived).length;
@@ -346,158 +318,71 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                     {/* Results Header */}
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <p className="text-sm text-editor-text-secondary">
-                                {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? 'template' : 'templates'}
-                            </p>
-                            {filteredAndSortedTemplates.length > 0 && (
-                                <label className="flex items-center gap-2 text-sm text-editor-text-secondary cursor-pointer hover:text-editor-text-primary">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTemplates.length === filteredAndSortedTemplates.length}
-                                        onChange={toggleSelectAll}
-                                        className="w-4 h-4 rounded border-editor-border"
-                                    />
-                                    Select All
-                                </label>
-                            )}
-                        </div>
+                        <p className="text-sm text-editor-text-secondary">
+                            {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? 'template' : 'templates'}
+                        </p>
                     </div>
 
                     {/* Templates Grid */}
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredAndSortedTemplates.map(template => (
                                 <div 
                                     key={template.id} 
-                                    className={`bg-editor-panel-bg rounded-lg border border-editor-border overflow-hidden group transition-all hover:shadow-xl relative ${template.isArchived ? 'opacity-60' : ''} ${selectedTemplates.includes(template.id) ? 'ring-2 ring-editor-accent' : ''}`}
+                                    className={`bg-editor-panel-bg rounded-lg border border-editor-border overflow-hidden group hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
-                                    {/* Selection Checkbox */}
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTemplates.includes(template.id)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedTemplates([...selectedTemplates, template.id]);
-                                            } else {
-                                                setSelectedTemplates(selectedTemplates.filter(id => id !== template.id));
-                                            }
-                                        }}
-                                        className="absolute top-3 left-3 w-5 h-5 rounded border-2 border-white shadow-lg z-10 cursor-pointer"
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-
                                     {/* Thumbnail */}
-                                    <div className="aspect-video bg-editor-border overflow-hidden relative">
+                                    <div 
+                                        className="aspect-video bg-editor-border overflow-hidden relative cursor-pointer"
+                                        onClick={() => setPreviewTemplate(template)}
+                                    >
                                         <img 
                                             src={template.thumbnailUrl} 
                                             alt={template.name} 
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                                         />
                                         
-                                        {/* Featured Badge */}
-                                        {template.isFeatured && (
-                                            <div className="absolute top-3 right-3">
-                                                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 drop-shadow-lg" />
-                                            </div>
-                                        )}
-                                        
-                                        {/* Usage Badge */}
-                                        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                            <Users size={12} />
-                                            {getTemplateUsage(template.id)}
-                                        </div>
-                                        
                                         {/* Archived Overlay */}
                                         {template.isArchived && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                <span className="font-bold text-white tracking-widest uppercase text-sm">Archived</span>
+                                                <Archive className="w-8 h-8 text-white" />
                                             </div>
                                         )}
-
-                                        {/* Quick Preview on Hover */}
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                            <button 
-                                                onClick={() => setPreviewTemplate(template)}
-                                                className="bg-white text-editor-bg px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform"
-                                            >
-                                                <Eye size={16} />
-                                                Quick Preview
-                                            </button>
-                                        </div>
                                     </div>
 
                                     {/* Content */}
                                     <div className="p-4">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h3 className="font-bold text-editor-text-primary flex-1 line-clamp-1">{template.name}</h3>
-                                        </div>
+                                        <h3 className="font-semibold text-editor-text-primary mb-1 line-clamp-1">{template.name}</h3>
                                         
-                                        {/* Category/Industry */}
-                                        <p className="text-xs text-editor-text-secondary mb-2">
+                                        <p className="text-xs text-editor-text-secondary mb-3">
                                             {template.category || template.brandIdentity?.industry || 'General'}
                                         </p>
                                         
-                                        {/* Description */}
-                                        {template.description && (
-                                            <p className="text-xs text-editor-text-secondary mb-3 line-clamp-2">
-                                                {template.description}
-                                            </p>
-                                        )}
-                                        
-                                        {/* Tags */}
-                                        {template.tags && template.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mb-3">
-                                                {template.tags.slice(0, 3).map(tag => (
-                                                    <span key={tag} className="text-xs bg-editor-border px-2 py-0.5 rounded">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                                {template.tags.length > 3 && (
-                                                    <span className="text-xs text-editor-text-secondary">+{template.tags.length - 3}</span>
-                                                )}
-                                            </div>
-                                        )}
-                                        
-                                        {/* Last Updated */}
-                                        <div className="flex items-center gap-1 text-xs text-editor-text-secondary mb-3">
-                                            <Clock size={12} />
-                                            {template.lastUpdated}
-                                        </div>
-                                        
                                         {/* Actions */}
-                                        <div className="flex justify-between items-center pt-3 border-t border-editor-border">
-                                            <div className="flex items-center space-x-1">
-                                                <button 
-                                                    onClick={() => loadProject(template.id, true)} 
-                                                    className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent transition-colors" 
-                                                    title="Edit Template"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => duplicateTemplate(template.id)} 
-                                                    className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-blue-500 transition-colors" 
-                                                    title="Duplicate Template"
-                                                >
-                                                    <Copy size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => archiveTemplate(template.id, !template.isArchived)} 
-                                                    className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border transition-colors" 
-                                                    title={template.isArchived ? 'Activate Template' : 'Archive Template'}
-                                                >
-                                                    {template.isArchived ? <Eye size={16} /> : <EyeOff size={16} />}
-                                                </button>
-                                            </div>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => loadProject(template.id, true)} 
+                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-editor-accent text-white rounded-md text-sm hover:bg-editor-accent/90 transition-colors" 
+                                                title="Edit Template"
+                                            >
+                                                <Edit size={14} />
+                                                Edit
+                                            </button>
+                                            <button 
+                                                onClick={() => duplicateTemplate(template.id)} 
+                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors" 
+                                                title="Duplicate"
+                                            >
+                                                <Copy size={16} />
+                                            </button>
                                             <button 
                                                 onClick={() => {
                                                     if (window.confirm(`Delete "${template.name}"?`)) {
                                                         deleteProject(template.id);
                                                     }
                                                 }} 
-                                                className="p-2 text-editor-text-secondary rounded-full hover:bg-red-500/10 hover:text-red-400 transition-colors" 
-                                                title="Delete Template"
+                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
+                                                title="Delete"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -508,107 +393,58 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
                     ) : (
                         /* List View */
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {filteredAndSortedTemplates.map(template => (
                                 <div 
                                     key={template.id} 
-                                    className={`bg-editor-panel-bg p-4 rounded-lg border border-editor-border flex items-center gap-4 hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-60' : ''} ${selectedTemplates.includes(template.id) ? 'ring-2 ring-editor-accent' : ''}`}
+                                    className={`bg-editor-panel-bg p-4 rounded-lg border border-editor-border flex items-center gap-4 hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
-                                    {/* Checkbox */}
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTemplates.includes(template.id)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedTemplates([...selectedTemplates, template.id]);
-                                            } else {
-                                                setSelectedTemplates(selectedTemplates.filter(id => id !== template.id));
-                                            }
-                                        }}
-                                        className="w-5 h-5 rounded border-editor-border cursor-pointer"
-                                    />
-
                                     {/* Thumbnail */}
                                     <div className="relative flex-shrink-0">
                                         <img 
                                             src={template.thumbnailUrl} 
                                             alt={template.name} 
-                                            className="w-32 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                            className="w-24 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                                             onClick={() => setPreviewTemplate(template)}
                                         />
-                                        {template.isFeatured && (
-                                            <Star className="absolute -top-1 -right-1 w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                        {template.isArchived && (
+                                            <div className="absolute inset-0 bg-black/60 rounded flex items-center justify-center">
+                                                <Archive className="w-6 h-6 text-white" />
+                                            </div>
                                         )}
                                     </div>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-editor-text-primary truncate">{template.name}</h3>
-                                            {template.isArchived && (
-                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">Archived</span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-editor-text-secondary mb-2">
+                                        <h3 className="font-semibold text-editor-text-primary truncate mb-1">{template.name}</h3>
+                                        <p className="text-sm text-editor-text-secondary">
                                             {template.category || template.brandIdentity?.industry || 'General'}
                                         </p>
-                                        {template.description && (
-                                            <p className="text-xs text-editor-text-secondary line-clamp-1 mb-2">
-                                                {template.description}
-                                            </p>
-                                        )}
-                                        <div className="flex items-center gap-4 text-xs text-editor-text-secondary">
-                                            <span className="flex items-center gap-1">
-                                                <Users size={12} />
-                                                {getTemplateUsage(template.id)} sites
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock size={12} />
-                                                {template.lastUpdated}
-                                            </span>
-                                        </div>
                                     </div>
 
-                                    {/* Tags */}
-                                    {template.tags && template.tags.length > 0 && (
-                                        <div className="hidden lg:flex flex-wrap gap-1 max-w-xs">
-                                            {template.tags.slice(0, 3).map(tag => (
-                                                <span key={tag} className="text-xs bg-editor-border px-2 py-0.5 rounded">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-
                                     {/* Actions */}
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-2">
                                         <button 
                                             onClick={() => setPreviewTemplate(template)}
-                                            className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent transition-colors" 
+                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors" 
                                             title="Preview"
                                         >
                                             <Eye size={18} />
                                         </button>
                                         <button 
                                             onClick={() => loadProject(template.id, true)} 
-                                            className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent transition-colors" 
+                                            className="flex items-center gap-1.5 px-3 py-2 bg-editor-accent text-white rounded-md text-sm hover:bg-editor-accent/90 transition-colors" 
                                             title="Edit"
                                         >
-                                            <Edit size={18} />
+                                            <Edit size={14} />
+                                            Edit
                                         </button>
                                         <button 
                                             onClick={() => duplicateTemplate(template.id)} 
-                                            className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-blue-500 transition-colors" 
+                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors" 
                                             title="Duplicate"
                                         >
                                             <Copy size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => archiveTemplate(template.id, !template.isArchived)} 
-                                            className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border transition-colors" 
-                                            title={template.isArchived ? 'Activate' : 'Archive'}
-                                        >
-                                            {template.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
                                         </button>
                                         <button 
                                             onClick={() => {
@@ -616,7 +452,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     deleteProject(template.id);
                                                 }
                                             }} 
-                                            className="p-2 text-editor-text-secondary rounded-full hover:bg-red-500/10 hover:text-red-400 transition-colors" 
+                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
                                             title="Delete"
                                         >
                                             <Trash2 size={18} />
@@ -820,36 +656,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 </div>
             )}
 
-            {/* Bulk Actions Bar */}
-            {selectedTemplates.length > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-editor-panel-bg border-2 border-editor-accent rounded-lg shadow-2xl p-4 flex items-center gap-4 z-40">
-                    <span className="text-sm font-medium">
-                        {selectedTemplates.length} template{selectedTemplates.length > 1 ? 's' : ''} selected
-                    </span>
-                    <div className="h-6 w-px bg-editor-border" />
-                    <button 
-                        onClick={handleBulkArchive}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 text-orange-500 rounded-md text-sm font-medium hover:bg-orange-500/20 transition-colors"
-                    >
-                        <Archive size={16} />
-                        Archive
-                    </button>
-                    <button 
-                        onClick={handleBulkDelete}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-md text-sm font-medium hover:bg-red-500/20 transition-colors"
-                    >
-                        <Trash2 size={16} />
-                        Delete
-                    </button>
-                    <div className="h-6 w-px bg-editor-border" />
-                    <button 
-                        onClick={() => setSelectedTemplates([])}
-                        className="px-3 py-1.5 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

@@ -51,10 +51,10 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           <button
             key={lang.code}
             onClick={() => changeLanguage(lang.code)}
-            className={`px-3 h-10 flex items-center rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center text-sm font-medium transition-all ${
               i18n.language === lang.code
-                ? 'bg-editor-accent text-white'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                ? 'text-editor-accent opacity-100'
+                : 'text-gray-400 hover:text-white opacity-70 hover:opacity-100'
             }`}
             aria-label={`Switch to ${lang.name}`}
           >
@@ -70,7 +70,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-9 w-9 flex items-center justify-center rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 group"
+        className="flex items-center justify-center transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:opacity-70 group"
         aria-label={t('language.selectLanguage')}
         aria-expanded={isOpen}
       >

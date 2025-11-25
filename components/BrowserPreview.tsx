@@ -1,27 +1,36 @@
 
 import React, { ReactNode, forwardRef } from 'react';
 import { useEditor } from '../contexts/EditorContext';
-import { PreviewDevice } from '../types';
+import { PreviewDevice, PreviewOrientation } from '../types';
 
 interface BrowserPreviewProps {
   children: ReactNode;
 }
 
-const widthClasses: Record<PreviewDevice, string> = {
-  desktop: 'w-full',
-  tablet: 'w-full max-w-3xl', // Tailwind's lg breakpoint
-  mobile: 'w-full max-w-sm', // Tailwind's sm breakpoint
+const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = {
+  desktop: {
+    portrait: 'w-full',
+    landscape: 'w-full',
+  },
+  tablet: {
+    portrait: 'w-full max-w-3xl',
+    landscape: 'w-full max-w-4xl',
+  },
+  mobile: {
+    portrait: 'w-full max-w-sm',
+    landscape: 'w-full max-w-md',
+  },
 };
 
 const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ children }, ref) => {
-  const { previewDevice, activeProject } = useEditor();
+  const { previewDevice, previewOrientation, activeProject } = useEditor();
   
   const projectSlug = activeProject?.name 
     ? activeProject.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
     : 'new-project';
 
   return (
-    <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice]}`}>
+    <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
       <div className="w-full h-full rounded-xl shadow-2xl bg-editor-panel-bg border border-editor-border flex flex-col overflow-hidden">
         {/* Browser Header */}
         <div className="flex-shrink-0 h-12 bg-editor-bg border-b border-editor-border flex items-center px-4 space-x-2 z-10">

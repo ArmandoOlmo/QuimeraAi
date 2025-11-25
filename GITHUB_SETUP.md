@@ -51,7 +51,7 @@ Agrega los siguientes secrets:
 
 #### **Secret 2: VITE_GEMINI_API_KEY**
 - Name: `VITE_GEMINI_API_KEY`
-- Value: `AIzaSyCkPaRaptGl8TBsCJiGFAk1bLHiSFiaEQA`
+- Value: `TU_GEMINI_API_KEY_AQUI` (NO expongas la real aquí)
 
 #### **Secret 3-8: Firebase Variables** (Opcionales, tienen fallbacks)
 - `VITE_FIREBASE_API_KEY`

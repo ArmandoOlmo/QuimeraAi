@@ -5,7 +5,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle, 
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap, 
     Store, FlaskConical, Accessibility, Languages, Search, FileText, 
-    Navigation, Star, Settings, Grid3x3, List
+    Navigation, TrendingUp, Activity, Clock, Star, Settings, Grid3x3, List
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -30,7 +30,7 @@ import AppInformationSettings from './admin/AppInformationSettings';
 import ContentManagementDashboard from './admin/ContentManagementDashboard';
 import LandingNavigationManagement from './admin/LandingNavigationManagement';
 
-// Types
+// Types for better organization
 type AdminFeature = {
     id: string;
     title: string;
@@ -43,7 +43,7 @@ type AdminFeature = {
 
 type ViewMode = 'grid' | 'list' | 'compact';
 
-// Components
+// Enhanced Admin Card with animations and better visuals
 const AdminCard: React.FC<{ 
     feature: AdminFeature;
     onClick?: () => void;
@@ -63,8 +63,10 @@ const AdminCard: React.FC<{
                 ${isList ? 'flex items-center gap-4' : ''}
             `}
         >
+            {/* Gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-editor-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
+            {/* Content */}
             <div className={`relative z-10 ${isList ? 'flex items-center gap-4 flex-1' : ''}`}>
                 <div className={`
                     bg-editor-accent/10 rounded-lg text-editor-accent
@@ -95,7 +97,10 @@ const AdminCard: React.FC<{
                         )}
                     </div>
                     {!isCompact && (
-                        <p className={`text-editor-text-secondary mt-1 ${isList ? 'text-sm' : 'text-sm'}`}>
+                        <p className={`
+                            text-editor-text-secondary mt-1
+                            ${isList ? 'text-sm' : 'text-sm'}
+                        `}>
                             {feature.description}
                         </p>
                     )}
@@ -105,10 +110,47 @@ const AdminCard: React.FC<{
                     <ArrowLeft className="w-5 h-5 text-editor-text-secondary group-hover:text-editor-accent transition-colors rotate-180" />
                 )}
             </div>
+
+            {/* Category badge */}
+            {!isCompact && !isList && (
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="px-2 py-1 text-xs font-medium bg-editor-accent/20 text-editor-accent rounded">
+                        {feature.category}
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
 
+// Quick Stats Card
+const StatCard: React.FC<{
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    trend?: string;
+    trendUp?: boolean;
+}> = ({ title, value, icon, trend, trendUp }) => (
+    <div className="bg-editor-panel-bg p-4 rounded-xl border border-editor-border hover:border-editor-accent/50 transition-colors">
+        <div className="flex items-center justify-between">
+            <div>
+                <p className="text-sm text-editor-text-secondary mb-1">{title}</p>
+                <p className="text-2xl font-bold text-editor-text-primary">{value}</p>
+                {trend && (
+                    <p className={`text-xs mt-1 flex items-center gap-1 ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                        <TrendingUp className={`w-3 h-3 ${!trendUp && 'rotate-180'}`} />
+                        {trend}
+                    </p>
+                )}
+            </div>
+            <div className="bg-editor-accent/10 p-3 rounded-lg text-editor-accent">
+                {icon}
+            </div>
+        </div>
+    </div>
+);
+
+// Category filter chip
 const CategoryChip: React.FC<{
     label: string;
     active: boolean;
@@ -137,6 +179,7 @@ const SuperAdminDashboard = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
+    // Organized admin features with categories
     const adminFeatures: AdminFeature[] = [
         // Core Management
         { id: 'admins', title: t('superadmin.adminManagement'), description: t('superadmin.adminManagementDesc'), icon: <Shield size={24} />, category: 'core' },
@@ -169,6 +212,7 @@ const SuperAdminDashboard = () => {
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system' },
     ];
 
+    // Categories with counts
     const categories = useMemo(() => {
         const categoryMap = new Map<string, number>();
         adminFeatures.forEach(feature => {
@@ -185,6 +229,7 @@ const SuperAdminDashboard = () => {
         ];
     }, [adminFeatures, t]);
 
+    // Filter and search features
     const filteredFeatures = useMemo(() => {
         return adminFeatures.filter(feature => {
             const matchesCategory = selectedCategory === 'all' || feature.category === selectedCategory;
@@ -221,7 +266,7 @@ const SuperAdminDashboard = () => {
         }
     };
 
-    // Views rendering
+    // Views that already have their own header/layout
     if (adminView === 'admins') return <AdminManagement onBack={() => setAdminView('main')} />;
     if (adminView === 'tenants') return <TenantManagement onBack={() => setAdminView('main')} />;
     if (adminView === 'languages') return <LanguageManagement onBack={() => setAdminView('main')} />;
@@ -236,58 +281,99 @@ const SuperAdminDashboard = () => {
     if (adminView === 'app-info') return <AppInformationSettings onBack={() => setAdminView('main')} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={() => setAdminView('main')} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'marketplace') return <AdminViewLayout title="Component Marketplace" onBack={() => setAdminView('main')}><ComponentMarketplace /></AdminViewLayout>;
-    if (adminView === 'design-tokens') return <AdminViewLayout title="Design Tokens" onBack={() => setAdminView('main')}><DesignTokensEditor /></AdminViewLayout>;
-    if (adminView === 'conditional-rules') return <AdminViewLayout title="Conditional Rules" onBack={() => setAdminView('main')}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
-    if (adminView === 'ab-testing') return <AdminViewLayout title="A/B Testing" onBack={() => setAdminView('main')} noPadding><ABTestingDashboard /></AdminViewLayout>;
-    if (adminView === 'accessibility') return <AdminViewLayout title="Accessibility Checker" onBack={() => setAdminView('main')} noPadding><AccessibilityChecker /></AdminViewLayout>;
-    if (adminView === 'analytics') return <AdminViewLayout title="Component Analytics" onBack={() => setAdminView('main')} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+    
+    // Views using the new AdminViewLayout wrapper
+    if (adminView === 'marketplace') return (
+        <AdminViewLayout title="Component Marketplace" onBack={() => setAdminView('main')}>
+            <ComponentMarketplace />
+        </AdminViewLayout>
+    );
+    
+    if (adminView === 'design-tokens') return (
+        <AdminViewLayout title="Design Tokens" onBack={() => setAdminView('main')}>
+            <DesignTokensEditor />
+        </AdminViewLayout>
+    );
+    
+    if (adminView === 'conditional-rules') return (
+        <AdminViewLayout title="Conditional Rules" onBack={() => setAdminView('main')}>
+            <ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} />
+        </AdminViewLayout>
+    );
+    
+    if (adminView === 'ab-testing') return (
+        <AdminViewLayout title="A/B Testing" onBack={() => setAdminView('main')} noPadding>
+            <ABTestingDashboard />
+        </AdminViewLayout>
+    );
+    
+    if (adminView === 'accessibility') return (
+        <AdminViewLayout title="Accessibility Checker" onBack={() => setAdminView('main')} noPadding>
+            <AccessibilityChecker />
+        </AdminViewLayout>
+    );
+    
+    if (adminView === 'analytics') return (
+        <AdminViewLayout title="Component Analytics" onBack={() => setAdminView('main')} noPadding>
+            <AnalyticsDashboard />
+        </AdminViewLayout>
+    );
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
+                {/* Enhanced Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors"
+                            title={t('common.openMenu')}
                         >
-                            <Menu className="w-5 h-5" />
+                            <Menu className="w-4 h-4" />
                         </button>
-                        <Shield className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
+                        <div className="flex items-center gap-2">
+                            <div className="bg-editor-accent/10 p-2 rounded-lg">
+                                <Shield className="text-editor-accent w-5 h-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
+                                <p className="text-xs text-editor-text-secondary hidden sm:block">Panel de Control Avanzado</p>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-3">
-                            <button 
-                                onClick={() => setViewMode('grid')} 
-                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                    <div className="flex items-center gap-2">
+                        {/* View Mode Toggles */}
+                        <div className="hidden md:flex items-center gap-1 bg-editor-panel-bg border border-editor-border rounded-lg p-1">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 title="Vista Grid"
                             >
-                                <Grid3x3 className="w-5 h-5" />
+                                <Grid3x3 className="w-4 h-4" />
                             </button>
-                            <button 
-                                onClick={() => setViewMode('list')} 
-                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 title="Vista Lista"
                             >
-                                <List className="w-5 h-5" />
+                                <List className="w-4 h-4" />
                             </button>
-                            <button 
-                                onClick={() => setViewMode('compact')} 
-                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                            <button
+                                onClick={() => setViewMode('compact')}
+                                className={`p-1.5 rounded transition-colors ${viewMode === 'compact' ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 title="Vista Compacta"
                             >
-                                <Settings className="w-5 h-5" />
+                                <Settings className="w-4 h-4" />
                             </button>
                         </div>
+
                         <button 
-                            onClick={() => setView('dashboard')} 
-                            className="flex items-center text-sm font-medium text-editor-text-secondary hover:text-editor-accent transition-colors"
+                            onClick={() => setView('dashboard')}
+                            className="flex items-center text-sm font-medium h-9 px-4 rounded-lg bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
                             <span className="hidden sm:inline">{t('superadmin.backToDashboard')}</span>
@@ -295,10 +381,43 @@ const SuperAdminDashboard = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
-                    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-                        {/* Search */}
-                        <div className="relative mb-6">
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                    {/* Quick Stats Section */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <StatCard 
+                            title="Usuarios Activos" 
+                            value="1,234" 
+                            icon={<Users size={24} />}
+                            trend="+12.5%"
+                            trendUp={true}
+                        />
+                        <StatCard 
+                            title="Sitios Publicados" 
+                            value="89" 
+                            icon={<LayoutTemplate size={24} />}
+                            trend="+5.2%"
+                            trendUp={true}
+                        />
+                        <StatCard 
+                            title="Uso de API" 
+                            value="45.2K" 
+                            icon={<Activity size={24} />}
+                            trend="-2.1%"
+                            trendUp={false}
+                        />
+                        <StatCard 
+                            title="Ingresos MRR" 
+                            value="$12.5K" 
+                            icon={<TrendingUp size={24} />}
+                            trend="+18.3%"
+                            trendUp={true}
+                        />
+                    </div>
+
+                    {/* Search and Filters */}
+                    <div className="mb-6 space-y-4">
+                        {/* Search Bar */}
+                        <div className="relative">
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-editor-text-secondary w-5 h-5" />
                             <input
                                 type="text"
@@ -307,62 +426,102 @@ const SuperAdminDashboard = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:border-editor-accent focus:ring-2 focus:ring-editor-accent/20 transition-all"
                             />
-                        </div>
-
-                        {/* Categories */}
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            {categories.map(cat => (
-                                <CategoryChip key={cat.id} label={cat.label} count={cat.count} active={selectedCategory === cat.id} onClick={() => setSelectedCategory(cat.id)} />
-                            ))}
-                        </div>
-
-                        {/* Results count */}
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm text-editor-text-secondary">
-                                Mostrando <span className="font-semibold text-editor-text-primary">{filteredFeatures.length}</span> de <span className="font-semibold">{adminFeatures.length}</span> funcionalidades
-                            </p>
-                            {(searchQuery || selectedCategory !== 'all') && (
+                            {searchQuery && (
                                 <button
-                                    onClick={() => {
-                                        setSearchQuery('');
-                                        setSelectedCategory('all');
-                                    }}
-                                    className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-editor-text-secondary hover:text-editor-text-primary"
                                 >
-                                    Limpiar filtros
+                                    <span className="sr-only">Limpiar búsqueda</span>
+                                    ✕
                                 </button>
                             )}
                         </div>
 
-                        {/* Features Grid */}
-                        {filteredFeatures.length > 0 ? (
-                            <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : viewMode === 'list' ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'}`}>
-                                {filteredFeatures.map(feature => (
-                                    <AdminCard key={feature.id} feature={feature} onClick={() => handleCardClick(feature.id)} viewMode={viewMode} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-12">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-editor-panel-bg border-2 border-dashed border-editor-border mb-4">
-                                    <Search className="w-8 h-8 text-editor-text-secondary" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
-                                    No se encontraron resultados
-                                </h3>
-                                <p className="text-editor-text-secondary mb-4">
-                                    Intenta con otros términos de búsqueda o filtros
-                                </p>
-                                <button
-                                    onClick={() => {
-                                        setSearchQuery('');
-                                        setSelectedCategory('all');
-                                    }}
-                                    className="px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
-                                >
-                                    Ver todas las funcionalidades
-                                </button>
-                            </div>
+                        {/* Category Filters */}
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map(category => (
+                                <CategoryChip
+                                    key={category.id}
+                                    label={category.label}
+                                    count={category.count}
+                                    active={selectedCategory === category.id}
+                                    onClick={() => setSelectedCategory(category.id)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Results Count */}
+                    <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm text-editor-text-secondary">
+                            Mostrando <span className="font-semibold text-editor-text-primary">{filteredFeatures.length}</span> de <span className="font-semibold">{adminFeatures.length}</span> funcionalidades
+                        </p>
+                        {(searchQuery || selectedCategory !== 'all') && (
+                            <button
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setSelectedCategory('all');
+                                }}
+                                className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
+                            >
+                                Limpiar filtros
+                            </button>
                         )}
+                    </div>
+
+                    {/* Admin Features Grid/List */}
+                    {filteredFeatures.length > 0 ? (
+                        <div className={`
+                            ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 
+                              viewMode === 'list' ? 'space-y-3' : 
+                              'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'}
+                        `}>
+                            {filteredFeatures.map(feature => (
+                                <AdminCard 
+                                    key={feature.id}
+                                    feature={feature}
+                                    onClick={() => handleCardClick(feature.id)}
+                                    viewMode={viewMode}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-editor-panel-bg border-2 border-dashed border-editor-border mb-4">
+                                <Search className="w-8 h-8 text-editor-text-secondary" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
+                                No se encontraron resultados
+                            </h3>
+                            <p className="text-editor-text-secondary mb-4">
+                                Intenta con otros términos de búsqueda o filtros
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setSelectedCategory('all');
+                                }}
+                                className="px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                            >
+                                Ver todas las funcionalidades
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Quick Actions Footer */}
+                    <div className="mt-8 p-4 bg-editor-panel-bg border border-editor-border rounded-xl">
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-editor-text-secondary" />
+                                <span className="text-sm text-editor-text-secondary">
+                                    Última actualización: <span className="text-editor-text-primary font-medium">Hace 2 minutos</span>
+                                </span>
+                            </div>
+                            <button className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium flex items-center gap-2">
+                                <Activity className="w-4 h-4" />
+                                Ver registro de actividad
+                            </button>
+                        </div>
                     </div>
                 </main>
             </div>

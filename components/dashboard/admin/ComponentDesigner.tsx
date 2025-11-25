@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { EditableComponentID, PreviewDevice, ComponentVariant, ComponentPermissions, ComponentDocumentation } from '../../../types';
+import { EditableComponentID, PreviewDevice, PreviewOrientation, ComponentVariant, ComponentPermissions, ComponentDocumentation } from '../../../types';
 import ComponentControls from './ComponentControls';
 import ComponentPreview from './ComponentPreview';
 import CreateComponentModal from './CreateComponentModal';
@@ -14,6 +14,7 @@ import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, He
 
 interface ComponentDesignerProps {
     previewDevice: PreviewDevice;
+    previewOrientation: PreviewOrientation;
 }
 
 const componentOptions: { id: EditableComponentID, name: string, icon: React.ReactNode }[] = [
@@ -38,7 +39,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
     { id: 'footer', name: 'Footer', icon: <Type size={18} /> },
 ];
 
-const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice }) => {
+const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, previewOrientation }) => {
     const { customComponents, saveComponent, revertToVersion, updateComponentStyle, updateComponentVariants, renameCustomComponent, componentStyles } = useEditor();
     const [selectedComponentId, setSelectedComponentId] = useState<string>('header');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -497,7 +498,8 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice }) 
                     <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center items-start bg-editor-bg">
                         <ComponentPreview 
                             selectedComponentId={selectedComponentId} 
-                            previewDevice={previewDevice} 
+                            previewDevice={previewDevice}
+                            previewOrientation={previewOrientation}
                         />
                     </div>
                 </main>

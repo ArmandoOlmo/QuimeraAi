@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
 import ThemeToggle from './ui/ThemeToggle';
 import LanguageSelector from './ui/LanguageSelector';
-import { Menu, LayoutDashboard, Check, CloudUpload, Globe } from 'lucide-react';
+import { Menu, LayoutDashboard, Check, CloudUpload, Globe, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { PreviewDevice } from '../types';
 
 interface SimpleEditorHeaderProps {
   onMenuClick?: () => void;
@@ -17,7 +18,11 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     renameActiveProject, 
     saveProject,
     isEditingTemplate, 
-    exitTemplateEditor 
+    exitTemplateEditor,
+    previewDevice,
+    setPreviewDevice,
+    previewOrientation,
+    setPreviewOrientation
   } = useEditor();
 
   const [isEditingName, setIsEditingName] = useState(false);
@@ -78,9 +83,22 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     }
   };
 
+  const deviceOptions: { name: PreviewDevice; icon: React.ReactNode }[] = [
+    { name: 'desktop', icon: <Monitor className="w-4 h-4" /> },
+    { name: 'tablet', icon: <Tablet className="w-4 h-4" /> },
+    { name: 'mobile', icon: <Smartphone className="w-4 h-4" /> },
+  ];
+
+  const orientationOptions = [
+    { value: 'portrait', label: 'Portrait', short: 'P' },
+    { value: 'landscape', label: 'Landscape', short: 'L' },
+  ] as const;
+
+  const orientationDisabled = previewDevice === 'desktop';
+
   return (
-    <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
-      <div className="flex items-center gap-4">
+    <header className="h-14 px-4 md:px-6 border-b border-border flex items-center gap-4 bg-background z-20 sticky top-0" role="banner">
+      <div className="flex items-center gap-4 min-w-0 flex-1">
         {/* Mobile Menu Button */}
         {onMenuClick && (
           <button 
@@ -126,7 +144,45 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Device & Orientation Controls */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          {deviceOptions.map(({ name, icon }) => (
+            <button
+              key={name}
+              title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
+              onClick={() => setPreviewDevice(name)}
+              className={`h-9 w-9 flex items-center justify-center rounded-md transition-all ${
+                previewDevice === name 
+                  ? 'bg-editor-accent text-white' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-border/40'
+              }`}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border/60 p-1">
+          {orientationOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setPreviewOrientation(option.value)}
+              disabled={orientationDisabled}
+              className={`h-7 w-9 text-xs font-semibold rounded-md transition-all ${
+                previewOrientation === option.value
+                  ? 'bg-editor-accent text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-border/40'
+              } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label={`Preview ${option.label}`}
+              aria-pressed={previewOrientation === option.value}
+            >
+              {option.short}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* Theme & Language */}
         <ThemeToggle />
         <LanguageSelector />

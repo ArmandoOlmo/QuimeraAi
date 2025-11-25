@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useState, useContext, useRef, ReactNode } from 'react';
-import { View, AdminView, PreviewDevice, PageSection, ThemeMode } from '../../types';
+import { View, AdminView, PreviewDevice, PreviewOrientation, PageSection, ThemeMode } from '../../types';
 
 interface UIContextType {
     // Sidebar State
@@ -23,6 +23,8 @@ interface UIContextType {
     previewRef: React.RefObject<HTMLDivElement>;
     previewDevice: PreviewDevice;
     setPreviewDevice: React.Dispatch<React.SetStateAction<PreviewDevice>>;
+    previewOrientation: PreviewOrientation;
+    setPreviewOrientation: React.Dispatch<React.SetStateAction<PreviewOrientation>>;
     
     // Section Management
     activeSection: PageSection | null;
@@ -56,6 +58,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Preview
     const previewRef = useRef<HTMLDivElement>(null);
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
+    const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
     
     // Section Management
     const [activeSection, setActiveSection] = useState<PageSection | null>(null);
@@ -107,6 +110,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         previewRef,
         previewDevice,
         setPreviewDevice,
+        previewOrientation,
+        setPreviewOrientation,
         activeSection,
         onSectionSelect,
         isProfileModalOpen,

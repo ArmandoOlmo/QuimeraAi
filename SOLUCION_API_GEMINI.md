@@ -23,7 +23,7 @@ O visita: https://console.cloud.google.com/apis/library/generativelanguage.googl
 ### Paso 2: Verificar que tu API Key es válida
 
 1. Ve a Google AI Studio: https://aistudio.google.com/app/apikey
-2. Verifica que tu API Key existe: `AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg`
+2. Verifica que tu API Key existe (NO expongas la key real en archivos de Git)
 3. Si no existe o está expirada, crea una nueva
 
 **IMPORTANTE**: Las API Keys de Gemini se crean en Google AI Studio, NO en Google Cloud Console.
@@ -33,7 +33,7 @@ O visita: https://console.cloud.google.com/apis/library/generativelanguage.googl
 Crea o edita tu archivo `.env.local` con:
 
 ```env
-VITE_GEMINI_API_KEY=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg
+VITE_GEMINI_API_KEY=TU_GEMINI_API_KEY_AQUI
 ```
 
 ### Paso 4: Prueba localmente primero
@@ -53,7 +53,7 @@ gcloud run deploy quimera2025 \
   --source . \
   --region us-east1 \
   --allow-unauthenticated \
-  --set-build-env-vars VITE_GEMINI_API_KEY=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg
+  --set-build-env-vars VITE_GEMINI_API_KEY=TU_GEMINI_API_KEY_AQUI
 ```
 
 ## Verificación de Errores Comunes
@@ -104,7 +104,7 @@ gcloud run deploy quimera2025 \
   --source . \
   --region us-east1 \
   --allow-unauthenticated \
-  --set-env-vars VITE_GEMINI_API_KEY=AIzaSyCNgO6QWhKy2B00d4uu-nAagPow3RnQRNg
+  --set-env-vars VITE_GEMINI_API_KEY=TU_GEMINI_API_KEY_AQUI
 ```
 
 ## Debugging en Tiempo Real

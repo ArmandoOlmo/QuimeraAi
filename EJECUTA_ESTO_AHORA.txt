@@ -1,0 +1,78 @@
+===========================================
+🚨 EMERGENCIA: API KEY BLOQUEADA - SOLUCIÓN
+===========================================
+
+📋 EJECUTA ESTE COMANDO EN UNA TERMINAL EXTERNA:
+
+cd /Users/armandoolmo/QuimeraAppCursor/QuimeraAi && ./fix-api-key-now.sh
+
+===========================================
+
+Este script hará TODO automáticamente:
+
+✅ 1. Verificar/Instalar Firebase CLI
+✅ 2. Login a Firebase (abrirá navegador)
+✅ 3. Pedirá tu nueva API key
+✅ 4. Configurará la key en backend (seguro)
+✅ 5. Deployará Cloud Functions (proxy)
+✅ 6. Creará .env.local
+✅ 7. Probará que funciona (sin 403)
+✅ 8. Rebuildeará tu app
+✅ 9. Deployará tu app
+✅ 10. ¡Listo!
+
+⏱️  TIEMPO TOTAL: ~10 minutos
+
+===========================================
+
+📝 NOTAS IMPORTANTES:
+
+1. Cuando el script pida tu API key:
+   - Pega la nueva key que creaste en Google AI Studio
+   - NO uses una key vieja (están bloqueadas)
+
+2. Durante el login de Firebase:
+   - Se abrirá tu navegador
+   - Acepta los permisos
+
+3. El script te mostrará el progreso en tiempo real
+
+===========================================
+
+🆘 SI ALGO FALLA:
+
+Ver logs:
+  firebase functions:log --follow
+
+Verificar config:
+  firebase functions:config:get
+
+Volver a ejecutar:
+  ./fix-api-key-now.sh
+
+===========================================
+
+🎯 RESULTADO ESPERADO:
+
+Después de ejecutar el script:
+  ✅ API key segura en backend
+  ✅ Sin errores 403
+  ✅ Chatbots funcionando
+  ✅ App deployada
+
+===========================================
+
+📞 AYUDA ADICIONAL:
+
+Si necesitas ayuda, consulta:
+  - EMERGENCY_API_KEY_FIX.md
+  - INSTALAR_Y_DEPLOYAR_AHORA.md
+
+===========================================
+
+🚀 ¡AHORA SÍ! COPIA Y PEGA ESTE COMANDO:
+
+cd /Users/armandoolmo/QuimeraAppCursor/QuimeraAi && ./fix-api-key-now.sh
+
+===========================================
+

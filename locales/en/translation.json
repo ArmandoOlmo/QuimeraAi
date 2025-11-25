@@ -285,6 +285,8 @@
     "tenantManagementDesc": "Administer clients and workspaces.",
     "languageSettings": "Language Settings",
     "languageSettingsDesc": "Configure platform languages and translations.",
+    "appInformation": "App Information",
+    "appInformationDesc": "Manage favicon, metadata defaults, and global branding.",
     "globalAssistant": "Global Assistant",
     "globalAssistantDesc": "Configure system-wide AI chat and voice.",
     "globalSEO": "Global SEO Settings",
