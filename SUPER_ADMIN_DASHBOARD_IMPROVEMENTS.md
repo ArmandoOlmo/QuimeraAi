@@ -382,3 +382,5 @@ Un dashboard de super administrador que:
 **Fecha**: Noviembre 2024  
 **Versión**: 2.0 (Mejorada)
 
+
+

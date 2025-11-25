@@ -123,3 +123,5 @@ firebase functions:log | grep ERROR
 firebase functions:config:set gemini.api_key="NUEVA_KEY"
 firebase deploy --only functions
 
+
+

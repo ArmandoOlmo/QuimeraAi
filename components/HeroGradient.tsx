@@ -1,6 +1,7 @@
 import React from 'react';
-import { HeroData, BorderRadiusSize, FontSize } from '../types';
+import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import * as LucideIcons from 'lucide-react';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-3xl md:text-5xl',
@@ -23,6 +24,36 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
     full: 'rounded-full',
 };
 
+const paddingYClasses: Record<PaddingSize, string> = {
+  sm: 'py-10 md:py-16',
+  md: 'py-16 md:py-24',
+  lg: 'py-20 md:py-32',
+};
+
+const paddingXClasses: Record<PaddingSize, string> = {
+  sm: 'px-4',
+  md: 'px-6',
+  lg: 'px-8',
+};
+
+// Helper function to render badge icon (supports both emoji strings and Lucide icons)
+const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
+    if (!badgeIcon) return '✨';
+    if (badgeIcon.length <= 2) return badgeIcon;
+    
+    const iconMap: Record<string, any> = {
+        'sparkles': LucideIcons.Sparkles, 'zap': LucideIcons.Zap, 'star': LucideIcons.Star,
+        'award': LucideIcons.Award, 'trophy': LucideIcons.Trophy, 'rocket': LucideIcons.Rocket,
+        'lightbulb': LucideIcons.Lightbulb, 'heart': LucideIcons.Heart, 'check-circle': LucideIcons.CheckCircle,
+        'alert-circle': LucideIcons.AlertCircle, 'shield': LucideIcons.Shield, 'target': LucideIcons.Target,
+        'trending-up': LucideIcons.TrendingUp, 'circle-dot': LucideIcons.CircleDot, 'hexagon': LucideIcons.Hexagon,
+        'layers': LucideIcons.Layers,
+    };
+    
+    const IconComponent = iconMap[badgeIcon];
+    return IconComponent ? React.createElement(IconComponent, { size: 16, className: 'inline-block' }) : badgeIcon;
+};
+
 interface HeroProps extends HeroData {
     borderRadius: BorderRadiusSize;
 }
@@ -30,6 +61,7 @@ interface HeroProps extends HeroData {
 const HeroGradient: React.FC<HeroProps> = ({ 
     headline, subheadline, primaryCta, secondaryCta, imageUrl, 
     colors, borderRadius,
+    paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
     showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
@@ -97,8 +129,8 @@ const HeroGradient: React.FC<HeroProps> = ({
                 }}
             ></div>
 
-            <div className="relative z-10 container mx-auto px-4 md:px-6 min-h-screen flex items-center">
-                <div className="grid md:grid-cols-2 gap-12 items-center w-full py-20">
+            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} min-h-screen flex items-center`}>
+                <div className={`grid md:grid-cols-2 gap-12 items-center w-full ${paddingYClasses[paddingY]}`}>
                     
                     {/* Left Column - Content */}
                     <div className="space-y-8 animate-fade-in-up">
@@ -112,8 +144,8 @@ const HeroGradient: React.FC<HeroProps> = ({
                                     borderColor: `${actualColors.primary}30`
                                 }}
                             >
-                                <span className="text-lg animate-pulse" style={{ color: badgeColor || actualColors.primary }}>
-                                    {badgeIcon}
+                                <span className="text-lg animate-pulse flex items-center" style={{ color: badgeColor || actualColors.primary }}>
+                                    {renderBadgeIcon(badgeIcon)}
                                 </span>
                                 <span 
                                     className="text-sm font-bold tracking-wide uppercase"

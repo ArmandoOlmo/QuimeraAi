@@ -320,7 +320,7 @@ const ConditionalRulesEditor: React.FC<ConditionalRulesEditorProps> = ({ rules, 
             {/* Help Text */}
             <div className="p-3 bg-editor-bg border border-editor-border rounded-lg">
                 <p className="text-xs text-editor-text-secondary">
-                    <strong>💡 Examples:</strong>
+                    <strong>Examples:</strong>
                     <br />• Show premium features only to users with role "premium"
                     <br />• Hide mobile menu on desktop devices (screenSize &gt; 1024)
                     <br />• Display different content based on time of day

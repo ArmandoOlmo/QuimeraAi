@@ -924,9 +924,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 placeholder="https://example.com/logo.png"
                                 className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
                             />
-                            <p className="text-xs text-editor-text-secondary mt-1">
-                                💡 Tip: Upload through Assets Manager or paste URL
-                            </p>
                         </div>
                         
                         {s.logoImageUrl && (
@@ -1413,11 +1410,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <li>• Voice and live chat features</li>
                     </ul>
                 </div>
-                <div className="bg-blue-600/10 p-4 rounded-lg border border-blue-600/30">
-                    <p className="text-sm text-blue-300">
-                        💡 <strong>Tip:</strong> The chatbot automatically adapts to your website's theme and appears in the bottom-right corner of your published site.
-                    </p>
-                </div>
             </div>
         );
     };
@@ -1451,11 +1443,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <p className="text-xs text-editor-text-secondary mt-1">Used for all buttons and CTAs</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-purple-600/10 p-4 rounded-lg border border-purple-600/30">
-                    <p className="text-sm text-purple-300">
-                        💡 <strong>Tip:</strong> To change these fonts, go to the main editor and access Theme Settings from the control panel.
-                    </p>
                 </div>
             </div>
         );

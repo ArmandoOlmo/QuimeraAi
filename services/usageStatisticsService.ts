@@ -136,8 +136,12 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 'gemini-2.5-pro': '#10b981',
                 'gemini-1.5-flash': '#f59e0b',
                 'gemini-1.5-pro': '#8b5cf6',
-                'imagen-4.0-generate-001': '#ef4444',
-                'imagen-3.0-generate-001': '#ec4899',
+                'gemini-3.0-pro-image-001': '#a855f7', // Quimera AI - Nano Banana Pro (Gemini 3 Pro Image)
+                'gemini-3.0-pro-image': '#a855f7', // Alias (sin -001)
+                'imagen-4.0-generate-001': '#9333ea', // Imagen 4.0 Standard
+                'imagen-4.0-ultra-generate-001': '#8b5cf6', // Imagen 4.0 Ultra
+                'imagen-4.0-fast-generate-001': '#c084fc', // Imagen 4.0 Fast
+                'imagen-3.0-generate-002': '#ec4899', // Imagen 3.0 Legacy
             };
             
             // Convert to array and sort
@@ -156,7 +160,7 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 apiCallsByModel.push(
                     { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
                     { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                    { model: 'imagen-4.0-generate-001', count: Math.round(totalProjects * 7), color: '#f59e0b' }
+                    { model: 'gemini-3.0-pro-image-001', count: Math.round(totalProjects * 7), color: '#a855f7' }
                 );
                 totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
             }
@@ -166,7 +170,7 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
             apiCallsByModel.push(
                 { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
                 { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                { model: 'imagen-4.0-generate-001', count: Math.round(totalProjects * 7), color: '#f59e0b' }
+                { model: 'gemini-3.0-pro-image-001', count: Math.round(totalProjects * 7), color: '#a855f7' }
             );
             totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
         }

@@ -1,9 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface DashboardSidebarProps {
   isMobileOpen: boolean;
@@ -12,51 +29,192 @@ interface DashboardSidebarProps {
   defaultCollapsed?: boolean;
 }
 
+interface NavItemData {
+  id: string;
+  icon: React.ElementType;
+  label: string;
+  view: string;
+  disabled?: boolean;
+  isFixed?: boolean;
+}
+
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
   const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage } = useEditor();
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
+  // Default navigation items
+  const defaultNavItems: NavItemData[] = [
+    { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard', isFixed: true },
+    { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites' },
+    { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation' },
+    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms' },
+    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant' },
+    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads' },
+    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains' },
+    { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo' },
+    { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance' },
+    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets' },
+  ];
+
+  // Load order from localStorage or use default
+  const [navItems, setNavItems] = useState<NavItemData[]>(() => {
+    const savedOrder = localStorage.getItem('sidebar-nav-order');
+    if (savedOrder) {
+      try {
+        const orderIds = JSON.parse(savedOrder);
+        // Reorder items based on saved order
+        const ordered = orderIds
+          .map((id: string) => defaultNavItems.find(item => item.id === id))
+          .filter((item: NavItemData | undefined): item is NavItemData => item !== undefined);
+        
+        // Add any new items that weren't in the saved order
+        const newItems = defaultNavItems.filter(
+          item => !orderIds.includes(item.id)
+        );
+        
+        return [...ordered, ...newItems];
+      } catch (e) {
+        return defaultNavItems;
+      }
+    }
+    return defaultNavItems;
+  });
+
+  // Update labels when language changes
+  useEffect(() => {
+    setNavItems(prev => prev.map(item => {
+      const defaultItem = defaultNavItems.find(d => d.id === item.id);
+      return defaultItem ? { ...item, label: defaultItem.label } : item;
+    }));
+  }, [t]);
+
+  // Save order to localStorage
+  const saveOrder = (items: NavItemData[]) => {
+    const orderIds = items.map(item => item.id);
+    localStorage.setItem('sidebar-nav-order', JSON.stringify(orderIds));
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setNavItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        // Don't allow moving items before the fixed item (dashboard)
+        if (newIndex === 0 && items[0].isFixed) {
+          return items;
+        }
+        
+        // Don't allow moving the fixed item
+        if (oldIndex === 0 && items[0].isFixed) {
+          return items;
+        }
+        
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        saveOrder(newItems);
+        return newItems;
+      });
+    }
+  };
+
   const handleSignOut = () => {
     signOut(auth).catch((error) => console.error("Sign out error", error));
   };
 
-  const NavItem = ({ icon: Icon, label, isActive, onClick, disabled = false }: any) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`
-        group flex items-center p-3 mb-2 transition-all duration-300
-        ${isCollapsed 
-            ? 'justify-center w-12 mx-auto rounded-lg' 
-            : 'w-full rounded-xl'
-        }
-        ${isActive 
-          ? (isCollapsed 
-              ? 'text-primary dark:text-primary' 
-              : 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]' 
-            ) 
-          : (isCollapsed
-              ? 'text-muted-foreground hover:text-foreground'
-              : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-            )
-        }
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
-      aria-label={label}
-      aria-current={isActive ? 'page' : undefined}
-      title={isCollapsed ? label : undefined}
-    >
-      <Icon size={20} className={`${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} aria-hidden="true" />
-      
-      {!isCollapsed && (
-        <span className="text-sm whitespace-nowrap overflow-hidden transition-all">
-            {label}
-        </span>
-      )}
-    </button>
-  );
+  // Sortable Nav Item Component
+  const SortableNavItem = ({ item }: { item: NavItemData }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ 
+      id: item.id,
+      disabled: item.isFixed,
+    });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    const isActive = view === item.view;
+    const Icon = item.icon;
+
+    return (
+      <div ref={setNodeRef} style={style} className="relative group/drag">
+        <button
+          onClick={() => {
+            if (item.view === 'superadmin') {
+              setView('superadmin');
+              setAdminView('main');
+            } else {
+              setView(item.view as any);
+            }
+          }}
+          disabled={item.disabled}
+          className={`
+            group flex items-center p-3 mb-2 transition-all duration-300 relative
+            ${isCollapsed 
+                ? 'justify-center w-12 mx-auto rounded-lg' 
+                : 'w-full rounded-xl'
+            }
+            ${isActive 
+              ? (isCollapsed 
+                  ? 'text-primary dark:text-primary' 
+                  : 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]' 
+                ) 
+              : (isCollapsed
+                  ? 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                )
+            }
+            ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${item.isFixed ? '' : 'cursor-pointer'}
+          `}
+          aria-label={item.label}
+          aria-current={isActive ? 'page' : undefined}
+          title={isCollapsed ? item.label : undefined}
+        >
+          {!isCollapsed && !item.isFixed && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity"
+            >
+              <GripVertical size={16} className="text-muted-foreground" />
+            </div>
+          )}
+          
+          <Icon 
+            size={20} 
+            className={`${isCollapsed ? '' : (item.isFixed ? 'mr-3' : 'ml-5 mr-3')} flex-shrink-0`} 
+            aria-hidden="true" 
+          />
+          
+          {!isCollapsed && (
+            <span className="text-sm whitespace-nowrap overflow-hidden transition-all">
+                {item.label}
+            </span>
+          )}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -105,72 +263,31 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar" role="navigation" aria-label="Main navigation">
-            <NavItem 
-                icon={LayoutDashboard} 
-                label={t('dashboard.title')} 
-                isActive={view === 'dashboard'} 
-                onClick={() => setView('dashboard')} 
-            />
-            <NavItem 
-                icon={Globe} 
-                label={t('dashboard.myWebsites')} 
-                isActive={view === 'websites'} 
-                onClick={() => setView('websites')} 
-            />
-            <NavItem 
-                icon={Link2} 
-                label={t('domains.title')} 
-                isActive={view === 'domains'} 
-                onClick={() => setView('domains')} 
-            />
-            <NavItem 
-                icon={MessageSquare} 
-                label={t('dashboard.quimeraChat')} 
-                isActive={view === 'ai-assistant'} 
-                onClick={() => setView('ai-assistant')} 
-            />
-            <NavItem 
-                icon={Users} 
-                label={t('leads.title')} 
-                isActive={view === 'leads'} 
-                onClick={() => setView('leads')} 
-            />
-            <NavItem 
-                icon={MenuIcon} 
-                label={t('dashboard.navigation')} 
-                isActive={view === 'navigation'} 
-                onClick={() => setView('navigation')} 
-            />
-             <NavItem 
-                icon={PenTool} 
-                label={t('dashboard.contentManager')} 
-                isActive={view === 'cms'} 
-                onClick={() => setView('cms')} 
-            />
-            <NavItem 
-                icon={Search} 
-                label={t('dashboard.seoAndMeta')} 
-                isActive={view === 'seo'} 
-                onClick={() => setView('seo')} 
-            />
-            <NavItem 
-                icon={Images} 
-                label={t('dashboard.assetLibrary')} 
-                isActive={view === 'assets'} 
-                onClick={() => setView('assets')} 
-            />
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={navItems.map(item => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {navItems.map((item) => (
+                  <SortableNavItem key={item.id} item={item} />
+                ))}
+              </SortableContext>
+            </DndContext>
              
             {/* Panel de administración disponible para todos los usuarios */}
             <>
                 <div className={`my-4 border-t border-border ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
-                <NavItem 
-                    icon={Settings} 
-                    label={t('dashboard.superAdmin')} 
-                    isActive={view === 'superadmin'} 
-                    onClick={() => {
-                        setView('superadmin');
-                        setAdminView('main');
-                    }} 
+                <SortableNavItem 
+                  item={{ 
+                    id: 'superadmin', 
+                    icon: Settings, 
+                    label: t('dashboard.superAdmin'), 
+                    view: 'superadmin' 
+                  }} 
                 />
             </>
         </nav>

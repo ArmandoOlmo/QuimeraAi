@@ -237,3 +237,5 @@ curl -X POST [URL]/gemini-generate \
 
 **¿Preguntas?** Consulta `GEMINI_PROXY_SETUP.md` para guía completa.
 
+
+

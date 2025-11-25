@@ -83,8 +83,8 @@ const EditorHeader: React.FC = () => {
   ];
 
   const orientationOptions = [
-    { value: 'portrait', label: 'Portrait', short: 'P' },
-    { value: 'landscape', label: 'Landscape', short: 'L' },
+    { value: 'portrait', label: t('editor.portrait'), short: 'P' },
+    { value: 'landscape', label: t('editor.landscape'), short: 'L' },
   ] as const;
 
   const orientationDisabled = previewDevice === 'desktop';
@@ -161,7 +161,7 @@ const EditorHeader: React.FC = () => {
             {orientationOptions.map((option) => (
               <button
                 key={option.value}
-                title={`${option.label}${orientationDisabled ? ' (Desktop only uses landscape)' : ''}`}
+                title={`${option.label}${orientationDisabled ? ` (${t('editor.desktopOnlyLandscape')})` : ''}`}
                 onClick={() => setPreviewOrientation(option.value)}
                 disabled={orientationDisabled}
                 className={`h-7 w-9 text-xs font-semibold rounded-md transition-all ${

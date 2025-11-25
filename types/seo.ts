@@ -53,3 +53,5 @@ export interface ProjectSEO extends SEOConfig {
     lastUpdated: string;
 }
 
+
+

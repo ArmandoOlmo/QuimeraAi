@@ -3,8 +3,6 @@ import { AiAssistantConfig, Project } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore from '../../chat/ChatCore';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -37,9 +35,6 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 className="w-full bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800 transition-all duration-500 h-[500px]"
                 showHeader={true}
             />
-            
-            {/* Info Bubble */}
-            <InfoBubble bubbleId="chatSimulator" content={INFO_BUBBLE_CONTENT.chatSimulator} position="bottom-left" />
         </div>
     );
 };

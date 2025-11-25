@@ -124,3 +124,5 @@ To modify the chat logic, edit `ChatCore.tsx`. Changes will automatically apply 
 
 To modify wrapper-specific behavior (button styles, positioning, etc.), edit the respective wrapper component.
 
+
+

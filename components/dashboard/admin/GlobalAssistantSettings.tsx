@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X, Menu } from 'lucide-react';
 import { GlobalAssistantConfig, ScopePermission } from '../../../types';
 import { PROMPT_TEMPLATES, getDefaultEnabledTemplates, compileTemplates } from '../../../data/promptTemplates';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 
 interface GlobalAssistantSettingsProps {
     onBack: () => void;
@@ -20,32 +19,34 @@ const voices: { name: GlobalAssistantConfig['voiceName']; description: string; g
     { name: 'Fenrir', description: 'Strong, clear, direct.', gender: 'Male' },
 ];
 
+// Scopes will be translated dynamically
 const ALL_SCOPES = [
-    { id: 'dashboard', name: 'Dashboard View', type: 'view' },
-    { id: 'websites', name: 'Websites List', type: 'view' },
-    { id: 'editor', name: 'Editor View', type: 'view' },
-    { id: 'cms', name: 'CMS Dashboard', type: 'view' },
-    { id: 'assets', name: 'Asset Library', type: 'view' },
-    { id: 'navigation', name: 'Navigation Manager', type: 'view' },
-    { id: 'superadmin', name: 'Super Admin Panel', type: 'view' },
-    { id: 'hero', name: 'Hero Section', type: 'component' },
-    { id: 'features', name: 'Features Section', type: 'component' },
-    { id: 'testimonials', name: 'Testimonials', type: 'component' },
-    { id: 'pricing', name: 'Pricing', type: 'component' },
-    { id: 'faq', name: 'FAQ', type: 'component' },
-    { id: 'cta', name: 'Call to Action', type: 'component' },
-    { id: 'services', name: 'Services', type: 'component' },
-    { id: 'team', name: 'Team', type: 'component' },
-    { id: 'video', name: 'Video', type: 'component' },
-    { id: 'slideshow', name: 'Slideshow', type: 'component' },
-    { id: 'portfolio', name: 'Portfolio', type: 'component' },
-    { id: 'leads', name: 'Leads Form', type: 'component' },
-    { id: 'newsletter', name: 'Newsletter', type: 'component' },
-    { id: 'howItWorks', name: 'How It Works', type: 'component' },
-    { id: 'footer', name: 'Footer', type: 'component' },
+    { id: 'dashboard', nameKey: 'superadmin.dashboardView', type: 'view' },
+    { id: 'websites', nameKey: 'superadmin.websitesList', type: 'view' },
+    { id: 'editor', nameKey: 'superadmin.editorView', type: 'view' },
+    { id: 'cms', nameKey: 'superadmin.cmsDashboard', type: 'view' },
+    { id: 'assets', nameKey: 'superadmin.assetLibrary', type: 'view' },
+    { id: 'navigation', nameKey: 'superadmin.navigationManager', type: 'view' },
+    { id: 'superadmin', nameKey: 'superadmin.superAdminPanel', type: 'view' },
+    { id: 'hero', nameKey: 'superadmin.heroSection', type: 'component' },
+    { id: 'features', nameKey: 'superadmin.featuresSection', type: 'component' },
+    { id: 'testimonials', nameKey: 'superadmin.testimonialsSection', type: 'component' },
+    { id: 'pricing', nameKey: 'superadmin.pricingSection', type: 'component' },
+    { id: 'faq', nameKey: 'superadmin.faqSection', type: 'component' },
+    { id: 'cta', nameKey: 'superadmin.ctaSection', type: 'component' },
+    { id: 'services', nameKey: 'superadmin.servicesSection', type: 'component' },
+    { id: 'team', nameKey: 'superadmin.teamSection', type: 'component' },
+    { id: 'video', nameKey: 'superadmin.videoSection', type: 'component' },
+    { id: 'slideshow', nameKey: 'superadmin.slideshowSection', type: 'component' },
+    { id: 'portfolio', nameKey: 'superadmin.portfolioSection', type: 'component' },
+    { id: 'leads', nameKey: 'superadmin.leadsForm', type: 'component' },
+    { id: 'newsletter', nameKey: 'superadmin.newsletterSection', type: 'component' },
+    { id: 'howItWorks', nameKey: 'superadmin.howItWorksSection', type: 'component' },
+    { id: 'footer', nameKey: 'superadmin.footerSection', type: 'component' },
 ];
 
 const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const { globalAssistantConfig, saveGlobalAssistantConfig } = useEditor();
     const [formData, setFormData] = useState<GlobalAssistantConfig>(globalAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
@@ -133,36 +134,35 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
-                            title="Open menu"
+                            title={t('common.openMenu')}
                         >
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
                              <MessageSquare className="text-editor-accent w-5 h-5" />
-                             <h1 className="text-lg font-semibold text-editor-text-primary">Global Assistant Settings</h1>
+                             <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant')}</h1>
                         </div>
                     </div>
                      <div className="flex items-center gap-1">
                          {showSuccess && (
                              <span className="text-sm text-green-400 flex items-center animate-fade-in-up mr-2">
-                                 <CheckCircle size={16} className="mr-1.5" /> Saved
+                                 <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.saved')}
                              </span>
                          )}
-                        <InfoBubble bubbleId="globalSettings" content={INFO_BUBBLE_CONTENT.globalSettings} inline defaultExpanded={false} />
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                         >
                             <Save className="w-4 h-4" />
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {isSaving ? t('superadmin.saving') : t('common.save')}
                         </button>
                         <button 
                             onClick={onBack}
                             className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Back
+                            {t('common.back')}
                         </button>
                      </div>
                 </header>
@@ -178,8 +178,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h3 className="font-bold text-lg mb-1">Assistant Status</h3>
-                                            <p className="text-sm text-editor-text-secondary">Enable/disable the global chat widget.</p>
+                                            <h3 className="font-bold text-lg mb-1">{t('superadmin.assistantStatus')}</h3>
+                                            <p className="text-sm text-editor-text-secondary">{t('superadmin.enableDisableGlobalChat')}</p>
                                         </div>
                                         <button 
                                             onClick={() => updateForm('isEnabled', !formData.isEnabled)}
@@ -227,8 +227,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                                      <div className="flex items-center justify-between border-b border-editor-border pb-6">
                                          <div>
-                                             <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-editor-accent" /> Live Voice</h3>
-                                             <p className="text-sm text-editor-text-secondary">Enable real-time voice interactions.</p>
+                                             <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-editor-accent" /> {t('superadmin.voiceSettings')}</h3>
+                                             <p className="text-sm text-editor-text-secondary">{t('superadmin.enableVoice')}</p>
                                          </div>
                                          <button 
                                             onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
@@ -239,7 +239,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                      </div>
 
                                      <div>
-                                         <label className="block text-sm font-bold text-editor-text-primary mb-4 flex items-center"><Radio className="mr-2 text-editor-accent"/> Voice Personality</label>
+                                         <label className="block text-sm font-bold text-editor-text-primary mb-4 flex items-center"><Radio className="mr-2 text-editor-accent"/> {t('superadmin.selectVoice')}</label>
                                          <div className="grid grid-cols-1 gap-3">
                                             {voices.map(v => (
                                                 <button
@@ -252,7 +252,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-editor-text-primary text-sm">{v.name}</h4>
-                                                        <p className="text-xs text-editor-text-secondary line-clamp-1">{v.description}</p>
+                                                        <p className="text-xs text-editor-text-secondary line-clamp-1">{v.description} - {t('superadmin.voiceGender')}: {v.gender}</p>
                                                     </div>
                                                 </button>
                                             ))}
@@ -307,25 +307,25 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     <div className="flex items-center justify-between border-b border-editor-border pb-4 mb-4">
                                         <div>
                                             <h3 className="font-bold text-lg flex items-center">
-                                                <Shield className="mr-2 text-editor-accent" /> AI Scope Control
+                                                <Shield className="mr-2 text-editor-accent" /> {t('superadmin.scopePermissions')}
                                             </h3>
-                                            <p className="text-sm text-editor-text-secondary">Define what the assistant can see and control.</p>
+                                            <p className="text-sm text-editor-text-secondary">{t('superadmin.scopePermissionsDesc')}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex justify-end space-x-4 mb-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                                         <div className="flex items-center space-x-2">
-                                            <span>Chat</span>
-                                            <button onClick={() => toggleAll('chat', true)} className="text-green-400 hover:underline">All</button>
+                                            <span>{t('superadmin.chatEnabled')}</span>
+                                            <button onClick={() => toggleAll('chat', true)} className="text-green-400 hover:underline">{t('common.add')}</button>
                                             <span>/</span>
-                                            <button onClick={() => toggleAll('chat', false)} className="text-red-400 hover:underline">None</button>
+                                            <button onClick={() => toggleAll('chat', false)} className="text-red-400 hover:underline">{t('common.remove')}</button>
                                         </div>
                                         <div className="w-px h-4 bg-editor-border mx-2"></div>
                                         <div className="flex items-center space-x-2">
-                                            <span>Voice</span>
-                                            <button onClick={() => toggleAll('voice', true)} className="text-green-400 hover:underline">All</button>
+                                            <span>{t('superadmin.voiceEnabled')}</span>
+                                            <button onClick={() => toggleAll('voice', true)} className="text-green-400 hover:underline">{t('common.add')}</button>
                                             <span>/</span>
-                                            <button onClick={() => toggleAll('voice', false)} className="text-red-400 hover:underline">None</button>
+                                            <button onClick={() => toggleAll('voice', false)} className="text-red-400 hover:underline">{t('common.remove')}</button>
                                         </div>
                                     </div>
 
@@ -333,9 +333,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                         <table className="w-full">
                                             <thead className="bg-editor-panel-bg z-10">
                                                 <tr className="text-left text-xs font-bold text-editor-text-secondary uppercase tracking-wider border-b border-editor-border">
-                                                    <th className="pb-3 pl-2">Area / Component</th>
-                                                    <th className="pb-3 text-center w-20">Chat</th>
-                                                    <th className="pb-3 text-center w-20">Voice</th>
+                                                    <th className="pb-3 pl-2">{t('superadmin.scope')}</th>
+                                                    <th className="pb-3 text-center w-20">{t('superadmin.chatEnabled')}</th>
+                                                    <th className="pb-3 text-center w-20">{t('superadmin.voiceEnabled')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-editor-border">
@@ -345,7 +345,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                         <tr key={scope.id} className="hover:bg-editor-bg/50 transition-colors">
                                                             <td className="py-3 pl-2">
                                                                 <span className={`text-sm font-medium ${scope.type === 'view' ? 'text-editor-accent' : 'text-editor-text-primary'}`}>
-                                                                    {scope.name}
+                                                                    {t(scope.nameKey)}
                                                                 </span>
                                                                 <span className="ml-2 text-[10px] text-editor-text-secondary border border-editor-border rounded px-1">
                                                                     {scope.type}
@@ -381,10 +381,10 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                             <div className="flex items-center gap-2 border-b border-editor-border pb-2">
                                 <Sparkles size={20} className="text-editor-accent" />
-                                <h3 className="font-bold text-lg">Instruction Templates</h3>
+                                <h3 className="font-bold text-lg">{t('superadmin.instructionTemplates')}</h3>
                             </div>
                             <p className="text-sm text-editor-text-secondary">
-                                Enable pre-built instruction sets to enhance the assistant's capabilities. These templates add advanced features like multilingual understanding, data schema knowledge, and conversation examples.
+                                {t('superadmin.instructionTemplatesDesc')}
                             </p>
 
                             <div className="space-y-3">
@@ -409,7 +409,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                     className="text-xs text-editor-accent hover:underline"
                                                 >
                                                     <Eye size={12} className="inline mr-1" />
-                                                    Preview Template Content
+                                                    {t('superadmin.templatePreview')}
                                                 </button>
                                             </div>
                                             
@@ -434,18 +434,18 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     className="w-full flex items-center justify-center gap-2 bg-editor-accent/10 hover:bg-editor-accent/20 text-editor-accent font-semibold py-3 px-4 rounded-lg transition-colors border border-editor-accent/30"
                                 >
                                     <Eye size={18} />
-                                    Preview Final Compiled Instructions
+                                    {t('superadmin.templatePreview')}
                                 </button>
                                 <p className="text-xs text-editor-text-secondary mt-2 text-center">
-                                    See exactly what instructions will be sent to the AI model
+                                    {t('superadmin.selectTemplateToPreview')}
                                 </p>
                             </div>
 
                             {/* Custom Instructions */}
                             <div className="pt-4 border-t border-editor-border">
-                                <label className="block text-sm font-bold text-editor-text-primary mb-2">Additional Custom Instructions</label>
+                                <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.systemPrompt')}</label>
                                 <p className="text-xs text-editor-text-secondary mb-3">
-                                    Add your own specific instructions that will be appended after the enabled templates.
+                                    {t('superadmin.systemPromptDesc')}
                                 </p>
                                 <textarea 
                                     className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"

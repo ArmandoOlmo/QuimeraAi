@@ -8,11 +8,9 @@ import ProjectCardSkeleton from './ProjectCardSkeleton';
 import ProjectListItem from './ProjectListItem';
 import StatCard from './StatCard';
 import FileHistory from './FileHistory';
-import InfoBubble from '../ui/InfoBubble';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import LanguageSelector from '../ui/LanguageSelector';
-import { INFO_BUBBLE_CONTENT } from '../../data/infoBubbleContent';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2 } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { importProjectFromFile } from '../../utils/projectImporter';
@@ -344,22 +342,17 @@ const Dashboard: React.FC = () => {
                     </>
                 )}
                 
-                {/* Info Bubble - Inline in header */}
-                {isDashboard && <InfoBubble bubbleId="dashboard" content={INFO_BUBBLE_CONTENT.dashboard} inline defaultExpanded={false} />}
-                {isWebsites && <InfoBubble bubbleId="websites" content={INFO_BUBBLE_CONTENT.websites} inline defaultExpanded={false} />}
-                {isAssets && <InfoBubble bubbleId="assets" content={INFO_BUBBLE_CONTENT.assets} inline defaultExpanded={false} />}
-
                 {/* Language Selector */}
                 <LanguageSelector />
 
                 <button 
                     onClick={() => setIsOnboardingOpen(true)}
                     className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                    aria-label="Create new project"
+                    aria-label={t('dashboard.newProject')}
                 >
                     <Plus className="w-4 h-4" aria-hidden="true" />
-                    <span className="hidden sm:inline">New Project</span>
-                    <span className="sm:hidden">New</span>
+                    <span className="hidden sm:inline">{t('dashboard.newProject')}</span>
+                    <span className="sm:hidden">{t('dashboard.new')}</span>
                 </button>
              </div>
           </header>
@@ -622,15 +615,6 @@ const Dashboard: React.FC = () => {
                                 label: 'Clear Search',
                                 onClick: () => setSearchQuery('')
                               } : undefined}
-                              tips={!searchQuery ? [
-                                'Choose from professional templates or start from scratch',
-                                'AI-powered design suggestions adapt to your business',
-                                'Publish instantly with one click - no coding required'
-                              ] : [
-                                'Try searching by project name or status',
-                                'Use filters to narrow down results',
-                                'Check if you\'re viewing the right tab (All/Published/Drafts)'
-                              ]}
                             />
                         )}
                     </section>

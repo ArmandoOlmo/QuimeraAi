@@ -278,3 +278,5 @@ Tu aplicación estará:
 - `GEMINI_PROXY_SETUP.md` - Setup completo del proxy
 - `START_HERE_PROXY.md` - ¿Qué es el proxy?
 
+
+

@@ -148,9 +148,9 @@ const SuperAdminDashboard = () => {
         // Content Management
         { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content' },
         { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content' },
-        { id: 'content', title: 'Content Management', description: 'Manage articles and pages for landing pages', icon: <FileText size={24} />, category: 'content' },
+        { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content' },
         { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content' },
-        { id: 'landing-navigation', title: 'Landing Navigation', description: 'Manage navigation menus for landing pages', icon: <Navigation size={24} />, category: 'content' },
+        { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content' },
         
         // Development & Design
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development' },
@@ -177,11 +177,11 @@ const SuperAdminDashboard = () => {
         
         return [
             { id: 'all', label: t('common.all'), count: adminFeatures.length },
-            { id: 'core', label: 'Core', count: categoryMap.get('core') || 0 },
-            { id: 'content', label: 'Contenido', count: categoryMap.get('content') || 0 },
-            { id: 'development', label: 'Desarrollo', count: categoryMap.get('development') || 0 },
-            { id: 'analytics', label: 'Analíticas', count: categoryMap.get('analytics') || 0 },
-            { id: 'system', label: 'Sistema', count: categoryMap.get('system') || 0 },
+            { id: 'core', label: t('superadmin.categoryCore'), count: categoryMap.get('core') || 0 },
+            { id: 'content', label: t('superadmin.categoryContent'), count: categoryMap.get('content') || 0 },
+            { id: 'development', label: t('superadmin.categoryDevelopment'), count: categoryMap.get('development') || 0 },
+            { id: 'analytics', label: t('superadmin.categoryAnalytics'), count: categoryMap.get('analytics') || 0 },
+            { id: 'system', label: t('superadmin.categorySystem'), count: categoryMap.get('system') || 0 },
         ];
     }, [adminFeatures, t]);
 
@@ -236,12 +236,12 @@ const SuperAdminDashboard = () => {
     if (adminView === 'app-info') return <AppInformationSettings onBack={() => setAdminView('main')} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={() => setAdminView('main')} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'marketplace') return <AdminViewLayout title="Component Marketplace" onBack={() => setAdminView('main')}><ComponentMarketplace /></AdminViewLayout>;
-    if (adminView === 'design-tokens') return <AdminViewLayout title="Design Tokens" onBack={() => setAdminView('main')}><DesignTokensEditor /></AdminViewLayout>;
-    if (adminView === 'conditional-rules') return <AdminViewLayout title="Conditional Rules" onBack={() => setAdminView('main')}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
-    if (adminView === 'ab-testing') return <AdminViewLayout title="A/B Testing" onBack={() => setAdminView('main')} noPadding><ABTestingDashboard /></AdminViewLayout>;
-    if (adminView === 'accessibility') return <AdminViewLayout title="Accessibility Checker" onBack={() => setAdminView('main')} noPadding><AccessibilityChecker /></AdminViewLayout>;
-    if (adminView === 'analytics') return <AdminViewLayout title="Component Analytics" onBack={() => setAdminView('main')} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.componentMarketplace')} onBack={() => setAdminView('main')}><ComponentMarketplace /></AdminViewLayout>;
+    if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={() => setAdminView('main')}><DesignTokensEditor /></AdminViewLayout>;
+    if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={() => setAdminView('main')}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
+    if (adminView === 'ab-testing') return <AdminViewLayout title={t('superadmin.abTestingTitle')} onBack={() => setAdminView('main')} noPadding><ABTestingDashboard /></AdminViewLayout>;
+    if (adminView === 'accessibility') return <AdminViewLayout title={t('superadmin.accessibilityCheckerTitle')} onBack={() => setAdminView('main')} noPadding><AccessibilityChecker /></AdminViewLayout>;
+    if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={() => setAdminView('main')} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">

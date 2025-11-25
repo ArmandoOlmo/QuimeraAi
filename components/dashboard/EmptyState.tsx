@@ -14,7 +14,6 @@ interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
-  tips?: string[];
   illustration?: 'search' | 'website' | 'folder' | 'default';
 }
 
@@ -24,7 +23,6 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   action,
   secondaryAction,
-  tips,
   illustration = 'default'
 }) => {
   // SVG Illustrations
@@ -82,28 +80,9 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       </h3>
 
       {/* Description */}
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
+      <p className="text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
         {description}
       </p>
-
-      {/* Tips Section */}
-      {tips && tips.length > 0 && (
-        <div className="mb-8 max-w-lg mx-auto">
-          <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/30">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-3">
-              💡 Quick Tips
-            </p>
-            <ul className="space-y-2 text-left text-sm text-muted-foreground">
-              {tips.map((tip, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-yellow-400 mt-0.5">•</span>
-                  <span>{tip}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
 
       {/* Actions */}
       <div className="flex items-center justify-center gap-4">

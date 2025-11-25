@@ -282,7 +282,7 @@ const AccessibilityChecker: React.FC = () => {
                                                     )}
                                                     {issue.suggestion && (
                                                         <p className="text-sm text-editor-accent">
-                                                            💡 {issue.suggestion}
+                                                            {issue.suggestion}
                                                         </p>
                                                     )}
                                                     {issue.wcagCriterion && (

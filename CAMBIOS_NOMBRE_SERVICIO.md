@@ -80,3 +80,5 @@ API restrictions: ✅ Generative Language API
 
 **Fecha de actualización:** 24 de Noviembre, 2025
 
+
+

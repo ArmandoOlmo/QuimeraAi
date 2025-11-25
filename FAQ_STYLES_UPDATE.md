@@ -120,3 +120,5 @@ Cuando se selecciona el componente FAQ en el editor, los usuarios ahora tienen a
 - Compatible con el sistema de temas existente
 - Sin errores de linting TypeScript
 
+
+

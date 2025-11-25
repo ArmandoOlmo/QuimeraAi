@@ -148,3 +148,5 @@ El componente 'chatbot' obsoleto ahora:
 
 **El sistema unificado de chat (ChatCore) es ahora el único camino para configurar chatbots, accesible desde el AI Assistant Dashboard.**
 
+
+

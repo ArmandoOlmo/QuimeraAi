@@ -54,3 +54,5 @@ jobs:
           echo "📦 Project: ${{ env.PROJECT_ID }}"
           echo "📍 Region: ${{ env.REGION }}"
 
+
+

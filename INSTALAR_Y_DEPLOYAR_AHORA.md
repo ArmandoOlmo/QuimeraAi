@@ -349,3 +349,5 @@ open "https://console.cloud.google.com/functions?project=quimeraai"
 - `GEMINI_PROXY_SETUP.md` - Setup completo
 - `PROXY_IMPLEMENTATION_SUMMARY.md` - Resumen técnico
 
+
+

@@ -156,3 +156,5 @@ echo -e "\n${GREEN}🎉 ¡Todo listo!${NC}"
 echo -e "\n${YELLOW}📚 Para más información, consulta:${NC}"
 echo -e "  ${BLUE}GEMINI_PROXY_SETUP.md${NC}"
 
+
+

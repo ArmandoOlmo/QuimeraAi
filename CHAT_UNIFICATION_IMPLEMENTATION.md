@@ -320,3 +320,5 @@ The unified chat architecture provides:
 
 All chat instances now use the exact same logic from ChatCore, ensuring consistency and easier maintenance.
 
+
+

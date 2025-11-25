@@ -465,27 +465,27 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 </div>
             </section>
 
-            {/* --- Image Generator Showcase (Nano Banana Pro) --- */}
+            {/* --- Image Generator Showcase (Quimera AI) --- */}
             <section id="showcase" className="py-24 bg-[#0A0A0A] relative overflow-hidden">
                  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
                  
                  <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center gap-16">
                      <div className="lg:w-1/2">
                          <div className="inline-block px-4 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-xs font-bold uppercase tracking-wider mb-6">
-                             Powered by Nano Banana Pro
+                             Quimera AI Image Generator
                          </div>
                          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Visuals that Look <br/>Impossible.</h2>
                          <p className="text-gray-400 text-lg mb-8">
-                             Need a cyberpunk cityscape? A minimalist coffee shop? A 3D render of your product? 
-                             Our integrated AI image generator creates royalty-free, professional assets instantly.
-                         </p>
-                         <ul className="space-y-4 mb-8">
-                             {['Photorealistic Quality', 'Style Transfer', 'Instant Variations'].map(item => (
-                                 <li key={item} className="flex items-center text-gray-300">
-                                     <CheckCircle size={20} className="text-green-500 mr-3" /> {item}
-                                 </li>
-                             ))}
-                         </ul>
+                            Need a cyberpunk cityscape? A minimalist coffee shop? A 3D render of your product? 
+                            Quimera AI creates stunning 4K, royalty-free images with professional lighting, camera angles, and color grading—all from a simple text prompt.
+                        </p>
+                        <ul className="space-y-4 mb-8">
+                            {['4K Ultra HD Resolution', 'Advanced Lighting & Camera Controls', 'Photorealistic Quality', 'Instant Variations'].map(item => (
+                                <li key={item} className="flex items-center text-gray-300">
+                                    <CheckCircle size={20} className="text-green-500 mr-3" /> {item}
+                                </li>
+                            ))}
+                        </ul>
                          <button onClick={() => openAuth('register')} className="text-white border-b border-yellow-400 pb-1 hover:text-yellow-400 transition-colors">Try it yourself &rarr;</button>
                      </div>
                      
@@ -534,7 +534,7 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                                 />
                                 <FAQItem 
                                     question="How does the AI image generation work?" 
-                                    answer="We integrate Nano Banana Pro, a state-of-the-art image model. You simply type a prompt like 'a modern coffee shop in Tokyo', and it generates unique, royalty-free high-resolution images in seconds."
+                                    answer="Quimera integrates the most advanced AI image generation technology (powered by Google's Gemini 3 Pro Image). It supports 4K resolution, advanced controls for lighting, camera angles, depth of field, and color grading. You can even use reference images as style guides. Simply type a prompt like 'a modern coffee shop in Tokyo with cinematic lighting', and it generates unique, royalty-free ultra HD images in seconds."
                                 />
                              </div>
                         </div>

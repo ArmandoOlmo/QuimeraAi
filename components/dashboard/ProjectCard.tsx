@@ -129,25 +129,32 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       );
   };
 
+  const handleCheckboxClick = (e: React.MouseEvent | React.ChangeEvent) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect(project.id);
+    }
+  };
+
   return (
     <article 
-      className={`group flex flex-col bg-card border rounded-2xl overflow-hidden transition-all duration-500 h-full relative ${
-        isSelected ? 'border-primary border-2 shadow-xl shadow-primary/20' : 'border-border hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10'
+      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 h-[400px] ${
+        isSelected ? 'ring-4 ring-primary shadow-2xl shadow-primary/30' : 'hover:shadow-2xl hover:scale-[1.02]'
       }`}
       aria-label={projectLabel}
     >
       
       {/* Loading Overlay */}
       {isDeleting && (
-          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center" role="status" aria-live="polite">
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center" role="status" aria-live="polite">
               <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-2" aria-hidden="true" />
               <span className="text-xs font-bold text-red-500">Deleting...</span>
           </div>
       )}
 
-      {/* Image Container - Clickable to Open */}
+      {/* Full Background Image - Clickable to Open */}
       <div 
-        className="relative aspect-[4/3] overflow-hidden bg-secondary cursor-pointer"
+        className="relative w-full h-full overflow-hidden cursor-pointer"
         onClick={handleOpenProject}
         role="button"
         tabIndex={0}
@@ -166,11 +173,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             loading="lazy"
         />
         
-        {/* Gradient Overlay - Oscuro en todos los modos */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-40" />
+        {/* Dark Gradient Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 z-10 flex gap-2">
+        {/* Top Section: Badges and Menu */}
+        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start">
+          <div className="flex gap-2 items-center">
              {/* Selection Checkbox */}
              {isSelectable && !isTemplate && (
                <div className="pointer-events-auto">
@@ -179,7 +187,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                    checked={isSelected}
                    onChange={handleCheckboxClick}
                    onClick={handleCheckboxClick}
-                   className="w-5 h-5 rounded border-2 border-white/50 bg-black/20 backdrop-blur-md checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                   className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-primary checked:border-primary cursor-pointer transition-all"
                    aria-label={`Select ${project.name}`}
                  />
                </div>
@@ -187,73 +195,77 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
              <div className="pointer-events-none">
                {getStatusBadge(project.status)}
              </div>
-        </div>
+          </div>
 
-        {/* Menu Button (Replacing Hover Overlay) */}
-        <div className="absolute top-2 right-2 z-20" ref={menuRef}>
+          {/* Menu Button */}
+          <div ref={menuRef}>
              <button 
-                onClick={toggleMenu}
-                className="p-1.5 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-colors shadow-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMenu(e);
+                }}
+                className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors shadow-lg pointer-events-auto"
                 aria-label="Project options menu"
                 aria-expanded={showMenu}
                 aria-haspopup="true"
              >
-                 <MoreVertical size={16} aria-hidden="true" />
+                 <MoreVertical size={18} aria-hidden="true" />
              </button>
              
              {showMenu && (
                  <div 
-                   className="absolute right-0 top-full mt-2 w-40 bg-popover border border-border rounded-lg shadow-xl py-1 flex flex-col z-30 animate-fade-in-up"
+                   className="absolute right-0 top-full mt-2 w-44 bg-popover border border-border rounded-xl shadow-2xl py-2 flex flex-col z-30 animate-fade-in-up"
                    role="menu"
                    aria-label="Project actions"
                  >
                      <button 
                         onClick={handleEditClick}
-                        className="text-left px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2"
+                        className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
                         role="menuitem"
                      >
-                         {isTemplate ? <Copy size={14} aria-hidden="true" /> : <Pencil size={14} aria-hidden="true" />}
+                         {isTemplate ? <Copy size={16} aria-hidden="true" /> : <Pencil size={16} aria-hidden="true" />}
                          {isTemplate ? 'Use Template' : 'Edit'}
                      </button>
                      {!isTemplate && (
                        <button 
                           onClick={handleExportClick}
-                          className="text-left px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2"
+                          className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
                           role="menuitem"
                        >
-                           <Download size={14} aria-hidden="true" />
+                           <Download size={16} aria-hidden="true" />
                            Export
                        </button>
                      )}
                      <button 
                         onClick={handleDeleteClick}
-                        className="text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                        className="text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3"
                         role="menuitem"
                      >
-                         <Trash2 size={14} aria-hidden="true" />
+                         <Trash2 size={16} aria-hidden="true" />
                          Delete
                      </button>
                  </div>
              )}
+          </div>
         </div>
 
-        {/* Hover Actions Overlay (Simplified) */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
-            <span className="bg-white text-black font-bold py-2 px-4 rounded-full shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center">
-                {isTemplate ? <Copy size={14} className="mr-2"/> : <ExternalLink size={14} className="mr-2"/>}
-                {isTemplate ? 'Use Template' : 'Open'}
+        {/* Hover Actions Overlay */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
+            <span className="bg-white text-black font-bold py-3 px-6 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2">
+                {isTemplate ? <Copy size={16} /> : <ExternalLink size={16} />}
+                {isTemplate ? 'Use Template' : 'Open Project'}
             </span>
         </div>
-      </div>
 
-      {/* Card Footer */}
-      <div className="p-4 flex flex-col flex-grow bg-card relative z-10">
-        <div className="flex justify-between items-start mb-2 gap-3">
-            {/* Title - Clickable to Open */}
+        {/* Bottom Section: Title and Date */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pointer-events-none">
             <h3 
-                className="font-bold text-base text-foreground truncate hover:text-primary hover:underline transition-all flex-1 cursor-pointer" 
+                className="font-bold text-2xl text-white mb-2 line-clamp-2 pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors" 
                 title={project.name}
-                onClick={handleOpenProject}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenProject();
+                }}
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -264,16 +276,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             >
                 {project.name}
             </h3>
-        </div>
-        
-        <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/50">
-            <span className="flex items-center text-[11px] text-muted-foreground font-medium">
-                <Clock size={12} className="mr-1.5" aria-hidden="true"/> 
-                <time dateTime={project.lastUpdated}>
-                  {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            <div className="flex items-center text-white/90">
+                <Clock size={16} className="mr-2" aria-hidden="true"/> 
+                <time dateTime={project.lastUpdated} className="text-sm font-medium">
+                  Updated {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
                 </time>
-            </span>
-            <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest" aria-label="Version 1.0">v1.0</span>
+            </div>
         </div>
       </div>
     </article>

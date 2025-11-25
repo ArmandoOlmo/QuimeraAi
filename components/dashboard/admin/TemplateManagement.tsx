@@ -9,6 +9,7 @@ import {
     Edit, 
     Trash2,
     Eye,
+    EyeOff,
     Search,
     Grid,
     List,
@@ -17,7 +18,8 @@ import {
     TrendingUp,
     Archive,
     Globe,
-    Filter
+    Filter,
+    Star
 } from 'lucide-react';
 import { Project } from '../../../types';
 
@@ -325,66 +327,85 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                     {/* Templates Grid */}
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {filteredAndSortedTemplates.map(template => (
                                 <div 
                                     key={template.id} 
-                                    className={`bg-editor-panel-bg rounded-lg border border-editor-border overflow-hidden group hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
+                                    className={`relative rounded-2xl overflow-hidden group hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 h-[400px] ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
-                                    {/* Thumbnail */}
+                                    {/* Full Background Image */}
                                     <div 
-                                        className="aspect-video bg-editor-border overflow-hidden relative cursor-pointer"
+                                        className="absolute inset-0 cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
                                         <img 
                                             src={template.thumbnailUrl} 
                                             alt={template.name} 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                                         />
+                                        
+                                        {/* Dark Gradient Overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
                                         
                                         {/* Archived Overlay */}
                                         {template.isArchived && (
-                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                <Archive className="w-8 h-8 text-white" />
+                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                                                <div className="text-center">
+                                                    <Archive className="w-12 h-12 text-white mx-auto mb-2" />
+                                                    <span className="text-white text-sm font-semibold">Archived</span>
+                                                </div>
                                             </div>
                                         )}
+                                        
+                                        {/* Hover Actions Overlay */}
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
                                     </div>
 
-                                    {/* Content */}
-                                    <div className="p-4">
-                                        <h3 className="font-semibold text-editor-text-primary mb-1 line-clamp-1">{template.name}</h3>
-                                        
-                                        <p className="text-xs text-editor-text-secondary mb-3">
+                                    {/* Category Badge */}
+                                    <div className="absolute top-4 left-4 z-20">
+                                        <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg bg-editor-accent/20 text-editor-accent border-editor-accent/30">
                                             {template.category || template.brandIdentity?.industry || 'General'}
-                                        </p>
+                                        </span>
+                                    </div>
+
+                                    {/* Content at Bottom */}
+                                    <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+                                        <h3 className="font-bold text-2xl text-white mb-3 line-clamp-2">{template.name}</h3>
                                         
                                         {/* Actions */}
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                             <button 
-                                                onClick={() => loadProject(template.id, true)} 
-                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-editor-accent text-white rounded-md text-sm hover:bg-editor-accent/90 transition-colors" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    loadProject(template.id, true);
+                                                }} 
+                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-semibold hover:scale-110 transition-transform shadow-2xl" 
                                                 title="Edit Template"
                                             >
-                                                <Edit size={14} />
+                                                <Edit size={16} />
                                                 Edit
                                             </button>
                                             <button 
-                                                onClick={() => duplicateTemplate(template.id)} 
-                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    duplicateTemplate(template.id);
+                                                }} 
+                                                className="p-2.5 bg-white/90 text-green-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
                                                 title="Duplicate"
                                             >
-                                                <Copy size={16} />
+                                                <Copy size={18} />
                                             </button>
                                             <button 
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     if (window.confirm(`Delete "${template.name}"?`)) {
                                                         deleteProject(template.id);
                                                     }
                                                 }} 
-                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
+                                                className="p-2.5 bg-white/90 text-red-500 rounded-full hover:scale-110 transition-transform shadow-2xl" 
                                                 title="Delete"
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </div>

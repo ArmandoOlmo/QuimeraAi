@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import ModernCMSEditor from './modern/ModernCMSEditor';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download } from 'lucide-react';
+import ContentCreatorAssistant from './ContentCreatorAssistant';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles } from 'lucide-react';
 import { CMSPost } from '../../types';
 
 const CMSDashboard: React.FC = () => {
@@ -29,6 +30,9 @@ const CMSDashboard: React.FC = () => {
     
     // Bulk actions
     const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+    
+    // AI Assistant
+    const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -71,6 +75,37 @@ const CMSDashboard: React.FC = () => {
 
     const handleQuickPreview = (post: CMSPost) => {
         setPreviewPost(post);
+    };
+
+    // AI Assistant handlers
+    const handleAiCreate = () => {
+        setIsAiAssistantOpen(true);
+    };
+
+    const handlePostCreatedFromAi = async (post: CMSPost) => {
+        setIsAiAssistantOpen(false);
+        console.log("📋 Dashboard: Post created from AI", post);
+        
+        // 1. Recargamos la lista para obtener el post con su ID real de Firebase
+        await loadCMSPosts(); 
+        
+        // 2. Esperamos un momento para que la lista se actualice
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // 3. Buscamos el post recién creado por slug (más confiable que por ID vacío)
+        const createdPost = cmsPosts.find(p => p.slug === post.slug);
+        
+        if (createdPost) {
+            console.log("✅ Found created post:", createdPost);
+            setEditingPost(createdPost);
+        } else {
+            // Si no lo encontramos, usamos el post tal cual (probablemente funcionará de todos modos)
+            console.warn("⚠️ Could not find created post, using original");
+            setEditingPost(post);
+        }
+        
+        // 4. Abrimos el editor inmediatamente
+        setIsEditorOpen(true);
     };
 
     // Bulk actions handlers
@@ -174,6 +209,14 @@ const CMSDashboard: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-background text-foreground">
+            {/* AI Assistant Modal */}
+            {isAiAssistantOpen && (
+                <ContentCreatorAssistant 
+                    onClose={() => setIsAiAssistantOpen(false)} 
+                    onPostCreated={handlePostCreatedFromAi} 
+                />
+            )}
+
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             
             <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -245,6 +288,15 @@ const CMSDashboard: React.FC = () => {
                                 <Download className="w-4 h-4" />
                             </button>
                         )}
+
+                        {/* Botón Crear con IA */}
+                        <button 
+                            onClick={handleAiCreate}
+                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-bold transition-all text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            <span>Crear con IA</span>
+                        </button>
 
                         <button 
                             onClick={handleCreateNew}
@@ -506,9 +558,9 @@ const CMSDashboard: React.FC = () => {
                             /* Vista de Grid */
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {filteredAndSortedPosts.map(post => (
-                                    <div key={post.id} className="group relative flex flex-col bg-card border border-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 h-full">
-                                        {/* Image Container */}
-                                        <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
+                                    <div key={post.id} className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] h-[400px]">
+                                        {/* Full Background Image */}
+                                        <div className="relative w-full h-full overflow-hidden">
                                             {post.featuredImage ? (
                                                 <img 
                                                     src={post.featuredImage} 
@@ -516,73 +568,71 @@ const CMSDashboard: React.FC = () => {
                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-secondary/50">
-                                                    <FileText size={40} className="text-muted-foreground opacity-20" />
+                                                <div className="w-full h-full flex items-center justify-center bg-secondary">
+                                                    <FileText size={60} className="text-muted-foreground opacity-20" />
                                                 </div>
                                             )}
                                             
-                                            {/* Gradient Overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+                                            {/* Dark Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
-                                            {/* Status Badge */}
-                                            <div className="absolute top-3 left-3 z-10">
-                                                <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border backdrop-blur-md ${post.status === 'published' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>
+                                            {/* Top Section: Status Badge */}
+                                            <div className="absolute top-4 left-4 z-20">
+                                                <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
                                                     {post.status}
                                                 </span>
                                             </div>
 
                                             {/* Hover Actions Overlay */}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] gap-2">
+                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] gap-3 z-10">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
-                                                    className="bg-white text-blue-500 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                                    className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Quick Preview"
                                                 >
-                                                    <Eye size={18} />
+                                                    <Eye size={20} />
                                                 </button>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleEdit(post); }} 
-                                                    className="bg-white text-black p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                                    className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Edit"
                                                 >
-                                                    <Edit3 size={18} />
+                                                    <Edit3 size={20} />
                                                 </button>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleDuplicate(post); }}
-                                                    className="bg-white text-green-600 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                                    className="bg-white text-green-600 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Duplicate"
                                                 >
-                                                    <Copy size={18} />
+                                                    <Copy size={20} />
                                                 </button>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }} 
-                                                    className="bg-white text-red-500 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                                    className="bg-white text-red-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Delete"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={20} />
                                                 </button>
                                             </div>
-                                        </div>
 
-                                        {/* Card Body */}
-                                        <div className="p-4 flex flex-col flex-grow bg-card relative z-10">
-                                            <h3 className="font-bold text-base text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors" title={post.title}>
-                                                {post.title}
-                                            </h3>
-                                            <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-grow">
-                                                {post.excerpt || "No summary available."}
-                                            </p>
-                                            
-                                            <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/50">
-                                                <span className="flex items-center text-[10px] text-muted-foreground font-medium">
-                                                    <Calendar size={10} className="mr-1.5"/> 
-                                                    {new Date(post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                </span>
-                                                {post.status === 'published' && (
-                                                    <div title="Published">
-                                                        <Globe size={12} className="text-green-500/50" />
+                                            {/* Bottom Section: Title and Date */}
+                                            <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+                                                <h3 className="font-bold text-2xl text-white line-clamp-2 mb-3 group-hover:text-primary/90 transition-colors" title={post.title}>
+                                                    {post.title}
+                                                </h3>
+                                                <div className="flex items-center justify-between text-white/90">
+                                                    <div className="flex items-center">
+                                                        <Calendar size={16} className="mr-2"/> 
+                                                        <span className="text-sm font-medium">
+                                                            Updated {new Date(post.updatedAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                                                        </span>
                                                     </div>
-                                                )}
+                                                    {post.status === 'published' && (
+                                                        <div title="Published">
+                                                            <Globe size={16} className="text-green-400" />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

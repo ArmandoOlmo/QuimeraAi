@@ -181,12 +181,6 @@ const ResponsiveConfigEditor: React.FC<ResponsiveConfigEditorProps> = ({ compone
                     />
                     <p className="text-xs text-editor-text-secondary mt-1">Margin (e.g., 0 auto, 1rem)</p>
                 </div>
-
-                <div className="pt-4 border-t border-editor-border">
-                    <p className="text-xs text-editor-text-secondary italic">
-                        💡 Tip: Leave empty to inherit from smaller breakpoints. Base styles apply to all sizes unless overridden.
-                    </p>
-                </div>
             </div>
         </div>
     );

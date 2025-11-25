@@ -8,8 +8,6 @@ import {
     Mic, Radio, BookOpen
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { AiAssistantConfig } from '../../../types';
 import FAQManager from './FAQManager';
 import KnowledgeDocumentUploader from './KnowledgeDocumentUploader';
@@ -88,19 +86,29 @@ const AiAssistantDashboard: React.FC = () => {
                                         <button 
                                             key={project.id}
                                             onClick={() => handleSelectProject(project.id)}
-                                            className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all duration-300 flex flex-col text-left h-64"
+                                            className="group relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex flex-col text-left h-[400px]"
                                         >
-                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-10 pointer-events-none" />
+                                            {/* Full Background Image */}
                                             <img 
                                                 src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'} 
                                                 alt={project.name} 
                                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                                             />
+                                            
+                                            {/* Dark Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+                                            
+                                            {/* Hover Effect */}
+                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
+                                            
+                                            {/* Content at Bottom */}
                                             <div className="absolute bottom-0 left-0 w-full p-6 z-20">
-                                                <h3 className="font-bold text-2xl text-white mb-1">{project.name}</h3>
-                                                <div className="flex items-center text-white/70 text-xs">
-                                                    <Clock size={12} className="mr-1.5" />
-                                                    <span>Updated {new Date(project.lastUpdated).toLocaleDateString()}</span>
+                                                <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{project.name}</h3>
+                                                <div className="flex items-center text-white/90">
+                                                    <Clock size={16} className="mr-2" />
+                                                    <span className="text-sm font-medium">
+                                                        Updated {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </button>
@@ -391,7 +399,6 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
-                        <InfoBubble bubbleId="chatSimulator" content={INFO_BUBBLE_CONTENT.chatSimulator} inline defaultExpanded={false} />
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}

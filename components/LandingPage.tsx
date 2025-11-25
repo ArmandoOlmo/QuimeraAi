@@ -80,7 +80,7 @@ const fontStacks: Record<FontFamily, string> = {
 };
 
 const LandingPage: React.FC = () => {
-  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents } = useEditor();
+  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents, componentStyles } = useEditor();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
 
@@ -161,13 +161,16 @@ const LandingPage: React.FC = () => {
     const customComp = customComponents.find(c => c.id === customComponentId);
     if (!customComp) return null;
 
-    // Merge custom component styles with base data
+    // Merge custom component styles with base data and componentStyles
     const baseComponentData = data[customComp.baseComponent];
+    const baseStyles = componentStyles[customComp.baseComponent as keyof typeof componentStyles];
     const mergedData = {
       ...baseComponentData,
+      ...baseStyles,
       ...customComp.styles,
       colors: {
         ...baseComponentData?.colors,
+        ...baseStyles?.colors,
         ...customComp.styles?.colors
       }
     };
@@ -220,31 +223,75 @@ const LandingPage: React.FC = () => {
     }
   };
 
+  // Merge data with componentStyles to ensure style updates are reflected
+  const mergedHeroData = {
+    ...data.hero,
+    ...componentStyles.hero,
+    colors: {
+      ...data.hero.colors,
+      ...componentStyles.hero?.colors
+    }
+  };
+
+  // Helper function to merge data with componentStyles for each component
+  const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
+    const componentData = data[componentKey];
+    const styles = componentStyles[componentKey];
+    if (!componentData || !styles) return componentData;
+    
+    return {
+      ...componentData,
+      ...styles,
+      colors: {
+        ...componentData.colors,
+        ...styles.colors
+      }
+    };
+  };
+
+  const mergedFeaturesData = mergeComponentData('features');
+  const mergedTestimonialsData = mergeComponentData('testimonials');
+  const mergedSlideshowData = mergeComponentData('slideshow');
+  const mergedPricingData = mergeComponentData('pricing');
+  const mergedFaqData = mergeComponentData('faq');
+  const mergedLeadsData = mergeComponentData('leads');
+  const mergedNewsletterData = mergeComponentData('newsletter');
+  const mergedCtaData = mergeComponentData('cta');
+  const mergedPortfolioData = mergeComponentData('portfolio');
+  const mergedServicesData = mergeComponentData('services');
+  const mergedTeamData = mergeComponentData('team');
+  const mergedVideoData = mergeComponentData('video');
+  const mergedHowItWorksData = mergeComponentData('howItWorks');
+  const mergedMapData = mergeComponentData('map');
+  const mergedMenuData = mergeComponentData('menu');
+  const mergedFooterData = mergeComponentData('footer');
+  const mergedHeaderData = mergeComponentData('header');
+
   const componentsMap: Record<PageSection, React.ReactNode> = {
-    hero: data.hero.heroVariant === 'modern' 
-      ? <HeroModern {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
-      : data.hero.heroVariant === 'gradient'
-        ? <HeroGradient {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
-        : data.hero.heroVariant === 'fitness'
-          ? <HeroFitness {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />
-          : <Hero {...data.hero} borderRadius={data.hero.buttonBorderRadius || theme.buttonBorderRadius} />,
-    features: <Features {...data.features} borderRadius={theme.cardBorderRadius} />,
-    testimonials: <Testimonials {...data.testimonials} borderRadius={data.testimonials.borderRadius || theme.cardBorderRadius} cardShadow={data.testimonials.cardShadow} borderStyle={data.testimonials.borderStyle} cardPadding={data.testimonials.cardPadding} avatarBorderWidth={data.testimonials.avatarBorderWidth} avatarBorderColor={data.testimonials.avatarBorderColor} />,
-    slideshow: <Slideshow {...data.slideshow} borderRadius={theme.cardBorderRadius} />,
-    pricing: <Pricing {...data.pricing} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    faq: <Faq {...data.faq} borderRadius={theme.cardBorderRadius} />,
-    leads: <Leads {...data.leads} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    newsletter: <Newsletter {...data.newsletter} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    cta: <CTASection {...data.cta} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    portfolio: <Portfolio {...data.portfolio} borderRadius={theme.cardBorderRadius} />,
-    services: <Services {...data.services} borderRadius={theme.cardBorderRadius} />,
-    team: <Team {...data.team} borderRadius={theme.cardBorderRadius} />,
-    video: <Video {...data.video} borderRadius={theme.cardBorderRadius} />,
-    howItWorks: <HowItWorks {...data.howItWorks} borderRadius={theme.cardBorderRadius} />,
-    map: <BusinessMap {...data.map} borderRadius={theme.cardBorderRadius} />,
-    menu: <Menu {...data.menu} borderRadius={theme.cardBorderRadius} />,
+    hero: mergedHeroData.heroVariant === 'modern' 
+      ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+      : mergedHeroData.heroVariant === 'gradient'
+        ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+        : mergedHeroData.heroVariant === 'fitness'
+          ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+          : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />,
+    features: <Features {...mergedFeaturesData} borderRadius={theme.cardBorderRadius} />,
+    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} avatarBorderWidth={mergedTestimonialsData.avatarBorderWidth} avatarBorderColor={mergedTestimonialsData.avatarBorderColor} />,
+    slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
+    pricing: <Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
+    faq: <Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} />,
+    leads: <Leads {...mergedLeadsData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
+    newsletter: <Newsletter {...mergedNewsletterData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
+    cta: <CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
+    portfolio: <Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} />,
+    services: <Services {...mergedServicesData} borderRadius={theme.cardBorderRadius} />,
+    team: <Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} />,
+    video: <Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} />,
+    howItWorks: <HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} />,
+    map: <BusinessMap {...mergedMapData} borderRadius={theme.cardBorderRadius} />,
+    menu: <Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} />,
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
-    footer: <Footer {...data.footer} />,
+    footer: <Footer {...mergedFooterData} />,
     header: null,
     typography: null,
   };
@@ -253,14 +300,14 @@ const LandingPage: React.FC = () => {
   // This ensures Tailwind's font-header, font-body, and font-button classes work correctly
 
   // Dynamic Menu Resolution
-  const headerLinks = data.header.menuId 
-    ? menus.find(m => m.id === data.header.menuId)?.items.map(i => ({ text: i.text, href: i.href })) || []
-    : data.header.links;
+  const headerLinks = mergedHeaderData.menuId 
+    ? menus.find(m => m.id === mergedHeaderData.menuId)?.items.map(i => ({ text: i.text, href: i.href })) || []
+    : mergedHeaderData.links;
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
-      ...data.footer,
-      linkColumns: data.footer.linkColumns.map(col => {
+      ...mergedFooterData,
+      linkColumns: mergedFooterData.linkColumns.map(col => {
           if (col.menuId) {
               const menu = menus.find(m => m.id === col.menuId);
               if (menu) {
@@ -291,7 +338,7 @@ const LandingPage: React.FC = () => {
         `}</style>
 
       {/* Header is always visible */}
-      <Header {...data.header} links={headerLinks} />
+      <Header {...mergedHeaderData} links={headerLinks} />
       
       <main className="min-h-screen bg-site-base relative">
         {/* 1. Loading State */}

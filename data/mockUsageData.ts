@@ -17,7 +17,7 @@ const MOCK_DATA: UsageData = {
   apiCallsByModel: [
     { model: 'gemini-2.5-flash', count: 89345, color: '#4f46e5' },
     { model: 'gemini-2.5-pro', count: 42100, color: '#10b981' },
-    { model: 'imagen-4.0-generate-001', count: 25344, color: '#f59e0b' },
+    { model: 'gemini-3.0-pro-image-001', count: 25344, color: '#a855f7' },
   ],
   topUsers: [
     { id: 'user1', name: 'Elena Petrova', email: 'elena@example.com', photoURL: 'https://picsum.photos/seed/user1/100', projectCount: 42 },

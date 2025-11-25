@@ -672,3 +672,5 @@ const ChecklistItem: React.FC<{ checked: boolean; label: string }> = ({ checked,
 
 export default AppInformationSettings;
 
+
+

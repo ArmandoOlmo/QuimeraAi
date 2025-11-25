@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { CMSPost } from '../../types';
 import { 
@@ -15,8 +16,6 @@ import {
 import { getGoogleGenAI } from '../../utils/genAiClient';
 import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
-import InfoBubble from '../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../data/infoBubbleContent';
 import { logApiCall } from '../../services/apiLoggingService';
 
 interface CMSEditorProps {
@@ -37,6 +36,7 @@ const ToolbarButton: React.FC<{ onClick: () => void; isActive?: boolean; title: 
 const ToolbarDivider = () => <div className="w-px h-6 bg-gray-300 mx-1 self-center" />;
 
 const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
+    const { t } = useTranslation();
     const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, user, activeProject } = useEditor();
     
     // Form State
@@ -624,8 +624,8 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                              <ToolbarButton onClick={() => execCmd('removeFormat')} title="Clear Formatting"><RemoveFormatting size={16} /></ToolbarButton>
                              <div className="bg-purple-50 border border-purple-200 rounded-md flex items-center p-0.5">
                                 <span className="px-2 text-xs font-bold text-purple-700 flex items-center"><Sparkles size={10} className="mr-1"/> AI</span>
-                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>Fix Grammar</button>
-                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>Continue</button>
+                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.fixGrammar')}</button>
+                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.continue')}</button>
                              </div>
                         </div>
                     </div>
@@ -653,39 +653,39 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 {isSidebarOpen && (
                     <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 z-20 shadow-xl custom-scrollbar">
                          <div className="mb-6">
-                            <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Post Settings</h3>
-                            <p className="text-xs text-muted-foreground">Configure metadata and appearance.</p>
+                            <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('postEditor.postSettings')}</h3>
+                            <p className="text-xs text-muted-foreground">{t('postEditor.configureMetadata')}</p>
                         </div>
                         
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">URL Slug</label>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.urlSlug')}</label>
                                 <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Featured Image</label>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.featuredImage')}</label>
                                 <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Excerpt</label>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.excerpt')}</label>
                                 <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
                             </div>
 
                             <div className="pt-6 border-t border-border">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO Settings</h4>
-                                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
+                                    <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('postEditor.seoSettings')}</h4>
+                                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
                                 </div>
                                 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-1">SEO Title</label>
+                                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('postEditor.seoTitle')}</label>
                                         <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Max 60 characters" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-1">Meta Description</label>
+                                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('postEditor.seoDescription')}</label>
                                         <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Max 160 characters" />
                                     </div>
                                 </div>

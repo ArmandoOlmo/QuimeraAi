@@ -95,3 +95,5 @@ Para verificar que funcionó:
 1. Intenta hacer login con Google
 2. El popup debería mostrar "**to continue to Quimera.ai**" en lugar de "to continue to quimeraai.firebaseapp.com"
 
+
+

@@ -114,7 +114,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
     
     // No permitir desactivar el idioma por defecto
     if (lang?.isDefault && lang.enabled) {
-      alert('No puedes desactivar el idioma por defecto. Primero establece otro idioma como predeterminado.');
+      alert(t('superadmin.cannotDisableDefault'));
       return;
     }
 
@@ -160,15 +160,15 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
               className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
-              title="Open menu"
+              title={t('common.openMenu')}
             >
               <Menu className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2">
               <Globe className="text-editor-accent w-5 h-5" />
               <div>
-                <h1 className="text-lg font-semibold text-editor-text-primary">Language Management</h1>
-                <p className="text-xs text-editor-text-secondary hidden sm:block">Configure platform languages</p>
+                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.languageManagement')}</h1>
+                <p className="text-xs text-editor-text-secondary hidden sm:block">{t('superadmin.configurePlatformLanguages')}</p>
               </div>
             </div>
           </div>
@@ -176,13 +176,13 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           {saveStatus === 'success' && (
             <div className="flex items-center gap-2 text-green-500 text-sm mr-2">
               <Check size={16} />
-              <span>Saved successfully</span>
+              <span>{t('superadmin.savedSuccessfully')}</span>
             </div>
           )}
           {saveStatus === 'error' && (
             <div className="flex items-center gap-2 text-red-500 text-sm mr-2">
               <AlertCircle size={16} />
-              <span>Error saving</span>
+              <span>{t('superadmin.errorSaving')}</span>
             </div>
           )}
           <button
@@ -191,14 +191,14 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
-            {saveStatus === 'saving' ? 'Saving...' : 'Save'}
+            {saveStatus === 'saving' ? t('superadmin.saving') : t('common.save')}
           </button>
           <button
             onClick={onBack}
             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Admin
+            {t('superadmin.backToAdmin')}
           </button>
         </div>
       </header>
@@ -211,9 +211,9 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold text-editor-text-primary">Current Interface Language</h2>
+                <h2 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.currentInterfaceLanguage')}</h2>
                 <p className="text-sm text-editor-text-secondary mt-1">
-                  This is your current admin interface language
+                  {t('superadmin.currentAdminInterface')}
                 </p>
               </div>
               <div className="text-3xl">{languages.find(l => l.code === i18n.language)?.flag}</div>
@@ -239,10 +239,10 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           {/* Enabled Languages */}
           <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
             <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
-              Enabled Languages ({enabledLanguages.length})
+              {t('superadmin.enabledLanguages')} ({enabledLanguages.length})
             </h2>
             <p className="text-sm text-editor-text-secondary mb-6">
-              These languages are available to users across the platform
+              {t('superadmin.languagesAvailableToUsers')}
             </p>
 
             <div className="space-y-3">
@@ -262,7 +262,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                           <span className="text-sm text-editor-text-secondary">({lang.name})</span>
                           {lang.isDefault && (
                             <span className="px-2 py-0.5 bg-editor-accent text-white text-xs rounded-full">
-                              Default
+                              {t('superadmin.default')}
                             </span>
                           )}
                         </div>
@@ -286,7 +286,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                           onClick={() => handleSetDefault(lang.code)}
                           className="px-3 py-1.5 text-sm bg-editor-border hover:bg-editor-bg-secondary text-editor-text-secondary rounded-lg transition-colors"
                         >
-                          Set as Default
+                          {t('superadmin.setAsDefault')}
                         </button>
                       )}
                       <button
@@ -294,7 +294,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                         disabled={lang.isDefault}
                         className="px-3 py-1.5 text-sm bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Disable
+                        {t('superadmin.disable')}
                       </button>
                     </div>
                   </div>
@@ -306,10 +306,10 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           {/* Available Languages */}
           <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
             <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
-              Available Languages ({availableLanguages.length})
+              {t('superadmin.availableLanguages')} ({availableLanguages.length})
             </h2>
             <p className="text-sm text-editor-text-secondary mb-6">
-              Enable these languages to make them available on the platform
+              {t('superadmin.enableLanguagesToMakeAvailable')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -332,13 +332,13 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                       onClick={() => handleToggleEnabled(lang.code)}
                       className="px-3 py-1.5 text-sm bg-editor-accent hover:bg-editor-accent-hover text-white rounded-lg transition-colors"
                     >
-                      Enable
+                      {t('superadmin.enable')}
                     </button>
                   </div>
                   {lang.completeness === 0 && (
                     <div className="mt-3 flex items-center gap-2 text-yellow-500 text-xs">
                       <AlertCircle size={14} />
-                      <span>Translation file not available yet</span>
+                      <span>{t('superadmin.translationFileNotAvailable')}</span>
                     </div>
                   )}
                 </div>
@@ -349,24 +349,24 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           {/* Translation Management */}
           <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
             <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
-              Translation Management
+              {t('superadmin.translationManagement')}
             </h2>
             <p className="text-sm text-editor-text-secondary mb-6">
-              Import and export translation files for each language
+              {t('superadmin.importExportTranslations')}
             </p>
 
             <div className="flex flex-wrap gap-3">
               <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
                 <Upload size={16} />
-                Import Translations
+                {t('superadmin.importTranslations')}
               </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
                 <Download size={16} />
-                Export All
+                {t('superadmin.exportAll')}
               </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
                 <Edit2 size={16} />
-                Edit Translations
+                {t('superadmin.editTranslations')}
               </button>
             </div>
           </div>
@@ -374,10 +374,10 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           {/* Translation Files Location */}
           <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
             <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
-              Translation Files
+              {t('superadmin.translationFiles')}
             </h2>
             <p className="text-sm text-editor-text-secondary mb-4">
-              Translation files are stored in the following locations:
+              {t('superadmin.translationFilesStored')}
             </p>
             <div className="bg-editor-bg rounded-lg p-4 font-mono text-sm space-y-2">
               {enabledLanguages.map(lang => (
@@ -386,7 +386,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                   <code className="text-editor-text-primary">/locales/{lang.code}/translation.json</code>
                   <span className="ml-auto text-green-500 flex items-center gap-1">
                     <Check size={14} />
-                    Available
+                    {t('superadmin.available')}
                   </span>
                 </div>
               ))}
@@ -398,13 +398,13 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             <div className="flex gap-3">
               <AlertCircle className="text-blue-400 flex-shrink-0" size={20} />
               <div className="text-sm text-blue-400">
-                <p className="font-semibold mb-1">About Language Management</p>
+                <p className="font-semibold mb-1">{t('superadmin.aboutLanguageManagement')}</p>
                 <ul className="space-y-1 list-disc list-inside">
-                  <li>Users can select their preferred language from enabled options</li>
-                  <li>The default language is used for new users and fallback</li>
-                  <li>Translation files are located in <code className="bg-black/20 px-1 rounded">/locales/[code]/</code></li>
-                  <li>Completeness shows the percentage of translated keys</li>
-                  <li>Changes will apply immediately after saving</li>
+                  <li>{t('superadmin.usersCanSelectLanguage')}</li>
+                  <li>{t('superadmin.defaultLanguageUsed')}</li>
+                  <li>{t('superadmin.translationFilesLocation')} <code className="bg-black/20 px-1 rounded">/locales/[code]/</code></li>
+                  <li>{t('superadmin.completenessShows')}</li>
+                  <li>{t('superadmin.changesApplyImmediately')}</li>
                 </ul>
               </div>
             </div>

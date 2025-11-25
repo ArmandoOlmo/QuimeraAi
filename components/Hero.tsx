@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { HeroData, PaddingSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, FontSize } from '../types';
+import { HeroData, PaddingSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, FontSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import * as LucideIcons from 'lucide-react';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -87,6 +88,42 @@ const getAspectRatioValue = (ratio: AspectRatio): number => {
     const [w, h] = parts.map(Number);
     if (isNaN(w) || isNaN(h) || w === 0) return 0;
     return h / w;
+};
+
+// Helper function to render badge icon (supports both emoji strings and Lucide icons)
+const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
+    if (!badgeIcon) return '✨';
+    
+    // If it's a single character or emoji, return it directly
+    if (badgeIcon.length <= 2) return badgeIcon;
+    
+    // Try to render as Lucide icon
+    const iconMap: Record<string, any> = {
+        'sparkles': LucideIcons.Sparkles,
+        'zap': LucideIcons.Zap,
+        'star': LucideIcons.Star,
+        'award': LucideIcons.Award,
+        'trophy': LucideIcons.Trophy,
+        'rocket': LucideIcons.Rocket,
+        'lightbulb': LucideIcons.Lightbulb,
+        'heart': LucideIcons.Heart,
+        'check-circle': LucideIcons.CheckCircle,
+        'alert-circle': LucideIcons.AlertCircle,
+        'shield': LucideIcons.Shield,
+        'target': LucideIcons.Target,
+        'trending-up': LucideIcons.TrendingUp,
+        'circle-dot': LucideIcons.CircleDot,
+        'hexagon': LucideIcons.Hexagon,
+        'layers': LucideIcons.Layers,
+    };
+    
+    const IconComponent = iconMap[badgeIcon];
+    if (IconComponent) {
+        return React.createElement(IconComponent, { size: 16, className: 'inline-block' });
+    }
+    
+    // Fallback to string if not found in icon map
+    return badgeIcon;
 };
 
 
@@ -202,8 +239,8 @@ const Hero: React.FC<HeroProps> = ({
                  backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`, 
                  borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30` 
                }}>
-            <span className="text-sm font-semibold animate-pulse" style={{ color: badgeColor || actualColors.primary }}>
-              {badgeIcon}
+            <span className="text-sm font-semibold animate-pulse flex items-center" style={{ color: badgeColor || actualColors.primary }}>
+              {renderBadgeIcon(badgeIcon)}
             </span>
             <span className="text-sm font-semibold" style={{ color: badgeColor || actualColors.primary }}>
               {badgeText}

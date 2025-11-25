@@ -319,79 +319,97 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 {filteredPosts.map(post => (
                                     <div 
                                         key={post.id}
-                                        className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
+                                        className="relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 h-[400px] group"
                                     >
-                                        {/* Thumbnail */}
-                                        <div className="aspect-video bg-secondary/20 relative overflow-hidden">
+                                        {/* Full Background Image */}
+                                        <div className="absolute inset-0">
                                             {post.featuredImage ? (
                                                 <img 
                                                     src={post.featuredImage} 
                                                     alt={post.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                 />
                                             ) : (
-                                                <div className="flex items-center justify-center h-full">
-                                                    <FileText className="w-12 h-12 text-muted-foreground opacity-20" />
+                                                <div className="w-full h-full flex items-center justify-center bg-secondary">
+                                                    <FileText className="w-20 h-20 text-muted-foreground opacity-20" />
                                                 </div>
                                             )}
-                                            <div className="absolute top-2 right-2">
-                                                <input 
-                                                    type="checkbox"
-                                                    checked={selectedPosts.includes(post.id)}
-                                                    onChange={() => toggleSelectPost(post.id)}
-                                                    className="w-5 h-5"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
                                         </div>
 
-                                        {/* Content */}
-                                        <div className="p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                                    post.status === 'published' 
-                                                        ? 'bg-green-500/10 text-green-600' 
-                                                        : 'bg-orange-500/10 text-orange-600'
-                                                }`}>
-                                                    {post.status === 'published' ? 'Published' : 'Draft'}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(post.createdAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            
-                                            <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
+                                        {/* Dark Gradient Overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+                                        
+                                        {/* Hover Overlay */}
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
+
+                                        {/* Status Badge and Checkbox */}
+                                        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start">
+                                            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg ${
+                                                post.status === 'published' 
+                                                    ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                                                    : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                                            }`}>
+                                                {post.status === 'published' ? 'Published' : 'Draft'}
+                                            </span>
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedPosts.includes(post.id)}
+                                                onChange={() => toggleSelectPost(post.id)}
+                                                className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+
+                                        {/* Content at Bottom */}
+                                        <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+                                            <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">
                                                 {post.title}
                                             </h3>
                                             
                                             {post.excerpt && (
-                                                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                                                <p className="text-sm text-white/80 line-clamp-2 mb-3">
                                                     {post.excerpt}
                                                 </p>
                                             )}
 
+                                            <div className="flex items-center text-white/90 mb-4">
+                                                <Calendar size={16} className="mr-2" />
+                                                <span className="text-sm font-medium">
+                                                    {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            </div>
+
                                             {/* Actions */}
-                                            <div className="flex items-center gap-2 pt-4 border-t border-border">
+                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                 <button 
-                                                    onClick={() => handleEdit(post)}
-                                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEdit(post);
+                                                    }}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-semibold hover:scale-110 transition-transform shadow-2xl"
                                                 >
-                                                    <Edit3 size={14} />
+                                                    <Edit3 size={16} />
                                                     Edit
                                                 </button>
                                                 <button 
-                                                    onClick={() => handleDuplicate(post)}
-                                                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-secondary/50 rounded transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDuplicate(post);
+                                                    }}
+                                                    className="p-2.5 bg-white/90 text-green-600 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Duplicate"
                                                 >
-                                                    <Copy size={14} />
+                                                    <Copy size={18} />
                                                 </button>
                                                 <button 
-                                                    onClick={() => handleDelete(post.id)}
-                                                    className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(post.id);
+                                                    }}
+                                                    className="p-2.5 bg-white/90 text-red-500 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Delete"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </div>

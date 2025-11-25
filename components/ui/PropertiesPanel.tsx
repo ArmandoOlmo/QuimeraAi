@@ -115,3 +115,5 @@ export const withTabOrganization = (
 
 export default PropertiesPanel;
 
+
+

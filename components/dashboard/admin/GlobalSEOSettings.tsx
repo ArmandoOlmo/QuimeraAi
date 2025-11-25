@@ -354,14 +354,6 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                     ))}
                                 </div>
                             </div>
-
-                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                                <h3 className="font-medium text-blue-400 mb-2">💡 Pro Tip</h3>
-                                <p className="text-sm text-editor-text-secondary">
-                                    SEO templates help users quickly set up optimized metadata for their projects. Each template should include:
-                                    recommended keywords, schema types, and best practices for that industry.
-                                </p>
-                            </div>
                         </div>
                     )}
 

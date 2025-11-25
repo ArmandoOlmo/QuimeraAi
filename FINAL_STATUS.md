@@ -210,3 +210,5 @@ Se ha completado exitosamente la unificación del sistema de chat y la limpieza 
 
 **El chatbot widget en el Builder ahora responde exactamente igual que el Quimera Chat, y el componente obsoleto en la Page Structure redirige apropiadamente al AI Assistant Dashboard.**
 
+
+

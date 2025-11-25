@@ -63,16 +63,34 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   
   return (
     <div 
-      className={`bg-dark-800 shadow-lg border transform hover:-translate-y-2 transition-all duration-300 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
+      className={`relative h-[400px] shadow-2xl border transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
       style={{ animationDelay: delay, borderColor: borderColor }}
     >
-      <div className="aspect-[4/3] overflow-hidden">
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" key={imageUrl} />
+      {/* Full Background Image */}
+      <div className="absolute inset-0">
+          <img 
+            src={imageUrl} 
+            alt={title} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+            key={imageUrl} 
+          />
       </div>
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-site-heading mb-2 font-header">{title}</h3>
-        <p className="font-body text-sm" style={{ color: textColor }}>{description}</p>
+      
+      {/* Dark Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+      
+      {/* Content at Bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+        <h3 className="text-2xl font-bold text-white mb-3 font-header line-clamp-2">
+          {title}
+        </h3>
+        <p className="font-body text-sm text-white/90 line-clamp-3">
+          {description}
+        </p>
       </div>
+      
+      {/* Hover Overlay */}
+      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
     </div>
   );
 };

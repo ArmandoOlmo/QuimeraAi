@@ -286,3 +286,5 @@ El Asistente Global ahora produce respuestas que son:
 **Fecha:** Noviembre 2025  
 **Tipo:** Mejora de UX - Espaciado y Legibilidad
 
+
+

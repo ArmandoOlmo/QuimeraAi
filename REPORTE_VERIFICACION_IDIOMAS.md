@@ -414,3 +414,5 @@ Continuar con la **Fase 1** traduciendo `Controls.tsx` y `LeadsDashboard.tsx` pa
 
 🌍 **Tu sistema de traducción está funcionando perfectamente!** ✨
 
+
+

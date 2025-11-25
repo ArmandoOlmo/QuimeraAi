@@ -4,8 +4,6 @@ import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings } from 'lucide-react';
 import Modal from '../../ui/Modal';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { Domain } from '../../../types';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
 
@@ -93,7 +91,7 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
             
             <div className="mt-6 flex justify-between items-center">
                 <p className="text-xs text-muted-foreground">
-                    💡 DNS changes can take 24-48 hours to propagate
+                    DNS changes can take 24-48 hours to propagate
                 </p>
                 <a 
                     href="https://support.google.com/domains/answer/3290350?hl=en" 
@@ -521,7 +519,6 @@ const DomainsDashboard: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-1">
-                        <InfoBubble bubbleId="domains" content={INFO_BUBBLE_CONTENT.domains} inline defaultExpanded={false} />
                         <button 
                             onClick={() => setIsConnectModalOpen(true)}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 hidden sm:flex"

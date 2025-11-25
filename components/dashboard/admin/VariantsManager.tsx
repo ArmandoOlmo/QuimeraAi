@@ -314,13 +314,6 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
         </div>
       )}
 
-      {/* Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-        <p className="text-blue-900">
-          <strong>💡 Tip:</strong> Variants allow you to create different visual styles (like primary, secondary, outline) 
-          while keeping the same component structure. The active variant's styles will be used when rendering.
-        </p>
-      </div>
     </div>
   );
 };

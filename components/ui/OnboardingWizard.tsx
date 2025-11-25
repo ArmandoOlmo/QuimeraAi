@@ -121,10 +121,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
     const onboardingStartTime = useRef<number | null>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
     
-    // Debug state
-    const [debugLogs, setDebugLogs] = useState<string[]>([]);
-    const [showDebugPanel, setShowDebugPanel] = useState(false);
-    
     // Track onboarding start
     useEffect(() => {
         if (isOpen && !onboardingStartTime.current) {
@@ -1559,37 +1555,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
              <div className="bg-[#1A0D26] w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative">
-                
-                {/* Debug Panel Toggle - Only in Development */}
-                <button
-                    onClick={() => setShowDebugPanel(!showDebugPanel)}
-                    className="absolute top-4 left-4 z-10 text-[10px] px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded border border-yellow-500/30 hover:bg-yellow-500/30 transition-colors"
-                    title="Toggle Debug Panel"
-                >
-                    🐛 DEBUG {showDebugPanel ? 'ON' : 'OFF'}
-                </button>
-
-                {/* Debug Status Panel */}
-                {showDebugPanel && (
-                    <div className="absolute top-14 left-4 right-4 z-10 bg-black/95 border border-yellow-500/50 rounded-lg p-3 max-h-[200px] overflow-y-auto">
-                        <div className="text-[10px] font-mono space-y-1">
-                            <div className="text-yellow-400 font-bold mb-2">🐛 ONBOARDING DEBUG STATUS</div>
-                            <div className="text-green-400">✓ User: {user ? `Authenticated (${user.email})` : '❌ NOT AUTHENTICATED'}</div>
-                            <div className="text-green-400">✓ API Key: {hasApiKey ? 'Configured' : '❌ NOT CONFIGURED'}</div>
-                            <div className="text-blue-400">• Business: {onboardingState.businessName || 'Not set'}</div>
-                            <div className="text-blue-400">• Industry: {onboardingState.industry || 'Not set'}</div>
-                            <div className="text-blue-400">• Step: {onboardingState.step}</div>
-                            <div className="text-blue-400">• Design Plan: {onboardingState.designPlan ? '✓ Generated' : '❌ Missing'}</div>
-                            <div className="text-blue-400">• Created Project ID: {createdProjectId || 'Not created yet'}</div>
-                            {onboardingState.step === 'generating' && (
-                                <div className="text-purple-400 mt-2">⚡ {generatingStatus}</div>
-                            )}
-                            <div className="text-gray-500 text-[9px] mt-2 pt-2 border-t border-gray-700">
-                                Tip: Open browser console (F12) for detailed logs
-                            </div>
-                        </div>
-                    </div>
-                )}
                 
                 {/* Header */}
                 <div className="px-8 py-6 flex justify-between items-start border-b border-white/5 bg-white/5">

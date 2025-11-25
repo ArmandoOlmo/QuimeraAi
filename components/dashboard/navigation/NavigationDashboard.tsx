@@ -4,8 +4,6 @@ import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
 import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info } from 'lucide-react';
 import MenuEditor from './MenuEditor';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { Menu } from '../../../types';
 
 const NavigationDashboard: React.FC = () => {
@@ -126,7 +124,6 @@ const NavigationDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <InfoBubble bubbleId="navigation" content={INFO_BUBBLE_CONTENT.navigation} inline defaultExpanded={false} />
                         {activeProject && (
                             <div className="flex items-center text-sm text-muted-foreground">
                                 <span className="mr-1.5">Project:</span>

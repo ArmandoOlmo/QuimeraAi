@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PageSection } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { 
     Layout, Image, List, Star, Users, DollarSign, 
     Briefcase, Mail, Send, MessageCircle, PlaySquare, 
@@ -44,29 +45,6 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     typography: Type
 };
 
-const sectionLabels: Record<PageSection, string> = {
-    hero: 'Hero Section',
-    features: 'Features',
-    testimonials: 'Testimonials',
-    services: 'Services',
-    team: 'Team',
-    pricing: 'Pricing',
-    faq: 'FAQ',
-    portfolio: 'Portfolio',
-    leads: 'Lead Form',
-    newsletter: 'Newsletter',
-    cta: 'Call to Action',
-    slideshow: 'Slideshow',
-    video: 'Video',
-    howItWorks: 'How It Works',
-    map: 'Location Map',
-    menu: 'Restaurant Menu',
-    chatbot: 'AI Chatbot',
-    footer: 'Footer',
-    header: 'Navigation',
-    typography: 'Typography'
-};
-
 const ComponentTree: React.FC<ComponentTreeProps> = ({
     componentOrder,
     activeSection,
@@ -79,6 +57,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     onRemoveComponent,
     availableComponents
 }) => {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
     const [draggedItem, setDraggedItem] = useState<PageSection | null>(null);
     const [showAddMenu, setShowAddMenu] = useState(false);
@@ -87,6 +66,29 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         content: true,
         integrations: true
     });
+
+    const sectionLabels: Record<PageSection, string> = {
+        hero: t('editor.heroSection'),
+        features: t('editor.featuresSection'),
+        testimonials: t('editor.testimonialsSection'),
+        services: t('editor.servicesSection'),
+        team: t('editor.teamSection'),
+        pricing: t('editor.pricingSection'),
+        faq: t('editor.faqSection'),
+        portfolio: t('editor.portfolioSection'),
+        leads: t('editor.leadForm'),
+        newsletter: t('editor.newsletterSection'),
+        cta: t('editor.ctaSection'),
+        slideshow: t('editor.slideshowSection'),
+        video: t('editor.videoSection'),
+        howItWorks: t('editor.howItWorksSection'),
+        map: t('editor.locationMap'),
+        menu: t('editor.restaurantMenu'),
+        chatbot: t('editor.aiChatbot'),
+        footer: t('editor.footerSection'),
+        header: t('editor.navigationSection'),
+        typography: t('editor.typographySection')
+    };
 
     const handleDragStart = (e: React.DragEvent, section: PageSection) => {
         setDraggedItem(section);
@@ -192,14 +194,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                     ? 'hover:bg-white/20 text-white' 
                                     : 'hover:bg-editor-border text-editor-text-secondary'
                             }`}
-                            title={isVisible ? 'Hide section' : 'Show section'}
+                            title={isVisible ? t('editor.hideSection') : t('editor.showSection')}
                         >
                             {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
                         </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm(`¿Estás seguro de que quieres eliminar la sección "${sectionLabels[section]}"?`)) {
+                                if (confirm(t('editor.deleteSectionConfirm', { section: sectionLabels[section] }))) {
                                     onRemoveComponent(section);
                                 }
                             }}
@@ -208,7 +210,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                     ? 'hover:bg-red-500/20 text-white' 
                                     : 'hover:bg-red-500/10 text-editor-text-secondary hover:text-red-500'
                             }`}
-                            title="Delete section"
+                            title={t('editor.deleteSection')}
                         >
                             <Trash2 size={14} />
                         </button>
@@ -254,13 +256,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             <div className="p-4 border-b border-editor-border">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-editor-text-primary uppercase tracking-wider">
-                        Page Structure
+                        {t('editor.pageStructure')}
                     </h3>
                     {availableComponents.length > 0 && (
                         <button
                             onClick={() => setShowAddMenu(!showAddMenu)}
                             className="p-1.5 rounded-md bg-editor-accent text-white hover:bg-editor-accent-hover transition-colors"
-                            title="Add Component"
+                            title={t('editor.addComponent')}
                         >
                             {showAddMenu ? <X size={14} /> : <Plus size={14} />}
                         </button>
@@ -272,7 +274,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search sections..."
+                        placeholder={t('editor.searchSections')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 text-sm bg-editor-panel-bg border border-editor-border rounded-md text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-editor-accent"
@@ -292,7 +294,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             {showAddMenu && availableComponents.length > 0 && (
                 <div className="p-3 border-b border-editor-border bg-editor-panel-bg/50">
                     <div className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-                        Add Component
+                        {t('editor.addComponent')}
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                         {availableComponents.map(section => {
@@ -327,9 +329,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 ) : (
                     // Grouped view
                     <>
-                        {renderGroup('Structure', structureSections, 'structure', false)}
-                        {renderGroup('Content', contentSections, 'content', true)}
-                        {renderGroup('Integrations', integrationSections, 'integrations', true)}
+                        {renderGroup(t('editor.structure'), structureSections, 'structure', false)}
+                        {renderGroup(t('editor.content'), contentSections, 'content', true)}
+                        {renderGroup(t('editor.integrations'), integrationSections, 'integrations', true)}
                     </>
                 )}
             </div>

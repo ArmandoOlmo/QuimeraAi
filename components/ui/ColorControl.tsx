@@ -84,6 +84,9 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
     const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
     const portalContainer = document.getElementById('portal-root');
     
+    // Estado local para el input HEX que permite edición manual
+    const [hexInput, setHexInput] = useState('');
+    
     useClickOutside(popoverRef, () => setIsOpen(false));
 
     useLayoutEffect(() => {
@@ -120,9 +123,39 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
     }, [isOpen]);
 
     const { hex, alpha } = parseColor(value);
+    
+    // Sincronizar hexInput con el valor actual cuando cambia externamente
+    useEffect(() => {
+        setHexInput(hex.toUpperCase());
+    }, [hex]);
 
     const handleColorChange = (newHex: string, newAlpha: number) => {
         onChange(formatColor({ hex: newHex, alpha: newAlpha }));
+    };
+    
+    // Validar si un string es un color HEX válido
+    const isValidHex = (hexString: string): boolean => {
+        const cleanHex = hexString.replace('#', '');
+        return /^[0-9A-Fa-f]{3}$|^[0-9A-Fa-f]{6}$/i.test(cleanHex);
+    };
+    
+    // Manejar cambios en el input HEX manual
+    const handleHexInputChange = (newHexValue: string) => {
+        // Actualizar el estado local inmediatamente para permitir edición
+        setHexInput(newHexValue);
+        
+        // Si el valor es válido, aplicar el cambio
+        if (isValidHex(newHexValue)) {
+            const normalizedHex = newHexValue.startsWith('#') ? newHexValue : `#${newHexValue}`;
+            let processedHex = normalizedHex;
+            
+            // Expandir formato corto (#RGB a #RRGGBB)
+            if (normalizedHex.length === 4) {
+                processedHex = '#' + normalizedHex.slice(1).split('').map(c => c + c).join('');
+            }
+            
+            handleColorChange(processedHex, alpha);
+        }
     };
 
     const PopoverContent = (
@@ -146,9 +179,17 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
                       <Label htmlFor="hex-input">HEX</Label>
                       <Input 
                           id="hex-input"
-                          value={hex.toUpperCase()} 
-                          onChange={(e) => handleColorChange(e.target.value, alpha)}
+                          value={hexInput} 
+                          onChange={(e) => handleHexInputChange(e.target.value)}
+                          onPaste={(e) => {
+                              e.stopPropagation();
+                              const pastedText = e.clipboardData.getData('text');
+                              if (pastedText) {
+                                  setTimeout(() => handleHexInputChange(pastedText), 0);
+                              }
+                          }}
                           className="font-mono"
+                          placeholder="#000000"
                       />
                   </div>
                   <div className="w-20">

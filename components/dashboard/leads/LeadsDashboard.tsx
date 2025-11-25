@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
-import InfoBubble from '../../ui/InfoBubble';
-import { INFO_BUBBLE_CONTENT } from '../../../data/infoBubbleContent';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
 import LeadsTimeline from './LeadsTimeline';
 import LeadTasksList from './LeadTasksList';
@@ -693,7 +691,6 @@ const LeadsDashboard: React.FC = () => {
                                     className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
                                 />
                             </div>
-                            <InfoBubble bubbleId="leads" content={INFO_BUBBLE_CONTENT.leads} inline defaultExpanded={false} />
                             <CustomFieldsManager 
                                 customFieldsConfig={customFieldsConfig}
                                 onSaveConfig={setCustomFieldsConfig}

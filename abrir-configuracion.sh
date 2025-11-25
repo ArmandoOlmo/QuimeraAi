@@ -20,3 +20,5 @@ echo "   http://localhost:5173/*"
 echo ""
 echo "📖 Consulta CONFIGURAR_RESTRICCIONES_AHORA.md para instrucciones detalladas"
 
+
+

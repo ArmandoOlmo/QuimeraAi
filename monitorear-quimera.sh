@@ -104,3 +104,5 @@ echo "Por favor verifica el estado en:"
 echo "https://console.firebase.google.com/project/quimeraai/hosting/sites/quimeraai"
 echo ""
 
+
+

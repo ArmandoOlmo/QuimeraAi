@@ -40,3 +40,5 @@ echo ""
 echo "💡 TIP: El proyecto que muestre quimera.ai como dominio personalizado"
 echo "       es donde necesitas hacer el deploy"
 
+
+

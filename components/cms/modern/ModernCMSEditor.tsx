@@ -452,7 +452,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         />
                         
                         <div className="flex-1 overflow-y-auto p-8 flex justify-center">
-                            <div className="w-full max-w-[900px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl min-h-[800px]">
+                            <div className="w-full max-w-[900px] min-h-[800px]">
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu 
                                     editor={editor} 

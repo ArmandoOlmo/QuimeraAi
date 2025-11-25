@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
 import { PageSection, PricingTier } from '../types';
 import ColorControl from './ui/ColorControl';
@@ -169,12 +170,13 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm(`Remove ${title} from this page?`)) {
+                                const { t } = useTranslation();
+                                if (confirm(t('editor.removeConfirm', { title }))) {
                                     onRemove();
                                 }
                             }}
                             className="p-1 text-editor-text-secondary hover:text-red-400 transition-colors"
-                            title="Remove from page"
+                            title={useTranslation().t('editor.removeFromPage')}
                         >
                             <Trash2 size={14} />
                         </button>
@@ -197,6 +199,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 // --- Main Component ---
 
 const Controls: React.FC = () => {
+  const { t } = useTranslation();
   const { 
       data, setData, 
       activeSection, onSectionSelect, 
@@ -680,11 +683,11 @@ const Controls: React.FC = () => {
                   {data.hero.showBadge !== false && (
                       <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
                           <div className="grid grid-cols-2 gap-3">
-                              <Input 
+                              <IconSelector 
                                   label="Icon" 
-                                  value={data.hero.badgeIcon || '✨'} 
-                                  onChange={(e) => setNestedData('hero.badgeIcon', e.target.value)} 
-                                  className="mb-0" 
+                                  value={data.hero.badgeIcon || 'sparkles'} 
+                                  onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
+                                  size="sm"
                               />
                               <Input 
                                   label="Text" 
@@ -832,18 +835,18 @@ const Controls: React.FC = () => {
                       <ColorControl label="Text" value={data.hero.colors.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
                       
                       <div className="pt-2">
-                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Primary Button</h5>
+                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
                           <div className="grid grid-cols-2 gap-3">
-                              <ColorControl label="Background" value={data.hero.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
-                              <ColorControl label="Text" value={data.hero.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
+                              <ColorControl label={t('editor.background')} value={data.hero.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
+                              <ColorControl label={t('editor.text')} value={data.hero.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
                           </div>
                       </div>
 
                       <div className="pt-2">
-                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Secondary Button</h5>
+                          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.secondaryButton')}</h5>
                           <div className="grid grid-cols-2 gap-3">
-                              <ColorControl label="Background" value={data.hero.colors.secondaryButtonBackground || '#334155'} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
-                              <ColorControl label="Text" value={data.hero.colors.secondaryButtonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+                              <ColorControl label={t('editor.background')} value={data.hero.colors.secondaryButtonBackground || '#334155'} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
+                              <ColorControl label={t('editor.text')} value={data.hero.colors.secondaryButtonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
                           </div>
                       </div>
                   </div>
@@ -856,14 +859,14 @@ const Controls: React.FC = () => {
                       <div>
                           <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
                               <Image size={14} />
-                              Hero Image
+                              {t('editor.heroImage')}
                           </h4>
                           
                           <ImagePicker label="Image URL" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
                           
                           {/* Image Style */}
                           <div className="mb-3">
-                              <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Image Style</label>
+                              <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('editor.imageStyle')}</label>
                               <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
                                   {['default', 'rounded-full', 'glow', 'float', 'hexagon', 'polaroid'].map(style => (
                                       <button 
@@ -882,7 +885,7 @@ const Controls: React.FC = () => {
                           {/* Position & Alignment */}
                           <div className="grid grid-cols-2 gap-4 mb-3">
                               <div>
-                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Position</label>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.position')}</label>
                                   <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                                       {['left', 'right'].map(pos => (
                                           <button 
@@ -896,7 +899,7 @@ const Controls: React.FC = () => {
                                   </div>
                               </div>
                               <div>
-                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Alignment</label>
+                                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.alignment')}</label>
                                   <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                                       {['start', 'center', 'end'].map(align => (
                                           <button 
@@ -1003,14 +1006,6 @@ const Controls: React.FC = () => {
                   </>
               )}
 
-              {/* Modern variant info */}
-              {currentVariant === 'modern' && (
-                  <div className="bg-editor-bg/50 p-4 rounded-lg border border-dashed border-editor-border">
-                      <p className="text-xs text-editor-text-secondary text-center">
-                          💡 <strong>Modern variant</strong> uses the hero image as a full-screen background. Upload image above in the main image picker.
-                      </p>
-                  </div>
-              )}
           </div>
       );
   };
@@ -2716,7 +2711,12 @@ const Controls: React.FC = () => {
           {data.hero.showBadge !== false && (
             <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Icon" value={data.hero.badgeIcon || '✨'} onChange={(e) => setNestedData('hero.badgeIcon', e.target.value)} className="mb-0" />
+                <IconSelector 
+                  label="Icon" 
+                  value={data.hero.badgeIcon || 'sparkles'} 
+                  onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
+                  size="sm"
+                />
                 <Input label="Text" value={data.hero.badgeText || ''} onChange={(e) => setNestedData('hero.badgeText', e.target.value)} className="mb-0" />
               </div>
             </div>
@@ -2906,9 +2906,9 @@ const Controls: React.FC = () => {
         <ColorControl label="Background" value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
         <ColorControl label="Heading" value={data.hero.colors.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
         <ColorControl label="Subheading" value={data.hero.colors.secondary} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
-        <ColorControl label="Primary Button BG" value={data.hero.colors.primaryButtonBg} onChange={(v) => setNestedData('hero.colors.primaryButtonBg', v)} />
-        <ColorControl label="Primary Button Text" value={data.hero.colors.primaryButtonText} onChange={(v) => setNestedData('hero.colors.primaryButtonText', v)} />
-        <ColorControl label="Secondary Button BG" value={data.hero.colors.secondaryButtonBg} onChange={(v) => setNestedData('hero.colors.secondaryButtonBg', v)} />
+        <ColorControl label="Primary Button BG" value={data.hero.colors.buttonBackground} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
+        <ColorControl label="Primary Button Text" value={data.hero.colors.buttonText} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
+        <ColorControl label="Secondary Button BG" value={data.hero.colors.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
         <ColorControl label="Secondary Button Text" value={data.hero.colors.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
         
         {data.hero.showBadge !== false && (
@@ -2924,7 +2924,7 @@ const Controls: React.FC = () => {
               </div>
             )}
             
-            <ColorControl label="Badge Background" value={data.hero.badgeBackground || '#000000'} onChange={(v) => setNestedData('hero.badgeBackground', v)} />
+            <ColorControl label="Badge Background" value={data.hero.badgeBackgroundColor || '#000000'} onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} />
             <ColorControl label="Badge Text" value={data.hero.badgeColor || '#ffffff'} onChange={(v) => setNestedData('hero.badgeColor', v)} />
           </>
         )}

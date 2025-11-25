@@ -4,7 +4,7 @@ import { useEditor } from '../../../contexts/EditorContext';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles } from 'lucide-react';
 import { FileRecord } from '../../../types';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import DragDropZone from '../../ui/DragDropZone';
@@ -107,7 +107,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             </button>
                             <div className="flex items-center gap-2">
                                 <Image className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">Global Image Library</h1>
+                                <h1 className="text-lg font-semibold text-editor-text-primary">Global Image Generator</h1>
                             </div>
                             {library.stats.filtered < library.stats.total && (
                                 <span className="ml-3 text-xs text-editor-text-secondary bg-editor-border px-2 py-1 rounded-md">
@@ -122,9 +122,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             </button>
                             <button 
                                 onClick={() => setIsGeneratorOpen(true)}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg hover:scale-105 transform"
                             >
-                                <Zap className="w-4 h-4" />
+                                <Zap className="w-4 h-4 animate-pulse" />
                                 Generate Image
                             </button>
                             <DragDropZone
@@ -282,12 +282,60 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                     </button>
                                 </div>
                             ) : (
-                                <DragDropZone
-                                    onFileSelect={handleFileUpload}
-                                    accept="image/*"
-                                    maxSizeMB={10}
-                                    className="min-h-[400px]"
-                                />
+                                <div className="space-y-4">
+                                    {/* AI Generator Card - Global Library */}
+                                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 p-10 text-center group hover:border-purple-500/40 transition-all">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-110 transition-transform"></div>
+                                        
+                                        <div className="relative z-10">
+                                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 mb-6 shadow-xl group-hover:scale-110 transition-transform">
+                                                <Zap className="w-10 h-10 text-white animate-pulse" />
+                                            </div>
+                                            
+                                            <h3 className="text-2xl font-bold text-editor-text-primary mb-3">
+                                                Generate AI Images for Global Library
+                                            </h3>
+                                            
+                                            <p className="text-base text-editor-text-secondary mb-8 max-w-2xl mx-auto">
+                                                Create stunning 4K images with Quimera AI. Perfect for reusing across multiple projects. Features advanced controls for lighting, camera angles, and style customization.
+                                            </p>
+                                            
+                                            <button
+                                                onClick={() => setIsGeneratorOpen(true)}
+                                                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                                            >
+                                                <Zap className="w-6 h-6" />
+                                                Open Image Generator
+                                            </button>
+                                            
+                                            <div className="mt-8 flex items-center justify-center gap-8 text-sm text-editor-text-secondary">
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles size={16} className="text-purple-400" />
+                                                    <span>Up to 4K Resolution</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles size={16} className="text-pink-400" />
+                                                    <span>Advanced Lighting & Camera</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles size={16} className="text-orange-400" />
+                                                    <span>Reference Image Support</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Upload Zone */}
+                                    <div className="text-center py-3">
+                                        <p className="text-sm text-editor-text-secondary mb-4">Or upload existing images to the global library</p>
+                                        <DragDropZone
+                                            onFileSelect={handleFileUpload}
+                                            accept="image/*"
+                                            maxSizeMB={10}
+                                            className="min-h-[250px]"
+                                        />
+                                    </div>
+                                </div>
                             )
                         ) : (
                             <>

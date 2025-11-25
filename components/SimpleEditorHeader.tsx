@@ -90,8 +90,8 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
   ];
 
   const orientationOptions = [
-    { value: 'portrait', label: 'Portrait', short: 'P' },
-    { value: 'landscape', label: 'Landscape', short: 'L' },
+    { value: 'portrait', label: t('editor.portrait'), short: 'P' },
+    { value: 'landscape', label: t('editor.landscape'), short: 'L' },
   ] as const;
 
   const orientationDisabled = previewDevice === 'desktop';

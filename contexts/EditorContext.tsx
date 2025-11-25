@@ -129,8 +129,20 @@ interface EditorContextType {
     updateFileNotes: (fileId: string, notes: string) => Promise<void>;
     generateFileSummary: (fileId: string, downloadURL: string) => Promise<void>;
     uploadImageAndGetURL: (file: File, path: string) => Promise<string>;
-    generateImage: (prompt: string, options?: { aspectRatio?: string, style?: string, destination?: 'user' | 'global' }) => Promise<string>; 
-    enhancePrompt: (draftPrompt: string) => Promise<string>;
+    generateImage: (prompt: string, options?: { 
+        aspectRatio?: string, 
+        style?: string, 
+        destination?: 'user' | 'global',
+        resolution?: '1K' | '2K' | '4K',
+        lighting?: string,
+        cameraAngle?: string,
+        colorGrading?: string,
+        themeColors?: string,
+        depthOfField?: string,
+        referenceImage?: string,
+        referenceImages?: string[]
+    }) => Promise<string>; 
+    enhancePrompt: (draftPrompt: string, referenceImages?: string[]) => Promise<string>;
     
     // Global File Management (Super Admin)
     globalFiles: FileRecord[];
@@ -1872,7 +1884,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const enhancePrompt = async (draftPrompt: string): Promise<string> => {
+    const enhancePrompt = async (draftPrompt: string, referenceImages?: string[]): Promise<string> => {
         if (hasApiKey === false) {
             await promptForKeySelection();
             throw new Error("Please select an API key.");
@@ -1889,11 +1901,46 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                  promptTemplate = enhancerPrompt.template;
              }
 
-             const filledPrompt = promptTemplate.replace('{{originalPrompt}}', draftPrompt);
+             // Prepare template variables
+             const hasReferenceImages = referenceImages && referenceImages.length > 0;
+             const referenceImagesInstruction = hasReferenceImages 
+                 ? `**ANALYZE THE REFERENCE IMAGES PROVIDED BELOW:** The user has uploaded ${referenceImages.length} reference image(s). Carefully examine the visual style, composition, color palette, lighting, mood, and artistic techniques present in these images. Incorporate these visual elements into your enhanced prompt to help Nano Banana Pro generate an image that matches or is inspired by the reference images.`
+                 : 'No reference images provided. Focus on enhancing the text prompt with rich descriptive details.';
+
+             const filledPrompt = promptTemplate
+                 .replace('{{originalPrompt}}', draftPrompt)
+                 .replace('{{hasReferenceImages}}', hasReferenceImages ? `YES (${referenceImages.length} image(s) provided)` : 'NO')
+                 .replace('{{referenceImagesInstruction}}', referenceImagesInstruction);
+
+             // Build the contents array
+             const contents: any[] = [filledPrompt];
+             
+             // Add reference images if provided (for vision models like gemini-3-pro-image)
+             if (hasReferenceImages && referenceImages) {
+                 referenceImages.forEach((imgDataUrl) => {
+                     // Extract base64 data from data URL (format: data:image/jpeg;base64,...)
+                     const base64Data = imgDataUrl.includes(',') ? imgDataUrl.split(',')[1] : imgDataUrl;
+                     const mimeType = imgDataUrl.match(/data:(image\/[a-z]+);/)?.[1] || 'image/jpeg';
+                     
+                     contents.push({
+                         inlineData: {
+                             mimeType: mimeType,
+                             data: base64Data
+                         }
+                     });
+                 });
+             }
+
+             console.log('🎨 [enhancePrompt] Sending request:', {
+                 model,
+                 hasReferenceImages,
+                 referenceImagesCount: referenceImages?.length || 0,
+                 promptLength: draftPrompt.length
+             });
 
              const response = await ai.models.generateContent({
                 model: model,
-                contents: filledPrompt,
+                contents: contents,
             });
             
             // Log API call
@@ -1924,7 +1971,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const generateImage = async (prompt: string, options?: { aspectRatio?: string, style?: string, destination?: 'user' | 'global' }): Promise<string> => {
+    const generateImage = async (prompt: string, options?: { 
+        aspectRatio?: string, 
+        style?: string, 
+        destination?: 'user' | 'global',
+        resolution?: '1K' | '2K' | '4K',
+        lighting?: string,
+        cameraAngle?: string,
+        colorGrading?: string,
+        themeColors?: string,
+        depthOfField?: string,
+        referenceImage?: string,
+        referenceImages?: string[]
+    }): Promise<string> => {
         if (!user) throw new Error("Authentication required to generate images.");
         
         if (hasApiKey === false) {
@@ -1940,70 +1999,269 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const ai = await getGoogleGenAI();
         
         const galleryPromptConfig = getPrompt('image-generation-gallery');
-        let modelName = 'imagen-4.0-generate-001';
-        let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo';
+        let modelName = 'gemini-3-pro-image-preview'; // Quimera AI - Nano Banana Pro (Updated per online docs)
+        let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality';
+
+        console.log('🔍 [EditorContext] galleryPromptConfig:', {
+            exists: !!galleryPromptConfig,
+            version: galleryPromptConfig?.version,
+            model: galleryPromptConfig?.model,
+            template: galleryPromptConfig?.template?.substring(0, 100) + '...',
+        });
 
         if (galleryPromptConfig) {
             modelName = galleryPromptConfig.model;
             promptTemplate = galleryPromptConfig.template;
         }
 
-        let finalPrompt = promptTemplate.replace('{{prompt}}', prompt).replace('{{style}}', options?.style && options.style !== 'None' ? `${options.style} style` : '');
+        // Build final prompt with all parameters and log them
+        console.log('🎨 [EditorContext] Received options:', {
+            prompt: prompt.substring(0, 50) + '...',
+            style: options?.style,
+            lighting: options?.lighting,
+            cameraAngle: options?.cameraAngle,
+            colorGrading: options?.colorGrading,
+            themeColors: options?.themeColors,
+            depthOfField: options?.depthOfField,
+        });
+        
+        console.log('📋 [EditorContext] Using template:', promptTemplate);
+
+        // Build the prompt with proper handling
+        let finalPrompt = promptTemplate
+            .replace('{{prompt}}', prompt)
+            .replace('{{style}}', options?.style && options.style !== 'None' ? `${options.style} style` : '')
+            .replace('{{lighting}}', options?.lighting ? options.lighting : '')
+            .replace('{{cameraAngle}}', options?.cameraAngle ? options.cameraAngle : '')
+            .replace('{{colorGrading}}', options?.colorGrading ? options.colorGrading : '')
+            .replace('{{themeColors}}', options?.themeColors ? options.themeColors : '')
+            .replace('{{depthOfField}}', options?.depthOfField ? options.depthOfField : '');
+        
+        console.log('🔄 [EditorContext] After replacements (before cleanup):', finalPrompt);
+        
+        // Clean up extra commas and spaces
+        finalPrompt = finalPrompt
+            .replace(/,\s*,/g, ',')      // Remove duplicate commas
+            .replace(/,\s*,/g, ',')      // Run twice to catch triple commas
+            .replace(/,\s*$/g, '')       // Remove trailing comma
+            .replace(/\s*,\s*/g, ', ')   // Normalize spacing around commas
+            .trim();
+        
+        console.log('✅ [EditorContext] Final prompt sent to API:', finalPrompt);
 
         try {
             let base64Image: string | undefined;
 
             if (modelName.includes('imagen')) {
-                // Use Imagen API
-                const response = await ai.models.generateImages({
+                // Use Imagen API for image generation (Imagen 4.0)
+                const imageConfig: any = {
+                    numberOfImages: 1,
+                    aspectRatio: (options?.aspectRatio || '1:1') as any,
+                };
+
+                // Add image size for Imagen 4.0 (Standard and Ultra support 1K and 2K)
+                if (options?.resolution === '4K') {
+                    imageConfig.imageSize = '2K'; // Imagen 4.0 max is 2K
+                } else if (options?.resolution === '2K') {
+                    imageConfig.imageSize = '2K';
+                } else if (options?.resolution === '1K') {
+                    imageConfig.imageSize = '1K';
+                } else {
+                    imageConfig.imageSize = '1K'; // Default
+                }
+
+                // Add person generation setting
+                imageConfig.personGeneration = 'allow_adult';
+
+                // Debug: Log the configuration
+                console.log('🎨 Quimera AI Image Generation Config:', {
+                    model: modelName,
+                    aspectRatio: imageConfig.aspectRatio,
+                    imageSize: imageConfig.imageSize,
+                    resolution: options?.resolution,
+                });
+
+                // Prepare the request
+                const generateRequest: any = {
                     model: modelName,
                     prompt: finalPrompt,
-                    config: {
-                        numberOfImages: 1,
-                        aspectRatio: (options?.aspectRatio || '1:1') as any,
-                        outputMimeType: 'image/jpeg',
-                    },
-                });
+                    config: imageConfig,
+                };
+
+                // Add reference image if provided (for style transfer/reference)
+                if (options?.referenceImage) {
+                    // Extract base64 data from data URL
+                    const base64Data = options.referenceImage.split(',')[1];
+                    generateRequest.referenceImage = {
+                        imageBytes: base64Data
+                    };
+                    // Modify prompt to indicate style transfer
+                    generateRequest.prompt = `In the style of the reference image: ${finalPrompt}`;
+                }
+
+                const response = await ai.models.generateImages(generateRequest);
                 base64Image = response.generatedImages?.[0]?.image?.imageBytes;
                 
                 // Log API call
                 if (user) {
                     logApiCall({
                         userId: user.uid,
-                        projectId: activeProject?.id,
+                        projectId: activeProject?.id || 'no-project',
                         model: modelName,
-                        feature: 'image-generation-imagen',
+                        feature: 'image-generation-quimera-ai',
                         success: true
                     });
                 }
             } else if (modelName.includes('gemini') || modelName.includes('nano')) {
-                // Use Gemini / Nano Banana Pro (generateContent)
-                const response = await ai.models.generateContent({
-                    model: modelName,
-                    contents: {
-                        parts: [{ text: finalPrompt }]
-                    },
-                    // Gemini 3 image generation typically uses generateContent and returns inlineData
-                });
-                
-                // Log API call
-                if (user) {
-                    logApiCall({
-                        userId: user.uid,
-                        projectId: activeProject?.id,
-                        model: modelName,
-                        feature: 'image-generation-gemini',
-                        success: true
-                    });
+                // Use Gemini 3 Pro Image (Nano Banana Pro / Quimera AI) with advanced config
+                // Strategy: Try multiple parameter locations for robust API compatibility
+                const generationConfig: any = {
+                    temperature: 1.0,           // Creatividad del modelo
+                    candidateCount: 1,          // Una imagen por turno
+                    responseMimeType: 'image/jpeg',
+                    // Add aspect ratio at root level (some SDKs/Models expect it here)
+                    aspectRatio: options?.aspectRatio || undefined
+                };
+
+                // Also add nested imageConfig (other SDKs/Models expect it here)
+                if (options?.aspectRatio) {
+                     generationConfig.imageConfig = {
+                         aspectRatio: options.aspectRatio
+                     };
                 }
+
+                // Add person generation setting
+                generationConfig.personGeneration = 'allow_adult';
+
+                // Add thinking level for Gemini 3 Pro (mejora texto en imagen y lógica espacial)
+                generationConfig.thinkingLevel = 'high';
+
+                // FALLBACK STRATEGY: Add aspect ratio to prompt text as well
+                // This is the most reliable way if config parameters are ignored
+                if (options?.aspectRatio && options.aspectRatio !== '1:1') {
+                    finalPrompt = `${finalPrompt}, aspect ratio ${options.aspectRatio}`;
+                }
+
+                // Debug: Log the configuration
+                console.log('🎨 Nano Banana Pro (Gemini 3 Pro Image) Config:', {
+                    model: modelName,
+                    aspectRatio: generationConfig.aspectRatio,
+                    imageConfig: generationConfig.imageConfig,
+                    temperature: generationConfig.temperature,
+                    thinkingLevel: generationConfig.thinkingLevel,
+                    resolution: options?.resolution,
+                });
+
+                // Build content parts (text + optional reference images)
+                const contentParts: any[] = [];
                 
-                // Extract image from response parts
-                if (response.candidates && response.candidates[0].content.parts) {
-                    for (const part of response.candidates[0].content.parts) {
-                        if (part.inlineData) {
-                            base64Image = part.inlineData.data;
-                            break;
+                // Prepare reference images array (support both singular and plural options)
+                const referenceImages = options?.referenceImages || (options?.referenceImage ? [options.referenceImage] : []);
+                
+                // Add reference images if provided (Nano Banana Pro supports up to 14 images)
+                if (referenceImages.length > 0) {
+                    referenceImages.forEach((imgData) => {
+                        // Extract base64 data from data URL
+                        const base64Data = imgData.split(',')[1];
+                        const mimeType = imgData.split(';')[0].split(':')[1];
+                        
+                        contentParts.push({
+                            inlineData: {
+                                mimeType: mimeType,
+                                data: base64Data
+                            }
+                        });
+                    });
+                    
+                    // Modify prompt to indicate we're using reference images
+                    contentParts.push({ 
+                        text: `Using the provided reference images as style guide: ${finalPrompt}` 
+                    });
+                } else {
+                    contentParts.push({ text: finalPrompt });
+                }
+
+                try {
+                    // Intenta generateContent primero (para modelos Gemini multimodal)
+                    // Nota: La SDK espera 'contents' como array de partes o un objeto con role/parts
+                    const response = await ai.models.generateContent({
+                        model: modelName,
+                        contents: [{ role: 'user', parts: contentParts }],
+                        generationConfig,
+                    });
+                    
+                    // Log API call success
+                    if (user) {
+                        logApiCall({
+                            userId: user.uid,
+                            projectId: activeProject?.id || 'no-project',
+                            model: modelName,
+                            feature: 'image-generation-quimera-ai',
+                            success: true
+                        });
+                    }
+                    
+                    // Extract image from response parts
+                    if (response.candidates && response.candidates[0].content.parts) {
+                        for (const part of response.candidates[0].content.parts) {
+                            if (part.inlineData) {
+                                base64Image = part.inlineData.data;
+                                break;
+                            }
                         }
+                    }
+                } catch (error: any) {
+                    console.warn(`⚠️ generateContent failed for ${modelName}, trying generateImages fallback...`, error);
+                    
+                    // Fallback crítico: Si generateContent falla (ej: 404 Not Found), 
+                    // intentamos usar la API de imagen dedicada (generateImages) con un modelo SEGURO
+                    if (error.message && (error.message.includes('not found') || error.message.includes('404') || error.message.includes('not supported'))) {
+                         // Try Fast model which is widely available
+                         const fallbackModel = 'imagen-3.0-fast-generate-001';
+                         console.log(`🔄 Switching to fallback model: ${fallbackModel}`);
+                         
+                         const generateRequest: any = {
+                            model: fallbackModel,
+                            prompt: finalPrompt,
+                            config: {
+                                aspectRatio: options?.aspectRatio,
+                                numberOfImages: 1,
+                                personGeneration: 'allow_adult',
+                            }
+                        };
+                        
+                        // Si hay imagen de referencia, intentamos pasarla (aunque generateImages a veces requiere otro formato)
+                        // Para fallback, usamos solo la primera imagen
+                        const refImages = options?.referenceImages || (options?.referenceImage ? [options.referenceImage] : []);
+                        if (refImages.length > 0) {
+                             const base64Data = refImages[0].split(',')[1];
+                             generateRequest.referenceImage = { imageBytes: base64Data };
+                             generateRequest.prompt = `Style reference: ${finalPrompt}`;
+                        }
+
+                        try {
+                            const response = await ai.models.generateImages(generateRequest);
+                            base64Image = response.generatedImages?.[0]?.image?.imageBytes;
+                        } catch (fallbackError: any) {
+                            console.warn(`⚠️ First fallback failed (${fallbackModel}), trying LAST RESORT (imagen-2)...`, fallbackError);
+                             
+                             // Debug available models if possible
+                             try {
+                                 // Note: listModels might not be directly available on the simple client interface depending on version
+                                 // But if it is, it helps debug
+                                 // const models = await ai.models.list(); 
+                                 // console.log('Available models:', models);
+                             } catch (e) {}
+
+                             // ULTIMATE FALLBACK: Imagen 2 (Legacy but reliable)
+                             const lastResortRequest = { ...generateRequest, model: 'image-generation-002' };
+                             // Remove unsupported params for legacy model if needed, or just retry
+                             const response = await ai.models.generateImages(lastResortRequest);
+                             base64Image = response.generatedImages?.[0]?.image?.imageBytes;
+                        }
+                    } else {
+                        // Si es otro error (ej: quota, safety), lo lanzamos
+                        throw error;
                     }
                 }
             }
@@ -2068,7 +2326,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (user) {
                 logApiCall({
                     userId: user.uid,
-                    projectId: activeProject?.id,
+                    projectId: activeProject?.id || 'no-project',
                     model: modelName,
                     feature: 'image-generation',
                     success: false,
@@ -2719,7 +2977,24 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const getPrompt = (name: string): LLMPrompt | undefined => {
         // Search in DB prompts first, then fallback to default file
-        return prompts.find(p => p.name === name) || defaultPrompts.find(p => p.name === name) as LLMPrompt | undefined;
+        const dbPrompt = prompts.find(p => p.name === name);
+        const defaultPrompt = defaultPrompts.find(p => p.name === name) as LLMPrompt | undefined;
+        
+        // Auto-migrate outdated prompts in DB
+        if (dbPrompt && defaultPrompt && dbPrompt.version !== undefined && defaultPrompt.version !== undefined) {
+            if (dbPrompt.version < defaultPrompt.version) {
+                console.warn(`🔄 [EditorContext] Auto-migrating outdated prompt '${name}' from v${dbPrompt.version} to v${defaultPrompt.version}`);
+                // Trigger async update (don't wait for it)
+                savePrompt({
+                    ...defaultPrompt,
+                    id: dbPrompt.id,
+                }).catch(err => console.error('Failed to auto-migrate prompt:', err));
+                // Return the updated version immediately
+                return defaultPrompt;
+            }
+        }
+        
+        return dbPrompt || defaultPrompt;
     };
 
     const fetchAllPrompts = async () => {

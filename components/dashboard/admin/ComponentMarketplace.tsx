@@ -107,52 +107,61 @@ const ComponentMarketplace: React.FC = () => {
                 {filteredComponents.map(component => (
                     <div
                         key={component.id}
-                        className="bg-editor-panel-bg border border-editor-border rounded-lg overflow-hidden hover:shadow-lg hover:border-editor-accent transition-all cursor-pointer"
+                        className="relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer h-[400px] group"
                         onClick={() => openDetailModal(component)}
                     >
-                        {/* Thumbnail */}
-                        <div className="relative h-48 bg-editor-bg">
+                        {/* Full Background Image */}
+                        <div className="absolute inset-0">
                             {component.thumbnail ? (
                                 <img
                                     src={component.thumbnail}
                                     alt={component.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <Package size={64} className="text-editor-text-secondary opacity-50" />
-                                </div>
-                            )}
-                            {/* Category Badge */}
-                            {component.category && (
-                                <div className="absolute top-2 right-2 px-2 py-1 bg-editor-accent text-editor-bg text-xs font-bold rounded">
-                                    {component.category}
+                                <div className="w-full h-full flex items-center justify-center bg-editor-bg">
+                                    <Package size={80} className="text-editor-text-secondary opacity-20" />
                                 </div>
                             )}
                         </div>
+                        
+                        {/* Dark Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+                        
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
 
-                        {/* Content */}
-                        <div className="p-4 space-y-3">
-                            <h3 className="text-lg font-bold text-editor-text-primary truncate">{component.name}</h3>
+                        {/* Category Badge */}
+                        {component.category && (
+                            <div className="absolute top-4 left-4 z-20">
+                                <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg bg-editor-accent/20 text-editor-accent border-editor-accent/30">
+                                    {component.category}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Stats in Top Right */}
+                        <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
+                            <div className="flex items-center gap-1 text-white bg-black/30 backdrop-blur-md rounded-full px-3 py-1">
+                                <Star size={14} fill="currentColor" className="text-yellow-400" />
+                                <span className="text-sm font-semibold">{getComponentRating(component).toFixed(1)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-white bg-black/30 backdrop-blur-md rounded-full px-3 py-1">
+                                <Download size={14} />
+                                <span className="text-sm font-semibold">{getComponentDownloads(component)}</span>
+                            </div>
+                        </div>
+
+                        {/* Content at Bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+                            <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{component.name}</h3>
                             
                             {component.description && (
-                                <p className="text-sm text-editor-text-secondary line-clamp-2">{component.description}</p>
+                                <p className="text-sm text-white/80 line-clamp-2 mb-3">{component.description}</p>
                             )}
 
-                            {/* Stats */}
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-1 text-yellow-400">
-                                    <Star size={16} fill="currentColor" />
-                                    <span className="text-editor-text-secondary">{getComponentRating(component).toFixed(1)}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-editor-text-secondary">
-                                    <Download size={16} />
-                                    <span>{getComponentDownloads(component)}</span>
-                                </div>
-                            </div>
-
                             {/* Creator */}
-                            <div className="text-xs text-editor-text-secondary pt-2 border-t border-editor-border">
+                            <div className="text-xs text-white/70">
                                 by {component.createdBy || 'Anonymous'}
                             </div>
                         </div>

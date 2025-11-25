@@ -82,7 +82,7 @@ export interface HeroData {
     subheadlineFontSize?: FontSize;
     showBadge?: boolean;
     badgeText?: string;
-    badgeIcon?: string;
+    badgeIcon?: ServiceIcon | string;
     badgeColor?: string;
     badgeBackgroundColor?: string;
     showStats?: boolean;

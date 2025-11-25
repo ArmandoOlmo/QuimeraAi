@@ -124,3 +124,5 @@ cat firestore.rules
 - **Problemas de deployment:** Ver GOOGLE_CLOUD_DEPLOYMENT.md
 - **Issues:** Abre un issue en el repositorio
 
+
+

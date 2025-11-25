@@ -356,28 +356,47 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     version: 2,
   },
 
-  // Image Generation
+  // Image Generation - Quimera AI (Nano Banana Pro)
   {
     name: 'image-generation-gallery',
     area: 'Image Generation',
-    description: "Generates images for the AI Gallery modal in the editor.",
-    template: `{{prompt}}, {{style}}, professional high quality photo`,
-    model: 'imagen-4.0-generate-001',
-    version: 1,
+    description: "Generates images using Quimera AI powered by Nano Banana Pro (Gemini 3 Pro Image) - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
+    template: `{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality`,
+    model: 'gemini-3-pro-image-preview',
+    version: 10,
   },
   
   // Image Prompt Enhancer
   {
     name: 'image-prompt-enhancer',
     area: 'Image Generation',
-    description: 'Enhances raw user prompts for better image generation results using Gemini 3.',
-    template: `Enhance this image generation prompt to be highly detailed, descriptive, and optimized for a professional AI image generator. Keep the original intent but add artistic details, lighting, and style keywords.
-    
-    Original Prompt: "{{originalPrompt}}"
-    
-    Enhanced Prompt:`,
-    model: 'gemini-3-pro-preview',
-    version: 1,
+    description: 'Enhances raw user prompts for better image generation results optimized for Nano Banana Pro.',
+    template: `You are an expert prompt engineer specializing in Nano Banana Pro image generation. Your task is to enhance the user's prompt to create stunning, high-quality images.
+
+**IMPORTANT CONTEXT:**
+- Target Model: Nano Banana Pro (optimized for speed and quality)
+- Reference Images: {{hasReferenceImages}}
+
+{{referenceImagesInstruction}}
+
+**ENHANCEMENT GUIDELINES:**
+1. Preserve the user's original intent and core concept
+2. Add specific artistic details: composition, lighting, atmosphere
+3. Include technical parameters when relevant: camera angles, depth of field, color grading
+4. Consider app theme colors if specified (Light Mode: soft grays and whites with Cadmium Yellow, Dark Mode: deep purples with Cadmium Yellow, Black Mode: true blacks with Cadmium Yellow, Quimera Brand: Cadmium Yellow primary)
+5. Use vivid, descriptive language that Nano Banana Pro understands well
+6. Keep the prompt concise but highly descriptive (aim for 50-150 words)
+7. Consider the style and aesthetic preferences implied in the original prompt
+
+**Original Prompt:**
+"{{originalPrompt}}"
+
+**Your Task:**
+Provide ONLY the enhanced prompt text, without explanations or formatting. Make it detailed, evocative, and optimized for Nano Banana Pro's capabilities.
+
+**Enhanced Prompt:**`,
+    model: 'gemini-3-pro-image-preview',
+    version: 2,
   },
   
   // File Management
