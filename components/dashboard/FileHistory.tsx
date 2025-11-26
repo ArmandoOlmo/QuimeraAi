@@ -210,9 +210,31 @@ const FileItem: React.FC<{
     isSelected?: boolean;
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
-}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode }) => {
+    onAddToReference?: (imageUrl: string) => void;
+}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference }) => {
+    const isImage = file.type.startsWith('image/');
+    
+    const handleDragStart = (e: React.DragEvent) => {
+        if (isImage) {
+            e.dataTransfer.setData('text/plain', file.downloadURL);
+            e.dataTransfer.setData('application/x-library-image', file.downloadURL);
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+    };
+
+    const handleAddToReference = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isImage && onAddToReference) {
+            onAddToReference(file.downloadURL);
+        }
+    };
+
     return (
-        <div className={`rounded-xl transition-all duration-200 group relative overflow-hidden h-full ${isSelected ? 'ring-2 ring-primary' : ''}`}>
+        <div 
+            className={`rounded-xl transition-all duration-200 group relative overflow-hidden h-full ${isSelected ? 'ring-2 ring-primary' : ''} ${isImage ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            draggable={isImage}
+            onDragStart={handleDragStart}
+        >
             {/* Image/File Preview */}
             <div 
                 className="aspect-square w-full bg-secondary/30 relative cursor-pointer overflow-hidden" 
@@ -227,13 +249,14 @@ const FileItem: React.FC<{
                         onPreview(file);
                     }
                 }}
-                title={isSelectionMode ? "Click to select" : "Double click to view details"}
+                title={isSelectionMode ? "Click to select" : isImage ? "Drag to use as reference • Double click to view" : "Double click to view details"}
             >
-                {file.type.startsWith('image/') ? (
+                {isImage ? (
                     <img
                         src={file.downloadURL}
                         alt={file.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        draggable={false}
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-primary bg-secondary/50">
@@ -261,10 +284,22 @@ const FileItem: React.FC<{
                     </div>
                 )}
 
+                {/* Add to Reference button - only for images when not in selection mode */}
+                {isImage && !isSelectionMode && onAddToReference && (
+                    <button
+                        onClick={handleAddToReference}
+                        className="absolute top-2 right-2 z-10 p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110"
+                        title="Add as reference image"
+                    >
+                        <Plus size={14} />
+                    </button>
+                )}
+
                 {/* Filename overlay on hover - only for images */}
-                {file.type.startsWith('image/') && !isSelectionMode && (
+                {isImage && !isSelectionMode && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="text-white text-xs font-medium truncate">{file.name}</p>
+                        <p className="text-purple-300 text-[10px] mt-0.5">Drag to use as reference</p>
                     </div>
                 )}
             </div>
@@ -348,9 +383,34 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
-        if (e.dataTransfer.files) {
+        
+        // Check if it's a library image (URL from drag)
+        const libraryImageUrl = e.dataTransfer.getData('application/x-library-image');
+        if (libraryImageUrl) {
+            addImageToReference(libraryImageUrl);
+            return;
+        }
+        
+        // Otherwise process as file upload
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             processFiles(e.dataTransfer.files);
         }
+    };
+
+    // Add image URL directly to reference images (from library)
+    const addImageToReference = (imageUrl: string) => {
+        if (referenceImages.length >= 14) {
+            showError("Maximum 14 reference images allowed.");
+            return;
+        }
+        
+        if (referenceImages.includes(imageUrl)) {
+            showError("This image is already added as reference.");
+            return;
+        }
+        
+        setReferenceImages(prev => [...prev, imageUrl]);
+        success("Image added as reference!");
     };
 
     const handleRemoveReferenceImage = (index: number) => {
@@ -589,8 +649,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                     className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
                                 >
                                     <Upload size={24} />
-                                    <span className="text-xs font-medium">Click or Drag to upload</span>
-                                    <span className="text-xs opacity-70">Up to 14 images supported</span>
+                                    <span className="text-xs font-medium">Click to upload or drag from library below</span>
+                                    <span className="text-xs opacity-70">Up to 14 images • Drag images from your assets</span>
                                 </button>
                             )}
                         </div>
@@ -909,6 +969,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                         isSelected={library.isSelected(file.id)}
                                                         onToggleSelect={() => library.toggleSelection(file.id)}
                                                         isSelectionMode={library.isSelectionMode}
+                                                        onAddToReference={variant === 'full' ? addImageToReference : undefined}
                                                     />
                                                 </div>
                                             ))}
