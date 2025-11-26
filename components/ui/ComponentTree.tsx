@@ -155,45 +155,30 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 onDrop={(e) => handleDrop(e, section)}
                 onDragEnd={handleDragEnd}
                 className={`
-                    group flex items-center gap-2 px-3 py-2.5 rounded-md cursor-pointer transition-all
-                    ${isActive ? 'bg-editor-accent text-white shadow-sm' : 'hover:bg-editor-panel-bg'}
+                    group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all
+                    ${isActive ? 'text-editor-accent' : 'text-editor-text-primary hover:text-editor-accent'}
                     ${draggedItem === section ? 'opacity-40' : ''}
                     ${!isVisible ? 'opacity-50' : ''}
                 `}
                 onClick={() => onSectionSelect(section)}
             >
-                {isDraggable && !isFixed && (
-                    <GripVertical 
-                        size={14} 
-                        className={`flex-shrink-0 cursor-grab active:cursor-grabbing ${
-                            isActive ? 'text-white/70' : 'text-editor-text-secondary opacity-0 group-hover:opacity-100'
-                        }`}
-                    />
-                )}
-                
                 <Icon 
                     size={16} 
-                    className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-editor-accent'}`}
+                    className="flex-shrink-0"
                 />
                 
-                <span className={`flex-1 text-sm font-medium truncate ${
-                    isActive ? 'text-white' : 'text-editor-text-primary'
-                }`}>
+                <span className="flex-1 text-sm font-medium truncate">
                     {sectionLabels[section]}
                 </span>
 
                 {!isFixed && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleVisibility(section);
                             }}
-                            className={`flex-shrink-0 p-1 rounded transition-colors ${
-                                isActive 
-                                    ? 'hover:bg-white/20 text-white' 
-                                    : 'hover:bg-editor-border text-editor-text-secondary'
-                            }`}
+                            className="flex-shrink-0 p-1 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                             title={isVisible ? t('editor.hideSection') : t('editor.showSection')}
                         >
                             {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -205,11 +190,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                     onRemoveComponent(section);
                                 }
                             }}
-                            className={`flex-shrink-0 p-1 rounded transition-colors ${
-                                isActive 
-                                    ? 'hover:bg-red-500/20 text-white' 
-                                    : 'hover:bg-red-500/10 text-editor-text-secondary hover:text-red-500'
-                            }`}
+                            className="flex-shrink-0 p-1 text-editor-text-secondary hover:text-red-500 transition-colors"
                             title={t('editor.deleteSection')}
                         >
                             <Trash2 size={14} />
