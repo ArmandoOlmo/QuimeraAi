@@ -286,7 +286,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                             />
                         </div>
                     </div>
-                    <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                    <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
                         {filteredPosts.length === 0 ? (
                             <div className="px-4 py-2 text-xs text-muted-foreground">No published articles found.</div>
                         ) : (
@@ -493,7 +493,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                                                                 {linkPickerOpenId === item.id && (
                                                                     <div 
                                                                         ref={pickerRef}
-                                                                        className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in-up"
+                                                                        className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 animate-fade-in-up"
                                                                     >
                                                                         {renderLinkPickerContent(item)}
                                                                     </div>
