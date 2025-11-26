@@ -27,7 +27,8 @@ const descriptionSizeClasses: Record<FontSize, string> = {
 };
 
 const Footer: React.FC<FooterData> = ({ 
-  title, description, linkColumns, socialLinks, copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm'
+  title, description, linkColumns, socialLinks, copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
+  logoType = 'text', logoImageUrl
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -50,7 +51,16 @@ const Footer: React.FC<FooterData> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
           
           <div className="sm:col-span-2 lg:col-span-4">
-            <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h3>
+            {/* Logo or Title */}
+            {logoType === 'image' && logoImageUrl ? (
+              <img 
+                src={logoImageUrl} 
+                alt={title} 
+                className="h-10 md:h-12 w-auto mb-4 object-contain"
+              />
+            ) : (
+              <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h3>
+            )}
             <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-xs`} style={{ color: actualColors.text }}>
               {description}
             </p>

@@ -34,13 +34,14 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 interface LeadsProps extends LeadsData {
     leadsVariant?: LeadsVariant;
     cardBorderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
+    inputBorderRadius?: BorderRadiusSize;
 }
 
 const Leads: React.FC<LeadsProps> = ({ 
@@ -57,6 +58,7 @@ const Leads: React.FC<LeadsProps> = ({
     leadsVariant = 'classic',
     cardBorderRadius = 'xl', 
     buttonBorderRadius = 'md',
+    inputBorderRadius = 'md',
     titleFontSize = 'md', 
     descriptionFontSize = 'md'
 }) => {
@@ -184,7 +186,7 @@ const Leads: React.FC<LeadsProps> = ({
                 onChange={handleChange}
                 required 
                 disabled={isSubmitting}
-                className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`} 
+                className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                 style={{
                   backgroundColor: colors.inputBackground || '#0f172a',
                   borderColor: colors.inputBorder || '#334155',
@@ -200,7 +202,7 @@ const Leads: React.FC<LeadsProps> = ({
                 onChange={handleChange}
                 required 
                 disabled={isSubmitting}
-                className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`} 
+                className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                 style={{
                   backgroundColor: colors.inputBackground || '#0f172a',
                   borderColor: colors.inputBorder || '#334155',
@@ -350,7 +352,7 @@ const Leads: React.FC<LeadsProps> = ({
                     onChange={handleChange}
                     required 
                     disabled={isSubmitting}
-                    className={`${inputBaseClasses} ${borderRadiusClasses[buttonBorderRadius]} disabled:opacity-50`} 
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
                       backgroundColor: colors.inputBackground || '#f8fafc',
                       borderColor: colors.inputBorder || '#e2e8f0',
@@ -372,7 +374,7 @@ const Leads: React.FC<LeadsProps> = ({
                     onChange={handleChange}
                     required 
                     disabled={isSubmitting}
-                    className={`${inputBaseClasses} ${borderRadiusClasses[buttonBorderRadius]} disabled:opacity-50`} 
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
                       backgroundColor: colors.inputBackground || '#f8fafc',
                       borderColor: colors.inputBorder || '#e2e8f0',
@@ -393,7 +395,7 @@ const Leads: React.FC<LeadsProps> = ({
                     value={formData.company}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className={`${inputBaseClasses} ${borderRadiusClasses[buttonBorderRadius]} disabled:opacity-50`} 
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
                       backgroundColor: colors.inputBackground || '#f8fafc',
                       borderColor: colors.inputBorder || '#e2e8f0',
@@ -414,7 +416,7 @@ const Leads: React.FC<LeadsProps> = ({
                     value={formData.message}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className={`${inputBaseClasses} ${borderRadiusClasses[buttonBorderRadius]} disabled:opacity-50`} 
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
                       backgroundColor: colors.inputBackground || '#f8fafc',
                       borderColor: colors.inputBorder || '#e2e8f0',
@@ -510,7 +512,7 @@ const Leads: React.FC<LeadsProps> = ({
                   onChange={handleChange}
                   required 
                   disabled={isSubmitting}
-                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[buttonBorderRadius]}`} 
+                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
                     color: colors.heading || '#ffffff',
                     '--tw-ring-color': colors.accent
@@ -528,7 +530,7 @@ const Leads: React.FC<LeadsProps> = ({
                   onChange={handleChange}
                   required 
                   disabled={isSubmitting}
-                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[buttonBorderRadius]}`} 
+                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
                     color: colors.heading || '#ffffff',
                     '--tw-ring-color': colors.accent
@@ -544,7 +546,7 @@ const Leads: React.FC<LeadsProps> = ({
               value={formData.company}
               onChange={handleChange}
               disabled={isSubmitting}
-              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[buttonBorderRadius]}`} 
+              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
                 color: colors.heading || '#ffffff',
                 '--tw-ring-color': colors.accent
@@ -558,7 +560,7 @@ const Leads: React.FC<LeadsProps> = ({
               value={formData.message}
               onChange={handleChange}
               disabled={isSubmitting}
-              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[buttonBorderRadius]}`} 
+              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
                 color: colors.heading || '#ffffff',
                 '--tw-ring-color': colors.accent

@@ -21,7 +21,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
     none: 'rounded-none',
     md: 'rounded-md',
     xl: 'rounded-xl',
-    full: 'rounded-full',
+    full: 'rounded-3xl',
 };
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -65,21 +65,22 @@ const HeroGradient: React.FC<HeroProps> = ({
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
     showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
-    showStats = true, stats = [],
-    statsValueColor, statsLabelColor
+    secondaryButtonStyle = 'outline',
+    secondaryButtonOpacity = 100,
 }) => {
     console.log('🎨 HeroGradient rendering with imageUrl:', imageUrl);
     const { getColor } = useDesignTokens();
     
+    // Component colors take priority over Design Tokens
     const actualColors = {
-        primary: getColor('primary.main', colors.primary),
-        secondary: getColor('secondary.main', colors.secondary),
+        primary: colors.primary || getColor('primary.main', '#4f46e5'),
+        secondary: colors.secondary || getColor('secondary.main', '#10b981'),
         background: colors.background,
         text: colors.text,
         heading: colors.heading,
-        buttonBackground: getColor('primary.main', colors.buttonBackground),
+        buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
         buttonText: colors.buttonText || '#ffffff',
-        secondaryButtonBackground: colors.secondaryButtonBackground || 'rgba(255,255,255,0.1)',
+        secondaryButtonBackground: colors.secondaryButtonBackground || '#334155',
         secondaryButtonText: colors.secondaryButtonText || '#ffffff',
     };
 
@@ -187,10 +188,18 @@ const HeroGradient: React.FC<HeroProps> = ({
                             
                             <a 
                                 href="#features" 
-                                className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md border-2 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+                                className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
+                                    secondaryButtonStyle === 'outline' 
+                                        ? 'border-2 bg-transparent' 
+                                        : secondaryButtonStyle === 'ghost'
+                                            ? 'bg-transparent border border-transparent'
+                                            : 'border-0'
+                                }`}
                                 style={{ 
-                                    backgroundColor: actualColors.secondaryButtonBackground,
-                                    borderColor: `${actualColors.primary}40`,
+                                    backgroundColor: secondaryButtonStyle === 'solid' 
+                                        ? `rgba(${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(1, 3), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(3, 5), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                                        : 'transparent',
+                                    borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
                                     color: actualColors.secondaryButtonText 
                                 }}
                             >
@@ -202,34 +211,6 @@ const HeroGradient: React.FC<HeroProps> = ({
                             </a>
                         </div>
 
-                        {/* Stats - Horizontal Cards */}
-                        {showStats && stats && stats.length > 0 && (
-                            <div className="flex flex-wrap gap-4 pt-4">
-                                {stats.map((stat, index) => (
-                                    <div 
-                                        key={index}
-                                        className="flex-1 min-w-[140px] p-4 rounded-2xl backdrop-blur-md border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                                        style={{ 
-                                            backgroundColor: `${actualColors.primary}08`,
-                                            borderColor: `${actualColors.primary}20`
-                                        }}
-                                    >
-                                        <div 
-                                            className="text-2xl md:text-3xl font-bold font-header mb-1"
-                                            style={{ color: statsValueColor || actualColors.primary }}
-                                        >
-                                            {stat.value}
-                                        </div>
-                                        <div 
-                                            className="text-xs md:text-sm font-medium opacity-80"
-                                            style={{ color: statsLabelColor || actualColors.text }}
-                                        >
-                                            {stat.label}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Column - Image with Floating Cards */}
@@ -257,60 +238,6 @@ const HeroGradient: React.FC<HeroProps> = ({
                                 style={{ minHeight: '400px', maxHeight: '600px' }}
                             />
                             
-                            {/* Floating Card 1 - Top Right */}
-                            <div 
-                                className="absolute top-8 -right-4 md:right-8 p-4 rounded-2xl backdrop-blur-xl shadow-2xl border animate-float"
-                                style={{ 
-                                    backgroundColor: `${actualColors.background}dd`,
-                                    borderColor: `${actualColors.primary}40`,
-                                    animationDelay: '0.5s'
-                                }}
-                            >
-                                <div 
-                                    className="text-3xl font-bold font-header mb-1"
-                                    style={{ color: actualColors.primary }}
-                                >
-                                    ✨
-                                </div>
-                                <div 
-                                    className="text-xs font-medium whitespace-nowrap"
-                                    style={{ color: actualColors.text }}
-                                >
-                                    AI Powered
-                                </div>
-                            </div>
-
-                            {/* Floating Card 2 - Bottom Left */}
-                            <div 
-                                className="absolute bottom-8 -left-4 md:left-8 p-5 rounded-2xl backdrop-blur-xl shadow-2xl border animate-float"
-                                style={{ 
-                                    backgroundColor: `${actualColors.background}dd`,
-                                    borderColor: `${actualColors.secondary}40`,
-                                    animationDelay: '1s'
-                                }}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div 
-                                        className="w-3 h-3 rounded-full animate-pulse"
-                                        style={{ backgroundColor: actualColors.secondary }}
-                                    ></div>
-                                    <div>
-                                        <div 
-                                            className="text-sm font-bold"
-                                            style={{ color: actualColors.heading }}
-                                        >
-                                            Live Status
-                                        </div>
-                                        <div 
-                                            className="text-xs opacity-80"
-                                            style={{ color: actualColors.text }}
-                                        >
-                                            All systems operational
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* Decorative Elements */}
                             <div 
                                 className="absolute top-4 left-4 w-20 h-20 rounded-full blur-2xl opacity-50"

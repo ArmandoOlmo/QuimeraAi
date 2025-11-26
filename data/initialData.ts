@@ -66,19 +66,13 @@ const pageData: PageData = {
       secondaryButtonBackground: '#334155', // slate-700
       secondaryButtonText: '#ffffff',
     },
+    secondaryButtonStyle: 'solid',
+    secondaryButtonOpacity: 100,
     showBadge: true,
     badgeText: 'AI-Powered Generation',
     badgeIcon: '✨',
     badgeColor: '#4f46e5',
     badgeBackgroundColor: '#4f46e515',
-    showStats: true,
-    stats: [
-      { value: '10K+', label: 'Artworks Created' },
-      { value: '5K+', label: 'Happy Users' },
-      { value: '4.9★', label: 'User Rating' }
-    ],
-    statsValueColor: '#4f46e5',
-    statsLabelColor: '#94a3b8',
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
   },

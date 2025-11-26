@@ -23,9 +23,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Use the custom hook for asset management
-    const library = useAssetLibrary({ 
-        files: globalFiles, 
-        itemsPerPage: 30 
+    const library = useAssetLibrary({
+        files: globalFiles,
+        itemsPerPage: 30
     });
 
     useEffect(() => {
@@ -43,9 +43,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
     const handleBulkDelete = async () => {
         if (library.selectedFiles.length === 0) return;
-        
+
         if (!window.confirm(`Delete ${library.selectedFiles.length} global asset(s)? This action cannot be undone.`)) return;
-        
+
         try {
             await Promise.all(
                 library.selectedFiles.map(f => deleteGlobalFile(f.id, f.storagePath))
@@ -60,7 +60,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
     const handleBulkDownload = () => {
         if (library.selectedFiles.length === 0) return;
-        
+
         library.selectedFiles.forEach(file => {
             const link = document.createElement('a');
             link.href = file.downloadURL;
@@ -69,13 +69,13 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
             link.click();
             document.body.removeChild(link);
         });
-        
+
         success(`Downloading ${library.selectedFiles.length} file(s)`);
     };
 
     const handleSingleDelete = async (file: FileRecord) => {
         if (!window.confirm('Delete this global asset?')) return;
-        
+
         try {
             await deleteGlobalFile(file.id, file.storagePath);
             success('Asset deleted successfully');
@@ -86,19 +86,19 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
     return (
         <>
-            <ImageGeneratorModal 
-                isOpen={isGeneratorOpen} 
-                onClose={() => setIsGeneratorOpen(false)} 
+            <ImageGeneratorModal
+                isOpen={isGeneratorOpen}
+                onClose={() => setIsGeneratorOpen(false)}
                 destination="global"
             />
             <div className="flex h-screen bg-editor-bg text-editor-text-primary">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                
+
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Header */}
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button 
+                            <button
                                 onClick={() => setIsMobileMenuOpen(true)}
                                 className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
                                 title="Open menu"
@@ -120,7 +120,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to Admin
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setIsGeneratorOpen(true)}
                                 className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg hover:scale-105 transform"
                             >
@@ -286,20 +286,20 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                     {/* AI Generator Card - Global Library */}
                                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 p-10 text-center group hover:border-purple-500/40 transition-all">
                                         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-110 transition-transform"></div>
-                                        
+
                                         <div className="relative z-10">
                                             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 mb-6 shadow-xl group-hover:scale-110 transition-transform">
                                                 <Zap className="w-10 h-10 text-white animate-pulse" />
                                             </div>
-                                            
+
                                             <h3 className="text-2xl font-bold text-editor-text-primary mb-3">
                                                 Generate AI Images for Global Library
                                             </h3>
-                                            
+
                                             <p className="text-base text-editor-text-secondary mb-8 max-w-2xl mx-auto">
                                                 Create stunning 4K images with Quimera AI. Perfect for reusing across multiple projects. Features advanced controls for lighting, camera angles, and style customization.
                                             </p>
-                                            
+
                                             <button
                                                 onClick={() => setIsGeneratorOpen(true)}
                                                 className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl hover:scale-105 transform"
@@ -307,7 +307,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                 <Zap className="w-6 h-6" />
                                                 Open Image Generator
                                             </button>
-                                            
+
                                             <div className="mt-8 flex items-center justify-center gap-8 text-sm text-editor-text-secondary">
                                                 <div className="flex items-center gap-2">
                                                     <Sparkles size={16} className="text-purple-400" />
@@ -341,11 +341,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             <>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                     {library.files.map((file) => (
-                                        <div 
-                                            key={file.id} 
+                                        <div
+                                            key={file.id}
                                             className={`group relative rounded-lg border overflow-hidden hover:border-editor-accent transition-all ${library.isSelected(file.id) ? 'border-editor-accent ring-2 ring-editor-accent' : 'border-editor-border'}`}
                                         >
-                                            <div 
+                                            <div
                                                 className="aspect-square bg-editor-bg overflow-hidden cursor-pointer relative"
                                                 onClick={() => {
                                                     if (library.isSelectionMode) {
@@ -353,13 +353,13 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                     }
                                                 }}
                                             >
-                                                <img 
-                                                    src={file.downloadURL} 
-                                                    alt={file.name} 
-                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105" 
-                                                    loading="lazy" 
+                                                <img
+                                                    src={file.downloadURL}
+                                                    alt={file.name}
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                                    loading="lazy"
                                                 />
-                                                
+
                                                 {/* Filename overlay on hover - only when not in selection mode */}
                                                 {!library.isSelectionMode && (
                                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -368,11 +368,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                     </div>
                                                 )}
                                             </div>
-                                            
+
                                             {/* Selection checkbox */}
                                             {library.isSelectionMode && (
                                                 <div className="absolute top-2 left-2 z-10">
-                                                    <button 
+                                                    <button
                                                         onClick={() => library.toggleSelection(file.id)}
                                                         className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg"
                                                     >
@@ -384,12 +384,12 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                     </button>
                                                 </div>
                                             )}
-                                            
+
                                             {/* Action buttons */}
                                             {!library.isSelectionMode && (
                                                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                    <a 
-                                                        href={file.downloadURL} 
+                                                    <a
+                                                        href={file.downloadURL}
                                                         download={file.name}
                                                         target="_blank"
                                                         rel="noreferrer"
@@ -399,7 +399,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                     >
                                                         <Download size={14} />
                                                     </a>
-                                                    <button 
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleSingleDelete(file);

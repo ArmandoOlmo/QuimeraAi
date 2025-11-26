@@ -48,7 +48,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 const objectFitClasses: Record<ObjectFit, string> = {
@@ -174,7 +174,7 @@ const Features: React.FC<FeaturesProps> = ({
                     </p>
                 </div>
 
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-6`}>
                     {items.map((feature, index) => (
                         <ModernFeatureCard 
                             key={index} 

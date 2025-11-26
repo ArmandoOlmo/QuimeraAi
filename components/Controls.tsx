@@ -235,7 +235,13 @@ const Controls: React.FC = () => {
         
         for (let i = 0; i < keys.length - 1; i++) {
           const key = keys[i];
-          if (!current[key]) current[key] = {};
+          const nextKey = keys[i + 1];
+          
+          // If current[key] doesn't exist, create it as an array or object based on nextKey
+          if (!current[key]) {
+            // If nextKey is a number, create an array; otherwise create an object
+            current[key] = /^\d+$/.test(nextKey) ? [] : {};
+          }
           
           // CRITICAL FIX: Prevent traversing primitive values to avoid "Cannot create property..." error
           if (typeof current[key] !== 'object') {
@@ -714,94 +720,6 @@ const Controls: React.FC = () => {
 
               <hr className="border-editor-border/50" />
 
-              {/* ========== STATISTICS ========== */}
-              <div>
-                  <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-                          <DollarSign size={14} />
-                          Statistics
-                      </h4>
-                      <ToggleControl 
-                          label="" 
-                          checked={data.hero.showStats !== false} 
-                          onChange={(v) => setNestedData('hero.showStats', v)} 
-                      />
-                  </div>
-                  {data.hero.showStats !== false && (
-                      <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
-                          {currentVariant === 'fitness' && (
-                              <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
-                                  <p className="text-xs text-orange-200 flex items-center gap-2">
-                                      <Star size={14} className="flex-shrink-0" />
-                                      <span><strong>Fitness Stats:</strong> Stats display with dynamic icons (Target, TrendingUp, Award, Zap) and angled card design with hover effects.</span>
-                                  </p>
-                              </div>
-                          )}
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                              <ColorControl 
-                                  label="Value Color" 
-                                  value={data.hero.statsValueColor || data.hero.colors.primary || '#4f46e5'} 
-                                  onChange={(v) => setNestedData('hero.statsValueColor', v)} 
-                              />
-                              <ColorControl 
-                                  label="Label Color" 
-                                  value={data.hero.statsLabelColor || data.hero.colors.text || '#94a3b8'} 
-                                  onChange={(v) => setNestedData('hero.statsLabelColor', v)} 
-                              />
-                          </div>
-                          {(data.hero.stats || [
-                              { value: '10K+', label: 'Artworks Created' },
-                              { value: '5K+', label: 'Happy Users' },
-                              { value: '4.9★', label: 'User Rating' }
-                          ]).map((stat, index) => (
-                              <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                  <div className="flex justify-between items-center mb-2">
-                                      <span className="text-xs font-bold text-editor-text-secondary">Stat #{index + 1}</span>
-                                      <button 
-                                          onClick={() => {
-                                              const newStats = (data.hero.stats || []).filter((_, i) => i !== index);
-                                              setNestedData('hero.stats', newStats.length > 0 ? newStats : undefined);
-                                          }}
-                                          className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                                      >
-                                          <Trash2 size={14} />
-                                      </button>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2">
-                                      <input 
-                                          placeholder="Value (e.g., 10K+)" 
-                                          value={stat.value} 
-                                          onChange={(e) => setNestedData(`hero.stats.${index}.value`, e.target.value)} 
-                                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                                      />
-                                      <input 
-                                          placeholder="Label" 
-                                          value={stat.label} 
-                                          onChange={(e) => setNestedData(`hero.stats.${index}.label`, e.target.value)} 
-                                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                                      />
-                                  </div>
-                              </div>
-                          ))}
-                          <button 
-                              onClick={() => {
-                                  const currentStats = data.hero.stats || [
-                                      { value: '10K+', label: 'Artworks Created' },
-                                      { value: '5K+', label: 'Happy Users' },
-                                      { value: '4.9★', label: 'User Rating' }
-                                  ];
-                                  setNestedData('hero.stats', [...currentStats, { value: '0', label: 'New Stat' }]);
-                              }}
-                              className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
-                          >
-                              <Plus size={14} /> Add Statistic
-                          </button>
-                      </div>
-                  )}
-              </div>
-
-              <hr className="border-editor-border/50" />
-
               {/* ========== LAYOUT & SPACING (Only for Classic) ========== */}
               {currentVariant === 'classic' && (
                   <>
@@ -844,10 +762,47 @@ const Controls: React.FC = () => {
 
                       <div className="pt-2">
                           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.secondaryButton')}</h5>
+                          
+                          {/* Button Style Selector */}
+                          <div className="mb-3">
+                              <label className="block text-xs font-medium text-editor-text-secondary mb-1">Style</label>
+                              <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                                  {['solid', 'outline', 'ghost'].map(style => (
+                                      <button 
+                                          key={style}
+                                          onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
+                                          className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${
+                                              (data.hero.secondaryButtonStyle || 'solid') === style 
+                                                  ? 'bg-editor-accent text-editor-bg' 
+                                                  : 'text-editor-text-secondary hover:bg-editor-border'
+                                          }`}
+                                      >
+                                          {style}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+                          
                           <div className="grid grid-cols-2 gap-3">
                               <ColorControl label={t('editor.background')} value={data.hero.colors.secondaryButtonBackground || '#334155'} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
                               <ColorControl label={t('editor.text')} value={data.hero.colors.secondaryButtonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
                           </div>
+                          
+                          {/* Opacity Slider - only for solid style */}
+                          {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
+                              <div className="mt-3">
+                                  <div className="flex justify-between items-center mb-1">
+                                      <label className="text-xs font-medium text-editor-text-secondary">Opacity</label>
+                                      <span className="text-xs text-editor-text-primary">{data.hero.secondaryButtonOpacity ?? 100}%</span>
+                                  </div>
+                                  <input
+                                      type="range" min="0" max="100" step="5"
+                                      value={data.hero.secondaryButtonOpacity ?? 100}
+                                      onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
+                                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                  />
+                              </div>
+                          )}
                       </div>
                   </div>
               </div>
@@ -1616,6 +1571,22 @@ const Controls: React.FC = () => {
               <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
               <hr className="border-editor-border/50" />
+              <h4 className="font-bold text-editor-text-primary text-sm">Avatar Styling</h4>
+              <ColorControl label="Avatar Border Color" value={data.testimonials.avatarBorderColor || data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.avatarBorderColor', v)} />
+              <div>
+                  <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Avatar Border Width</label>
+                      <span className="text-xs text-editor-text-primary">{data.testimonials.avatarBorderWidth || 2}px</span>
+                  </div>
+                  <input
+                      type="range" min="0" max="8" step="1"
+                      value={data.testimonials.avatarBorderWidth || 2}
+                      onChange={(e) => setNestedData('testimonials.avatarBorderWidth', parseInt(e.target.value))}
+                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                  />
+              </div>
+
+              <hr className="border-editor-border/50" />
               <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Testimonials</h4>
               {(data.testimonials.items || []).map((item: any, index: number) => (
                   <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
@@ -1956,6 +1927,35 @@ const Controls: React.FC = () => {
 
          return (
             <div className="space-y-4">
+                {/* Logo Type Selector */}
+                <div>
+                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+                    <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                        {['text', 'image'].map(type => (
+                            <button 
+                                key={type}
+                                onClick={() => setNestedData('footer.logoType', type)}
+                                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${
+                                    (data.footer.logoType || 'text') === type 
+                                        ? 'bg-editor-accent text-editor-bg' 
+                                        : 'text-editor-text-secondary hover:bg-editor-border'
+                                }`}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Logo Image Upload - only shown when logoType is 'image' */}
+                {data.footer.logoType === 'image' && (
+                    <ImagePicker 
+                        label="Logo Image"
+                        value={data.footer.logoImageUrl || ''}
+                        onChange={(url) => setNestedData('footer.logoImageUrl', url)}
+                    />
+                )}
+                
                 <Input label="Title" value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
                 <FontSizeSelector label="Title Size" value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
                 
@@ -2230,7 +2230,96 @@ const Controls: React.FC = () => {
               ])}
           </div>
       ) },
-      team: { label: 'Team', icon: Users, renderer: () => renderListSectionControls('team', 'Member', [{key: 'name', label: 'Name', type: 'input'}, {key: 'role', label: 'Role', type: 'input'}, {key: 'imageUrl', label: 'Photo', type: 'image'}]) },
+      team: { label: 'Team', icon: Users, renderer: () => (
+          <div className="space-y-4">
+              {/* Team Variant Selector */}
+              <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+                  <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Style</label>
+                  <div className="grid grid-cols-2 gap-2">
+                      {[
+                          { value: 'classic', label: 'Classic' },
+                          { value: 'cards', label: 'Cards' },
+                          { value: 'minimal', label: 'Minimal' },
+                          { value: 'overlay', label: 'Overlay' }
+                      ].map((variant) => (
+                          <button
+                              key={variant.value}
+                              onClick={() => setNestedData('team.teamVariant', variant.value)}
+                              className={`p-2 text-xs font-medium rounded-md border transition-all ${
+                                  (data?.team?.teamVariant || 'classic') === variant.value
+                                      ? 'bg-editor-accent text-editor-bg border-editor-accent'
+                                      : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
+                              }`}
+                          >
+                              {variant.label}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Content */}
+              <Input label="Title" value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
+              <FontSizeSelector label="Title Size" value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
+              
+              <TextArea label="Description" value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
+              <FontSizeSelector label="Description Size" value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
+
+              <hr className="border-editor-border/50" />
+
+              {/* Colors */}
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Colors</h4>
+              <ColorControl label="Background" value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
+              <ColorControl label="Heading" value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
+              <ColorControl label="Text" value={data?.team?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('team.colors.text', v)} />
+              <ColorControl label="Photo Border / Role Color" value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
+              <ColorControl label="Card Background" value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
+
+              <hr className="border-editor-border/50" />
+
+              {/* Spacing */}
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Spacing</h4>
+              <div className="grid grid-cols-2 gap-3">
+                  <PaddingSelector label="Vertical" value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
+                  <PaddingSelector label="Horizontal" value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Team Members */}
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Team Members</h4>
+              {(data?.team?.items || []).map((member: any, index: number) => (
+                  <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
+                      <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold text-editor-text-secondary">Member #{index + 1}</span>
+                          <button 
+                              onClick={() => {
+                                  const newItems = [...(data?.team?.items || [])];
+                                  newItems.splice(index, 1);
+                                  setNestedData('team.items', newItems);
+                              }}
+                              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                          >
+                              <Trash2 size={14} />
+                          </button>
+                      </div>
+                      <ImagePicker label="Photo" value={member.imageUrl} onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)} />
+                      <Input label="Name" value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} />
+                      <Input label="Role" value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
+                  </div>
+              ))}
+              <button 
+                  onClick={() => {
+                      const newItems = [...(data?.team?.items || []), { name: 'New Member', role: 'Role', imageUrl: '' }];
+                      setNestedData('team.items', newItems);
+                  }}
+                  className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+              >
+                  <Plus size={14} /> Add Member
+              </button>
+          </div>
+      ) },
       pricing: { label: 'Pricing', icon: DollarSign, renderer: renderPricingControls },
       faq: { label: 'FAQ', icon: HelpCircle, renderer: () => renderListSectionControls('faq', 'Question', [{ key: 'question', label: 'Question', type: 'input' }, { key: 'answer', label: 'Answer', type: 'textarea' }]) },
       portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => renderListSectionControls('portfolio', 'Project', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'imageUrl', label: 'Image', type: 'image'}]) },
@@ -2278,6 +2367,7 @@ const Controls: React.FC = () => {
              <div className="space-y-2">
                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
                  <BorderRadiusSelector label="Card Radius" value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
+                 <BorderRadiusSelector label="Input Radius" value={data?.leads?.inputBorderRadius || 'md'} onChange={(v) => setNestedData('leads.inputBorderRadius', v)} />
                  <BorderRadiusSelector label="Button Radius" value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
              </div>
 
@@ -2427,6 +2517,25 @@ const Controls: React.FC = () => {
                   <FontSizeSelector label="Title Size" value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
                   <TextArea label="Description" value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
                   <FontSizeSelector label="Description Size" value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Section Icon */}
+              <div className="space-y-3">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
+                  <ToggleControl 
+                      label="Show Section Icon" 
+                      checked={data?.menu?.showIcon !== false} 
+                      onChange={(v) => setNestedData('menu.showIcon', v)} 
+                  />
+                  {data?.menu?.showIcon !== false && (
+                      <IconSelector 
+                          label="Icon" 
+                          value={data?.menu?.icon || 'utensils-crossed'} 
+                          onChange={(v) => setNestedData('menu.icon', v)} 
+                      />
+                  )}
               </div>
               
               <hr className="border-editor-border/50" />
@@ -2648,8 +2757,7 @@ const Controls: React.FC = () => {
                   <li>• Image is used as full-screen background</li>
                   <li>• Bold typography with 3D text shadow effects</li>
                   <li>• Animated diagonal energy lines</li>
-                  <li>• Stats display with angled cards & icons</li>
-                  <li>• Floating action cards (Live Classes, Top Rated)</li>
+                  <li>• Energy burst visual effects</li>
                 </ul>
               </div>
             </div>
@@ -2794,80 +2902,6 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        {/* Statistics Section */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <TrendingUp size={14} />
-              Statistics
-            </h4>
-            <ToggleControl 
-              label="" 
-              checked={data.hero.showStats !== false} 
-              onChange={(v) => setNestedData('hero.showStats', v)} 
-            />
-          </div>
-          {data.hero.showStats !== false && (
-            <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
-              {currentVariant === 'fitness' && (
-                <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
-                  <p className="text-xs text-orange-200 flex items-center gap-2">
-                    <Star size={14} className="flex-shrink-0" />
-                    <span><strong>Fitness Stats:</strong> Stats display with dynamic icons (Target, TrendingUp, Award, Zap) and angled card design with hover effects.</span>
-                  </p>
-                </div>
-              )}
-              
-              {(data.hero.stats || [
-                { value: '10K+', label: 'Artworks Created' },
-                { value: '5K+', label: 'Happy Users' },
-                { value: '4.9★', label: 'User Rating' }
-              ]).map((stat, index) => (
-                <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-editor-text-secondary">Stat #{index + 1}</span>
-                    <button 
-                      onClick={() => {
-                        const newStats = (data.hero.stats || []).filter((_, i) => i !== index);
-                        setNestedData('hero.stats', newStats.length > 0 ? newStats : undefined);
-                      }}
-                      className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input 
-                      placeholder="Value (e.g., 10K+)" 
-                      value={stat.value} 
-                      onChange={(e) => setNestedData(`hero.stats.${index}.value`, e.target.value)} 
-                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                    />
-                    <input 
-                      placeholder="Label" 
-                      value={stat.label} 
-                      onChange={(e) => setNestedData(`hero.stats.${index}.label`, e.target.value)} 
-                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button 
-                onClick={() => {
-                  const currentStats = data.hero.stats || [
-                    { value: '10K+', label: 'Artworks Created' },
-                    { value: '5K+', label: 'Happy Users' },
-                    { value: '4.9★', label: 'User Rating' }
-                  ];
-                  setNestedData('hero.stats', [...currentStats, { value: '0', label: 'New Stat' }]);
-                }}
-                className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
-              >
-                <Plus size={14} /> Add Statistic
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     );
 
@@ -2911,6 +2945,42 @@ const Controls: React.FC = () => {
         <ColorControl label="Secondary Button BG" value={data.hero.colors.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
         <ColorControl label="Secondary Button Text" value={data.hero.colors.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
         
+        {/* Secondary Button Style */}
+        <div className="mt-2">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Secondary Button Style</label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            {['solid', 'outline', 'ghost'].map(style => (
+              <button 
+                key={style}
+                onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${
+                  (data.hero.secondaryButtonStyle || 'solid') === style 
+                    ? 'bg-editor-accent text-editor-bg' 
+                    : 'text-editor-text-secondary hover:bg-editor-border'
+                }`}
+              >
+                {style}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Opacity Slider - only for solid style */}
+        {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
+          <div className="mt-2">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Opacity</label>
+              <span className="text-xs text-editor-text-primary">{data.hero.secondaryButtonOpacity ?? 100}%</span>
+            </div>
+            <input
+              type="range" min="0" max="100" step="5"
+              value={data.hero.secondaryButtonOpacity ?? 100}
+              onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+        )}
+        
         {data.hero.showBadge !== false && (
           <>
             <hr className="border-editor-border/50" />
@@ -2929,28 +2999,6 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        {/* Statistics Colors */}
-        {data.hero.showStats !== false && (
-          <>
-            <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <TrendingUp size={14} />
-              Statistics Colors
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-              <ColorControl 
-                label="Value Color" 
-                value={data.hero.statsValueColor || data.hero.colors.primary || '#4f46e5'} 
-                onChange={(v) => setNestedData('hero.statsValueColor', v)} 
-              />
-              <ColorControl 
-                label="Label Color" 
-                value={data.hero.statsLabelColor || data.hero.colors.text || '#94a3b8'} 
-                onChange={(v) => setNestedData('hero.statsLabelColor', v)} 
-              />
-            </div>
-          </>
-        )}
 
         {/* Image Style Controls - Only for Classic variant */}
         {currentVariant === 'classic' && (
@@ -3445,6 +3493,27 @@ const Controls: React.FC = () => {
               type="range" min="16" max="64" step="4"
               value={data.testimonials.cardPadding || 32}
               onChange={(e) => setNestedData('testimonials.cardPadding', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+        </div>
+
+        {/* Avatar Styling */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Users size={14} />
+            Avatar Styling
+          </label>
+          <ColorControl label="Photo Border Color" value={data.testimonials.avatarBorderColor || data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.avatarBorderColor', v)} />
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Photo Border Width</label>
+              <span className="text-xs text-editor-text-primary">{data.testimonials.avatarBorderWidth ?? 2}px</span>
+            </div>
+            <input
+              type="range" min="0" max="8" step="1"
+              value={data.testimonials.avatarBorderWidth ?? 2}
+              onChange={(e) => setNestedData('testimonials.avatarBorderWidth', parseInt(e.target.value))}
               className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
           </div>

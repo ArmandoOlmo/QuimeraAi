@@ -107,8 +107,8 @@ const detectLeadIntent = (message: string): boolean => {
         'price', 'buy', 'quote', 'schedule', 'demo', 'meeting', 'purchase',
         'order', 'pricing', 'cost', 'how much', 'cuanto cuesta', 'quiero comprar'
     ];
-    
-    return intentKeywords.some(keyword => 
+
+    return intentKeywords.some(keyword =>
         message.toLowerCase().includes(keyword)
     );
 };
@@ -119,20 +119,20 @@ const calculateLeadScore = (
     hasHighIntent: boolean
 ): number => {
     let score = 0;
-    
+
     // Base score for contact info
     if (leadData.email) score += 20;
     if (leadData.phone) score += 15;
     if (leadData.name) score += 10;
     if (leadData.company) score += 10;
-    
+
     // Engagement score
     const conversationLength = messages.filter(m => m.role === 'user').length;
     score += Math.min(conversationLength * 3, 25);
-    
+
     // High intent keywords
     if (hasHighIntent) score += 20;
-    
+
     return Math.min(score, 100);
 };
 
@@ -154,7 +154,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     currentPageContext
 }) => {
     const { hasApiKey, promptForKeySelection, handleApiError, user, activeProject } = useEditor();
-    
+
     // Get lead capture config with defaults
     const leadConfig = config.leadCaptureConfig || {
         enabled: config.leadCaptureEnabled !== false,
@@ -166,12 +166,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         intentKeywords: [],
         progressiveProfilingEnabled: true
     };
-    
+
     // Chat State
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Lead Capture State
     const [showPreChatForm, setShowPreChatForm] = useState(false);
     const [showLeadCaptureModal, setShowLeadCaptureModal] = useState(false);
@@ -179,12 +179,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [preChatData, setPreChatData] = useState<PreChatFormData>({ name: '', email: '', phone: '' });
     const [quickLeadEmail, setQuickLeadEmail] = useState('');
-    
+
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
-    
+
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -263,7 +263,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             - Use line breaks between different topics
             - Structure your responses clearly with headings if needed (## Heading)
         `;
-        
+
         return systemInstruction;
     };
 
@@ -279,10 +279,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 setShowPreChatForm(true);
             } else {
                 const agentName = config.agentName || 'AI Assistant';
-                const welcomeMsg = appearance.messages?.welcomeMessageEnabled 
+                const welcomeMsg = appearance.messages?.welcomeMessageEnabled
                     ? (appearance.messages.welcomeMessage || `Hello! I'm {agentName}. How can I help you today?`).replace('{agentName}', agentName)
                     : `Hello! I'm ${agentName}. How can I help you today?`;
-                
+
                 const welcomeDelay = appearance.messages?.welcomeDelay || 0;
                 if (welcomeDelay > 0) {
                     setTimeout(() => {
@@ -363,7 +363,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
             setLeadCaptured(true);
             setShowPreChatForm(false);
-            
+
             // Start chat with personalized welcome
             const welcomeMsg = `¡Hola ${preChatData.name}! Soy ${config.agentName}. ¿En qué puedo ayudarte hoy? 😊`;
             setMessages([{ role: 'model', text: welcomeMsg }]);
@@ -398,7 +398,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             setLeadCaptured(true);
             setShowLeadCaptureModal(false);
             setQuickLeadEmail('');
-            
+
             setMessages(prev => [...prev, {
                 role: 'model',
                 text: '¡Perfecto! Te contactaremos pronto. ¿En qué más puedo ayudarte? 😊'
@@ -410,9 +410,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
     const checkLeadCaptureThreshold = () => {
         if (!leadConfig.enabled || leadCaptured) return;
-        
+
         const userMessagesCount = messages.filter(m => m.role === 'user').length;
-        
+
         if (userMessagesCount >= leadConfig.triggerAfterMessages) {
             setMessages(prev => [...prev, {
                 role: 'model',
@@ -431,7 +431,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
         const userMessage = input.trim();
         setInput('');
-        
+
         const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
         setMessages(newMessages);
 
@@ -467,13 +467,13 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 const sectionData = (currentPageContext.pageData as any)[currentPageContext.section];
                 if (sectionData) {
                     const contextMessage = `[SYSTEM CONTEXT] The user is currently viewing the "${currentPageContext.section}" section. Content: ${JSON.stringify(sectionData).slice(0, 1500)}`;
-                    
+
                     // Prepend context to the latest user message
                     const lastMessageIndex = conversationHistory.length - 1;
                     if (lastMessageIndex >= 0 && conversationHistory[lastMessageIndex].role === 'user') {
-                        conversationHistory[lastMessageIndex].parts[0].text = 
+                        conversationHistory[lastMessageIndex].parts[0].text =
                             contextMessage + '\n\n' + conversationHistory[lastMessageIndex].parts[0].text;
-                        
+
                         console.log('[ChatCore] 🎯 Page context injected into user message');
                     }
                 }
@@ -484,13 +484,13 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             // Use proxy in production, direct API in development
             if (isProxyMode()) {
                 console.log('[ChatCore] 🔄 Using proxy mode for Gemini API');
-                
+
                 // Build full prompt with system context and conversation history
-                const fullPrompt = systemContext + '\n\n' + 
-                    conversationHistory.map(msg => 
+                const fullPrompt = systemContext + '\n\n' +
+                    conversationHistory.map(msg =>
                         `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
                     ).join('\n\n');
-                
+
                 const proxyResponse = await generateContentViaProxy(
                     project.id,
                     fullPrompt,
@@ -500,24 +500,25 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         topK: 40,
                         topP: 0.95,
                         maxOutputTokens: 2048
-                    }
+                    },
+                    user?.uid
                 );
-                
-                botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text || 
-                             'Sorry, I could not generate a response.';
+
+                botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
+                    'Sorry, I could not generate a response.';
             } else {
                 console.log('[ChatCore] 🔑 Using direct API mode');
-                
+
                 const genai = await getGoogleGenAI();
                 const result = await genai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     systemInstruction: systemContext,
                     contents: conversationHistory
                 });
-                
+
                 botResponse = result.text;
             }
-            
+
             // Log API call
             if (user && activeProject) {
                 logApiCall({
@@ -578,12 +579,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
         try {
             const genai = await getGoogleGenAI();
-            
+
             // Initialize Audio Contexts
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
             const inputCtx = new AudioContextClass({ sampleRate: 16000 });
-            
+
             audioContextRef.current = outputCtx;
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
@@ -604,7 +605,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
                         console.log("Gemini Live Session Opened");
-                        
+
                         // Start Mic Stream
                         try {
                             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -619,7 +620,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                 const inputData = e.inputBuffer.getChannelData(0);
                                 const pcm16 = floatTo16BitPCM(inputData);
                                 const base64Data = bytesToBase64(new Uint8Array(pcm16));
-                                
+
                                 sessionPromise.then(session => {
                                     if (!isConnectedRef.current) return;
                                     try {
@@ -648,10 +649,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         if (message.serverContent?.interrupted) {
                             console.log("Model interrupted");
                             activeSourcesRef.current.forEach(source => {
-                                try { source.stop(); } catch (e) {}
+                                try { source.stop(); } catch (e) { }
                             });
                             activeSourcesRef.current = [];
-                            
+
                             if (audioContextRef.current) {
                                 nextStartTimeRef.current = audioContextRef.current.currentTime;
                             }
@@ -664,15 +665,15 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             const ctx = audioContextRef.current;
                             const bytes = base64ToBytes(audioData);
                             const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            
+
                             const source = ctx.createBufferSource();
                             source.buffer = buffer;
                             source.connect(ctx.destination);
-                            
+
                             const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
                             source.start(startTime);
                             nextStartTimeRef.current = startTime + buffer.duration;
-                            
+
                             activeSourcesRef.current.push(source);
                             source.onended = () => {
                                 activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
@@ -689,7 +690,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     }
                 }
             });
-            
+
             sessionRef.current = sessionPromise;
 
         } catch (error) {
@@ -719,7 +720,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
         // Stop Speakers
         activeSourcesRef.current.forEach(source => {
-            try { source.stop(); } catch (e) {}
+            try { source.stop(); } catch (e) { }
         });
         activeSourcesRef.current = [];
         if (audioContextRef.current) {
@@ -745,9 +746,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         <div className={`flex flex-col h-full ${className}`}>
             {/* Header */}
             {showHeader && (
-                <div 
-                    className="p-4 flex justify-between items-center transition-colors duration-500" 
-                    style={{ 
+                <div
+                    className="p-4 flex justify-between items-center transition-colors duration-500"
+                    style={{
                         backgroundColor: isLiveActive ? '#ef4444' : appearance.colors.headerBackground,
                         color: appearance.colors.headerText
                     }}
@@ -778,7 +779,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     <div className="flex gap-2">
                         {headerActions}
                         {onClose && (
-                            <button 
+                            <button
                                 onClick={onClose}
                                 className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
                             >
@@ -791,7 +792,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
             {/* Content Area */}
             <div className="flex-1 relative flex flex-col overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
-                
+
                 {/* Pre-Chat Form */}
                 {showPreChatForm && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 p-6">
@@ -910,20 +911,20 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         {/* Audio Waveform Visualizer */}
                         <div className="flex items-center gap-1 h-12 mb-6">
                             {visualizerLevels.map((height, i) => (
-                                <div 
-                                    key={i} 
+                                <div
+                                    key={i}
                                     className="w-1.5 bg-white rounded-full transition-all duration-100"
-                                    style={{ height: `${height}px`, opacity: 0.6 + (height/50) }}
+                                    style={{ height: `${height}px`, opacity: 0.6 + (height / 50) }}
                                 />
                             ))}
                         </div>
-                        
+
                         <p className="text-lg font-medium mb-2">Listening...</p>
                         <p className="text-xs text-gray-500 max-w-[200px] text-center mb-8">
                             Speak naturally. I'm listening in {config.languages || 'your language'}.
                         </p>
-                        
-                        <button 
+
+                        <button
                             onClick={stopLiveSession}
                             className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full text-sm font-bold text-white transition-colors shadow-lg flex items-center"
                         >
@@ -940,19 +941,18 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                         {appearance.branding.botAvatarEmoji}
                                     </div>
                                 )}
-                                <div 
-                                    className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                                        msg.role === 'user' 
-                                            ? 'rounded-tr-sm' 
+                                <div
+                                    className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${msg.role === 'user'
+                                            ? 'rounded-tr-sm'
                                             : 'rounded-tl-sm markdown-content'
-                                    }`}
+                                        }`}
                                     style={
-                                        msg.role === 'user' 
-                                            ? { 
+                                        msg.role === 'user'
+                                            ? {
                                                 backgroundColor: appearance.colors.userBubbleColor,
                                                 color: appearance.colors.userTextColor
-                                            } 
-                                            : { 
+                                            }
+                                            : {
                                                 backgroundColor: appearance.colors.botBubbleColor,
                                                 color: appearance.colors.botTextColor
                                             }
@@ -961,24 +961,24 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                     {msg.role === 'model' ? (
                                         <ReactMarkdown
                                             components={{
-                                                p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
-                                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
-                                                li: ({node, ...props}) => <li className="ml-2" {...props} />,
-                                                strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
-                                                em: ({node, ...props}) => <em className="italic" {...props} />,
-                                                code: ({node, inline, ...props}) => 
+                                                p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                                                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                                                li: ({ node, ...props }) => <li className="ml-2" {...props} />,
+                                                strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                                                em: ({ node, ...props }) => <em className="italic" {...props} />,
+                                                code: ({ node, inline, ...props }) =>
                                                     inline ? (
                                                         <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono" {...props} />
                                                     ) : (
                                                         <code className="block bg-black/10 p-2 rounded my-2 text-xs font-mono overflow-x-auto" {...props} />
                                                     ),
-                                                a: ({node, ...props}) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2" {...props} />,
-                                                h2: ({node, ...props}) => <h2 className="text-sm font-bold mb-2" {...props} />,
-                                                h3: ({node, ...props}) => <h3 className="text-xs font-bold mb-1" {...props} />,
-                                                blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-current pl-2 italic my-2 opacity-80" {...props} />,
-                                                hr: ({node, ...props}) => <hr className="my-2 border-current opacity-20" {...props} />,
+                                                a: ({ node, ...props }) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                h1: ({ node, ...props }) => <h1 className="text-base font-bold mb-2" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-sm font-bold mb-2" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-xs font-bold mb-1" {...props} />,
+                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-current pl-2 italic my-2 opacity-80" {...props} />,
+                                                hr: ({ node, ...props }) => <hr className="my-2 border-current opacity-20" {...props} />,
                                             }}
                                         >
                                             {msg.text}
@@ -997,7 +997,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             </div>
                         )}
                         <div ref={messagesEndRef} />
-                        
+
                         {/* Quick Replies */}
                         {appearance.messages.quickReplies && appearance.messages.quickReplies.length > 0 && messages.length <= 2 && (
                             <div className="flex flex-wrap gap-2 mt-3">
@@ -1029,7 +1029,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             {!isLiveActive && !showPreChatForm && (
                 <div className="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2" style={{ backgroundColor: appearance.colors.inputBackground }}>
                     {config.enableLiveVoice && (
-                        <button 
+                        <button
                             onClick={startLiveSession}
                             disabled={isConnecting}
                             className={`p-2.5 rounded-full transition-all shadow-sm ${isConnecting ? 'bg-gray-100 text-gray-400' : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-200'}`}
@@ -1038,19 +1038,19 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
                         </button>
                     )}
-                    <input 
+                    <input
                         ref={inputRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={appearance.messages.inputPlaceholder}
                         className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border border-gray-200 dark:border-gray-700"
-                        style={{ 
+                        style={{
                             '--tw-ring-color': appearance.colors.primaryColor + '40'
                         } as React.CSSProperties}
                         disabled={isLoading}
                     />
-                    <button 
+                    <button
                         onClick={handleSend}
                         disabled={!input.trim() || isLoading}
                         className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"

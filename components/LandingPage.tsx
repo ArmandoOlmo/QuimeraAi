@@ -199,7 +199,7 @@ const LandingPage: React.FC = () => {
       case 'faq':
         return <Faq {...mergedData} borderRadius={borderRadius} />;
       case 'leads':
-        return <Leads {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+        return <Leads {...mergedData} cardBorderRadius={mergedData.cardBorderRadius || borderRadius} inputBorderRadius={mergedData.inputBorderRadius || 'md'} buttonBorderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />;
       case 'newsletter':
         return <Newsletter {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
       case 'cta':
@@ -223,28 +223,29 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  // Merge data with componentStyles to ensure style updates are reflected
+  // Merge componentStyles (defaults) with data (user changes) - user changes take priority
   const mergedHeroData = {
-    ...data.hero,
-    ...componentStyles.hero,
+    ...componentStyles.hero,  // defaults first
+    ...data.hero,             // user changes override defaults
     colors: {
-      ...data.hero.colors,
-      ...componentStyles.hero?.colors
+      ...componentStyles.hero?.colors,  // default colors first
+      ...data.hero.colors               // user color changes override
     }
   };
 
-  // Helper function to merge data with componentStyles for each component
+  // Helper function to merge componentStyles (defaults) with data (user changes)
+  // User changes in data take priority over componentStyles defaults
   const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
     const componentData = data[componentKey];
     const styles = componentStyles[componentKey];
     if (!componentData || !styles) return componentData;
     
     return {
-      ...componentData,
-      ...styles,
+      ...styles,           // defaults first
+      ...componentData,    // user changes override defaults
       colors: {
-        ...componentData.colors,
-        ...styles.colors
+        ...styles.colors,         // default colors first
+        ...componentData.colors   // user color changes override
       }
     };
   };
@@ -280,7 +281,7 @@ const LandingPage: React.FC = () => {
     slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
     pricing: <Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     faq: <Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} />,
-    leads: <Leads {...mergedLeadsData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
+    leads: <Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData.buttonBorderRadius || theme.buttonBorderRadius} />,
     newsletter: <Newsletter {...mergedNewsletterData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     cta: <CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     portfolio: <Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} />,

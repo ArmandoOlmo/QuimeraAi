@@ -20,6 +20,9 @@ export const componentStyles: ComponentStyles = {
     imageObjectFit: 'cover',
     headlineFontSize: 'lg',
     subheadlineFontSize: 'lg',
+    // Secondary button styles
+    secondaryButtonStyle: 'outline',
+    secondaryButtonOpacity: 100,
     colors: {
       primary: '#4f46e5',
       secondary: '#10b981',

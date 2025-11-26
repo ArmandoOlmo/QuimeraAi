@@ -26,7 +26,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 interface SlideshowProps extends SlideshowData {
@@ -132,36 +132,98 @@ const Slideshow: React.FC<SlideshowProps> = ({
         return scales[kenBurnsIntensity];
     };
 
+    // Get transition styles based on effect type
+    const getTransitionStyles = (index: number): React.CSSProperties => {
+        const isActive = index === currentIndex;
+        
+        switch (transitionEffect) {
+            case 'fade':
+                return {
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: isActive ? 1 : 0,
+                    transition: `opacity ${transitionDuration}ms ease-in-out`,
+                    zIndex: isActive ? 10 : 0,
+                };
+            case 'zoom':
+                return {
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: isActive ? 1 : 0,
+                    transform: isActive ? 'scale(1)' : 'scale(1.1)',
+                    transition: `opacity ${transitionDuration}ms ease-in-out, transform ${transitionDuration}ms ease-in-out`,
+                    zIndex: isActive ? 10 : 0,
+                };
+            case 'slide':
+            default:
+                return {}; // Slide effect uses different layout
+        }
+    };
+
     // Render Classic Variant
-    const renderClassic = () => (
-        <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
-            <div 
-                className="w-full h-full whitespace-nowrap transition-transform ease-in-out" 
-                style={{ 
-                    transform: `translateX(-${currentIndex * 100}%)`,
-                    transitionDuration: `${transitionDuration}ms`
-                }}
-            >
-                {items.map((item, index) => (
-                    <div key={index} className="inline-block w-full h-full align-top relative">
-                        <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
-                        {showCaptions && item.caption && (
-                            <div 
-                                className="absolute bottom-0 left-0 right-0 p-4 text-center"
-                                style={{ 
-                                    backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                    color: colors.captionText || '#ffffff'
-                                }}
-                            >
-                                {item.caption}
+    const renderClassic = () => {
+        // For slide effect, use horizontal scroll layout
+        if (transitionEffect === 'slide') {
+            return (
+                <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
+                    <div 
+                        className="w-full h-full whitespace-nowrap transition-transform ease-in-out" 
+                        style={{ 
+                            transform: `translateX(-${currentIndex * 100}%)`,
+                            transitionDuration: `${transitionDuration}ms`
+                        }}
+                    >
+                        {items.map((item, index) => (
+                            <div key={index} className="inline-block w-full h-full align-top relative">
+                                <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
+                                {showCaptions && item.caption && (
+                                    <div 
+                                        className="absolute bottom-0 left-0 right-0 p-4 text-center"
+                                        style={{ 
+                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors.captionText || '#ffffff'
+                                        }}
+                                    >
+                                        {item.caption}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        ))}
                     </div>
-                ))}
+                    {renderControls()}
+                </div>
+            );
+        }
+        
+        // For fade and zoom effects, use absolute positioning
+        return (
+            <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
+                <div className="relative w-full h-full">
+                    {items.map((item, index) => (
+                        <div 
+                            key={index} 
+                            style={getTransitionStyles(index)}
+                            className="w-full h-full"
+                        >
+                            <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
+                            {showCaptions && item.caption && index === currentIndex && (
+                                <div 
+                                    className="absolute bottom-0 left-0 right-0 p-4 text-center"
+                                    style={{ 
+                                        backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                        color: colors.captionText || '#ffffff'
+                                    }}
+                                >
+                                    {item.caption}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {renderControls()}
             </div>
-            {renderControls()}
-        </div>
-    );
+        );
+    };
 
     // Render Ken Burns Variant
     const renderKenBurns = () => (

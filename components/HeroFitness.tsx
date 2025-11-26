@@ -2,7 +2,7 @@ import React from 'react';
 import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
-import { Zap, Target, TrendingUp, Award } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-4xl md:text-5xl',
@@ -22,7 +22,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
     none: 'rounded-none',
     md: 'rounded-md',
     xl: 'rounded-xl',
-    full: 'rounded-full',
+    full: 'rounded-3xl',
 };
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -66,21 +66,22 @@ const HeroFitness: React.FC<HeroProps> = ({
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
     showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '⚡',
     badgeColor, badgeBackgroundColor,
-    showStats = true, stats = [],
-    statsValueColor, statsLabelColor
+    secondaryButtonStyle = 'outline',
+    secondaryButtonOpacity = 100,
 }) => {
     console.log('💪 HeroFitness rendering with imageUrl:', imageUrl);
     const { getColor } = useDesignTokens();
     
+    // Component colors take priority over Design Tokens
     const actualColors = {
-        primary: getColor('primary.main', colors.primary),
-        secondary: getColor('secondary.main', colors.secondary),
+        primary: colors.primary || getColor('primary.main', '#4f46e5'),
+        secondary: colors.secondary || getColor('secondary.main', '#10b981'),
         background: colors.background,
         text: colors.text,
         heading: colors.heading,
-        buttonBackground: getColor('primary.main', colors.buttonBackground),
+        buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
         buttonText: colors.buttonText || '#ffffff',
-        secondaryButtonBackground: colors.secondaryButtonBackground || '#1f2937',
+        secondaryButtonBackground: colors.secondaryButtonBackground || '#334155',
         secondaryButtonText: colors.secondaryButtonText || '#ffffff',
     };
 
@@ -211,135 +212,29 @@ const HeroFitness: React.FC<HeroProps> = ({
                             
                             <a 
                                 href="#features" 
-                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide border-4 hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
+                                    secondaryButtonStyle === 'outline' 
+                                        ? 'border-4 bg-transparent' 
+                                        : secondaryButtonStyle === 'ghost'
+                                            ? 'bg-transparent border-0'
+                                            : 'border-0'
+                                }`}
                                 style={{ 
-                                    backgroundColor: 'transparent',
-                                    borderColor: actualColors.primary,
-                                    color: actualColors.heading 
+                                    backgroundColor: secondaryButtonStyle === 'solid' 
+                                        ? `rgba(${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(1, 3), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(3, 5), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                                        : 'transparent',
+                                    borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
+                                    color: actualColors.secondaryButtonText 
                                 }}
                             >
                                 <span className="relative z-10">{secondaryCta}</span>
                                 <div 
                                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                    style={{ backgroundColor: `${actualColors.primary}20` }}
+                                    style={{ backgroundColor: `${actualColors.secondaryButtonBackground}20` }}
                                 ></div>
                             </a>
                         </div>
 
-                        {/* Stats Grid - Dynamic Cards */}
-                        {showStats && stats && stats.length > 0 && (
-                            <div 
-                                className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
-                                style={{ animationDelay: '0.3s' }}
-                            >
-                                {stats.map((stat, index) => {
-                                    const icons = [Target, TrendingUp, Award, Zap];
-                                    const Icon = icons[index % icons.length];
-                                    
-                                    return (
-                                        <div 
-                                            key={index}
-                                            className="relative group cursor-pointer"
-                                        >
-                                            {/* Skewed Background */}
-                                            <div 
-                                                className="absolute inset-0 transform -skew-y-3 transition-all duration-300 group-hover:skew-y-0 group-hover:scale-105"
-                                                style={{ 
-                                                    backgroundColor: `${actualColors.primary}15`,
-                                                    borderLeft: `4px solid ${actualColors.primary}`
-                                                }}
-                                            ></div>
-                                            
-                                            {/* Content */}
-                                            <div className="relative p-5">
-                                                <Icon 
-                                                    size={24} 
-                                                    className="mb-2 group-hover:scale-110 transition-transform"
-                                                    style={{ color: actualColors.primary }}
-                                                />
-                                                <div 
-                                                    className="text-3xl md:text-4xl font-black font-header mb-1"
-                                                    style={{ color: statsValueColor || actualColors.primary }}
-                                                >
-                                                    {stat.value}
-                                                </div>
-                                                <div 
-                                                    className="text-xs md:text-sm font-bold uppercase tracking-wider"
-                                                    style={{ color: statsLabelColor || actualColors.text }}
-                                                >
-                                                    {stat.label}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Floating Action Elements - Bottom Right */}
-                    <div className="absolute bottom-8 right-8 hidden lg:flex flex-col gap-4 animate-fade-in-left">
-                        {/* Energy Indicator */}
-                        <div 
-                            className="flex items-center gap-3 px-6 py-4 backdrop-blur-xl border-l-4 shadow-2xl transform hover:scale-105 transition-all"
-                            style={{ 
-                                backgroundColor: `${actualColors.background}dd`,
-                                borderColor: actualColors.primary
-                            }}
-                        >
-                            <div className="relative">
-                                <div 
-                                    className="w-3 h-3 rounded-full animate-ping absolute"
-                                    style={{ backgroundColor: actualColors.primary }}
-                                ></div>
-                                <div 
-                                    className="w-3 h-3 rounded-full"
-                                    style={{ backgroundColor: actualColors.primary }}
-                                ></div>
-                            </div>
-                            <div>
-                                <div 
-                                    className="text-sm font-black uppercase"
-                                    style={{ color: actualColors.heading }}
-                                >
-                                    Live Classes
-                                </div>
-                                <div 
-                                    className="text-xs font-bold"
-                                    style={{ color: actualColors.text }}
-                                >
-                                    Join Now
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Achievement Badge */}
-                        <div 
-                            className="flex items-center gap-3 px-6 py-4 backdrop-blur-xl border-l-4 shadow-2xl transform hover:scale-105 transition-all"
-                            style={{ 
-                                backgroundColor: `${actualColors.background}dd`,
-                                borderColor: actualColors.secondary
-                            }}
-                        >
-                            <Award 
-                                size={32} 
-                                style={{ color: actualColors.secondary }}
-                            />
-                            <div>
-                                <div 
-                                    className="text-sm font-black uppercase"
-                                    style={{ color: actualColors.heading }}
-                                >
-                                    Top Rated
-                                </div>
-                                <div 
-                                    className="text-xs font-bold"
-                                    style={{ color: actualColors.text }}
-                                >
-                                    5★ Reviews
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Decorative Geometric Shapes */}

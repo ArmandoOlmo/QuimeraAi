@@ -22,7 +22,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -68,20 +68,22 @@ const HeroModern: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     showStats = true, stats = [],
     statsValueColor,
+    secondaryButtonStyle = 'outline',
+    secondaryButtonOpacity = 100,
 }) => {
   console.log('🚀 HeroModern rendering with imageUrl:', imageUrl);
   const { getColor } = useDesignTokens();
   
-  // Forzamos colores claros para texto ya que el fondo es una imagen oscura
+  // Component colors take priority - user colors override defaults
   const actualColors = {
-    primary: getColor('primary.main', colors.primary),
-    secondary: getColor('secondary.main', colors.secondary),
+    primary: colors.primary || getColor('primary.main', '#4f46e5'),
+    secondary: colors.secondary || getColor('secondary.main', '#10b981'),
     text: '#ffffff', 
     heading: '#ffffff',
-    buttonBackground: getColor('primary.main', colors.buttonBackground),
+    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
     buttonText: colors.buttonText || '#ffffff',
-    secondaryButtonBackground: 'rgba(255,255,255,0.1)', // Efecto cristal
-    secondaryButtonText: '#ffffff',
+    secondaryButtonBackground: colors.secondaryButtonBackground || '#ffffff',
+    secondaryButtonText: colors.secondaryButtonText || '#ffffff',
   };
 
   // Manejo seguro del headline
@@ -146,8 +148,20 @@ const HeroModern: React.FC<HeroProps> = ({
              </a>
              <a 
                 href="#features"
-                className={`py-4 px-10 font-bold text-lg backdrop-blur-md transition-all duration-300 hover:bg-white/20 border border-white/20 hover:border-white/40 font-button ${borderRadiusClasses[borderRadius]}`}
-                style={{ backgroundColor: actualColors.secondaryButtonBackground, color: actualColors.secondaryButtonText }}
+                className={`py-4 px-10 font-bold text-lg backdrop-blur-md transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
+                  secondaryButtonStyle === 'outline' 
+                    ? 'border-2 bg-transparent hover:bg-white/10' 
+                    : secondaryButtonStyle === 'ghost'
+                      ? 'bg-transparent hover:bg-white/10 border border-transparent'
+                      : 'hover:brightness-110'
+                }`}
+                style={{ 
+                  backgroundColor: secondaryButtonStyle === 'solid' 
+                    ? `rgba(${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(1, 3), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(3, 5), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                    : 'transparent',
+                  borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
+                  color: actualColors.secondaryButtonText
+                }}
              >
                 {secondaryCta}
              </a>

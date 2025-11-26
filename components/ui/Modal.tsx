@@ -1,6 +1,7 @@
 
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useEditor } from '../../contexts/EditorContext';
 
 interface ModalProps {
   children: ReactNode;
@@ -11,44 +12,18 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ children, onClose, isOpen, maxWidth = 'max-w-3xl', className = '' }) => {
-  const [themeClass, setThemeClass] = useState<string>('dark');
-
-  // Sync theme with document root
-  useEffect(() => {
-    const updateTheme = () => {
-      const root = document.documentElement;
-      if (root.classList.contains('dark')) {
-        setThemeClass('dark');
-      } else if (root.classList.contains('black')) {
-        setThemeClass('black');
-      } else {
-        setThemeClass('light');
-      }
-    };
-
-    // Initial theme
-    updateTheme();
-
-    // Observe theme changes
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const { themeMode } = useEditor();
 
   if (!isOpen) return null;
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up ${themeClass}`}
+      className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up ${themeMode}`}
       style={{ animationDuration: '0.3s' }}
       aria-modal="true"
       role="dialog"
     >
-      <div 
+      <div
         className="absolute inset-0"
         onClick={onClose}
         aria-hidden="true"

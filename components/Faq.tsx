@@ -33,7 +33,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 type FaqVariant = 'classic' | 'cards' | 'gradient' | 'minimal';

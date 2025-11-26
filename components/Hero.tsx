@@ -43,7 +43,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   md: 'rounded-md',
   xl: 'rounded-xl',
-  full: 'rounded-full',
+  full: 'rounded-3xl',
 };
 
 const borderSizeClasses: Record<BorderSize, string> = {
@@ -140,23 +140,26 @@ const Hero: React.FC<HeroProps> = ({
         { value: '5K+', label: 'Happy Users' },
         { value: '4.9★', label: 'User Rating' }
     ],
-    statsValueColor, statsLabelColor
+    statsValueColor, statsLabelColor,
+    secondaryButtonStyle = 'solid',
+    secondaryButtonOpacity = 100,
 }) => {
   console.log('🎯 Hero Classic rendering with imageUrl:', imageUrl);
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
   
-  // Merge Design Tokens with component colors (Design Tokens take priority)
+  // Component colors take priority over Design Tokens
+  // User changes should always override defaults and design tokens
   const actualColors = {
-    primary: getColor('primary.main', colors.primary),
-    secondary: getColor('secondary.main', colors.secondary),
-    background: colors.background, // Keep component-specific background
+    primary: colors.primary || getColor('primary.main', '#4f46e5'),
+    secondary: colors.secondary || getColor('secondary.main', '#10b981'),
+    background: colors.background,
     text: colors.text,
     heading: colors.heading,
-    buttonBackground: getColor('primary.main', colors.buttonBackground),
-    buttonText: colors.buttonText,
-    secondaryButtonBackground: colors.secondaryButtonBackground,
-    secondaryButtonText: colors.secondaryButtonText,
+    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
+    buttonText: colors.buttonText || '#ffffff',
+    secondaryButtonBackground: colors.secondaryButtonBackground || '#334155',
+    secondaryButtonText: colors.secondaryButtonText || '#ffffff',
   };
   // Ensure headline is always a string - handle all edge cases
   let safeHeadline: string;
@@ -270,11 +273,25 @@ const Hero: React.FC<HeroProps> = ({
           </a>
           <a 
             href="#features" 
-            className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
-            style={{ backgroundColor: actualColors.secondaryButtonBackground || '#334155', color: actualColors.secondaryButtonText || '#ffffff' }}
+            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
+              secondaryButtonStyle === 'outline' 
+                ? 'border-2 bg-transparent hover:shadow-lg' 
+                : secondaryButtonStyle === 'ghost'
+                  ? 'bg-transparent hover:bg-white/10'
+                  : 'shadow-lg hover:shadow-2xl'
+            }`}
+            style={{ 
+              backgroundColor: secondaryButtonStyle === 'solid' 
+                ? `rgba(${parseInt(actualColors.secondaryButtonBackground.slice(1, 3), 16)}, ${parseInt(actualColors.secondaryButtonBackground.slice(3, 5), 16)}, ${parseInt(actualColors.secondaryButtonBackground.slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                : 'transparent',
+              borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
+              color: actualColors.secondaryButtonText || '#ffffff'
+            }}
           >
             <span className="relative z-10">{secondaryCta}</span>
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            {secondaryButtonStyle === 'solid' && (
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            )}
           </a>
         </div>
         

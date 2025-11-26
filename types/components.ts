@@ -78,6 +78,9 @@ export interface HeroData {
         secondaryButtonBackground?: string; 
         secondaryButtonText?: string; 
     };
+    // Secondary button style options
+    secondaryButtonStyle?: 'solid' | 'outline' | 'ghost';
+    secondaryButtonOpacity?: number; // 0-100
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
     showBadge?: boolean;
@@ -85,10 +88,6 @@ export interface HeroData {
     badgeIcon?: ServiceIcon | string;
     badgeColor?: string;
     badgeBackgroundColor?: string;
-    showStats?: boolean;
-    stats?: Array<{ value: string; label: string }>;
-    statsValueColor?: string;
-    statsLabelColor?: string;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
 }
@@ -284,6 +283,7 @@ export interface LeadsData {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     cardBorderRadius?: BorderRadiusSize;
+    inputBorderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     colors: { 
         background: string; 
@@ -534,6 +534,9 @@ export interface FooterData {
     colors: { background: string; border: string; text: string; linkHover: string; heading: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    // Logo settings
+    logoType?: 'text' | 'image';
+    logoImageUrl?: string;
 }
 
 // =============================================================================
