@@ -312,37 +312,25 @@ const CMSDashboard: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
                     <div className="max-w-7xl mx-auto h-full space-y-6">
                         
-                        {/* Métricas Cards */}
+                        {/* Métricas - Simple inline stats */}
                         {cmsPosts.length > 0 && (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div className="bg-card border border-border rounded-xl p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Total Posts</p>
-                                            <p className="text-2xl font-bold text-foreground">{metrics.total}</p>
-                                        </div>
-                                        <FileText className="text-primary opacity-50" size={32} />
-                                    </div>
+                            <div className="flex items-center gap-8 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="text-primary" size={18} />
+                                    <span className="text-muted-foreground">Total:</span>
+                                    <span className="font-bold text-foreground">{metrics.total}</span>
                                 </div>
                                 
-                                <div className="bg-card border border-border rounded-xl p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Published</p>
-                                            <p className="text-2xl font-bold text-green-500">{metrics.published}</p>
-                                        </div>
-                                        <Globe className="text-green-500 opacity-50" size={32} />
-                                    </div>
+                                <div className="flex items-center gap-2">
+                                    <Globe className="text-green-500" size={18} />
+                                    <span className="text-muted-foreground">Published:</span>
+                                    <span className="font-bold text-green-500">{metrics.published}</span>
                                 </div>
                                 
-                                <div className="bg-card border border-border rounded-xl p-4 col-span-2 lg:col-span-1">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Drafts</p>
-                                            <p className="text-2xl font-bold text-yellow-500">{metrics.drafts}</p>
-                                        </div>
-                                        <Edit3 className="text-yellow-500 opacity-50" size={32} />
-                                    </div>
+                                <div className="flex items-center gap-2">
+                                    <Edit3 className="text-yellow-500" size={18} />
+                                    <span className="text-muted-foreground">Drafts:</span>
+                                    <span className="font-bold text-yellow-500">{metrics.drafts}</span>
                                 </div>
                             </div>
                         )}
