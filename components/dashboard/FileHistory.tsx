@@ -502,7 +502,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
             </Modal>
 
-            {/* IMAGE GENERATOR - INTEGRATED */}
+            {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget */}
+            {variant !== 'widget' && (
             <div className="mb-8 p-6 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 rounded-2xl">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
@@ -715,6 +716,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     </button>
                 </div>
             </div>
+            )}
 
             {/* ASSET LIBRARY SECTION */}
             <div className="border-t border-border/50 pt-6">
