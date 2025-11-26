@@ -210,13 +210,41 @@ const FileItem: React.FC<{
     isSelected?: boolean;
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
-    onAddToReference?: (imageUrl: string) => Promise<void>;
+    onAddToReference?: (base64Data: string) => Promise<void>;
 }> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference }) => {
     const isImage = file.type.startsWith('image/');
     const [isAdding, setIsAdding] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
+    
+    // Try to convert rendered img element to base64 using canvas
+    // Note: This will fail for cross-origin images without proper CORS headers
+    const getImageAsBase64 = (): string | null => {
+        const imgElement = imgRef.current;
+        if (!imgElement || !imgElement.complete || imgElement.naturalWidth === 0) return null;
+        
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = imgElement.naturalWidth;
+            canvas.height = imgElement.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+            
+            ctx.drawImage(imgElement, 0, 0);
+            // This will throw SecurityError for tainted canvas (cross-origin without CORS)
+            return canvas.toDataURL('image/jpeg', 0.85);
+        } catch (error) {
+            // Canvas is tainted due to cross-origin image
+            console.warn('Canvas tainted - cross-origin image without CORS:', error);
+            return null;
+        }
+    };
     
     const handleDragStart = (e: React.DragEvent) => {
         if (isImage) {
+            const base64 = getImageAsBase64();
+            if (base64) {
+                e.dataTransfer.setData('application/x-library-image-base64', base64);
+            }
             e.dataTransfer.setData('text/plain', file.downloadURL);
             e.dataTransfer.setData('application/x-library-image', file.downloadURL);
             e.dataTransfer.effectAllowed = 'copy';
@@ -228,7 +256,13 @@ const FileItem: React.FC<{
         if (isImage && onAddToReference && !isAdding) {
             setIsAdding(true);
             try {
-                await onAddToReference(file.downloadURL);
+                const base64 = getImageAsBase64();
+                if (base64) {
+                    await onAddToReference(base64);
+                } else {
+                    // Fallback: try to fetch and convert (won't work with CORS issues)
+                    await onAddToReference(file.downloadURL);
+                }
             } finally {
                 setIsAdding(false);
             }
@@ -259,6 +293,7 @@ const FileItem: React.FC<{
             >
                 {isImage ? (
                     <img
+                        ref={imgRef}
                         src={file.downloadURL}
                         alt={file.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -395,7 +430,24 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         e.preventDefault();
         setIsDragging(false);
         
-        // Check if it's a library image (URL from drag)
+        // First try base64 data (converted during drag)
+        const base64Data = e.dataTransfer.getData('application/x-library-image-base64');
+        if (base64Data) {
+            // Already base64, add directly
+            if (referenceImages.length >= 14) {
+                showError("Maximum 14 reference images allowed.");
+                return;
+            }
+            if (referenceImages.includes(base64Data)) {
+                showError("This image is already added as reference.");
+                return;
+            }
+            setReferenceImages(prev => [...prev, base64Data]);
+            success("Image added as reference!");
+            return;
+        }
+        
+        // Fallback: try URL and convert
         const libraryImageUrl = e.dataTransfer.getData('application/x-library-image');
         if (libraryImageUrl) {
             await addImageToReference(libraryImageUrl);
@@ -408,59 +460,71 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         }
     };
 
-    // Convert URL to base64 data URL
-    const urlToBase64 = async (url: string): Promise<string> => {
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.error('Error converting URL to base64:', error);
-            throw error;
-        }
+    // Convert URL to base64 data URL using canvas (avoids CORS issues)
+    const urlToBase64 = (url: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Could not get canvas context'));
+                        return;
+                    }
+                    
+                    ctx.drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    resolve(dataUrl);
+                } catch (error) {
+                    console.error('Error converting image to base64:', error);
+                    reject(error);
+                }
+            };
+            
+            img.onerror = () => {
+                reject(new Error('Failed to load image'));
+            };
+            
+            // Add cache buster to avoid CORS cache issues
+            const separator = url.includes('?') ? '&' : '?';
+            img.src = `${url}${separator}t=${Date.now()}`;
+        });
     };
 
-    // Add image URL directly to reference images (from library)
-    const addImageToReference = async (imageUrl: string) => {
+    // Add image as base64 to reference images (from library)
+    const addImageToReference = async (imageData: string) => {
         if (referenceImages.length >= 14) {
             showError("Maximum 14 reference images allowed.");
             return;
         }
         
-        // Check if it's already a data URL
-        if (imageUrl.startsWith('data:')) {
-            if (referenceImages.includes(imageUrl)) {
+        // Check if already a base64 data URL
+        if (imageData.startsWith('data:')) {
+            if (referenceImages.includes(imageData)) {
                 showError("This image is already added as reference.");
                 return;
             }
-            setReferenceImages(prev => [...prev, imageUrl]);
+            setReferenceImages(prev => [...prev, imageData]);
             success("Image added as reference!");
             return;
         }
         
-        // Convert URL to base64 for API compatibility
+        // If it's a URL, try to convert using fetch+canvas (may fail with CORS)
         try {
-            // Ensure URL has protocol
-            const fullUrl = imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl;
-            
-            // Check if already added (by comparing the URL part)
-            const existingUrlPart = referenceImages.find(img => img.includes(imageUrl) || imageUrl.includes(img.split(',')[0]));
-            if (existingUrlPart) {
-                showError("This image is already added as reference.");
-                return;
-            }
-            
-            const base64Data = await urlToBase64(fullUrl);
-            setReferenceImages(prev => [...prev, base64Data]);
+            const fullUrl = imageData.startsWith('//') ? `https:${imageData}` : imageData;
+            const converted = await urlToBase64(fullUrl);
+            setReferenceImages(prev => [...prev, converted]);
             success("Image added as reference!");
         } catch (error) {
-            showError("Failed to add image as reference. Please try again.");
-            console.error('Error adding image to reference:', error);
+            // CORS error - show helpful message
+            showError("Cannot add this image. Please upload from your computer using the upload button.");
+            console.warn('CORS error adding image to reference. Use local upload instead:', error);
         }
     };
 
