@@ -90,10 +90,10 @@ const ComponentMarketplace: React.FC = () => {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                            className={`px-4 py-2 font-medium whitespace-nowrap transition-colors ${
                                 selectedCategory === cat
-                                    ? 'bg-editor-accent text-editor-bg'
-                                    : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border'
+                                    ? 'text-editor-accent'
+                                    : 'text-editor-text-secondary hover:text-editor-text-primary'
                             }`}
                         >
                             {cat === 'all' ? 'All' : cat}
@@ -134,7 +134,7 @@ const ComponentMarketplace: React.FC = () => {
                         {/* Category Badge */}
                         {component.category && (
                             <div className="absolute top-4 left-4 z-20">
-                                <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg bg-editor-accent/20 text-editor-accent border-editor-accent/30">
+                                <span className="text-xs font-bold uppercase tracking-wider text-editor-accent">
                                     {component.category}
                                 </span>
                             </div>
@@ -311,7 +311,7 @@ const ComponentMarketplace: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => handleAddToLibrary(selectedComponent)}
-                                className="px-6 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all flex items-center gap-2"
+                                className="px-4 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all flex items-center gap-2"
                             >
                                 <Check size={20} />
                                 Add to Library

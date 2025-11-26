@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, Palette, Settings } from 'lucide-react';
 
 interface TabbedControlsProps {
@@ -14,15 +15,16 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
     styleTab,
     advancedTab
 }) => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>('content');
 
     const tabs = [
-        { id: 'content' as TabType, label: 'Content', icon: FileText, content: contentTab },
-        { id: 'style' as TabType, label: 'Style', icon: Palette, content: styleTab },
+        { id: 'content' as TabType, label: t('controls.contentTab'), icon: FileText, content: contentTab },
+        { id: 'style' as TabType, label: t('controls.styleTab'), icon: Palette, content: styleTab },
     ];
 
     if (advancedTab) {
-        tabs.push({ id: 'advanced' as TabType, label: 'Advanced', icon: Settings, content: advancedTab });
+        tabs.push({ id: 'advanced' as TabType, label: t('controls.advanced'), icon: Settings, content: advancedTab });
     }
 
     return (

@@ -128,7 +128,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                         <button 
                             onClick={handleSaveAll}
                             disabled={isSaving}
-                            className="h-9 px-4 bg-editor-accent text-white font-medium text-sm rounded-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 shadow-sm flex items-center gap-1.5"
+                            className="h-9 px-3 text-editor-accent font-medium text-sm transition-colors disabled:opacity-50 flex items-center gap-1.5 hover:text-editor-accent-hover"
                         >
                             <Save className="w-4 h-4" />
                             {isSaving ? 'Saving...' : 'Save All'}
@@ -312,7 +312,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                     <h2 className="text-xl font-semibold text-editor-text-primary">
                                         SEO Templates
                                     </h2>
-                                    <button className="px-4 py-2 bg-editor-accent text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2">
+                                    <button className="px-3 py-2 text-editor-accent hover:text-editor-accent-hover flex items-center gap-2 text-sm font-medium transition-colors">
                                         <Plus className="w-4 h-4" />
                                         Create Template
                                     </button>

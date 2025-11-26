@@ -198,10 +198,10 @@ const AnalyticsDashboard: React.FC = () => {
                   <button
                     key={option.value}
                     onClick={() => setSortBy(option.value as any)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                       sortBy === option.value
-                        ? 'bg-editor-accent text-editor-bg'
-                        : 'bg-editor-border text-editor-text-secondary hover:bg-editor-accent/20'
+                        ? 'text-editor-accent'
+                        : 'text-editor-text-secondary hover:text-editor-text-primary'
                     }`}
                   >
                     {option.label}
@@ -221,10 +221,10 @@ const AnalyticsDashboard: React.FC = () => {
                   <button
                     key={option.value}
                     onClick={() => setFilterType(option.value as any)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                       filterType === option.value
-                        ? 'bg-editor-accent text-editor-bg'
-                        : 'bg-editor-border text-editor-text-secondary hover:bg-editor-accent/20'
+                        ? 'text-editor-accent'
+                        : 'text-editor-text-secondary hover:text-editor-text-primary'
                     }`}
                   >
                     {option.label}

@@ -151,7 +151,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                         )}
                         <button 
                             onClick={onBack}
-                            className="flex items-center text-sm font-medium h-9 px-4 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                            className="flex items-center text-sm font-medium h-9 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
                             Back
@@ -221,7 +221,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             <div className="flex items-center gap-3">
                                 <h2 className="text-lg font-semibold text-foreground">Navigation Menus</h2>
                                 {menus.length > 0 && (
-                                    <span className="px-2 py-1 text-xs font-medium bg-secondary rounded-full text-muted-foreground">
+                                    <span className="text-xs font-medium text-muted-foreground">
                                         {filteredMenus.length} of {menus.length}
                                     </span>
                                 )}
@@ -258,7 +258,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             {activeProject && (
                                 <button 
                                     onClick={handleCreateNew}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                                    className="flex items-center gap-2 px-3 py-2 text-primary hover:text-primary/80 transition-colors font-medium text-sm"
                                 >
                                     <Plus size={16} />
                                     Add Menu
@@ -338,7 +338,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         </p>
                                         <button 
                                             onClick={handleCreateNew}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                                            className="inline-flex items-center gap-2 px-3 py-2 text-primary hover:text-primary/80 transition-colors font-medium"
                                         >
                                             <Plus size={16} />
                                             Create Menu
@@ -403,13 +403,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                     <td className="p-4">
                                                                         <div className="flex gap-2 flex-wrap">
                                                                             {usedInHeader && (
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
                                                                                     <Layout size={12} />
                                                                                     Header
                                                                                 </span>
                                                                             )}
                                                                             {usedInFooter && (
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
                                                                                     <LayoutGrid size={12} />
                                                                                     Footer
                                                                                 </span>

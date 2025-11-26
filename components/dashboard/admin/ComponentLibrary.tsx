@@ -143,10 +143,10 @@ const ComponentLibrary: React.FC = () => {
                                     <button
                                         key={status}
                                         onClick={() => setFilterStatus(status as any)}
-                                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                                        className={`px-3 py-1 text-sm font-medium transition-colors ${
                                             filterStatus === status
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'bg-editor-border text-editor-text-secondary hover:bg-editor-accent/20'
+                                                ? 'text-editor-accent'
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
                                         }`}
                                     >
                                         {status.charAt(0).toUpperCase() + status.slice(1)}

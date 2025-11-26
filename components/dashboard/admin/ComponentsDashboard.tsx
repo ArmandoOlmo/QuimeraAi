@@ -58,7 +58,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                         key={name}
                                         title={`Preview on ${name}`}
                                         onClick={() => setPreviewDevice(name)}
-                                        className={`p-2 rounded-md transition-colors ${previewDevice === name ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'}`}
+                                        className={`p-2 transition-colors ${previewDevice === name ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                     >
                                         {icon}
                                     </button>
@@ -70,10 +70,10 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                         key={orientation}
                                         onClick={() => setPreviewOrientation(orientation)}
                                         disabled={previewDevice === 'desktop'}
-                                        className={`h-8 w-9 text-xs font-semibold rounded-md transition-all ${
+                                        className={`h-8 w-9 text-xs font-semibold transition-all ${
                                             previewOrientation === orientation
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
+                                                ? 'text-editor-accent'
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
                                         } ${previewDevice === 'desktop' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         aria-label={`Preview ${orientation}`}
                                     >

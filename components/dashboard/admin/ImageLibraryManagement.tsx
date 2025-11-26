@@ -122,9 +122,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             </button>
                             <button
                                 onClick={() => setIsGeneratorOpen(true)}
-                                className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg hover:scale-105 transform"
+                                className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-purple-500 hover:text-purple-400"
                             >
-                                <Zap className="w-4 h-4 animate-pulse" />
+                                <Zap className="w-4 h-4" />
                                 Generate Image
                             </button>
                             <DragDropZone
@@ -133,7 +133,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 maxSizeMB={10}
                                 variant="compact"
                             >
-                                <button className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-accent text-editor-bg hover:bg-editor-accent-hover transition-colors">
+                                <button className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors">
                                     <Upload size={16} className="mr-1.5" />
                                     Upload Image
                                 </button>
@@ -161,7 +161,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             {/* Filter Toggle */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${showFilters ? 'bg-editor-accent text-editor-bg' : 'bg-editor-panel-bg hover:bg-editor-border text-editor-text-primary'}`}
+                                className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${showFilters ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                             >
                                 <Filter size={16} />
                                 Filters
@@ -170,7 +170,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             {/* Selection Mode Toggle */}
                             <button
                                 onClick={library.toggleSelectionMode}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${library.isSelectionMode ? 'bg-editor-accent text-editor-bg' : 'bg-editor-panel-bg hover:bg-editor-border text-editor-text-primary'}`}
+                                className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${library.isSelectionMode ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                             >
                                 <CheckSquare size={16} />
                                 Select

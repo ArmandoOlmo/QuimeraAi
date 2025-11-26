@@ -329,7 +329,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         <button
                             onClick={handleSave}
                             disabled={isSaving || !hasUnsavedChanges}
-                            className="h-9 px-4 bg-editor-accent text-white font-medium text-sm rounded-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 shadow-sm flex items-center gap-1.5"
+                            className="h-9 px-3 text-editor-accent font-medium text-sm hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center gap-1.5"
                         >
                             <Save className="w-4 h-4" />
                             {isSaving ? 'Guardando...' : 'Guardar cambios'}

@@ -145,7 +145,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                     <p className="text-editor-text-secondary">{error}</p>
                     <button 
                         onClick={() => window.location.reload()} 
-                        className="px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                        className="px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                     >
                         Retry
                     </button>

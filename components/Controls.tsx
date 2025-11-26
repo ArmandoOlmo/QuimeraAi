@@ -587,7 +587,7 @@ const Controls: React.FC = () => {
               <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                   <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                       <Layout size={14} />
-                      Hero Style
+                      {t('controls.heroStyle')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                       <button
@@ -598,8 +598,8 @@ const Controls: React.FC = () => {
                                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                           }`}
                       >
-                          <div className="font-semibold text-sm">Classic</div>
-                          <div className="text-xs opacity-70">Two Column</div>
+                          <div className="font-semibold text-sm">{t('controls.classic')}</div>
+                          <div className="text-xs opacity-70">{t('controls.twoColumn')}</div>
                       </button>
                       <button
                           onClick={() => setNestedData('hero.heroVariant', 'modern')}
@@ -609,8 +609,8 @@ const Controls: React.FC = () => {
                                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                           }`}
                       >
-                          <div className="font-semibold text-sm">Modern</div>
-                          <div className="text-xs opacity-70">Full Screen</div>
+                          <div className="font-semibold text-sm">{t('controls.modern')}</div>
+                          <div className="text-xs opacity-70">{t('controls.fullScreen')}</div>
                       </button>
                       <button
                           onClick={() => setNestedData('hero.heroVariant', 'gradient')}
@@ -620,8 +620,8 @@ const Controls: React.FC = () => {
                                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                           }`}
                       >
-                          <div className="font-semibold text-sm">Gradient</div>
-                          <div className="text-xs opacity-70">Futuristic</div>
+                          <div className="font-semibold text-sm">{t('controls.gradient')}</div>
+                          <div className="text-xs opacity-70">{t('controls.futuristic')}</div>
                       </button>
                       <button
                           onClick={() => setNestedData('hero.heroVariant', 'fitness')}
@@ -631,18 +631,18 @@ const Controls: React.FC = () => {
                                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                           }`}
                       >
-                          <div className="font-semibold text-sm">Fitness</div>
-                          <div className="text-xs opacity-70">Bold & Dynamic</div>
+                          <div className="font-semibold text-sm">{t('controls.fitness')}</div>
+                          <div className="text-xs opacity-70">{t('controls.boldDynamic')}</div>
                       </button>
                   </div>
                   <p className="text-xs text-editor-text-secondary mt-2">
                       {currentVariant === 'modern' 
-                          ? '✨ Full-screen hero with image background' 
+                          ? `✨ ${t('controls.fullScreenHero')}` 
                           : currentVariant === 'gradient'
-                            ? '🎨 Modern layout with gradient effects & floating elements'
+                            ? `🎨 ${t('controls.gradientLayout')}`
                             : currentVariant === 'fitness'
-                              ? '💪 Bold design with energy and impact for gyms/sports'
-                              : '📐 Traditional side-by-side layout'}
+                              ? `💪 ${t('controls.fitnessLayout')}`
+                              : `📐 ${t('controls.traditionalLayout')}`}
                   </p>
               </div>
 
@@ -652,22 +652,22 @@ const Controls: React.FC = () => {
               <div>
                   <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
                       <Type size={14} />
-                      Content
+                      {t('controls.content')}
                   </h4>
                   
-                  <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
+                  <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
                       <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
                   </AIFormControl>
-                  <FontSizeSelector label="Headline Size" value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+                  <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
                   
-                  <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
+                  <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
                       <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
                   </AIFormControl>
-                  <FontSizeSelector label="Subheadline Size" value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+                  <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
                   
                   <div className="grid grid-cols-2 gap-4">
-                      <Input label="Primary CTA" value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
-                      <Input label="Secondary CTA" value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+                      <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
+                      <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
                   </div>
               </div>
 
@@ -678,7 +678,7 @@ const Controls: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                       <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
                           <Star size={14} />
-                          Badge
+                          {t('controls.badge')}
                       </h4>
                       <ToggleControl 
                           label="" 
@@ -690,13 +690,13 @@ const Controls: React.FC = () => {
                       <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
                           <div className="grid grid-cols-2 gap-3">
                               <IconSelector 
-                                  label="Icon" 
+                                  label={t('controls.icon')} 
                                   value={data.hero.badgeIcon || 'sparkles'} 
                                   onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
                                   size="sm"
                               />
                               <Input 
-                                  label="Text" 
+                                  label={t('controls.text')} 
                                   value={data.hero.badgeText || 'AI-Powered Generation'} 
                                   onChange={(e) => setNestedData('hero.badgeText', e.target.value)} 
                                   className="mb-0" 
@@ -704,12 +704,12 @@ const Controls: React.FC = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                               <ColorControl 
-                                  label="Color" 
+                                  label={t('controls.color')} 
                                   value={data.hero.badgeColor || data.hero.colors.primary || '#4f46e5'} 
                                   onChange={(v) => setNestedData('hero.badgeColor', v)} 
                               />
                               <ColorControl 
-                                  label="Background" 
+                                  label={t('controls.background')} 
                                   value={data.hero.badgeBackgroundColor || `${data.hero.colors.primary}15`} 
                                   onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} 
                               />
@@ -727,11 +727,11 @@ const Controls: React.FC = () => {
                           <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                   <AlignJustify size={12} className="text-editor-accent" />
-                                  <label className="text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                                  <label className="text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
-                                  <PaddingSelector label="Vertical" value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
-                                  <PaddingSelector label="Horizontal" value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
+                                  <PaddingSelector label={t('controls.vertical')} value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
+                                  <PaddingSelector label={t('controls.horizontal')} value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
                               </div>
                           </div>
                       </div>
@@ -744,13 +744,13 @@ const Controls: React.FC = () => {
               <div>
                   <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
                       <Settings size={14} />
-                      Colors
+                      {t('controls.colors')}
                   </h4>
                   
                   <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
-                      <ColorControl label="Background" value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
-                      <ColorControl label="Title" value={data.hero.colors.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
-                      <ColorControl label="Text" value={data.hero.colors.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
+                      <ColorControl label={t('controls.background')} value={data.hero.colors.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
+                      <ColorControl label={t('controls.title')} value={data.hero.colors.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
+                      <ColorControl label={t('controls.text')} value={data.hero.colors.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
                       
                       <div className="pt-2">
                           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
@@ -765,7 +765,7 @@ const Controls: React.FC = () => {
                           
                           {/* Button Style Selector */}
                           <div className="mb-3">
-                              <label className="block text-xs font-medium text-editor-text-secondary mb-1">Style</label>
+                              <label className="block text-xs font-medium text-editor-text-secondary mb-1">{t('editor.style')}</label>
                               <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                                   {['solid', 'outline', 'ghost'].map(style => (
                                       <button 
@@ -2670,7 +2670,7 @@ const Controls: React.FC = () => {
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Layout size={14} />
-            Hero Style
+            {t('controls.heroStyle')}
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -2681,8 +2681,8 @@ const Controls: React.FC = () => {
                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
               }`}
             >
-              <div className="font-semibold text-sm">Classic</div>
-              <div className="text-xs opacity-70">Two Column</div>
+              <div className="font-semibold text-sm">{t('controls.classic')}</div>
+              <div className="text-xs opacity-70">{t('controls.twoColumn')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'modern')}
@@ -2692,8 +2692,8 @@ const Controls: React.FC = () => {
                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
               }`}
             >
-              <div className="font-semibold text-sm">Modern</div>
-              <div className="text-xs opacity-70">Full Screen</div>
+              <div className="font-semibold text-sm">{t('controls.modern')}</div>
+              <div className="text-xs opacity-70">{t('controls.fullScreen')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'gradient')}
@@ -2703,8 +2703,8 @@ const Controls: React.FC = () => {
                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
               }`}
             >
-              <div className="font-semibold text-sm">Gradient</div>
-              <div className="text-xs opacity-70">Futuristic</div>
+              <div className="font-semibold text-sm">{t('controls.gradient')}</div>
+              <div className="text-xs opacity-70">{t('controls.futuristic')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'fitness')}
@@ -2714,18 +2714,18 @@ const Controls: React.FC = () => {
                   : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
               }`}
             >
-              <div className="font-semibold text-sm">Fitness</div>
-              <div className="text-xs opacity-70">Bold & Dynamic</div>
+              <div className="font-semibold text-sm">{t('controls.fitness')}</div>
+              <div className="text-xs opacity-70">{t('controls.boldDynamic')}</div>
             </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
             {currentVariant === 'modern' 
-              ? '✨ Full-screen hero with image background' 
+              ? `✨ ${t('controls.fullScreenHero')}` 
               : currentVariant === 'gradient'
-                ? '🎨 Modern layout with gradient effects & floating elements'
+                ? `🎨 ${t('controls.gradientLayout')}`
                 : currentVariant === 'fitness'
-                  ? '💪 Bold design with energy and impact for gyms/sports'
-                  : '📐 Traditional side-by-side layout'}
+                  ? `💪 ${t('controls.fitnessLayout')}`
+                  : `📐 ${t('controls.traditionalLayout')}`}
           </p>
         </div>
 
@@ -2785,22 +2785,22 @@ const Controls: React.FC = () => {
         {/* Content */}
         <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2 mt-4">
           <Type size={14} />
-          Content
+          {t('controls.content')}
         </h4>
         
-        <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
+        <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
           <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
         </AIFormControl>
-        <FontSizeSelector label="Headline Size" value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
         
-        <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
+        <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
           <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
         </AIFormControl>
-        <FontSizeSelector label="Subheadline Size" value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
         
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Primary CTA" value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
-          <Input label="Secondary CTA" value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+          <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
+          <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
         </div>
 
         {/* Badge */}
@@ -2808,7 +2808,7 @@ const Controls: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
               <Star size={14} />
-              Badge
+              {t('controls.badge')}
             </h4>
             <ToggleControl 
               label="" 
@@ -2820,12 +2820,12 @@ const Controls: React.FC = () => {
             <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
               <div className="grid grid-cols-2 gap-3">
                 <IconSelector 
-                  label="Icon" 
+                  label={t('controls.icon')} 
                   value={data.hero.badgeIcon || 'sparkles'} 
                   onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
                   size="sm"
                 />
-                <Input label="Text" value={data.hero.badgeText || ''} onChange={(e) => setNestedData('hero.badgeText', e.target.value)} className="mb-0" />
+                <Input label={t('controls.text')} value={data.hero.badgeText || ''} onChange={(e) => setNestedData('hero.badgeText', e.target.value)} className="mb-0" />
               </div>
             </div>
           )}
@@ -2833,7 +2833,7 @@ const Controls: React.FC = () => {
 
         {/* Image */}
         <ImagePicker 
-          label="Hero Image" 
+          label={t('controls.heroImage')} 
           value={data.hero.imageUrl} 
           onChange={(url) => setNestedData('hero.imageUrl', url)} 
         />
@@ -2843,16 +2843,16 @@ const Controls: React.FC = () => {
           <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
             <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
               <Layout size={14} />
-              Image Layout
+              {t('controls.layout')}
             </label>
             
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Position</label>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.position')}</label>
                 <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                   {[
-                    { value: 'left', label: 'Left', icon: '←' },
-                    { value: 'right', label: 'Right', icon: '→' }
+                    { value: 'left', label: t('controls.left'), icon: '←' },
+                    { value: 'right', label: t('controls.right'), icon: '→' }
                   ].map(pos => (
                     <button 
                       key={pos.value}
@@ -3601,12 +3601,12 @@ const Controls: React.FC = () => {
           <div className="flex-shrink-0 p-4 border-b border-editor-border bg-editor-panel-bg/30">
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                Properties
+                {t('controls.properties')}
               </h3>
               <button
                 onClick={() => onSectionSelect(null as any)}
                 className="p-1 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded transition-colors"
-                title="Close properties panel"
+                title={t('controls.closePropertiesPanel')}
               >
                 <X size={16} />
               </button>

@@ -191,7 +191,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xl font-semibold text-editor-text-primary">Subscription Plans</h3>
-                                <button onClick={handleCreatePlan} className="flex items-center text-sm font-semibold py-2 px-4 rounded-lg bg-editor-accent text-editor-bg hover:bg-editor-accent-hover transition-colors"><Plus size={16} className="mr-1.5" /> Create Plan</button>
+                                <button onClick={handleCreatePlan} className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors"><Plus size={16} className="mr-1.5" /> Create Plan</button>
                             </div>
                             
                             {/* Mobile & Tablet View */}

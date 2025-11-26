@@ -125,7 +125,7 @@ const AccessibilityChecker: React.FC = () => {
                     <button
                         onClick={runFullScan}
                         disabled={isScanning || !currentProject}
-                        className="px-4 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Play size={20} />
                         {isScanning ? 'Scanning...' : 'Run Scan'}
@@ -326,7 +326,7 @@ const AccessibilityChecker: React.FC = () => {
                     </p>
                     <button
                         onClick={runFullScan}
-                        className="px-6 py-3 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all flex items-center gap-2 mx-auto"
+                        className="px-4 py-3 text-editor-accent font-bold hover:text-editor-accent/80 transition-all flex items-center gap-2 mx-auto"
                     >
                         <Play size={20} />
                         Run Accessibility Scan

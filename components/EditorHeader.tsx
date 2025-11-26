@@ -147,27 +147,27 @@ const EditorHeader: React.FC = () => {
                 key={name}
                 title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
                 onClick={() => setPreviewDevice(name)}
-                className={`h-9 w-9 flex items-center justify-center rounded-md transition-all ${
+                className={`h-9 w-9 flex items-center justify-center transition-all ${
                   previewDevice === name 
-                    ? 'bg-editor-accent text-white' 
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                    ? 'text-editor-accent' 
+                    : 'text-editor-text-secondary hover:text-editor-text-primary'
                 }`}
               >
                 {icon}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 rounded-lg border border-editor-border/60 p-1">
+          <div className="flex items-center gap-1">
             {orientationOptions.map((option) => (
               <button
                 key={option.value}
                 title={`${option.label}${orientationDisabled ? ` (${t('editor.desktopOnlyLandscape')})` : ''}`}
                 onClick={() => setPreviewOrientation(option.value)}
                 disabled={orientationDisabled}
-                className={`h-7 w-9 text-xs font-semibold rounded-md transition-all ${
+                className={`h-9 w-9 text-xs font-semibold transition-all ${
                   previewOrientation === option.value
-                    ? 'bg-editor-accent text-white'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                    ? 'text-editor-accent'
+                    : 'text-editor-text-secondary hover:text-editor-text-primary'
                 } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-pressed={previewOrientation === option.value}
                 aria-label={`Preview ${option.label}`}
@@ -201,8 +201,8 @@ const EditorHeader: React.FC = () => {
             </span>
           </button>
 
-          {/* Publish Button - Primary CTA */}
-          <button className="bg-editor-accent hover:bg-editor-accent-hover text-white font-medium text-sm h-9 px-4 rounded-md transition-colors shadow-sm">
+          {/* Publish Button */}
+          <button className="text-editor-accent hover:text-editor-accent-hover font-medium text-sm h-9 px-3 transition-colors">
             {t('editor.publish')}
           </button>
         </div>

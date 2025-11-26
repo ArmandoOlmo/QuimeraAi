@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 
 const Label: React.FC<{ children: ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
@@ -12,6 +13,7 @@ interface AIFormControlProps {
 }
 
 const AIFormControl: React.FC<AIFormControlProps> = ({ children, label, onAssistClick }) => {
+  const { t } = useTranslation();
   const id = label.toLowerCase().replace(/\s+/g, '-');
   return (
     <div>
@@ -21,10 +23,10 @@ const AIFormControl: React.FC<AIFormControlProps> = ({ children, label, onAssist
           type="button"
           onClick={onAssistClick}
           className="flex items-center text-xs font-semibold py-1 px-2 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
-          title="Generate with AI"
+          title={t('controls.assist')}
         >
           <Sparkles size={16} className="text-editor-accent" />
-          <span className="ml-1">Assist</span>
+          <span className="ml-1">{t('controls.assist')}</span>
         </button>
       </div>
       {React.Children.map(children, child => {

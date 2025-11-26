@@ -181,7 +181,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="mb-6">
                             <button
                                 onClick={() => setShowCreateModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-semibold hover:bg-editor-accent/90 transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
                                 Crear Nuevo Administrador
@@ -342,7 +342,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                             </button>
                             <button
                                 onClick={handleCreateAdmin}
-                                className="flex-1 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-semibold hover:bg-editor-accent/90 transition-colors"
+                                className="flex-1 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                             >
                                 Crear
                             </button>

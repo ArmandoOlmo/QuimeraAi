@@ -101,7 +101,7 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                 <div className="flex justify-between"><span className="text-editor-text-secondary">Version:</span> <span className="font-semibold">{prompt.version}</span></div>
             </div>
             <div className="flex justify-end items-center space-x-2">
-                 <button onClick={() => handleEdit(prompt)} className="flex items-center text-xs font-semibold py-1.5 px-3 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"><Edit size={14} className="mr-1.5" /> Edit</button>
+                 <button onClick={() => handleEdit(prompt)} className="flex items-center text-xs font-semibold py-1.5 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"><Edit size={14} className="mr-1.5" /> Edit</button>
                  <button onClick={() => handleDelete(prompt.id)} className="flex items-center text-xs font-semibold py-1.5 px-3 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"><Trash2 size={14} className="mr-1.5" /> Delete</button>
             </div>
         </div>

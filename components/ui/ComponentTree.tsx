@@ -242,7 +242,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     {availableComponents.length > 0 && (
                         <button
                             onClick={() => setShowAddMenu(!showAddMenu)}
-                            className="p-1.5 rounded-md bg-editor-accent text-white hover:bg-editor-accent-hover transition-colors"
+                            className="p-1.5 text-editor-accent hover:text-editor-accent-hover transition-colors"
                             title={t('editor.addComponent')}
                         >
                             {showAddMenu ? <X size={14} /> : <Plus size={14} />}

@@ -118,10 +118,10 @@ const CategoryChip: React.FC<{
     <button
         onClick={onClick}
         className={`
-            px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+            px-4 py-2 font-medium text-sm transition-all duration-200
             ${active 
-                ? 'bg-editor-accent text-white shadow-lg shadow-editor-accent/30' 
-                : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
+                ? 'text-editor-accent' 
+                : 'text-editor-text-secondary hover:text-editor-text-primary'
             }
         `}
     >
@@ -357,7 +357,7 @@ const SuperAdminDashboard = () => {
                                         setSearchQuery('');
                                         setSelectedCategory('all');
                                     }}
-                                    className="px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                                    className="px-4 py-2 text-editor-accent hover:text-editor-accent/80 transition-colors font-medium"
                                 >
                                     Ver todas las funcionalidades
                                 </button>

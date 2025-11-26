@@ -104,7 +104,7 @@ const PlanEditorModal: React.FC<PlanEditorModalProps> = ({ isOpen, onClose, plan
                                 </div>
                             ))}
                         </div>
-                        <button type="button" onClick={addFeature} className="mt-2 flex items-center text-xs font-semibold py-1 px-3 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg"><Plus size={14} className="mr-1" /> Add Feature</button>
+                        <button type="button" onClick={addFeature} className="mt-2 flex items-center text-xs font-semibold py-1 px-3 text-editor-accent hover:text-editor-accent/80 transition-colors"><Plus size={14} className="mr-1" /> Add Feature</button>
                     </div>
                      <div>
                         <label className="block text-sm font-medium text-editor-text-secondary mb-2">Included Service Modules</label>
@@ -126,7 +126,7 @@ const PlanEditorModal: React.FC<PlanEditorModalProps> = ({ isOpen, onClose, plan
                 </div>
                 <div className="p-6 bg-editor-panel-bg/50 border-t border-editor-border flex justify-end items-center space-x-3">
                     <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border">Cancel</button>
-                    <button type="submit" disabled={isLoading} className="bg-editor-accent text-editor-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-editor-accent-hover disabled:opacity-50 flex items-center">{isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}{isLoading ? 'Saving...' : 'Save Plan'}</button>
+                    <button type="submit" disabled={isLoading} className="text-editor-accent font-bold py-2 px-4 hover:text-editor-accent-hover disabled:opacity-50 flex items-center transition-colors">{isLoading && <div className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin mr-2"></div>}{isLoading ? 'Saving...' : 'Save Plan'}</button>
                 </div>
             </form>
         </Modal>

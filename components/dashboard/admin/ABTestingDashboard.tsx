@@ -108,7 +108,7 @@ const ABTestingDashboard: React.FC = () => {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="px-4 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all flex items-center gap-2"
+                    className="px-3 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all flex items-center gap-2"
                 >
                     <Plus size={20} />
                     New Experiment
@@ -301,7 +301,7 @@ const ABTestingDashboard: React.FC = () => {
                     </p>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="px-6 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all"
+                        className="px-4 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all"
                     >
                         Create First Test
                     </button>
@@ -359,7 +359,7 @@ const ABTestingDashboard: React.FC = () => {
                                     </label>
                                     <button
                                         onClick={addVariant}
-                                        className="px-3 py-1 bg-editor-accent text-editor-bg text-sm font-bold rounded hover:bg-opacity-90 transition-all flex items-center gap-1"
+                                        className="px-3 py-1 text-editor-accent text-sm font-bold hover:text-editor-accent/80 transition-all flex items-center gap-1"
                                         disabled={newTest.variants && newTest.variants.length >= 10}
                                     >
                                         <Plus size={16} />
@@ -422,7 +422,7 @@ const ABTestingDashboard: React.FC = () => {
                             <button
                                 onClick={handleCreateTest}
                                 disabled={!newTest.name || (newTest.variants?.reduce((sum, v) => sum + v.weight, 0) !== 100)}
-                                className="px-6 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Create Test
                             </button>

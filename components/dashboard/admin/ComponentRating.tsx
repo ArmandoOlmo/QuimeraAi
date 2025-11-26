@@ -131,7 +131,7 @@ const ComponentRating: React.FC<ComponentRatingProps> = ({ component, onRatingAd
 
                 <button
                     onClick={() => setShowAddReview(!showAddReview)}
-                    className="px-4 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all whitespace-nowrap"
+                    className="px-3 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all whitespace-nowrap"
                 >
                     {showAddReview ? 'Cancel' : 'Write Review'}
                 </button>
@@ -163,7 +163,7 @@ const ComponentRating: React.FC<ComponentRatingProps> = ({ component, onRatingAd
 
                     <button
                         onClick={handleSubmitReview}
-                        className="px-6 py-2 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all"
+                        className="px-4 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all"
                     >
                         Submit Review
                     </button>

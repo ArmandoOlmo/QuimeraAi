@@ -164,14 +164,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="hidden sm:flex items-center gap-0.5 bg-editor-border/40 rounded-md p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`p-1.5 transition-all ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 title="Grid View"
                             >
                                 <Grid size={16} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded transition-all ${viewMode === 'list' ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`p-1.5 transition-all ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 title="List View"
                             >
                                 <List size={16} />
@@ -181,13 +181,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         {/* Filter Toggle */}
                         <button 
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all ${showFilters ? 'bg-editor-accent text-white' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'}`}
+                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${showFilters ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                         >
                             <Filter className="w-4 h-4" />
                             <span className="hidden lg:inline">Filters</span>
                         </button>
 
-                        <button onClick={createNewTemplate} className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all bg-editor-accent text-white hover:bg-editor-accent/90">
+                        <button onClick={createNewTemplate} className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-accent hover:text-editor-accent/80">
                             <Plus className="w-4 h-4" />
                             <span className="hidden sm:inline">New</span>
                         </button>
@@ -277,44 +277,36 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 )}
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                    {/* Statistics Cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                        <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
-                            <div className="flex items-center gap-2 mb-2">
-                                <LayoutTemplate size={18} className="text-editor-accent" />
-                                <span className="text-xs sm:text-sm text-editor-text-secondary">Total Templates</span>
-                            </div>
-                            <p className="text-2xl font-bold">{templates.length}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">{activeTemplates} active</p>
+                    {/* Statistics - Simple inline */}
+                    <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
+                        <div className="flex items-center gap-2">
+                            <LayoutTemplate size={16} className="text-editor-accent" />
+                            <span className="text-editor-text-secondary">Total Templates:</span>
+                            <span className="font-bold">{templates.length}</span>
+                            <span className="text-editor-text-secondary text-xs">({activeTemplates} active)</span>
                         </div>
                         
-                        <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Globe size={18} className="text-blue-500" />
-                                <span className="text-xs sm:text-sm text-editor-text-secondary">Sites Created</span>
-                            </div>
-                            <p className="text-2xl font-bold">{totalSitesUsingTemplates}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">from templates</p>
+                        <div className="flex items-center gap-2">
+                            <Globe size={16} className="text-blue-500" />
+                            <span className="text-editor-text-secondary">Sites Created:</span>
+                            <span className="font-bold">{totalSitesUsingTemplates}</span>
+                            <span className="text-editor-text-secondary text-xs">from templates</span>
                         </div>
                         
-                        <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
-                            <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp size={18} className="text-green-500" />
-                                <span className="text-xs sm:text-sm text-editor-text-secondary">Most Popular</span>
-                            </div>
-                            <p className="text-sm font-bold truncate">{mostUsedTemplate?.name || 'N/A'}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">
-                                {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} uses` : ''}
-                            </p>
+                        <div className="flex items-center gap-2">
+                            <TrendingUp size={16} className="text-green-500" />
+                            <span className="text-editor-text-secondary">Most Popular:</span>
+                            <span className="font-bold">{mostUsedTemplate?.name || 'N/A'}</span>
+                            <span className="text-editor-text-secondary text-xs">
+                                {mostUsedTemplate ? `(${getTemplateUsage(mostUsedTemplate.id)} uses)` : ''}
+                            </span>
                         </div>
                         
-                        <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Archive size={18} className="text-orange-500" />
-                                <span className="text-xs sm:text-sm text-editor-text-secondary">Archived</span>
-                            </div>
-                            <p className="text-2xl font-bold">{archivedTemplates}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">templates</p>
+                        <div className="flex items-center gap-2">
+                            <Archive size={16} className="text-orange-500" />
+                            <span className="text-editor-text-secondary">Archived:</span>
+                            <span className="font-bold">{archivedTemplates}</span>
+                            <span className="text-editor-text-secondary text-xs">templates</span>
                         </div>
                     </div>
 

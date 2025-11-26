@@ -709,7 +709,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     <button 
                         onClick={handleGenerate}
                         disabled={isGenerating || !prompt}
-                        className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:scale-[1.02]"
+                        className="w-full py-3 text-purple-500 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-purple-400"
                     >
                         {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
                         {isGenerating ? 'Generating...' : 'Generate Image'}
@@ -749,7 +749,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         {/* Filter Toggle */}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${showFilters ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80 text-foreground'}`}
+                            className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors ${showFilters ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Filters"
                         >
                             <Filter size={14} />
@@ -758,7 +758,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         {/* Selection Mode Toggle */}
                         <button 
                             onClick={library.toggleSelectionMode}
-                            className={`flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all ${library.isSelectionMode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}
+                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${library.isSelectionMode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Selection Mode"
                         >
                             <CheckSquare className="w-4 h-4" />

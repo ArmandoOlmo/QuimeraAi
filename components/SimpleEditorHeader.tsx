@@ -152,26 +152,26 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
               key={name}
               title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
               onClick={() => setPreviewDevice(name)}
-              className={`h-9 w-9 flex items-center justify-center rounded-md transition-all ${
+              className={`h-9 w-9 flex items-center justify-center transition-all ${
                 previewDevice === name 
-                  ? 'bg-editor-accent text-white' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-border/40'
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {icon}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border/60 p-1">
+        <div className="flex items-center gap-1">
           {orientationOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => setPreviewOrientation(option.value)}
               disabled={orientationDisabled}
-              className={`h-7 w-9 text-xs font-semibold rounded-md transition-all ${
+              className={`h-9 w-9 text-xs font-semibold transition-all ${
                 previewOrientation === option.value
-                  ? 'bg-editor-accent text-white'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-border/40'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
               } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label={`Preview ${option.label}`}
               aria-pressed={previewOrientation === option.value}
@@ -205,7 +205,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
         </button>
 
         {/* Publish Button */}
-        <button className="bg-primary hover:opacity-90 text-primary-foreground font-medium text-sm h-9 px-4 rounded-lg transition-all shadow-sm">
+        <button className="text-primary hover:text-primary/80 font-medium text-sm h-9 px-3 transition-colors">
           {t('editor.publish')}
         </button>
       </div>

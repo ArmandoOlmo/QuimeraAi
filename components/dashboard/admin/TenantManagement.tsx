@@ -312,20 +312,20 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setActiveTab('all')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                                         activeTab === 'all' 
-                                            ? 'bg-editor-accent text-editor-bg' 
-                                            : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-editor-accent' 
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
                                     }`}
                                 >
                                     Todos ({tenants.length})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('individual')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                                         activeTab === 'individual' 
-                                            ? 'bg-editor-accent text-editor-bg' 
-                                            : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-editor-accent' 
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
                                     }`}
                                 >
                                     <User size={16} />
@@ -333,10 +333,10 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('agency')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                                         activeTab === 'agency' 
-                                            ? 'bg-editor-accent text-editor-bg' 
-                                            : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-editor-accent' 
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
                                     }`}
                                 >
                                     <Building2 size={16} />
@@ -371,7 +371,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                                 <button 
                                     onClick={() => setShowCreateModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg text-sm font-semibold hover:bg-editor-accent/90 transition-colors"
+                                    className="flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
                                 >
                                     <Plus size={16} />
                                     Nuevo Tenant
@@ -403,7 +403,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             </p>
                             <button 
                                 onClick={() => setShowCreateModal(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg text-sm font-semibold hover:bg-editor-accent/90 transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
                                 Crear Primer Tenant
@@ -423,7 +423,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         </p>
                         <button 
                             onClick={() => setShowCreateModal(false)}
-                            className="w-full px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-semibold hover:bg-editor-accent/90 transition-colors"
+                            className="w-full px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                         >
                             Cerrar
                         </button>
@@ -459,7 +459,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         </div>
                         <button 
                             onClick={() => setSelectedTenant(null)}
-                            className="w-full mt-6 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-semibold hover:bg-editor-accent/90 transition-colors"
+                            className="w-full mt-6 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                         >
                             Cerrar
                         </button>

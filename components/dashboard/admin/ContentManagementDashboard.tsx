@@ -160,7 +160,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={onBack}
-                            className="flex items-center text-sm font-medium h-9 px-4 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                            className="flex items-center text-sm font-medium h-9 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
                             Back
@@ -171,34 +171,22 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-background black:bg-background">
                     <div className="max-w-7xl mx-auto">
                         
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-card border border-border rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Total Articles</p>
-                                        <p className="text-2xl font-bold text-foreground">{cmsPosts.length}</p>
-                                    </div>
-                                    <FileText className="w-8 h-8 text-primary opacity-20" />
-                                </div>
+                        {/* Stats - Simple inline */}
+                        <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
+                            <div className="flex items-center gap-2">
+                                <FileText size={16} className="text-primary" />
+                                <span className="text-muted-foreground">Total Articles:</span>
+                                <span className="font-bold">{cmsPosts.length}</span>
                             </div>
-                            <div className="bg-card border border-border rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Published</p>
-                                        <p className="text-2xl font-bold text-green-600">{publishedCount}</p>
-                                    </div>
-                                    <Globe className="w-8 h-8 text-green-600 opacity-20" />
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <Globe size={16} className="text-green-600" />
+                                <span className="text-muted-foreground">Published:</span>
+                                <span className="font-bold text-green-600">{publishedCount}</span>
                             </div>
-                            <div className="bg-card border border-border rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Drafts</p>
-                                        <p className="text-2xl font-bold text-orange-600">{draftCount}</p>
-                                    </div>
-                                    <Edit3 className="w-8 h-8 text-orange-600 opacity-20" />
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <Edit3 size={16} className="text-orange-600" />
+                                <span className="text-muted-foreground">Drafts:</span>
+                                <span className="font-bold text-orange-600">{draftCount}</span>
                             </div>
                         </div>
 
@@ -251,13 +239,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     <div className="flex border border-border rounded-lg overflow-hidden">
                                         <button 
                                             onClick={() => setViewMode('list')}
-                                            className={`p-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'bg-secondary/30 hover:bg-secondary/50'}`}
+                                            className={`p-2 ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <List size={16} />
                                         </button>
                                         <button 
                                             onClick={() => setViewMode('grid')}
-                                            className={`p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : 'bg-secondary/30 hover:bg-secondary/50'}`}
+                                            className={`p-2 ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <Grid size={16} />
                                         </button>
@@ -265,7 +253,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                     <button 
                                         onClick={handleCreateNew}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                                        className="flex items-center gap-2 px-3 py-2 text-primary font-medium text-sm transition-colors hover:text-primary/80"
                                     >
                                         <Plus size={16} />
                                         New Article

@@ -96,8 +96,8 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
 
                 <div className="p-6 bg-editor-panel-bg/50 border-t border-editor-border flex justify-end items-center space-x-3">
                     <button type="button" onClick={handleClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border transition-colors">Cancel</button>
-                    <button type="submit" disabled={isLoading} className="bg-editor-accent text-editor-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 flex items-center">
-                        {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                    <button type="submit" disabled={isLoading} className="text-editor-accent font-bold py-2 px-4 hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center">
+                        {isLoading && <div className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin mr-2"></div>}
                         {isLoading ? 'Creating...' : 'Create Component'}
                     </button>
                 </div>
