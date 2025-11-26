@@ -2296,15 +2296,49 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const snapshot = await uploadBytes(storageRef, blob);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            // Create DB Record
+            // Generate title using Gemini to interpret the image
+            let generatedTitle = fileName; // Default fallback
+            try {
+                const titleResponse = await ai.models.generateContent({
+                    model: 'gemini-2.0-flash',
+                    contents: [
+                        {
+                            text: 'Generate a short, descriptive title (maximum 5 words) for this image. Only respond with the title, nothing else. No quotes, no explanation.'
+                        },
+                        {
+                            inlineData: {
+                                mimeType: 'image/jpeg',
+                                data: base64Image
+                            }
+                        }
+                    ]
+                });
+                
+                const titleText = titleResponse.text?.trim();
+                if (titleText && titleText.length > 0 && titleText.length < 100) {
+                    // Clean up the title and create a valid filename
+                    generatedTitle = titleText
+                        .replace(/[^a-zA-Z0-9\s\-áéíóúñüÁÉÍÓÚÑÜ]/g, '') // Remove special chars
+                        .trim()
+                        .substring(0, 50); // Limit length
+                    if (generatedTitle.length === 0) {
+                        generatedTitle = fileName;
+                    }
+                }
+            } catch (titleError) {
+                console.warn('Could not generate title for image:', titleError);
+                // Keep default fileName as title
+            }
+
+            // Create DB Record with simplified notes (just the prompt)
             const newFileRecord: Omit<FileRecord, 'id'> = {
-                name: fileName,
+                name: generatedTitle,
                 storagePath: snapshot.ref.fullPath,
                 downloadURL,
                 size: blob.size,
                 type: 'image/jpeg',
                 createdAt: serverTimestamp() as any,
-                notes: `AI Generated via ${modelName}. Prompt: "${prompt}". Options: ${JSON.stringify(options)}`,
+                notes: prompt, // Only the prompt used
                 aiSummary: ''
             };
 
