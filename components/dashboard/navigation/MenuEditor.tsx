@@ -286,7 +286,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                             />
                         </div>
                     </div>
-                    <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
+                    <div className="py-1 max-h-80 overflow-y-auto custom-scrollbar">
                         {filteredPosts.length === 0 ? (
                             <div className="px-4 py-2 text-xs text-muted-foreground">No published articles found.</div>
                         ) : (
@@ -431,12 +431,12 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                         )}
 
                         {/* Menu Items Section */}
-                        <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm">
                              <div className="p-6 border-b border-border">
                                 <h3 className="text-md font-semibold text-foreground">Menu items</h3>
                              </div>
 
-                             <div className="divide-y divide-border">
+                             <div className="divide-y divide-border overflow-visible">
                                 {items.length === 0 ? (
                                     <div className="p-8 text-center text-muted-foreground text-sm">
                                         This menu doesn't have any items yet.
@@ -453,13 +453,13 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                                             onDragEnd={handleDragEnd}
                                         >
                                             {editingItemId === item.id ? (
-                                                <div className="p-4 bg-secondary/10">
+                                                <div className="p-4 bg-secondary/10 overflow-visible">
                                                     <div className="flex justify-between items-center mb-4">
                                                         <span className="text-sm font-semibold">Edit item</span>
                                                         <button onClick={() => setEditingItemId(null)}><X size={16} className="text-muted-foreground"/></button>
                                                     </div>
-                                                    <div className="space-y-4">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="space-y-4 overflow-visible">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
                                                             <div>
                                                                 <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
                                                                 <input 
@@ -493,7 +493,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                                                                 {linkPickerOpenId === item.id && (
                                                                     <div 
                                                                         ref={pickerRef}
-                                                                        className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 animate-fade-in-up"
+                                                                        className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-lg shadow-2xl z-[100] animate-fade-in-up"
+                                                                        style={{ minHeight: 'auto', maxHeight: '400px' }}
                                                                     >
                                                                         {renderLinkPickerContent(item)}
                                                                     </div>

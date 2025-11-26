@@ -1,422 +1,560 @@
-
 <!DOCTYPE html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quimera.ai</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Abel&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Narrow:wght@400;700&family=Arimo:wght@400;700&family=Arvo:wght@400;700&family=Asap:wght@400;700&family=Bitter:wght@400;700&family=Bree+Serif&family=Cabin:wght@400;700&family=Cardo:wght@400;700&family=Crimson+Text:wght@400;700&family=Dancing+Script:wght@400;700&family=Dosis:wght@400;700&family=Exo+2:wght@400;700&family=Fira+Sans:wght@400;700&family=Francois+One&family=Inconsolata:wght@400;700&family=Indie+Flower&family=Josefin+Sans:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700;900&family=Mulish:wght@400;700&family=Nobile:wght@400;700&family=Noticia+Text:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Serif:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Oxygen:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Questrial&family=Quicksand:wght@400;700&family=Raleway:wght@400;700;900&family=Roboto:wght@400;700&family=Signika:wght@400;700&family=Slabo+27px&family=Source+Sans+Pro:wght@400;700&family=Titillium+Web:wght@400;700&family=Ubuntu:wght@300;400;500;700&family=Varela+Round&family=Vollkorn:wght@400;700&family=Yanone+Kaffeesatz:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <style>
-      :root {
-        /* QUIMERA THEME - Light Mode (Porcelain & Slate) */
-        /* Background: Very subtle Cool Gray to reduce eye strain compared to pure white */
-        --background: 210 40% 98%;  /* #F8FAFC */
-        --foreground: 222 47% 11%;  /* #0F172A - Deep Slate, readable & professional */
-        
-        /* Cards: Pure White to pop against the light gray background */
-        --card: 0 0% 100%;          /* #FFFFFF */
-        --card-foreground: 222 47% 11%;
-        
-        /* Popovers */
-        --popover: 0 0% 100%;
-        --popover-foreground: 222 47% 11%;
-        
-        /* Primary: Cadmium Yellow (Brand Identity) */
-        --primary: 41 96% 58%;      /* #FBB92B - Cadmium Yellow */
-        --primary-foreground: 0 0% 100%; /* White text on yellow buttons */
-        
-        /* Secondary: Light Slate for subtle elements/hovers */
-        --secondary: 210 40% 96.1%; /* #F1F5F9 */
-        --secondary-foreground: 222 47% 11.2%;
-        
-        /* Muted */
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215 16% 47%; /* #64748B - Slate 500 */
-        
-        /* Accent */
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222 47% 11.2%;
-        
-        /* Destructive */
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
-        
-        /* Borders - Soft Slate */
-        --border: 214 32% 91%;      /* #E2E8F0 */
-        --input: 214 32% 91%;
-        --ring: 41 96% 58%;         /* Matches Primary - Cadmium Yellow */
-        --radius: 0.75rem;
-        
-        /* Editor Specific Mappings - Explicit Hex for Consistency */
-        --editor-bg: #F3F4F6;       /* Gray 100 - The canvas background */
-        --editor-panel-bg: #FFFFFF; /* White - The sidebar/panels */
-        --editor-border: #E5E7EB;   /* Gray 200 */
-        --editor-accent: #FBB92B;   /* Cadmium Yellow */
-        --editor-text-primary: #111827;   /* Gray 900 */
-        --editor-text-secondary: #6B7280; /* Gray 500 */
-      }
-  
-      .dark {
-        /* QUIMERA THEME (Dark Mode - Improved Contrast) */
-        /* Background: Purple más claro para reducir fatiga visual */
-        --background: 272 45% 14%;  /* #251636 - Más claro, menos cansancio */
-        --foreground: 0 0% 98%;     /* Texto casi blanco para mejor contraste */
-        
-        /* Cards: Mayor diferencia con el fondo */
-        --card: 268 35% 22%;        /* #382952 - Mucho mejor contraste */
-        --card-foreground: 0 0% 98%;
-        
-        /* Popovers */
-        --popover: 268 35% 22%;
-        --popover-foreground: 0 0% 98%;
-        
-        /* Primary: Cadmium Yellow */
-        --primary: 41 96% 58%;      /* #FBB92B - Cadmium Yellow */
-        --primary-foreground: 272 47% 10%; /* Purple text on yellow */
-        
-        /* Secondary: Purple más visible */
-        --secondary: 268 38% 35%;   /* #5C3D7A - Más claro y visible */
-        --secondary-foreground: 0 0% 100%;
-        
-        /* Muted: Más contraste */
-        --muted: 268 25% 25%;       /* Más claro */
-        --muted-foreground: 265 12% 75%; /* Texto más claro y legible */
-        
-        /* Accent: Purple vibrante */
-        --accent: 268 45% 45%;      /* #7A569D - Más visible */
-        --accent-foreground: 0 0% 100%;
-        
-        /* Destructive */
-        --destructive: 0 65% 50%;   /* Más brillante y visible */
-        --destructive-foreground: 0 0% 100%;
-        
-        /* Borders: Mucho más visibles */
-        --border: 266 30% 32%;      /* #4F3B66 - Borders claramente visibles */
-        --input: 266 30% 32%;
-        --ring: 41 96% 58%;         /* Focus ring - Cadmium Yellow */
 
-        /* Editor Mapping for existing components */
-        --editor-bg: hsl(272, 45%, 14%);
-        --editor-panel-bg: hsl(268, 35%, 22%);
-        --editor-border: hsl(266, 30%, 32%);
-        --editor-accent: hsl(41, 96%, 58%);  /* Cadmium Yellow */
-        --editor-text-primary: hsl(0, 0%, 98%);
-        --editor-text-secondary: hsl(265, 12%, 75%);
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quimera.ai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Abel&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Narrow:wght@400;700&family=Arimo:wght@400;700&family=Arvo:wght@400;700&family=Asap:wght@400;700&family=Bitter:wght@400;700&family=Bree+Serif&family=Cabin:wght@400;700&family=Cardo:wght@400;700&family=Crimson+Text:wght@400;700&family=Dancing+Script:wght@400;700&family=Dosis:wght@400;700&family=Exo+2:wght@400;700&family=Fira+Sans:wght@400;700&family=Francois+One&family=Inconsolata:wght@400;700&family=Indie+Flower&family=Josefin+Sans:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700;900&family=Mulish:wght@400;700&family=Nobile:wght@400;700&family=Noticia+Text:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Serif:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Oxygen:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Questrial&family=Quicksand:wght@400;700&family=Raleway:wght@400;700;900&family=Roboto:wght@400;700&family=Signika:wght@400;700&family=Slabo+27px&family=Source+Sans+Pro:wght@400;700&family=Titillium+Web:wght@400;700&family=Ubuntu:wght@300;400;500;700&family=Varela+Round&family=Vollkorn:wght@400;700&family=Yanone+Kaffeesatz:wght@400;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <style>
+    :root {
+      /* QUIMERA THEME - Light Mode (Porcelain & Slate) */
+      /* Background: Very subtle Cool Gray to reduce eye strain compared to pure white */
+      --background: 210 40% 98%;
+      /* #F8FAFC */
+      --foreground: 222 47% 11%;
+      /* #0F172A - Deep Slate, readable & professional */
+
+      /* Cards: Pure White to pop against the light gray background */
+      --card: 0 0% 100%;
+      /* #FFFFFF */
+      --card-foreground: 222 47% 11%;
+
+      /* Popovers */
+      --popover: 0 0% 100%;
+      --popover-foreground: 222 47% 11%;
+
+      /* Primary: Cadmium Yellow (Brand Identity) */
+      --primary: 41 96% 58%;
+      /* #FBB92B - Cadmium Yellow */
+      --primary-foreground: 0 0% 100%;
+      /* White text on yellow buttons */
+
+      /* Secondary: Light Slate for subtle elements/hovers */
+      --secondary: 210 40% 96.1%;
+      /* #F1F5F9 */
+      --secondary-foreground: 222 47% 11.2%;
+
+      /* Muted */
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215 16% 47%;
+      /* #64748B - Slate 500 */
+
+      /* Accent */
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222 47% 11.2%;
+
+      /* Destructive */
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+
+      /* Borders - Soft Slate */
+      --border: 214 32% 91%;
+      /* #E2E8F0 */
+      --input: 214 32% 91%;
+      --ring: 41 96% 58%;
+      /* Matches Primary - Cadmium Yellow */
+      --radius: 0.75rem;
+
+      /* Editor Specific Mappings - Explicit Hex for Consistency */
+      --editor-bg: #F3F4F6;
+      /* Gray 100 - The canvas background */
+      --editor-panel-bg: #FFFFFF;
+      /* White - The sidebar/panels */
+      --editor-border: #E5E7EB;
+      /* Gray 200 */
+      --editor-accent: #FBB92B;
+      /* Cadmium Yellow */
+      --editor-text-primary: #111827;
+      /* Gray 900 */
+      --editor-text-secondary: #6B7280;
+      /* Gray 500 */
+    }
+
+    .dark {
+      /* QUIMERA THEME (Dark Mode - Improved Contrast) */
+      /* Background: Purple más claro para reducir fatiga visual */
+      --background: 272 45% 14%;
+      /* #251636 - Más claro, menos cansancio */
+      --foreground: 0 0% 98%;
+      /* Texto casi blanco para mejor contraste */
+
+      /* Cards: Mayor diferencia con el fondo */
+      --card: 268 35% 22%;
+      /* #382952 - Mucho mejor contraste */
+      --card-foreground: 0 0% 98%;
+
+      /* Popovers */
+      --popover: 268 35% 22%;
+      --popover-foreground: 0 0% 98%;
+
+      /* Primary: Cadmium Yellow */
+      --primary: 41 96% 58%;
+      /* #FBB92B - Cadmium Yellow */
+      --primary-foreground: 272 47% 10%;
+      /* Purple text on yellow */
+
+      /* Secondary: Purple más visible */
+      --secondary: 268 38% 35%;
+      /* #5C3D7A - Más claro y visible */
+      --secondary-foreground: 0 0% 100%;
+
+      /* Muted: Más contraste */
+      --muted: 268 25% 25%;
+      /* Más claro */
+      --muted-foreground: 265 12% 75%;
+      /* Texto más claro y legible */
+
+      /* Accent: Purple vibrante */
+      --accent: 268 45% 45%;
+      /* #7A569D - Más visible */
+      --accent-foreground: 0 0% 100%;
+
+      /* Destructive */
+      --destructive: 0 65% 50%;
+      /* Más brillante y visible */
+      --destructive-foreground: 0 0% 100%;
+
+      /* Borders: Mucho más visibles */
+      --border: 266 30% 32%;
+      /* #4F3B66 - Borders claramente visibles */
+      --input: 266 30% 32%;
+      --ring: 41 96% 58%;
+      /* Focus ring - Cadmium Yellow */
+
+      /* Editor Mapping for existing components */
+      --editor-bg: hsl(272, 45%, 14%);
+      --editor-panel-bg: hsl(268, 35%, 22%);
+      --editor-border: hsl(266, 30%, 32%);
+      --editor-accent: hsl(41, 96%, 58%);
+      /* Cadmium Yellow */
+      --editor-text-primary: hsl(0, 0%, 98%);
+      --editor-text-secondary: hsl(265, 12%, 75%);
+    }
+
+    /* BLACK MODE - OLED Optimized */
+    .black {
+      /* Background: Negro puro para OLED */
+      --background: 0 0% 0%;
+      /* #000000 - True Black OLED */
+      --foreground: 0 0% 100%;
+      /* #FFFFFF - Blanco puro */
+
+      /* Cards: Gris muy oscuro pero visible sobre negro */
+      --card: 0 0% 6%;
+      /* #0F0F0F - Se diferencia claramente */
+      --card-foreground: 0 0% 100%;
+
+      /* Popovers: Ligeramente más claro que cards */
+      --popover: 0 0% 8%;
+      /* #141414 */
+      --popover-foreground: 0 0% 100%;
+
+      /* Primary: Cadmium Yellow (Quimera brand) */
+      --primary: 41 96% 58%;
+      /* #FBB92B - Cadmium Yellow */
+      --primary-foreground: 0 0% 0%;
+      /* Black text on bright yellow */
+
+      /* Secondary: Gris oscuro claramente visible */
+      --secondary: 0 0% 18%;
+      /* #2E2E2E - Mucho más visible */
+      --secondary-foreground: 0 0% 100%;
+
+      /* Muted: Mayor contraste */
+      --muted: 0 0% 18%;
+      --muted-foreground: 0 0% 70%;
+      /* #B3B3B3 - Más legible */
+
+      /* Accent: Cadmium Yellow para coherencia */
+      --accent: 41 96% 58%;
+      /* Cadmium Yellow */
+      --accent-foreground: 0 0% 0%;
+
+      /* Destructive: Rojo más visible */
+      --destructive: 0 70% 55%;
+      --destructive-foreground: 0 0% 100%;
+
+      /* Borders: Grises claramente visibles */
+      --border: 0 0% 20%;
+      /* #333333 - Muy visibles */
+      --input: 0 0% 20%;
+      --ring: 41 96% 58%;
+      /* Cadmium Yellow */
+
+      /* Editor Mappings */
+      --editor-bg: #000000;
+      /* True Black */
+      --editor-panel-bg: #0F0F0F;
+      /* Panels visibles */
+      --editor-border: #333333;
+      /* Borders claramente visibles */
+      --editor-accent: #FBB92B;
+      /* Cadmium Yellow */
+      --editor-text-primary: #FFFFFF;
+      --editor-text-secondary: #B3B3B3;
+      /* Más legible */
+    }
+
+    body {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Custom Scrollbar for the Quimera look */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: hsl(var(--background));
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--border));
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--primary));
+    }
+
+    /* Utility Classes for Drag & Drop */
+    .drag-container:active {
+      cursor: grabbing;
+    }
+
+    .drag-container.dragging {
+      opacity: 0.4;
+      background: hsl(var(--accent));
+    }
+
+    .drag-container.drag-over>div {
+      outline: 2px dashed hsl(var(--primary));
+      outline-offset: -2px;
+      background-color: hsla(var(--primary), 0.1);
+    }
+
+    .editing-section>section {
+      outline: 2px solid hsl(var(--primary));
+      outline-offset: 2px;
+      box-shadow: 0 0 15px hsla(var(--primary), 0.4);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .editable-section:hover>section {
+      outline: 2px dashed hsl(var(--primary));
+      outline-offset: 2px;
+      transition: outline 0.2s ease-in-out;
+    }
+
+    /* Image Styles */
+    .img-style-float {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    .img-style-float:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px hsla(var(--primary), 0.2);
+    }
+
+    .img-style-hexagon {
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    }
+
+    .img-style-polaroid {
+      background: white;
+      padding: 1rem 1rem 3rem 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: rotate(-3deg);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .img-style-polaroid:hover {
+      transform: rotate(0deg) scale(1.05);
+    }
+
+    /* Hero Float Animation */
+    @keyframes heroFloat {
+
+      0%,
+      100% {
+        transform: translateY(0px);
       }
 
-      /* BLACK MODE - OLED Optimized */
-      .black {
-        /* Background: Negro puro para OLED */
-        --background: 0 0% 0%;        /* #000000 - True Black OLED */
-        --foreground: 0 0% 100%;      /* #FFFFFF - Blanco puro */
-        
-        /* Cards: Gris muy oscuro pero visible sobre negro */
-        --card: 0 0% 6%;              /* #0F0F0F - Se diferencia claramente */
-        --card-foreground: 0 0% 100%;
-        
-        /* Popovers: Ligeramente más claro que cards */
-        --popover: 0 0% 8%;           /* #141414 */
-        --popover-foreground: 0 0% 100%;
-        
-        /* Primary: Cadmium Yellow (Quimera brand) */
-        --primary: 41 96% 58%;        /* #FBB92B - Cadmium Yellow */
-        --primary-foreground: 0 0% 0%; /* Black text on bright yellow */
-        
-        /* Secondary: Gris oscuro claramente visible */
-        --secondary: 0 0% 18%;        /* #2E2E2E - Mucho más visible */
-        --secondary-foreground: 0 0% 100%;
-        
-        /* Muted: Mayor contraste */
-        --muted: 0 0% 18%;
-        --muted-foreground: 0 0% 70%; /* #B3B3B3 - Más legible */
-        
-        /* Accent: Cadmium Yellow para coherencia */
-        --accent: 41 96% 58%;         /* Cadmium Yellow */
-        --accent-foreground: 0 0% 0%;
-        
-        /* Destructive: Rojo más visible */
-        --destructive: 0 70% 55%;
-        --destructive-foreground: 0 0% 100%;
-        
-        /* Borders: Grises claramente visibles */
-        --border: 0 0% 20%;           /* #333333 - Muy visibles */
-        --input: 0 0% 20%;
-        --ring: 41 96% 58%;           /* Cadmium Yellow */
+      50% {
+        transform: translateY(-20px);
+      }
+    }
 
-        /* Editor Mappings */
-        --editor-bg: #000000;         /* True Black */
-        --editor-panel-bg: #0F0F0F;   /* Panels visibles */
-        --editor-border: #333333;     /* Borders claramente visibles */
-        --editor-accent: #FBB92B;     /* Cadmium Yellow */
-        --editor-text-primary: #FFFFFF;
-        --editor-text-secondary: #B3B3B3; /* Más legible */
+    .animate-hero-float {
+      animation: heroFloat 6s ease-in-out infinite;
+    }
+
+    /* Shimmer Animation for Skeleton Loading */
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
       }
 
-      body {
-        background-color: hsl(var(--background));
-        color: hsl(var(--foreground));
-        font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .animate-shimmer {
+      animation: shimmer 2s infinite linear;
+    }
+
+    /* Slideshow Fade In Animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
       }
 
-      /* Custom Scrollbar for the Quimera look */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+      to {
+        opacity: 1;
       }
-      ::-webkit-scrollbar-track {
-        background: hsl(var(--background)); 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: hsl(var(--border)); 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: hsl(var(--primary)); 
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* Fade In Up Animation */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
       }
 
-      /* Utility Classes for Drag & Drop */
-      .drag-container:active { cursor: grabbing; }
-      .drag-container.dragging { opacity: 0.4; background: hsl(var(--accent)); }
-      .drag-container.drag-over > div { outline: 2px dashed hsl(var(--primary)); outline-offset: -2px; background-color: hsla(var(--primary), 0.1); }
-      .editing-section > section { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; box-shadow: 0 0 15px hsla(var(--primary), 0.4); transition: all 0.3s ease-in-out; }
-      .editable-section:hover > section { outline: 2px dashed hsl(var(--primary)); outline-offset: 2px; transition: outline 0.2s ease-in-out; }
-      
-      /* Image Styles */
-      .img-style-float { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
-      .img-style-float:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px hsla(var(--primary), 0.2); }
-      .img-style-hexagon { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
-      .img-style-polaroid { background: white; padding: 1rem 1rem 3rem 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: rotate(-3deg); transition: transform 0.3s ease-in-out; }
-      .img-style-polaroid:hover { transform: rotate(0deg) scale(1.05); }
-      
-      /* Hero Float Animation */
-      @keyframes heroFloat {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      .animate-hero-float { animation: heroFloat 6s ease-in-out infinite; }
-      
-      /* Shimmer Animation for Skeleton Loading */
-      @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-      }
-      .animate-shimmer { animation: shimmer 2s infinite linear; }
+    }
 
-      /* Slideshow Fade In Animation */
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      .animate-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Fade In Down Animation */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
       }
 
-      /* Fade In Up Animation */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-down {
+      animation: fadeInDown 0.6s ease-out forwards;
+    }
+
+    /* Slide Down Animation */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-slide-down {
+      animation: slideDown 0.4s ease-out forwards;
+    }
+
+    /* Slide Up Animation */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.4s ease-out forwards;
+    }
+
+    /* Scale In Animation */
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.5s ease-out forwards;
+    }
+
+    /* Bounce In Animation */
+    @keyframes bounceIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.3);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+
+      70% {
+        transform: scale(0.9);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .animate-bounce-in {
+      animation: bounceIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    /* Gradient Shift Animation for Testimonials */
+    @keyframes gradientShift {
+
+      0%,
+      100% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    /* Site Content Colors - Default Mappings */
+    :root {
+      --site-heading-color: #111827;
+      --site-body-color: #4B5563;
+    }
+
+    html.dark {
+      --site-heading-color: #F9FAFB;
+      --site-body-color: #9CA3AF;
+    }
+
+    /* Site Content Colors for Black Mode */
+    html.black {
+      --site-heading-color: #FFFFFF;
+      --site-body-color: #A1A1AA;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      plugins: [
+        function ({ addVariant }) {
+          addVariant('black', '.black &');
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-      }
-
-      /* Fade In Down Animation */
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-fade-in-down {
-        animation: fadeInDown 0.6s ease-out forwards;
-      }
-
-      /* Slide Down Animation */
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-slide-down {
-        animation: slideDown 0.4s ease-out forwards;
-      }
-
-      /* Slide Up Animation */
-      @keyframes slideUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-slide-up {
-        animation: slideUp 0.4s ease-out forwards;
-      }
-
-      /* Scale In Animation */
-      @keyframes scaleIn {
-        from {
-          opacity: 0;
-          transform: scale(0.9);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-      .animate-scale-in {
-        animation: scaleIn 0.5s ease-out forwards;
-      }
-
-      /* Bounce In Animation */
-      @keyframes bounceIn {
-        0% {
-          opacity: 0;
-          transform: scale(0.3);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1.05);
-        }
-        70% {
-          transform: scale(0.9);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-      .animate-bounce-in {
-        animation: bounceIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-      }
-
-      /* Gradient Shift Animation for Testimonials */
-      @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-      }
-
-      /* Site Content Colors - Default Mappings */
-      :root {
-        --site-heading-color: #111827;
-        --site-body-color: #4B5563;
-      }
-      html.dark {
-        --site-heading-color: #F9FAFB;
-        --site-body-color: #9CA3AF;
-      }
-      /* Site Content Colors for Black Mode */
-      html.black {
-        --site-heading-color: #FFFFFF;
-        --site-body-color: #A1A1AA;
-      }
-    </style>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        plugins: [
-          function({ addVariant }) {
-            addVariant('black', '.black &');
-          }
-        ],
-        theme: {
-          extend: {
-            colors: {
-              border: "hsl(var(--border))",
-              input: "hsl(var(--input))",
-              ring: "hsl(var(--ring))",
-              background: "hsl(var(--background))",
-              foreground: "hsl(var(--foreground))",
-              primary: {
-                DEFAULT: "hsl(var(--primary))",
-                foreground: "hsl(var(--primary-foreground))",
-              },
-              secondary: {
-                DEFAULT: "hsl(var(--secondary))",
-                foreground: "hsl(var(--secondary-foreground))",
-              },
-              destructive: {
-                DEFAULT: "hsl(var(--destructive))",
-                foreground: "hsl(var(--destructive-foreground))",
-              },
-              muted: {
-                DEFAULT: "hsl(var(--muted))",
-                foreground: "hsl(var(--muted-foreground))",
-              },
-              accent: {
-                DEFAULT: "hsl(var(--accent))",
-                foreground: "hsl(var(--accent-foreground))",
-              },
-              popover: {
-                DEFAULT: "hsl(var(--popover))",
-                foreground: "hsl(var(--popover-foreground))",
-              },
-              card: {
-                DEFAULT: "hsl(var(--card))",
-                foreground: "hsl(var(--card-foreground))",
-              },
-              // Legacy Editor Mapping
-              editor: {
-                bg: "var(--editor-bg)",
-                'panel-bg': "var(--editor-panel-bg)",
-                border: "var(--editor-border)",
-                accent: "var(--editor-accent)",
-                'accent-hover': "hsl(var(--primary) / 0.8)",
-                text: {
-                    primary: "var(--editor-text-primary)",
-                    secondary: "var(--editor-text-secondary)",
-                }
-              },
-              // Site Colors
-              'site-heading': 'var(--site-heading-color)',
-              'site-body': 'var(--site-body-color)',
+      ],
+      theme: {
+        extend: {
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
             },
-            borderRadius: {
-              lg: "var(--radius)",
-              md: "calc(var(--radius) - 2px)",
-              sm: "calc(var(--radius) - 4px)",
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
             },
-            fontFamily: {
-              sans: ['Ubuntu', 'sans-serif'],
-              header: 'var(--font-header)',
-              body: 'var(--font-body)',
-              button: 'var(--font-button)',
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))",
             },
-            animation: {
-              'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))",
             },
-            keyframes: {
-              fadeInUp: {
-                '0%': { opacity: 0, transform: 'translateY(20px)' },
-                '100%': { opacity: 1, transform: 'translateY(0)' },
-              },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))",
+            },
+            popover: {
+              DEFAULT: "hsl(var(--popover))",
+              foreground: "hsl(var(--popover-foreground))",
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))",
+            },
+            // Legacy Editor Mapping
+            editor: {
+              bg: "var(--editor-bg)",
+              'panel-bg': "var(--editor-panel-bg)",
+              border: "var(--editor-border)",
+              accent: "var(--editor-accent)",
+              'accent-hover': "hsl(var(--primary) / 0.8)",
+              text: {
+                primary: "var(--editor-text-primary)",
+                secondary: "var(--editor-text-secondary)",
+              }
+            },
+            // Site Colors
+            'site-heading': 'var(--site-heading-color)',
+            'site-body': 'var(--site-body-color)',
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+          fontFamily: {
+            sans: ['Ubuntu', 'sans-serif'],
+            header: 'var(--font-header)',
+            body: 'var(--font-body)',
+            button: 'var(--font-button)',
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: 0, transform: 'translateY(20px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
             },
           },
         },
-      }
-    </script>
+      },
+    }
+  </script>
   <script type="importmap">
 {
   "imports": {
@@ -432,9 +570,11 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-    <div id="portal-root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <div id="portal-root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

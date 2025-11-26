@@ -27,6 +27,13 @@ cleanup() {
 # Registrar cleanup para ejecutar en caso de error
 trap cleanup EXIT
 
+# Cargar variables desde .env.local si existe
+if [ -f .env.local ]; then
+    echo "📥 Cargando variables desde .env.local..."
+    # Exportar variables ignorando comentarios y líneas vacías
+    export $(grep -v '^#' .env.local | grep -v '^$' | xargs)
+fi
+
 # Paso 1: Hacer backup del .env.local si existe
 if [ -f .env.local ]; then
     echo "📦 Haciendo backup de .env.local..."
@@ -128,15 +135,34 @@ echo -e "${BLUE}🚢 Desplegando...${NC}"
 echo "Esto puede tomar varios minutos..."
 echo ""
 
+echo -e "${BLUE}🔨 Construyendo imagen de Docker...${NC}"
+echo "Esto puede tomar varios minutos..."
+echo ""
+
+# Construir la imagen usando Cloud Build y pasar los argumentos de build via substitutions
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions _VITE_GEMINI_API_KEY="$VITE_GEMINI_API_KEY",_VITE_FIREBASE_API_KEY="$VITE_FIREBASE_API_KEY",_VITE_FIREBASE_AUTH_DOMAIN="$VITE_FIREBASE_AUTH_DOMAIN",_VITE_FIREBASE_PROJECT_ID="$VITE_FIREBASE_PROJECT_ID",_VITE_FIREBASE_STORAGE_BUCKET="$VITE_FIREBASE_STORAGE_BUCKET",_VITE_FIREBASE_MESSAGING_SENDER_ID="$VITE_FIREBASE_MESSAGING_SENDER_ID",_VITE_FIREBASE_APP_ID="$VITE_FIREBASE_APP_ID",_VITE_FIREBASE_MEASUREMENT_ID="$VITE_FIREBASE_MEASUREMENT_ID",_CACHEBUST="$TIMESTAMP" \
+  .
+
+BUILD_STATUS=$?
+
+if [ $BUILD_STATUS -ne 0 ]; then
+    echo -e "${RED}❌ Build falló${NC}"
+    exit 1
+fi
+
+echo ""
+echo -e "${BLUE}🚢 Desplegando imagen a Cloud Run...${NC}"
+echo ""
+
 set +e  # No salir automáticamente si falla
 gcloud run deploy quimeraai2025 \
-  --source . \
+  --image gcr.io/$PROJECT_ID/quimeraai2025 \
   --region us-east1 \
   --allow-unauthenticated \
   --platform managed \
   --memory 512Mi \
-  --timeout 300 \
-  --set-build-env-vars "$BUILD_ENV_VARS"
+  --timeout 300
 
 DEPLOY_STATUS=$?
 set -e  # Volver a activar exit on error

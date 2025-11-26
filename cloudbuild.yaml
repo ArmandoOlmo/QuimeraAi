@@ -1,120 +1,27 @@
-# Google Cloud Build configuration for QuimeraAI
-# This file defines the build and deployment process for Google Cloud Run
-
 steps:
-  # Step 0: Validate that API key is provided
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "🔍 Validating environment variables..."
-        if [ -z "${_VITE_GEMINI_API_KEY}" ]; then
-          echo "❌ ERROR: _VITE_GEMINI_API_KEY is not set!"
-          echo "Please provide it using: --substitutions=_VITE_GEMINI_API_KEY=your_api_key"
-          exit 1
-        fi
-        echo "✅ VITE_GEMINI_API_KEY is set (length: $${#_VITE_GEMINI_API_KEY})"
-        if [ -z "${_VITE_FIREBASE_PROJECT_ID}" ]; then
-          echo "⚠️  WARNING: Firebase variables not set, will use fallbacks"
-        else
-          echo "✅ Firebase variables are set"
-        fi
-
-  # Step 1: Build the container image with API keys
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      # Google Gemini API
-      - '--build-arg'
-      - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
-      # Firebase Configuration
-      - '--build-arg'
-      - 'VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_STORAGE_BUCKET=${_VITE_FIREBASE_STORAGE_BUCKET}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${_VITE_FIREBASE_MESSAGING_SENDER_ID}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}'
-      - '--build-arg'
-      - 'VITE_FIREBASE_MEASUREMENT_ID=${_VITE_FIREBASE_MEASUREMENT_ID}'
-      # Cache busting
-      - '--build-arg'
-      - 'CACHEBUST=$BUILD_ID'
-      # Image tags
       - '-t'
-      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/quimeraai2025:latest'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025'
+      - '--build-arg'
+      - 'VITE_GEMINI_API_KEY=$_VITE_GEMINI_API_KEY'
+      - '--build-arg'
+      - 'VITE_FIREBASE_API_KEY=$_VITE_FIREBASE_API_KEY'
+      - '--build-arg'
+      - 'VITE_FIREBASE_AUTH_DOMAIN=$_VITE_FIREBASE_AUTH_DOMAIN'
+      - '--build-arg'
+      - 'VITE_FIREBASE_PROJECT_ID=$_VITE_FIREBASE_PROJECT_ID'
+      - '--build-arg'
+      - 'VITE_FIREBASE_STORAGE_BUCKET=$_VITE_FIREBASE_STORAGE_BUCKET'
+      - '--build-arg'
+      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=$_VITE_FIREBASE_MESSAGING_SENDER_ID'
+      - '--build-arg'
+      - 'VITE_FIREBASE_APP_ID=$_VITE_FIREBASE_APP_ID'
+      - '--build-arg'
+      - 'VITE_FIREBASE_MEASUREMENT_ID=$_VITE_FIREBASE_MEASUREMENT_ID'
+      - '--build-arg'
+      - 'CACHEBUST=$_CACHEBUST'
       - '.'
-
-  # Step 2: Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
-
-  # Step 3: Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'deploy'
-      - 'quimeraai2025'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
-      - '--region'
-      - '${_REGION}'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--port'
-      - '8080'
-      - '--memory'
-      - '512Mi'
-      - '--min-instances'
-      - '0'
-      - '--max-instances'
-      - '10'
-      - '--timeout'
-      - '300'
-      - '--cpu'
-      - '1'
-      - '--set-env-vars'
-      - 'NODE_ENV=production,DEPLOYED_AT=$BUILD_ID'
-
-# Substitutions (valores por defecto)
-substitutions:
-  # Google Gemini API (REQUERIDA)
-  _VITE_GEMINI_API_KEY: ''  # Debe proporcionarse durante el deploy
-  
-  # Firebase Configuration (OPCIONAL - tiene fallbacks en el código)
-  _VITE_FIREBASE_API_KEY: ''
-  _VITE_FIREBASE_AUTH_DOMAIN: ''
-  _VITE_FIREBASE_PROJECT_ID: ''
-  _VITE_FIREBASE_STORAGE_BUCKET: ''
-  _VITE_FIREBASE_MESSAGING_SENDER_ID: ''
-  _VITE_FIREBASE_APP_ID: ''
-  _VITE_FIREBASE_MEASUREMENT_ID: ''
-  
-  # Región de deployment
-  _REGION: 'us-central1'
-
-# Images to push to Container Registry
 images:
-  - 'gcr.io/$PROJECT_ID/quimeraai2025:$BUILD_ID'
-  - 'gcr.io/$PROJECT_ID/quimeraai2025:latest'
-
-# Timeout for the entire build (20 minutes)
-timeout: '1200s'
-
-# Build options
-options:
-  machineType: 'N1_HIGHCPU_8'  # Máquina más potente para builds rápidos
-  logging: CLOUD_LOGGING_ONLY
-
+  - 'gcr.io/$PROJECT_ID/quimeraai2025'

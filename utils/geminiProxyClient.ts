@@ -6,8 +6,8 @@
  */
 
 // Configuration
-const PROXY_BASE_URL = import.meta.env.VITE_GEMINI_PROXY_URL || 
-                       'https://us-central1-quimeraai.cloudfunctions.net/gemini';
+const PROXY_BASE_URL = import.meta.env.VITE_GEMINI_PROXY_URL ||
+    'https://us-central1-quimeraai.cloudfunctions.net/gemini';
 
 export interface GeminiProxyConfig {
     temperature?: number;
@@ -56,8 +56,9 @@ export interface GeminiProxyError {
 export async function generateContentViaProxy(
     projectId: string,
     prompt: string,
-    model: string = 'gemini-1.5-flash',
-    config: GeminiProxyConfig = {}
+    model: string = 'gemini-2.5-flash',
+    config: GeminiProxyConfig = {},
+    userId?: string
 ): Promise<GeminiProxyResponse> {
     try {
         const response = await fetch(`${PROXY_BASE_URL}-generate`, {
@@ -68,6 +69,7 @@ export async function generateContentViaProxy(
             body: JSON.stringify({
                 projectId,
                 prompt,
+                userId,
                 model,
                 config
             })
@@ -93,8 +95,9 @@ export async function generateContentViaProxy(
 export async function* streamContentViaProxy(
     projectId: string,
     prompt: string,
-    model: string = 'gemini-1.5-flash',
-    config: GeminiProxyConfig = {}
+    model: string = 'gemini-2.5-flash',
+    config: GeminiProxyConfig = {},
+    userId?: string
 ): AsyncGenerator<string, void, unknown> {
     try {
         const response = await fetch(`${PROXY_BASE_URL}-stream`, {
@@ -105,6 +108,7 @@ export async function* streamContentViaProxy(
             body: JSON.stringify({
                 projectId,
                 prompt,
+                userId,
                 model,
                 config
             })
@@ -192,17 +196,19 @@ export function shouldUseProxy(): boolean {
     // 1. Running in production (not localhost)
     // 2. VITE_USE_GEMINI_PROXY is explicitly set to 'true'
     // 3. No direct API key is available
-    
-    const isProduction = !window.location.hostname.includes('localhost') && 
-                         !window.location.hostname.includes('127.0.0.1');
-    
+
+    const isProduction = !window.location.hostname.includes('localhost') &&
+        !window.location.hostname.includes('127.0.0.1');
+
     const forceProxy = import.meta.env.VITE_USE_GEMINI_PROXY === 'true';
-    
+
     const hasDirectKey = !!(import.meta.env.VITE_GEMINI_API_KEY);
-    
+
     // Use proxy in production, or if forced, or if no direct key
     return isProduction || forceProxy || !hasDirectKey;
 }
+
+
 
 
 

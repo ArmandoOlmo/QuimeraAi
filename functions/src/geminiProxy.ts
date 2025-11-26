@@ -36,19 +36,25 @@ interface RateLimitCheck {
 /**
  * Check rate limit for a project
  */
-async function checkRateLimit(projectId: string, planType: string = 'FREE'): Promise<RateLimitCheck> {
+/**
+ * Check rate limit for a project
+ */
+async function checkRateLimit(projectId: string, userId: string, planType: string = 'FREE'): Promise<RateLimitCheck> {
     const now = new Date();
-    const minuteKey = `${projectId}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}_${now.getHours()}_${now.getMinutes()}`;
-    const dayKey = `${projectId}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}`;
-    
+    // For templates, we limit by user to prevent one user from exhausting the template quota for everyone
+    const limitKey = projectId.startsWith('template-') ? `${projectId}_${userId}` : projectId;
+
+    const minuteKey = `${limitKey}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}_${now.getHours()}_${now.getMinutes()}`;
+    const dayKey = `${limitKey}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}`;
+
     const limits = RATE_LIMITS[planType as keyof typeof RATE_LIMITS] || RATE_LIMITS.FREE;
-    
+
     try {
         // Check minute limit
         const minuteRef = db.collection('rateLimits').doc('minutes').collection('entries').doc(minuteKey);
         const minuteDoc = await minuteRef.get();
         const minuteCount = minuteDoc.exists ? (minuteDoc.data()?.count || 0) : 0;
-        
+
         if (minuteCount >= limits.requestsPerMinute) {
             return {
                 allowed: false,
@@ -57,17 +63,17 @@ async function checkRateLimit(projectId: string, planType: string = 'FREE'): Pro
                 message: 'Rate limit exceeded: Too many requests per minute'
             };
         }
-        
+
         // Check day limit
         const dayRef = db.collection('rateLimits').doc('days').collection('entries').doc(dayKey);
         const dayDoc = await dayRef.get();
         const dayCount = dayDoc.exists ? (dayDoc.data()?.count || 0) : 0;
-        
+
         if (dayCount >= limits.requestsPerDay) {
             const tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(0, 0, 0, 0);
-            
+
             return {
                 allowed: false,
                 remaining: 0,
@@ -75,30 +81,65 @@ async function checkRateLimit(projectId: string, planType: string = 'FREE'): Pro
                 message: 'Rate limit exceeded: Daily quota exhausted'
             };
         }
-        
+
         // Increment counters
         await minuteRef.set({
             count: admin.firestore.FieldValue.increment(1),
             projectId,
+            userId,
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-        
+
         await dayRef.set({
             count: admin.firestore.FieldValue.increment(1),
             projectId,
+            userId,
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-        
+
         return {
             allowed: true,
             remaining: limits.requestsPerMinute - minuteCount - 1
         };
-        
+
     } catch (error) {
         console.error('Rate limit check error:', error);
         // Fail open - allow request if rate limit check fails
         return { allowed: true };
     }
+}
+
+/**
+ * Helper to get project data from various locations
+ */
+async function getProjectData(projectId: string, userId?: string) {
+    // 1. Handle Templates
+    if (projectId.startsWith('template-')) {
+        return {
+            exists: true,
+            data: {
+                userId: userId || 'system',
+                planType: 'FREE',
+                aiAssistantConfig: { isActive: true }
+            }
+        };
+    }
+
+    // 2. Handle User Projects (if userId is provided)
+    if (userId) {
+        const userProjectDoc = await db.collection('users').doc(userId).collection('projects').doc(projectId).get();
+        if (userProjectDoc.exists) {
+            return { exists: true, data: { ...userProjectDoc.data(), userId } };
+        }
+    }
+
+    // 3. Handle Top-Level Projects (Fallback)
+    const projectDoc = await db.collection('projects').doc(projectId).get();
+    if (projectDoc.exists) {
+        return { exists: true, data: projectDoc.data() };
+    }
+
+    return { exists: false, data: null };
 }
 
 /**
@@ -151,11 +192,11 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
     }
 
     try {
-        const { projectId, prompt, model = 'gemini-1.5-flash', config = {} } = req.body;
-        
+        const { projectId, prompt, userId, model = 'gemini-2.5-flash', config = {} } = req.body;
+
         // Validate required fields
         if (!projectId || !prompt) {
-            res.status(400).json({ 
+            res.status(400).json({
                 error: 'Missing required fields',
                 required: ['projectId', 'prompt']
             });
@@ -163,27 +204,27 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         }
 
         // Verify project exists and is active
-        const projectDoc = await db.collection('projects').doc(projectId).get();
-        
-        if (!projectDoc.exists) {
+        const { exists, data: projectData } = await getProjectData(projectId, userId);
+
+        if (!exists || !projectData) {
             res.status(404).json({ error: 'Project not found' });
             return;
         }
 
-        const projectData = projectDoc.data();
-        const userId = projectData?.userId || 'unknown';
-        const planType = projectData?.planType || 'FREE';
-        
+        const finalUserId = projectData.userId || userId || 'unknown';
+        const planType = projectData.planType || 'FREE';
+
         // Check if AI assistant is active
-        if (!projectData?.aiAssistantConfig?.isActive) {
+        if (!projectData.aiAssistantConfig?.isActive) {
             res.status(403).json({ error: 'AI assistant is not active for this project' });
             return;
         }
 
         // Rate limiting
-        const rateLimitCheck = await checkRateLimit(projectId, planType);
+        // Rate limiting
+        const rateLimitCheck = await checkRateLimit(projectId, finalUserId, planType);
         if (!rateLimitCheck.allowed) {
-            res.status(429).json({ 
+            res.status(429).json({
                 error: rateLimitCheck.message,
                 resetAt: rateLimitCheck.resetAt
             });
@@ -192,7 +233,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
         // Get API key from environment variable (set via Firebase Config)
         const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
-        
+
         if (!apiKey) {
             console.error('GEMINI_API_KEY not configured');
             res.status(500).json({ error: 'API configuration error' });
@@ -202,7 +243,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         // Make request to Gemini API
         // Using fetch instead of the SDK to avoid adding extra dependencies
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        
+
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
@@ -232,7 +273,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         if (!geminiResponse.ok) {
             const errorData = await geminiResponse.json().catch(() => ({}));
             console.error('Gemini API error:', errorData);
-            res.status(geminiResponse.status).json({ 
+            res.status(geminiResponse.status).json({
                 error: 'Gemini API error',
                 details: errorData
             });
@@ -240,13 +281,14 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         }
 
         const data = await geminiResponse.json();
-        
+
         // Extract token usage for tracking
         const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
-        
+
         // Track usage asynchronously
-        trackUsage(projectId, userId, tokensUsed, model).catch(console.error);
-        
+        // Track usage asynchronously
+        trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
+
         // Return response with rate limit headers
         res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
         res.status(200).json({
@@ -260,7 +302,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
     } catch (error) {
         console.error('Proxy error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -292,37 +334,37 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
     }
 
     try {
-        const { projectId, prompt, model = 'gemini-1.5-flash', config = {} } = req.body;
-        
+        const { projectId, prompt, userId, model = 'gemini-1.5-flash', config = {} } = req.body;
+
         if (!projectId || !prompt) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-        // Verify project and rate limit (same as generateContent)
-        const projectDoc = await db.collection('projects').doc(projectId).get();
-        
-        if (!projectDoc.exists) {
+        // Verify project and rate limit
+        const { exists, data: projectData } = await getProjectData(projectId, userId);
+
+        if (!exists || !projectData) {
             res.status(404).json({ error: 'Project not found' });
             return;
         }
 
-        const projectData = projectDoc.data();
-        const planType = projectData?.planType || 'FREE';
-        
-        if (!projectData?.aiAssistantConfig?.isActive) {
+        const finalUserId = projectData.userId || userId || 'unknown';
+        const planType = projectData.planType || 'FREE';
+
+        if (!projectData.aiAssistantConfig?.isActive) {
             res.status(403).json({ error: 'AI assistant is not active' });
             return;
         }
 
-        const rateLimitCheck = await checkRateLimit(projectId, planType);
+        const rateLimitCheck = await checkRateLimit(projectId, finalUserId, planType);
         if (!rateLimitCheck.allowed) {
             res.status(429).json({ error: rateLimitCheck.message });
             return;
         }
 
         const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
-        
+
         if (!apiKey) {
             res.status(500).json({ error: 'API configuration error' });
             return;
@@ -334,7 +376,7 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
-        
+
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
@@ -368,7 +410,7 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             // Forward the chunk to client
             res.write(value);
         }
@@ -407,7 +449,7 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
 
     try {
         const projectId = req.path.split('/').pop();
-        
+
         if (!projectId) {
             res.status(400).json({ error: 'Project ID required' });
             return;
@@ -425,11 +467,11 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
             .get();
 
         const usage = usageSnapshot.docs.map(doc => doc.data());
-        
+
         // Calculate statistics
         const totalRequests = usage.length;
         const totalTokens = usage.reduce((sum, u) => sum + (u.tokensUsed || 0), 0);
-        
+
         res.status(200).json({
             projectId,
             period: '30days',
@@ -444,6 +486,8 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+
 
 
 

@@ -1,57 +1,57 @@
 import { GoogleGenAI } from '@google/genai';
-import { 
-    shouldUseProxy, 
-    generateContentViaProxy, 
+import {
+    shouldUseProxy,
+    generateContentViaProxy,
     extractTextFromResponse,
-    type GeminiProxyConfig 
+    type GeminiProxyConfig
 } from './geminiProxyClient';
 
 // Helper para obtener la API key de las variables de entorno (Vite usa import.meta.env)
 const getProcessApiKey = (): string | null => {
     let key: string | undefined | null = null;
-    
+
     try {
         // Opción 1: Intentar obtener de import.meta.env (Vite standard para variables de entorno)
         // Nota: Las variables definidas en vite.config.ts en 'define' no aparecen aquí,
         // solo las variables de entorno con prefijo VITE_ que están disponibles en runtime
         if (typeof import.meta !== 'undefined' && import.meta.env) {
             const metaEnv = import.meta.env as any;
-            key = metaEnv.VITE_GEMINI_API_KEY || 
-                  metaEnv.VITE_GOOGLE_AI_API_KEY ||
-                  metaEnv.GEMINI_API_KEY;
+            key = metaEnv.VITE_GEMINI_API_KEY ||
+                metaEnv.VITE_GOOGLE_AI_API_KEY ||
+                metaEnv.GEMINI_API_KEY;
         }
     } catch (e) {
         console.debug('Could not access import.meta.env', e);
     }
-    
+
     try {
         // Opción 2: Intentar obtener de process.env (definido en vite.config.ts en 'define')
         // Estas variables se reemplazan en tiempo de build como strings literales
         if ((!key || key === 'null' || key === 'undefined' || key === '') && typeof process !== 'undefined' && process.env) {
             const procEnv = process.env as any;
-            key = procEnv.GEMINI_API_KEY || 
-                  procEnv.API_KEY ||
-                  procEnv.VITE_GEMINI_API_KEY;
+            key = procEnv.GEMINI_API_KEY ||
+                procEnv.API_KEY ||
+                procEnv.VITE_GEMINI_API_KEY;
         }
     } catch (e) {
         console.debug('Could not access process.env', e);
     }
-    
+
     // Verificar que exista, no sea null, undefined, ni una cadena vacía
     if (!key || key === 'null' || key === 'undefined' || key === '') {
         return null;
     }
-    
+
     const trimmed = String(key).trim();
     if (trimmed === '') {
         return null;
     }
-    
+
     // Log para debugging (sin exponer la key completa)
     if (trimmed.length > 10) {
         console.debug(`✅ API Key encontrada (length: ${trimmed.length}, starts with: ${trimmed.substring(0, 8)}...)`);
     }
-    
+
     return trimmed;
 };
 
@@ -140,20 +140,21 @@ export const getGoogleGenAI = async () => {
 export const generateContent = async (
     prompt: string,
     projectId?: string,
-    model: string = 'gemini-1.5-flash',
-    config: GeminiProxyConfig = {}
+    model: string = 'gemini-2.5-flash',
+    config: GeminiProxyConfig = {},
+    userId?: string
 ): Promise<string> => {
     const useProxy = shouldUseProxy();
-    
+
     console.debug(`🤖 Using ${useProxy ? 'PROXY' : 'DIRECT'} mode for Gemini API`);
-    
+
     if (useProxy) {
         // Use proxy in production
         if (!projectId) {
             throw new Error('projectId is required when using Gemini proxy');
         }
-        
-        const response = await generateContentViaProxy(projectId, prompt, model, config);
+
+        const response = await generateContentViaProxy(projectId, prompt, model, config, userId);
         return extractTextFromResponse(response);
     } else {
         // Use direct API in development
