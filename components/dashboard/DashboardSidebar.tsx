@@ -168,20 +168,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           }}
           disabled={item.disabled}
           className={`
-            group flex items-center p-3 mb-2 transition-all duration-300 relative
+            group flex items-center p-3 mb-1 transition-all duration-300 relative
             ${isCollapsed 
-                ? 'justify-center w-12 mx-auto rounded-lg' 
-                : 'w-full rounded-xl'
+                ? 'justify-center w-12 mx-auto' 
+                : 'w-full'
             }
             ${isActive 
-              ? (isCollapsed 
-                  ? 'text-primary dark:text-primary' 
-                  : 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]' 
-                ) 
-              : (isCollapsed
-                  ? 'text-muted-foreground hover:text-foreground'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                )
+              ? 'text-primary font-bold' 
+              : 'text-muted-foreground hover:text-foreground'
             }
             ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${item.isFixed ? '' : 'cursor-pointer'}
