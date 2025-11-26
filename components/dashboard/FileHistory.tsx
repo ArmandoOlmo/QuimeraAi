@@ -210,9 +210,10 @@ const FileItem: React.FC<{
     isSelected?: boolean;
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
-    onAddToReference?: (imageUrl: string) => void;
+    onAddToReference?: (imageUrl: string) => Promise<void>;
 }> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference }) => {
     const isImage = file.type.startsWith('image/');
+    const [isAdding, setIsAdding] = useState(false);
     
     const handleDragStart = (e: React.DragEvent) => {
         if (isImage) {
@@ -222,10 +223,15 @@ const FileItem: React.FC<{
         }
     };
 
-    const handleAddToReference = (e: React.MouseEvent) => {
+    const handleAddToReference = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (isImage && onAddToReference) {
-            onAddToReference(file.downloadURL);
+        if (isImage && onAddToReference && !isAdding) {
+            setIsAdding(true);
+            try {
+                await onAddToReference(file.downloadURL);
+            } finally {
+                setIsAdding(false);
+            }
         }
     };
 
@@ -288,10 +294,15 @@ const FileItem: React.FC<{
                 {isImage && !isSelectionMode && onAddToReference && (
                     <button
                         onClick={handleAddToReference}
-                        className="absolute top-2 right-2 z-10 p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110"
+                        disabled={isAdding}
+                        className={`absolute top-2 right-2 z-10 p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg transition-all transform hover:scale-110 ${isAdding ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                         title="Add as reference image"
                     >
-                        <Plus size={14} />
+                        {isAdding ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Plus size={14} />
+                        )}
                     </button>
                 )}
 
@@ -380,14 +391,14 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         setIsDragging(false);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
         
         // Check if it's a library image (URL from drag)
         const libraryImageUrl = e.dataTransfer.getData('application/x-library-image');
         if (libraryImageUrl) {
-            addImageToReference(libraryImageUrl);
+            await addImageToReference(libraryImageUrl);
             return;
         }
         
@@ -397,20 +408,60 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         }
     };
 
+    // Convert URL to base64 data URL
+    const urlToBase64 = async (url: string): Promise<string> => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } catch (error) {
+            console.error('Error converting URL to base64:', error);
+            throw error;
+        }
+    };
+
     // Add image URL directly to reference images (from library)
-    const addImageToReference = (imageUrl: string) => {
+    const addImageToReference = async (imageUrl: string) => {
         if (referenceImages.length >= 14) {
             showError("Maximum 14 reference images allowed.");
             return;
         }
         
-        if (referenceImages.includes(imageUrl)) {
-            showError("This image is already added as reference.");
+        // Check if it's already a data URL
+        if (imageUrl.startsWith('data:')) {
+            if (referenceImages.includes(imageUrl)) {
+                showError("This image is already added as reference.");
+                return;
+            }
+            setReferenceImages(prev => [...prev, imageUrl]);
+            success("Image added as reference!");
             return;
         }
         
-        setReferenceImages(prev => [...prev, imageUrl]);
-        success("Image added as reference!");
+        // Convert URL to base64 for API compatibility
+        try {
+            // Ensure URL has protocol
+            const fullUrl = imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl;
+            
+            // Check if already added (by comparing the URL part)
+            const existingUrlPart = referenceImages.find(img => img.includes(imageUrl) || imageUrl.includes(img.split(',')[0]));
+            if (existingUrlPart) {
+                showError("This image is already added as reference.");
+                return;
+            }
+            
+            const base64Data = await urlToBase64(fullUrl);
+            setReferenceImages(prev => [...prev, base64Data]);
+            success("Image added as reference!");
+        } catch (error) {
+            showError("Failed to add image as reference. Please try again.");
+            console.error('Error adding image to reference:', error);
+        }
     };
 
     const handleRemoveReferenceImage = (index: number) => {
