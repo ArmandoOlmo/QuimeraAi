@@ -59,17 +59,17 @@ const Pricing: React.FC<PricingProps> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge Design Tokens with component colors
+  // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors.background,
-    accent: getColor('primary.main', colors.accent || '#4f46e5'),
+    accent: colors.accent || getColor('primary.main', '#4f46e5'),
     borderColor: colors.borderColor || '#374151',
     text: colors.text,
     heading: colors.heading,
     cardBackground: colors.cardBackground || '#1f2937',
-    buttonBackground: getColor('primary.main', colors.buttonBackground || '#4f46e5'),
+    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
     buttonText: colors.buttonText || '#ffffff',
-    checkmarkColor: getColor('success.main', colors.checkmarkColor || '#10b981'),
+    checkmarkColor: colors.checkmarkColor || getColor('success.main', '#10b981'),
     gradientStart: colors.gradientStart || '#4f46e5',
     gradientEnd: colors.gradientEnd || '#10b981',
   };

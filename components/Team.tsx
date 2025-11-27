@@ -2,6 +2,8 @@
 import React from 'react';
 import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant, AnimationType } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
 
 interface TeamMemberCardProps {
   imageUrl: string;
@@ -58,13 +60,19 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'classic') {
     return (
       <div className={`text-center ${animationClass}`} style={{ animationDelay: delay }}>
-        <img 
-          src={imageUrl} 
-          alt={name} 
-          className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 shadow-lg transform transition-transform duration-300 hover:scale-105" 
-          style={{ borderColor: accentColor }}
-          key={imageUrl} 
-        />
+        {isPendingImage(imageUrl) ? (
+          <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full" />
+          </div>
+        ) : (
+          <img 
+            src={imageUrl} 
+            alt={name} 
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 shadow-lg transform transition-transform duration-300 hover:scale-105" 
+            style={{ borderColor: accentColor }}
+            key={imageUrl} 
+          />
+        )}
         <h3 className="text-xl font-bold text-site-heading mb-1 font-header">{name}</h3>
         <p className="text-primary font-semibold font-body" style={{ color: accentColor }}>{role}</p>
       </div>
@@ -82,12 +90,18 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
         }}
       >
         <div className="relative overflow-hidden">
-          <img 
-            src={imageUrl} 
-            alt={name} 
-            className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110" 
-            key={imageUrl} 
-          />
+          {isPendingImage(imageUrl) ? (
+            <div className="h-64">
+              <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="h-full" />
+            </div>
+          ) : (
+            <img 
+              src={imageUrl} 
+              alt={name} 
+              className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110" 
+              key={imageUrl} 
+            />
+          )}
           <div 
             className="absolute bottom-0 left-0 right-0 h-1"
             style={{ backgroundColor: accentColor }}
@@ -106,12 +120,16 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     return (
       <div className={`group ${animationClass}`} style={{ animationDelay: delay }}>
         <div className="relative overflow-hidden rounded-lg mb-4">
-          <img 
-            src={imageUrl} 
-            alt={name} 
-            className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0" 
-            key={imageUrl} 
-          />
+          {isPendingImage(imageUrl) ? (
+            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} />
+          ) : (
+            <img 
+              src={imageUrl} 
+              alt={name} 
+              className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0" 
+              key={imageUrl} 
+            />
+          )}
           <div 
             className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
             style={{ backgroundColor: accentColor }}
@@ -138,12 +156,16 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
         style={{ animationDelay: delay }}
       >
         <div className="aspect-[3/4] relative">
-          <img 
-            src={imageUrl} 
-            alt={name} 
-            className="w-full h-full object-cover" 
-            key={imageUrl} 
-          />
+          {isPendingImage(imageUrl) ? (
+            <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0" />
+          ) : (
+            <img 
+              src={imageUrl} 
+              alt={name} 
+              className="w-full h-full object-cover" 
+              key={imageUrl} 
+            />
+          )}
           {/* Dark overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
           

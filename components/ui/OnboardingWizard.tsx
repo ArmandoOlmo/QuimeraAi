@@ -6,9 +6,24 @@ import { getGoogleGenAI } from '../../utils/genAiClient';
 import { Sparkles, ArrowRight, Wand2, Palette, Type, Layout, Loader2, X, Briefcase, Target, Layers, Gem, Monitor, PenTool, Leaf, Megaphone, Smile, Building2, Package, Phone, Image as ImageIcon, Star, Plus, Trash2, Rocket, CheckCircle } from 'lucide-react';
 import GeneratingState from './GeneratingState';
 import GuidedTour from './GuidedTour';
+import ColorControl from './ColorControl';
 import { initialData } from '../../data/initialData';
-import { OnboardingStep, AestheticType, ProductInfo, TestimonialInfo, ContactInfo, PageSection } from '../../types';
+import { OnboardingStep, AestheticType, ProductInfo, TestimonialInfo, ContactInfo, PageSection, ImageGenerationProgress } from '../../types';
 import { trackOnboardingStarted, trackOnboardingCompleted, trackProjectCreated } from '../../utils/analytics';
+import { getContrastingTextColor, ensureTextContrast } from '../../utils/colorUtils';
+
+const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+
+/**
+ * Converts hex color to rgba with opacity
+ */
+const hexToRgba = (hex: string, opacity: number): string => {
+    const cleanHex = hex.replace('#', '');
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 interface OnboardingWizardProps {
     isOpen: boolean;
@@ -111,7 +126,7 @@ const OptionCard = ({
 // --- Main Component ---
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) => {
-    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user } = useEditor();
+    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user, generateProjectImagesWithProgress } = useEditor();
     
     // Local UI state for transient loading/status
     const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +145,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
     }, [isOpen]);
     const [generatingStatus, setGeneratingStatus] = useState('Initializing...');
     const [fieldLoading, setFieldLoading] = useState<string | null>(null);
+    const [imageProgress, setImageProgress] = useState<ImageGenerationProgress>({
+        current: 0,
+        total: 0,
+        currentSection: '',
+        completedImages: [],
+        failedPaths: []
+    });
     
     // Helper to update context state
     const updateState = (key: string, value: any) => {
@@ -138,9 +160,19 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
     const cleanJson = (text: string) => {
         let cleaned = text.replace(/```json\n?|```/g, '').trim();
+        
+        // Handle both objects {} and arrays []
         const firstBrace = cleaned.indexOf('{');
         const lastBrace = cleaned.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
+        const firstBracket = cleaned.indexOf('[');
+        const lastBracket = cleaned.lastIndexOf(']');
+        
+        // Determine if it's an array or object
+        const isArray = firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace);
+        
+        if (isArray && firstBracket !== -1 && lastBracket !== -1) {
+            cleaned = cleaned.substring(firstBracket, lastBracket + 1);
+        } else if (firstBrace !== -1 && lastBrace !== -1) {
             cleaned = cleaned.substring(firstBrace, lastBrace + 1);
         }
         return cleaned;
@@ -174,7 +206,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         }
     };
 
-    const generateField = async (field: 'summary' | 'audience' | 'offerings' | 'uniqueValueProposition' | 'companyHistory' | 'coreValues') => {
+    const generateField = async (field: 'summary' | 'audience' | 'offerings' | 'goal' | 'colorVibe' | 'uniqueValueProposition' | 'companyHistory' | 'coreValues') => {
         if (!onboardingState.businessName || !onboardingState.industry) return;
         if (hasApiKey === false) { await promptForKeySelection(); return; }
 
@@ -187,6 +219,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 case 'summary': promptName = 'onboarding-summary'; break;
                 case 'audience': promptName = 'onboarding-audience'; break;
                 case 'offerings': promptName = 'onboarding-offerings'; break;
+                case 'goal': promptName = 'onboarding-goal'; break;
+                case 'colorVibe': promptName = 'onboarding-color-vibe'; break;
                 case 'uniqueValueProposition': promptName = 'onboarding-uvp'; break;
                 case 'companyHistory': promptName = 'onboarding-history'; break;
                 case 'coreValues': promptName = 'onboarding-core-values'; break;
@@ -199,7 +233,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 .replace('{{businessName}}', onboardingState.businessName)
                 .replace('{{industry}}', onboardingState.industry)
                 .replace('{{summary}}', onboardingState.summary || '')
-                .replace('{{audience}}', onboardingState.audience || '');
+                .replace('{{audience}}', onboardingState.audience || '')
+                .replace('{{aesthetic}}', onboardingState.aesthetic || 'Minimalist');
 
             const response = await ai.models.generateContent({
                 model: promptConfig.model,
@@ -423,7 +458,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 
                 // Ensure primaryCta and secondaryCta are strings
                 if (!safeData.hero.primaryCta || typeof safeData.hero.primaryCta !== 'string') {
-                    safeData.hero.primaryCta = onboardingState.goal === 'Generate Leads' ? 'Get Started' : onboardingState.goal === 'Sell Products' ? 'Shop Now' : 'Learn More';
+                    // Fallback CTA - AI should generate appropriate one based on business focus
+                    safeData.hero.primaryCta = 'Get Started';
                 } else {
                     safeData.hero.primaryCta = String(safeData.hero.primaryCta);
                 }
@@ -457,51 +493,133 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         const sectionData = safeData[section as PageSection];
                         const existingColors = sectionData.colors || {};
                         
+                        // Determine background color for this section
+                        const sectionBg = palette.background || '#0f172a';
+                        
+                        // Ensure text color has proper contrast with background
+                        const textColor = ensureTextContrast(sectionBg, palette.text);
+                        const headingColor = ensureTextContrast(sectionBg, palette.text);
+                        
                         // Build new colors object with Design Plan as absolute priority
                         const newColors: any = {
-                            // Core colors from Design Plan (mandatory - no fallback to initialData)
-                            background: palette.background || '#0f172a',
-                            text: palette.text || '#e2e8f0',
-                            heading: palette.text || '#ffffff',
+                            // Core colors from Design Plan with contrast verification
+                            background: sectionBg,
+                            text: textColor,
+                            heading: headingColor,
                             accent: palette.primary || palette.accent || '#4f46e5',
                             primary: palette.primary,
                             secondary: palette.secondary,
                         };
                         
+                        // Apply brand color to buttons
+                        newColors.buttonBackground = palette.primary || '#4f46e5';
+                        newColors.buttonText = getContrastingTextColor(newColors.buttonBackground);
+                        
+                        // Apply PRIMARY brand color to cards for specific components
+                        if (['features', 'testimonials', 'menu', 'map'].includes(section)) {
+                            newColors.cardBackground = palette.primary || '#4f46e5';
+                            // Ensure text on cards contrasts with primary color
+                            const cardTextColor = getContrastingTextColor(newColors.cardBackground);
+                            newColors.text = cardTextColor;
+                            newColors.heading = cardTextColor;
+                            // Border color slightly different from card background
+                            newColors.borderColor = palette.secondary || palette.accent || '#374151';
+                        }
+                        
+                        // FAQ: use SECONDARY color
+                        if (section === 'faq') {
+                            newColors.background = palette.secondary || '#10b981';
+                            newColors.cardBackground = palette.secondary || '#10b981';
+                            const faqTextColor = getContrastingTextColor(newColors.background);
+                            newColors.text = faqTextColor;
+                            newColors.heading = faqTextColor;
+                            newColors.borderColor = palette.accent || '#059669';
+                        }
+                        
+                        // Leads: PRIMARY color for form background
+                        if (section === 'leads') {
+                            newColors.cardBackground = palette.primary || '#4f46e5';
+                            const leadsTextColor = getContrastingTextColor(newColors.cardBackground);
+                            newColors.text = leadsTextColor;
+                            newColors.heading = leadsTextColor;
+                            newColors.buttonBackground = palette.primary || '#4f46e5';
+                            newColors.buttonText = getContrastingTextColor(newColors.buttonBackground);
+                        }
+                        
+                        // Newsletter: PRIMARY color at 75% opacity
+                        if (section === 'newsletter') {
+                            const primaryColor = palette.primary || '#4f46e5';
+                            // Convert hex to rgba with 75% opacity
+                            const rgbaColor = hexToRgba(primaryColor, 0.75);
+                            newColors.cardBackground = rgbaColor;
+                            const newsletterTextColor = getContrastingTextColor(primaryColor);
+                            newColors.text = newsletterTextColor;
+                            newColors.heading = newsletterTextColor;
+                            newColors.buttonBackground = palette.primary || '#4f46e5';
+                            newColors.buttonText = getContrastingTextColor(newColors.buttonBackground);
+                        }
+                        
                         // Preserve section-specific color properties that don't conflict with Design Plan
-                        // (like buttonBackground, buttonText, gradientStart, gradientEnd, border, linkHover)
-                        if (existingColors.buttonBackground) newColors.buttonBackground = existingColors.buttonBackground;
-                        if (existingColors.buttonText) newColors.buttonText = existingColors.buttonText;
+                        // (like gradientStart, gradientEnd, border, linkHover)
                         if (existingColors.gradientStart) newColors.gradientStart = existingColors.gradientStart;
                         if (existingColors.gradientEnd) newColors.gradientEnd = existingColors.gradientEnd;
                         if (existingColors.border) newColors.border = existingColors.border;
-                        if (existingColors.borderColor) newColors.borderColor = existingColors.borderColor;
+                        if (!['features', 'testimonials', 'menu', 'map'].includes(section) && existingColors.borderColor) {
+                            newColors.borderColor = existingColors.borderColor;
+                        }
                         if (existingColors.linkHover) newColors.linkHover = existingColors.linkHover;
                         
                         sectionData.colors = newColors;
                         console.log(`   ✓ Applied Design Plan palette to ${section}:`, {
                             background: newColors.background,
                             text: newColors.text,
-                            accent: newColors.accent
+                            accent: newColors.accent,
+                            buttonBackground: newColors.buttonBackground
                         });
                     }
                 });
                 
                 // Always apply to header (it's always present)
+                // Use PRIMARY brand color for header background (SOLID, not transparent)
                 if (safeData.header) {
-                    const headerBg = palette.background || '#0f172a';
-                    // Convert hex to rgba for header transparency
-                    const rgbMatch = headerBg.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
-                    const rgbaBg = rgbMatch 
-                        ? `rgba(${parseInt(rgbMatch[1], 16)}, ${parseInt(rgbMatch[2], 16)}, ${parseInt(rgbMatch[3], 16)}, 0.7)`
-                        : 'rgba(15, 23, 42, 0.7)';
-                        
+                    const headerBg = palette.primary || palette.background || '#0f172a';
+                    
+                    // Calculate contrasting text color based on background luminance
+                    const textColor = getContrastingTextColor(headerBg);
+                    
                     safeData.header.colors = {
-                        background: rgbaBg,
-                        text: palette.text || '#E2E8F0',
-                        accent: palette.primary || '#4f46e5',
+                        background: headerBg, // SOLID color, NOT transparent
+                        text: textColor,      // Contrasting text color for readability
+                        accent: palette.secondary || palette.accent || '#ffffff',
                     };
-                    console.log(`   ✓ Applied Design Plan palette to header`);
+                    
+                    // Force header style to solid (not transparent)
+                    safeData.header.style = 'sticky-solid';
+                    
+                    console.log(`   ✓ Applied brand color to header:`, {
+                        background: headerBg,
+                        text: textColor,
+                        style: 'sticky-solid'
+                    });
+                }
+                
+                // Always apply SAME color to footer (matches header)
+                if (safeData.footer) {
+                    const footerBg = palette.primary || palette.background || '#0f172a';
+                    const footerTextColor = getContrastingTextColor(footerBg);
+                    
+                    safeData.footer.colors = {
+                        background: footerBg, // SAME as header - brand color
+                        text: footerTextColor,
+                        heading: footerTextColor,
+                        border: footerBg,
+                        linkHover: palette.secondary || palette.accent || '#ffffff',
+                    };
+                    
+                    console.log(`   ✓ Applied brand color to footer (same as header):`, {
+                        background: footerBg,
+                        text: footerTextColor
+                    });
                 }
                 
                 console.log("✅ [generateWebsite] Design Plan colors applied to selected components");
@@ -715,8 +833,61 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             setCreatedProjectId(savedProjectId);
             console.log("✅ [generateWebsite] Created project ID stored in state");
             
+            // Step 9: Generate images with progress UI
+            console.log("🖼️ [generateWebsite] Step 9: Starting image generation...");
+            if (generatedPrompts && Object.keys(generatedPrompts).length > 0) {
+                updateState('step', 'generating-images' as OnboardingStep);
+                
+                // Reset image progress
+                setImageProgress({
+                    current: 0,
+                    total: Object.keys(generatedPrompts).length,
+                    currentSection: '',
+                    completedImages: [],
+                    failedPaths: []
+                });
+
+                // Create a project object with the saved ID for the image generation
+                const projectForImages = { 
+                    ...cleanedProject, 
+                    id: savedProjectId 
+                };
+
+                // Generate images with progress callbacks
+                const imageResult = await generateProjectImagesWithProgress(
+                    projectForImages,
+                    generatedPrompts,
+                    (current, total, section, imageUrl) => {
+                        setImageProgress(prev => ({
+                            ...prev,
+                            current,
+                            total,
+                            currentSection: section,
+                            completedImages: imageUrl 
+                                ? [...prev.completedImages, imageUrl]
+                                : prev.completedImages
+                        }));
+                    }
+                );
+
+                // Update failed paths if any
+                if (imageResult.failedPaths.length > 0) {
+                    setImageProgress(prev => ({
+                        ...prev,
+                        failedPaths: imageResult.failedPaths
+                    }));
+                }
+
+                console.log("✅ [generateWebsite] Image generation complete:", {
+                    generated: Object.keys(imageResult.generatedImages).length,
+                    failed: imageResult.failedPaths.length
+                });
+            } else {
+                console.log("ℹ️ [generateWebsite] No image prompts to generate");
+            }
+            
             // Track project creation analytics
-            console.log("📊 [generateWebsite] Step 9: Tracking analytics...");
+            console.log("📊 [generateWebsite] Step 10: Tracking analytics...");
             const duration = onboardingStartTime.current 
                 ? Math.round((Date.now() - onboardingStartTime.current) / 1000) 
                 : 0;
@@ -725,7 +896,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             console.log("✅ [generateWebsite] Analytics tracked (duration:", duration, "s)");
             
             // Show success step with option to start guided tour
-            console.log("🎉 [generateWebsite] Step 10: Showing success screen...");
+            console.log("🎉 [generateWebsite] Step 11: Showing success screen...");
             updateState('step', 'success' as OnboardingStep);
             onboardingStartTime.current = null;
 
@@ -800,18 +971,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         <div className="space-y-6 animate-fade-in-up">
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div className="col-span-1 sm:col-span-2">
-                    <InputLabel label="Primary Goal" />
-                    <div className="grid grid-cols-3 gap-3">
-                        {['Generate Leads', 'Sell Products', 'Show Portfolio'].map(g => (
-                            <button
-                                key={g}
-                                onClick={() => updateState('goal', g)}
-                                className={`py-3 px-2 text-xs sm:text-sm font-bold rounded-lg border transition-all ${onboardingState.goal === g ? 'bg-yellow-500 text-black border-yellow-500' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30'}`}
-                            >
-                                {g}
-                            </button>
-                        ))}
-                    </div>
+                    <InputLabel 
+                        label="Business Focus" 
+                        onAiAssist={() => generateField('goal')} 
+                        isLoading={fieldLoading === 'goal'}
+                    />
+                    <InputField 
+                        value={onboardingState.goal} 
+                        onChange={(e) => updateState('goal', e.target.value)} 
+                        placeholder="e.g. Generate leads, Sell products online, Showcase portfolio, Book appointments, Build brand awareness"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">What's the main purpose of your website?</p>
                  </div>
              </div>
              
@@ -898,12 +1068,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             </div>
             
             <div>
-                <InputLabel label="Color Vibe" />
+                <InputLabel 
+                    label="Color Vibe" 
+                    onAiAssist={() => generateField('colorVibe')} 
+                    isLoading={fieldLoading === 'colorVibe'}
+                />
                 <InputField 
                     value={onboardingState.colorVibe || ''} 
                     onChange={(e) => updateState('colorVibe', e.target.value)} 
                     placeholder="e.g. Trustworthy Blue, Energetic Orange, Deep Forest Green" 
                 />
+                <p className="text-xs text-gray-500 mt-1">What emotional tone should your brand colors convey?</p>
             </div>
         </div>
     );
@@ -979,6 +1154,49 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             updateState('products', [...(onboardingState.products || []), newProduct]);
         };
 
+        const generateProducts = async () => {
+            if (!onboardingState.businessName || !onboardingState.industry) return;
+            if (hasApiKey === false) { await promptForKeySelection(); return; }
+
+            setFieldLoading('products');
+            try {
+                const ai = await getGoogleGenAI();
+                const promptConfig = getPrompt('onboarding-products');
+                if (!promptConfig) throw new Error('Prompt onboarding-products not found');
+
+                const filledPrompt = promptConfig.template
+                    .replace('{{businessName}}', onboardingState.businessName)
+                    .replace('{{industry}}', onboardingState.industry)
+                    .replace('{{summary}}', onboardingState.summary || '')
+                    .replace('{{offerings}}', onboardingState.offerings || '');
+
+                const response = await ai.models.generateContent({
+                    model: promptConfig.model,
+                    contents: filledPrompt,
+                    config: { responseMimeType: 'application/json' }
+                });
+
+                const jsonText = cleanJson(response.text);
+                const productsData = JSON.parse(jsonText);
+                
+                // Convert to ProductInfo format with IDs
+                const products: ProductInfo[] = productsData.map((p: any, index: number) => ({
+                    id: `prod_${Date.now()}_${index}`,
+                    name: p.name || '',
+                    description: p.description || '',
+                    price: p.price || '',
+                    features: []
+                }));
+
+                updateState('products', products);
+            } catch (error) {
+                handleApiError(error);
+                console.error('Error generating products:', error);
+            } finally {
+                setFieldLoading(null);
+            }
+        };
+
         const updateProduct = (id: string, field: keyof ProductInfo, value: any) => {
             const updated = (onboardingState.products || []).map(p => 
                 p.id === id ? { ...p, [field]: value } : p
@@ -994,6 +1212,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             <div className="space-y-5 animate-fade-in-up">
                 <div className="text-center mb-4">
                     <p className="text-sm text-gray-400">Agrega tus productos o servicios principales (opcional)</p>
+                    {(onboardingState.products || []).length === 0 && (
+                        <button
+                            onClick={generateProducts}
+                            disabled={fieldLoading === 'products'}
+                            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        >
+                            {fieldLoading === 'products' ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Generando...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles size={16} />
+                                    Generar con IA
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
                 
                 {(onboardingState.products || []).map((product, index) => (
@@ -1132,6 +1369,100 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     ))}
                 </div>
             </div>
+            
+            {/* FAQs Section */}
+            <div className="border-t border-white/10 pt-4 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <InputLabel 
+                        label="Preguntas Frecuentes (FAQ)" 
+                        onAiAssist={async () => {
+                            if (!onboardingState.businessName || !onboardingState.industry) return;
+                            if (hasApiKey === false) { await promptForKeySelection(); return; }
+
+                            setFieldLoading('faqs');
+                            try {
+                                const ai = await getGoogleGenAI();
+                                const promptConfig = getPrompt('onboarding-faqs');
+                                if (!promptConfig) throw new Error('Prompt onboarding-faqs not found');
+
+                                const filledPrompt = promptConfig.template
+                                    .replace('{{businessName}}', onboardingState.businessName)
+                                    .replace('{{industry}}', onboardingState.industry)
+                                    .replace('{{summary}}', onboardingState.summary || '')
+                                    .replace('{{audience}}', onboardingState.audience || '');
+
+                                const response = await ai.models.generateContent({
+                                    model: promptConfig.model,
+                                    contents: filledPrompt,
+                                    config: { responseMimeType: 'application/json' }
+                                });
+
+                                const jsonText = cleanJson(response.text);
+                                const faqsData = JSON.parse(jsonText);
+                                updateState('faqs', faqsData);
+                            } catch (error) {
+                                console.error('Error generating FAQs:', error);
+                                alert('Error al generar FAQs. Por favor intenta de nuevo.');
+                            } finally {
+                                setFieldLoading(null);
+                            }
+                        }}
+                        isLoading={fieldLoading === 'faqs'}
+                    />
+                </div>
+                
+                {(onboardingState.faqs || []).map((faq, index) => (
+                    <div key={index} className="space-y-2 mb-4 p-4 border border-white/10 rounded-lg">
+                        <InputField 
+                            value={faq.question} 
+                            onChange={(e) => {
+                                const newFaqs = [...(onboardingState.faqs || [])];
+                                newFaqs[index] = { ...newFaqs[index], question: e.target.value };
+                                updateState('faqs', newFaqs);
+                            }} 
+                            placeholder="Pregunta" 
+                        />
+                        <textarea
+                            value={faq.answer}
+                            onChange={(e) => {
+                                const newFaqs = [...(onboardingState.faqs || [])];
+                                newFaqs[index] = { ...newFaqs[index], answer: e.target.value };
+                                updateState('faqs', newFaqs);
+                            }}
+                            placeholder="Respuesta"
+                            className="w-full bg-dark-800 border border-dark-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary resize-none"
+                            rows={3}
+                        />
+                        <button
+                            onClick={() => {
+                                const newFaqs = (onboardingState.faqs || []).filter((_, i) => i !== index);
+                                updateState('faqs', newFaqs);
+                            }}
+                            className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"
+                        >
+                            <Trash2 size={14} />
+                            Eliminar
+                        </button>
+                    </div>
+                ))}
+                
+                {(onboardingState.faqs || []).length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                        No hay preguntas frecuentes. Usa el asistente de IA para generarlas.
+                    </p>
+                )}
+                
+                <button
+                    onClick={() => {
+                        const newFaq = { question: '', answer: '' };
+                        updateState('faqs', [...(onboardingState.faqs || []), newFaq]);
+                    }}
+                    className="w-full py-3 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/40 transition-colors flex items-center justify-center gap-2"
+                >
+                    <Plus size={16} />
+                    Agregar Pregunta Frecuente
+                </button>
+            </div>
         </div>
     );
 
@@ -1146,6 +1477,49 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 company: ''
             };
             updateState('testimonials', [...(onboardingState.testimonials || []), newTestimonial]);
+        };
+
+        const generateTestimonials = async () => {
+            if (!onboardingState.businessName || !onboardingState.industry) return;
+            if (hasApiKey === false) { await promptForKeySelection(); return; }
+
+            setFieldLoading('testimonials');
+            try {
+                const ai = await getGoogleGenAI();
+                const promptConfig = getPrompt('onboarding-testimonials');
+                if (!promptConfig) throw new Error('Prompt onboarding-testimonials not found');
+
+                const filledPrompt = promptConfig.template
+                    .replace('{{businessName}}', onboardingState.businessName)
+                    .replace('{{industry}}', onboardingState.industry)
+                    .replace('{{summary}}', onboardingState.summary || '')
+                    .replace('{{audience}}', onboardingState.audience || '');
+
+                const response = await ai.models.generateContent({
+                    model: promptConfig.model,
+                    contents: filledPrompt,
+                    config: { responseMimeType: 'application/json' }
+                });
+
+                const jsonText = cleanJson(response.text);
+                const testimonialsData = JSON.parse(jsonText);
+                
+                // Convert to TestimonialInfo format with IDs
+                const testimonials: TestimonialInfo[] = testimonialsData.map((t: any, index: number) => ({
+                    id: `test_${Date.now()}_${index}`,
+                    quote: t.quote || '',
+                    author: t.author || '',
+                    role: t.role || '',
+                    company: t.company || ''
+                }));
+
+                updateState('testimonials', testimonials);
+            } catch (error) {
+                handleApiError(error);
+                console.error('Error generating testimonials:', error);
+            } finally {
+                setFieldLoading(null);
+            }
         };
 
         const updateTestimonial = (id: string, field: keyof TestimonialInfo, value: string) => {
@@ -1167,6 +1541,26 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Testimonios de Clientes</h3>
                     </div>
                     <p className="text-xs text-gray-400 mb-4">Agrega testimonios reales de tus clientes (opcional)</p>
+                    
+                    {(onboardingState.testimonials || []).length === 0 && (
+                        <button
+                            onClick={generateTestimonials}
+                            disabled={fieldLoading === 'testimonials'}
+                            className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        >
+                            {fieldLoading === 'testimonials' ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Generando...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles size={16} />
+                                    Generar con IA
+                                </>
+                            )}
+                        </button>
+                    )}
                     
                     {(onboardingState.testimonials || []).map((testimonial, index) => (
                         <div key={testimonial.id} className="bg-[#130a1d] p-4 rounded-xl border border-white/10 space-y-3 mb-3">
@@ -1221,31 +1615,31 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 {/* Brand Colors Section */}
                 <div className="border-t border-white/10 pt-6">
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Colores de Marca (Opcional)</h3>
-                    <p className="text-xs text-gray-400 mb-4">Si ya tienes colores de marca, ingrésalos aquí</p>
+                    <p className="text-xs text-gray-400 mb-4">Si ya tienes colores de marca, ingrésalos aquí. Estos colores se aplicarán a tu sitio web.</p>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-6">
                         <div>
-                            <InputLabel label="Color Primario" />
-                            <InputField 
-                                type="color"
+                            <ColorControl 
+                                label="Color Primario" 
                                 value={onboardingState.brandGuidelines?.primaryColor || '#4f46e5'} 
-                                onChange={(e) => updateState('brandGuidelines', { 
+                                onChange={(value) => updateState('brandGuidelines', { 
                                     ...(onboardingState.brandGuidelines || {}), 
-                                    primaryColor: e.target.value 
+                                    primaryColor: value 
                                 })} 
                             />
+                            <p className="text-xs text-gray-500 mt-1">Se usará en botones, header, footer y elementos principales</p>
                         </div>
                         
                         <div>
-                            <InputLabel label="Color Secundario" />
-                            <InputField 
-                                type="color"
+                            <ColorControl 
+                                label="Color Secundario" 
                                 value={onboardingState.brandGuidelines?.secondaryColor || '#ec4899'} 
-                                onChange={(e) => updateState('brandGuidelines', { 
+                                onChange={(value) => updateState('brandGuidelines', { 
                                     ...(onboardingState.brandGuidelines || {}), 
-                                    secondaryColor: e.target.value 
+                                    secondaryColor: value 
                                 })} 
                             />
+                            <p className="text-xs text-gray-500 mt-1">Se usará para acentos y elementos secundarios</p>
                         </div>
                     </div>
                 </div>
@@ -1330,7 +1724,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
     const renderReview = () => {
         if (isLoading) return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mb-4" />
+                <div className="relative w-16 h-16 mb-4">
+                    <div className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping"></div>
+                    <div className="absolute inset-0 rounded-full bg-yellow-400/10 animate-pulse"></div>
+                    <img 
+                        src={QUIMERA_LOGO} 
+                        alt="Quimera AI" 
+                        className="relative w-full h-full object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse"
+                    />
+                </div>
                 <p className="text-white font-bold text-xl">Crafting Design System...</p>
                 <p className="text-sm text-gray-500 mt-2">AI is selecting fonts, palettes, and layouts.</p>
             </div>
@@ -1521,7 +1923,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             <Modal isOpen={isOpen} onClose={() => {}}>
                 <div className="h-[450px] w-full bg-[#1A0D26] rounded-2xl border border-white/10 overflow-hidden relative">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                    <GeneratingState statusText={generatingStatus} />
+                    <GeneratingState statusText={generatingStatus} phase="content" />
+                </div>
+            </Modal>
+        )
+    }
+
+    if (onboardingState.step === 'generating-images') {
+        return (
+            <Modal isOpen={isOpen} onClose={() => {}}>
+                <div className="h-[550px] w-full bg-[#1A0D26] rounded-2xl border border-white/10 overflow-hidden relative">
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                    <GeneratingState 
+                        statusText="" 
+                        phase="images" 
+                        imageProgress={imageProgress}
+                    />
                 </div>
             </Modal>
         )
@@ -1560,7 +1977,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 <div className="px-8 py-6 flex justify-between items-start border-b border-white/5 bg-white/5">
                      <div>
                          <div className="flex items-center gap-3 mb-1">
-                            <Wand2 className="text-yellow-400" size={20} />
+                            <div className="relative w-7 h-7">
+                                <div className="absolute inset-0 rounded-full bg-yellow-400/10 animate-pulse"></div>
+                                <img 
+                                    src={QUIMERA_LOGO} 
+                                    alt="Quimera AI" 
+                                    className="relative w-full h-full object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]"
+                                />
+                            </div>
                             <h2 className="text-lg font-bold text-white tracking-tight">AI Site Architect</h2>
                          </div>
                          <div className="flex items-center gap-2 mt-2">

@@ -2,6 +2,8 @@
 import React from 'react';
 import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
 
 interface TestimonialCardProps {
   quote: string;
@@ -210,16 +212,22 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         "{quote}"
       </blockquote>
       <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
-        <img 
-          src={avatar} 
-          alt={name} 
-          style={{ 
-            borderColor: avatarBorderColor,
-            borderWidth: `${avatarBorderWidth}px`
-          }} 
-          className={`w-12 h-12 rounded-full mr-4 ${avatarBorderWidth > 0 ? 'border-solid' : ''} ${avatarClasses()}`} 
-          key={avatar} 
-        />
+        {isPendingImage(avatar) ? (
+          <div className="w-12 h-12 mr-4">
+            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full w-12 h-12" />
+          </div>
+        ) : (
+          <img 
+            src={avatar} 
+            alt={name} 
+            style={{ 
+              borderColor: avatarBorderColor,
+              borderWidth: `${avatarBorderWidth}px`
+            }} 
+            className={`w-12 h-12 rounded-full mr-4 ${avatarBorderWidth > 0 ? 'border-solid' : ''} ${avatarClasses()}`} 
+            key={avatar} 
+          />
+        )}
         <div>
           <p className="font-bold text-site-heading font-body">{name}</p>
           <p className="text-sm font-body" style={{ color: textColor }}>{title}</p>
@@ -258,10 +266,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge Design Tokens with component colors
+  // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors.background,
-    accent: getColor('primary.main', colors.accent),
+    accent: colors.accent || getColor('primary.main', '#4f46e5'),
     borderColor: colors.borderColor,
     text: colors.text,
     heading: colors.heading,

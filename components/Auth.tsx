@@ -223,117 +223,181 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         }
     };
 
-    const renderAuthForm = () => (
-        <div className="bg-[#1A0D26] w-full max-w-md p-6 sm:p-8 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    // Feature cards for the right side panel
+    const featureCards = [
+        { icon: <Zap className="text-[#1A0D26]" size={24} />, title: "AI-Powered Creation", desc: "Build websites in seconds with intelligent automation" },
+        { icon: <Layout className="text-[#1A0D26]" size={24} />, title: "Smart Templates", desc: "Professional designs that adapt to your content" },
+        { icon: <Sparkles className="text-[#1A0D26]" size={24} />, title: "One-Click Styles", desc: "Change your entire site's look instantly" },
+        { icon: <ImageIcon className="text-[#1A0D26]" size={24} />, title: "4K AI Images", desc: "Generate stunning visuals from text prompts" },
+        { icon: <Hexagon className="text-[#1A0D26]" size={24} />, title: "Global Components", desc: "Reusable blocks across all your pages" },
+        { icon: <PlayCircle className="text-[#1A0D26]" size={24} />, title: "Instant Preview", desc: "See changes in real-time as you build" },
+    ];
 
-            <div className="relative z-10">
-                <div className="flex justify-end">
-                    <button onClick={() => setIsAuthModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
-                        <X size={24} />
+    const renderAuthForm = () => (
+        <div className="w-full max-w-5xl flex rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+            {/* Left Side - Dark Theme (Form) */}
+            <div className="bg-[#1A0D26] w-full lg:w-1/2 p-6 sm:p-10 relative overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div className="relative z-10">
+                    <div className="text-center mb-6 sm:mb-8">
+                        <Logo size="lg" />
+                        <h2 className="text-xl sm:text-2xl font-bold text-white mt-4 sm:mt-6 mb-2">
+                            {authMode === 'login' ? t('auth.welcomeBack') : authMode === 'register' ? t('auth.startCreating') : t('auth.resetPassword')}
+                        </h2>
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                            {authMode === 'login' ? t('auth.loginSubtitle') : authMode === 'register' ? t('auth.registerSubtitle') : t('auth.resetSubtitle')}
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-6 flex items-start">
+                            <span className="mr-2">⚠️</span> {error}
+                        </div>
+                    )}
+
+                    {authMode === 'forgotPassword' && resetEmailSentTo ? (
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle size={32} />
+                            </div>
+                            <p className="text-white mb-6">{t('auth.resetLinkSent')} <strong className="text-yellow-400">{resetEmailSentTo}</strong>.</p>
+                            <button onClick={() => setAuthMode('login')} className="text-sm text-gray-400 hover:text-white underline">{t('auth.backToLogin')}</button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleAuthAction} className="space-y-3 sm:space-y-4">
+                            {authMode === 'register' && (
+                                <div className="space-y-3 sm:space-y-4 animate-fade-in-up">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.username')}</label>
+                                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="DesignGuru"/>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.profilePhotoOptional')}</label>
+                                        <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"/>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.email')}</label>
+                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="you@example.com"/>
+                            </div>
+
+                            {authMode !== 'forgotPassword' && (
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase">{t('auth.password')}</label>
+                                        {authMode === 'login' && (
+                                            <button type="button" onClick={() => setAuthMode('forgotPassword')} className="text-xs text-yellow-500 hover:text-yellow-400 hover:underline">{t('auth.forgot')}</button>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all pr-10 text-sm" placeholder="••••••••"/>
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white">
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {authMode === 'register' && (
+                                <div className="animate-fade-in-up">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.repeatPassword')}</label>
+                                    <input type="password" value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="••••••••"/>
+                                </div>
+                            )}
+
+                            <button type="submit" disabled={isLoading} className="w-full bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:bg-yellow-400 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6">
+                                {isLoading && <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2"></div>}
+                                {isLoading ? t('auth.processing') : authMode === 'login' ? t('auth.signIn') : authMode === 'register' ? t('auth.createAccount') : t('auth.sendResetLink')}
+                            </button>
+
+                            {authMode !== 'forgotPassword' && (
+                                <>
+                                    <div className="relative my-6">
+                                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                                        <div className="relative flex justify-center text-xs"><span className="bg-[#1A0D26] px-2 text-gray-500">{t('auth.orContinueWith')}</span></div>
+                                    </div>
+                                    <button type="button" onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center bg-white text-gray-900 font-bold py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50">
+                                        <img src="https://storage.googleapis.com/quimera_assets/google.svg" alt="Google" className="w-5 h-5 mr-3"/>
+                                        Google
+                                    </button>
+                                </>
+                            )}
+                        </form>
+                    )}
+
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-400">
+                            {authMode === 'login' ? t('auth.newHere') : t('auth.alreadyHaveAccount')}
+                            <button 
+                                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} 
+                                className="ml-1 font-bold text-yellow-400 hover:underline"
+                            >
+                                {authMode === 'login' ? t('auth.createAccount') : t('auth.signIn')}
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Side - Light Theme (Inverted colors - 6 Feature Cards) */}
+            <div className="hidden lg:block bg-gradient-to-br from-yellow-50 via-white to-amber-50 w-1/2 p-8 relative overflow-hidden">
+                {/* Background Decor - Inverted from left side */}
+                <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#1A0D26]/5 rounded-full blur-3xl pointer-events-none"></div>
+                <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                
+                {/* Close button - Top Right */}
+                <div className="absolute top-4 right-4 z-20">
+                    <button 
+                        onClick={() => setIsAuthModalOpen(false)} 
+                        className="bg-[#1A0D26] text-white p-2.5 rounded-full hover:bg-[#2D1A40] transition-all shadow-lg hover:scale-110"
+                    >
+                        <X size={20} />
                     </button>
                 </div>
 
-                <div className="text-center mb-6 sm:mb-8">
-                    <Logo size="lg" />
-                    <h2 className="text-xl sm:text-2xl font-bold text-white mt-4 sm:mt-6 mb-2">
-                        {authMode === 'login' ? t('auth.welcomeBack') : authMode === 'register' ? t('auth.startCreating') : t('auth.resetPassword')}
-                    </h2>
-                    <p className="text-gray-400 text-xs sm:text-sm">
-                        {authMode === 'login' ? t('auth.loginSubtitle') : authMode === 'register' ? t('auth.registerSubtitle') : t('auth.resetSubtitle')}
-                    </p>
-                </div>
-
-                {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-6 flex items-start">
-                        <span className="mr-2">⚠️</span> {error}
+                <div className="relative z-10 h-full flex flex-col">
+                    {/* Header */}
+                    <div className="mb-6">
+                        <h3 className="text-2xl font-bold text-[#1A0D26] mb-2">
+                            Why Quimera?
+                        </h3>
+                        <p className="text-[#1A0D26]/60 text-sm">
+                            Everything you need to create stunning websites
+                        </p>
                     </div>
-                )}
 
-                {authMode === 'forgotPassword' && resetEmailSentTo ? (
-                    <div className="text-center">
-                        <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle size={32} />
-                        </div>
-                        <p className="text-white mb-6">{t('auth.resetLinkSent')} <strong className="text-yellow-400">{resetEmailSentTo}</strong>.</p>
-                        <button onClick={() => setAuthMode('login')} className="text-sm text-gray-400 hover:text-white underline">{t('auth.backToLogin')}</button>
+                    {/* 6 Feature Cards Grid */}
+                    <div className="grid grid-cols-2 gap-3 flex-1">
+                        {featureCards.map((card, index) => (
+                            <div 
+                                key={index}
+                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-[#1A0D26]/10 hover:border-yellow-400/50 hover:shadow-lg hover:scale-[1.02] transition-all group cursor-default"
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                                <div className="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-md">
+                                    {card.icon}
+                                </div>
+                                <h4 className="font-bold text-[#1A0D26] text-sm mb-1">
+                                    {card.title}
+                                </h4>
+                                <p className="text-[#1A0D26]/50 text-xs leading-relaxed">
+                                    {card.desc}
+                                </p>
+                            </div>
+                        ))}
                     </div>
-                ) : (
-                    <form onSubmit={handleAuthAction} className="space-y-3 sm:space-y-4">
-                        {authMode === 'register' && (
-                            <div className="space-y-3 sm:space-y-4 animate-fade-in-up">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.username')}</label>
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="DesignGuru"/>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.profilePhotoOptional')}</label>
-                                    <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"/>
-                                </div>
-                            </div>
-                        )}
-                        
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.email')}</label>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="you@example.com"/>
-                        </div>
 
-                        {authMode !== 'forgotPassword' && (
-                            <div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('auth.password')}</label>
-                                    {authMode === 'login' && (
-                                        <button type="button" onClick={() => setAuthMode('forgotPassword')} className="text-xs text-yellow-500 hover:text-yellow-400 hover:underline">{t('auth.forgot')}</button>
-                                    )}
-                                </div>
-                                <div className="relative">
-                                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all pr-10 text-sm" placeholder="••••••••"/>
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white">
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {authMode === 'register' && (
-                            <div className="animate-fade-in-up">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('auth.repeatPassword')}</label>
-                                <input type="password" value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} required className="w-full bg-black/40 text-white p-2.5 sm:p-3 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 outline-none transition-all text-sm" placeholder="••••••••"/>
-                            </div>
-                        )}
-
-                        <button type="submit" disabled={isLoading} className="w-full bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:bg-yellow-400 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6">
-                            {isLoading && <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2"></div>}
-                            {isLoading ? t('auth.processing') : authMode === 'login' ? t('auth.signIn') : authMode === 'register' ? t('auth.createAccount') : t('auth.sendResetLink')}
-                        </button>
-
-                        {authMode !== 'forgotPassword' && (
-                            <>
-                                <div className="relative my-6">
-                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                                    <div className="relative flex justify-center text-xs"><span className="bg-[#1A0D26] px-2 text-gray-500">{t('auth.orContinueWith')}</span></div>
-                                </div>
-                                <button type="button" onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center bg-white text-gray-900 font-bold py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50">
-                                    <img src="https://storage.googleapis.com/quimera_assets/google.svg" alt="Google" className="w-5 h-5 mr-3"/>
-                                    Google
-                                </button>
-                            </>
-                        )}
-                    </form>
-                )}
-
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-400">
-                        {authMode === 'login' ? t('auth.newHere') : t('auth.alreadyHaveAccount')}
-                        <button 
-                            onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} 
-                            className="ml-1 font-bold text-yellow-400 hover:underline"
-                        >
-                            {authMode === 'login' ? t('auth.createAccount') : t('auth.signIn')}
-                        </button>
-                    </p>
+                    {/* Bottom tagline */}
+                    <div className="mt-4 pt-4 border-t border-[#1A0D26]/10 text-center">
+                        <p className="text-xs text-[#1A0D26]/40 font-medium">
+                            Join 10,000+ creators building with Quimera
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -343,7 +407,7 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-yellow-500/30 selection:text-yellow-200">
             {/* --- Auth Modal Overlay --- */}
             {isAuthModalOpen && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in-up">
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in-up">
                     {renderAuthForm()}
                 </div>
             )}

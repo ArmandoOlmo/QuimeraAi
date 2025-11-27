@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EditorProvider, useEditor } from './contexts/EditorContext';
 import { ToastProvider } from './contexts/ToastContext';
-import Auth from './components/Auth';
+import ModernAuth from './components/ModernAuth';
 import VerificationScreen from './components/VerificationScreen';
+import PublicLandingPage from './components/PublicLandingPage';
 import { auth, signOut } from './firebase';
 import ProfileModal from './components/dashboard/ProfileModal';
 import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
@@ -12,6 +13,42 @@ import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
 import ViewRouter from './components/ViewRouter';
+
+// Simple hash-based routing
+type PublicRoute = 'landing' | 'login' | 'register';
+
+const useHashRoute = () => {
+  const [route, setRoute] = useState<PublicRoute>(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash === 'login' || hash === 'register') return hash;
+    return 'landing';
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash === 'login' || hash === 'register') {
+        setRoute(hash);
+      } else {
+        setRoute('landing');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigate = (newRoute: PublicRoute) => {
+    if (newRoute === 'landing') {
+      window.location.hash = '';
+    } else {
+      window.location.hash = newRoute;
+    }
+    setRoute(newRoute);
+  };
+
+  return { route, navigate };
+};
 
 
 const AppContent: React.FC = () => {
@@ -48,6 +85,7 @@ const AppContent: React.FC = () => {
 
 const AuthGate: React.FC = () => {
   const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument } = useEditor();
+  const { route, navigate } = useHashRoute();
 
   // Set user context for monitoring when user changes
   useEffect(() => {
@@ -62,6 +100,7 @@ const AuthGate: React.FC = () => {
     }
   }, [user, userDocument]);
 
+  // Loading state
   if (loadingAuth) {
     return (
       <div className="min-h-screen bg-editor-bg flex items-center justify-center relative overflow-hidden">
@@ -93,6 +132,7 @@ const AuthGate: React.FC = () => {
     );
   }
   
+  // Authenticated user
   if (user) {
     if (user.emailVerified) {
         return (
@@ -104,17 +144,39 @@ const AuthGate: React.FC = () => {
     } else {
         const handleGoToLogin = async () => {
             await signOut(auth);
-            setVerificationEmail(null); 
+            setVerificationEmail(null);
+            navigate('login');
         };
         return <VerificationScreen email={user.email!} onGoToLogin={handleGoToLogin} />;
     }
   }
 
+  // Verification email sent
   if (verificationEmail) {
-    return <VerificationScreen email={verificationEmail} onGoToLogin={() => setVerificationEmail(null)} />;
+    return <VerificationScreen email={verificationEmail} onGoToLogin={() => {
+      setVerificationEmail(null);
+      navigate('login');
+    }} />;
   }
 
-  return <Auth onVerificationEmailSent={setVerificationEmail} />;
+  // Public routes (no authenticated user)
+  if (route === 'login' || route === 'register') {
+    return (
+      <ModernAuth 
+        onVerificationEmailSent={setVerificationEmail}
+        initialMode={route === 'register' ? 'register' : 'login'}
+        onNavigateToLanding={() => navigate('landing')}
+      />
+    );
+  }
+
+  // Default: Show public landing page
+  return (
+    <PublicLandingPage 
+      onNavigateToLogin={() => navigate('login')}
+      onNavigateToRegister={() => navigate('register')}
+    />
+  );
 }
 
 

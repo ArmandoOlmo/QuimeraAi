@@ -94,15 +94,16 @@ const Header: React.FC<HeaderData> = ({
   const { previewRef } = useEditor();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge Design Tokens with component colors
+  // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors.background,
     text: colors.text,
-    accent: getColor('primary.main', colors.accent),
+    accent: colors.accent || getColor('primary.main', '#4f46e5'),
   };
 
   useEffect(() => {
@@ -117,6 +118,11 @@ const Header: React.FC<HeaderData> = ({
     const handleScroll = () => {
       const scrolled = scrollContainer.scrollTop > 20;
       setIsScrolled(scrolled);
+      
+      // Calculate scroll progress for progress bar
+      const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      const progress = scrollHeight > 0 ? (scrollContainer.scrollTop / scrollHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
     };
 
     handleScroll(); // Check on mount
@@ -235,6 +241,15 @@ const Header: React.FC<HeaderData> = ({
         className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out`}
         style={{ height: style === 'floating' ? 0 : 'auto' }} 
     >
+      {/* === SCROLL PROGRESS BAR === */}
+      <div 
+        className="absolute bottom-0 left-0 h-[2px] z-50 transition-all duration-150"
+        style={{ 
+          width: `${scrollProgress}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.accent})`
+        }}
+      />
+      
       <div 
         className={`transition-all duration-500 ease-out ${containerClasses} ${glassClasses} ${shadowClasses}`}
         style={{ 

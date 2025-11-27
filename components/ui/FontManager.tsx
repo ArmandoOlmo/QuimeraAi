@@ -2,6 +2,7 @@
 import React from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import { FontFamily } from '../../types';
+import ColorControl from './ColorControl';
 
 const fontOptions: FontFamily[] = [
   'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
@@ -24,6 +25,10 @@ const FontManager: React.FC = () => {
 
     const handleChange = (key: keyof typeof theme, value: FontFamily) => {
         setTheme(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleColorChange = (color: string) => {
+        setTheme(prev => ({ ...prev, pageBackground: color }));
     };
 
     const renderSelect = (label: string, key: keyof typeof theme) => (
@@ -49,10 +54,26 @@ const FontManager: React.FC = () => {
     );
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-4">
             {renderSelect("Headings Font", 'fontFamilyHeader')}
             {renderSelect("Body Text Font", 'fontFamilyBody')}
             {renderSelect("Buttons & UI Font", 'fontFamilyButton')}
+            
+            <hr className="border-editor-border/50 my-4" />
+            
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+                    Page Background Color
+                </label>
+                <ColorControl 
+                    label="" 
+                    value={theme.pageBackground || '#ffffff'} 
+                    onChange={handleColorChange}
+                />
+                <p className="text-xs text-editor-text-secondary mt-1">
+                    Global background color for the entire page
+                </p>
+            </div>
         </div>
     );
 };

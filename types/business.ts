@@ -401,7 +401,7 @@ export interface LLMPrompt {
 // =============================================================================
 // ONBOARDING
 // =============================================================================
-export type OnboardingStep = 'basics' | 'strategy' | 'aesthetic' | 'details' | 'products' | 'contact' | 'visuals' | 'review' | 'generating' | 'success';
+export type OnboardingStep = 'basics' | 'strategy' | 'aesthetic' | 'details' | 'products' | 'contact' | 'visuals' | 'review' | 'generating' | 'generating-images' | 'success';
 export type AestheticType = 'Minimalist' | 'Bold' | 'Elegant' | 'Playful' | 'Tech' | 'Organic';
 
 export interface ProductInfo {
@@ -443,6 +443,14 @@ export interface BrandGuidelines {
     existingImages?: string[];
 }
 
+export interface ImageGenerationProgress {
+    current: number;
+    total: number;
+    currentSection: string;
+    completedImages: string[];
+    failedPaths: string[];
+}
+
 export interface OnboardingState {
     step: OnboardingStep;
     
@@ -476,9 +484,13 @@ export interface OnboardingState {
     // Visuals
     brandGuidelines?: BrandGuidelines;
     testimonials?: TestimonialInfo[];
+    faqs?: Array<{ question: string; answer: string; }>;
     
     // Generated
     designPlan?: any;
+    
+    // Image Generation Progress
+    imageProgress?: ImageGenerationProgress;
 }
 
 // =============================================================================

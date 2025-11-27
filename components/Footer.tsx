@@ -33,21 +33,25 @@ const Footer: React.FC<FooterData> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge Design Tokens with component colors
+  // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors.background,
     border: colors.border,
     text: colors.text,
     heading: colors.heading,
-    linkHover: getColor('primary.main', colors.linkHover),
+    linkHover: colors.linkHover || getColor('primary.main', '#4f46e5'),
   };
 
   const currentYear = new Date().getFullYear();
   const finalCopyrightText = copyrightText.replace('{YEAR}', currentYear.toString());
 
   return (
-    <footer id="contact" className="border-t" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
-      <div className="container mx-auto px-6 py-12">
+    <footer id="contact" className="border-t relative overflow-hidden" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
+      {/* Decorative gradient orbs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+      
+      <div className="container mx-auto px-6 py-12 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
           
           <div className="sm:col-span-2 lg:col-span-4">
@@ -92,14 +96,14 @@ const Footer: React.FC<FooterData> = ({
           <p className="text-sm font-body mb-4 sm:mb-0" style={{ color: actualColors.text }}>
             {finalCopyrightText}
           </p>
-          <div className="flex space-x-4">
+          <div className="flex space-x-3">
             {socialLinks.map((link, index) => (
               <a 
                 key={index} 
                 href={link.href} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="transition-colors duration-300"
+                className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-white/10"
                 style={{ color: actualColors.text }}
                 onMouseEnter={(e) => e.currentTarget.style.color = actualColors.linkHover}
                 onMouseLeave={(e) => e.currentTarget.style.color = actualColors.text}

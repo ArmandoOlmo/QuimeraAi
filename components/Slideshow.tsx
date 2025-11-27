@@ -2,6 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { SlideshowData, PaddingSize, BorderRadiusSize, FontSize, SlideshowVariant, ArrowStyle, DotStyle } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
+
+// Helper component to render slideshow image or placeholder
+const SlideImage: React.FC<{ imageUrl: string; altText: string; className?: string }> = ({ imageUrl, altText, className = '' }) => {
+    if (isPendingImage(imageUrl)) {
+        return <ImagePlaceholder aspectRatio="16:9" showGenerateButton={false} className={`w-full h-full ${className}`} />;
+    }
+    return <img src={imageUrl} alt={altText} className={`w-full h-full object-cover ${className}`} />;
+};
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -175,7 +185,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                     >
                         {items.map((item, index) => (
                             <div key={index} className="inline-block w-full h-full align-top relative">
-                                <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
+                                <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
                                 {showCaptions && item.caption && (
                                     <div 
                                         className="absolute bottom-0 left-0 right-0 p-4 text-center"
@@ -205,7 +215,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                             style={getTransitionStyles(index)}
                             className="w-full h-full"
                         >
-                            <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
+                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
                             {showCaptions && item.caption && index === currentIndex && (
                                 <div 
                                     className="absolute bottom-0 left-0 right-0 p-4 text-center"
@@ -237,13 +247,17 @@ const Slideshow: React.FC<SlideshowProps> = ({
                         }`}
                     >
                         <div className="w-full h-full overflow-hidden">
-                            <img 
-                                src={item.imageUrl} 
-                                alt={item.altText} 
-                                className={`w-full h-full object-cover transition-transform duration-[8000ms] ease-out ${
-                                    index === currentIndex ? getKenBurnsScale() : 'scale-100'
-                                }`}
-                            />
+                            {isPendingImage(item.imageUrl) ? (
+                                <ImagePlaceholder aspectRatio="16:9" showGenerateButton={false} className="w-full h-full" />
+                            ) : (
+                                <img 
+                                    src={item.imageUrl} 
+                                    alt={item.altText} 
+                                    className={`w-full h-full object-cover transition-transform duration-[8000ms] ease-out ${
+                                        index === currentIndex ? getKenBurnsScale() : 'scale-100'
+                                    }`}
+                                />
+                            )}
                         </div>
                         {showCaptions && item.caption && index === currentIndex && (
                             <div 
@@ -287,11 +301,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                 transformStyle: 'preserve-3d',
                             }}
                         >
-                            <img 
-                                src={item.imageUrl} 
-                                alt={item.altText} 
-                                className="w-full h-full object-cover"
-                            />
+                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
                             {showCaptions && item.caption && isActive && (
                                 <div 
                                     className="absolute bottom-0 left-0 right-0 p-4 text-center"
@@ -324,7 +334,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                 >
                     {items.map((item, index) => (
                         <div key={index} className="inline-block w-full h-full align-top relative">
-                            <img src={item.imageUrl} alt={item.altText} className="w-full h-full object-cover" />
+                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
                             {showCaptions && item.caption && (
                                 <div 
                                     className="absolute bottom-0 left-0 right-0 p-4 text-center"
@@ -372,11 +382,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                             }
                         }}
                     >
-                        <img 
-                            src={item.imageUrl} 
-                            alt={item.altText} 
-                            className="w-full h-full object-cover"
-                        />
+                        <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
                     </button>
                 ))}
             </div>

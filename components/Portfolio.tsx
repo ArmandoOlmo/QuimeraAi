@@ -2,6 +2,8 @@
 import React from 'react';
 import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize, AnimationType } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -68,12 +70,16 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
     >
       {/* Full Background Image */}
       <div className="absolute inset-0">
-          <img 
-            src={imageUrl} 
-            alt={title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-            key={imageUrl} 
-          />
+          {isPendingImage(imageUrl) ? (
+            <ImagePlaceholder aspectRatio="4:3" showGenerateButton={false} className="w-full h-full" />
+          ) : (
+            <img 
+              src={imageUrl} 
+              alt={title} 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              key={imageUrl} 
+            />
+          )}
       </div>
       
       {/* Dark Gradient Overlay */}

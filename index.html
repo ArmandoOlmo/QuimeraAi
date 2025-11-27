@@ -469,6 +469,185 @@
       --site-heading-color: #FFFFFF;
       --site-body-color: #A1A1AA;
     }
+
+    /* ========================================
+       LANDING PAGE PREMIUM ANIMATIONS
+       ======================================== */
+
+    /* Blob Animation - Para fondos orgánicos */
+    @keyframes blob {
+      0%, 100% {
+        transform: translate(0, 0) scale(1);
+      }
+      25% {
+        transform: translate(20px, -30px) scale(1.1);
+      }
+      50% {
+        transform: translate(-20px, 20px) scale(0.95);
+      }
+      75% {
+        transform: translate(30px, 10px) scale(1.05);
+      }
+    }
+
+    .animate-blob {
+      animation: blob 8s ease-in-out infinite;
+    }
+
+    .animation-delay-2000 {
+      animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+      animation-delay: 4s;
+    }
+
+    /* Scroll Indicator Animation */
+    @keyframes scroll-indicator {
+      0%, 100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      50% {
+        opacity: 0.5;
+        transform: translateY(6px);
+      }
+    }
+
+    .animate-scroll-indicator {
+      animation: scroll-indicator 1.5s ease-in-out infinite;
+    }
+
+    /* Marquee Animation for Trusted By logos */
+    @keyframes marquee {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .animate-marquee {
+      animation: marquee 25s linear infinite;
+    }
+
+    .animate-marquee:hover {
+      animation-play-state: paused;
+    }
+
+    /* Glow Pulse Animation */
+    @keyframes glow-pulse {
+      0%, 100% {
+        box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 40px rgba(79, 70, 229, 0.6);
+      }
+    }
+
+    .animate-glow-pulse {
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+
+    /* Float animation suave */
+    @keyframes float-gentle {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-15px) rotate(1deg);
+      }
+    }
+
+    .animate-float-gentle {
+      animation: float-gentle 5s ease-in-out infinite;
+    }
+
+    /* Ping Animation más suave */
+    @keyframes ping-soft {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .animate-ping-soft {
+      animation: ping-soft 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    /* Text gradient animation */
+    @keyframes text-gradient {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    .animate-text-gradient {
+      background-size: 200% auto;
+      animation: text-gradient 4s linear infinite;
+    }
+
+    /* Stagger children animation */
+    .stagger-children > * {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .stagger-children.animate > *:nth-child(1) { animation: fadeInUp 0.5s ease forwards 0.1s; }
+    .stagger-children.animate > *:nth-child(2) { animation: fadeInUp 0.5s ease forwards 0.2s; }
+    .stagger-children.animate > *:nth-child(3) { animation: fadeInUp 0.5s ease forwards 0.3s; }
+    .stagger-children.animate > *:nth-child(4) { animation: fadeInUp 0.5s ease forwards 0.4s; }
+    .stagger-children.animate > *:nth-child(5) { animation: fadeInUp 0.5s ease forwards 0.5s; }
+    .stagger-children.animate > *:nth-child(6) { animation: fadeInUp 0.5s ease forwards 0.6s; }
+
+    /* Gradient border animation */
+    @keyframes gradient-rotate {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .animate-gradient-border {
+      background: linear-gradient(90deg, #4f46e5, #10b981, #4f46e5);
+      background-size: 200% 200%;
+      animation: gradient-rotate 3s ease infinite;
+    }
+
+    /* Shine effect */
+    @keyframes shine {
+      0% {
+        transform: translateX(-100%) skewX(-15deg);
+      }
+      100% {
+        transform: translateX(200%) skewX(-15deg);
+      }
+    }
+
+    .animate-shine::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      animation: shine 3s ease-in-out infinite;
+    }
   </style>
   <script>
     tailwind.config = {
@@ -544,11 +723,26 @@
           animation: {
             'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'blob': 'blob 8s ease-in-out infinite',
+            'marquee': 'marquee 25s linear infinite',
+            'float-gentle': 'float-gentle 5s ease-in-out infinite',
+            'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
+            'scroll-indicator': 'scroll-indicator 1.5s ease-in-out infinite',
           },
           keyframes: {
             fadeInUp: {
               '0%': { opacity: 0, transform: 'translateY(20px)' },
               '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+            blob: {
+              '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+              '25%': { transform: 'translate(20px, -30px) scale(1.1)' },
+              '50%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+              '75%': { transform: 'translate(30px, 10px) scale(1.05)' },
+            },
+            marquee: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
             },
           },
         },

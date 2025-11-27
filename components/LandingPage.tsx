@@ -23,7 +23,9 @@ import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
+import TrustedBy from './TrustedBy';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
+import { TrustedByData } from './TrustedBy';
 import { useEditor } from '../contexts/EditorContext';
 
 const fontStacks: Record<FontFamily, string> = {
@@ -268,14 +270,43 @@ const LandingPage: React.FC = () => {
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
 
+  // Default TrustedBy data (can be customized later via data.trustedBy)
+  const trustedByData: TrustedByData = (data as any).trustedBy || {
+    title: "Trusted by innovative teams worldwide",
+    logos: [
+      { name: 'Company 1', imageUrl: 'https://picsum.photos/seed/logo1/200/60' },
+      { name: 'Company 2', imageUrl: 'https://picsum.photos/seed/logo2/200/60' },
+      { name: 'Company 3', imageUrl: 'https://picsum.photos/seed/logo3/200/60' },
+      { name: 'Company 4', imageUrl: 'https://picsum.photos/seed/logo4/200/60' },
+      { name: 'Company 5', imageUrl: 'https://picsum.photos/seed/logo5/200/60' },
+      { name: 'Company 6', imageUrl: 'https://picsum.photos/seed/logo6/200/60' },
+    ],
+    paddingY: 'sm',
+    paddingX: 'md',
+    colors: {
+      background: data.hero?.colors?.background || '#0f172a',
+      text: data.hero?.colors?.text || '#94a3b8',
+      borderColor: data.hero?.colors?.background || 'rgba(255,255,255,0.05)'
+    },
+    showBorder: true,
+    logoStyle: 'grayscale',
+    animationSpeed: 'normal'
+  };
+
   const componentsMap: Record<PageSection, React.ReactNode> = {
-    hero: mergedHeroData.heroVariant === 'modern' 
-      ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-      : mergedHeroData.heroVariant === 'gradient'
-        ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-        : mergedHeroData.heroVariant === 'fitness'
-          ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-          : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />,
+    hero: (
+      <>
+        {mergedHeroData.heroVariant === 'modern' 
+          ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+          : mergedHeroData.heroVariant === 'gradient'
+            ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+            : mergedHeroData.heroVariant === 'fitness'
+              ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+              : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />}
+        {/* TrustedBy section after Hero */}
+        <TrustedBy {...trustedByData} />
+      </>
+    ),
     features: <Features {...mergedFeaturesData} borderRadius={theme.cardBorderRadius} />,
     testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} avatarBorderWidth={mergedTestimonialsData.avatarBorderWidth} avatarBorderColor={mergedTestimonialsData.avatarBorderColor} />,
     slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
@@ -324,8 +355,8 @@ const LandingPage: React.FC = () => {
   // Determine if we should show the loading spinner for an article
   const showArticleLoading = isArticleHash && (isLoadingCMS || (isRouting && !activePost));
 
-  // Safe access for background color to prevent crashes if data structure is incomplete
-  const pageBackgroundColor = data?.hero?.colors?.background || '#0f172a';
+  // Use theme pageBackground with fallback to white
+  const pageBackgroundColor = theme?.pageBackground || '#ffffff';
 
   return (
     <div 
@@ -420,8 +451,8 @@ const LandingPage: React.FC = () => {
         )}
       </main>
       
-      {/* Footer (Hide when reading article) */}
-      {!activePost && !showArticleLoading && componentStatus.footer && sectionVisibility.footer && (
+      {/* Footer - Always visible on all pages including articles */}
+      {!showArticleLoading && componentStatus.footer && sectionVisibility.footer && (
          <div 
             id="footer" 
             className={`cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}

@@ -3,6 +3,8 @@ import React from 'react';
 import { HeroData, PaddingSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, FontSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -211,6 +213,17 @@ const Hero: React.FC<HeroProps> = ({
       // Logic for 'auto' aspect ratio: constrain the image's height directly.
       if (imageHeightEnabled && imageAspectRatio === 'auto') {
           imgStyle.maxHeight = `${imageHeight}px`;
+      }
+
+      // Show placeholder if image URL is empty or pending
+      if (isPendingImage(imageUrl)) {
+          return (
+              <ImagePlaceholder 
+                  aspectRatio="16:9"
+                  showGenerateButton={false}
+                  className={`${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]}`}
+              />
+          );
       }
 
       return (

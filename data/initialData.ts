@@ -5,10 +5,10 @@ import { PageData, NavLink, ThemeData, PageSection, BrandIdentity } from '../typ
 // that includes theme, componentOrder, and sectionVisibility to resolve type errors.
 const pageData: PageData = {
   header: {
-    style: 'sticky-transparent',
+    style: 'sticky-solid',
     layout: 'classic',
     isSticky: true,
-    glassEffect: true,
+    glassEffect: false,
     height: 80,
     logoType: 'text',
     logoText: 'Quimera.ai',
@@ -26,26 +26,26 @@ const pageData: PageData = {
     loginText: 'Log In',
     loginUrl: '#',
     colors: {
-      background: 'rgba(15, 23, 42, 0.7)', // dark-900 with transparency
-      text: '#E2E8F0', // slate-200
-      accent: '#4f46e5',
+      background: '#4f46e5', // Solid brand color
+      text: '#ffffff', // White text for contrast
+      accent: '#ffffff',
     },
     buttonBorderRadius: 'xl',
   },
   hero: {
-    heroVariant: 'classic',
+    heroVariant: 'modern',
     paddingY: 'lg',
     paddingX: 'md',
     headline: "Create Stunning Visuals with <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary\">Quimera.ai</span>",
     subheadline: "Unlock your creative potential. Generate breathtaking, unique images with our cutting-edge AI technology. Perfect for designers, artists, and marketers.",
-    primaryCta: "Start Generating",
-    secondaryCta: "Learn More",
+    primaryCta: "Start Creating Now",
+    secondaryCta: "See How It Works",
     imageUrl: "https://picsum.photos/id/10/800/600",
     imageStyle: 'default',
     imageDropShadow: true,
     imageBorderRadius: 'xl',
     imageBorderSize: 'sm',
-    imageBorderColor: '#4f46e5',
+    imageBorderColor: '#ffffff',
     imageJustification: 'end',
     imagePosition: 'right',
     imageWidth: 100,
@@ -69,14 +69,42 @@ const pageData: PageData = {
     secondaryButtonStyle: 'solid',
     secondaryButtonOpacity: 100,
     showBadge: true,
-    badgeText: 'AI-Powered Generation',
-    badgeIcon: '✨',
+    badgeText: '🚀 AI-Powered Generation 2.0',
+    badgeIcon: 'sparkles',
+    showStats: true,
+    stats: [
+      { value: '50K+', label: 'Images Created' },
+      { value: '99.9%', label: 'Uptime' },
+      { value: '<2s', label: 'Generation Time' }
+    ],
     badgeColor: '#4f46e5',
     badgeBackgroundColor: '#4f46e515',
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
   },
+  trustedBy: {
+    title: "Trusted by innovative teams worldwide",
+    logos: [
+      { name: 'TechCorp', imageUrl: 'https://picsum.photos/seed/techcorp/200/60' },
+      { name: 'DesignPro', imageUrl: 'https://picsum.photos/seed/designpro/200/60' },
+      { name: 'StartupX', imageUrl: 'https://picsum.photos/seed/startupx/200/60' },
+      { name: 'InnovateLabs', imageUrl: 'https://picsum.photos/seed/innovate/200/60' },
+      { name: 'CreativeStudio', imageUrl: 'https://picsum.photos/seed/creative/200/60' },
+      { name: 'DigitalWorks', imageUrl: 'https://picsum.photos/seed/digital/200/60' },
+    ],
+    paddingY: 'sm',
+    paddingX: 'md',
+    colors: {
+      background: '#0f172a',
+      text: '#94a3b8',
+      borderColor: 'rgba(255,255,255,0.05)'
+    },
+    showBorder: true,
+    logoStyle: 'grayscale',
+    animationSpeed: 'normal'
+  },
   features: {
+    featuresVariant: 'bento-premium',
     paddingY: 'lg',
     paddingX: 'md',
     title: "Powerful Features, Effortless Creation",
@@ -112,7 +140,7 @@ const pageData: PageData = {
     },
   },
   testimonials: {
-    testimonialsVariant: 'classic',
+    testimonialsVariant: 'glassmorphism',
     paddingY: 'lg',
     paddingX: 'md',
     title: "Loved by Creatives Worldwide",
@@ -190,7 +218,7 @@ const pageData: PageData = {
     },
   },
   pricing: {
-    pricingVariant: 'classic',
+    pricingVariant: 'gradient',
     title: "Choose Your Plan",
     description: "Simple, transparent pricing. No hidden fees. Choose the plan that's right for you and start creating today.",
     paddingY: 'lg',
@@ -617,11 +645,11 @@ const pageData: PageData = {
     ],
     copyrightText: '© {YEAR} Quimera.ai. All rights reserved.',
     colors: {
-      background: '#1e293b', // bg-dark-800
-      border: '#334155', // border-dark-700
-      text: '#94a3b8', // text-slate-400
-      linkHover: '#4f46e5', // hover:text-primary
-      heading: '#F9FAFB',
+      background: '#4f46e5', // Same as header - solid brand color
+      border: '#6366f1', // Lighter border
+      text: '#ffffff', // White text for contrast
+      linkHover: '#e0e7ff', // Light hover color
+      heading: '#ffffff',
     },
   },
 };
@@ -632,6 +660,7 @@ const theme: ThemeData = {
     fontFamilyHeader: 'poppins',
     fontFamilyBody: 'mulish',
     fontFamilyButton: 'poppins',
+    pageBackground: '#ffffff', // Default to white page background
 };
 
 const brandIdentity: BrandIdentity = {

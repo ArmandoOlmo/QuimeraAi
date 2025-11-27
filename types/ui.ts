@@ -50,5 +50,6 @@ export interface ThemeData {
     fontFamilyHeader: FontFamily;
     fontFamilyBody: FontFamily;
     fontFamilyButton: FontFamily;
+    pageBackground: string; // Global page background color
 }
 

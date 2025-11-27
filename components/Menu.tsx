@@ -1,6 +1,9 @@
 import React from 'react';
 import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, AnimationType } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
+import { isLightColor } from '../utils/colorUtils';
 import { 
     Star, Award, ChefHat,
     // Development & Technology
@@ -60,6 +63,38 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   md: 'rounded-md',
   xl: 'rounded-xl',
   full: 'rounded-3xl',
+};
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex: string, opacity: number): string => {
+    const cleanHex = hex.replace('#', '');
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
+// Helper function to check if background is light/white
+const isBackgroundLight = (backgroundColor: string | undefined): boolean => {
+    if (!backgroundColor) return false;
+    // Handle rgba colors
+    if (backgroundColor.includes('rgba')) {
+        const match = backgroundColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (match) {
+            const [, r, g, b] = match.map(Number);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.6;
+        }
+    }
+    // Handle hex colors
+    if (backgroundColor.startsWith('#')) {
+        return isLightColor(backgroundColor);
+    }
+    // Handle color names
+    if (backgroundColor.toLowerCase() === 'white' || backgroundColor === '#fff' || backgroundColor === '#ffffff') {
+        return true;
+    }
+    return false;
 };
 
 const menuIcons: Record<ServiceIcon, React.ReactNode> = {
@@ -191,22 +226,34 @@ const ClassicMenuCard: React.FC<{
     enableAnimation?: boolean;
 }> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
+    const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
+    const hasLightBackground = isBackgroundLight(cardBg);
+    
+    // Price is 30% opacity of the primary color
+    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // On light backgrounds, use primary color for title and description
+    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
         <div 
             className={`group bg-white/5 border overflow-hidden transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl ${animationClass} ${borderRadius}`}
             style={{ 
                 borderColor: colors.borderColor,
-                backgroundColor: colors.cardBackground || 'rgba(30, 41, 59, 0.5)',
+                backgroundColor: cardBg,
                 animationDelay: getAnimationDelay(index, 0.1)
             }}
         >
         <div className="relative overflow-hidden h-56">
-            <img 
-                src={item.imageUrl} 
-                alt={item.name} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
+            {isPendingImage(item.imageUrl) ? (
+                <ImagePlaceholder aspectRatio="4:3" showGenerateButton={false} className="w-full h-full" />
+            ) : (
+                <img 
+                    src={item.imageUrl} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+            )}
             {item.isSpecial && (
                 <div 
                     className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"
@@ -223,22 +270,22 @@ const ClassicMenuCard: React.FC<{
         
         <div className="p-6">
             <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold font-header flex-1" style={{ color: colors.heading }}>
+                <h3 className="text-xl font-bold font-header flex-1" style={{ color: titleColor }}>
                     {item.name}
                 </h3>
                 <span 
                     className="text-2xl font-bold ml-3 font-header" 
-                    style={{ color: colors.priceColor || colors.accent }}
+                    style={{ color: priceColor }}
                 >
                     {item.price}
                 </span>
             </div>
-            <p className="text-sm leading-relaxed font-body opacity-90" style={{ color: colors.text }}>
+            <p className="text-sm leading-relaxed font-body opacity-90" style={{ color: textColor }}>
                 {item.description}
             </p>
             {item.category && (
                 <div className="mt-4 pt-4 border-t" style={{ borderColor: colors.borderColor }}>
-                    <span className="text-xs uppercase tracking-wider font-bold opacity-60" style={{ color: colors.text }}>
+                    <span className="text-xs uppercase tracking-wider font-bold opacity-60" style={{ color: textColor }}>
                         {item.category}
                     </span>
                 </div>
@@ -253,13 +300,21 @@ const ClassicMenuCard: React.FC<{
 // =============================================================================
 const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; index: number }> = ({ item, colors, borderRadius, index }) => {
     const isWide = index % 3 === 0;
+    const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
+    const hasLightBackground = isBackgroundLight(cardBg);
+    
+    // Price is 30% opacity of the primary color
+    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // On light backgrounds, use primary color for title and description
+    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
         <div 
             className={`group relative border overflow-hidden transition-all duration-500 hover:shadow-2xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`}
             style={{ 
                 borderColor: colors.borderColor,
-                backgroundColor: colors.cardBackground || 'rgba(30, 41, 59, 0.5)',
+                backgroundColor: cardBg,
             }}
         >
             {/* Gradient Glow Effect */}
@@ -271,11 +326,15 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
             <div className={`relative z-10 flex ${isWide ? 'flex-row' : 'flex-col'} h-full`}>
                 {/* Image Section */}
                 <div className={`relative overflow-hidden ${isWide ? 'w-1/2' : 'w-full h-48'}`}>
-                    <img 
-                        src={item.imageUrl} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    {isPendingImage(item.imageUrl) ? (
+                        <ImagePlaceholder aspectRatio="4:3" showGenerateButton={false} className="w-full h-full" />
+                    ) : (
+                        <img 
+                            src={item.imageUrl} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                    )}
                     {item.isSpecial && (
                         <div 
                             className="absolute top-4 left-4 p-2 rounded-full"
@@ -297,15 +356,15 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                                 {item.category}
                             </span>
                         )}
-                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: colors.heading, '--accent': colors.accent } as any}>
+                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: titleColor, '--accent': colors.accent } as any}>
                             {item.name}
                         </h3>
-                        <p className="text-sm leading-relaxed font-body mb-4 opacity-90" style={{ color: colors.text }}>
+                        <p className="text-sm leading-relaxed font-body mb-4 opacity-90" style={{ color: textColor }}>
                             {item.description}
                         </p>
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: colors.borderColor }}>
-                        <span className="text-3xl font-bold font-header" style={{ color: colors.priceColor || colors.accent }}>
+                        <span className="text-3xl font-bold font-header" style={{ color: priceColor }}>
                             {item.price}
                         </span>
                         <button 
@@ -333,23 +392,35 @@ const ElegantListCard: React.FC<{
     enableAnimation?: boolean;
 }> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
+    const cardBg = colors.cardBackground || 'transparent';
+    const hasLightBackground = isBackgroundLight(cardBg);
+    
+    // Price is 30% opacity of the primary color
+    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // On light backgrounds, use primary color for title and description
+    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
         <div 
             className={`group flex flex-col md:flex-row gap-6 p-6 border transition-all duration-300 hover:bg-white/5 ${borderRadius} ${animationClass}`}
             style={{ 
                 borderColor: colors.borderColor,
-                backgroundColor: colors.cardBackground || 'transparent',
+                backgroundColor: cardBg,
                 animationDelay: getAnimationDelay(index, 0.08)
             }}
         >
         {/* Image */}
         <div className={`relative overflow-hidden w-full md:w-64 h-48 flex-shrink-0 ${borderRadius}`}>
-            <img 
-                src={item.imageUrl} 
-                alt={item.name} 
-                className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
-            />
+            {isPendingImage(item.imageUrl) ? (
+                <ImagePlaceholder aspectRatio="4:3" showGenerateButton={false} className="w-full h-full" />
+            ) : (
+                <img 
+                    src={item.imageUrl} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
+                />
+            )}
             {item.isSpecial && (
                 <div 
                     className="absolute top-3 left-3 p-2 rounded-full shadow-lg"
@@ -365,7 +436,7 @@ const ElegantListCard: React.FC<{
             <div>
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2 font-header" style={{ color: colors.heading }}>
+                        <h3 className="text-2xl font-bold mb-2 font-header" style={{ color: titleColor }}>
                             {item.name}
                         </h3>
                         {item.category && (
@@ -379,12 +450,12 @@ const ElegantListCard: React.FC<{
                     </div>
                     <span 
                         className="text-3xl font-bold ml-4 font-header" 
-                        style={{ color: colors.priceColor || colors.accent }}
+                        style={{ color: priceColor }}
                     >
                         {item.price}
                     </span>
                 </div>
-                <p className="leading-relaxed font-body opacity-90" style={{ color: colors.text }}>
+                <p className="leading-relaxed font-body opacity-90" style={{ color: textColor }}>
                     {item.description}
                 </p>
             </div>
@@ -434,6 +505,12 @@ const Menu: React.FC<MenuProps> = ({
     // Group items by category if showCategories is true
     const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
     
+    // Check if section background is light
+    const hasLightSectionBackground = isBackgroundLight(colors.background);
+    // On light backgrounds, use primary color for section title and description
+    const sectionTitleColor = hasLightSectionBackground ? colors.accent : colors.heading;
+    const sectionTextColor = hasLightSectionBackground ? colors.accent : colors.text;
+    
     return (
         <section 
             id="menu" 
@@ -456,13 +533,13 @@ const Menu: React.FC<MenuProps> = ({
                 )}
                 <h2 
                     className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} 
-                    style={{ color: colors.heading }}
+                    style={{ color: sectionTitleColor }}
                 >
                     {title}
                 </h2>
                 <p 
                     className={`${descriptionSizeClasses[descriptionFontSize]} font-body opacity-90`} 
-                    style={{ color: colors.text }}
+                    style={{ color: sectionTextColor }}
                 >
                     {description}
                 </p>

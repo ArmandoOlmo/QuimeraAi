@@ -54,6 +54,46 @@ export const defaultPrompts: DefaultPrompt[] = [
     version: 1,
   },
   {
+    name: 'onboarding-goal',
+    area: 'Onboarding',
+    description: 'Generates business focus/goal during onboarding.',
+    template: `You are a business strategist. Based on this business:\n- Business Name: {{businessName}}\n- Industry: {{industry}}\n- Summary: {{summary}}\n\nWhat is the main business focus or goal for this website? Respond with a short, clear phrase (5-10 words) describing the primary objective. Examples: "Generate qualified leads for our services", "Sell products directly online", "Showcase portfolio and attract clients", "Build brand awareness and credibility", "Book appointments and consultations".`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
+    name: 'onboarding-color-vibe',
+    area: 'Onboarding',
+    description: 'Generates color vibe recommendation during onboarding.',
+    template: `You are a brand color expert. Based on this business:\n- Business Name: {{businessName}}\n- Industry: {{industry}}\n- Summary: {{summary}}\n- Aesthetic: {{aesthetic}}\n\nRecommend a color vibe that best represents this brand. Respond with a short, descriptive phrase (3-5 words) that captures the emotional tone. Examples: "Trustworthy Blue", "Energetic Orange", "Sophisticated Navy", "Fresh Green", "Bold Crimson", "Warm Earthy Tones", "Cool Modern Gray", "Vibrant Purple", "Elegant Gold".`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
+    name: 'onboarding-products',
+    area: 'Onboarding',
+    description: 'Generates product/service suggestions during onboarding.',
+    template: `You are a business consultant. Based on this business:\n- Business Name: {{businessName}}\n- Industry: {{industry}}\n- Summary: {{summary}}\n- Key Offerings: {{offerings}}\n\nGenerate 3-4 main products or services this business would offer. For each product/service, provide:\n- A clear name (2-4 words)\n- A compelling description (1-2 sentences)\n- A realistic price or pricing model\n\nReturn ONLY valid JSON in this exact format:\n[\n  {\n    "name": "Product Name",\n    "description": "Brief description of what this is and its benefits",\n    "price": "$99" or "Contact for pricing" or "$29/month"\n  }\n]\n\nMake the products/services specific, realistic, and valuable for the target audience.`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
+    name: 'onboarding-faqs',
+    area: 'Onboarding',
+    description: 'Generates frequently asked questions during onboarding.',
+    template: `You are a customer service expert. Based on this business:\n- Business Name: {{businessName}}\n- Industry: {{industry}}\n- Summary: {{summary}}\n- Target Audience: {{audience}}\n\nGenerate 5-6 frequently asked questions that potential customers would have. Each FAQ should:\n- Address common concerns or questions specific to {{industry}}\n- Provide clear, helpful answers (2-3 sentences)\n- Build trust and address objections\n- Be relevant to the business and its offerings\n\nReturn ONLY valid JSON in this exact format:\n[\n  {\n    "question": "Specific question customers would ask?",\n    "answer": "Clear, helpful answer that builds trust and addresses the concern."\n  }\n]\n\nMake the FAQs diverse, covering pricing, process, guarantees, timing, and quality concerns.`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
+    name: 'onboarding-testimonials',
+    area: 'Onboarding',
+    description: 'Generates realistic customer testimonials during onboarding.',
+    template: `You are a marketing copywriter specializing in authentic testimonials. Based on this business:\n- Business Name: {{businessName}}\n- Industry: {{industry}}\n- Summary: {{summary}}\n- Target Audience: {{audience}}\n\nGenerate 3 realistic and compelling customer testimonials. Each testimonial should:\n- Sound authentic and specific (not generic)\n- Mention concrete benefits or results\n- Include realistic customer details\n- Be 2-3 sentences long\n\nReturn ONLY valid JSON in this exact format:\n[\n  {\n    "quote": "Specific testimonial text that sounds authentic and mentions real benefits",\n    "author": "First Last Name",\n    "role": "Job Title",\n    "company": "Company Name"\n  }\n]\n\nMake the testimonials diverse (different industries, roles, benefits mentioned) and believable.`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
     name: 'onboarding-design-plan',
     area: 'Onboarding',
     description: 'Acts as a Senior Art Director to define a strict Design System based on aesthetic choice.',
@@ -64,7 +104,7 @@ export const defaultPrompts: DefaultPrompt[] = [
 - Summary: {{summary}}
 - Aesthetic Direction: **{{aesthetic}}**
 - Color Vibe: {{colorVibe}}
-- Primary Goal: {{goal}}
+- Business Focus: {{goal}}
 
 **Available Components:**
 {{availableComponents}}
@@ -77,6 +117,17 @@ export const defaultPrompts: DefaultPrompt[] = [
 2. You MAY include custom components if they fit the design
 3. DO NOT include any components not in the available list
 
+**INTELLIGENT COMPONENT SELECTION:**
+Choose components that best fit the {{industry}} and {{summary}}. Consider:
+- Hero section is ALWAYS required as the entry point
+- For service businesses: Consider 'services', 'team', 'testimonials', 'leads'
+- For e-commerce/products: Consider 'features', 'pricing', 'testimonials', 'cta'
+- For portfolios/agencies: Consider 'portfolio', 'services', 'team', 'cta'
+- For restaurants/food: Consider 'menu', 'slideshow', 'leads'
+- For any business: 'faq' builds trust, 'newsletter' grows audience, 'leads' captures contacts
+- Select 5-8 components that create a complete, cohesive experience
+- Footer is ALWAYS required and will be added automatically
+
 **Available Font Stacks (Pick the best match for {{aesthetic}}):**
 - 'inter', 'plus-jakarta-sans', 'outfit' (Modern/Tech)
 - 'playfair-display', 'merriweather', 'lora' (Elegant/Editorial)
@@ -87,18 +138,27 @@ export const defaultPrompts: DefaultPrompt[] = [
 **Available Component Settings:**
 - cardBorderRadius / buttonBorderRadius: 'none' (Sharp), 'md' (Soft), 'xl' (Rounded), 'full' (Pill)
 - headerLayout: 'classic', 'minimal', 'center', 'stack'
-- headerStyle: 'sticky-solid', 'sticky-transparent', 'floating'
+- headerStyle: 'sticky-solid' (ALWAYS use solid - header must have solid brand color background)
 - heroImageStyle: 'default', 'glow', 'float', 'hexagon', 'polaroid'
+
+**CRITICAL COLOR RULES:**
+1. "primary" = BRAND COLOR = Used for header background, buttons, CTAs, accents
+2. "secondary" = Complementary color for variety and balance
+3. "background" = Section backgrounds (should contrast well with text)
+4. "text" = MUST have high contrast with background for readability
+5. For DARK backgrounds: text MUST be #ffffff or very light (luminance > 0.8)
+6. For LIGHT backgrounds: text MUST be #1a1a1a or very dark (luminance < 0.2)
+7. Buttons always use primary brand color with contrasting text
 
 **Task:**
 Generate a JSON object defining the visual strategy.
 {
   "palette": { 
-      "primary": "Hex Code", 
-      "secondary": "Hex Code (Complementary)", 
-      "accent": "Hex Code (Pop color)", 
-      "background": "Hex Code (Base canvas)", 
-      "text": "Hex Code (High contrast)" 
+      "primary": "Hex Code (BRAND COLOR - header, buttons, CTAs)", 
+      "secondary": "Hex Code (Complementary for accents)", 
+      "accent": "Hex Code (Pop color for highlights)", 
+      "background": "Hex Code (Section backgrounds)", 
+      "text": "Hex Code (MUST contrast with background - white for dark bg, black for light bg)" 
   },
   "typography": { 
       "header": "font-family-slug", 
@@ -111,21 +171,33 @@ Generate a JSON object defining the visual strategy.
   },
   "layoutStrategy": {
       "headerLayout": "type",
-      "headerStyle": "type",
+      "headerStyle": "sticky-solid",
       "heroImageStyle": "type",
       "heroImagePosition": "left | right"
   },
-  "componentOrder": [Only components from availableComponents list],
+  "componentOrder": [Components selected based on {{goal}} - see MANDATORY rules above. MUST always end with 'footer'],
   "imageStyleDescription": "Detailed Stable Diffusion style prompt describing lighting, composition, and mood matching {{aesthetic}}."
 }
 
-**Rules:**
-- If Aesthetic is 'Minimalist': Use lots of whitespace, black/white/gray palette, sharp or small radius, 'minimal' header.
-- If Aesthetic is 'Bold': Use high contrast colors, large typography ('oswald'), sharp corners, 'floating' header.
-- If Aesthetic is 'Elegant': Use serif fonts, gold/cream/navy palette, 'classic' header.
-- If Aesthetic is 'Tech': Use dark mode, neon accents, 'glow' image styles, 'inter' font.`,
+**FOOTER RULE (MANDATORY):**
+- The 'footer' component MUST ALWAYS be included as the LAST item in componentOrder
+- Footer is required on ALL pages, including articles
+
+**AESTHETIC RULES:**
+- If Aesthetic is 'Minimalist': Black/white/gray palette, sharp or small radius, 'minimal' header layout. Text: #1a1a1a on light, #ffffff on dark.
+- If Aesthetic is 'Bold': High contrast vivid colors, large typography ('oswald'), sharp corners. Ensure text pops against background.
+- If Aesthetic is 'Elegant': Serif fonts, gold/cream/navy palette, 'classic' header layout. Refined contrast ratios.
+- If Aesthetic is 'Tech': Dark mode (#0f172a background), neon/cyan accents, #ffffff text. 'glow' image styles, 'inter' font.
+- If Aesthetic is 'Playful': Vibrant colors, rounded shapes. Ensure playful colors still have good text contrast.
+- If Aesthetic is 'Organic': Earth tones (greens, browns, creams). Natural palette with readable text.
+
+**HEADER & FOOTER RULES (MANDATORY):**
+- headerStyle MUST always be 'sticky-solid' - the header will use the primary brand color as solid background, never transparent.
+- Header and Footer MUST have the SAME background color (primary brand color)
+- Both header and footer backgrounds must be SOLID colors, never transparent or gradient
+- Page background should default to white (#ffffff) or a very light neutral color to provide contrast`,
     model: 'gemini-3-pro-preview',
-    version: 3,
+    version: 4,
   },
   {
     name: 'onboarding-website-json',
@@ -148,7 +220,7 @@ Generate a JSON object defining the visual strategy.
 - Summary: {{summary}}
 - Target Audience: {{audience}}
 - Key Offerings: {{offerings}}
-- Primary Goal: {{goal}}
+- Business Focus: {{goal}}
 - Aesthetic: {{aesthetic}}
 
 **Detailed Information (USE THESE!):**
@@ -182,18 +254,31 @@ Generate a JSON object defining the visual strategy.
 2.  **Personalization Strategy:**
     - Hero headline: Use {{uniqueValueProposition}} if provided, otherwise create compelling headline mentioning {{businessName}}
     - Hero subheadline: Incorporate {{companyHistory}} or {{summary}}
+    - Hero CTA: Create action-oriented button text that aligns with {{goal}} and {{industry}}
     - Features: Map from {{offerings}} and {{products}} data
     - Testimonials: Use {{testimonials}} data EXACTLY - do not modify quotes
     - Services/Pricing: Build from {{products}} data if available
     - Footer: Include ALL contact info from {{contactInfo}}
-    - FAQ: Create questions relevant to {{industry}} and {{goal}}
-    - CTA: Align with {{goal}} (leads/sales/portfolio)
+    - FAQ: Create questions relevant to {{industry}} and common customer concerns
+    - CTA: Write compelling copy that encourages action based on business context
 
 3.  **Content Quality:**
     - Write in professional, engaging tone
     - Vary section backgrounds for visual rhythm
     - Create specific image prompts using imageStyleDescription
     - Ensure copy reflects {{aesthetic}} (e.g., Bold = powerful language, Elegant = refined language)
+
+4.  **Color Consistency Rules:**
+    - Header background = PRIMARY brand color (SOLID)
+    - Footer background = PRIMARY brand color (SOLID, SAME as header)
+    - Page background = White (#ffffff) or very light neutral color
+    - Card backgrounds for Features, Menu, Testimonials cards, Map info card = PRIMARY brand color
+    - FAQ section background = SECONDARY color
+    - Leads (contact form) = PRIMARY brand color for form background
+    - Newsletter = PRIMARY brand color at 75% opacity (rgba)
+    - Chatbot widget = PRIMARY brand color
+    - Ensure all text on colored backgrounds has proper contrast
+    - Buttons always use PRIMARY brand color with contrasting text
 
 **CRITICAL: Final JSON Output Specification**
 Return ONLY valid JSON. No markdown.
@@ -207,13 +292,18 @@ Return ONLY valid JSON. No markdown.
         "buttonBorderRadius": "From Design Plan",
         "fontFamilyHeader": "From Design Plan",
         "fontFamilyBody": "From Design Plan",
-        "fontFamilyButton": "From Design Plan"
+        "fontFamilyButton": "From Design Plan",
+        "pageBackground": "#ffffff"
     },
     "data": {
         "header": {
-            "style": "From Design Plan",
+            "style": "sticky-solid",
             "layout": "From Design Plan",
-            "colors": { "background": "Hex", "text": "Hex", "accent": "Hex" },
+            "colors": { 
+                "background": "PRIMARY brand color from palette (solid, not transparent)", 
+                "text": "Contrasting color (white for dark bg, black for light bg)", 
+                "accent": "Secondary or accent color" 
+            },
             "logoText": "{{businessName}}",
             "links": [{"text": "Home", "href": "#hero"}, {"text": "Services", "href": "#services"}, {"text": "Contact", "href": "#leads"}]
         },
@@ -234,13 +324,77 @@ Return ONLY valid JSON. No markdown.
                 { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "imageUrl": "" },
                 { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "imageUrl": "" }
             ], 
-            "colors": { "background": "Contrasting to hero", "accent": "Palette Accent", "text": "Palette Text" } 
+            "colors": { 
+                "background": "Contrasting to hero", 
+                "accent": "Palette Accent", 
+                "text": "Palette Text",
+                "cardBackground": "PRIMARY brand color",
+                "borderColor": "Slightly darker/lighter than primary"
+            } 
         },
         "testimonials": { 
             "title": "What Our Clients Say", 
             "description": "Real experiences", 
-            "items": "USE {{testimonials}} EXACTLY - array of {quote, name, title, avatar}",
-            "colors": { "background": "Palette Primary/Dark", "text": "White/Light" } 
+            "items": [
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" },
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" },
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" }
+            ],
+            "colors": { 
+                "background": "Palette Background", 
+                "text": "Palette Text",
+                "heading": "Palette Text",
+                "cardBackground": "PRIMARY brand color",
+                "borderColor": "Slightly darker/lighter than primary"
+            } 
+        },
+        "team": {
+            "title": "Meet Our Team",
+            "description": "The experts behind our success",
+            "items": [
+                { "name": "Team Member Name", "role": "Position", "imageUrl": "" },
+                { "name": "Team Member Name", "role": "Position", "imageUrl": "" },
+                { "name": "Team Member Name", "role": "Position", "imageUrl": "" },
+                { "name": "Team Member Name", "role": "Position", "imageUrl": "" }
+            ],
+            "colors": { "background": "Palette Background", "text": "Palette Text", "heading": "Palette Heading" }
+        },
+        "portfolio": {
+            "title": "Our Work",
+            "description": "Projects we're proud of",
+            "items": [
+                { "title": "Project Name", "description": "Brief description", "imageUrl": "" },
+                { "title": "Project Name", "description": "Brief description", "imageUrl": "" },
+                { "title": "Project Name", "description": "Brief description", "imageUrl": "" }
+            ],
+            "colors": { "background": "Palette Background", "accent": "Palette Accent", "text": "Palette Text" }
+        },
+        "slideshow": {
+            "title": "Gallery",
+            "items": [
+                { "imageUrl": "", "altText": "Slide description" },
+                { "imageUrl": "", "altText": "Slide description" },
+                { "imageUrl": "", "altText": "Slide description" }
+            ],
+            "colors": { "background": "Palette Background", "heading": "Palette Heading" }
+        },
+        "menu": {
+            "title": "Our Menu",
+            "description": "Delicious offerings",
+            "items": [
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" },
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" },
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" },
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" },
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" },
+                { "name": "Item Name", "description": "Description", "price": "$XX", "imageUrl": "" }
+            ],
+            "colors": { 
+                "background": "Palette Background", 
+                "text": "Palette Text",
+                "cardBackground": "PRIMARY brand color",
+                "borderColor": "Slightly darker/lighter than primary"
+            }
         },
         "services": { 
             "title": "Our Services", 
@@ -258,7 +412,13 @@ Return ONLY valid JSON. No markdown.
             "title": "Frequently Asked Questions", 
             "description": "Everything you need to know", 
             "items": "Create 5-7 relevant to {{industry}} and {{goal}}",
-            "colors": { "background": "Palette Background", "text": "Palette Text" } 
+            "colors": { 
+                "background": "SECONDARY color", 
+                "text": "Contrasting text color",
+                "heading": "Contrasting heading color",
+                "accent": "PRIMARY brand color",
+                "borderColor": "Slightly darker/lighter than secondary"
+            } 
         },
         "cta": { 
             "title": "Ready to get started?", 
@@ -270,24 +430,72 @@ Return ONLY valid JSON. No markdown.
             "title": "Get In Touch", 
             "description": "We'd love to hear from you", 
             "buttonText": "Send Message",
-            "colors": { "background": "Palette Background", "text": "Palette Text" } 
+            "colors": { 
+                "background": "Palette Background", 
+                "text": "Palette Text",
+                "cardBackground": "PRIMARY brand color",
+                "buttonBackground": "PRIMARY brand color",
+                "buttonText": "Contrasting text color"
+            } 
         },
         "footer": { 
             "title": "{{businessName}}", 
             "description": "Brief value prop", 
             "copyrightText": "© 2024 {{businessName}}",
             "socialLinks": "BUILD from {{contactInfo.socialMedia}} if provided",
-            "colors": { "background": "Palette Dark", "text": "Gray" } 
+            "colors": { 
+                "background": "PRIMARY brand color (SAME as header)", 
+                "text": "Contrasting color (white for dark bg, black for light bg)",
+                "heading": "Contrasting color (white for dark bg, black for light bg)"
+            } 
         }
     }
   },
   "imagePrompts": {
-    "hero.imageUrl": "Specific prompt for {{industry}} hero using style: {{designPlanImageStyle}}",
-    "features.items.0.imageUrl": "Prompt for feature 1 in {{industry}} context",
-    "features.items.1.imageUrl": "Prompt for feature 2 in {{industry}} context",
-    "features.items.2.imageUrl": "Prompt for feature 3 in {{industry}} context"
+    "IMPORTANT": "Generate prompts ONLY for sections in componentOrder. Each prompt should use imageStyleDescription from Design Plan.",
+    
+    "hero.imageUrl": "{{industry}} hero image, {{aesthetic}} style, professional, high quality, {{imageStyleDescription}}",
+    
+    "features.items.0.imageUrl": "Image for feature 1, {{industry}} context, {{aesthetic}} aesthetic, professional",
+    "features.items.1.imageUrl": "Image for feature 2, {{industry}} context, {{aesthetic}} aesthetic, professional",
+    "features.items.2.imageUrl": "Image for feature 3, {{industry}} context, {{aesthetic}} aesthetic, professional",
+    
+    "team.items.0.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
+    "team.items.1.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
+    "team.items.2.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
+    "team.items.3.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
+    
+    "testimonials.items.0.avatar": "Casual portrait photo of a real person, satisfied customer, friendly natural expression, casual everyday clothing, authentic look, square format 1:1 aspect ratio, {{industry}} context",
+    "testimonials.items.1.avatar": "Natural portrait photo of a real person, happy customer, confident warm smile, relaxed casual attire, genuine expression, square format 1:1 aspect ratio, {{industry}} context",
+    "testimonials.items.2.avatar": "Authentic portrait photo of a real person, pleased customer, approachable friendly look, casual normal clothing, natural lighting, square format 1:1 aspect ratio, {{industry}} context",
+    
+    "portfolio.items.0.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, high quality",
+    "portfolio.items.1.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, professional",
+    "portfolio.items.2.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, premium",
+    
+    "slideshow.items.0.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, cinematic, high resolution",
+    "slideshow.items.1.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, atmospheric, professional",
+    "slideshow.items.2.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, editorial quality",
+    
+    "menu.items.0.imageUrl": "Food photography, {{industry}} dish, appetizing, professional lighting, {{aesthetic}} style",
+    "menu.items.1.imageUrl": "Food photography, {{industry}} dish, delicious, styled, {{aesthetic}} aesthetic",
+    "menu.items.2.imageUrl": "Food photography, {{industry}} dish, gourmet presentation, {{aesthetic}} style",
+    "menu.items.3.imageUrl": "Food photography, {{industry}} dish, fresh ingredients, {{aesthetic}} aesthetic",
+    "menu.items.4.imageUrl": "Food photography, {{industry}} dish, artfully plated, {{aesthetic}} style",
+    "menu.items.5.imageUrl": "Food photography, {{industry}} dish, inviting, {{aesthetic}} aesthetic"
   }
-}`,
+}
+
+**IMPORTANT IMAGE PROMPTS RULES:**
+1. ONLY include imagePrompts for sections that are in componentOrder
+2. If "team" is NOT in componentOrder, do NOT include team.items.X.imageUrl prompts
+3. If "menu" is NOT in componentOrder, do NOT include menu.items.X.imageUrl prompts
+4. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
+5. If "slideshow" is NOT in componentOrder, do NOT include slideshow.items.X.imageUrl prompts
+6. If "testimonials" is NOT in componentOrder, do NOT include testimonials.items.X.avatar prompts
+7. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
+8. Use imageStyleDescription from Design Plan for consistent visual style
+9. TESTIMONIAL AVATARS MUST use square format (1:1 aspect ratio) and show people in CASUAL/NORMAL clothing UNLESS the industry is formal (law firm, consulting, finance, corporate) - in those cases use smart casual or business casual attire`,
     model: 'gemini-3-pro-preview',
     version: 4,
   },

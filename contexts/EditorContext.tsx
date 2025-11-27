@@ -141,7 +141,12 @@ interface EditorContextType {
         depthOfField?: string,
         referenceImage?: string,
         referenceImages?: string[]
-    }) => Promise<string>; 
+    }) => Promise<string>;
+    generateProjectImagesWithProgress: (
+        project: Project,
+        imagePrompts: Record<string, string>,
+        onProgress: (current: number, total: number, section: string, imageUrl?: string) => void
+    ) => Promise<{ success: boolean; generatedImages: Record<string, string>; failedPaths: string[] }>;
     enhancePrompt: (draftPrompt: string, referenceImages?: string[]) => Promise<string>;
     
     // Global File Management (Super Admin)
@@ -453,9 +458,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         audience: '',
         offerings: '',
         tone: 'Professional',
-        goal: 'Generate Leads',
+        goal: '',
         aesthetic: 'Minimalist',
-        colorVibe: 'Trustworthy Blue',
+        colorVibe: '',
         // Nuevos campos opcionales
         companyHistory: undefined,
         uniqueValueProposition: undefined,
@@ -1470,6 +1475,118 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 console.error("Failed to save hydrated project", err);
             }
         }
+    };
+
+    // New function with progress callbacks for onboarding wizard
+    const generateProjectImagesWithProgress = async (
+        project: Project,
+        imagePrompts: Record<string, string>,
+        onProgress: (current: number, total: number, section: string, imageUrl?: string) => void
+    ): Promise<{ success: boolean; generatedImages: Record<string, string>; failedPaths: string[] }> => {
+        if (!user) {
+            return { success: false, generatedImages: {}, failedPaths: Object.keys(imagePrompts) };
+        }
+
+        // Check for API Key before starting
+        if (hasApiKey === false) {
+            await promptForKeySelection();
+        }
+
+        console.log("🖼️ [generateProjectImagesWithProgress] Starting image generation...", {
+            projectId: project.id,
+            totalPrompts: Object.keys(imagePrompts).length
+        });
+
+        const generatedImages: Record<string, string> = {};
+        const failedPaths: string[] = [];
+        const entries = Object.entries(imagePrompts);
+        const newProjectData = JSON.parse(JSON.stringify(project.data));
+        let newThumbnailUrl = project.thumbnailUrl;
+
+        // Helper to get aspect ratio based on path
+        const getAspectRatioForPath = (path: string): string => {
+            if (path.includes('avatar')) return '1:1';
+            if (path.includes('team')) return '3:4';
+            if (path.includes('hero') || path.includes('slideshow')) return '16:9';
+            if (path.includes('menu') || path.includes('portfolio') || path.includes('features')) return '4:3';
+            return '16:9';
+        };
+
+        // Helper to get section name from path
+        const getSectionFromPath = (path: string): string => {
+            const section = path.split('.')[0];
+            return section.charAt(0).toUpperCase() + section.slice(1);
+        };
+
+        for (let i = 0; i < entries.length; i++) {
+            const [path, prompt] = entries[i];
+            const section = getSectionFromPath(path);
+            const aspectRatio = getAspectRatioForPath(path);
+
+            // Report progress start for this image
+            onProgress(i, entries.length, section);
+
+            try {
+                console.log(`🖼️ [generateProjectImagesWithProgress] Generating image ${i + 1}/${entries.length}: ${path}`);
+                
+                const imageUrl = await generateImage(prompt, { 
+                    aspectRatio, 
+                    style: 'Photorealistic' 
+                });
+
+                generatedImages[path] = imageUrl;
+                updateNestedData(newProjectData, path, imageUrl);
+
+                // If we generated the hero image, update the project thumbnail
+                if (path === 'hero.imageUrl') {
+                    newThumbnailUrl = imageUrl;
+                }
+
+                // Report progress with the generated image URL
+                onProgress(i + 1, entries.length, section, imageUrl);
+
+                console.log(`✅ [generateProjectImagesWithProgress] Image ${i + 1} generated successfully`);
+
+            } catch (error) {
+                console.error(`❌ [generateProjectImagesWithProgress] Failed to generate image for ${path}:`, error);
+                failedPaths.push(path);
+                // Leave the field empty for failed images (will show placeholder)
+                updateNestedData(newProjectData, path, '');
+                
+                // Still report progress even on failure
+                onProgress(i + 1, entries.length, section);
+            }
+        }
+
+        // Save to Firebase
+        if (Object.keys(generatedImages).length > 0 || failedPaths.length > 0) {
+            try {
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', project.id);
+                await updateDoc(projectDocRef, { 
+                    data: newProjectData,
+                    thumbnailUrl: newThumbnailUrl
+                });
+                
+                // Update project list state
+                setProjects(prev => prev.map(p => 
+                    p.id === project.id 
+                        ? { ...p, data: newProjectData, thumbnailUrl: newThumbnailUrl } 
+                        : p
+                ));
+
+                console.log(`💾 [generateProjectImagesWithProgress] Project updated in Firebase`);
+            } catch (err) {
+                console.error("Failed to save project with generated images", err);
+            }
+        }
+
+        console.log(`🖼️ [generateProjectImagesWithProgress] Complete. Generated: ${Object.keys(generatedImages).length}, Failed: ${failedPaths.length}`);
+
+        return {
+            success: failedPaths.length === 0,
+            generatedImages,
+            failedPaths
+        };
     };
 
     const createProjectFromTemplate = async (templateId: string, newName?: string) => {
@@ -3624,6 +3741,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         generateFileSummary,
         uploadImageAndGetURL,
         generateImage,
+        generateProjectImagesWithProgress,
         enhancePrompt,
         // Global File Management
         globalFiles,

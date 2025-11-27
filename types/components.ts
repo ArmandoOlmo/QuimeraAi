@@ -102,7 +102,7 @@ export interface FeatureItem {
 }
 
 export interface FeaturesData {
-    featuresVariant?: 'classic' | 'modern';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium';
     title: string;
     description: string;
     items: FeatureItem[];

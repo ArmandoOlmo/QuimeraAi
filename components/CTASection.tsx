@@ -45,11 +45,11 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge Design Tokens with component colors
+  // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors.background || '#0f172a',
-    gradientStart: getColor('primary.main', colors.gradientStart),
-    gradientEnd: getColor('secondary.main', colors.gradientEnd),
+    gradientStart: colors.gradientStart || getColor('primary.main', '#4f46e5'),
+    gradientEnd: colors.gradientEnd || getColor('secondary.main', '#10b981'),
     text: colors.text || '#ffffff',
     heading: colors.heading,
     buttonBackground: colors.buttonBackground || '#ffffff',
@@ -60,27 +60,60 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
     <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div 
-            className={`relative p-12 shadow-2xl text-center overflow-hidden ${borderRadiusClasses[cardBorderRadius]}`}
-            style={{ backgroundImage: `linear-gradient(to right, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
+            className={`relative p-12 md:p-16 lg:p-20 shadow-2xl text-center overflow-hidden ${borderRadiusClasses[cardBorderRadius]}`}
+            style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
         >
-            <div className="absolute inset-0 bg-black/20 mix-blend-multiply"></div>
-            <div className="relative">
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-white mb-4 font-header`} style={{ color: actualColors.heading }}>
+            {/* === ANIMATED BACKGROUND ELEMENTS === */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {/* Floating orbs */}
+              <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-blob" />
+              <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-blob animation-delay-2000" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+              
+              {/* Grid pattern */}
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+            </div>
+            
+            <div className="absolute inset-0 bg-black/10 mix-blend-multiply"></div>
+            
+            <div className="relative z-10">
+                {/* Urgency Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6 animate-pulse">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  </span>
+                  <span className="text-white/90 text-sm font-medium">Limited Time Offer</span>
+                </div>
+                
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-black text-white mb-4 font-header leading-tight`} style={{ color: actualColors.heading }}>
                     {title}
                 </h2>
                 <p 
-                    className={`${descriptionSizeClasses[descriptionFontSize]} mb-8 max-w-2xl mx-auto font-body`}
+                    className={`${descriptionSizeClasses[descriptionFontSize]} mb-10 max-w-2xl mx-auto font-body opacity-90`}
                     style={{ color: actualColors.text }}
                 >
                     {description}
                 </p>
-                <a 
-                    href="#" 
-                    className={`inline-block font-bold py-4 px-10 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-                    style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
-                >
-                    {buttonText}
-                </a>
+                
+                {/* CTA Button Group */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a 
+                      href="#" 
+                      className={`group inline-flex items-center gap-3 font-bold py-4 px-10 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
+                      style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
+                  >
+                      <span>{buttonText}</span>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                  </a>
+                  
+                  {/* Secondary text */}
+                  <span className="text-white/60 text-sm">
+                    No credit card required • Cancel anytime
+                  </span>
+                </div>
             </div>
         </div>
       </div>
