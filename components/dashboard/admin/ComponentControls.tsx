@@ -807,13 +807,13 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
-                    <ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
 
                 <hr className="border-editor-border/50" />
                 <h4 className="font-semibold text-editor-text-primary">Card Box</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Border" value={s.colors?.borderColor || '#374151'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
 
                 <hr className="border-editor-border/50" />
