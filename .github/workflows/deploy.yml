@@ -27,6 +27,20 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+      
+      - name: Verify Firebase secrets
+        run: |
+          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+            echo "❌ Error: FIREBASE_SERVICE_ACCOUNT secret is not configured in GitHub"
+            echo "Please configure the secret in: Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ]; then
+            echo "❌ Error: VITE_FIREBASE_PROJECT_ID secret is not configured in GitHub"
+            echo "Please configure the secret in: Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          echo "✅ Firebase secrets found"
           
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
