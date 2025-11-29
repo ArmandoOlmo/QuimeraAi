@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: quimeraapp
+  PROJECT_ID: quimeraai
   SERVICE: quimeraai2025
   REGION: us-east1
 
