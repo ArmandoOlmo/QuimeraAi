@@ -31,7 +31,7 @@ type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
-    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate } = useEditor();
+    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, userDocument } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Search and Filter States
@@ -50,6 +50,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
     const getTemplateUsage = (templateId: string) => {
         return userProjects.filter(p => p.sourceTemplateId === templateId).length;
+    };
+
+    // Check if user can delete templates (only owner and superadmin)
+    const canDeleteTemplates = () => {
+        const userRole = userDocument?.role || '';
+        return ['owner', 'superadmin'].includes(userRole);
     };
 
     // Get unique categories from templates
@@ -387,18 +393,22 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             >
                                                 <Copy size={18} />
                                             </button>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (window.confirm(`Delete "${template.name}"?`)) {
-                                                        deleteProject(template.id);
-                                                    }
-                                                }} 
-                                                className="p-2.5 bg-white/90 text-red-500 rounded-full hover:scale-110 transition-transform shadow-2xl" 
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                            {canDeleteTemplates() && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (window.confirm(`Delete "${template.name}"?`)) {
+                                                            deleteProject(template.id).catch(err => {
+                                                                alert(err.message || 'No tienes permisos para borrar templates');
+                                                            });
+                                                        }
+                                                    }} 
+                                                    className="p-2.5 bg-white/90 text-red-500 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -459,17 +469,21 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         >
                                             <Copy size={18} />
                                         </button>
-                                        <button 
-                                            onClick={() => {
-                                                if (window.confirm(`Delete "${template.name}"?`)) {
-                                                    deleteProject(template.id);
-                                                }
-                                            }} 
-                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {canDeleteTemplates() && (
+                                            <button 
+                                                onClick={() => {
+                                                    if (window.confirm(`Delete "${template.name}"?`)) {
+                                                        deleteProject(template.id).catch(err => {
+                                                            alert(err.message || 'No tienes permisos para borrar templates');
+                                                        });
+                                                    }
+                                                }} 
+                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

@@ -21,12 +21,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   onSelect 
 }) => {
   const { t } = useTranslation();
-  const { createProjectFromTemplate, loadProject, deleteProject, user } = useEditor();
+  const { createProjectFromTemplate, loadProject, deleteProject, user, userDocument } = useEditor();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
   const isTemplate = project.status === 'Template';
+
+  // Check if user can delete templates (only owner and superadmin)
+  const canDeleteTemplate = () => {
+    if (!isTemplate) return true; // Users can always delete their own projects
+    const userRole = userDocument?.role || '';
+    return ['owner', 'superadmin'].includes(userRole);
+  };
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -86,10 +93,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             
             await deleteProject(project.id);
             // Component will unmount on success as parent list updates via Context
-        } catch (err) {
+        } catch (err: any) {
             console.error("Deletion failed", err);
             setIsDeleting(false);
-            alert("Failed to delete project. Please try again.");
+            const errorMessage = err?.message || "Failed to delete project. Please try again.";
+            alert(errorMessage);
         }
     }
   };
@@ -236,14 +244,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                            Export
                        </button>
                      )}
-                     <button 
-                        onClick={handleDeleteClick}
-                        className="text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3"
-                        role="menuitem"
-                     >
-                         <Trash2 size={16} aria-hidden="true" />
-                         Delete
-                     </button>
+                     {canDeleteTemplate() && (
+                        <button 
+                           onClick={handleDeleteClick}
+                           className="text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3"
+                           role="menuitem"
+                        >
+                            <Trash2 size={16} aria-hidden="true" />
+                            Delete
+                        </button>
+                     )}
                  </div>
              )}
           </div>

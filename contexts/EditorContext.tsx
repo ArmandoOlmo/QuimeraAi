@@ -2,7 +2,6 @@
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
 import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
-import { initialProjects } from '../data/templates';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
@@ -345,22 +344,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     const deletedTemplateIdsRef = useRef<Set<string>>(getDeletedTemplateIds());
     
-    // Filter initial projects to exclude deleted templates from the start
-    const getFilteredInitialProjects = (): Project[] => {
-        const deletedIds = deletedTemplateIdsRef.current;
-        console.log('🔍 [Init] Filtering initialProjects. Deleted IDs:', [...deletedIds]);
-        console.log('🔍 [Init] Initial templates count:', initialProjects.filter(p => p.status === 'Template').length);
-        if (deletedIds.size === 0) {
-            console.log('🔍 [Init] No deleted IDs, returning all initialProjects');
-            return initialProjects;
-        }
-        const filtered = initialProjects.filter(p => !deletedIds.has(p.id));
-        console.log('🔍 [Init] After filtering, templates count:', filtered.filter(p => p.status === 'Template').length);
-        return filtered;
-    };
-    
-    // Project state - initialized with filtered templates
-    const [projects, setProjects] = useState<Project[]>(getFilteredInitialProjects);
+    // Project state - initialized empty, will be loaded from Firestore
+    const [projects, setProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
@@ -804,7 +789,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 
                 console.log(`✅ Loaded ${activeTemplates.length} templates from Firestore (${deletedIds.size} deleted)`);
                 
-                // Persist deleted template IDs to prevent hardcoded templates from reappearing
+                // Persist deleted template IDs to localStorage
                 if (deletedIds.size > 0) {
                     deletedIds.forEach(id => deletedTemplateIdsRef.current.add(id));
                     localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
@@ -831,27 +816,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 // This also updates deletedTemplateIdsRef with Firestore deleted IDs
                 const { templates: firestoreTemplates } = await loadGlobalTemplates();
                 
-                // Merge: Firestore templates take priority, then initial templates (as fallback), then user projects
-                // IMPORTANT: Use deletedTemplateIdsRef.current which contains BOTH localStorage AND Firestore deleted IDs
-                const firestoreTemplateIds = new Set(firestoreTemplates.map(t => t.id));
-                const allDeletedIds = deletedTemplateIdsRef.current;
+                // Merge: Firestore templates + user projects (NO hardcoded templates)
+                console.log('🔍 [Load] Templates from Firestore:', firestoreTemplates.length);
+                console.log('🔍 [Load] User projects:', userProjects.length);
                 
-                console.log('🔍 [Load] All deleted template IDs (localStorage + Firestore):', [...allDeletedIds]);
-                
-                const filteredInitialTemplates = initialProjects.filter(t => 
-                    !firestoreTemplateIds.has(t.id) && !allDeletedIds.has(t.id)
-                );
-                
-                console.log('🔍 [Load] Filtered initial templates count:', filteredInitialTemplates.length);
-                
-                setProjects([...firestoreTemplates, ...filteredInitialTemplates, ...userProjects]);
+                setProjects([...firestoreTemplates, ...userProjects]);
             } catch (error) {
                 console.error("Error loading user projects:", error);
-                // Filter out deleted templates even on error using cached IDs
-                const filteredTemplates = initialProjects.filter(t => 
-                    !deletedTemplateIdsRef.current.has(t.id)
-                );
-                setProjects(filteredTemplates);
+                // On error, try to load at least templates from Firestore
+                try {
+                    const { templates: firestoreTemplates } = await loadGlobalTemplates();
+                    setProjects(firestoreTemplates);
+                } catch (templateError) {
+                    console.error("Error loading templates from Firestore:", templateError);
+                    setProjects([]);
+                }
             } finally {
                 setIsLoadingProjects(false);
             }
@@ -982,11 +961,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     }
                     
                     setUserDocument(null);
-                    // Filter out deleted templates using cached IDs to prevent them from reappearing
-                    const filteredTemplates = initialProjects.filter(t => 
-                        !deletedTemplateIdsRef.current.has(t.id)
-                    );
-                    setProjects(filteredTemplates);
+                    // Load templates from Firestore when user logs out (public templates only)
+                    try {
+                        const { templates: firestoreTemplates } = await loadGlobalTemplates();
+                        setProjects(firestoreTemplates);
+                    } catch (error) {
+                        console.error("Error loading templates after logout:", error);
+                        setProjects([]);
+                    }
                     setIsLoadingProjects(false);
                     setFiles([]);
                     setDomains([]);
@@ -1271,10 +1253,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    // Auto-save effect: saves project automatically when data changes
+    // Auto-save effect: saves project automatically when data changes (including templates)
     useEffect(() => {
-        // Skip if missing required data or if it's a template
-        if (!activeProjectId || !data || !user || !activeProject || activeProject.status === 'Template') {
+        // Skip if missing required data
+        if (!activeProjectId || !data || !user || !activeProject) {
             return;
         }
 
@@ -1296,6 +1278,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const projectToSave = projects.find(p => p.id === activeProjectId);
                 if (!projectToSave || !user) return;
 
+                // Check permissions for templates
+                if (projectToSave.status === 'Template') {
+                    const userRole = userDocument?.role || '';
+                    if (!['owner', 'superadmin'].includes(userRole)) {
+                        console.warn('⚠️ Auto-save skipped: Only owner/superadmin can save templates');
+                        return;
+                    }
+                }
+
                 let thumbnailUrl = projectToSave.thumbnailUrl;
                 if (data.hero?.imageUrl && data.hero.imageUrl.trim() !== '') {
                     thumbnailUrl = data.hero.imageUrl;
@@ -1315,11 +1306,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 };
 
                 const { id, ...dataToSave } = updatedProject;
-                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                await setDoc(projectDocRef, dataToSave);
+
+                // Save to appropriate collection based on project type
+                if (projectToSave.status === 'Template') {
+                    // Save template to global templates collection
+                    const templateDocRef = doc(db, 'templates', activeProjectId);
+                    await setDoc(templateDocRef, dataToSave);
+                    console.log('✅ Auto-saved template to Firestore');
+                } else {
+                    // Save regular project to user's projects collection
+                    const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                    await setDoc(projectDocRef, dataToSave);
+                    console.log('✅ Auto-saved project to Firestore');
+                }
                 
                 setProjects(prev => prev.map(p => p.id === activeProjectId ? updatedProject : p));
-                console.log('✅ Auto-saved project');
             } catch (error) {
                 console.error('❌ Auto-save error:', error);
             }
@@ -1330,7 +1331,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, aiAssistantConfig]);
+    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, aiAssistantConfig, activeProjectId, activeProject, user, userDocument]);
 
     // Reset initial load flag when project changes
     useEffect(() => {
@@ -2027,7 +2028,27 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             return;
         }
 
-        const baseTemplate = projects.find(p => p.id === 'template-local-service') || initialProjects[0];
+        // Find a base template from Firestore, or create a minimal empty template
+        const baseTemplate = projects.find(p => p.status === 'Template') || {
+            id: 'empty-template',
+            name: 'Empty Template',
+            status: 'Template' as const,
+            data: initialData.data,
+            theme: initialData.theme,
+            brandIdentity: initialData.brandIdentity,
+            componentOrder: initialData.componentOrder,
+            sectionVisibility: initialData.sectionVisibility,
+            thumbnailUrl: '',
+            lastUpdated: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            isArchived: false,
+            category: 'General',
+            tags: [],
+            description: 'Empty template',
+            isFeatured: false,
+            author: 'Quimera AI',
+            version: '1.0.0'
+        };
         const newTemplateId = `template-${Date.now()}`;
         const newTemplate: Project = {
             ...baseTemplate,
@@ -2130,7 +2151,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const userRole = userDocument?.role || '';
             if (!['owner', 'superadmin'].includes(userRole)) {
                 console.warn("Only superadmin/owner can delete templates");
-                return;
+                throw new Error("Solo el owner y super admin pueden borrar templates");
             }
 
             // Optimistic Update
