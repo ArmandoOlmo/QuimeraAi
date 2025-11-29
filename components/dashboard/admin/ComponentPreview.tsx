@@ -137,7 +137,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             case 'features':
                 return <Features {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'testimonials':
-                return <Testimonials {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} avatarBorderWidth={styles.avatarBorderWidth} avatarBorderColor={styles.avatarBorderColor} />;
+                return <Testimonials {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
             case 'cta':
                  return <CTASection {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'services':

@@ -64,7 +64,7 @@ const HeroFitness: React.FC<HeroProps> = ({
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '⚡',
+    showBadge = true, badgeText = '', badgeIcon = '⚡',
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
@@ -147,9 +147,9 @@ const HeroFitness: React.FC<HeroProps> = ({
                     <div className="max-w-5xl">
                         
                         {/* Badge with Icon */}
-                        {showBadge && (
+                        {showBadge && badgeText && (
                             <div 
-                                className="inline-flex items-center gap-2 px-5 py-2.5 mb-6 font-black tracking-wider uppercase text-sm transform -skew-x-6 shadow-xl animate-fade-in-down"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 mb-6 font-black tracking-wider uppercase text-sm transform -skew-x-6 animate-fade-in-down"
                                 style={{ 
                                     backgroundColor: badgeBackgroundColor || actualColors.primary,
                                     color: badgeColor || '#ffffff'
@@ -198,7 +198,7 @@ const HeroFitness: React.FC<HeroProps> = ({
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText 
                                 }} 
-                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button shadow-2xl ${borderRadiusClasses[borderRadius]}`}
+                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     <Zap size={24} className="group-hover:rotate-12 transition-transform" />

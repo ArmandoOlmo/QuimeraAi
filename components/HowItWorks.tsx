@@ -2,6 +2,7 @@
 import React from 'react';
 import { HowItWorksData, PaddingSize, BorderRadiusSize, HowItWorksIcon, FontSize } from '../types';
 import { Upload, Cog, Sparkles, Download, Share2, Search } from 'lucide-react';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -43,11 +44,15 @@ interface HowItWorksProps extends HowItWorksData {
 }
 
 const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+    // Get design tokens for secondary color
+    const { colors: tokenColors } = useDesignTokens();
+    const secondaryColor = tokenColors.secondary;
+    
     const visibleItems = items.slice(0, steps);
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
 
     return (
-        <section id="how-it-works" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+        <section id="how-it-works" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: secondaryColor }}>
             <div className="text-center max-w-3xl mx-auto mb-16">
                 <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
                 <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>

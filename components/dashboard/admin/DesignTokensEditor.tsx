@@ -5,7 +5,7 @@ import { Palette, Type, Maximize2, Cloud, Sparkles, Monitor, Save, RotateCcw, Ch
 import { applyTokensToFullProject } from '../../../utils/designTokenApplier';
 
 const DesignTokensEditor: React.FC = () => {
-  const { designTokens, updateDesignTokens, projects, currentProject, updateProject } = useEditor();
+  const { designTokens, updateDesignTokens, projects, activeProject, updateProject } = useEditor();
   
   const [localTokens, setLocalTokens] = useState<DesignTokens>(designTokens || {
     colors: {
@@ -129,20 +129,20 @@ const DesignTokensEditor: React.FC = () => {
   };
 
   const handleApplyToAllComponents = async () => {
-    if (!currentProject) {
+    if (!activeProject) {
       alert('Por favor selecciona un proyecto primero.');
       return;
     }
 
     if (!window.confirm(
-      `¿Aplicar Design Tokens a todos los componentes del proyecto "${currentProject.name}"?\n\nEsto actualizará los estilos de todos los componentes para usar los tokens globales.`
+      `¿Aplicar Design Tokens a todos los componentes del proyecto "${activeProject.name}"?\n\nEsto actualizará los estilos de todos los componentes para usar los tokens globales.`
     )) {
       return;
     }
 
     try {
       setIsSaving(true);
-      const updatedProject = applyTokensToFullProject(currentProject, localTokens);
+      const updatedProject = applyTokensToFullProject(activeProject, localTokens);
       await updateProject(updatedProject);
       alert('Design Tokens aplicados exitosamente a todos los componentes!');
       setSaveSuccess(true);
@@ -203,7 +203,7 @@ const DesignTokensEditor: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {currentProject && (
+            {activeProject && (
               <button
                 onClick={handleApplyToAllComponents}
                 disabled={isSaving}

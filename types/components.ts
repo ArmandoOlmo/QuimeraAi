@@ -108,7 +108,7 @@ export interface FeaturesData {
     items: FeatureItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
     gridColumns: number;
     imageHeight: number;
     imageObjectFit: ObjectFit;
@@ -127,7 +127,6 @@ export interface TestimonialItem {
     quote: string;
     name: string;
     title: string;
-    avatar: string;
 }
 
 export interface TestimonialsData {
@@ -137,15 +136,13 @@ export interface TestimonialsData {
     items: TestimonialItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; cardBackground?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
     cardShadow?: string;
     borderStyle?: string;
     cardPadding?: number;
-    avatarBorderWidth?: number;
-    avatarBorderColor?: string;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
 }
@@ -167,6 +164,8 @@ export interface SlideItem {
 export interface SlideshowData {
     slideshowVariant?: SlideshowVariant;
     title: string;
+    showTitle?: boolean;
+    fullWidth?: boolean;
     items: SlideItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -192,6 +191,7 @@ export interface SlideshowData {
     thumbnailSize?: number;
     showCaptions?: boolean;
     borderRadius?: BorderRadiusSize;
+    slideHeight?: number;
 }
 
 // =============================================================================
@@ -224,6 +224,7 @@ export interface PricingData {
         borderColor: string; 
         text: string; 
         heading: string; 
+        description?: string;
         buttonBackground?: string; 
         buttonText?: string;
         checkmarkColor?: string;
@@ -258,6 +259,7 @@ export interface FaqData {
         borderColor: string; 
         text: string; 
         heading: string;
+        description?: string;
         cardBackground?: string;
         gradientStart?: string;
         gradientEnd?: string;
@@ -291,6 +293,7 @@ export interface LeadsData {
         borderColor: string; 
         text: string; 
         heading: string; 
+        description?: string;
         buttonBackground?: string; 
         buttonText?: string;
         cardBackground?: string;
@@ -320,8 +323,13 @@ export interface NewsletterData {
         borderColor: string; 
         text: string; 
         heading: string; 
+        description?: string;
         buttonBackground?: string; 
-        buttonText?: string; 
+        buttonText?: string;
+        cardBackground?: string;
+        inputBackground?: string;
+        inputText?: string;
+        inputBorder?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -342,6 +350,7 @@ export interface CtaData {
         gradientEnd: string; 
         text: string; 
         heading: string; 
+        description?: string;
         buttonBackground?: string; 
         buttonText?: string; 
     };
@@ -364,7 +373,7 @@ export interface PortfolioData {
     items: PortfolioItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
@@ -413,7 +422,7 @@ export interface ServicesData {
     items: ServiceItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
@@ -437,7 +446,7 @@ export interface TeamData {
     items: TeamMember[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; text: string; heading: string; accent?: string; cardBackground?: string; };
+    colors: { background: string; text: string; heading: string; description?: string; accent?: string; cardBackground?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     teamVariant?: TeamVariant;
@@ -459,7 +468,7 @@ export interface VideoData {
     showControls: boolean;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; text: string; heading: string; };
+    colors: { background: string; text: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
 }
@@ -482,7 +491,7 @@ export interface HowItWorksData {
     items: HowItWorksItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; text: string; heading: string; };
+    colors: { background: string; accent: string; text: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
 }
@@ -531,7 +540,7 @@ export interface FooterData {
     copyrightText: string;
     linkColumns: FooterColumn[];
     socialLinks: SocialLink[];
-    colors: { background: string; border: string; text: string; linkHover: string; heading: string; };
+    colors: { background: string; border: string; text: string; linkHover: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     // Logo settings
@@ -559,6 +568,7 @@ export interface MapData {
         background: string;
         text: string;
         heading: string;
+        description?: string;
         accent: string;
         cardBackground?: string;
     };
@@ -595,8 +605,10 @@ export interface MenuData {
         borderColor: string; 
         text: string; 
         heading: string;
+        description?: string;
         cardBackground?: string;
         priceColor?: string;
+        cardTitleColor?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;

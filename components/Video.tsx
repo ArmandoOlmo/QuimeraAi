@@ -110,7 +110,7 @@ const Video: React.FC<VideoProps> = ({
                     {description}
                 </p>
             </div>
-            <div className={`relative aspect-video w-full max-w-4xl mx-auto shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
+            <div className={`relative aspect-video w-full max-w-4xl mx-auto ${borderRadiusClasses[borderRadius]}`}>
                 {videoPlayer}
             </div>
         </section>

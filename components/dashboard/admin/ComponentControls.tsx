@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, ResponsiveStyles, AnimationConfig, ServiceIcon } from '../../../types';
+import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, ResponsiveStyles, AnimationConfig, ServiceIcon, AnimationType } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { componentStyles } from '../../../data/componentStyles';
 import ColorControl from '../../ui/ColorControl';
 import IconSelector from '../../ui/IconSelector';
-import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2 } from 'lucide-react';
+import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2 } from 'lucide-react';
 import ResponsiveConfigEditor from './ResponsiveConfigEditor';
 import AnimationConfigurator from './AnimationConfigurator';
 
@@ -293,8 +293,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== LAYOUT & SPACING (Only for Classic) ========== */}
-                {currentVariant === 'classic' && (
+                {/* ========== LAYOUT & SPACING (For Classic and Modern) ========== */}
+                {(currentVariant === 'classic' || currentVariant === 'modern') && (
                     <>
                         <div>
                             <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
@@ -443,10 +443,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                      <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
                          Features Style
                      </label>
-                     <div className="grid grid-cols-2 gap-2 mb-2">
+                     <div className="grid grid-cols-3 gap-2 mb-2">
                          <button
                              onClick={() => handleStyleChange('featuresVariant', 'classic')}
-                             className={`px-4 py-2 rounded-md border transition-all ${
+                             className={`px-3 py-2 rounded-md border transition-all text-sm ${
                                  currentVariant === 'classic'
                                      ? 'bg-editor-accent text-editor-bg border-editor-accent' 
                                      : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
@@ -456,19 +456,31 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                          </button>
                          <button
                              onClick={() => handleStyleChange('featuresVariant', 'modern')}
-                             className={`px-4 py-2 rounded-md border transition-all ${
+                             className={`px-3 py-2 rounded-md border transition-all text-sm ${
                                  currentVariant === 'modern'
                                      ? 'bg-editor-accent text-editor-bg border-editor-accent' 
                                      : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                              }`}
                          >
-                             Bento / Modern
+                             Bento
+                         </button>
+                         <button
+                             onClick={() => handleStyleChange('featuresVariant', 'bento-premium')}
+                             className={`px-3 py-2 rounded-md border transition-all text-sm ${
+                                 currentVariant === 'bento-premium'
+                                     ? 'bg-editor-accent text-editor-bg border-editor-accent' 
+                                     : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                             }`}
+                         >
+                             Premium
                          </button>
                      </div>
                      <p className="text-xs text-editor-text-secondary mt-1">
-                         {currentVariant === 'modern' 
-                             ? '✨ Modern asymmetrical bento grid layout' 
-                             : 'box Traditional uniform grid layout'}
+                         {currentVariant === 'classic' 
+                             ? '📦 Traditional uniform grid layout'
+                             : currentVariant === 'modern' 
+                                 ? '✨ Modern asymmetrical bento grid layout' 
+                                 : '🎯 Premium bento with featured first card'}
                      </p>
                  </div>
                  <hr className="border-editor-border/50" />
@@ -516,10 +528,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />}
-                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
+                    {<ColorControl label="Description Color" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
                     {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1a1a2e'} onChange={v => handleColorChange('cardBackground', v)} />}
                 </div>
 
                 <hr className="border-editor-border/50" />
@@ -529,6 +545,48 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+                <div className="flex items-center space-x-2">
+                    <Wand2 size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Animations</h4>
+                </div>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <Label>Enable Card Animations</Label>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={(s as any).enableCardAnimation !== false}
+                            onClick={() => handleStyleChange('enableCardAnimation', !(s as any).enableCardAnimation !== false)}
+                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            />
+                        </button>
+                    </div>
+                    {(s as any).enableCardAnimation !== false && (
+                        <div>
+                            <Label>Animation Type</Label>
+                            <select
+                                value={(s as any).animationType || 'fade-in-up'}
+                                onChange={(e) => handleStyleChange('animationType', e.target.value as AnimationType)}
+                                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all"
+                            >
+                                <option value="none">None</option>
+                                <option value="fade-in">Fade In</option>
+                                <option value="fade-in-up">Fade In Up</option>
+                                <option value="fade-in-down">Fade In Down</option>
+                                <option value="slide-up">Slide Up</option>
+                                <option value="slide-down">Slide Down</option>
+                                <option value="scale-in">Scale In</option>
+                                <option value="bounce-in">Bounce In</option>
+                            </select>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     };
@@ -693,29 +751,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Avatar Styling</h4>
-                <div className="space-y-4">
-                    <div>
-                        <div className="flex justify-between items-center">
-                            <Label>Border Width</Label>
-                            <span className="text-sm font-medium text-editor-text-primary">{s.avatarBorderWidth || 2}px</span>
-                        </div>
-                        <input
-                            type="range" min="0" max="8" step="1"
-                            value={s.avatarBorderWidth || 2}
-                            onChange={e => handleStyleChange('avatarBorderWidth', parseInt(e.target.value, 10))}
-                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
-                        />
-                    </div>
-                    <ColorControl 
-                        label="Border Color" 
-                        value={s.avatarBorderColor || s.colors?.accent || '#4f46e5'} 
-                        onChange={v => handleStyleChange('avatarBorderColor', v)} 
-                    />
-                </div>
-
-                <hr className="border-editor-border/50" />
-
                 <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
@@ -728,11 +763,71 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />}
-                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
+                    {<ColorControl label="Description Color" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
                     {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1f2937'} onChange={v => handleColorChange('cardBackground', v)} />}
+                </div>
+
+                <hr className="border-editor-border/50" />
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+            </div>
+        );
+    };
+
+    const renderNewsletterControls = () => {
+        const s = styles as any;
+        return (
+            <div className="space-y-4">
+                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
+                    <ColorControl label="Description Color" value={s.colors?.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+                <h4 className="font-semibold text-editor-text-primary">Card Box</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+                <h4 className="font-semibold text-editor-text-primary">Input Field</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Input Background" value={s.colors?.inputBackground || '#111827'} onChange={v => handleColorChange('inputBackground', v)} />
+                    <ColorControl label="Input Text" value={s.colors?.inputText || '#ffffff'} onChange={v => handleColorChange('inputText', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Input Border" value={s.colors?.inputBorder || '#374151'} onChange={v => handleColorChange('inputBorder', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+                <h4 className="font-semibold text-editor-text-primary">Button</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Button Background" value={s.colors?.buttonBackground || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
+                    <ColorControl label="Button Text" value={s.colors?.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
                 </div>
 
                 <hr className="border-editor-border/50" />
@@ -762,9 +857,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />}
-                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
+                    {<ColorControl label="Description Color" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
                     {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
                 </div>
 
@@ -794,6 +890,9 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Heading Color" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Description Color" value={colors.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Gradient Start" value={colors.gradientStart || '#0000ff'} onChange={v => handleColorChange('gradientStart', v)} />
                     <ColorControl label="Gradient End" value={colors.gradientEnd || '#00ff00'} onChange={v => handleColorChange('gradientEnd', v)} />
                 </div>
@@ -821,9 +920,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading Color" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Link Hover" value={colors.linkHover || '#aaaaaa'} onChange={v => handleColorChange('linkHover', v)} />
+                    <ColorControl label="Description Color" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Link Hover" value={colors.linkHover || '#aaaaaa'} onChange={v => handleColorChange('linkHover', v)} />
                     <ColorControl label="Border" value={colors.border || 'transparent'} onChange={v => handleColorChange('border', v)} />
                 </div>
 
@@ -1131,13 +1231,127 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Description" value={colors.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border Color" value={colors.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
-                    <ColorControl label="Price Color" value={colors.priceColor || '#10b981'} onChange={v => handleColorChange('priceColor', v)} />
                 </div>
-                <div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Price Color" value={colors.priceColor || '#10b981'} onChange={v => handleColorChange('priceColor', v)} />
+                    <ColorControl label="Card Background" value={colors.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Title" value={colors.cardTitleColor || colors.heading || '#ffffff'} onChange={v => handleColorChange('cardTitleColor', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+                </div>
+            </div>
+        );
+    };
+
+    const renderMapControls = () => {
+        const s = styles as any;
+        const colors = (s.colors || {}) as any;
+        const currentVariant = s.mapVariant || 'modern';
+
+        return (
+            <div className="space-y-4">
+                 {/* --- VARIANT SELECTOR --- */}
+                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                         <Layout size={14} />
+                         Map Style
+                     </label>
+                     <div className="grid grid-cols-2 gap-2">
+                         {['modern', 'minimal', 'dark-tech', 'retro', 'night'].map((variant) => (
+                             <button
+                                 key={variant}
+                                 onClick={() => handleStyleChange('mapVariant', variant)}
+                                 className={`px-2 py-2 rounded-md border text-xs transition-all ${
+                                     currentVariant === variant
+                                         ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                                         : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                 }`}
+                             >
+                                 {variant === 'modern' && '🗺️ Modern'}
+                                 {variant === 'minimal' && '✨ Minimal'}
+                                 {variant === 'dark-tech' && '🌑 Dark Tech'}
+                                 {variant === 'retro' && '🏛️ Retro'}
+                                 {variant === 'night' && '🌙 Night'}
+                             </button>
+                         ))}
+                     </div>
+                     <p className="text-xs text-editor-text-secondary mt-2 italic">
+                        {currentVariant === 'modern' && '🗺️ Split layout with info card on the left.'}
+                        {currentVariant === 'minimal' && '✨ Clean map with floating badge.'}
+                        {currentVariant === 'dark-tech' && '🌑 Dark mode with tech overlay card.'}
+                        {currentVariant === 'retro' && '🏛️ Vintage map style with bottom bar.'}
+                        {currentVariant === 'night' && '🌙 Night mode with bottom info bar.'}
+                     </p>
+                 </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- MAP SIZE --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                        <Settings size={14} />
+                        Map Settings
+                    </h4>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <Label>Map Height</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{s.height || 400}px</span>
+                            </div>
+                            <input
+                                type="range" min="200" max="800" step="50"
+                                value={s.height || 400}
+                                onChange={e => handleStyleChange('height', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <Label>Zoom Level</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{s.zoom || 15}</span>
+                            </div>
+                            <input
+                                type="range" min="10" max="20" step="1"
+                                value={s.zoom || 15}
+                                onChange={e => handleStyleChange('zoom', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- STANDARD CONTROLS --- */}
+                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Text" value={colors.text || '#94a3b8'} onChange={v => handleColorChange('text', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Heading" value={colors.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
+                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Card Background" value={colors.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
                 </div>
 
@@ -1202,9 +1416,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Accent" value={colors.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border" value={colors.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
 
@@ -1273,13 +1488,12 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
                 </div>
-                {(currentVariant === 'cards') && (
-                    <div className="grid grid-cols-1 gap-4">
-                        <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
-                    </div>
-                )}
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent / Border" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
+                </div>
 
                 <hr className="border-editor-border/50" />
                 <div className="flex items-center space-x-2">
@@ -1291,7 +1505,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             </div>
         );
     };
-
+    
     const renderFaqControls = () => {
         const s = styles as typeof componentStyles['faq'];
         const colors = (s.colors || {}) as any;
@@ -1359,14 +1573,17 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Description" value={colors.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border Color" value={colors.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
-                    {currentVariant === 'cards' && (
-                        <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
-                    )}
                 </div>
+                {currentVariant === 'cards' && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
+                    </div>
+                )}
 
                 {/* Gradient Colors for Gradient Variant */}
                 {currentVariant === 'gradient' && (
@@ -1448,6 +1665,306 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         );
     };
 
+    const renderSlideshowControls = () => {
+        const s = styles as any;
+        const colors = (s.colors || {}) as any;
+        const currentVariant = s.slideshowVariant || 'classic';
+        
+        return (
+            <div className="space-y-4">
+                {/* --- VARIANT SELECTOR --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                        <Layout size={14} />
+                        Slideshow Style
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { value: 'classic', label: '📷 Classic', desc: 'Standard slide transitions' },
+                            { value: 'kenburns', label: '🎬 Ken Burns', desc: 'Cinematic zoom effect' },
+                            { value: 'cards3d', label: '🎴 3D Cards', desc: '3D perspective cards' },
+                            { value: 'thumbnails', label: '🖼️ Thumbnails', desc: 'With thumbnail navigation' }
+                        ].map((variant) => (
+                            <button
+                                key={variant.value}
+                                onClick={() => handleStyleChange('slideshowVariant', variant.value)}
+                                className={`px-3 py-2 rounded-md border text-xs transition-all ${
+                                    currentVariant === variant.value
+                                        ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold' 
+                                        : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                            >
+                                {variant.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- LAYOUT OPTIONS --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                        <Layout size={14} />
+                        Layout Options
+                    </h4>
+                    <div className="space-y-4">
+                        <ToggleControl 
+                            label="Full Width" 
+                            checked={s.fullWidth || false} 
+                            onChange={(v) => handleStyleChange('fullWidth', v)} 
+                        />
+                        <p className="text-xs text-editor-text-secondary -mt-2">
+                            {s.fullWidth ? '🖼️ Slideshow spans the entire screen width' : '📦 Slideshow is contained within max-width'}
+                        </p>
+                        
+                        <ToggleControl 
+                            label="Show Title" 
+                            checked={s.showTitle !== false} 
+                            onChange={(v) => handleStyleChange('showTitle', v)} 
+                        />
+                        
+                        {s.fullWidth && (
+                            <div className="animate-fade-in-up">
+                                <div className="flex justify-between items-center">
+                                    <Label>Slide Height</Label>
+                                    <span className="text-sm font-medium text-editor-text-primary">{s.slideHeight || 600}px</span>
+                                </div>
+                                <input
+                                    type="range" min="300" max="900" step="50"
+                                    value={s.slideHeight || 600}
+                                    onChange={e => handleStyleChange('slideHeight', parseInt(e.target.value, 10))}
+                                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- TRANSITION SETTINGS --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                        <Settings size={14} />
+                        Transition Settings
+                    </h4>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Transition Effect</Label>
+                            <div className="grid grid-cols-3 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                {['slide', 'fade', 'zoom'].map(effect => (
+                                    <button 
+                                        key={effect}
+                                        onClick={() => handleStyleChange('transitionEffect', effect)}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${
+                                            (s.transitionEffect || 'slide') === effect 
+                                                ? 'bg-editor-accent text-editor-bg' 
+                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                        }`}
+                                    >
+                                        {effect}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div className="flex justify-between items-center">
+                                <Label>Auto-play Speed</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{((s.autoPlaySpeed || 5000) / 1000).toFixed(1)}s</span>
+                            </div>
+                            <input
+                                type="range" min="2000" max="10000" step="500"
+                                value={s.autoPlaySpeed || 5000}
+                                onChange={e => handleStyleChange('autoPlaySpeed', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                            />
+                        </div>
+                        
+                        <div>
+                            <div className="flex justify-between items-center">
+                                <Label>Transition Duration</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{s.transitionDuration || 500}ms</span>
+                            </div>
+                            <input
+                                type="range" min="200" max="1500" step="100"
+                                value={s.transitionDuration || 500}
+                                onChange={e => handleStyleChange('transitionDuration', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- CONTROLS --- */}
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-3">Navigation Controls</h4>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <ToggleControl 
+                                label="Show Arrows" 
+                                checked={s.showArrows !== false} 
+                                onChange={(v) => handleStyleChange('showArrows', v)} 
+                            />
+                            <ToggleControl 
+                                label="Show Dots" 
+                                checked={s.showDots !== false} 
+                                onChange={(v) => handleStyleChange('showDots', v)} 
+                            />
+                        </div>
+                        
+                        <ToggleControl 
+                            label="Show Captions" 
+                            checked={s.showCaptions || false} 
+                            onChange={(v) => handleStyleChange('showCaptions', v)} 
+                        />
+                        
+                        {s.showArrows !== false && (
+                            <div className="animate-fade-in-up">
+                                <Label>Arrow Style</Label>
+                                <div className="grid grid-cols-4 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                    {['rounded', 'square', 'minimal', 'floating'].map(style => (
+                                        <button 
+                                            key={style}
+                                            onClick={() => handleStyleChange('arrowStyle', style)}
+                                            className={`px-2 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${
+                                                (s.arrowStyle || 'rounded') === style 
+                                                    ? 'bg-editor-accent text-editor-bg' 
+                                                    : 'text-editor-text-secondary hover:bg-editor-border'
+                                            }`}
+                                        >
+                                            {style}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {s.showDots !== false && (
+                            <div className="animate-fade-in-up">
+                                <Label>Dot Style</Label>
+                                <div className="grid grid-cols-4 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                    {['circle', 'line', 'square', 'pill'].map(style => (
+                                        <button 
+                                            key={style}
+                                            onClick={() => handleStyleChange('dotStyle', style)}
+                                            className={`px-2 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${
+                                                (s.dotStyle || 'circle') === style 
+                                                    ? 'bg-editor-accent text-editor-bg' 
+                                                    : 'text-editor-text-secondary hover:bg-editor-border'
+                                            }`}
+                                        >
+                                            {style}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Ken Burns Intensity (only for kenburns variant) */}
+                {currentVariant === 'kenburns' && (
+                    <>
+                        <hr className="border-editor-border/50" />
+                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border animate-fade-in-up">
+                            <h4 className="font-semibold text-editor-text-primary mb-3">Ken Burns Effect</h4>
+                            <Label>Zoom Intensity</Label>
+                            <div className="grid grid-cols-3 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                {['low', 'medium', 'high'].map(intensity => (
+                                    <button 
+                                        key={intensity}
+                                        onClick={() => handleStyleChange('kenBurnsIntensity', intensity)}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${
+                                            (s.kenBurnsIntensity || 'medium') === intensity 
+                                                ? 'bg-editor-accent text-editor-bg' 
+                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                        }`}
+                                    >
+                                        {intensity}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Thumbnail Size (only for thumbnails variant) */}
+                {currentVariant === 'thumbnails' && (
+                    <>
+                        <hr className="border-editor-border/50" />
+                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border animate-fade-in-up">
+                            <h4 className="font-semibold text-editor-text-primary mb-3">Thumbnail Settings</h4>
+                            <div className="flex justify-between items-center">
+                                <Label>Thumbnail Size</Label>
+                                <span className="text-sm font-medium text-editor-text-primary">{s.thumbnailSize || 80}px</span>
+                            </div>
+                            <input
+                                type="range" min="50" max="150" step="10"
+                                value={s.thumbnailSize || 80}
+                                onChange={e => handleStyleChange('thumbnailSize', parseInt(e.target.value, 10))}
+                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                            />
+                        </div>
+                    </>
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- STYLING --- */}
+                <h4 className="font-semibold text-editor-text-primary">Layout & Spacing</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+                
+                {!s.fullWidth && (
+                    <BorderRadiusControl 
+                        label="Border Radius" 
+                        value={s.borderRadius || 'xl'} 
+                        onChange={(v) => handleStyleChange('borderRadius', v)} 
+                    />
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- COLORS --- */}
+                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#1e293b'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Heading" value={colors.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Arrow Background" value={colors.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={v => handleColorChange('arrowBackground', v)} />
+                    <ColorControl label="Arrow Text" value={colors.arrowText || '#ffffff'} onChange={v => handleColorChange('arrowText', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Dot Active" value={colors.dotActive || '#ffffff'} onChange={v => handleColorChange('dotActive', v)} />
+                    <ColorControl label="Dot Inactive" value={colors.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={v => handleColorChange('dotInactive', v)} />
+                </div>
+                
+                {s.showCaptions && (
+                    <div className="grid grid-cols-2 gap-4 animate-fade-in-up">
+                        <ColorControl label="Caption Background" value={colors.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={v => handleColorChange('captionBackground', v)} />
+                        <ColorControl label="Caption Text" value={colors.captionText || '#ffffff'} onChange={v => handleColorChange('captionText', v)} />
+                    </div>
+                )}
+
+                <hr className="border-editor-border/50" />
+
+                {/* --- TYPOGRAPHY --- */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+            </div>
+        );
+    };
+
     const renderControls = () => {
         switch (baseComponent) {
             case 'hero': return renderHeroControls();
@@ -1456,19 +1973,21 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'header': return renderHeaderControls();
             case 'services': return renderServicesControls();
             case 'menu': return renderMenuControls();
+            case 'map': return renderMapControls();
             case 'team': return renderTeamControls();
             case 'testimonials': return renderTestimonialsControls();
             case 'faq': return renderFaqControls();
             case 'chatbot': return renderChatbotControls();
             case 'typography': return renderTypographyControls();
+            case 'slideshow': return renderSlideshowControls();
+            case 'newsletter':
+                return renderNewsletterControls();
             // Standard handlers for all other components that share similar structure
             case 'pricing':
             case 'portfolio':
             case 'leads':
-            case 'newsletter':
             case 'video':
             case 'howItWorks':
-            case 'slideshow':
                 return renderStandardControls();
             case 'footer':
                  return renderFooterControls();

@@ -99,11 +99,14 @@ const Header: React.FC<HeaderData> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge component colors with Design Tokens (component colors take priority)
+  // Use primary color for navbar background
+  const primaryColor = getColor('primary.main', '#4f46e5');
+  
+  // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background,
+    background: colors.background || primaryColor, // Fallback to primary if not set
     text: colors.text,
-    accent: colors.accent || getColor('primary.main', '#4f46e5'),
+    accent: colors.accent || primaryColor,
   };
 
   useEffect(() => {
@@ -144,7 +147,7 @@ const Header: React.FC<HeaderData> = ({
   // Floating Bar Style Override
   // In preview mode, use absolute instead of fixed to stay within preview container
   const containerClasses = style === 'floating' 
-    ? `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl shadow-xl border border-white/10 max-w-7xl mx-auto`
+    ? `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`
     : 'w-full border-b border-transparent';
 
   const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
@@ -303,7 +306,7 @@ const Header: React.FC<HeaderData> = ({
       {/* Mobile Menu Drawer */}
       <div 
         className={`
-            fixed top-0 right-0 bottom-0 w-[85%] max-w-sm z-40 shadow-2xl transform transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) md:hidden
+            fixed top-0 right-0 bottom-0 w-[85%] max-w-sm z-40 transform transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) md:hidden
             ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
         style={{ backgroundColor: colors.background }}

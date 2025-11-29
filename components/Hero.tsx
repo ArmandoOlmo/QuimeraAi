@@ -135,14 +135,8 @@ const Hero: React.FC<HeroProps> = ({
     imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
     paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors, borderRadius,
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
+    showBadge = true, badgeText = '', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
-    showStats = true, stats = [
-        { value: '10K+', label: 'Artworks Created' },
-        { value: '5K+', label: 'Happy Users' },
-        { value: '4.9★', label: 'User Rating' }
-    ],
-    statsValueColor, statsLabelColor,
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
 }) => {
@@ -249,7 +243,7 @@ const Hero: React.FC<HeroProps> = ({
       
       <div className={`md:w-1/2 animate-fade-in-up text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
         {/* Badge/Kicker */}
-        {showBadge && (
+        {showBadge && badgeText && (
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
                style={{ 
                  backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`, 
@@ -279,7 +273,7 @@ const Hero: React.FC<HeroProps> = ({
           <a 
             href="#cta" 
             style={{ backgroundColor: actualColors.buttonBackground || actualColors.primary, color: actualColors.buttonText || '#ffffff' }} 
-            className={`relative overflow-hidden group text-white font-bold py-3 px-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -288,10 +282,10 @@ const Hero: React.FC<HeroProps> = ({
             href="#features" 
             className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
               secondaryButtonStyle === 'outline' 
-                ? 'border-2 bg-transparent hover:shadow-lg' 
-                : secondaryButtonStyle === 'ghost'
-                  ? 'bg-transparent hover:bg-white/10'
-                  : 'shadow-lg hover:shadow-2xl'
+                  ? 'border-2 bg-transparent' 
+                  : secondaryButtonStyle === 'ghost'
+                    ? 'bg-transparent hover:bg-white/10'
+                    : ''
             }`}
             style={{ 
               backgroundColor: secondaryButtonStyle === 'solid' 
@@ -308,21 +302,6 @@ const Hero: React.FC<HeroProps> = ({
           </a>
         </div>
         
-        {/* Social Proof / Stats */}
-        {showStats && stats && stats.length > 0 && (
-          <div className={`flex flex-wrap gap-6 mt-8 justify-center ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'} opacity-90`}>
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center md:text-left">
-                <div className="text-2xl md:text-3xl font-bold font-header" style={{ color: statsValueColor || actualColors.primary }}>
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm font-body" style={{ color: statsLabelColor || actualColors.text, opacity: 0.7 }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
       <div className={`md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]} animate-fade-in-up`} style={{ animationDelay: '0.2s' }}>
         <div className="relative animate-hero-float" style={imageContainerStyle}>

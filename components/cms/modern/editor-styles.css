@@ -208,21 +208,7 @@
   margin: 1rem 0;
 }
 
-/* Animation for fade in */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.2s ease-out;
-}
+/* Animation for fade in - uses global definition from main.css */
 
 /* Animation for toast slide in */
 @keyframes slide-in-right {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import Modal from './Modal';
 import { getGoogleGenAI } from '../../utils/genAiClient';
@@ -10,7 +10,8 @@ import ColorControl from './ColorControl';
 import { initialData } from '../../data/initialData';
 import { OnboardingStep, AestheticType, ProductInfo, TestimonialInfo, ContactInfo, PageSection, ImageGenerationProgress } from '../../types';
 import { trackOnboardingStarted, trackOnboardingCompleted, trackProjectCreated } from '../../utils/analytics';
-import { getContrastingTextColor, ensureTextContrast } from '../../utils/colorUtils';
+import { getContrastingTextColor, ensureTextContrast, darkenColor } from '../../utils/colorUtils';
+import { colorPalettes, ColorPalette } from '../../data/colorPalettes';
 
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
@@ -126,7 +127,29 @@ const OptionCard = ({
 // --- Main Component ---
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) => {
-    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user, generateProjectImagesWithProgress } = useEditor();
+    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, saveOnboardingStateToFirebase, clearOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user, generateProjectImagesWithProgress } = useEditor();
+    
+    // LOCAL form state - prevents lag by avoiding global context updates on every keystroke
+    const [localFormState, setLocalFormState] = useState(onboardingState);
+    
+    // Sync local state when modal opens or context changes externally
+    useEffect(() => {
+        if (isOpen) {
+            setLocalFormState(onboardingState);
+        }
+    }, [isOpen, onboardingState.step]); // Only sync on open or step change from context
+    
+    // Auto-save onboarding state to Firebase when it changes (debounced)
+    useEffect(() => {
+        // Only save if onboarding is open and we have meaningful data
+        if (isOpen && localFormState.businessName) {
+            const timer = setTimeout(() => {
+                saveOnboardingStateToFirebase(localFormState);
+            }, 2000); // Debounce 2 seconds
+            
+            return () => clearTimeout(timer);
+        }
+    }, [localFormState, isOpen]);
     
     // Local UI state for transient loading/status
     const [isLoading, setIsLoading] = useState(false);
@@ -153,28 +176,81 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         failedPaths: []
     });
     
-    // Helper to update context state
+    // Helper to update LOCAL form state (fast, no global re-renders)
     const updateState = (key: string, value: any) => {
-        setOnboardingState(prev => ({ ...prev, [key]: value }));
+        setLocalFormState(prev => ({ ...prev, [key]: value }));
     };
 
     const cleanJson = (text: string) => {
         let cleaned = text.replace(/```json\n?|```/g, '').trim();
         
-        // Handle both objects {} and arrays []
+        // Find the first { or [
         const firstBrace = cleaned.indexOf('{');
-        const lastBrace = cleaned.lastIndexOf('}');
         const firstBracket = cleaned.indexOf('[');
-        const lastBracket = cleaned.lastIndexOf(']');
         
-        // Determine if it's an array or object
-        const isArray = firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace);
-        
-        if (isArray && firstBracket !== -1 && lastBracket !== -1) {
-            cleaned = cleaned.substring(firstBracket, lastBracket + 1);
-        } else if (firstBrace !== -1 && lastBrace !== -1) {
-            cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        // Determine start index (whichever comes first, or -1 if neither exists)
+        let startIndex = -1;
+        if (firstBrace !== -1 && firstBracket !== -1) {
+            startIndex = Math.min(firstBrace, firstBracket);
+        } else if (firstBrace !== -1) {
+            startIndex = firstBrace;
+        } else if (firstBracket !== -1) {
+            startIndex = firstBracket;
         }
+        
+        if (startIndex === -1) return cleaned;
+        
+        // Find the matching closing bracket/brace by counting depth
+        let braceDepth = 0;
+        let bracketDepth = 0;
+        let inString = false;
+        let escapeNext = false;
+        let endIndex = -1;
+        
+        for (let i = startIndex; i < cleaned.length; i++) {
+            const char = cleaned[i];
+            
+            if (escapeNext) {
+                escapeNext = false;
+                continue;
+            }
+            
+            if (char === '\\' && inString) {
+                escapeNext = true;
+                continue;
+            }
+            
+            if (char === '"') {
+                inString = !inString;
+                continue;
+            }
+            
+            if (!inString) {
+                if (char === '{') braceDepth++;
+                else if (char === '}') braceDepth--;
+                else if (char === '[') bracketDepth++;
+                else if (char === ']') bracketDepth--;
+                
+                // Check if we've closed all brackets and braces
+                if (braceDepth === 0 && bracketDepth === 0 && i > startIndex) {
+                    endIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        if (endIndex !== -1) {
+            cleaned = cleaned.substring(startIndex, endIndex + 1);
+        } else {
+            // Fallback to lastIndexOf if balanced parsing fails
+            const lastBrace = cleaned.lastIndexOf('}');
+            const lastBracket = cleaned.lastIndexOf(']');
+            const lastIndex = Math.max(lastBrace, lastBracket);
+            if (lastIndex !== -1) {
+                cleaned = cleaned.substring(startIndex, lastIndex + 1);
+            }
+        }
+        
         return cleaned;
     };
 
@@ -194,20 +270,37 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
     };
 
     const handleNext = () => {
-        switch(onboardingState.step) {
-            case 'basics': updateState('step', 'strategy'); break;
-            case 'strategy': updateState('step', 'aesthetic'); break;
-            case 'aesthetic': updateState('step', 'details'); break;
-            case 'details': updateState('step', 'products'); break;
-            case 'products': updateState('step', 'contact'); break;
-            case 'contact': updateState('step', 'visuals'); break;
-            case 'visuals': generateDesignPlan(); break;
-            case 'review': generateWebsite(); break;
+        // Sync local state to context before navigating
+        const nextStep = (() => {
+            switch(localFormState.step) {
+                case 'basics': return 'strategy';
+                case 'strategy': return 'aesthetic';
+                case 'aesthetic': return 'details';
+                case 'details': return 'products';
+                case 'products': return 'contact';
+                case 'contact': return 'visuals';
+                case 'visuals': return null; // Will call generateDesignPlan
+                case 'review': return null; // Will call generateWebsite
+                default: return null;
+            }
+        })();
+        
+        if (nextStep) {
+            const newState = { ...localFormState, step: nextStep as OnboardingStep };
+            setLocalFormState(newState);
+            setOnboardingState(newState);
+        } else if (localFormState.step === 'visuals') {
+            setOnboardingState(localFormState);
+            generateDesignPlan();
+        } else if (localFormState.step === 'review') {
+            setOnboardingState(localFormState);
+            generateWebsite();
         }
     };
 
     const generateField = async (field: 'summary' | 'audience' | 'offerings' | 'goal' | 'colorVibe' | 'uniqueValueProposition' | 'companyHistory' | 'coreValues') => {
-        if (!onboardingState.businessName || !onboardingState.industry) return;
+        // Use localFormState instead of onboardingState to get current form values
+        if (!localFormState.businessName || !localFormState.industry) return;
         if (hasApiKey === false) { await promptForKeySelection(); return; }
 
         setFieldLoading(field);
@@ -229,12 +322,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             const promptConfig = getPrompt(promptName);
             if (!promptConfig) throw new Error(`Prompt ${promptName} not found`);
 
+            // Use localFormState to get current form values
             let filledPrompt = promptConfig.template
-                .replace('{{businessName}}', onboardingState.businessName)
-                .replace('{{industry}}', onboardingState.industry)
-                .replace('{{summary}}', onboardingState.summary || '')
-                .replace('{{audience}}', onboardingState.audience || '')
-                .replace('{{aesthetic}}', onboardingState.aesthetic || 'Minimalist');
+                .replace('{{businessName}}', localFormState.businessName)
+                .replace('{{industry}}', localFormState.industry)
+                .replace('{{summary}}', localFormState.summary || '')
+                .replace('{{audience}}', localFormState.audience || '')
+                .replace('{{aesthetic}}', localFormState.aesthetic || 'Minimalist');
 
             const response = await ai.models.generateContent({
                 model: promptConfig.model,
@@ -263,7 +357,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         if (hasApiKey === false) { await promptForKeySelection(); return; }
 
         setIsLoading(true);
-        updateState('step', 'review'); 
+        // Update both local and context state for review step
+        setLocalFormState(prev => ({ ...prev, step: 'review' as OnboardingStep }));
+        setOnboardingState(prev => ({ ...prev, step: 'review' as OnboardingStep }));
         
         try {
             const promptConfig = getPrompt('onboarding-design-plan');
@@ -342,7 +438,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             return;
         }
 
-        updateState('step', 'generating');
+        // Update both local and context state for generating step
+        setLocalFormState(prev => ({ ...prev, step: 'generating' as OnboardingStep }));
+        setOnboardingState(prev => ({ ...prev, step: 'generating' as OnboardingStep }));
         setGeneratingStatus('Architecting site structure...');
         
         try {
@@ -469,6 +567,49 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 } else {
                     safeData.hero.secondaryCta = String(safeData.hero.secondaryCta);
                 }
+                
+                // Ensure badgeText is relevant to the business (not generic "AI-Powered")
+                if (!safeData.hero.badgeText || 
+                    typeof safeData.hero.badgeText !== 'string' || 
+                    safeData.hero.badgeText.toLowerCase().includes('ai-powered') ||
+                    safeData.hero.badgeText.toLowerCase().includes('generation')) {
+                    // Generate a contextual badge based on business info
+                    const businessName = onboardingState.businessName || '';
+                    const industry = onboardingState.industry || '';
+                    const yearsInBusiness = onboardingState.yearsInBusiness;
+                    
+                    // Choose the most relevant badge text
+                    if (yearsInBusiness && parseInt(yearsInBusiness) > 0) {
+                        safeData.hero.badgeText = `✨ Since ${new Date().getFullYear() - parseInt(yearsInBusiness)}`;
+                    } else if (industry) {
+                        // Use industry-specific badges
+                        const industryBadges: Record<string, string> = {
+                            'Technology': '🚀 Innovation Leader',
+                            'Healthcare': '💚 Trusted Care',
+                            'Education': '🎓 Excellence in Learning',
+                            'Finance': '💰 Financial Expertise',
+                            'Restaurant': '⭐ Award-Winning Taste',
+                            'Retail': '🛍️ Premium Selection',
+                            'Real Estate': '🏠 Your Dream Home',
+                            'Legal': '⚖️ Trusted Counsel',
+                            'Marketing': '📈 Results Driven',
+                            'Design': '🎨 Creative Excellence',
+                            'Fitness': '💪 Transform Your Life',
+                            'Beauty': '✨ Beauty Redefined',
+                        };
+                        safeData.hero.badgeText = industryBadges[industry] || `⭐ ${industry} Experts`;
+                    } else if (businessName) {
+                        safeData.hero.badgeText = `✨ Welcome to ${businessName}`;
+                    } else {
+                        safeData.hero.badgeText = '⭐ Premium Quality';
+                    }
+                    console.log("   ✓ Set contextual badgeText:", safeData.hero.badgeText);
+                }
+                
+                // Ensure badgeIcon is set
+                if (!safeData.hero.badgeIcon || typeof safeData.hero.badgeIcon !== 'string') {
+                    safeData.hero.badgeIcon = 'sparkles';
+                }
             }
             console.log("✅ [generateWebsite] Critical fields validated");
             
@@ -544,6 +685,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                             newColors.heading = leadsTextColor;
                             newColors.buttonBackground = palette.primary || '#4f46e5';
                             newColors.buttonText = getContrastingTextColor(newColors.buttonBackground);
+                            // IMPORTANT: Input background should be 30% darker than primary color
+                            newColors.inputBackground = darkenColor(palette.primary || '#4f46e5', 30);
+                            newColors.inputText = getContrastingTextColor(newColors.inputBackground);
+                            newColors.inputBorder = darkenColor(palette.primary || '#4f46e5', 20);
                         }
                         
                         // Newsletter: PRIMARY color at 75% opacity
@@ -630,10 +775,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             if (onboardingState.designPlan?.layoutStrategy) {
                 const layoutStrategy = onboardingState.designPlan.layoutStrategy;
                 
-                // Apply header layout and style
-                if (layoutStrategy.headerLayout && safeData.header) {
-                    safeData.header.layout = layoutStrategy.headerLayout;
-                    console.log(`   ✓ Applied headerLayout: ${layoutStrategy.headerLayout}`);
+                // Apply header layout and style (default to 'classic' if not specified)
+                if (safeData.header) {
+                    safeData.header.layout = layoutStrategy.headerLayout || 'classic';
+                    console.log(`   ✓ Applied headerLayout: ${safeData.header.layout}`);
                 }
                 if (layoutStrategy.headerStyle && safeData.header) {
                     safeData.header.style = layoutStrategy.headerStyle;
@@ -651,6 +796,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 }
                 
                 console.log("✅ [generateWebsite] layoutStrategy applied");
+            } else {
+                // No layoutStrategy from Design Plan - ensure header layout defaults to 'classic'
+                if (safeData.header && !safeData.header.layout) {
+                    safeData.header.layout = 'classic';
+                    console.log("   ✓ Applied default headerLayout: classic");
+                }
             }
             
             // Step 6.7: Apply uiShapes from Design Plan to theme
@@ -686,11 +837,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             }
             
             // Build theme with potential brand color overrides
+            const designPlanPalette = generatedTheme?.palette || onboardingState.designPlan?.palette;
             const finalTheme = {
                 ...themeWithShapes,
                 fontFamilyHeader: (themeWithShapes.fontFamilyHeader || 'inter').toLowerCase().replace(/\s/g, '-'),
                 fontFamilyBody: (themeWithShapes.fontFamilyBody || 'inter').toLowerCase().replace(/\s/g, '-'),
                 fontFamilyButton: (themeWithShapes.fontFamilyButton || 'inter').toLowerCase().replace(/\s/g, '-'),
+                // IMPORTANT: Set page background to match component backgrounds
+                pageBackground: designPlanPalette?.background || '#0f172a',
             };
             
             // Override palette with user's brand colors if provided
@@ -725,9 +879,24 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             const mergedComponentOrder: PageSection[] = [];
             const addedComponents = new Set<string>();
 
-            // First, add components from Design Plan (in order)
+            // First, ensure header is first (if enabled)
+            if (componentStatus.header !== false) {
+                mergedComponentOrder.push('header');
+                addedComponents.add('header');
+            }
+
+            // CRITICAL: Hero MUST always be the first component after header in onboarding
+            if (componentStatus.hero !== false) {
+                mergedComponentOrder.push('hero');
+                addedComponents.add('hero');
+                console.log("   ✓ Hero positioned as first component after header");
+            }
+
+            // Then, add remaining components from Design Plan (in order), excluding header and hero
             designPlanOrder.forEach((comp: string) => {
-                if (componentStatus[comp as PageSection] !== false && !addedComponents.has(comp)) {
+                if (comp !== 'header' && comp !== 'hero' && 
+                    componentStatus[comp as PageSection] !== false && 
+                    !addedComponents.has(comp)) {
                     mergedComponentOrder.push(comp as PageSection);
                     addedComponents.add(comp);
                 }
@@ -735,16 +904,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
             // Then, add any enabled components that weren't in the Design Plan
             enabledComponents.forEach(comp => {
-                if (!addedComponents.has(comp)) {
+                if (!addedComponents.has(comp) && comp !== 'footer') {
                     mergedComponentOrder.push(comp);
                     addedComponents.add(comp);
                 }
             });
 
-            // Always ensure header and footer are included (if enabled)
-            if (componentStatus.header !== false && !addedComponents.has('header')) {
-                mergedComponentOrder.unshift('header');
-            }
+            // Always ensure footer is last (if enabled)
             if (componentStatus.footer !== false && !addedComponents.has('footer')) {
                 mergedComponentOrder.push('footer');
             }
@@ -753,7 +919,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 designPlanCount: designPlanOrder.length,
                 enabledCount: enabledComponents.length,
                 finalCount: mergedComponentOrder.length,
-                finalOrder: mergedComponentOrder
+                finalOrder: mergedComponentOrder,
+                heroPosition: mergedComponentOrder.indexOf('hero')
             });
             
             const newProject = {
@@ -836,7 +1003,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             // Step 9: Generate images with progress UI
             console.log("🖼️ [generateWebsite] Step 9: Starting image generation...");
             if (generatedPrompts && Object.keys(generatedPrompts).length > 0) {
-                updateState('step', 'generating-images' as OnboardingStep);
+                // Update both local and context state for generating-images step
+                setLocalFormState(prev => ({ ...prev, step: 'generating-images' as OnboardingStep }));
+                setOnboardingState(prev => ({ ...prev, step: 'generating-images' as OnboardingStep }));
                 
                 // Reset image progress
                 setImageProgress({
@@ -897,8 +1066,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             
             // Show success step with option to start guided tour
             console.log("🎉 [generateWebsite] Step 11: Showing success screen...");
-            updateState('step', 'success' as OnboardingStep);
+            // Update both local and context state for success step
+            setLocalFormState(prev => ({ ...prev, step: 'success' as OnboardingStep }));
+            setOnboardingState(prev => ({ ...prev, step: 'success' as OnboardingStep }));
             onboardingStartTime.current = null;
+            
+            // Clear onboarding state from Firebase since it's completed
+            clearOnboardingState();
 
             console.log("🎨 [generateWebsite] =================================");
             console.log("🎨 [generateWebsite] ✅ WEBSITE GENERATION COMPLETE!");
@@ -925,17 +1099,21 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setGeneratingStatus(`Error: ${errorMessage}`);
             console.log("⏰ [generateWebsite] Returning to review in 5 seconds...");
-            setTimeout(() => updateState('step', 'review'), 5000);
+            setTimeout(() => {
+                // Update both local and context state on error recovery
+                setLocalFormState(prev => ({ ...prev, step: 'review' as OnboardingStep }));
+                setOnboardingState(prev => ({ ...prev, step: 'review' as OnboardingStep }));
+            }, 5000);
         }
     };
 
     // --- Step 1: Basics ---
     const renderBasics = () => (
-        <div className="space-y-5 animate-fade-in-up">
+        <div className="space-y-5">
             <div>
                 <InputLabel label="Business Name" />
                 <InputField 
-                    value={onboardingState.businessName} 
+                    value={localFormState.businessName} 
                     onChange={(e) => updateState('businessName', e.target.value)} 
                     placeholder="e.g. Acme Studio" 
                     autoFocus
@@ -944,7 +1122,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             <div>
                 <InputLabel label="Industry / Niche" />
                 <InputField 
-                    value={onboardingState.industry} 
+                    value={localFormState.industry} 
                     onChange={(e) => updateState('industry', e.target.value)} 
                     placeholder="e.g. Interior Design, SaaS, Coffee Shop" 
                 />
@@ -954,10 +1132,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     label="Short Summary" 
                     onAiAssist={() => generateField('summary')} 
                     isLoading={fieldLoading === 'summary'} 
-                    disabled={!onboardingState.businessName || !onboardingState.industry}
+                    disabled={!localFormState.businessName || !localFormState.industry}
                 />
                 <TextAreaField 
-                    value={onboardingState.summary} 
+                    value={localFormState.summary} 
                     onChange={(e) => updateState('summary', e.target.value)} 
                     rows={3} 
                     placeholder="What does your business do?" 
@@ -968,7 +1146,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
     // --- Step 2: Strategy ---
     const renderStrategy = () => (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="space-y-6">
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div className="col-span-1 sm:col-span-2">
                     <InputLabel 
@@ -977,7 +1155,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         isLoading={fieldLoading === 'goal'}
                     />
                     <InputField 
-                        value={onboardingState.goal} 
+                        value={localFormState.goal} 
                         onChange={(e) => updateState('goal', e.target.value)} 
                         placeholder="e.g. Generate leads, Sell products online, Showcase portfolio, Book appointments, Build brand awareness"
                     />
@@ -992,7 +1170,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     isLoading={fieldLoading === 'audience'} 
                 />
                 <InputField 
-                    value={onboardingState.audience} 
+                    value={localFormState.audience} 
                     onChange={(e) => updateState('audience', e.target.value)} 
                     placeholder="e.g. Startups, Homeowners, Fitness Enthusiasts" 
                 />
@@ -1004,7 +1182,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     isLoading={fieldLoading === 'offerings'} 
                 />
                 <TextAreaField 
-                    value={onboardingState.offerings} 
+                    value={localFormState.offerings} 
                     onChange={(e) => updateState('offerings', e.target.value)} 
                     rows={2}
                     placeholder="List your top services or products..." 
@@ -1015,13 +1193,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
     // --- Step 3: Aesthetic (Visual Selection) ---
     const renderAesthetic = () => (
-        <div className="space-y-6 animate-fade-in-up h-full flex flex-col">
+        <div className="space-y-6 h-full flex flex-col">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 flex-grow overflow-y-auto custom-scrollbar pr-1">
                 <OptionCard 
                     title="Minimalist" 
                     description="Clean lines, lots of whitespace, sharp typography."
                     icon={Layout} 
-                    selected={onboardingState.aesthetic === 'Minimalist'} 
+                    selected={localFormState.aesthetic === 'Minimalist'} 
                     onClick={() => updateState('aesthetic', 'Minimalist')}
                     aestheticType="Minimalist"
                 />
@@ -1029,7 +1207,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     title="Bold / Loud" 
                     description="High contrast, large text, punchy colors."
                     icon={Megaphone} 
-                    selected={onboardingState.aesthetic === 'Bold'} 
+                    selected={localFormState.aesthetic === 'Bold'} 
                     onClick={() => updateState('aesthetic', 'Bold')}
                     aestheticType="Bold"
                 />
@@ -1037,7 +1215,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     title="Elegant" 
                     description="Serif fonts, muted luxury tones, classic layouts."
                     icon={Gem} 
-                    selected={onboardingState.aesthetic === 'Elegant'} 
+                    selected={localFormState.aesthetic === 'Elegant'} 
                     onClick={() => updateState('aesthetic', 'Elegant')}
                     aestheticType="Elegant"
                 />
@@ -1045,7 +1223,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     title="Playful" 
                     description="Rounded shapes, vibrant colors, friendly vibe."
                     icon={Smile} 
-                    selected={onboardingState.aesthetic === 'Playful'} 
+                    selected={localFormState.aesthetic === 'Playful'} 
                     onClick={() => updateState('aesthetic', 'Playful')}
                     aestheticType="Playful"
                 />
@@ -1053,7 +1231,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     title="Tech / Future" 
                     description="Dark mode, neon accents, gradients, glow."
                     icon={Monitor} 
-                    selected={onboardingState.aesthetic === 'Tech'} 
+                    selected={localFormState.aesthetic === 'Tech'} 
                     onClick={() => updateState('aesthetic', 'Tech')}
                     aestheticType="Tech"
                 />
@@ -1061,7 +1239,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     title="Organic" 
                     description="Earth tones, soft edges, natural feel."
                     icon={Leaf} 
-                    selected={onboardingState.aesthetic === 'Organic'} 
+                    selected={localFormState.aesthetic === 'Organic'} 
                     onClick={() => updateState('aesthetic', 'Organic')}
                     aestheticType="Organic"
                 />
@@ -1074,7 +1252,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     isLoading={fieldLoading === 'colorVibe'}
                 />
                 <InputField 
-                    value={onboardingState.colorVibe || ''} 
+                    value={localFormState.colorVibe || ''} 
                     onChange={(e) => updateState('colorVibe', e.target.value)} 
                     placeholder="e.g. Trustworthy Blue, Energetic Orange, Deep Forest Green" 
                 />
@@ -1085,16 +1263,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
     // --- Step 4: Details (Company Info) ---
     const renderDetails = () => (
-        <div className="space-y-5 animate-fade-in-up">
+        <div className="space-y-5">
             <div>
                 <InputLabel 
                     label="Propuesta de Valor Única" 
                     onAiAssist={() => generateField('uniqueValueProposition')} 
                     isLoading={fieldLoading === 'uniqueValueProposition'}
-                    disabled={!onboardingState.businessName || !onboardingState.industry}
+                    disabled={!localFormState.businessName || !localFormState.industry}
                 />
                 <TextAreaField 
-                    value={onboardingState.uniqueValueProposition || ''} 
+                    value={localFormState.uniqueValueProposition || ''} 
                     onChange={(e) => updateState('uniqueValueProposition', e.target.value)} 
                     rows={3} 
                     placeholder="¿Qué hace a tu negocio único y diferente de la competencia?" 
@@ -1106,10 +1284,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     label="Historia de la Empresa (Opcional)" 
                     onAiAssist={() => generateField('companyHistory')} 
                     isLoading={fieldLoading === 'companyHistory'}
-                    disabled={!onboardingState.businessName || !onboardingState.industry}
+                    disabled={!localFormState.businessName || !localFormState.industry}
                 />
                 <TextAreaField 
-                    value={onboardingState.companyHistory || ''} 
+                    value={localFormState.companyHistory || ''} 
                     onChange={(e) => updateState('companyHistory', e.target.value)} 
                     rows={3} 
                     placeholder="Cuéntanos cómo empezó tu negocio y qué te impulsa..." 
@@ -1121,10 +1299,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     label="Valores Fundamentales (Opcional)" 
                     onAiAssist={() => generateField('coreValues')} 
                     isLoading={fieldLoading === 'coreValues'}
-                    disabled={!onboardingState.businessName || !onboardingState.industry}
+                    disabled={!localFormState.businessName || !localFormState.industry}
                 />
                 <InputField 
-                    value={onboardingState.coreValues?.join(', ') || ''} 
+                    value={localFormState.coreValues?.join(', ') || ''} 
                     onChange={(e) => updateState('coreValues', e.target.value.split(',').map(v => v.trim()).filter(v => v))} 
                     placeholder="e.g. Innovación, Calidad, Integridad, Sostenibilidad" 
                 />
@@ -1133,7 +1311,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             <div>
                 <InputLabel label="Años en el Negocio (Opcional)" />
                 <InputField 
-                    value={onboardingState.yearsInBusiness || ''} 
+                    value={localFormState.yearsInBusiness || ''} 
                     onChange={(e) => updateState('yearsInBusiness', e.target.value)} 
                     placeholder="e.g. 5 años, Desde 2019" 
                 />
@@ -1198,21 +1376,21 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         };
 
         const updateProduct = (id: string, field: keyof ProductInfo, value: any) => {
-            const updated = (onboardingState.products || []).map(p => 
+            const updated = (localFormState.products || []).map(p => 
                 p.id === id ? { ...p, [field]: value } : p
             );
             updateState('products', updated);
         };
 
         const removeProduct = (id: string) => {
-            updateState('products', (onboardingState.products || []).filter(p => p.id !== id));
+            updateState('products', (localFormState.products || []).filter(p => p.id !== id));
         };
 
         return (
-            <div className="space-y-5 animate-fade-in-up">
+            <div className="space-y-5">
                 <div className="text-center mb-4">
                     <p className="text-sm text-gray-400">Agrega tus productos o servicios principales (opcional)</p>
-                    {(onboardingState.products || []).length === 0 && (
+                    {(localFormState.products || []).length === 0 && (
                         <button
                             onClick={generateProducts}
                             disabled={fieldLoading === 'products'}
@@ -1233,7 +1411,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     )}
                 </div>
                 
-                {(onboardingState.products || []).map((product, index) => (
+                {(localFormState.products || []).map((product, index) => (
                     <div key={product.id} className="bg-[#130a1d] p-4 rounded-xl border border-white/10 space-y-3">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-bold text-yellow-400">PRODUCTO {index + 1}</span>
@@ -1279,7 +1457,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
     // --- Step 6: Contact Information ---
     const renderContact = () => (
-        <div className="space-y-5 animate-fade-in-up">
+        <div className="space-y-5">
             <div className="text-center mb-4">
                 <p className="text-sm text-gray-400">Información de contacto (opcional pero recomendado)</p>
             </div>
@@ -1289,9 +1467,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     <InputLabel label="Email" />
                     <InputField 
                         type="email"
-                        value={onboardingState.contactInfo?.email || ''} 
+                        value={localFormState.contactInfo?.email || ''} 
                         onChange={(e) => updateState('contactInfo', { 
-                            ...(onboardingState.contactInfo || {}), 
+                            ...(localFormState.contactInfo || {}), 
                             email: e.target.value 
                         })} 
                         placeholder="contacto@empresa.com" 
@@ -1302,9 +1480,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     <InputLabel label="Teléfono" />
                     <InputField 
                         type="tel"
-                        value={onboardingState.contactInfo?.phone || ''} 
+                        value={localFormState.contactInfo?.phone || ''} 
                         onChange={(e) => updateState('contactInfo', { 
-                            ...(onboardingState.contactInfo || {}), 
+                            ...(localFormState.contactInfo || {}), 
                             phone: e.target.value 
                         })} 
                         placeholder="+1 (555) 123-4567" 
@@ -1315,9 +1493,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             <div>
                 <InputLabel label="Dirección" />
                 <InputField 
-                    value={onboardingState.contactInfo?.address || ''} 
+                    value={localFormState.contactInfo?.address || ''} 
                     onChange={(e) => updateState('contactInfo', { 
-                        ...(onboardingState.contactInfo || {}), 
+                        ...(localFormState.contactInfo || {}), 
                         address: e.target.value 
                     })} 
                     placeholder="123 Main Street" 
@@ -1328,9 +1506,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 <div>
                     <InputLabel label="Ciudad" />
                     <InputField 
-                        value={onboardingState.contactInfo?.city || ''} 
+                        value={localFormState.contactInfo?.city || ''} 
                         onChange={(e) => updateState('contactInfo', { 
-                            ...(onboardingState.contactInfo || {}), 
+                            ...(localFormState.contactInfo || {}), 
                             city: e.target.value 
                         })} 
                         placeholder="Ciudad" 
@@ -1340,9 +1518,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 <div>
                     <InputLabel label="País" />
                     <InputField 
-                        value={onboardingState.contactInfo?.country || ''} 
+                        value={localFormState.contactInfo?.country || ''} 
                         onChange={(e) => updateState('contactInfo', { 
-                            ...(onboardingState.contactInfo || {}), 
+                            ...(localFormState.contactInfo || {}), 
                             country: e.target.value 
                         })} 
                         placeholder="País" 
@@ -1356,11 +1534,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     {['facebook', 'instagram', 'twitter', 'linkedin', 'youtube'].map((platform) => (
                         <InputField 
                             key={platform}
-                            value={onboardingState.contactInfo?.socialMedia?.[platform as keyof typeof onboardingState.contactInfo.socialMedia] || ''} 
+                            value={localFormState.contactInfo?.socialMedia?.[platform as keyof typeof onboardingState.contactInfo.socialMedia] || ''} 
                             onChange={(e) => updateState('contactInfo', { 
-                                ...(onboardingState.contactInfo || {}), 
+                                ...(localFormState.contactInfo || {}), 
                                 socialMedia: {
-                                    ...(onboardingState.contactInfo?.socialMedia || {}),
+                                    ...(localFormState.contactInfo?.socialMedia || {}),
                                     [platform]: e.target.value
                                 }
                             })} 
@@ -1411,12 +1589,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     />
                 </div>
                 
-                {(onboardingState.faqs || []).map((faq, index) => (
+                {(localFormState.faqs || []).map((faq, index) => (
                     <div key={index} className="space-y-2 mb-4 p-4 border border-white/10 rounded-lg">
                         <InputField 
                             value={faq.question} 
                             onChange={(e) => {
-                                const newFaqs = [...(onboardingState.faqs || [])];
+                                const newFaqs = [...(localFormState.faqs || [])];
                                 newFaqs[index] = { ...newFaqs[index], question: e.target.value };
                                 updateState('faqs', newFaqs);
                             }} 
@@ -1425,7 +1603,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         <textarea
                             value={faq.answer}
                             onChange={(e) => {
-                                const newFaqs = [...(onboardingState.faqs || [])];
+                                const newFaqs = [...(localFormState.faqs || [])];
                                 newFaqs[index] = { ...newFaqs[index], answer: e.target.value };
                                 updateState('faqs', newFaqs);
                             }}
@@ -1435,7 +1613,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         />
                         <button
                             onClick={() => {
-                                const newFaqs = (onboardingState.faqs || []).filter((_, i) => i !== index);
+                                const newFaqs = (localFormState.faqs || []).filter((_, i) => i !== index);
                                 updateState('faqs', newFaqs);
                             }}
                             className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"
@@ -1446,7 +1624,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     </div>
                 ))}
                 
-                {(onboardingState.faqs || []).length === 0 && (
+                {(localFormState.faqs || []).length === 0 && (
                     <p className="text-sm text-gray-500 text-center py-4">
                         No hay preguntas frecuentes. Usa el asistente de IA para generarlas.
                     </p>
@@ -1455,7 +1633,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 <button
                     onClick={() => {
                         const newFaq = { question: '', answer: '' };
-                        updateState('faqs', [...(onboardingState.faqs || []), newFaq]);
+                        updateState('faqs', [...(localFormState.faqs || []), newFaq]);
                     }}
                     className="w-full py-3 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/40 transition-colors flex items-center justify-center gap-2"
                 >
@@ -1476,7 +1654,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 role: '',
                 company: ''
             };
-            updateState('testimonials', [...(onboardingState.testimonials || []), newTestimonial]);
+            updateState('testimonials', [...(localFormState.testimonials || []), newTestimonial]);
         };
 
         const generateTestimonials = async () => {
@@ -1523,18 +1701,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
         };
 
         const updateTestimonial = (id: string, field: keyof TestimonialInfo, value: string) => {
-            const updated = (onboardingState.testimonials || []).map(t => 
+            const updated = (localFormState.testimonials || []).map(t => 
                 t.id === id ? { ...t, [field]: value } : t
             );
             updateState('testimonials', updated);
         };
 
         const removeTestimonial = (id: string) => {
-            updateState('testimonials', (onboardingState.testimonials || []).filter(t => t.id !== id));
+            updateState('testimonials', (localFormState.testimonials || []).filter(t => t.id !== id));
         };
 
         return (
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-6">
                 {/* Testimonials Section */}
                 <div>
                     <div className="flex items-center justify-between mb-3">
@@ -1542,7 +1720,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     </div>
                     <p className="text-xs text-gray-400 mb-4">Agrega testimonios reales de tus clientes (opcional)</p>
                     
-                    {(onboardingState.testimonials || []).length === 0 && (
+                    {(localFormState.testimonials || []).length === 0 && (
                         <button
                             onClick={generateTestimonials}
                             disabled={fieldLoading === 'testimonials'}
@@ -1562,7 +1740,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                         </button>
                     )}
                     
-                    {(onboardingState.testimonials || []).map((testimonial, index) => (
+                    {(localFormState.testimonials || []).map((testimonial, index) => (
                         <div key={testimonial.id} className="bg-[#130a1d] p-4 rounded-xl border border-white/10 space-y-3 mb-3">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs font-bold text-yellow-400">TESTIMONIO {index + 1}</span>
@@ -1612,34 +1790,79 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     </button>
                 </div>
                 
-                {/* Brand Colors Section */}
+                {/* Brand Colors Section with Palette Selector */}
                 <div className="border-t border-white/10 pt-6">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Colores de Marca (Opcional)</h3>
-                    <p className="text-xs text-gray-400 mb-4">Si ya tienes colores de marca, ingrésalos aquí. Estos colores se aplicarán a tu sitio web.</p>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <Palette size={16} className="text-yellow-400" />
+                        Paleta de Colores
+                    </h3>
+                    <p className="text-xs text-gray-400 mb-4">
+                        Selecciona una paleta predefinida o personaliza tus colores de marca.
+                    </p>
                     
-                    <div className="grid grid-cols-1 gap-6">
-                        <div>
-                            <ColorControl 
-                                label="Color Primario" 
-                                value={onboardingState.brandGuidelines?.primaryColor || '#4f46e5'} 
-                                onChange={(value) => updateState('brandGuidelines', { 
-                                    ...(onboardingState.brandGuidelines || {}), 
-                                    primaryColor: value 
-                                })} 
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Se usará en botones, header, footer y elementos principales</p>
-                        </div>
-                        
-                        <div>
-                            <ColorControl 
-                                label="Color Secundario" 
-                                value={onboardingState.brandGuidelines?.secondaryColor || '#ec4899'} 
-                                onChange={(value) => updateState('brandGuidelines', { 
-                                    ...(onboardingState.brandGuidelines || {}), 
-                                    secondaryColor: value 
-                                })} 
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Se usará para acentos y elementos secundarios</p>
+                    {/* Palette Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        {colorPalettes.slice(0, 8).map((palette) => (
+                            <button
+                                key={palette.id}
+                                onClick={() => {
+                                    updateState('brandGuidelines', {
+                                        ...(localFormState.brandGuidelines || {}),
+                                        primaryColor: palette.colors.primary,
+                                        secondaryColor: palette.colors.secondary,
+                                        paletteId: palette.id
+                                    });
+                                }}
+                                className={`p-3 rounded-xl border transition-all text-left group ${
+                                    localFormState.brandGuidelines?.paletteId === palette.id
+                                        ? 'border-yellow-500 ring-1 ring-yellow-500 bg-yellow-500/10'
+                                        : 'border-white/10 hover:border-white/30 bg-white/5'
+                                }`}
+                            >
+                                <div className="flex gap-1.5 mb-2">
+                                    {palette.preview.map((color, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="w-5 h-5 rounded-md border border-white/10"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                    ))}
+                                </div>
+                                <p className="text-xs font-medium text-white">{palette.nameEs}</p>
+                                <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{palette.descriptionEs}</p>
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {/* Custom Color Controls */}
+                    <div className="border-t border-white/5 pt-4">
+                        <p className="text-xs text-gray-500 mb-4">O personaliza los colores manualmente:</p>
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <ColorControl 
+                                    label="Color Primario" 
+                                    value={localFormState.brandGuidelines?.primaryColor || '#4f46e5'} 
+                                    onChange={(value) => updateState('brandGuidelines', { 
+                                        ...(localFormState.brandGuidelines || {}), 
+                                        primaryColor: value,
+                                        paletteId: undefined // Clear palette selection when custom color is picked
+                                    })} 
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Se usará en botones, header, footer y elementos principales</p>
+                            </div>
+                            
+                            <div>
+                                <ColorControl 
+                                    label="Color Secundario" 
+                                    value={localFormState.brandGuidelines?.secondaryColor || '#10b981'} 
+                                    onChange={(value) => updateState('brandGuidelines', { 
+                                        ...(localFormState.brandGuidelines || {}), 
+                                        secondaryColor: value,
+                                        paletteId: undefined // Clear palette selection when custom color is picked
+                                    })} 
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Se usará para acentos y elementos secundarios</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1650,16 +1873,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     <p className="text-xs text-gray-400 mb-4">Sube tu logo si ya tienes uno</p>
                     
                     <div className="flex items-center gap-4">
-                        {onboardingState.brandGuidelines?.logoUrl && (
+                        {localFormState.brandGuidelines?.logoUrl && (
                             <div className="relative group">
                                 <img 
-                                    src={onboardingState.brandGuidelines.logoUrl} 
+                                    src={localFormState.brandGuidelines.logoUrl} 
                                     alt="Logo" 
                                     className="w-20 h-20 object-contain bg-white/5 rounded-lg border border-white/10"
                                 />
                                 <button
                                     onClick={() => updateState('brandGuidelines', { 
-                                        ...(onboardingState.brandGuidelines || {}), 
+                                        ...(localFormState.brandGuidelines || {}), 
                                         logoUrl: undefined 
                                     })}
                                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1682,7 +1905,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                             ) : (
                                 <>
                                     <ImageIcon size={16} />
-                                    {onboardingState.brandGuidelines?.logoUrl ? 'Cambiar Logo' : 'Subir Logo'}
+                                    {localFormState.brandGuidelines?.logoUrl ? 'Cambiar Logo' : 'Subir Logo'}
                                 </>
                             )}
                         </button>
@@ -1700,7 +1923,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                                 try {
                                     const url = await uploadImageAndGetURL(file);
                                     updateState('brandGuidelines', { 
-                                        ...(onboardingState.brandGuidelines || {}), 
+                                        ...(localFormState.brandGuidelines || {}), 
                                         logoUrl: url 
                                     });
                                 } catch (error) {
@@ -1738,22 +1961,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             </div>
         );
 
-        if (!onboardingState.designPlan) return null;
+        if (!localFormState.designPlan) return null;
 
-        const p = onboardingState.designPlan.palette || {};
-        const t = onboardingState.designPlan.typography || {};
+        const p = localFormState.designPlan.palette || {};
+        const t = localFormState.designPlan.typography || {};
 
         // Calculate completeness score
         const totalFields = 7; // basics, strategy, aesthetic, details, products, contact, visuals
         let filledFields = 3; // basics, strategy, aesthetic are required
-        if (onboardingState.uniqueValueProposition || onboardingState.companyHistory || onboardingState.coreValues?.length) filledFields++;
-        if (onboardingState.products?.length) filledFields++;
-        if (onboardingState.contactInfo?.email || onboardingState.contactInfo?.phone) filledFields++;
-        if (onboardingState.testimonials?.length || onboardingState.brandGuidelines?.primaryColor) filledFields++;
+        if (localFormState.uniqueValueProposition || localFormState.companyHistory || localFormState.coreValues?.length) filledFields++;
+        if (localFormState.products?.length) filledFields++;
+        if (localFormState.contactInfo?.email || localFormState.contactInfo?.phone) filledFields++;
+        if (localFormState.testimonials?.length || localFormState.brandGuidelines?.primaryColor) filledFields++;
         const completeness = Math.round((filledFields / totalFields) * 100);
 
         return (
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-6">
                 {/* Completeness Score */}
                 <div className="bg-gradient-to-r from-yellow-400/10 to-orange-500/10 p-4 rounded-xl border border-yellow-400/20">
                     <div className="flex items-center justify-between mb-2">
@@ -1813,42 +2036,42 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                             <span className="text-gray-500">Negocio:</span>
-                            <p className="text-white font-medium">{onboardingState.businessName}</p>
+                            <p className="text-white font-medium">{localFormState.businessName}</p>
                         </div>
                         <div>
                             <span className="text-gray-500">Industria:</span>
-                            <p className="text-white font-medium">{onboardingState.industry}</p>
+                            <p className="text-white font-medium">{localFormState.industry}</p>
                         </div>
                         <div>
                             <span className="text-gray-500">Objetivo:</span>
-                            <p className="text-white font-medium">{onboardingState.goal}</p>
+                            <p className="text-white font-medium">{localFormState.goal}</p>
                         </div>
                         <div>
                             <span className="text-gray-500">Estética:</span>
-                            <p className="text-white font-medium">{onboardingState.aesthetic}</p>
+                            <p className="text-white font-medium">{localFormState.aesthetic}</p>
                         </div>
-                        {onboardingState.products && onboardingState.products.length > 0 && (
+                        {localFormState.products && localFormState.products.length > 0 && (
                             <div>
                                 <span className="text-gray-500">Productos/Servicios:</span>
-                                <p className="text-white font-medium">{onboardingState.products.length} agregados</p>
+                                <p className="text-white font-medium">{localFormState.products.length} agregados</p>
                             </div>
                         )}
-                        {onboardingState.testimonials && onboardingState.testimonials.length > 0 && (
+                        {localFormState.testimonials && localFormState.testimonials.length > 0 && (
                             <div>
                                 <span className="text-gray-500">Testimonios:</span>
-                                <p className="text-white font-medium">{onboardingState.testimonials.length} agregados</p>
+                                <p className="text-white font-medium">{localFormState.testimonials.length} agregados</p>
                             </div>
                         )}
-                        {onboardingState.contactInfo?.email && (
+                        {localFormState.contactInfo?.email && (
                             <div>
                                 <span className="text-gray-500">Email:</span>
-                                <p className="text-white font-medium">{onboardingState.contactInfo.email}</p>
+                                <p className="text-white font-medium">{localFormState.contactInfo.email}</p>
                             </div>
                         )}
-                        {onboardingState.contactInfo?.phone && (
+                        {localFormState.contactInfo?.phone && (
                             <div>
                                 <span className="text-gray-500">Teléfono:</span>
-                                <p className="text-white font-medium">{onboardingState.contactInfo.phone}</p>
+                                <p className="text-white font-medium">{localFormState.contactInfo.phone}</p>
                             </div>
                         )}
                     </div>
@@ -1902,7 +2125,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                             loadProject(createdProjectId);
                         }
                         onClose();
-                        updateState('step', 'basics');
+                        // Reset step to basics for next time
+                        setLocalFormState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
+                        setOnboardingState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
                     }}
                     className="bg-white/10 text-white font-bold py-4 px-6 rounded-xl hover:bg-white/20 border border-white/10 transition-all flex flex-col items-center justify-center gap-2"
                 >
@@ -1960,7 +2185,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     onClose={() => setIsGuidedTourOpen(false)}
                     onComplete={() => {
                         setIsGuidedTourOpen(false);
-                        updateState('step', 'basics');
+                        // Reset step to basics for next time
+                        setLocalFormState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
+                        setOnboardingState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
                     }}
                 />
             </>
@@ -1989,7 +2216,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                          </div>
                          <div className="flex items-center gap-2 mt-2">
                              {['basics', 'strategy', 'aesthetic', 'details', 'products', 'contact', 'visuals', 'review'].map((s, i) => (
-                                 <div key={s} className={`h-1 w-6 rounded-full transition-colors ${['basics', 'strategy', 'aesthetic', 'details', 'products', 'contact', 'visuals', 'review'].indexOf(onboardingState.step) >= i ? 'bg-yellow-400' : 'bg-white/10'}`}></div>
+                                 <div key={s} className={`h-1 w-6 rounded-full transition-colors ${['basics', 'strategy', 'aesthetic', 'details', 'products', 'contact', 'visuals', 'review'].indexOf(localFormState.step) >= i ? 'bg-yellow-400' : 'bg-white/10'}`}></div>
                              ))}
                          </div>
                      </div>
@@ -2000,31 +2227,33 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
                 {/* Content */}
                 <div className="px-8 py-8 overflow-y-auto flex-grow custom-scrollbar relative z-10">
-                    {onboardingState.step === 'basics' && renderBasics()}
-                    {onboardingState.step === 'strategy' && renderStrategy()}
-                    {onboardingState.step === 'aesthetic' && renderAesthetic()}
-                    {onboardingState.step === 'details' && renderDetails()}
-                    {onboardingState.step === 'products' && renderProducts()}
-                    {onboardingState.step === 'contact' && renderContact()}
-                    {onboardingState.step === 'visuals' && renderVisuals()}
-                    {onboardingState.step === 'review' && renderReview()}
+                    {localFormState.step === 'basics' && renderBasics()}
+                    {localFormState.step === 'strategy' && renderStrategy()}
+                    {localFormState.step === 'aesthetic' && renderAesthetic()}
+                    {localFormState.step === 'details' && renderDetails()}
+                    {localFormState.step === 'products' && renderProducts()}
+                    {localFormState.step === 'contact' && renderContact()}
+                    {localFormState.step === 'visuals' && renderVisuals()}
+                    {localFormState.step === 'review' && renderReview()}
                 </div>
 
                 {/* Footer */}
                 <div className="p-8 pt-4 flex justify-between items-center border-t border-white/5 bg-white/5">
-                     {onboardingState.step !== 'basics' ? (
+                     {localFormState.step !== 'basics' ? (
                          <button onClick={() => {
                              const steps: OnboardingStep[] = ['basics', 'strategy', 'aesthetic', 'details', 'products', 'contact', 'visuals', 'review'];
-                             const currentIndex = steps.indexOf(onboardingState.step);
+                             const currentIndex = steps.indexOf(localFormState.step);
                              if (currentIndex > 0) {
-                                 updateState('step', steps[currentIndex - 1]);
+                                 const newState = { ...localFormState, step: steps[currentIndex - 1] };
+                                 setLocalFormState(newState);
+                                 setOnboardingState(newState);
                              }
                          }} className="text-sm text-gray-400 hover:text-white font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/5">Atrás</button>
                      ) : <div></div>}
 
                      <div className="flex items-center gap-3">
                          {/* Botón Saltar para pasos opcionales */}
-                         {['details', 'products', 'contact', 'visuals'].includes(onboardingState.step) && (
+                         {['details', 'products', 'contact', 'visuals'].includes(localFormState.step) && (
                              <button
                                  onClick={handleNext}
                                  className="text-sm text-gray-400 hover:text-white font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
@@ -2035,23 +2264,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                          
                          <button 
                             onClick={handleNext}
-                            disabled={isLoading || (onboardingState.step === 'basics' && !onboardingState.businessName)}
+                            disabled={isLoading || (localFormState.step === 'basics' && !localFormState.businessName)}
                             className="bg-yellow-400 text-black font-bold py-3 px-8 rounded-xl hover:bg-yellow-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(250,204,21,0.3)] transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                          >
-                            {onboardingState.step === 'review' ? 'Crear Website' : onboardingState.step === 'visuals' ? 'Generar Diseño' : 'Continuar'} <ArrowRight size={18} className="ml-2" />
+                            {localFormState.step === 'review' ? 'Crear Website' : localFormState.step === 'visuals' ? 'Generar Diseño' : 'Continuar'} <ArrowRight size={18} className="ml-2" />
                          </button>
                      </div>
                 </div>
              </div>
              
              {/* Guided Tour can also be triggered from regular wizard */}
-             {isGuidedTourOpen && onboardingState.step !== 'success' && (
+             {isGuidedTourOpen && localFormState.step !== 'success' && (
                  <GuidedTour
                      isOpen={isGuidedTourOpen}
                      onClose={() => setIsGuidedTourOpen(false)}
                      onComplete={() => {
                          setIsGuidedTourOpen(false);
-                         updateState('step', 'basics');
+                         // Reset step to basics for next time
+                         setLocalFormState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
+                         setOnboardingState(prev => ({ ...prev, step: 'basics' as OnboardingStep }));
                      }}
                  />
              )}

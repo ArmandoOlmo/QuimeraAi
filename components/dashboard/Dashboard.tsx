@@ -217,8 +217,9 @@ const Dashboard: React.FC = () => {
        
        <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Standardized Header */}
-          <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
-             <div className="flex items-center gap-4">
+          <header className="h-14 px-6 border-b border-border flex items-center bg-background z-20 sticky top-0" role="banner">
+             {/* Left Section - Logo & Title */}
+             <div className="flex items-center gap-4 flex-shrink-0">
                 <button 
                    onClick={() => setIsMobileMenuOpen(true)} 
                    className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
@@ -229,21 +230,21 @@ const Dashboard: React.FC = () => {
                 </button>
                 <div className="flex items-center gap-2">
                     <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
-                    <h1 className="text-xl font-bold text-foreground">{headerTitle}</h1>
+                    <h1 className="text-xl font-bold text-foreground hidden sm:block">{headerTitle}</h1>
                 </div>
              </div>
 
-             <div className="flex items-center gap-4 flex-1 justify-end">
-                {/* Search Bar - Desktop */}
+             {/* Center Section - Search Bar */}
+             <div className="flex-1 flex justify-center px-4">
                 {(isDashboard || isWebsites) && (
-                    <div className="relative group max-w-md w-full hidden md:block" role="search">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} aria-hidden="true" />
+                    <div className="relative group w-full max-w-xl hidden md:block" role="search">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} aria-hidden="true" />
                         <input 
                             type="search" 
                             placeholder={t('dashboard.searchProjects')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-transparent border border-border/30 focus:border-primary/50 rounded-lg py-1.5 pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
+                            className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm shadow-sm focus:shadow-md"
                             aria-label={t('dashboard.searchProjects')}
                         />
                     </div>
@@ -253,32 +254,35 @@ const Dashboard: React.FC = () => {
                 {(isDashboard || isWebsites) && (
                     <button 
                         onClick={() => setShowMobileSearch(true)}
-                        className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="md:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-colors"
                         aria-label="Open search"
                         aria-expanded={showMobileSearch}
                     >
                         <Search size={20} />
                     </button>
                 )}
+             </div>
 
+             {/* Right Section - Actions & Language */}
+             <div className="flex items-center gap-2 flex-shrink-0">
                 {/* View Mode Toggle - Only on Websites view */}
                 {isWebsites && (
-                    <div className="hidden sm:flex items-center gap-1" role="group" aria-label="View mode">
+                    <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
                         <button 
                             onClick={() => setViewMode('grid')}
-                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             aria-label={t('dashboard.gridView')}
                             aria-pressed={viewMode === 'grid'}
                         >
-                            <LayoutGrid size={16} aria-hidden="true" />
+                            <LayoutGrid size={15} aria-hidden="true" />
                         </button>
                         <button 
                             onClick={() => setViewMode('list')}
-                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             aria-label={t('dashboard.listView')}
                             aria-pressed={viewMode === 'list'}
                         >
-                            <List size={16} aria-hidden="true" />
+                            <List size={15} aria-hidden="true" />
                         </button>
                     </div>
                 )}
@@ -297,7 +301,7 @@ const Dashboard: React.FC = () => {
                                 setSortOrder('desc');
                             }
                         }}
-                        className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                         aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
                     >
                         <ArrowUpDown size={14} aria-hidden="true" />
@@ -312,7 +316,7 @@ const Dashboard: React.FC = () => {
                     <>
                         <button 
                             onClick={handleExportAll}
-                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                             title={t('common.export')}
                             aria-label={t('dashboard.exportAllProjects')}
                         >
@@ -323,7 +327,7 @@ const Dashboard: React.FC = () => {
                         <button 
                             onClick={handleImportClick}
                             disabled={isImporting}
-                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
+                            className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60 disabled:opacity-50"
                             title={t('common.import')}
                             aria-label={t('dashboard.importProjects')}
                         >
@@ -342,18 +346,11 @@ const Dashboard: React.FC = () => {
                     </>
                 )}
                 
+                {/* Separator */}
+                <div className="hidden sm:block h-6 w-px bg-border/50 mx-1"></div>
+                
                 {/* Language Selector */}
                 <LanguageSelector />
-
-                <button 
-                    onClick={() => setIsOnboardingOpen(true)}
-                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                    aria-label={t('dashboard.newProject')}
-                >
-                    <Plus className="w-4 h-4" aria-hidden="true" />
-                    <span className="hidden sm:inline">{t('dashboard.newProject')}</span>
-                    <span className="sm:hidden">{t('dashboard.new')}</span>
-                </button>
              </div>
           </header>
 
@@ -409,17 +406,35 @@ const Dashboard: React.FC = () => {
                 {isDashboard && (
                     <section className="w-full">
                         <div className="flex flex-col justify-center py-6">
-                            {/* Greeting Header */}
-                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground mb-4 flex items-center flex-wrap">
-                                <img 
-                                    src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
-                                    alt="Quimera Logo" 
-                                    className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]" 
-                                />
-                                <span>
-                                    {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{userDocument?.name?.split(' ')[0] || 'Creator'}</span>.
-                                </span>
-                            </h1>
+                            {/* Greeting Header with CTA */}
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-4">
+                                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground flex items-center flex-wrap">
+                                    <img 
+                                        src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
+                                        alt="Quimera Logo" 
+                                        className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]" 
+                                    />
+                                    <span>
+                                        {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{userDocument?.name?.split(' ')[0] || 'Creator'}</span>.
+                                    </span>
+                                </h1>
+                                
+                                {/* New Project CTA */}
+                                <button 
+                                    onClick={() => setIsOnboardingOpen(true)}
+                                    className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-slate-900 font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                    aria-label={t('dashboard.newProject')}
+                                >
+                                    <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
+                                        <Plus className="w-6 h-6" aria-hidden="true" />
+                                    </div>
+                                    <div className="flex flex-col items-start text-left">
+                                        <span className="text-lg leading-tight">{t('dashboard.newProject')}</span>
+                                        <span className="text-xs opacity-80 font-medium text-left">{t('dashboard.startBuilding')}</span>
+                                    </div>
+                                </button>
+                            </div>
+                            
                             <p className="text-lg text-muted-foreground max-w-3xl mb-8 leading-relaxed">
                                 {t('dashboard.heroSubtitlePart1')} <span className="text-foreground font-semibold">{allUserProjects.length} {t('dashboard.heroSubtitlePart2')}</span> {t('dashboard.heroSubtitlePart3')}
                             </p>

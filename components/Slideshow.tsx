@@ -4,6 +4,7 @@ import { SlideshowData, PaddingSize, BorderRadiusSize, FontSize, SlideshowVarian
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 // Helper component to render slideshow image or placeholder
 const SlideImage: React.FC<{ imageUrl: string; altText: string; className?: string }> = ({ imageUrl, altText, className = '' }) => {
@@ -46,6 +47,8 @@ interface SlideshowProps extends SlideshowData {
 const Slideshow: React.FC<SlideshowProps> = ({ 
     slideshowVariant = 'classic',
     title, 
+    showTitle = true,
+    fullWidth = false,
     items, 
     paddingY, 
     paddingX, 
@@ -61,8 +64,13 @@ const Slideshow: React.FC<SlideshowProps> = ({
     dotStyle = 'circle',
     kenBurnsIntensity = 'medium',
     thumbnailSize = 80,
-    showCaptions = false
+    showCaptions = false,
+    slideHeight = 600
 }) => {
+    // Get design tokens with primary color
+    const { getColor } = useDesignTokens();
+    const primaryColor = getColor('primary.main', '#4f46e5');
+    
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const hasItems = items && items.length > 0;
@@ -111,7 +119,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
             rounded: 'rounded-full hover:scale-110',
             square: 'rounded-none hover:scale-105',
             minimal: 'rounded hover:opacity-80',
-            floating: 'rounded-full shadow-lg hover:shadow-xl hover:scale-110'
+            floating: 'rounded-full hover:scale-110'
         };
         
         return `${baseClasses} ${shapes[arrowStyle]}`;
@@ -172,10 +180,17 @@ const Slideshow: React.FC<SlideshowProps> = ({
 
     // Render Classic Variant
     const renderClassic = () => {
+        const containerStyle: React.CSSProperties = fullWidth 
+            ? { height: `${slideHeight}px` }
+            : {};
+        const containerClass = fullWidth 
+            ? `w-full overflow-hidden relative ${fullWidth ? 'rounded-none' : borderRadiusClasses[borderRadius]}`
+            : `w-full aspect-video overflow-hidden relative ${borderRadiusClasses[borderRadius]}`;
+
         // For slide effect, use horizontal scroll layout
         if (transitionEffect === 'slide') {
             return (
-                <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
+                <div className={containerClass} style={containerStyle}>
                     <div 
                         className="w-full h-full whitespace-nowrap transition-transform ease-in-out" 
                         style={{ 
@@ -207,7 +222,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
         
         // For fade and zoom effects, use absolute positioning
         return (
-            <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
+            <div className={containerClass} style={containerStyle}>
                 <div className="relative w-full h-full">
                     {items.map((item, index) => (
                         <div 
@@ -236,108 +251,40 @@ const Slideshow: React.FC<SlideshowProps> = ({
     };
 
     // Render Ken Burns Variant
-    const renderKenBurns = () => (
-        <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
-            <div className="relative w-full h-full">
-                {items.map((item, index) => (
-                    <div 
-                        key={index} 
-                        className={`absolute inset-0 transition-opacity duration-1000 ${
-                            index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                        }`}
-                    >
-                        <div className="w-full h-full overflow-hidden">
-                            {isPendingImage(item.imageUrl) ? (
-                                <ImagePlaceholder aspectRatio="16:9" showGenerateButton={false} className="w-full h-full" />
-                            ) : (
-                                <img 
-                                    src={item.imageUrl} 
-                                    alt={item.altText} 
-                                    className={`w-full h-full object-cover transition-transform duration-[8000ms] ease-out ${
-                                        index === currentIndex ? getKenBurnsScale() : 'scale-100'
-                                    }`}
-                                />
-                            )}
-                        </div>
-                        {showCaptions && item.caption && index === currentIndex && (
-                            <div 
-                                className="absolute bottom-0 left-0 right-0 p-4 text-center animate-fade-in"
-                                style={{ 
-                                    backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                    color: colors.captionText || '#ffffff'
-                                }}
-                            >
-                                {item.caption}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-            {renderControls()}
-        </div>
-    );
+    const renderKenBurns = () => {
+        const containerStyle: React.CSSProperties = fullWidth 
+            ? { height: `${slideHeight}px` }
+            : {};
+        const containerClass = fullWidth 
+            ? `w-full overflow-hidden relative ${fullWidth ? 'rounded-none' : borderRadiusClasses[borderRadius]}`
+            : `w-full aspect-video overflow-hidden relative ${borderRadiusClasses[borderRadius]}`;
 
-    // Render 3D Cards Variant
-    const renderCards3D = () => (
-        <div className="relative w-full aspect-video" style={{ perspective: '1000px' }}>
-            <div className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
-                {items.map((item, index) => {
-                    const offset = index - currentIndex;
-                    const isActive = index === currentIndex;
-                    
-                    return (
-                        <div
-                            key={index}
-                            className={`absolute inset-0 transition-all duration-700 ${borderRadiusClasses[borderRadius]} overflow-hidden shadow-2xl`}
-                            style={{
-                                transform: `
-                                    translateX(${offset * 100}px)
-                                    translateZ(${isActive ? 0 : -200}px)
-                                    rotateY(${offset * 15}deg)
-                                    scale(${isActive ? 1 : 0.85})
-                                `,
-                                opacity: Math.abs(offset) > 1 ? 0 : 1,
-                                zIndex: isActive ? 10 : 10 - Math.abs(offset),
-                                transformStyle: 'preserve-3d',
-                            }}
-                        >
-                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
-                            {showCaptions && item.caption && isActive && (
-                                <div 
-                                    className="absolute bottom-0 left-0 right-0 p-4 text-center"
-                                    style={{ 
-                                        backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                        color: colors.captionText || '#ffffff'
-                                    }}
-                                >
-                                    {item.caption}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-            {renderControls()}
-        </div>
-    );
-
-    // Render Thumbnails Variant
-    const renderThumbnails = () => (
-        <div className="w-full space-y-4">
-            <div className={`w-full aspect-video overflow-hidden relative shadow-2xl ${borderRadiusClasses[borderRadius]}`}>
-                <div 
-                    className="w-full h-full whitespace-nowrap transition-transform ease-in-out" 
-                    style={{ 
-                        transform: `translateX(-${currentIndex * 100}%)`,
-                        transitionDuration: `${transitionDuration}ms`
-                    }}
-                >
+        return (
+            <div className={containerClass} style={containerStyle}>
+                <div className="relative w-full h-full">
                     {items.map((item, index) => (
-                        <div key={index} className="inline-block w-full h-full align-top relative">
-                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
-                            {showCaptions && item.caption && (
+                        <div 
+                            key={index} 
+                            className={`absolute inset-0 transition-opacity duration-1000 ${
+                                index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                            }`}
+                        >
+                            <div className="w-full h-full overflow-hidden">
+                                {isPendingImage(item.imageUrl) ? (
+                                    <ImagePlaceholder aspectRatio="16:9" showGenerateButton={false} className="w-full h-full" />
+                                ) : (
+                                    <img 
+                                        src={item.imageUrl} 
+                                        alt={item.altText} 
+                                        className={`w-full h-full object-cover transition-transform duration-[8000ms] ease-out ${
+                                            index === currentIndex ? getKenBurnsScale() : 'scale-100'
+                                        }`}
+                                    />
+                                )}
+                            </div>
+                            {showCaptions && item.caption && index === currentIndex && (
                                 <div 
-                                    className="absolute bottom-0 left-0 right-0 p-4 text-center"
+                                    className="absolute bottom-0 left-0 right-0 p-4 text-center animate-fade-in"
                                     style={{ 
                                         backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
                                         color: colors.captionText || '#ffffff'
@@ -351,43 +298,138 @@ const Slideshow: React.FC<SlideshowProps> = ({
                 </div>
                 {renderControls()}
             </div>
-            
-            {/* Thumbnails */}
-            <div className="flex gap-2 justify-center overflow-x-auto pb-2">
-                {items.map((item, index) => (
-                    <button
-                        key={index}
-                        onClick={() => goToSlide(index)}
-                        className={`flex-shrink-0 overflow-hidden transition-all duration-300 ${borderRadiusClasses[borderRadius]}`}
+        );
+    };
+
+    // Render 3D Cards Variant
+    const renderCards3D = () => {
+        const containerStyle: React.CSSProperties = fullWidth 
+            ? { height: `${slideHeight}px`, perspective: '1000px' }
+            : { perspective: '1000px' };
+        const containerClass = fullWidth 
+            ? `relative w-full`
+            : `relative w-full aspect-video`;
+
+        return (
+            <div className={containerClass} style={containerStyle}>
+                <div className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
+                    {items.map((item, index) => {
+                        const offset = index - currentIndex;
+                        const isActive = index === currentIndex;
+                        
+                        return (
+                            <div
+                                key={index}
+                                className={`absolute inset-0 transition-all duration-700 ${fullWidth ? 'rounded-none' : borderRadiusClasses[borderRadius]} overflow-hidden`}
+                                style={{
+                                    transform: `
+                                        translateX(${offset * 100}px)
+                                        translateZ(${isActive ? 0 : -200}px)
+                                        rotateY(${offset * 15}deg)
+                                        scale(${isActive ? 1 : 0.85})
+                                    `,
+                                    opacity: Math.abs(offset) > 1 ? 0 : 1,
+                                    zIndex: isActive ? 10 : 10 - Math.abs(offset),
+                                    transformStyle: 'preserve-3d',
+                                }}
+                            >
+                                <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
+                                {showCaptions && item.caption && isActive && (
+                                    <div 
+                                        className="absolute bottom-0 left-0 right-0 p-4 text-center"
+                                        style={{ 
+                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors.captionText || '#ffffff'
+                                        }}
+                                    >
+                                        {item.caption}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                {renderControls()}
+            </div>
+        );
+    };
+
+    // Render Thumbnails Variant
+    const renderThumbnails = () => {
+        const containerStyle: React.CSSProperties = fullWidth 
+            ? { height: `${slideHeight}px` }
+            : {};
+        const containerClass = fullWidth 
+            ? `w-full overflow-hidden relative ${fullWidth ? 'rounded-none' : borderRadiusClasses[borderRadius]}`
+            : `w-full aspect-video overflow-hidden relative ${borderRadiusClasses[borderRadius]}`;
+
+        return (
+            <div className="w-full space-y-4">
+                <div className={containerClass} style={containerStyle}>
+                    <div 
+                        className="w-full h-full whitespace-nowrap transition-transform ease-in-out" 
                         style={{ 
-                            height: `${thumbnailSize}px`,
-                            width: `${thumbnailSize * 1.5}px`,
-                            border: index === currentIndex 
-                                ? `4px solid ${colors.dotActive || '#ffffff'}` 
-                                : `2px solid ${colors.dotInactive || 'rgba(255, 255, 255, 0.5)'}`,
-                            transform: index === currentIndex ? 'scale(1.05)' : 'scale(1)',
-                        }}
-                        onMouseEnter={(e) => {
-                            if (index !== currentIndex) {
-                                e.currentTarget.style.borderColor = colors.dotActive || '#ffffff';
-                                e.currentTarget.style.borderWidth = '2px';
-                                e.currentTarget.style.transform = 'scale(1.05)';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            if (index !== currentIndex) {
-                                e.currentTarget.style.borderColor = colors.dotInactive || 'rgba(255, 255, 255, 0.5)';
-                                e.currentTarget.style.borderWidth = '2px';
-                                e.currentTarget.style.transform = 'scale(1)';
-                            }
+                            transform: `translateX(-${currentIndex * 100}%)`,
+                            transitionDuration: `${transitionDuration}ms`
                         }}
                     >
-                        <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
-                    </button>
-                ))}
+                        {items.map((item, index) => (
+                            <div key={index} className="inline-block w-full h-full align-top relative">
+                                <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
+                                {showCaptions && item.caption && (
+                                    <div 
+                                        className="absolute bottom-0 left-0 right-0 p-4 text-center"
+                                        style={{ 
+                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors.captionText || '#ffffff'
+                                        }}
+                                    >
+                                        {item.caption}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {renderControls()}
+                </div>
+                
+                {/* Thumbnails */}
+                <div className={`flex gap-2 justify-center overflow-x-auto pb-2 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
+                    {items.map((item, index) => (
+                        <button
+                            key={index}
+                            onClick={() => goToSlide(index)}
+                            className={`flex-shrink-0 overflow-hidden transition-all duration-300 ${borderRadiusClasses[borderRadius]}`}
+                            style={{ 
+                                height: `${thumbnailSize}px`,
+                                width: `${thumbnailSize * 1.5}px`,
+                                border: index === currentIndex 
+                                    ? `4px solid ${colors.dotActive || '#ffffff'}` 
+                                    : `2px solid ${colors.dotInactive || 'rgba(255, 255, 255, 0.5)'}`,
+                                transform: index === currentIndex ? 'scale(1.05)' : 'scale(1)',
+                            }}
+                            onMouseEnter={(e) => {
+                                if (index !== currentIndex) {
+                                    e.currentTarget.style.borderColor = colors.dotActive || '#ffffff';
+                                    e.currentTarget.style.borderWidth = '2px';
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (index !== currentIndex) {
+                                    e.currentTarget.style.borderColor = colors.dotInactive || 'rgba(255, 255, 255, 0.5)';
+                                    e.currentTarget.style.borderWidth = '2px';
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                }
+                            }}
+                        >
+                            <SlideImage imageUrl={item.imageUrl} altText={item.altText} />
+                        </button>
+                    ))}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // Render Controls (Arrows and Dots)
     const renderControls = () => (
@@ -452,16 +494,21 @@ const Slideshow: React.FC<SlideshowProps> = ({
     };
 
     return (
-        <section className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
-            </div>
+        <section 
+            className={`${fullWidth ? 'w-full' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]}`} 
+            style={{ backgroundColor: colors.background }}
+        >
+            {showTitle && title && (
+                <div className={`text-center max-w-3xl mx-auto mb-16 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading || primaryColor }}>{title}</h2>
+                </div>
+            )}
             {hasItems ? (
-                <div className="relative w-full max-w-5xl mx-auto">
+                <div className={`relative w-full ${fullWidth ? '' : 'max-w-5xl mx-auto'}`}>
                     {renderVariant()}
                 </div>
             ) : (
-                <div className="text-center text-editor-text-secondary p-8 bg-editor-panel-bg rounded-lg">
+                <div className={`text-center text-editor-text-secondary p-8 bg-editor-panel-bg rounded-lg ${fullWidth ? 'mx-4' : ''}`}>
                     No slides to display. Add some in the editor!
                 </div>
             )}

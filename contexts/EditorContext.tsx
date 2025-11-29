@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
-import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
+import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialProjects } from '../data/templates';
 import { initialData } from '../data/initialData';
@@ -193,9 +193,9 @@ interface EditorContextType {
     // Template Management
     isEditingTemplate: boolean;
     exitTemplateEditor: () => void;
-    createNewTemplate: () => void;
-    archiveTemplate: (templateId: string, isArchived: boolean) => void;
-    duplicateTemplate: (templateId: string) => void;
+    createNewTemplate: () => Promise<void>;
+    archiveTemplate: (templateId: string, isArchived: boolean) => Promise<void>;
+    duplicateTemplate: (templateId: string) => Promise<void>;
 
     // Component Studio
     componentStyles: ComponentStyles;
@@ -241,6 +241,12 @@ interface EditorContextType {
     setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
     onboardingState: OnboardingState;
     setOnboardingState: React.Dispatch<React.SetStateAction<OnboardingState>>;
+    saveOnboardingStateToFirebase: (state: OnboardingState) => Promise<void>;
+    clearOnboardingState: () => Promise<void>;
+    
+    // User Preferences (synced across devices)
+    sidebarOrder: string[];
+    setSidebarOrder: React.Dispatch<React.SetStateAction<string[]>>;
 
     // Leads & CRM
     leads: Lead[];
@@ -319,8 +325,42 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-    // Project state
-    const [projects, setProjects] = useState<Project[]>(initialProjects);
+    // Track deleted template IDs to prevent hardcoded templates from reappearing
+    // IMPORTANT: This must be initialized BEFORE projects state
+    const getDeletedTemplateIds = (): Set<string> => {
+        try {
+            const stored = localStorage.getItem('deletedTemplateIds');
+            console.log('🔍 [Init] Reading deletedTemplateIds from localStorage:', stored);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                const ids = new Set(Array.isArray(parsed) ? parsed : []);
+                console.log('🔍 [Init] Parsed deleted template IDs:', [...ids]);
+                return ids;
+            }
+        } catch (e) {
+            console.error('Error reading deletedTemplateIds from localStorage:', e);
+        }
+        return new Set();
+    };
+    
+    const deletedTemplateIdsRef = useRef<Set<string>>(getDeletedTemplateIds());
+    
+    // Filter initial projects to exclude deleted templates from the start
+    const getFilteredInitialProjects = (): Project[] => {
+        const deletedIds = deletedTemplateIdsRef.current;
+        console.log('🔍 [Init] Filtering initialProjects. Deleted IDs:', [...deletedIds]);
+        console.log('🔍 [Init] Initial templates count:', initialProjects.filter(p => p.status === 'Template').length);
+        if (deletedIds.size === 0) {
+            console.log('🔍 [Init] No deleted IDs, returning all initialProjects');
+            return initialProjects;
+        }
+        const filtered = initialProjects.filter(p => !deletedIds.has(p.id));
+        console.log('🔍 [Init] After filtering, templates count:', filtered.filter(p => p.status === 'Template').length);
+        return filtered;
+    };
+    
+    // Project state - initialized with filtered templates
+    const [projects, setProjects] = useState<Project[]>(getFilteredInitialProjects);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
@@ -337,6 +377,10 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{id: '1', text: 'Home', href: '#hero', type: 'section'}] },
         { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{id: '1', text: 'Contact', href: '#contact', type: 'section'}] }
     ]);
+
+    // Auto-save timer ref
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isInitialLoadRef = useRef(true);
 
     // Project AI Assistant Config
     const [aiAssistantConfig, setAiAssistantConfig] = useState<AiAssistantConfig>({
@@ -423,8 +467,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
     const [leadTasks, setLeadTasks] = useState<LeadTask[]>([]);
 
-    // Theme mode
-    const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+    // Theme mode - Load from localStorage first, then sync from Firebase
+    const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+        const saved = localStorage.getItem('themeMode');
+        return (saved as ThemeMode) || 'dark';
+    });
+    
+    // Sidebar order - Load from localStorage first, then sync from Firebase
+    const [sidebarOrder, setSidebarOrder] = useState<string[]>(() => {
+        const saved = localStorage.getItem('sidebar-nav-order');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     // File Management State
     const [files, setFiles] = useState<FileRecord[]>([]);
@@ -672,7 +725,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const setupComponentDefaultsListener = () => {
             try {
                 // Real-time listener for component defaults
-                const componentDefaultsCol = collection(db, "component_defaults");
+                const componentDefaultsCol = collection(db, "componentDefaults");
                 const unsubscribe = onSnapshot(componentDefaultsCol, (snapshot) => {
                     const loadedStyles: any = {};
                     snapshot.forEach((doc) => {
@@ -683,7 +736,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         console.log("✅ Component defaults updated in real-time");
                     }
                 }, (error) => {
-                    console.error("Error in component defaults listener:", error);
+                    // Silently handle expected errors (empty collection, no permissions yet)
+                    if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
+                        console.warn("⚠️ Component defaults listener: waiting for permissions");
+                    } else {
+                        console.error("Error in component defaults listener:", error);
+                    }
                 });
                 return unsubscribe;
             } catch (e) {
@@ -720,18 +778,80 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
              }
         };
 
+        // Load templates from Firestore (global collection)
+        const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
+            try {
+                const templatesCol = collection(db, 'templates');
+                const q = query(templatesCol, orderBy('lastUpdated', 'desc'));
+                const templateSnapshot = await getDocs(q);
+                
+                const deletedIds = new Set<string>();
+                const activeTemplates: Project[] = [];
+                
+                templateSnapshot.docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    // Check if template is marked as deleted
+                    if (data.isDeleted === true) {
+                        deletedIds.add(docSnap.id);
+                    } else {
+                        activeTemplates.push({ 
+                            id: docSnap.id, 
+                            ...data,
+                            status: 'Template' as const
+                        } as Project);
+                    }
+                });
+                
+                console.log(`✅ Loaded ${activeTemplates.length} templates from Firestore (${deletedIds.size} deleted)`);
+                
+                // Persist deleted template IDs to prevent hardcoded templates from reappearing
+                if (deletedIds.size > 0) {
+                    deletedIds.forEach(id => deletedTemplateIdsRef.current.add(id));
+                    localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+                }
+                
+                return { templates: activeTemplates, deletedIds };
+            } catch (error) {
+                console.error("Error loading templates from Firestore:", error);
+                // Return cached deleted IDs even on error
+                return { templates: [], deletedIds: deletedTemplateIdsRef.current };
+            }
+        };
+
         const loadUserProjects = async (userId: string) => {
             setIsLoadingProjects(true);
             try {
+                // Load user projects
                 const projectsCol = collection(db, 'users', userId, 'projects');
                 const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
                 const projectSnapshot = await getDocs(q);
                 const userProjects = projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
                 
-                setProjects([...initialProjects, ...userProjects]);
+                // Load templates from Firestore (includes deleted template IDs)
+                // This also updates deletedTemplateIdsRef with Firestore deleted IDs
+                const { templates: firestoreTemplates } = await loadGlobalTemplates();
+                
+                // Merge: Firestore templates take priority, then initial templates (as fallback), then user projects
+                // IMPORTANT: Use deletedTemplateIdsRef.current which contains BOTH localStorage AND Firestore deleted IDs
+                const firestoreTemplateIds = new Set(firestoreTemplates.map(t => t.id));
+                const allDeletedIds = deletedTemplateIdsRef.current;
+                
+                console.log('🔍 [Load] All deleted template IDs (localStorage + Firestore):', [...allDeletedIds]);
+                
+                const filteredInitialTemplates = initialProjects.filter(t => 
+                    !firestoreTemplateIds.has(t.id) && !allDeletedIds.has(t.id)
+                );
+                
+                console.log('🔍 [Load] Filtered initial templates count:', filteredInitialTemplates.length);
+                
+                setProjects([...firestoreTemplates, ...filteredInitialTemplates, ...userProjects]);
             } catch (error) {
                 console.error("Error loading user projects:", error);
-                setProjects(initialProjects);
+                // Filter out deleted templates even on error using cached IDs
+                const filteredTemplates = initialProjects.filter(t => 
+                    !deletedTemplateIdsRef.current.has(t.id)
+                );
+                setProjects(filteredTemplates);
             } finally {
                 setIsLoadingProjects(false);
             }
@@ -745,9 +865,18 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
                     setCustomComponents(components);
-                    console.log("✅ Custom components updated in real-time");
+                    if (components.length > 0) {
+                        console.log("✅ Custom components updated in real-time:", components.length);
+                    }
                 }, (error) => {
-                    console.error("Error in custom components listener:", error);
+                    // Silently handle permission errors or missing index errors
+                    // These are expected when the collection is empty or index doesn't exist yet
+                    if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
+                        console.warn("⚠️ Custom components listener: waiting for index or permissions");
+                        setCustomComponents([]);
+                    } else {
+                        console.error("Error in custom components listener:", error);
+                    }
                 });
                 return unsubscribe;
             } catch (error) {
@@ -807,6 +936,29 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     }
 
                     setUserDocument({ ...finalUserDoc, id: currentUser.uid });
+                    
+                    // Load user preferences from Firebase (sync across devices)
+                    if (finalUserDoc.preferences) {
+                        if (finalUserDoc.preferences.themeMode) {
+                            setThemeMode(finalUserDoc.preferences.themeMode);
+                            localStorage.setItem('themeMode', finalUserDoc.preferences.themeMode);
+                        }
+                        if (finalUserDoc.preferences.sidebarOrder && finalUserDoc.preferences.sidebarOrder.length > 0) {
+                            setSidebarOrder(finalUserDoc.preferences.sidebarOrder);
+                            localStorage.setItem('sidebar-nav-order', JSON.stringify(finalUserDoc.preferences.sidebarOrder));
+                        }
+                    }
+                    
+                    // Load persisted onboarding state if exists
+                    if (finalUserDoc.onboardingState) {
+                        setOnboardingState(finalUserDoc.onboardingState);
+                        // If user had an ongoing onboarding, reopen it
+                        if (finalUserDoc.onboardingState.step !== 'basics' || 
+                            finalUserDoc.onboardingState.businessName) {
+                            setIsOnboardingOpen(true);
+                        }
+                    }
+                    
                     loadUserProjects(currentUser.uid);
                     fetchAllFiles(currentUser.uid);
                     fetchUserDomains(currentUser.uid);
@@ -830,7 +982,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     }
                     
                     setUserDocument(null);
-                    setProjects(initialProjects);
+                    // Filter out deleted templates using cached IDs to prevent them from reappearing
+                    const filteredTemplates = initialProjects.filter(t => 
+                        !deletedTemplateIdsRef.current.has(t.id)
+                    );
+                    setProjects(filteredTemplates);
                     setIsLoadingProjects(false);
                     setFiles([]);
                     setDomains([]);
@@ -1064,6 +1220,122 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         root.classList.remove('light', 'dark', 'black'); // Remove all existing theme classes
         root.classList.add(themeMode); // Add the current one
     }, [themeMode]);
+    
+    // Sync themeMode to localStorage and Firebase
+    useEffect(() => {
+        localStorage.setItem('themeMode', themeMode);
+        
+        // Save to Firebase if user is authenticated
+        if (user && userDocument) {
+            const userDocRef = doc(db, 'users', user.uid);
+            updateDoc(userDocRef, {
+                'preferences.themeMode': themeMode
+            }).catch(err => console.warn('Failed to sync themeMode to Firebase:', err));
+        }
+    }, [themeMode, user?.uid]); // Only depend on user.uid to avoid infinite loops
+    
+    // Sync sidebarOrder to localStorage and Firebase
+    useEffect(() => {
+        if (sidebarOrder.length > 0) {
+            localStorage.setItem('sidebar-nav-order', JSON.stringify(sidebarOrder));
+            
+            // Save to Firebase if user is authenticated
+            if (user && userDocument) {
+                const userDocRef = doc(db, 'users', user.uid);
+                updateDoc(userDocRef, {
+                    'preferences.sidebarOrder': sidebarOrder
+                }).catch(err => console.warn('Failed to sync sidebarOrder to Firebase:', err));
+            }
+        }
+    }, [sidebarOrder, user?.uid]); // Only depend on user.uid to avoid infinite loops
+    
+    // Persist onboarding state to Firebase (so user doesn't lose progress)
+    const saveOnboardingStateToFirebase = async (state: OnboardingState) => {
+        if (!user) return;
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, { onboardingState: state });
+        } catch (err) {
+            console.warn('Failed to save onboarding state:', err);
+        }
+    };
+    
+    // Clear onboarding state from Firebase when completed
+    const clearOnboardingState = async () => {
+        if (!user) return;
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, { onboardingState: null });
+        } catch (err) {
+            console.warn('Failed to clear onboarding state:', err);
+        }
+    };
+
+    // Auto-save effect: saves project automatically when data changes
+    useEffect(() => {
+        // Skip if missing required data or if it's a template
+        if (!activeProjectId || !data || !user || !activeProject || activeProject.status === 'Template') {
+            return;
+        }
+
+        // Skip first render (initial project load)
+        if (isInitialLoadRef.current) {
+            isInitialLoadRef.current = false;
+            return;
+        }
+
+        // Clear any existing timer
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+        }
+
+        // Set debounced auto-save (2 seconds after last change)
+        autoSaveTimerRef.current = setTimeout(async () => {
+            try {
+                // Get fresh references
+                const projectToSave = projects.find(p => p.id === activeProjectId);
+                if (!projectToSave || !user) return;
+
+                let thumbnailUrl = projectToSave.thumbnailUrl;
+                if (data.hero?.imageUrl && data.hero.imageUrl.trim() !== '') {
+                    thumbnailUrl = data.hero.imageUrl;
+                }
+
+                const updatedProject: Project = {
+                    ...projectToSave,
+                    data,
+                    theme,
+                    brandIdentity,
+                    componentOrder,
+                    sectionVisibility,
+                    thumbnailUrl,
+                    menus,
+                    aiAssistantConfig,
+                    lastUpdated: new Date().toISOString()
+                };
+
+                const { id, ...dataToSave } = updatedProject;
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                await setDoc(projectDocRef, dataToSave);
+                
+                setProjects(prev => prev.map(p => p.id === activeProjectId ? updatedProject : p));
+                console.log('✅ Auto-saved project');
+            } catch (error) {
+                console.error('❌ Auto-save error:', error);
+            }
+        }, 2000);
+
+        return () => {
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+            }
+        };
+    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, aiAssistantConfig]);
+
+    // Reset initial load flag when project changes
+    useEffect(() => {
+        isInitialLoadRef.current = true;
+    }, [activeProjectId]);
 
     const toggleDashboardSidebar = () => {
         setIsDashboardSidebarCollapsed(prev => !prev);
@@ -1345,11 +1617,36 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
     
     const renameActiveProject = async (newName: string) => {
-        if (!activeProjectId || !user || activeProject?.status === 'Template') return;
+        if (!activeProjectId || !user || !activeProject) return;
         const newLastUpdated = new Date().toISOString();
         try {
-            const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-            await updateDoc(projectDocRef, { name: newName, lastUpdated: newLastUpdated });
+            // If it's a template, also update the global templates collection
+            if (activeProject.status === 'Template') {
+                const userRole = userDocument?.role || '';
+                if (!['owner', 'superadmin'].includes(userRole)) {
+                    console.warn("Only superadmin/owner can rename templates");
+                    return;
+                }
+                
+                // Update global templates collection
+                const templateDocRef = doc(db, 'templates', activeProjectId);
+                await updateDoc(templateDocRef, { name: newName, lastUpdated: newLastUpdated });
+                
+                // Also update in user's projects collection if it exists there
+                try {
+                    const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                    await updateDoc(projectDocRef, { name: newName, lastUpdated: newLastUpdated });
+                } catch (err) {
+                    // It's okay if the project doesn't exist in user's collection
+                    console.log("Template not found in user's projects collection, continuing...");
+                }
+            } else {
+                // Regular project - update in user's collection
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                await updateDoc(projectDocRef, { name: newName, lastUpdated: newLastUpdated });
+            }
+            
+            // Update local state
             setProjects(prev => prev.map(p => p.id === activeProjectId ? { ...p, name: newName, lastUpdated: newLastUpdated } : p));
         } catch (error) {
             console.error("Error renaming project:", error);
@@ -1358,11 +1655,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const saveProject = async () => {
         if (!activeProject || !data || !user) return;
-
-        if (activeProject.status === 'Template') {
-            console.log("Template saving is a super admin function and is not persisted per user.");
-            return;
-        }
 
         // Update Thumbnail with Hero Image if available
         let thumbnailUrl = activeProject.thumbnailUrl;
@@ -1386,11 +1678,29 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const { id, ...dataToSave } = updatedProject;
 
         try {
+            // Handle Template saving - only for superadmin/owner
+            if (activeProject.status === 'Template') {
+                const userRole = userDocument?.role || '';
+                if (!['owner', 'superadmin'].includes(userRole)) {
+                    console.warn("Only superadmin/owner can save templates");
+                    return;
+                }
+                
+                // Save to global templates collection
+                const templateDocRef = doc(db, 'templates', activeProject.id);
+                await setDoc(templateDocRef, dataToSave);
+                
+                setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
+                console.log('✅ Template saved to Firestore (global templates collection)');
+                return;
+            }
+
+            // Save regular user project
             const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProject.id);
             await setDoc(projectDocRef, dataToSave);
             
             setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
-            console.log('Project saved to Firestore');
+            console.log('✅ Project saved to Firestore');
         } catch (error) {
             console.error("Error saving project:", error);
         }
@@ -1708,39 +2018,105 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const createNewTemplate = () => {
+    const createNewTemplate = async () => {
+        if (!user) return;
+        
+        const userRole = userDocument?.role || '';
+        if (!['owner', 'superadmin'].includes(userRole)) {
+            console.warn("Only superadmin/owner can create templates");
+            return;
+        }
+
         const baseTemplate = projects.find(p => p.id === 'template-local-service') || initialProjects[0];
+        const newTemplateId = `template-${Date.now()}`;
         const newTemplate: Project = {
             ...baseTemplate,
-            id: `template-${Date.now()}`,
+            id: newTemplateId,
             name: 'New Custom Template',
             status: 'Template',
             lastUpdated: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
         };
-        setProjects(prev => [...prev, newTemplate]);
-        loadProject(newTemplate.id, true);
+        
+        // Save to Firestore immediately
+        try {
+            const { id, ...dataToSave } = newTemplate;
+            const templateDocRef = doc(db, 'templates', newTemplateId);
+            await setDoc(templateDocRef, dataToSave);
+            
+            setProjects(prev => [...prev, newTemplate]);
+            loadProject(newTemplate.id, true);
+            console.log('✅ New template created and saved to Firestore');
+        } catch (error) {
+            console.error("Error creating template:", error);
+            // Still add locally for UX, but warn user
+            setProjects(prev => [...prev, newTemplate]);
+            loadProject(newTemplate.id, true);
+        }
     };
 
-    const archiveTemplate = (templateId: string, isArchived: boolean) => {
+    const archiveTemplate = async (templateId: string, isArchived: boolean) => {
+        if (!user) return;
+        
+        const userRole = userDocument?.role || '';
+        if (!['owner', 'superadmin'].includes(userRole)) {
+            console.warn("Only superadmin/owner can archive templates");
+            return;
+        }
+
+        // Update locally first (optimistic update)
         setProjects(prev => prev.map(p => p.id === templateId ? { ...p, isArchived } : p));
+        
+        // Persist to Firestore
+        try {
+            const templateDocRef = doc(db, 'templates', templateId);
+            await updateDoc(templateDocRef, { 
+                isArchived,
+                lastUpdated: new Date().toISOString()
+            });
+            console.log(`✅ Template ${isArchived ? 'archived' : 'unarchived'} in Firestore`);
+        } catch (error) {
+            console.error("Error archiving template:", error);
+            // Revert on failure
+            setProjects(prev => prev.map(p => p.id === templateId ? { ...p, isArchived: !isArchived } : p));
+        }
     };
 
-    const duplicateTemplate = (templateId: string) => {
+    const duplicateTemplate = async (templateId: string) => {
+        if (!user) return;
+        
+        const userRole = userDocument?.role || '';
+        if (!['owner', 'superadmin'].includes(userRole)) {
+            console.warn("Only superadmin/owner can duplicate templates");
+            return;
+        }
+
         const template = projects.find(p => p.id === templateId);
         if (!template) return;
         
+        const newTemplateId = `template-${Date.now()}`;
         const duplicatedTemplate: Project = {
             ...template,
-            id: `template-${Date.now()}`,
+            id: newTemplateId,
             name: `${template.name} (Copy)`,
             lastUpdated: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             isArchived: false,
         };
         
-        setProjects(prev => [...prev, duplicatedTemplate]);
-        // Optionally load the duplicated template in the editor
-        // loadProject(duplicatedTemplate.id, true);
+        // Save to Firestore
+        try {
+            const { id, ...dataToSave } = duplicatedTemplate;
+            const templateDocRef = doc(db, 'templates', newTemplateId);
+            await setDoc(templateDocRef, dataToSave);
+            
+            setProjects(prev => [...prev, duplicatedTemplate]);
+            console.log('✅ Template duplicated and saved to Firestore');
+        } catch (error) {
+            console.error("Error duplicating template:", error);
+            // Still add locally for UX
+            setProjects(prev => [...prev, duplicatedTemplate]);
+        }
     };
 
     const deleteProject = async (projectId: string) => {
@@ -1749,13 +2125,46 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const projectToDelete = projects.find(p => p.id === projectId);
         const isTemplate = projectToDelete ? projectToDelete.status === 'Template' : false;
 
-        // 1. Handle Templates
+        // 1. Handle Templates - Delete from Firestore (only superadmin/owner)
         if (isTemplate) {
+            const userRole = userDocument?.role || '';
+            if (!['owner', 'superadmin'].includes(userRole)) {
+                console.warn("Only superadmin/owner can delete templates");
+                return;
+            }
+
+            // Optimistic Update
             setProjects(prev => prev.filter(p => p.id !== projectId));
             if (activeProjectId === projectId) {
                 setActiveProjectId(null);
                 setData(null);
                 setView('dashboard');
+            }
+
+            // Mark template as deleted in Firestore (instead of deleting, to prevent hardcoded templates from reappearing)
+            try {
+                const templateDocRef = doc(db, 'templates', projectId);
+                // Mark as deleted instead of deleting - this prevents hardcoded templates from reappearing
+                await setDoc(templateDocRef, { 
+                    isDeleted: true,
+                    deletedAt: new Date().toISOString(),
+                    name: projectToDelete?.name || 'Deleted Template'
+                });
+                
+                // Also persist to local cache to prevent reappearing on errors/logout
+                deletedTemplateIdsRef.current.add(projectId);
+                const idsToStore = [...deletedTemplateIdsRef.current];
+                localStorage.setItem('deletedTemplateIds', JSON.stringify(idsToStore));
+                
+                console.log('✅ Template marked as deleted in Firestore and cached locally');
+                console.log('🔍 [Delete] Saved to localStorage:', idsToStore);
+                console.log('🔍 [Delete] Verification - localStorage now contains:', localStorage.getItem('deletedTemplateIds'));
+            } catch (error: any) {
+                console.error("Error marking template as deleted:", error);
+                // Revert state on failure
+                if (projectToDelete) {
+                    setProjects(prev => [...prev, projectToDelete]);
+                }
             }
             return;
         }
@@ -3287,7 +3696,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const currentStyle = componentStyles[componentId as EditableComponentID];
             
             if (currentStyle) {
-                 const docRef = doc(db, 'component_defaults', componentId);
+                 const docRef = doc(db, 'componentDefaults', componentId);
                  // Use setDoc with merge to create or update
                  await setDoc(docRef, { styles: currentStyle }, { merge: true });
                  console.log("Saved standard component", componentId);
@@ -3814,6 +4223,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         saveAiAssistantConfig,
         isOnboardingOpen, setIsOnboardingOpen,
         onboardingState, setOnboardingState,
+        saveOnboardingStateToFirebase,
+        clearOnboardingState,
+        // User Preferences
+        sidebarOrder, setSidebarOrder,
         // Leads & CRM
         leads,
         isLoadingLeads,

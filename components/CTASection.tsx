@@ -52,6 +52,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
     gradientEnd: colors.gradientEnd || getColor('secondary.main', '#10b981'),
     text: colors.text || '#ffffff',
     heading: colors.heading,
+    description: colors.description || colors.text || 'rgba(255, 255, 255, 0.8)',
     buttonBackground: colors.buttonBackground || '#ffffff',
     buttonText: colors.buttonText || '#4f46e5',
   };
@@ -60,23 +61,10 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
     <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div 
-            className={`relative p-12 md:p-16 lg:p-20 shadow-2xl text-center overflow-hidden ${borderRadiusClasses[cardBorderRadius]}`}
+            className={`p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]}`}
             style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
         >
-            {/* === ANIMATED BACKGROUND ELEMENTS === */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {/* Floating orbs */}
-              <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-blob" />
-              <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-blob animation-delay-2000" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-              
-              {/* Grid pattern */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-            </div>
-            
-            <div className="absolute inset-0 bg-black/10 mix-blend-multiply"></div>
-            
-            <div className="relative z-10">
+            <div>
                 {/* Urgency Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6 animate-pulse">
                   <span className="relative flex h-2 w-2">
@@ -90,8 +78,8 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                     {title}
                 </h2>
                 <p 
-                    className={`${descriptionSizeClasses[descriptionFontSize]} mb-10 max-w-2xl mx-auto font-body opacity-90`}
-                    style={{ color: actualColors.text }}
+                    className={`${descriptionSizeClasses[descriptionFontSize]} mb-10 max-w-2xl mx-auto font-body`}
+                    style={{ color: actualColors.description }}
                 >
                     {description}
                 </p>
@@ -100,7 +88,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <a 
                       href="#" 
-                      className={`group inline-flex items-center gap-3 font-bold py-4 px-10 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
+                      className={`group inline-flex items-center gap-3 font-bold py-4 px-10 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
                       style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
                   >
                       <span>{buttonText}</span>

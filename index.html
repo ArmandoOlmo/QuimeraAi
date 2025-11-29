@@ -457,17 +457,24 @@
     :root {
       --site-heading-color: #111827;
       --site-body-color: #4B5563;
+      /* Flexible site background - inherits from components */
+      --site-base-bg: var(--editor-bg, #F3F4F6);
+      --site-surface-bg: var(--editor-panel-bg, #FFFFFF);
     }
 
     html.dark {
       --site-heading-color: #F9FAFB;
       --site-body-color: #9CA3AF;
+      --site-base-bg: var(--editor-bg, hsl(272, 45%, 14%));
+      --site-surface-bg: var(--editor-panel-bg, hsl(268, 35%, 22%));
     }
 
     /* Site Content Colors for Black Mode */
     html.black {
       --site-heading-color: #FFFFFF;
       --site-body-color: #A1A1AA;
+      --site-base-bg: var(--editor-bg, #000000);
+      --site-surface-bg: var(--editor-panel-bg, #0F0F0F);
     }
 
     /* ========================================
@@ -705,10 +712,13 @@
                 secondary: "var(--editor-text-secondary)",
               }
             },
-            // Site Colors
-            'site-heading': 'var(--site-heading-color)',
-            'site-body': 'var(--site-body-color)',
-          },
+                            // Site Colors
+                            'site-heading': 'var(--site-heading-color)',
+                            'site-body': 'var(--site-body-color)',
+                            // Flexible Site Backgrounds (inherits from page/component backgrounds)
+                            'site-base': 'var(--site-base-bg)',
+                            'site-surface': 'var(--site-surface-bg)',
+                          },
           borderRadius: {
             lg: "var(--radius)",
             md: "calc(var(--radius) - 2px)",

@@ -13,7 +13,7 @@ interface ChatbotWidgetProps {
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
     isPreview = false
 }) => {
-    const { aiAssistantConfig, addLead, activeProject, data, componentOrder, sectionVisibility } = useEditor();
+    const { aiAssistantConfig, addLead, activeProject, data, componentOrder, sectionVisibility, view } = useEditor();
     
     // Get appearance config with defaults
     const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
@@ -24,6 +24,10 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [leadCaptured, setLeadCaptured] = useState(false);
     const messagesRef = useRef<any[]>([]);
     const [currentSection, setCurrentSection] = useState<string>('hero');
+    
+    // Detect if we're in the editor (editor view showing the preview)
+    // In editor mode, we disable pointer events to allow clicking through to other components
+    const isInEditor = view === 'editor';
 
     // Don't render if not active and not in preview
     if (!aiAssistantConfig.isActive && !isPreview) return null;
@@ -114,12 +118,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Widget content
     const widgetContent = (
-        <div className={`fixed z-[9999] flex flex-col items-end font-body`} style={getPositionStyle()}>
+        <div 
+            className={`fixed z-[9999] flex flex-col items-end font-body ${isInEditor ? 'pointer-events-none' : ''}`} 
+            style={getPositionStyle()}
+        >
             {/* Chat Window */}
             <div 
                 className={`
                     mb-4 ${sizeClasses.width} rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border
-                    ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
+                    ${isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
                 `}
                 style={{ 
                     maxHeight: sizeClasses.height,
@@ -156,6 +163,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     ${getShadowClasses(appearance.button.shadowSize)}
                     ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
                     hover:scale-110 transition-all duration-300 flex items-center justify-center group relative
+                    ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                 `}
                 style={{ 
                     backgroundColor: appearance.colors.primaryColor,

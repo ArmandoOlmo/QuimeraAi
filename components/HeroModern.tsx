@@ -64,10 +64,8 @@ const HeroModern: React.FC<HeroProps> = ({
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
+    showBadge = true, badgeText = '', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
-    showStats = true, stats = [],
-    statsValueColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
 }) => {
@@ -112,27 +110,29 @@ const HeroModern: React.FC<HeroProps> = ({
       </div>
 
       {/* Imagen de Fondo Full Bleed con Parallax Effect */}
-      <div className="absolute inset-0 z-0 transform-gpu">
-         <img 
-            src={imageUrl} 
-            alt="Hero Background" 
-            className="w-full h-full object-cover scale-105 transition-transform duration-1000"
-         />
-         {/* Gradient Overlay Mejorado con múltiples capas */}
-         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/95"></div>
-         <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-transparent to-emerald-900/20"></div>
-         
-         {/* Efectos de luz decorativos opcionales */}
-         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/25 via-transparent to-transparent opacity-50"></div>
-         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500/15 via-transparent to-transparent opacity-40"></div>
-      </div>
+      {imageUrl && (
+        <div className="absolute inset-0 z-0 transform-gpu">
+           <img 
+              src={imageUrl} 
+              alt="Hero Background" 
+              className="w-full h-full object-cover scale-105 transition-transform duration-1000"
+           />
+           {/* Gradient Overlay Mejorado con múltiples capas */}
+           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/95"></div>
+           <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-transparent to-emerald-900/20"></div>
+           
+           {/* Efectos de luz decorativos opcionales */}
+           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/25 via-transparent to-transparent opacity-50"></div>
+           <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500/15 via-transparent to-transparent opacity-40"></div>
+        </div>
+      )}
 
       {/* Contenido */}
       <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} text-center max-w-5xl flex flex-col items-center`}>
          
          {/* Badge Flotante Premium */}
-         {showBadge && (
-            <div className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full mb-8 border border-white/10 backdrop-blur-md bg-white/5 shadow-xl animate-fade-in-up hover:bg-white/10 hover:border-white/20 transition-all duration-300 cursor-default">
+         {showBadge && badgeText && (
+            <div className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full mb-8 border border-white/10 backdrop-blur-md bg-white/5 animate-fade-in-up hover:bg-white/10 hover:border-white/20 transition-all duration-300 cursor-default">
                <span className="relative flex items-center">
                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping-soft" style={{ backgroundColor: badgeColor || actualColors.primary }}></span>
                  <span className="relative text-base flex items-center" style={{ color: badgeColor || actualColors.primary }}>{renderBadgeIcon(badgeIcon)}</span>
@@ -143,14 +143,14 @@ const HeroModern: React.FC<HeroProps> = ({
 
          {/* Título Principal */}
          <h1 
-            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight mb-8 leading-[1.1] drop-shadow-2xl animate-fade-in-up font-header`}
+            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight mb-8 leading-[1.1] animate-fade-in-up font-header`}
             style={{ animationDelay: '0.1s', color: actualColors.heading }}
             dangerouslySetInnerHTML={{ __html: styledHeadline }}
          />
          
          {/* Subtítulo */}
          <p 
-            className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-90 drop-shadow-lg max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up font-body`}
+            className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-90 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up font-body`}
             style={{ animationDelay: '0.2s', color: actualColors.text }}
          >
             {subheadline}
@@ -160,7 +160,7 @@ const HeroModern: React.FC<HeroProps> = ({
          <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
              <a 
                 href="#cta"
-                className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:shadow-[0_0_50px_rgba(79,70,229,0.6)] font-button ${borderRadiusClasses[borderRadius]}`}
+                className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                 style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
              >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -198,29 +198,6 @@ const HeroModern: React.FC<HeroProps> = ({
              </a>
          </div>
 
-         {/* Estadísticas en Grid Transparente */}
-         {showStats && stats && stats.length > 0 && (
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-20 pt-10 border-t border-white/10 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                 {stats.map((stat, idx) => (
-                     <div key={idx} className="text-center group cursor-default">
-                         <div className="text-3xl md:text-5xl font-bold mb-2 transition-colors duration-300 group-hover:brightness-125" style={{ color: statsValueColor || actualColors.primary }}>
-                             {stat.value}
-                         </div>
-                         <div className="text-sm uppercase tracking-wider text-gray-400 font-medium group-hover:text-white transition-colors">
-                             {stat.label}
-                         </div>
-                     </div>
-                 ))}
-             </div>
-         )}
-      </div>
-
-      {/* === SCROLL INDICATOR === */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in-up z-20" style={{ animationDelay: '0.6s' }}>
-        <span className="text-white/50 text-[10px] uppercase tracking-[0.3em] mb-3 font-medium">Scroll</span>
-        <div className="w-6 h-10 border-2 border-white/25 rounded-full flex justify-center p-1">
-          <div className="w-1.5 h-3 bg-white/60 rounded-full animate-scroll-indicator" />
-        </div>
       </div>
     </section>
   );

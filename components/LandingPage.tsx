@@ -23,9 +23,7 @@ import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
-import TrustedBy from './TrustedBy';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
-import { TrustedByData } from './TrustedBy';
 import { useEditor } from '../contexts/EditorContext';
 
 const fontStacks: Record<FontFamily, string> = {
@@ -193,7 +191,7 @@ const LandingPage: React.FC = () => {
       case 'features':
         return <Features {...mergedData} borderRadius={borderRadius} />;
       case 'testimonials':
-        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} avatarBorderWidth={mergedData.avatarBorderWidth} avatarBorderColor={mergedData.avatarBorderColor} />;
+        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} />;
       case 'slideshow':
         return <Slideshow {...mergedData} borderRadius={borderRadius} />;
       case 'pricing':
@@ -270,45 +268,18 @@ const LandingPage: React.FC = () => {
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
 
-  // Default TrustedBy data (can be customized later via data.trustedBy)
-  const trustedByData: TrustedByData = (data as any).trustedBy || {
-    title: "Trusted by innovative teams worldwide",
-    logos: [
-      { name: 'Company 1', imageUrl: 'https://picsum.photos/seed/logo1/200/60' },
-      { name: 'Company 2', imageUrl: 'https://picsum.photos/seed/logo2/200/60' },
-      { name: 'Company 3', imageUrl: 'https://picsum.photos/seed/logo3/200/60' },
-      { name: 'Company 4', imageUrl: 'https://picsum.photos/seed/logo4/200/60' },
-      { name: 'Company 5', imageUrl: 'https://picsum.photos/seed/logo5/200/60' },
-      { name: 'Company 6', imageUrl: 'https://picsum.photos/seed/logo6/200/60' },
-    ],
-    paddingY: 'sm',
-    paddingX: 'md',
-    colors: {
-      background: data.hero?.colors?.background || '#0f172a',
-      text: data.hero?.colors?.text || '#94a3b8',
-      borderColor: data.hero?.colors?.background || 'rgba(255,255,255,0.05)'
-    },
-    showBorder: true,
-    logoStyle: 'grayscale',
-    animationSpeed: 'normal'
-  };
-
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      <>
-        {mergedHeroData.heroVariant === 'modern' 
-          ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-          : mergedHeroData.heroVariant === 'gradient'
-            ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-            : mergedHeroData.heroVariant === 'fitness'
-              ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-              : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />}
-        {/* TrustedBy section after Hero */}
-        <TrustedBy {...trustedByData} />
-      </>
+      mergedHeroData.heroVariant === 'modern' 
+        ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+        : mergedHeroData.heroVariant === 'gradient'
+          ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+          : mergedHeroData.heroVariant === 'fitness'
+            ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+            : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
     ),
     features: <Features {...mergedFeaturesData} borderRadius={theme.cardBorderRadius} />,
-    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} avatarBorderWidth={mergedTestimonialsData.avatarBorderWidth} avatarBorderColor={mergedTestimonialsData.avatarBorderColor} />,
+    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} />,
     slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
     pricing: <Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     faq: <Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} />,
@@ -355,8 +326,12 @@ const LandingPage: React.FC = () => {
   // Determine if we should show the loading spinner for an article
   const showArticleLoading = isArticleHash && (isLoadingCMS || (isRouting && !activePost));
 
-  // Use theme pageBackground with fallback to white
-  const pageBackgroundColor = theme?.pageBackground || '#ffffff';
+  // Use theme pageBackground with smart fallback based on globalColors or hero background
+  // Priority: pageBackground > globalColors.background > hero background > default
+  const pageBackgroundColor = theme?.pageBackground 
+    || theme?.globalColors?.background 
+    || data?.hero?.colors?.background 
+    || '#0f172a'; // Default to modern dark slate instead of white
 
   return (
     <div 
@@ -366,6 +341,10 @@ const LandingPage: React.FC = () => {
         // Note: Removed font-body class from here - each component applies its own font class
     >
         <style>{`
+            :root {
+                --site-base-bg: ${pageBackgroundColor};
+                --site-surface-bg: ${theme?.globalColors?.surface || pageBackgroundColor};
+            }
             body, .bg-site-base { background-color: ${pageBackgroundColor}; }
         `}</style>
 
@@ -411,33 +390,13 @@ const LandingPage: React.FC = () => {
         {!isArticleHash && !activePost && (
             <>
                 {componentOrder
-                .filter(key => componentStatus[key as PageSection] && sectionVisibility[key as PageSection] && key !== 'footer')
+                .filter(key => componentStatus[key as PageSection] && sectionVisibility[key as PageSection] && key !== 'footer' && key !== 'chatbot')
                 .map(key => {
-                    // Special handling for Chatbot: it floats, so clicking it shouldn't scroll to it usually,
-                    // but for editing we wrap it. In preview it's just there.
-                    if (key === 'chatbot') {
-                         return (
-                             <div 
-                                key={key}
-                                id={key}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onSectionSelect(key as PageSection);
-                                }}
-                                className={`absolute inset-0 pointer-events-none z-50 ${activeSection === key ? 'ring-4 ring-primary ring-offset-4 ring-offset-transparent' : ''}`}
-                             >
-                                <div className="pointer-events-auto h-full w-full">
-                                     {componentsMap[key as PageSection]}
-                                </div>
-                             </div>
-                         )
-                    }
-
                     return (
                         <div 
                             id={key} 
                             key={key} 
-                            className={`cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onSectionSelect(key as PageSection);
@@ -455,7 +414,7 @@ const LandingPage: React.FC = () => {
       {!showArticleLoading && componentStatus.footer && sectionVisibility.footer && (
          <div 
             id="footer" 
-            className={`cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
             onClick={(e) => {
                  e.stopPropagation();
                  onSectionSelect('footer' as PageSection);

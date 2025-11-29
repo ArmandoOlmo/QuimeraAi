@@ -66,27 +66,27 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
         canExportData: true,
     },
     admin: {
-        // TODOS LOS PERMISOS HABILITADOS
+        // Gestión de usuarios - puede gestionar pero no roles críticos
         canViewUsers: true,
         canEditUsers: true,
-        canDeleteUsers: true,
-        canManageRoles: true,
-        canCreateSuperAdmin: true,
+        canDeleteUsers: false, // No puede eliminar usuarios
+        canManageRoles: false, // No puede cambiar roles
+        canCreateSuperAdmin: false,
         
-        // Gestión de tenants
+        // Gestión de tenants - solo ver
         canViewTenants: true,
-        canEditTenants: true,
-        canDeleteTenants: true,
-        canManageTenantLimits: true,
+        canEditTenants: false,
+        canDeleteTenants: false,
+        canManageTenantLimits: false,
         
-        // Configuración global
-        canEditGlobalSettings: true,
-        canEditPrompts: true,
-        canEditDesignTokens: true,
+        // Configuración global - limitado
+        canEditGlobalSettings: false,
+        canEditPrompts: true, // Puede editar prompts
+        canEditDesignTokens: true, // Puede editar design tokens
         canViewBilling: true,
-        canEditBilling: true,
+        canEditBilling: false,
         
-        // Contenido y proyectos
+        // Contenido y proyectos - acceso completo
         canViewAllProjects: true,
         canEditAllProjects: true,
         canDeleteAllProjects: true,
@@ -96,60 +96,64 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
         canExportData: true,
     },
     manager: {
-        // TODOS LOS PERMISOS HABILITADOS
+        // Gestión de usuarios - solo ver
         canViewUsers: true,
-        canEditUsers: true,
-        canDeleteUsers: true,
-        canManageRoles: true,
-        canCreateSuperAdmin: true,
+        canEditUsers: false,
+        canDeleteUsers: false,
+        canManageRoles: false,
+        canCreateSuperAdmin: false,
         
-        // Gestión de tenants
-        canViewTenants: true,
-        canEditTenants: true,
-        canDeleteTenants: true,
-        canManageTenantLimits: true,
+        // Gestión de tenants - sin acceso
+        canViewTenants: false,
+        canEditTenants: false,
+        canDeleteTenants: false,
+        canManageTenantLimits: false,
         
-        // Configuración global
-        canEditGlobalSettings: true,
-        canEditPrompts: true,
-        canEditDesignTokens: true,
-        canViewBilling: true,
-        canEditBilling: true,
+        // Configuración global - sin acceso
+        canEditGlobalSettings: false,
+        canEditPrompts: false,
+        canEditDesignTokens: false,
+        canViewBilling: true, // Solo ver
+        canEditBilling: false,
         
-        // Contenido y proyectos
+        // Contenido y proyectos - puede ver y editar
         canViewAllProjects: true,
         canEditAllProjects: true,
-        canDeleteAllProjects: true,
+        canDeleteAllProjects: false, // No puede eliminar
         
         // Estadísticas
         canViewUsageStats: true,
-        canExportData: true,
+        canExportData: false,
     },
     user: {
-        // TODOS LOS PERMISOS HABILITADOS PARA TODOS LOS USUARIOS
-        canViewUsers: true,
-        canEditUsers: true,
-        canDeleteUsers: true,
-        canManageRoles: true,
-        canCreateSuperAdmin: true,
+        // Gestión de usuarios - sin acceso
+        canViewUsers: false,
+        canEditUsers: false,
+        canDeleteUsers: false,
+        canManageRoles: false,
+        canCreateSuperAdmin: false,
         
-        canViewTenants: true,
-        canEditTenants: true,
-        canDeleteTenants: true,
-        canManageTenantLimits: true,
+        // Gestión de tenants - sin acceso
+        canViewTenants: false,
+        canEditTenants: false,
+        canDeleteTenants: false,
+        canManageTenantLimits: false,
         
-        canEditGlobalSettings: true,
-        canEditPrompts: true,
-        canEditDesignTokens: true,
-        canViewBilling: true,
-        canEditBilling: true,
+        // Configuración global - sin acceso
+        canEditGlobalSettings: false,
+        canEditPrompts: false,
+        canEditDesignTokens: false,
+        canViewBilling: false,
+        canEditBilling: false,
         
-        canViewAllProjects: true,
-        canEditAllProjects: true,
-        canDeleteAllProjects: true,
+        // Contenido y proyectos - solo sus propios proyectos
+        canViewAllProjects: false,
+        canEditAllProjects: false,
+        canDeleteAllProjects: false,
         
-        canViewUsageStats: true,
-        canExportData: true,
+        // Estadísticas - sin acceso
+        canViewUsageStats: false,
+        canExportData: false,
     },
 };
 
@@ -164,7 +168,7 @@ export const isOwner = (email: string): boolean => {
 };
 
 // Helper para determinar el rol correcto (owner siempre es owner)
-export const determineRole = (email: string, assignedRole: string): string => {
+export const determineRole = (email: string, assignedRole: string = 'user'): string => {
     if (isOwner(email)) return 'owner';
     return assignedRole;
 };
@@ -181,8 +185,8 @@ export const ROLE_LABELS: Record<string, string> = {
 export const ROLE_DESCRIPTIONS: Record<string, string> = {
     owner: 'Acceso total y único que puede crear Super Admins',
     superadmin: 'Acceso total excepto crear otros Super Admins',
-    admin: 'Puede gestionar usuarios y tenants, pero no configuraciones críticas',
-    manager: 'Solo puede ver y gestionar contenido básico',
+    admin: 'Puede gestionar usuarios y contenido, pero no configuraciones críticas',
+    manager: 'Puede ver y editar contenido, sin acceso administrativo',
     user: 'Usuario estándar sin accesos administrativos'
 };
 
@@ -193,4 +197,3 @@ export const ROLE_COLORS: Record<string, string> = {
     manager: 'bg-green-500/20 text-green-400 border-green-500/30',
     user: 'bg-gray-500/20 text-gray-400 border-gray-500/30'
 };
-

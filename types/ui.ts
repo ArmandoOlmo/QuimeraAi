@@ -43,13 +43,32 @@ export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' 
 // Page Section Types
 export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'map' | 'menu';
 
+// Global Color Palette
+export interface GlobalColors {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+    textMuted: string;
+    heading: string;
+    border: string;
+    success: string;
+    error: string;
+}
+
 // Theme Data
 export interface ThemeData {
+    // Border Radius
     cardBorderRadius: BorderRadiusSize;
     buttonBorderRadius: BorderRadiusSize;
+    // Typography
     fontFamilyHeader: FontFamily;
     fontFamilyBody: FontFamily;
     fontFamilyButton: FontFamily;
-    pageBackground: string; // Global page background color
+    // Global Colors
+    pageBackground: string;
+    globalColors: GlobalColors;
 }
 

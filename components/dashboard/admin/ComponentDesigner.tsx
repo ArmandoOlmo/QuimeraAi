@@ -10,7 +10,7 @@ import ComponentPermissionsEditor from './ComponentPermissionsEditor';
 import ComponentDocumentationEditor from './ComponentDocumentationEditor';
 import { useEditor } from '../../../contexts/EditorContext';
 import { generateComponentThumbnail, createPlaceholderThumbnail } from '../../../utils/thumbnailGenerator';
-import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle } from 'lucide-react';
+import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin } from 'lucide-react';
 
 interface ComponentDesignerProps {
     previewDevice: PreviewDevice;
@@ -34,6 +34,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
     { id: 'newsletter', name: 'Newsletter', icon: <FilePenLine size={18} /> },
     { id: 'video', name: 'Video', icon: <Video size={18} /> },
     { id: 'howItWorks', name: 'How It Works', icon: <Puzzle size={18} /> },
+    { id: 'map', name: 'Location Map', icon: <MapPin size={18} /> },
     { id: 'chatbot', name: 'AI Chatbot', icon: <MessageCircle size={18} /> },
     { id: 'typography', name: 'Global Typography', icon: <Type size={18} /> },
     { id: 'footer', name: 'Footer', icon: <Type size={18} /> },
@@ -67,8 +68,16 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
 
     const handleSave = async () => {
         setIsSaving(true);
-        await saveComponent(selectedComponentId);
-        setIsSaving(false);
+        try {
+            await saveComponent(selectedComponentId);
+            // Mostrar feedback de éxito
+            console.log("✅ Component saved successfully:", selectedComponentId);
+        } catch (error) {
+            console.error("Error saving component:", error);
+            alert("❌ Error al guardar el componente. Revisa la consola para más detalles.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleGenerateThumbnail = async () => {

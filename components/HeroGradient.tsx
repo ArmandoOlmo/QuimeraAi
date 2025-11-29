@@ -63,7 +63,7 @@ const HeroGradient: React.FC<HeroProps> = ({
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = 'AI-Powered Generation', badgeIcon = '✨',
+    showBadge = true, badgeText = '', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
@@ -137,9 +137,9 @@ const HeroGradient: React.FC<HeroProps> = ({
                     <div className="space-y-8 animate-fade-in-up">
                         
                         {/* Badge */}
-                        {showBadge && (
+                        {showBadge && badgeText && (
                             <div 
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border shadow-lg"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border"
                                 style={{ 
                                     backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`,
                                     borderColor: `${actualColors.primary}30`
@@ -180,7 +180,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText 
                                 }} 
-                                className={`relative overflow-hidden group px-8 py-4 font-bold shadow-2xl hover:shadow-[0_20px_50px_rgba(139,92,246,0.5)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+                                className={`relative overflow-hidden group px-8 py-4 font-bold hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             >
                                 <span className="relative z-10">{primaryCta}</span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -188,7 +188,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                             
                             <a 
                                 href="#features" 
-                                className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
+                                className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
                                     secondaryButtonStyle === 'outline' 
                                         ? 'border-2 bg-transparent' 
                                         : secondaryButtonStyle === 'ghost'
@@ -218,7 +218,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                         
                         {/* Main Image Card */}
                         <div 
-                            className="relative rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md border"
+                            className="relative rounded-3xl overflow-hidden backdrop-blur-md border"
                             style={{ 
                                 borderColor: `${actualColors.primary}30`
                             }}

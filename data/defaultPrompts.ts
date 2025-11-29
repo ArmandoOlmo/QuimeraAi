@@ -121,10 +121,11 @@ export const defaultPrompts: DefaultPrompt[] = [
 Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - Hero section is ALWAYS required as the entry point
 - For service businesses: Consider 'services', 'team', 'testimonials', 'leads'
-- For e-commerce/products: Consider 'features', 'pricing', 'testimonials', 'cta'
-- For portfolios/agencies: Consider 'portfolio', 'services', 'team', 'cta'
+- For e-commerce/products: Consider 'features', 'pricing', 'testimonials'
+- For portfolios/agencies: Consider 'portfolio', 'services', 'team'
 - For restaurants/food: Consider 'menu', 'slideshow', 'leads'
 - For any business: 'faq' builds trust, 'newsletter' grows audience, 'leads' captures contacts
+- DO NOT include 'cta' (Call to Action) section - users can add it later if needed
 - Select 5-8 components that create a complete, cohesive experience
 - Footer is ALWAYS required and will be added automatically
 
@@ -137,7 +138,7 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 
 **Available Component Settings:**
 - cardBorderRadius / buttonBorderRadius: 'none' (Sharp), 'md' (Soft), 'xl' (Rounded), 'full' (Pill)
-- headerLayout: 'classic', 'minimal', 'center', 'stack'
+- headerLayout: 'classic' (DEFAULT - use this unless there's a specific aesthetic reason), 'minimal', 'center', 'stack'
 - headerStyle: 'sticky-solid' (ALWAYS use solid - header must have solid brand color background)
 - heroImageStyle: 'default', 'glow', 'float', 'hexagon', 'polaroid'
 
@@ -170,7 +171,7 @@ Generate a JSON object defining the visual strategy.
       "buttonBorderRadius": "size"
   },
   "layoutStrategy": {
-      "headerLayout": "type",
+      "headerLayout": "classic",
       "headerStyle": "sticky-solid",
       "heroImageStyle": "type",
       "heroImagePosition": "left | right"
@@ -185,11 +186,11 @@ Generate a JSON object defining the visual strategy.
 
 **AESTHETIC RULES:**
 - If Aesthetic is 'Minimalist': Black/white/gray palette, sharp or small radius, 'minimal' header layout. Text: #1a1a1a on light, #ffffff on dark.
-- If Aesthetic is 'Bold': High contrast vivid colors, large typography ('oswald'), sharp corners. Ensure text pops against background.
+- If Aesthetic is 'Bold': High contrast vivid colors, large typography ('oswald'), sharp corners, 'classic' header layout. Ensure text pops against background.
 - If Aesthetic is 'Elegant': Serif fonts, gold/cream/navy palette, 'classic' header layout. Refined contrast ratios.
-- If Aesthetic is 'Tech': Dark mode (#0f172a background), neon/cyan accents, #ffffff text. 'glow' image styles, 'inter' font.
-- If Aesthetic is 'Playful': Vibrant colors, rounded shapes. Ensure playful colors still have good text contrast.
-- If Aesthetic is 'Organic': Earth tones (greens, browns, creams). Natural palette with readable text.
+- If Aesthetic is 'Tech': Dark mode (#0f172a background), neon/cyan accents, #ffffff text. 'glow' image styles, 'inter' font, 'classic' header layout.
+- If Aesthetic is 'Playful': Vibrant colors, rounded shapes, 'classic' header layout. Ensure playful colors still have good text contrast.
+- If Aesthetic is 'Organic': Earth tones (greens, browns, creams), 'classic' header layout. Natural palette with readable text.
 
 **HEADER & FOOTER RULES (MANDATORY):**
 - headerStyle MUST always be 'sticky-solid' - the header will use the primary brand color as solid background, never transparent.
@@ -286,7 +287,7 @@ Return ONLY valid JSON. No markdown.
 {
   "pageConfig": {
     "componentOrder": [List from Design Plan],
-    "sectionVisibility": { "hero": true, "features": true, "testimonials": true, "pricing": true, "faq": true, "cta": true, "footer": true, "services": true, "team": true, "slideshow": true, "leads": true, "newsletter": true, "portfolio": true, "video": true, "howItWorks": true },
+    "sectionVisibility": { "hero": true, "features": true, "testimonials": true, "pricing": true, "faq": true, "cta": false, "footer": true, "services": true, "team": true, "slideshow": true, "leads": true, "newsletter": true, "portfolio": true, "video": true, "howItWorks": true },
     "theme": {
         "cardBorderRadius": "From Design Plan",
         "buttonBorderRadius": "From Design Plan",
@@ -314,6 +315,9 @@ Return ONLY valid JSON. No markdown.
             "secondaryCta": "Secondary action",
             "imageStyle": "From Design Plan", 
             "imagePosition": "From Design Plan",
+            "showBadge": true,
+            "badgeText": "Create a short, catchy badge text (3-5 words) that highlights the business's key differentiator or value (e.g., 'Award-Winning Service', 'Since 2010', 'Premium Quality', '#1 in {{industry}}'). Should NOT be generic like 'AI-Powered'.",
+            "badgeIcon": "Choose an appropriate icon slug from: sparkles, zap, star, award, trophy, rocket, lightbulb, heart, check-circle, shield, target, trending-up",
             "colors": { "background": "Palette Background", "text": "Palette Text", "heading": "Palette Text" }
         },
         "features": { 
@@ -336,9 +340,9 @@ Return ONLY valid JSON. No markdown.
             "title": "What Our Clients Say", 
             "description": "Real experiences", 
             "items": [
-                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" },
-                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" },
-                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company", "avatar": "" }
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company" },
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company" },
+                { "quote": "Testimonial text", "name": "Client Name", "title": "Role, Company" }
             ],
             "colors": { 
                 "background": "Palette Background", 
@@ -420,12 +424,6 @@ Return ONLY valid JSON. No markdown.
                 "borderColor": "Slightly darker/lighter than secondary"
             } 
         },
-        "cta": { 
-            "title": "Ready to get started?", 
-            "description": "Compelling reason to act", 
-            "buttonText": "Based on {{goal}}",
-            "colors": { "gradientStart": "Palette Primary", "gradientEnd": "Palette Accent", "text": "White" } 
-        },
         "leads": { 
             "title": "Get In Touch", 
             "description": "We'd love to hear from you", 
@@ -465,10 +463,6 @@ Return ONLY valid JSON. No markdown.
     "team.items.2.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
     "team.items.3.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
     
-    "testimonials.items.0.avatar": "Casual portrait photo of a real person, satisfied customer, friendly natural expression, casual everyday clothing, authentic look, square format 1:1 aspect ratio, {{industry}} context",
-    "testimonials.items.1.avatar": "Natural portrait photo of a real person, happy customer, confident warm smile, relaxed casual attire, genuine expression, square format 1:1 aspect ratio, {{industry}} context",
-    "testimonials.items.2.avatar": "Authentic portrait photo of a real person, pleased customer, approachable friendly look, casual normal clothing, natural lighting, square format 1:1 aspect ratio, {{industry}} context",
-    
     "portfolio.items.0.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, high quality",
     "portfolio.items.1.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, professional",
     "portfolio.items.2.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, premium",
@@ -492,10 +486,8 @@ Return ONLY valid JSON. No markdown.
 3. If "menu" is NOT in componentOrder, do NOT include menu.items.X.imageUrl prompts
 4. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
 5. If "slideshow" is NOT in componentOrder, do NOT include slideshow.items.X.imageUrl prompts
-6. If "testimonials" is NOT in componentOrder, do NOT include testimonials.items.X.avatar prompts
-7. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
-8. Use imageStyleDescription from Design Plan for consistent visual style
-9. TESTIMONIAL AVATARS MUST use square format (1:1 aspect ratio) and show people in CASUAL/NORMAL clothing UNLESS the industry is formal (law firm, consulting, finance, corporate) - in those cases use smart casual or business casual attire`,
+6. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
+7. Use imageStyleDescription from Design Plan for consistent visual style`,
     model: 'gemini-3-pro-preview',
     version: 4,
   },

@@ -51,12 +51,17 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
             type="email"
             placeholder={placeholderText}
             required
-            className={`flex-grow bg-dark-900 border border-dark-700 text-site-heading px-4 py-3 focus:ring-2 focus:outline-none w-full font-body ${borderRadiusClasses[cardBorderRadius]}`}
-            style={{'--tw-ring-color': colors.accent} as React.CSSProperties}
+            className={`flex-grow border px-4 py-3 focus:ring-2 focus:outline-none w-full font-body ${borderRadiusClasses[cardBorderRadius]}`}
+            style={{
+              backgroundColor: colors.inputBackground || '#111827',
+              color: colors.inputText || '#ffffff',
+              borderColor: colors.inputBorder || '#374151',
+              '--tw-ring-color': colors.accent
+            } as React.CSSProperties}
           />
           <button
             type="submit"
-            className={`text-white font-bold py-3 px-8 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
+            className={`text-white font-bold py-3 px-8 hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
             style={{ backgroundColor: colors.buttonBackground || colors.accent, color: colors.buttonText || '#ffffff' }}
           >
             {buttonText}

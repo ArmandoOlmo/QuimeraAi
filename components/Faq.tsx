@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FaqData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
 import { Plus, Minus, ChevronDown, HelpCircle } from 'lucide-react';
+import { ensureTextContrast, hasGoodContrast, darkenColor, hexToRgba } from '../utils/colorUtils';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -54,22 +56,25 @@ interface FaqItemProps {
   gradientEnd?: string;
 }
 
-const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, borderColor }) => {
+const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
   return (
-    <div className="border-b" style={{ borderColor: borderColor || 'rgba(255, 255, 255, 0.1)' }}>
+    <div className="border-b" style={{ borderColor: borderColor || 'rgba(128, 128, 128, 0.3)' }}>
       <button
         onClick={onClick}
         className="w-full flex justify-between items-center text-left py-6 transition-colors"
         aria-expanded={isOpen}
       >
-        <h3 className={`text-lg font-semibold transition-colors ${isOpen ? '' : 'text-site-heading hover:text-site-heading/80'}`} style={{ color: isOpen ? accentColor : undefined }}>
+        <h3 
+          className="text-lg font-semibold transition-colors hover:opacity-80" 
+          style={{ color: isOpen ? accentColor : headingColor }}
+        >
           {question}
         </h3>
-        <span className="text-2xl text-site-body transform transition-transform duration-300">
+        <span className="text-2xl transform transition-transform duration-300" style={{ color: textColor }}>
           {isOpen ? (
             <Minus className="h-6 w-6" style={{ color: accentColor }} />
           ) : (
-            <Plus className="h-6 w-6" />
+            <Plus className="h-6 w-6" style={{ color: headingColor }} />
           )}
         </span>
       </button>
@@ -92,8 +97,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border`}
       style={{ 
         backgroundColor: cardBackground || 'rgba(30, 41, 59, 0.5)',
-        borderColor: isOpen ? accentColor : (borderColor || 'rgba(255, 255, 255, 0.1)'),
-        boxShadow: isOpen ? `0 4px 20px ${accentColor}40` : '0 2px 8px rgba(0, 0, 0, 0.1)'
+        borderColor: isOpen ? accentColor : (borderColor || 'rgba(255, 255, 255, 0.1)')
       }}
     >
       <button
@@ -105,7 +109,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
           <div 
             className="p-2 rounded-lg transition-transform duration-300"
             style={{ 
-              backgroundColor: `${accentColor}20`,
+              backgroundColor: hexToRgba(accentColor, 0.125),
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
             }}
           >
@@ -137,16 +141,15 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-500 relative group`}
       style={{ 
         background: isOpen 
-          ? `linear-gradient(135deg, ${gradientStart || accentColor}15, ${gradientEnd || accentColor}05)`
+          ? `linear-gradient(135deg, ${hexToRgba(gradientStart || accentColor, 0.08)}, ${hexToRgba(gradientEnd || accentColor, 0.03)})`
           : 'rgba(30, 41, 59, 0.3)',
-        boxShadow: isOpen ? `0 8px 32px ${accentColor}30` : '0 2px 8px rgba(0, 0, 0, 0.1)',
-        border: isOpen ? `2px solid ${accentColor}50` : '2px solid transparent'
+        border: isOpen ? `2px solid ${hexToRgba(accentColor, 0.31)}` : '2px solid transparent'
       }}
     >
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
-          background: `linear-gradient(135deg, ${gradientStart || accentColor}10, ${gradientEnd || accentColor}05)`
+          background: `linear-gradient(135deg, ${hexToRgba(gradientStart || accentColor, 0.06)}, ${hexToRgba(gradientEnd || accentColor, 0.03)})`
         }}
       />
       <button
@@ -158,7 +161,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
           className="text-lg font-semibold transition-all duration-300 flex-1"
           style={{ 
             color: isOpen ? accentColor : headingColor,
-            textShadow: isOpen ? `0 0 20px ${accentColor}40` : 'none'
+            textShadow: isOpen ? `0 0 20px ${hexToRgba(accentColor, 0.25)}` : 'none'
           }}
         >
           {question}
@@ -168,7 +171,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
           style={{ 
             background: isOpen 
               ? `linear-gradient(135deg, ${gradientStart || accentColor}, ${gradientEnd || accentColor})`
-              : `${accentColor}20`
+              : hexToRgba(accentColor, 0.125)
           }}
         >
           <Plus 
@@ -210,7 +213,7 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
         <div 
           className={`flex-shrink-0 w-12 h-12 ${borderRadiusClasses[borderRadius]} flex items-center justify-center transition-all duration-300`}
           style={{ 
-            backgroundColor: isOpen ? accentColor : `${accentColor}20`,
+            backgroundColor: isOpen ? accentColor : hexToRgba(accentColor, 0.125),
             transform: isOpen ? 'scale(1.1)' : 'scale(1)'
           }}
         >
@@ -264,24 +267,61 @@ const Faq: React.FC<FaqProps> = ({
   faqVariant = 'classic'
 }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  
+  // Get design tokens for primary color
+  const { colors: tokenColors } = useDesignTokens();
+  const primaryColor = tokenColors.primary;
 
   const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  // Calculate contrast-safe colors based on background
+  // Use component background color - fallback to primary only if not set
+  const safeColors = useMemo(() => {
+    const bgColor = colors.background || primaryColor || '#ffffff';
+    
+    // Ensure heading color has good contrast with background
+    const safeHeadingColor = ensureTextContrast(bgColor, colors.heading);
+    
+    // Ensure text color has good contrast with background
+    const safeTextColor = ensureTextContrast(bgColor, colors.text);
+    
+    // For card backgrounds (used in cards/gradient variants), ensure contrast
+    const cardBg = colors.cardBackground || bgColor;
+    const safeCardTextColor = ensureTextContrast(cardBg, colors.text);
+    const safeCardHeadingColor = ensureTextContrast(cardBg, colors.heading);
+    
+    // Calculate a visible border color if needed
+    const safeBorderColor = colors.borderColor || (hasGoodContrast(bgColor, colors.borderColor || '#333333') 
+      ? colors.borderColor 
+      : darkenColor(bgColor, 20));
+    
+    return {
+      heading: safeHeadingColor,
+      text: safeTextColor,
+      cardHeading: safeCardHeadingColor,
+      cardText: safeCardTextColor,
+      border: safeBorderColor,
+    };
+  }, [colors]);
+
   const renderFaqItem = (item: any, index: number) => {
+    // For card-based variants, use card-specific colors
+    const isCardVariant = faqVariant === 'cards' || faqVariant === 'gradient';
+    
     const commonProps = {
       question: item.question,
       answer: item.answer,
       isOpen: openIndex === index,
       onClick: () => handleToggle(index),
       accentColor: colors.accent,
-      textColor: colors.text,
-      headingColor: colors.heading,
+      textColor: isCardVariant ? safeColors.cardText : safeColors.text,
+      headingColor: isCardVariant ? safeColors.cardHeading : safeColors.heading,
       variant: faqVariant,
       borderRadius,
       cardBackground: colors.cardBackground,
-      borderColor: colors.borderColor,
+      borderColor: safeColors.border,
       gradientStart: colors.gradientStart,
       gradientEnd: colors.gradientEnd,
     };
@@ -299,10 +339,10 @@ const Faq: React.FC<FaqProps> = ({
   };
 
   return (
-    <section id="faq" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+    <section id="faq" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background || primaryColor }}>
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
-        <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+        <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.text }}>
           {description}
         </p>
       </div>

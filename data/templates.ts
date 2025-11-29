@@ -49,9 +49,6 @@ export const initialProjects: Project[] = [
         'slideshow.items.0.imageUrl': 'Elegant restaurant dining room, empty tables with white cloths, wine glasses, evening ambiance, cozy fireplace',
         'slideshow.items.1.imageUrl': 'Chef plating a complex dessert, chocolate and gold leaf, focus on hands and food, professional kitchen background blur',
         'slideshow.items.2.imageUrl': 'Sommelier pouring red wine into a crystal glass, elegant setting, focus on the liquid motion',
-        'testimonials.items.0.avatar': 'Casual portrait of a woman in her 40s enjoying dinner, stylish glasses, relaxed smile, casual elegant clothing, restaurant ambiance, square format 1:1 aspect ratio',
-        'testimonials.items.1.avatar': 'Natural portrait of a happy male diner, casual smart attire, warm genuine smile, relaxed atmosphere, square format 1:1 aspect ratio',
-        'testimonials.items.2.avatar': 'Authentic portrait of a woman wine enthusiast, casual elegant clothing, holding wine glass, friendly expression, square format 1:1 aspect ratio',
         'team.items.0.imageUrl': 'Headshot of executive chef, chef coat, arms crossed, confident, kitchen background',
         'team.items.1.imageUrl': 'Headshot of sous chef, chopping herbs, action shot',
         'team.items.2.imageUrl': 'Headshot of restaurant manager, welcoming smile, suit',
@@ -87,7 +84,7 @@ export const initialProjects: Project[] = [
             { title: "Private Dining", description: "Exclusive rooms for your special events.", imageUrl: "" }
         ],
         gridColumns: 3, imageHeight: 250, imageObjectFit: 'cover',
-        colors: { background: '#18100A', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD' }
+        colors: { background: '#18100A', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD', description: '#Eaddcf' }
       },
       services: { // Menu Highlights
         title: 'Signature Dishes', description: 'A selection of our chef\'s most celebrated creations.', paddingY: 'lg', paddingX: 'md',
@@ -131,11 +128,10 @@ export const initialProjects: Project[] = [
         title: 'Guest Experiences', description: 'Hear what our patrons have to say.', paddingY: 'md', paddingX: 'md',
         titleFontSize: 'md', descriptionFontSize: 'md',
         borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
-        avatarBorderWidth: 2, avatarBorderColor: '#D4A373',
         items: [
-          { quote: "The best dining experience I've had in years. The ambiance is unmatched.", name: 'Eleanor R.', title: 'Food Critic', avatar: '' },
-          { quote: "Exquisite flavors and impeccable service. Perfect for our anniversary.", name: 'James T.', title: 'Guest', avatar: '' },
-          { quote: "The wine pairing was spot on. Highly recommend the tasting menu.", name: 'Sarah L.', title: 'Sommelier', avatar: '' },
+          { quote: "The best dining experience I've had in years. The ambiance is unmatched.", name: 'Eleanor R.', title: 'Food Critic' },
+          { quote: "Exquisite flavors and impeccable service. Perfect for our anniversary.", name: 'James T.', title: 'Guest' },
+          { quote: "The wine pairing was spot on. Highly recommend the tasting menu.", name: 'Sarah L.', title: 'Sommelier' },
         ],
         colors: { background: '#241A15', accent: '#D4A373', borderColor: '#3E2723', text: '#Eaddcf', heading: '#FAEDCD', cardBackground: '#1f2937' },
       },
@@ -218,9 +214,6 @@ export const initialProjects: Project[] = [
         'team.items.1.imageUrl': 'Professional headshot of female managing partner, formal business attire, confident, modern office background',
         'team.items.2.imageUrl': 'Professional headshot of young male associate lawyer, suit, eager and sharp, blurred office background',
         'team.items.3.imageUrl': 'Professional headshot of female paralegal, smart business casual, organized desk background',
-        'testimonials.items.0.avatar': 'Portrait of a middle-aged business owner, smart casual attire, confident relaxed expression, professional but approachable, square format 1:1 aspect ratio',
-        'testimonials.items.1.avatar': 'Natural portrait of a woman client, calm relieved expression, casual professional clothing, friendly look, square format 1:1 aspect ratio',
-        'testimonials.items.2.avatar': 'Authentic portrait of a male executive, modern smart casual look, genuine smile, approachable demeanor, square format 1:1 aspect ratio',
         'header.logoImageUrl': 'Law firm logo, scales of justice icon, gold color on dark background, vector style'
     },
     data: {
@@ -250,7 +243,7 @@ export const initialProjects: Project[] = [
           { title: 'Criminal Defense', description: 'Protecting your rights and freedom with vigorous defense strategies.', imageUrl: '' },
         ],
         gridColumns: 3, imageHeight: 220, imageObjectFit: 'cover',
-        colors: { background: '#f8fafc', accent: '#c29d59', borderColor: '#e2e8f0', text: '#334155', heading: '#0f172a' },
+        colors: { background: '#f8fafc', accent: '#c29d59', borderColor: '#e2e8f0', text: '#334155', heading: '#0f172a', description: '#334155' },
       },
       services: {
           title: 'Our Services', description: 'Legal excellence in every field.', paddingY: 'md', paddingX: 'md',
@@ -280,11 +273,10 @@ export const initialProjects: Project[] = [
         title: 'Client Testimonials', description: 'We let our record speak for itself.', paddingY: 'lg', paddingX: 'md',
         titleFontSize: 'md', descriptionFontSize: 'md',
         borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
-        avatarBorderWidth: 2, avatarBorderColor: '#c29d59',
         items: [
-          { quote: "They handled my case with professionalism and achieved a result better than I expected.", name: 'John D.', title: 'Business Owner', avatar: '' },
-          { quote: "Responsive, knowledgeable, and empathetic. I felt supported every step of the way.", name: 'Sarah M.', title: 'Client', avatar: '' },
-          { quote: "Top-tier legal representation. Worth every penny for the peace of mind.", name: 'David K.', title: 'CEO', avatar: '' },
+          { quote: "They handled my case with professionalism and achieved a result better than I expected.", name: 'John D.', title: 'Business Owner' },
+          { quote: "Responsive, knowledgeable, and empathetic. I felt supported every step of the way.", name: 'Sarah M.', title: 'Client' },
+          { quote: "Top-tier legal representation. Worth every penny for the peace of mind.", name: 'David K.', title: 'CEO' },
         ],
         colors: { background: '#0f172a', accent: '#c29d59', borderColor: '#334155', text: '#f1f5f9', heading: '#ffffff', cardBackground: '#1f2937' },
       },
@@ -399,7 +391,7 @@ export const initialProjects: Project[] = [
           { title: 'Mobility', description: 'Improve flexibility and recovery to prevent injury.', imageUrl: '' },
         ],
         gridColumns: 3, imageHeight: 250, imageObjectFit: 'cover',
-        colors: { background: '#0a0a0a', accent: '#ccff00', borderColor: '#27272a', text: '#a1a1aa', heading: '#ffffff' },
+        colors: { background: '#0a0a0a', accent: '#ccff00', borderColor: '#27272a', text: '#a1a1aa', heading: '#ffffff', description: '#a1a1aa' },
       },
       services: {
           title: 'Amenities', description: 'Everything you need to succeed.', paddingY: 'md', paddingX: 'md',
@@ -443,11 +435,10 @@ export const initialProjects: Project[] = [
           title: 'Real Results', description: 'Our members crush their goals.', paddingY: 'md', paddingX: 'md',
           titleFontSize: 'md', descriptionFontSize: 'md',
           borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
-          avatarBorderWidth: 2, avatarBorderColor: '#ccff00',
           items: [
-              { quote: "Lost 20lbs in 3 months. The community here keeps me going.", name: 'Mark P.', title: 'Member', avatar: '' },
-              { quote: "Best equipment in the city. No waiting for racks.", name: 'Jenny L.', title: 'Powerlifter', avatar: '' },
-              { quote: "The coaches actually care about your form. Highly recommend.", name: 'Chris R.', title: 'Member', avatar: '' }
+              { quote: "Lost 20lbs in 3 months. The community here keeps me going.", name: 'Mark P.', title: 'Member' },
+              { quote: "Best equipment in the city. No waiting for racks.", name: 'Jenny L.', title: 'Powerlifter' },
+              { quote: "The coaches actually care about your form. Highly recommend.", name: 'Chris R.', title: 'Member' }
           ],
           colors: { background: '#000000', accent: '#ccff00', borderColor: '#333', text: '#ffffff', heading: '#ffffff', cardBackground: '#1f2937' }
       },
@@ -525,9 +516,6 @@ export const initialProjects: Project[] = [
         'slideshow.items.0.imageUrl': 'Street style fashion shot, urban setting, trendy outfit, candid pose, daylight',
         'slideshow.items.1.imageUrl': 'Woman drinking coffee in a cozy cafe, wearing a stylish sweater, warm tones, lifestyle photography',
         'slideshow.items.2.imageUrl': 'Beach fashion shoot, woman in summer dress walking on sand, ocean background, bright and airy',
-        'testimonials.items.0.avatar': 'Casual portrait of young stylish woman, natural makeup, genuine happy smile, trendy casual clothing, pastel background, square format 1:1 aspect ratio',
-        'testimonials.items.1.avatar': 'Natural portrait of a woman with curly hair, laughing joyfully, casual trendy outfit, vibrant colorful background, square format 1:1 aspect ratio',
-        'testimonials.items.2.avatar': 'Authentic portrait of a fashion enthusiast, casual chic style, trendy accessories, cool confident attitude, square format 1:1 aspect ratio',
         'team.items.0.imageUrl': 'Headshot of fashion designer, creative studio background',
         'team.items.1.imageUrl': 'Headshot of stylist, chic outfit',
         'team.items.2.imageUrl': 'Headshot of store manager, friendly',
@@ -563,7 +551,7 @@ export const initialProjects: Project[] = [
           { title: 'Accessories', description: 'The finishing touches.', imageUrl: '' },
         ],
         gridColumns: 3, imageHeight: 400, imageObjectFit: 'cover',
-        colors: { background: '#ffffff', accent: '#fb7185', borderColor: '#fce7f3', text: '#4b5563', heading: '#1f2937' },
+        colors: { background: '#ffffff', accent: '#fb7185', borderColor: '#fce7f3', text: '#4b5563', heading: '#1f2937', description: '#4b5563' },
       },
       portfolio: {
           title: 'Spring Lookbook', description: 'Inspiration for the season.', paddingY: 'lg', paddingX: 'md',
@@ -612,9 +600,9 @@ export const initialProjects: Project[] = [
         titleFontSize: 'md', descriptionFontSize: 'md',
         borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
         items: [
-            { quote: "The fabric quality is amazing! It feels so expensive but the price was great.", name: 'Chloe', title: 'Verified Buyer', avatar: '' },
-            { quote: "Fast shipping and the packaging was so cute. I'm obsessed with the dress.", name: 'Mia', title: 'Verified Buyer', avatar: '' },
-            { quote: "Finally found jeans that fit perfectly. Lumina is my new go-to.", name: 'Zoe', title: 'Verified Buyer', avatar: '' },
+            { quote: "The fabric quality is amazing! It feels so expensive but the price was great.", name: 'Chloe', title: 'Verified Buyer' },
+            { quote: "Fast shipping and the packaging was so cute. I'm obsessed with the dress.", name: 'Mia', title: 'Verified Buyer' },
+            { quote: "Finally found jeans that fit perfectly. Lumina is my new go-to.", name: 'Zoe', title: 'Verified Buyer' },
         ],
         colors: { background: '#ffffff', accent: '#fb7185', borderColor: '#fce7f3', text: '#4b5563', heading: '#1f2937', cardBackground: '#ffffff' }
       },
@@ -689,9 +677,6 @@ export const initialProjects: Project[] = [
         'features.items.0.imageUrl': 'Professional car mechanic working on an engine, clean workshop, focused expression',
         'features.items.1.imageUrl': 'Hand signing a car purchase contract, keys on table, close up, business setting',
         'features.items.2.imageUrl': 'Inspector checking car paint with a light, detailed inspection, professional',
-        'testimonials.items.0.avatar': 'Casual portrait of middle-aged man, polo shirt, happy satisfied customer, relaxed natural expression, square format 1:1 aspect ratio',
-        'testimonials.items.1.avatar': 'Natural portrait of young woman with car keys, genuine excited smile, casual clothing, dealership background, square format 1:1 aspect ratio',
-        'testimonials.items.2.avatar': 'Authentic portrait of older gentleman, smart casual attire, satisfied warm expression, friendly approachable look, square format 1:1 aspect ratio',
         'header.logoImageUrl': 'Minimalist car silhouette logo, metallic silver on dark background',
         'team.items.0.imageUrl': 'Headshot of sales manager, suit',
         'team.items.1.imageUrl': 'Headshot of service director, uniform',
@@ -734,7 +719,7 @@ export const initialProjects: Project[] = [
           { title: '100-Point Inspection', description: 'Every vehicle is rigorously tested for quality.', imageUrl: '' },
         ],
         gridColumns: 3, imageHeight: 200, imageObjectFit: 'cover',
-        colors: { background: '#1f2937', accent: '#ef4444', borderColor: '#374151', text: '#f3f4f6', heading: '#ffffff' },
+        colors: { background: '#1f2937', accent: '#ef4444', borderColor: '#374151', text: '#f3f4f6', heading: '#ffffff', description: '#f3f4f6' },
       },
       services: {
           title: 'Service Center', description: 'Keep your vehicle running like new.', paddingY: 'md', paddingX: 'md',
@@ -801,9 +786,9 @@ export const initialProjects: Project[] = [
         titleFontSize: 'md', descriptionFontSize: 'md',
         borderRadius: 'xl', cardShadow: 'lg', borderStyle: 'solid', cardPadding: 32,
         items: [
-          { quote: "Easiest car buying experience ever. No pressure, great price.", name: 'Tom H.', title: 'Customer', avatar: '' },
-          { quote: "Love my new SUV! The service department is also top notch.", name: 'Karen P.', title: 'Customer', avatar: '' },
-          { quote: "They found me the exact model I wanted. Highly recommended.", name: 'Greg S.', title: 'Customer', avatar: '' },
+          { quote: "Easiest car buying experience ever. No pressure, great price.", name: 'Tom H.', title: 'Customer' },
+          { quote: "Love my new SUV! The service department is also top notch.", name: 'Karen P.', title: 'Customer' },
+          { quote: "They found me the exact model I wanted. Highly recommended.", name: 'Greg S.', title: 'Customer' },
         ],
         colors: { background: '#111827', accent: '#ef4444', borderColor: '#374151', text: '#f3f4f6', heading: '#ffffff', cardBackground: '#1f2937' },
       },

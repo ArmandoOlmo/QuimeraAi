@@ -1,15 +1,13 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import ImagePlaceholder from './ui/ImagePlaceholder';
-import { isPendingImage } from '../utils/imagePlaceholders';
+import { ensureTextContrast } from '../utils/colorUtils';
 
 interface TestimonialCardProps {
   quote: string;
   name: string;
   title: string;
-  avatar: string;
   delay?: string;
   accentColor: string;
   textColor: string;
@@ -20,8 +18,6 @@ interface TestimonialCardProps {
   borderStyle: string;
   cardPadding: number;
   variant: TestimonialsVariant;
-  avatarBorderWidth: number;
-  avatarBorderColor: string;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -69,7 +65,6 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   quote, 
   name, 
   title, 
-  avatar, 
   delay = '0s', 
   accentColor, 
   textColor, 
@@ -79,9 +74,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   cardShadow,
   borderStyle,
   cardPadding,
-  variant,
-  avatarBorderWidth,
-  avatarBorderColor
+  variant
 }) => {
   const getBorderClass = () => {
     switch(borderStyle) {
@@ -92,7 +85,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       case 'gradient':
         return 'border-2 bg-gradient-to-br from-purple-500/20 to-blue-500/20';
       case 'glow':
-        return 'border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]';
+        return 'border border-purple-500/50';
       default:
         return 'border';
     }
@@ -101,15 +94,15 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   const getVariantClasses = () => {
     switch(variant) {
       case 'minimal-cards':
-        return 'border border-gray-200/20 hover:border-gray-200/40 transition-all duration-300 hover:-translate-y-1';
+        return 'border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1';
       case 'glassmorphism':
-        return 'backdrop-blur-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300';
+        return 'backdrop-blur-xl border border-white/20 hover:border-white/30 transition-all duration-300';
       case 'gradient-glow':
-        return 'relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/20 before:to-blue-500/20 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
+        return 'relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
       case 'neon-border':
         return 'relative border-2 hover:scale-[1.02] transition-all duration-500 animate-[pulse_3s_ease-in-out_infinite]';
       case 'floating-cards':
-        return 'border border-gray-700/30 hover:-translate-y-2 hover:rotate-1 transition-all duration-500 shadow-2xl hover:shadow-purple-500/20';
+        return 'border border-white/20 hover:-translate-y-2 hover:rotate-1 transition-all duration-500';
       case 'gradient-shift':
         return 'relative border-0 overflow-hidden transition-all duration-500 hover:scale-[1.03]';
       case 'classic':
@@ -124,6 +117,14 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       padding: `${cardPadding}px`
     };
 
+    // Convert hex to rgba for glassmorphism effect
+    const hexToRgba = (hex: string, alpha: number) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
     switch(variant) {
       case 'minimal-cards':
         return {
@@ -134,23 +135,20 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       case 'glassmorphism':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: hexToRgba(cardBackground, 0.85),
           backdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
         };
       case 'gradient-glow':
         return {
           ...baseStyle,
           backgroundColor: cardBackground,
           borderColor: borderStyle === 'solid' ? borderColor : undefined,
-          boxShadow: `0 0 30px ${accentColor}33, 0 10px 50px rgba(0,0,0,0.3)`,
         };
       case 'neon-border':
         return {
           ...baseStyle,
           backgroundColor: cardBackground,
           borderColor: accentColor,
-          boxShadow: `0 0 20px ${accentColor}66, 0 0 40px ${accentColor}33, inset 0 0 20px ${accentColor}11`,
         };
       case 'floating-cards':
         return {
@@ -158,15 +156,13 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
           backgroundColor: cardBackground,
           borderColor: borderStyle === 'solid' ? borderColor : undefined,
           transform: 'perspective(1000px) translateZ(0)',
-          boxShadow: '0 20px 60px -15px rgba(0, 0, 0, 0.5), 0 10px 30px -10px rgba(0, 0, 0, 0.4)',
         };
       case 'gradient-shift':
         return {
           ...baseStyle,
-          background: `linear-gradient(135deg, ${accentColor}22, ${cardBackground}, ${accentColor}11)`,
+          background: `linear-gradient(135deg, ${cardBackground}ee, ${cardBackground}, ${cardBackground}dd)`,
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
-          boxShadow: `0 15px 40px -10px ${accentColor}44`,
         };
       case 'classic':
       default:
@@ -179,18 +175,6 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   };
 
   const needsZIndex = variant === 'gradient-glow' || variant === 'gradient-shift';
-  const avatarClasses = () => {
-    switch(variant) {
-      case 'glassmorphism':
-        return 'ring-2 ring-white/20';
-      case 'neon-border':
-        return `ring-2 shadow-[0_0_10px_${accentColor}]`;
-      case 'floating-cards':
-        return 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-500/20';
-      default:
-        return '';
-    }
-  };
 
   return (
     <div 
@@ -201,7 +185,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         <div 
           className="absolute inset-0 opacity-50 -z-10"
           style={{
-            background: `linear-gradient(45deg, ${accentColor}33, transparent, ${accentColor}22)`,
+            background: `linear-gradient(45deg, ${cardBackground}55, transparent, ${cardBackground}44)`,
             backgroundSize: '400% 400%',
             animation: 'gradientShift 10s ease infinite',
             filter: 'blur(30px)',
@@ -212,25 +196,9 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         "{quote}"
       </blockquote>
       <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
-        {isPendingImage(avatar) ? (
-          <div className="w-12 h-12 mr-4">
-            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full w-12 h-12" />
-          </div>
-        ) : (
-          <img 
-            src={avatar} 
-            alt={name} 
-            style={{ 
-              borderColor: avatarBorderColor,
-              borderWidth: `${avatarBorderWidth}px`
-            }} 
-            className={`w-12 h-12 rounded-full mr-4 ${avatarBorderWidth > 0 ? 'border-solid' : ''} ${avatarClasses()}`} 
-            key={avatar} 
-          />
-        )}
         <div>
-          <p className="font-bold text-site-heading font-body">{name}</p>
-          <p className="text-sm font-body" style={{ color: textColor }}>{title}</p>
+          <p className="font-bold font-body" style={{ color: textColor }}>{name}</p>
+          <p className="text-sm font-body opacity-80" style={{ color: textColor }}>{title}</p>
         </div>
       </div>
     </div>
@@ -242,8 +210,6 @@ interface TestimonialsProps extends TestimonialsData {
     cardShadow?: string;
     borderStyle?: string;
     cardPadding?: number;
-    avatarBorderWidth?: number;
-    avatarBorderColor?: string;
 }
 
 const Testimonials: React.FC<TestimonialsProps> = ({ 
@@ -259,31 +225,50 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   cardPadding = 32,
   titleFontSize = 'md', 
   descriptionFontSize = 'md',
-  testimonialsVariant = 'classic',
-  avatarBorderWidth = 2,
-  avatarBorderColor
+  testimonialsVariant = 'classic'
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge component colors with Design Tokens (component colors take priority)
+  // Get primary color for title and cards
+  const primaryColor = getColor('primary.main', '#4f46e5');
+  
+  // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
     background: colors.background,
-    accent: colors.accent || getColor('primary.main', '#4f46e5'),
+    accent: colors.accent || primaryColor,
     borderColor: colors.borderColor,
     text: colors.text,
-    heading: colors.heading,
+    heading: colors.heading || primaryColor,
+    description: colors.description || colors.text,
+    cardBackground: colors.cardBackground || primaryColor,
   };
-
-  // Avatar border color defaults to accent color if not specified
-  const finalAvatarBorderColor = avatarBorderColor || actualColors.accent;
+  
+  // Use component cardBackground color (falls back to primary if not set)
+  const cardBackground = actualColors.cardBackground;
+  
+  // Calculate contrast-safe colors based on backgrounds
+  const safeColors = useMemo(() => {
+    const bgColor = actualColors.background || '#ffffff';
+    const cardBg = cardBackground;
+    
+    return {
+      // Section-level colors - use component heading color (with contrast check)
+      heading: ensureTextContrast(bgColor, actualColors.heading),
+      text: ensureTextContrast(bgColor, actualColors.text),
+      description: ensureTextContrast(bgColor, actualColors.description),
+      // Card-level colors
+      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
+      cardText: ensureTextContrast(cardBg, actualColors.text),
+    };
+  }, [actualColors, cardBackground]);
   
   return (
     <section id="testimonials" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
             {description}
           </p>
         </div>
@@ -291,19 +276,19 @@ const Testimonials: React.FC<TestimonialsProps> = ({
           {items.map((testimonial, index) => (
             <TestimonialCard 
                 key={index}
-                {...testimonial}
+                quote={testimonial.quote}
+                name={testimonial.name}
+                title={testimonial.title}
                 delay={`${(index + 1) * 0.2}s`}
                 accentColor={actualColors.accent}
-                textColor={actualColors.text}
+                textColor={safeColors.cardText}
                 borderRadius={borderRadius}
                 borderColor={actualColors.borderColor}
-                cardBackground={colors.cardBackground || '#1f2937'}
+                cardBackground={cardBackground}
                 cardShadow={cardShadow}
                 borderStyle={borderStyle}
                 cardPadding={cardPadding}
                 variant={testimonialsVariant}
-                avatarBorderWidth={avatarBorderWidth}
-                avatarBorderColor={finalAvatarBorderColor}
             />
           ))}
         </div>

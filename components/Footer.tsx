@@ -33,25 +33,24 @@ const Footer: React.FC<FooterData> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge component colors with Design Tokens (component colors take priority)
+  // Use primary color for footer background
+  const primaryColor = getColor('primary.main', '#4f46e5');
+  
+  // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background,
+    background: colors.background || primaryColor, // Fallback to primary if not set
     border: colors.border,
     text: colors.text,
     heading: colors.heading,
-    linkHover: colors.linkHover || getColor('primary.main', '#4f46e5'),
+    linkHover: colors.linkHover || primaryColor,
   };
 
   const currentYear = new Date().getFullYear();
   const finalCopyrightText = copyrightText.replace('{YEAR}', currentYear.toString());
 
   return (
-    <footer id="contact" className="border-t relative overflow-hidden" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
-      {/* Decorative gradient orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-      
-      <div className="container mx-auto px-6 py-12 relative z-10">
+    <footer id="contact" className="border-t" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
+      <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
           
           <div className="sm:col-span-2 lg:col-span-4">
@@ -72,16 +71,14 @@ const Footer: React.FC<FooterData> = ({
 
           {linkColumns.map((column, index) => (
             <div key={index} className="lg:col-span-2">
-              <h4 className="font-semibold text-site-heading mb-4 font-header">{column.title}</h4>
+              <h4 className="font-semibold text-site-heading mb-4 font-header" style={{ color: actualColors.heading }}>{column.title}</h4>
               <ul className="space-y-2 font-body">
                 {column.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <a 
                       href={link.href} 
-                      className="transition-colors duration-300 text-sm" 
+                      className="text-sm" 
                       style={{ color: actualColors.text }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = actualColors.linkHover}
-                      onMouseLeave={(e) => e.currentTarget.style.color = actualColors.text}
                     >
                       {link.text}
                     </a>
@@ -103,10 +100,8 @@ const Footer: React.FC<FooterData> = ({
                 href={link.href} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-white/10"
+                className="p-2 rounded-lg"
                 style={{ color: actualColors.text }}
-                onMouseEnter={(e) => e.currentTarget.style.color = actualColors.linkHover}
-                onMouseLeave={(e) => e.currentTarget.style.color = actualColors.text}
                 title={link.platform}
               >
                 {socialIconComponents[link.platform]}

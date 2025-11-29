@@ -1,6 +1,8 @@
 import React from 'react';
 import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize, AnimationType } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import { useDesignTokens } from '../hooks/useDesignTokens';
+import { hexToRgba, toHex } from '../utils/colorUtils';
 import { 
     // Base icons
     Code, Paintbrush2, Megaphone, BarChart, Scissors, Camera, ArrowRight,
@@ -188,6 +190,7 @@ interface ServiceCardProps {
   textColor: string;
   borderRadius: BorderRadiusSize;
   borderColor: string;
+  cardBackground: string;
   variant: 'cards' | 'grid' | 'minimal';
   index: number;
   animationType?: AnimationType;
@@ -203,6 +206,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   textColor, 
   borderRadius, 
   borderColor, 
+  cardBackground,
   variant,
   animationType = 'fade-in-up',
   enableAnimation = true,
@@ -215,15 +219,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'cards') {
         return (
             <div 
-                className={`bg-white/5 p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} ${animationClass} relative overflow-hidden`}
-                style={{ borderColor: borderColor, animationDelay: delay }}
+                className={`p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} ${animationClass} relative overflow-hidden`}
+                style={{ backgroundColor: cardBackground, borderColor: borderColor, animationDelay: delay }}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 <div className="relative z-10 flex justify-center mb-6">
                     <div 
-                        className="p-4 inline-flex rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 shadow-lg" 
-                        style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
+                        className="p-4 inline-flex rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3" 
+                        style={{ backgroundColor: hexToRgba(accentColor, 0.125), color: accentColor }}
                     >
                         {icon}
                     </div>
@@ -240,9 +244,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'grid') {
         return (
             <div 
-                className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl ${radiusClass} ${animationClass}`}
+                className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 ${radiusClass} ${animationClass}`}
                 style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.03)', 
+                    backgroundColor: cardBackground, 
                     borderLeft: `4px solid ${accentColor}`,
                     animationDelay: delay
                 }}
@@ -263,9 +267,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 3: MINIMAL LIST
     if (variant === 'minimal') {
         return (
-            <div className={`flex gap-6 p-6 transition-all duration-300 hover:bg-white/5 ${radiusClass} ${animationClass}`} style={{ animationDelay: delay }}>
+            <div className={`flex gap-6 p-6 transition-all duration-300 ${radiusClass} ${animationClass}`} style={{ backgroundColor: cardBackground, animationDelay: delay }}>
                 <div className="flex-shrink-0 mt-1">
-                    <div className="w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: `${accentColor}15`, color: accentColor }}>
+                    <div className="w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
                         {React.cloneElement(icon as React.ReactElement, { size: 20 })}
                     </div>
                 </div>
@@ -300,16 +304,20 @@ const Services: React.FC<ServicesProps> = ({
     animationType = 'fade-in-up',
     enableCardAnimation = true
 }) => {
+  // Get design tokens for primary color - use as fallback with 75% opacity
+  const { colors: tokenColors } = useDesignTokens();
+  const sectionBackground = colors.background || hexToRgba(tokenColors.primary, 0.75);
+  
   return (
-    <section id="services" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+    <section id="services" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: sectionBackground }}>
         <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
             {servicesVariant === 'grid' && (
-                <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: `${colors.accent}20`, color: colors.accent }}>
+                <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}>
                     Our Services
                 </span>
             )}
             <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors.heading }}>{title}</h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto opacity-90`} style={{ color: colors.text }}>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors.description || colors.text }}>
                 {description}
             </p>
         </div>
@@ -329,6 +337,7 @@ const Services: React.FC<ServicesProps> = ({
                     textColor={colors.text}
                     borderRadius={borderRadius}
                     borderColor={colors.borderColor}
+                    cardBackground={colors.cardBackground || 'rgba(255,255,255,0.05)'}
                     variant={servicesVariant}
                     animationType={animationType}
                     enableAnimation={enableCardAnimation}

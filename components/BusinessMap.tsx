@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { MapData, BorderRadiusSize } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 interface BusinessMapProps extends MapData {
     borderRadius?: BorderRadiusSize;
@@ -66,9 +67,25 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     height = 400,
     borderRadius = 'none',
 }) => {
+    // Get design tokens with primary color
+    const { getColor } = useDesignTokens();
+    const primaryColor = getColor('primary.main', '#4f46e5');
+    
+    // Use component colors - fallback to primary color only if not set
+    const mapColors = {
+        ...colors,
+        heading: colors.heading || primaryColor,
+        cardBackground: colors.cardBackground || primaryColor,
+    };
+    
+    // Only load Google Maps if we have a valid API key
+    const hasValidApiKey = apiKey && apiKey.trim().length > 0;
+    
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: apiKey || '',
+        googleMapsApiKey: hasValidApiKey ? apiKey : 'PLACEHOLDER_KEY',
+        // Prevent loading if no API key
+        ...(hasValidApiKey ? {} : { preventLoad: true }),
     });
 
     const center = useMemo(() => ({ lat: lat || 40.7128, lng: lng || -74.0060 }), [lat, lng]);
@@ -125,6 +142,29 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     }), [mapVariant]);
 
     const renderContent = () => {
+        // Show placeholder if no API key is provided
+        if (!hasValidApiKey) {
+            return (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" style={{ minHeight: `${height}px` }}>
+                    <div className="text-center p-8">
+                        <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                        <h3 className="text-lg font-semibold text-gray-700 mb-2">{title || 'Location'}</h3>
+                        <p className="text-sm text-gray-500 mb-4">{address}</p>
+                        <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium transition-all hover:scale-105"
+                            style={{ backgroundColor: primaryColor }}
+                        >
+                            <Navigation className="w-4 h-4" />
+                            View on Google Maps
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+        
         if (!isLoaded) {
             return (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -141,12 +181,12 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-0" style={{ height: `${height}px` }}>
                     {/* Info Card - Left Side */}
-                    <div className="lg:col-span-1 p-8 flex flex-col justify-center" style={{ backgroundColor: colors.cardBackground || colors.background }}>
+                    <div className="lg:col-span-1 p-8 flex flex-col justify-center" style={{ backgroundColor: mapColors.cardBackground }}>
                         <div className="mb-6">
                             <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors.accent + '20' }}>
                                 <MapPin className="w-6 h-6" style={{ color: colors.accent }} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-2" style={{ color: colors.heading }}>{title}</h3>
+                            <h3 className="text-2xl font-bold mb-2" style={{ color: mapColors.heading }}>{title}</h3>
                             <p className="text-sm mb-6" style={{ color: colors.text }}>{description}</p>
                         </div>
 
@@ -196,7 +236,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     </GoogleMap>
                     
                     {/* Floating Badge */}
-                    <div className="absolute bottom-6 left-6 bg-white shadow-2xl rounded-2xl p-4 max-w-xs backdrop-blur-sm border border-gray-200">
+                    <div className="absolute bottom-6 left-6 bg-white rounded-2xl p-4 max-w-xs backdrop-blur-sm border border-gray-200">
                         <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: colors.accent + '20' }}>
                                 <MapPin className="w-5 h-5" style={{ color: colors.accent }} />
@@ -225,7 +265,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     </GoogleMap>
                     
                     {/* Tech Overlay Card */}
-                    <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-md rounded-xl p-6 max-w-sm shadow-2xl border border-gray-700">
+                    <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-md rounded-xl p-6 max-w-sm border border-gray-700">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.accent }}></div>
                             <span className="text-xs font-mono uppercase tracking-wider text-gray-400">Location</span>
@@ -300,7 +340,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     <div className="text-center mb-12">
                         <h2 
                             className={getFontSize(titleFontSize || 'md', 'title')}
-                            style={{ color: colors.heading }}
+                            style={{ color: mapColors.heading }}
                         >
                             {title}
                         </h2>
@@ -314,7 +354,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                 )}
 
                 {/* Map Container */}
-                <div className={`shadow-2xl ${getRadius(borderRadius)} overflow-hidden`}>
+                <div className={`${getRadius(borderRadius)} overflow-hidden`}>
                    {renderContent()}
                 </div>
             </div>

@@ -42,7 +42,7 @@ const animationDuration: Record<string, string> = {
 };
 
 const TrustedBy: React.FC<TrustedByData> = ({ 
-  title = "Trusted by innovative teams worldwide",
+  title = "",
   logos = [],
   paddingY = 'sm',
   paddingX = 'md',

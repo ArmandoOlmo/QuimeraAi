@@ -4,21 +4,21 @@ import { checkComponentAccessibility, A11yReport, A11yIssue } from '../../../uti
 import { AlertCircle, AlertTriangle, Info, CheckCircle, Play, Download, Shield } from 'lucide-react';
 
 const AccessibilityChecker: React.FC = () => {
-    const { currentProject, data } = useEditor();
+    const { activeProject, data } = useEditor();
     const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
     const [reports, setReports] = useState<A11yReport[]>([]);
     const [isScanning, setIsScanning] = useState(false);
 
     // Run accessibility scan on all components
     const runFullScan = () => {
-        if (!currentProject || !data) return;
+        if (!activeProject || !data) return;
 
         setIsScanning(true);
         const newReports: A11yReport[] = [];
 
         // Scan visible components
-        currentProject.componentOrder.forEach((componentId) => {
-            if (currentProject.sectionVisibility[componentId]) {
+        activeProject.componentOrder.forEach((componentId) => {
+            if (activeProject.sectionVisibility[componentId]) {
                 const componentData = data[componentId];
                 const report = checkComponentAccessibility(
                     componentId,
@@ -87,7 +87,7 @@ const AccessibilityChecker: React.FC = () => {
 
     const exportReport = () => {
         const reportData = {
-            projectName: currentProject?.name || 'Unknown',
+            projectName: activeProject?.name || 'Unknown',
             timestamp: new Date().toISOString(),
             stats,
             reports,
@@ -124,7 +124,7 @@ const AccessibilityChecker: React.FC = () => {
                     )}
                     <button
                         onClick={runFullScan}
-                        disabled={isScanning || !currentProject}
+                        disabled={isScanning || !activeProject}
                         className="px-3 py-2 text-editor-accent font-bold hover:text-editor-accent/80 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Play size={20} />
@@ -134,7 +134,7 @@ const AccessibilityChecker: React.FC = () => {
             </div>
 
             {/* No Project Warning */}
-            {!currentProject && (
+            {!activeProject && (
                 <div className="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg flex items-center gap-3">
                     <AlertTriangle className="text-yellow-400" size={24} />
                     <div>
@@ -315,7 +315,7 @@ const AccessibilityChecker: React.FC = () => {
             )}
 
             {/* Empty State */}
-            {reports.length === 0 && currentProject && (
+            {reports.length === 0 && activeProject && (
                 <div className="text-center py-16">
                     <Shield size={64} className="mx-auto text-editor-text-secondary opacity-50 mb-4" />
                     <h3 className="text-xl font-bold text-editor-text-primary mb-2">

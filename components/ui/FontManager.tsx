@@ -55,24 +55,41 @@ const FontManager: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            {renderSelect("Headings Font", 'fontFamilyHeader')}
-            {renderSelect("Body Text Font", 'fontFamilyBody')}
-            {renderSelect("Buttons & UI Font", 'fontFamilyButton')}
-            
-            <hr className="border-editor-border/50 my-4" />
-            
-            <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
-                    Page Background Color
+            {/* Page Background - Most prominent control */}
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border-2 border-editor-accent/50 shadow-lg">
+                <label className="block text-sm font-bold text-editor-accent mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Fondo General del Sitio Web
                 </label>
                 <ColorControl 
                     label="" 
                     value={theme.pageBackground || '#ffffff'} 
                     onChange={handleColorChange}
                 />
-                <p className="text-xs text-editor-text-secondary mt-1">
-                    Global background color for the entire page
-                </p>
+                <div className="mt-3 p-2 bg-editor-bg/50 rounded border border-editor-border">
+                    <p className="text-xs text-editor-text-primary font-medium mb-1">
+                        ✨ Background Color / Color de Fondo
+                    </p>
+                    <p className="text-xs text-editor-text-secondary italic">
+                        Este color se aplica a TODA la página web (body completo), no solo a secciones individuales.
+                    </p>
+                </div>
+            </div>
+            
+            <hr className="border-editor-border/50 my-4" />
+            
+            {/* Typography Controls */}
+            <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider">
+                    Fuentes / Fonts
+                </label>
+                {renderSelect("Headings Font", 'fontFamilyHeader')}
+                {renderSelect("Body Text Font", 'fontFamilyBody')}
+                {renderSelect("Buttons & UI Font", 'fontFamilyButton')}
             </div>
         </div>
     );

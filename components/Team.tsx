@@ -4,6 +4,8 @@ import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant, Animati
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { useDesignTokens } from '../hooks/useDesignTokens';
+import { hexToRgba } from '../utils/colorUtils';
 
 interface TeamMemberCardProps {
   imageUrl: string;
@@ -15,6 +17,7 @@ interface TeamMemberCardProps {
   cardBackground?: string;
   animationType?: AnimationType;
   enableAnimation?: boolean;
+  photoBorderColor?: string;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -52,9 +55,13 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   accentColor = '#4f46e5',
   cardBackground = 'transparent',
   animationType = 'fade-in-up',
-  enableAnimation = true
+  enableAnimation = true,
+  photoBorderColor
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
+  
+  // Use photoBorderColor if provided, otherwise fall back to accentColor
+  const borderColor = photoBorderColor || accentColor;
   
   // Classic variant - simple circular images with text below
   if (variant === 'classic') {
@@ -68,8 +75,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           <img 
             src={imageUrl} 
             alt={name} 
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 shadow-lg transform transition-transform duration-300 hover:scale-105" 
-            style={{ borderColor: accentColor }}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 transform transition-transform duration-300 hover:scale-105" 
+            style={{ borderColor: borderColor }}
             key={imageUrl} 
           />
         )}
@@ -83,7 +90,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'cards') {
     return (
       <div 
-        className={`rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${animationClass}`}
+        className={`rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 ${animationClass}`}
         style={{ 
           animationDelay: delay,
           backgroundColor: cardBackground
@@ -152,7 +159,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'overlay') {
     return (
       <div 
-        className={`group relative overflow-hidden rounded-2xl shadow-xl cursor-pointer ${animationClass}`}
+        className={`group relative overflow-hidden rounded-2xl cursor-pointer ${animationClass}`}
         style={{ animationDelay: delay }}
       >
         <div className="aspect-[3/4] relative">
@@ -217,6 +224,12 @@ const Team: React.FC<TeamProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true
 }) => {
+  // Get design tokens for secondary color
+  const { colors: tokenColors } = useDesignTokens();
+  const secondaryColor = tokenColors.secondary;
+  // Use 50% of secondary color for photo border
+  const photoBorderColor = hexToRgba(secondaryColor, 0.5);
+  
   // Grid columns based on variant
   const gridClasses = {
     classic: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12',
@@ -229,7 +242,7 @@ const Team: React.FC<TeamProps> = ({
     <section 
       id="team" 
       className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
-      style={{ backgroundColor: colors.background }}
+      style={{ backgroundColor: secondaryColor }}
     >
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -241,7 +254,7 @@ const Team: React.FC<TeamProps> = ({
           </h2>
           <p 
             className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} 
-            style={{ color: colors.text }}
+            style={{ color: colors.description || colors.text }}
           >
             {description}
           </p>
@@ -259,6 +272,7 @@ const Team: React.FC<TeamProps> = ({
                 cardBackground={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
+                photoBorderColor={photoBorderColor}
             />
           ))}
         </div>

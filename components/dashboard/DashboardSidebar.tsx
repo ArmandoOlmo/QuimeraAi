@@ -40,7 +40,7 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage } = useEditor();
+  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage, sidebarOrder, setSidebarOrder } = useEditor();
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
@@ -58,29 +58,33 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets' },
   ];
 
-  // Load order from localStorage or use default
+  // Helper function to reorder items based on saved order
+  const getOrderedItems = (orderIds: string[]): NavItemData[] => {
+    if (orderIds.length === 0) return defaultNavItems;
+    
+    const ordered = orderIds
+      .map((id: string) => defaultNavItems.find(item => item.id === id))
+      .filter((item: NavItemData | undefined): item is NavItemData => item !== undefined);
+    
+    // Add any new items that weren't in the saved order
+    const newItems = defaultNavItems.filter(
+      item => !orderIds.includes(item.id)
+    );
+    
+    return [...ordered, ...newItems];
+  };
+
+  // Load order from context (synced from Firebase) or use default
   const [navItems, setNavItems] = useState<NavItemData[]>(() => {
-    const savedOrder = localStorage.getItem('sidebar-nav-order');
-    if (savedOrder) {
-      try {
-        const orderIds = JSON.parse(savedOrder);
-        // Reorder items based on saved order
-        const ordered = orderIds
-          .map((id: string) => defaultNavItems.find(item => item.id === id))
-          .filter((item: NavItemData | undefined): item is NavItemData => item !== undefined);
-        
-        // Add any new items that weren't in the saved order
-        const newItems = defaultNavItems.filter(
-          item => !orderIds.includes(item.id)
-        );
-        
-        return [...ordered, ...newItems];
-      } catch (e) {
-        return defaultNavItems;
-      }
-    }
-    return defaultNavItems;
+    return getOrderedItems(sidebarOrder);
   });
+
+  // Sync navItems when sidebarOrder changes (e.g., loaded from Firebase)
+  useEffect(() => {
+    if (sidebarOrder.length > 0) {
+      setNavItems(getOrderedItems(sidebarOrder));
+    }
+  }, [sidebarOrder]);
 
   // Update labels when language changes
   useEffect(() => {
@@ -90,10 +94,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }));
   }, [t]);
 
-  // Save order to localStorage
+  // Save order to context (which syncs to localStorage and Firebase)
   const saveOrder = (items: NavItemData[]) => {
     const orderIds = items.map(item => item.id);
-    localStorage.setItem('sidebar-nav-order', JSON.stringify(orderIds));
+    setSidebarOrder(orderIds);
   };
 
   const sensors = useSensors(

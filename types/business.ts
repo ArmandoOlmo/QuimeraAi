@@ -103,12 +103,25 @@ export interface Tenant {
     };
 }
 
+// User Preferences (synced across devices)
+export interface UserPreferences {
+    themeMode?: 'light' | 'dark' | 'black';
+    sidebarOrder?: string[];
+    language?: string;
+}
+
 export interface UserDocument {
     id: string;
     name: string;
     email: string;
     photoURL: string;
     role?: UserRole;
+    
+    // User Preferences (synced across devices via Firebase)
+    preferences?: UserPreferences;
+    
+    // Onboarding State (persisted to not lose progress)
+    onboardingState?: OnboardingState;
     
     // Tenant Relations
     tenantId?: string;

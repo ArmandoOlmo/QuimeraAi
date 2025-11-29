@@ -69,39 +69,12 @@ const pageData: PageData = {
     secondaryButtonStyle: 'solid',
     secondaryButtonOpacity: 100,
     showBadge: true,
-    badgeText: '🚀 AI-Powered Generation 2.0',
+    badgeText: '✨ Welcome to Quimera.ai',
     badgeIcon: 'sparkles',
-    showStats: true,
-    stats: [
-      { value: '50K+', label: 'Images Created' },
-      { value: '99.9%', label: 'Uptime' },
-      { value: '<2s', label: 'Generation Time' }
-    ],
     badgeColor: '#4f46e5',
     badgeBackgroundColor: '#4f46e515',
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
-  },
-  trustedBy: {
-    title: "Trusted by innovative teams worldwide",
-    logos: [
-      { name: 'TechCorp', imageUrl: 'https://picsum.photos/seed/techcorp/200/60' },
-      { name: 'DesignPro', imageUrl: 'https://picsum.photos/seed/designpro/200/60' },
-      { name: 'StartupX', imageUrl: 'https://picsum.photos/seed/startupx/200/60' },
-      { name: 'InnovateLabs', imageUrl: 'https://picsum.photos/seed/innovate/200/60' },
-      { name: 'CreativeStudio', imageUrl: 'https://picsum.photos/seed/creative/200/60' },
-      { name: 'DigitalWorks', imageUrl: 'https://picsum.photos/seed/digital/200/60' },
-    ],
-    paddingY: 'sm',
-    paddingX: 'md',
-    colors: {
-      background: '#0f172a',
-      text: '#94a3b8',
-      borderColor: 'rgba(255,255,255,0.05)'
-    },
-    showBorder: true,
-    logoStyle: 'grayscale',
-    animationSpeed: 'normal'
   },
   features: {
     featuresVariant: 'bento-premium',
@@ -137,6 +110,8 @@ const pageData: PageData = {
       borderColor: '#334155',
       text: '#94a3b8',
       heading: '#F9FAFB',
+      description: '#94a3b8',
+      cardBackground: '#1e293b',
     },
   },
   testimonials: {
@@ -151,8 +126,6 @@ const pageData: PageData = {
     cardShadow: 'lg',
     borderStyle: 'solid',
     cardPadding: 32,
-    avatarBorderWidth: 2,
-    avatarBorderColor: '#4f46e5',
     animationType: 'fade-in-up',
     enableCardAnimation: true,
     items: [
@@ -160,19 +133,16 @@ const pageData: PageData = {
         quote: "Quimera.ai has completely transformed my workflow. I can now visualize concepts in seconds that used to take hours. It's an indispensable tool for any creative professional.",
         name: 'Alex Johnson',
         title: 'Lead Designer, Creative Inc.',
-        avatar: 'https://picsum.photos/seed/alex/100/100',
       },
       {
         quote: "The quality of the images generated is simply astounding. I've used other AI tools, but nothing comes close to the detail and artistic flair of this platform.",
         name: 'Samantha Lee',
         title: 'Digital Artist & Illustrator',
-        avatar: 'https://picsum.photos/seed/samantha/100/100',
       },
       {
         quote: "As a marketer, generating compelling visuals for campaigns is crucial. This tool gives me an endless supply of unique, high-quality images that make our brand stand out.",
         name: 'Michael Chen',
         title: 'Marketing Director, TechSavvy',
-        avatar: 'https://picsum.photos/seed/michael/100/100',
       },
     ],
     colors: {
@@ -187,6 +157,8 @@ const pageData: PageData = {
   slideshow: {
     slideshowVariant: 'classic',
     title: "Our Work in Pixels",
+    showTitle: true,
+    fullWidth: false,
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -201,6 +173,7 @@ const pageData: PageData = {
     kenBurnsIntensity: 'medium',
     thumbnailSize: 80,
     showCaptions: false,
+    slideHeight: 600,
     items: [
       { imageUrl: 'https://picsum.photos/seed/slide1/1200/800', altText: 'AI generated cityscape at night', caption: 'Modern Cityscapes' },
       { imageUrl: 'https://picsum.photos/seed/slide2/1200/800', altText: 'AI generated abstract art', caption: 'Abstract Creations' },
@@ -351,6 +324,10 @@ const pageData: PageData = {
       heading: '#F9FAFB',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      cardBackground: 'rgba(79, 70, 229, 0.75)',
+      inputBackground: '#111827',
+      inputText: '#ffffff',
+      inputBorder: '#374151',
     },
   },
   cta: {
@@ -660,7 +637,20 @@ const theme: ThemeData = {
     fontFamilyHeader: 'poppins',
     fontFamilyBody: 'mulish',
     fontFamilyButton: 'poppins',
-    pageBackground: '#ffffff', // Default to white page background
+    pageBackground: '#0f172a',
+    globalColors: {
+        primary: '#4f46e5',
+        secondary: '#10b981',
+        accent: '#f59e0b',
+        background: '#0f172a',
+        surface: '#1e293b',
+        text: '#e2e8f0',
+        textMuted: '#94a3b8',
+        heading: '#f8fafc',
+        border: '#334155',
+        success: '#10b981',
+        error: '#ef4444'
+    }
 };
 
 const brandIdentity: BrandIdentity = {
@@ -672,7 +662,7 @@ const brandIdentity: BrandIdentity = {
     language: 'English',
 };
 
-const componentOrder: PageSection[] = ['typography', 'header', 'hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
+const componentOrder: PageSection[] = ['hero', 'typography', 'header', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
 
 const sectionVisibility = componentOrder.reduce((acc, section) => {
     (acc as any)[section] = true;

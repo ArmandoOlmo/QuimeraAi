@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
+
+// Use primary color for section background
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -57,15 +60,19 @@ const Pricing: React.FC<PricingProps> = ({
     descriptionFontSize = 'md' 
 }) => {
   // Get design tokens with fallback to component colors
-  const { getColor } = useDesignTokens();
+  const { getColor, colors: tokenColors } = useDesignTokens();
+  
+  // Use primary color for section background
+  const primaryColor = tokenColors.primary;
   
   // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
-    background: colors.background,
+    background: colors.background || primaryColor, // Fallback to primary if not set
     accent: colors.accent || getColor('primary.main', '#4f46e5'),
     borderColor: colors.borderColor || '#374151',
     text: colors.text,
     heading: colors.heading,
+    description: colors.description || colors.text,
     cardBackground: colors.cardBackground || '#1f2937',
     buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
     buttonText: colors.buttonText || '#ffffff',
@@ -74,14 +81,30 @@ const Pricing: React.FC<PricingProps> = ({
     gradientEnd: colors.gradientEnd || '#10b981',
   };
 
+  // Calculate contrast-safe colors based on backgrounds
+  const safeColors = useMemo(() => {
+    const bgColor = actualColors.background || '#ffffff';
+    const cardBg = actualColors.cardBackground || '#1f2937';
+    
+    return {
+      // Section-level colors
+      heading: ensureTextContrast(bgColor, actualColors.heading),
+      text: ensureTextContrast(bgColor, actualColors.text),
+      description: ensureTextContrast(bgColor, actualColors.description),
+      // Card-level colors
+      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
+      cardText: ensureTextContrast(cardBg, actualColors.text),
+    };
+  }, [actualColors]);
+
   // Classic Variant (Original Design)
   if (pricingVariant === 'classic') {
     return (
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
         <div className="container mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
             </div>
@@ -94,7 +117,7 @@ const Pricing: React.FC<PricingProps> = ({
                     p-8 border relative flex flex-col h-full
                     transform transition-all duration-300 hover:scale-105
                     ${borderRadiusClasses[cardBorderRadius]}
-                    ${tier.featured ? 'border-2 shadow-2xl' : 'border'}
+                    ${tier.featured ? 'border-2' : 'border'}
                   `}
                   style={{ 
                       backgroundColor: actualColors.cardBackground,
@@ -113,28 +136,28 @@ const Pricing: React.FC<PricingProps> = ({
                   )}
                   
                   <div className="flex-grow">
-                      <h3 className="text-2xl font-bold text-site-heading text-center mb-2 font-header" style={{ color: actualColors.heading }}>
+                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
                           {tier.name}
                       </h3>
                       
                       {tier.description && (
-                          <p className="text-center text-sm font-body mb-4" style={{ color: actualColors.text, opacity: 0.8 }}>
+                          <p className="text-center text-sm font-body mb-4" style={{ color: safeColors.cardText, opacity: 0.8 }}>
                               {tier.description}
                           </p>
                       )}
                       
                       <div className="text-center mb-8">
-                          <span className="text-5xl font-extrabold text-site-heading font-header" style={{ color: actualColors.heading }}>
+                          <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.cardHeading }}>
                               {tier.price}
                           </span>
-                          <span className="text-lg font-header ml-1" style={{ color: actualColors.text }}>
+                          <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
                               {tier.frequency}
                           </span>
                       </div>
                       
                       <ul className="space-y-4 mb-8">
                           {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: actualColors.text }}>
+                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                                 <CheckCircle 
                                     size={20} 
                                     className="mr-3 flex-shrink-0" 
@@ -151,7 +174,7 @@ const Pricing: React.FC<PricingProps> = ({
                     target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
                     rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className={`
-                      w-full text-center block font-bold py-3 px-8 shadow-lg 
+                      w-full text-center block font-bold py-3 px-8
                       transition-all duration-300 transform hover:scale-105 font-button
                       ${borderRadiusClasses[buttonBorderRadius]}
                     `}
@@ -188,7 +211,7 @@ const Pricing: React.FC<PricingProps> = ({
               >
                 {title}
               </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
             </div>
@@ -206,7 +229,7 @@ const Pricing: React.FC<PricingProps> = ({
                   style={{ 
                       backgroundColor: actualColors.cardBackground,
                       backgroundImage: tier.featured 
-                        ? `linear-gradient(135deg, ${actualColors.gradientStart}15, ${actualColors.gradientEnd}15)`
+                        ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.08)}, ${hexToRgba(actualColors.gradientEnd, 0.08)})`
                         : 'none'
                   }}
                 >
@@ -226,7 +249,7 @@ const Pricing: React.FC<PricingProps> = ({
                   {tier.featured && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                       <div 
-                        className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-lg"
+                        className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider"
                         style={{ 
                           backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
                         }}
@@ -238,12 +261,12 @@ const Pricing: React.FC<PricingProps> = ({
                   )}
                   
                   <div className="flex-grow relative z-10">
-                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: actualColors.heading }}>
+                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
                           {tier.name}
                       </h3>
                       
                       {tier.description && (
-                          <p className="text-center text-sm font-body mb-6" style={{ color: actualColors.text, opacity: 0.8 }}>
+                          <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.8 }}>
                               {tier.description}
                           </p>
                       )}
@@ -256,7 +279,7 @@ const Pricing: React.FC<PricingProps> = ({
                             >
                                 {tier.price}
                             </span>
-                            <span className="text-lg font-header ml-1" style={{ color: actualColors.text }}>
+                            <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
                                 {tier.frequency}
                             </span>
                           </div>
@@ -264,7 +287,7 @@ const Pricing: React.FC<PricingProps> = ({
                       
                       <ul className="space-y-3 mb-8">
                           {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: actualColors.text }}>
+                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                                 <div 
                                   className="mr-3 flex-shrink-0 rounded-full p-1"
                                   style={{ 
@@ -284,8 +307,8 @@ const Pricing: React.FC<PricingProps> = ({
                     target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
                     rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className={`
-                      relative z-10 w-full text-center block font-bold py-3 px-8 shadow-xl
-                      transition-all duration-300 transform hover:scale-105 hover:shadow-2xl font-button
+                      relative z-10 w-full text-center block font-bold py-3 px-8
+                      transition-all duration-300 transform hover:scale-105 font-button
                       ${borderRadiusClasses[buttonBorderRadius]}
                     `}
                     style={{ 
@@ -318,10 +341,10 @@ const Pricing: React.FC<PricingProps> = ({
 
         <div className="container mx-auto relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: actualColors.heading }}>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>
                 {title}
               </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
             </div>
@@ -336,13 +359,9 @@ const Pricing: React.FC<PricingProps> = ({
                     border border-white/10
                     transform transition-all duration-500 hover:scale-105
                     ${borderRadiusClasses[cardBorderRadius]}
-                    ${tier.featured ? 'shadow-2xl' : 'shadow-lg'}
                   `}
                   style={{ 
-                      backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                      boxShadow: tier.featured 
-                        ? `0 8px 32px 0 ${actualColors.accent}40, inset 0 0 0 1px rgba(255,255,255,0.1)`
-                        : '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                      backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)'
                   }}
                 >
                   {tier.featured && (
@@ -350,7 +369,7 @@ const Pricing: React.FC<PricingProps> = ({
                       <div 
                         className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20"
                         style={{ 
-                          backgroundColor: `${actualColors.accent}80`
+                          backgroundColor: hexToRgba(actualColors.accent, 0.5)
                         }}
                       >
                         <Zap size={14} />
@@ -360,33 +379,33 @@ const Pricing: React.FC<PricingProps> = ({
                   )}
                   
                   <div className="flex-grow">
-                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: actualColors.heading }}>
+                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
                           {tier.name}
                       </h3>
                       
                       {tier.description && (
-                          <p className="text-center text-sm font-body mb-6" style={{ color: actualColors.text, opacity: 0.9 }}>
+                          <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.9 }}>
                               {tier.description}
                           </p>
                       )}
                       
                       <div className="text-center mb-8">
-                          <span className="text-6xl font-black font-header" style={{ color: actualColors.heading }}>
+                          <span className="text-6xl font-black font-header" style={{ color: safeColors.cardHeading }}>
                               {tier.price}
                           </span>
-                          <span className="text-lg font-header ml-1 block mt-1" style={{ color: actualColors.text }}>
+                          <span className="text-lg font-header ml-1 block mt-1" style={{ color: safeColors.cardText }}>
                               {tier.frequency}
                           </span>
                       </div>
                       
                       <ul className="space-y-3 mb-8">
                           {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: actualColors.text }}>
+                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                                 <div 
                                   className="mr-3 mt-0.5 flex-shrink-0 rounded-full p-1 backdrop-blur-sm"
                                   style={{ 
-                                    backgroundColor: `${actualColors.checkmarkColor}30`,
-                                    border: `1px solid ${actualColors.checkmarkColor}60`
+                                    backgroundColor: hexToRgba(actualColors.checkmarkColor, 0.19),
+                                    border: `1px solid ${hexToRgba(actualColors.checkmarkColor, 0.38)}`
                                   }}
                                 >
                                   <Check size={12} style={{ color: actualColors.checkmarkColor }} />
@@ -409,10 +428,9 @@ const Pricing: React.FC<PricingProps> = ({
                     `}
                     style={{ 
                         backgroundColor: tier.featured 
-                          ? `${actualColors.accent}90`
-                          : `${actualColors.buttonBackground}70`,
-                        color: actualColors.buttonText,
-                        boxShadow: `0 4px 16px ${actualColors.accent}30`
+                          ? hexToRgba(actualColors.accent, 0.56)
+                          : hexToRgba(actualColors.buttonBackground, 0.44),
+                        color: actualColors.buttonText
                      }}
                   >
                     {tier.buttonText}
@@ -431,10 +449,10 @@ const Pricing: React.FC<PricingProps> = ({
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
         <div className="container mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-20">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: actualColors.heading }}>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading }}>
                 {title}
               </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
             </div>
@@ -465,22 +483,22 @@ const Pricing: React.FC<PricingProps> = ({
                   )}
                   
                   <div className="flex-grow">
-                      <h3 className="text-lg font-semibold mb-1 font-header uppercase tracking-wide" style={{ color: actualColors.heading }}>
+                      <h3 className="text-lg font-semibold mb-1 font-header uppercase tracking-wide" style={{ color: safeColors.cardHeading }}>
                           {tier.name}
                       </h3>
                       
                       {tier.description && (
-                          <p className="text-xs font-body mb-8 leading-relaxed" style={{ color: actualColors.text, opacity: 0.7 }}>
+                          <p className="text-xs font-body mb-8 leading-relaxed" style={{ color: safeColors.cardText, opacity: 0.7 }}>
                               {tier.description}
                           </p>
                       )}
                       
                       <div className="mb-10 pb-8 border-b" style={{ borderColor: actualColors.borderColor }}>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-5xl font-light font-header" style={{ color: actualColors.heading }}>
+                            <span className="text-5xl font-light font-header" style={{ color: safeColors.cardHeading }}>
                                 {tier.price}
                             </span>
-                            <span className="text-sm font-header" style={{ color: actualColors.text, opacity: 0.6 }}>
+                            <span className="text-sm font-header" style={{ color: safeColors.cardText, opacity: 0.6 }}>
                                 {tier.frequency}
                             </span>
                           </div>
@@ -488,7 +506,7 @@ const Pricing: React.FC<PricingProps> = ({
                       
                       <ul className="space-y-4 mb-10">
                           {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: actualColors.text }}>
+                              <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
                                 <span className="mr-3 mt-1 flex-shrink-0" style={{ color: actualColors.accent }}>—</span>
                                 <span>{feature}</span>
                               </li>
@@ -507,7 +525,7 @@ const Pricing: React.FC<PricingProps> = ({
                     style={{ 
                         backgroundColor: tier.featured ? actualColors.accent : 'transparent',
                         borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
-                        color: tier.featured ? actualColors.buttonText : actualColors.heading
+                        color: tier.featured ? actualColors.buttonText : safeColors.cardHeading
                      }}
                   >
                     {tier.buttonText}

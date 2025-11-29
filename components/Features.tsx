@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit, AnimationType } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -80,7 +81,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   
   return (
     <div 
-      className={`shadow-lg border transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
+      className={`border transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
       style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: cardBackground }}
     >
       {isPendingImage(imageUrl) ? (
@@ -101,8 +102,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         />
       )}
       <div className="p-8">
-        <h3 className="text-2xl font-bold text-site-heading mb-3 font-header">{title}</h3>
-        <p className="font-body" style={{ color: textColor }}>{description}</p>
+        <h3 className="text-2xl font-bold mb-3 font-header" style={{ color: textColor }}>{title}</h3>
+        <p className="font-body opacity-90" style={{ color: textColor }}>{description}</p>
       </div>
     </div>
   );
@@ -120,7 +121,7 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: 
             
             <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="mb-8">
-                    <div className={`mb-6 overflow-hidden rounded-2xl border shadow-2xl ${isWide ? 'aspect-[21/9]' : 'aspect-[4/3]'}`} style={{ borderColor: colors.borderColor }}>
+                    <div className={`mb-6 overflow-hidden rounded-2xl border ${isWide ? 'aspect-[21/9]' : 'aspect-[4/3]'}`} style={{ borderColor: colors.borderColor }}>
                         {isPendingImage(feature.imageUrl) ? (
                             <ImagePlaceholder 
                                 aspectRatio="4:3"
@@ -167,15 +168,36 @@ const Features: React.FC<FeaturesProps> = ({
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge component colors with Design Tokens (component colors take priority)
+  // Get primary color for background
+  const primaryColor = getColor('primary.main', '#4f46e5');
+  
+  // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background,
-    accent: colors.accent || getColor('primary.main', '#4f46e5'),
+    background: colors.background || primaryColor, // Fallback to primary if not set
+    accent: colors.accent || primaryColor,
     borderColor: colors.borderColor,
     text: colors.text,
     heading: colors.heading,
-    cardBackground: colors.cardBackground || getColor('primary.main', '#4f46e5'),
+    description: colors.description || colors.text,
+    cardBackground: colors.cardBackground || primaryColor,
   };
+  
+  // Calculate contrast-safe colors based on backgrounds
+  const safeColors = useMemo(() => {
+    const bgColor = actualColors.background || '#ffffff';
+    const cardBg = actualColors.cardBackground || bgColor;
+    
+    return {
+      // Section-level colors (for titles on section background)
+      heading: ensureTextContrast(bgColor, actualColors.heading),
+      text: ensureTextContrast(bgColor, actualColors.text),
+      // Description uses exact user-selected color without auto-contrast adjustment
+      description: actualColors.description,
+      // Card-level colors (for text inside cards)
+      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
+      cardText: ensureTextContrast(cardBg, actualColors.text),
+    };
+  }, [actualColors]);
   
   const gridColsClasses: Record<number, string> = {
       2: 'lg:grid-cols-2',
@@ -189,10 +211,10 @@ const Features: React.FC<FeaturesProps> = ({
         <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
             <div className="relative z-10">
                 <div className="mb-20 max-w-3xl">
-                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: actualColors.heading }}>
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: safeColors.heading }}>
                         {title}
                     </h2>
-                    <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: actualColors.text, borderColor: actualColors.accent }}>
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: safeColors.description, borderColor: actualColors.accent }}>
                         {description}
                     </p>
                 </div>
@@ -203,7 +225,7 @@ const Features: React.FC<FeaturesProps> = ({
                             key={index} 
                             feature={feature} 
                             index={index}
-                            colors={actualColors}
+                            colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
                             borderRadius={borderRadiusClasses[borderRadius]}
                         />
                     ))}
@@ -226,11 +248,11 @@ const Features: React.FC<FeaturesProps> = ({
                   <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
                   <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
                 </div>
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: actualColors.heading }}>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading }}>
                   {title}
                 </h2>
               </div>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md opacity-70 font-body`} style={{ color: actualColors.text }}>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
             </div>
@@ -247,7 +269,7 @@ const Features: React.FC<FeaturesProps> = ({
                       group relative overflow-hidden cursor-pointer
                       ${isLarge ? 'md:col-span-2 lg:row-span-2' : ''}
                       ${borderRadiusClasses[borderRadius]}
-                      transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl
+                      transition-all duration-500 hover:scale-[1.02]
                       border
                     `}
                     style={{ 
@@ -259,7 +281,7 @@ const Features: React.FC<FeaturesProps> = ({
                     <div 
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none"
                       style={{ 
-                        background: `linear-gradient(135deg, ${actualColors.accent}20, transparent 60%)`
+                        background: `linear-gradient(135deg, ${hexToRgba(actualColors.accent, 0.125)}, transparent 60%)`
                       }}
                     />
                     
@@ -292,14 +314,14 @@ const Features: React.FC<FeaturesProps> = ({
                       
                       <h3 
                         className={`${isLarge ? 'text-2xl md:text-3xl' : 'text-xl'} font-bold mb-3 group-hover:translate-x-2 transition-transform duration-300 font-header`}
-                        style={{ color: actualColors.heading }}
+                        style={{ color: safeColors.cardHeading }}
                       >
                         {feature.title}
                       </h3>
                       
                       <p 
                         className="leading-relaxed opacity-70 font-body"
-                        style={{ color: actualColors.text }}
+                        style={{ color: safeColors.cardText }}
                       >
                         {feature.description}
                       </p>
@@ -320,7 +342,7 @@ const Features: React.FC<FeaturesProps> = ({
                     <div 
                       className="absolute top-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                       style={{
-                        background: `linear-gradient(135deg, transparent 50%, ${actualColors.accent}15 50%)`
+                        background: `linear-gradient(135deg, transparent 50%, ${hexToRgba(actualColors.accent, 0.08)} 50%)`
                       }}
                     />
                   </div>
@@ -336,8 +358,8 @@ const Features: React.FC<FeaturesProps> = ({
     <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: actualColors.text }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
             {description}
           </p>
         </div>
@@ -350,7 +372,7 @@ const Features: React.FC<FeaturesProps> = ({
                 description={feature.description}
                 delay={getAnimationDelay(index)}
                 accentColor={actualColors.accent}
-                textColor={actualColors.text}
+                textColor={safeColors.cardText}
                 borderRadius={borderRadius}
                 borderColor={actualColors.borderColor}
                 cardBackground={actualColors.cardBackground}

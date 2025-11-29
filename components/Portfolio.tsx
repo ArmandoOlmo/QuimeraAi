@@ -4,6 +4,7 @@ import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize, AnimationType }
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -65,7 +66,7 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   
   return (
     <div 
-      className={`relative h-[400px] shadow-2xl border transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
+      className={`relative h-[400px] border transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
       style={{ animationDelay: delay, borderColor: borderColor }}
     >
       {/* Full Background Image */}
@@ -118,8 +119,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true
 }) => {
+  // Get design tokens for secondary color
+  const { colors: tokenColors } = useDesignTokens();
+  const secondaryColor = tokenColors.secondary;
+  
   return (
-    <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+    <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: secondaryColor }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>

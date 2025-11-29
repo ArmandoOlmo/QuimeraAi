@@ -159,21 +159,6 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </button>
           </div>
 
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 md:gap-16 pt-8 border-t border-white/10">
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400">10K+</div>
-              <div className="text-sm text-gray-500">{t('landing.statSites')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400">99.9%</div>
-              <div className="text-sm text-gray-500">{t('landing.statUptime')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400">&lt;30s</div>
-              <div className="text-sm text-gray-500">{t('landing.statTime')}</div>
-            </div>
-          </div>
         </div>
       </section>
 

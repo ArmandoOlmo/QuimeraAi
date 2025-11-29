@@ -3,7 +3,8 @@ import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, Animati
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
-import { isLightColor } from '../utils/colorUtils';
+import { isLightColor, hexToRgba } from '../utils/colorUtils';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 import { 
     Star, Award, ChefHat,
     // Development & Technology
@@ -63,15 +64,6 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   md: 'rounded-md',
   xl: 'rounded-xl',
   full: 'rounded-3xl',
-};
-
-// Helper function to convert hex color to rgba with opacity
-const hexToRgba = (hex: string, opacity: number): string => {
-    const cleanHex = hex.replace('#', '');
-    const r = parseInt(cleanHex.substring(0, 2), 16);
-    const g = parseInt(cleanHex.substring(2, 4), 16);
-    const b = parseInt(cleanHex.substring(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
 // Helper function to check if background is light/white
@@ -231,13 +223,13 @@ const ClassicMenuCard: React.FC<{
     
     // Price is 30% opacity of the primary color
     const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // On light backgrounds, use primary color for title and description
-    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    // Use cardTitleColor if defined, otherwise fallback to previous logic
+    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
         <div 
-            className={`group bg-white/5 border overflow-hidden transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl ${animationClass} ${borderRadius}`}
+            className={`group bg-white/5 border overflow-hidden transform hover:-translate-y-2 transition-all duration-300 ${animationClass} ${borderRadius}`}
             style={{ 
                 borderColor: colors.borderColor,
                 backgroundColor: cardBg,
@@ -305,13 +297,13 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
     
     // Price is 30% opacity of the primary color
     const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // On light backgrounds, use primary color for title and description
-    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    // Use cardTitleColor if defined, otherwise fallback to previous logic
+    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
         <div 
-            className={`group relative border overflow-hidden transition-all duration-500 hover:shadow-2xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`}
+            className={`group relative border overflow-hidden transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`}
             style={{ 
                 borderColor: colors.borderColor,
                 backgroundColor: cardBg,
@@ -320,7 +312,7 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
             {/* Gradient Glow Effect */}
             <div 
                 className="absolute -right-20 -top-20 h-[250px] w-[250px] rounded-full blur-[100px] transition-all duration-500 group-hover:blur-[120px]" 
-                style={{ backgroundColor: `${colors.accent}30`, opacity: 0.3 }}
+                style={{ backgroundColor: hexToRgba(colors.accent, 0.19), opacity: 0.3 }}
             />
             
             <div className={`relative z-10 flex ${isWide ? 'flex-row' : 'flex-col'} h-full`}>
@@ -351,7 +343,7 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                         {item.category && (
                             <span 
                                 className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3"
-                                style={{ backgroundColor: `${colors.accent}20`, color: colors.accent }}
+                                style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}
                             >
                                 {item.category}
                             </span>
@@ -397,8 +389,8 @@ const ElegantListCard: React.FC<{
     
     // Price is 30% opacity of the primary color
     const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // On light backgrounds, use primary color for title and description
-    const titleColor = hasLightBackground ? colors.accent : colors.heading;
+    // Use cardTitleColor if defined, otherwise fallback to previous logic
+    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
     
     return (
@@ -423,7 +415,7 @@ const ElegantListCard: React.FC<{
             )}
             {item.isSpecial && (
                 <div 
-                    className="absolute top-3 left-3 p-2 rounded-full shadow-lg"
+                    className="absolute top-3 left-3 p-2 rounded-full"
                     style={{ backgroundColor: colors.accent }}
                 >
                     <ChefHat size={18} className="text-white" />
@@ -462,7 +454,7 @@ const ElegantListCard: React.FC<{
             
             <div className="flex items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: colors.borderColor }}>
                 <button 
-                    className="px-6 py-2 rounded-lg font-bold text-sm transition-all hover:scale-105 hover:shadow-lg"
+                    className="px-6 py-2 rounded-lg font-bold text-sm transition-all hover:scale-105"
                     style={{ backgroundColor: colors.accent, color: '#fff' }}
                 >
                     Ver Más
@@ -502,14 +494,22 @@ const Menu: React.FC<MenuProps> = ({
     animationType = 'fade-in-up',
     enableCardAnimation = true
 }) => {
+    // Get design tokens with primary color
+    const { getColor } = useDesignTokens();
+    const primaryColor = getColor('primary.main', '#4f46e5');
+    
     // Group items by category if showCategories is true
     const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
     
-    // Check if section background is light
-    const hasLightSectionBackground = isBackgroundLight(colors.background);
-    // On light backgrounds, use primary color for section title and description
-    const sectionTitleColor = hasLightSectionBackground ? colors.accent : colors.heading;
-    const sectionTextColor = hasLightSectionBackground ? colors.accent : colors.text;
+    // Use component colors - fallback to primary color only if not set
+    const sectionTitleColor = colors.heading || primaryColor;
+    const sectionTextColor = colors.text;
+    
+    // Use component cardBackground color - fallback to primary if not set
+    const menuColors = {
+        ...colors,
+        cardBackground: colors.cardBackground || primaryColor,
+    };
     
     return (
         <section 
@@ -523,7 +523,7 @@ const Menu: React.FC<MenuProps> = ({
                     <div className="flex justify-center mb-6">
                         <div 
                             className="p-4 rounded-2xl"
-                            style={{ backgroundColor: `${colors.accent}20` }}
+                            style={{ backgroundColor: hexToRgba(colors.accent, 0.125) }}
                         >
                             <div style={{ color: colors.accent }}>
                                 {menuIcons[icon] || menuIcons['utensils-crossed']}
@@ -552,7 +552,7 @@ const Menu: React.FC<MenuProps> = ({
                         <ClassicMenuCard 
                             key={index} 
                             item={item} 
-                            colors={colors} 
+                            colors={menuColors} 
                             borderRadius={borderRadiusClasses[borderRadius]}
                             index={index}
                             animationType={animationType}
@@ -569,7 +569,7 @@ const Menu: React.FC<MenuProps> = ({
                         <ModernGridCard 
                             key={index} 
                             item={item} 
-                            colors={colors} 
+                            colors={menuColors} 
                             borderRadius={borderRadiusClasses[borderRadius]}
                             index={index}
                         />
@@ -584,7 +584,7 @@ const Menu: React.FC<MenuProps> = ({
                         <ElegantListCard 
                             key={index} 
                             item={item} 
-                            colors={colors} 
+                            colors={menuColors} 
                             borderRadius={borderRadiusClasses[borderRadius]}
                             index={index}
                             animationType={animationType}

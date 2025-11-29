@@ -6,7 +6,7 @@ import {
     Briefcase, Mail, Send, MessageCircle, PlaySquare, 
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronRight, ChevronDown, Eye, EyeOff,
-    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed
+    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette
 } from 'lucide-react';
 
 interface ComponentTreeProps {
@@ -42,7 +42,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     chatbot: MessageSquare,
     footer: Type,
     header: AlignJustify,
-    typography: Type
+    typography: Palette
 };
 
 const ComponentTree: React.FC<ComponentTreeProps> = ({
@@ -109,7 +109,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const targetIndex = newOrder.indexOf(targetSection);
 
         newOrder.splice(draggedIndex, 1);
-        newOrder.splice(targetIndex, 0, draggedItem);
+        // Adjust target index after removal
+        const finalTargetIndex = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
+        
+        newOrder.splice(finalTargetIndex, 0, draggedItem);
 
         onReorder(newOrder);
         setDraggedItem(null);
@@ -119,13 +122,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         setDraggedItem(null);
     };
 
-    // Group sections by category
-    const structureSections = componentOrder.filter(s => 
-        ['typography', 'header', 'hero', 'footer'].includes(s)
-    );
+    // Group sections by category - hero is now in content so it can be dragged
+    // Fixed order: Global Styles (typography) → Navigation (header) → Footer
+    const structureSections = ['typography', 'header', 'footer'].filter(s => 
+        componentOrder.includes(s as PageSection)
+    ) as PageSection[];
     
     const contentSections = componentOrder.filter(s => 
-        !['header', 'hero', 'footer', 'typography', 'chatbot', 'leads', 'newsletter'].includes(s) &&
+        !['header', 'footer', 'typography', 'chatbot', 'leads', 'newsletter'].includes(s) &&
         componentStatus[s]
     );
     
@@ -143,7 +147,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        // Only typography and footer are truly fixed - header can be reordered if needed
+        // Only typography and footer are fixed positions - hero can be moved
         const isFixed = ['footer', 'typography'].includes(section);
 
         return (
@@ -162,6 +166,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 `}
                 onClick={() => onSectionSelect(section)}
             >
+                {/* Drag handle - only show for draggable items */}
+                {isDraggable && !isFixed && (
+                    <GripVertical 
+                        size={14} 
+                        className="flex-shrink-0 text-editor-text-secondary cursor-grab active:cursor-grabbing"
+                    />
+                )}
                 <Icon 
                     size={16} 
                     className="flex-shrink-0"
@@ -214,19 +225,31 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return (
             <div className="mb-4">
                 <button
-                    onClick={() => setExpandedGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }))}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setExpandedGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
+                    }}
                     className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-editor-text-secondary uppercase tracking-wider hover:text-editor-text-primary transition-colors"
+                    type="button"
                 >
-                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
+                        <ChevronDown size={14} />
+                    </span>
                     {title}
                     <span className="text-editor-accent">({sections.length})</span>
                 </button>
                 
-                {isExpanded && (
+                <div 
+                    className={`
+                        overflow-hidden transition-all duration-300 ease-in-out
+                        ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
+                    `}
+                >
                     <div className="mt-1 space-y-1">
                         {sections.map(section => renderSection(section, isDraggable))}
                     </div>
-                )}
+                </div>
             </div>
         );
     };

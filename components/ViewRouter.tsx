@@ -96,19 +96,20 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
                 <SimpleEditorHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
                 
                 <div className="flex flex-1 overflow-hidden relative">
+                    {/* Controls/Editor Sidebar - Siempre visible en desktop */}
                     <Controls />
                     
-                    {/* Backdrop for mobile sidebar */}
+                    {/* Backdrop for mobile ONLY - Cierra el sidebar en mobile */}
                     <div 
                         aria-hidden="true"
                         onClick={() => setIsSidebarOpen(false)} 
-                        className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity ${
+                        className={`fixed inset-0 bg-black/50 z-30 transition-opacity md:hidden ${
                             isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         }`} 
                     />
                     
                     {/* Preview Area */}
-                    <main className="flex-1 p-4 sm:p-8 flex justify-center">
+                    <main className="flex-1 p-4 sm:p-8 flex justify-center overflow-auto">
                         <BrowserPreview ref={previewRef}>
                             <LandingPage />
                         </BrowserPreview>

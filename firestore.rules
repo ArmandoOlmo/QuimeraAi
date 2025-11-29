@@ -48,40 +48,58 @@ service cloud.firestore {
       }
     }
     
-    // Global settings (superadmin only for write)
+    // Helper function to check if user is superadmin or owner
+    function isSuperAdminOrOwner() {
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return userRole == 'superadmin' || userRole == 'owner';
+    }
+    
+    // Global settings (superadmin/owner for write)
     match /globalSettings/{settingId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // Global files (superadmin only)
-    match /globalFiles/{fileId} {
+    // Settings collection (used for components, global_assistant, designTokens)
+    match /settings/{settingId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // Component defaults (superadmin only for write)
+    // Global files (superadmin/owner)
+    match /global_files/{fileId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Component defaults (superadmin/owner for write)
     match /componentDefaults/{componentId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // Custom components (superadmin only)
+    // Custom components (superadmin/owner)
     match /customComponents/{componentId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // LLM Prompts (superadmin only for write)
+    // LLM Prompts (superadmin/owner for write)
     match /prompts/{promptId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // Design tokens (superadmin only for write)
+    // Design tokens (superadmin/owner for write)
     match /designTokens/{tokenId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Global templates (superadmin/owner for write)
+    match /templates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
   }
 }

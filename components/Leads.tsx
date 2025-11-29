@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 import { CheckCircle2, Mail, Phone, User } from 'lucide-react';
+import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -63,6 +64,19 @@ const Leads: React.FC<LeadsProps> = ({
     descriptionFontSize = 'md'
 }) => {
   const { addLead, activeProject } = useEditor();
+  
+  // Get design tokens with primary color
+  const { getColor } = useDesignTokens();
+  const primaryColor = getColor('primary.main', '#4f46e5');
+  
+  // Use component colors - fallback to primary color only if not set
+  const leadsColors = {
+    ...colors,
+    cardBackground: colors.cardBackground || primaryColor,
+    heading: colors.heading || primaryColor,
+    text: colors.text || '#ffffff',
+    description: colors.description || colors.text || 'rgba(255, 255, 255, 0.8)',
+  };
   
   const [formData, setFormData] = useState({
     name: '',
@@ -149,13 +163,13 @@ const Leads: React.FC<LeadsProps> = ({
     <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 md:gap-16 items-center">
         <div className="text-center md:text-left mb-12 md:mb-0">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: leadsColors.heading }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: leadsColors.description }}>
             {description}
           </p>
         </div>
         <div className={`p-8 md:p-12 border relative ${borderRadiusClasses[cardBorderRadius]}`} 
-             style={{ backgroundColor: colors.cardBackground || '#1e293b', borderColor: colors.borderColor }}>
+             style={{ backgroundColor: leadsColors.cardBackground, borderColor: colors.borderColor }}>
           {/* Success Overlay */}
           {submitStatus === 'success' && (
             <div className={`absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in ${borderRadiusClasses[cardBorderRadius]}`}>
@@ -317,7 +331,7 @@ const Leads: React.FC<LeadsProps> = ({
           
           {/* Right Side - Form */}
           <div className="p-8 md:p-12 lg:p-16 relative" 
-               style={{ backgroundColor: colors.cardBackground || '#ffffff' }}>
+               style={{ backgroundColor: leadsColors.cardBackground }}>
             {/* Success Overlay */}
             {submitStatus === 'success' && (
               <div className="absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in">
@@ -470,10 +484,10 @@ const Leads: React.FC<LeadsProps> = ({
       <div className="max-w-4xl mx-auto relative">
         {/* Title Section */}
         <div className="text-center mb-12">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: colors.heading }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading }}>
             {title}
           </h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors.text }}>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: leadsColors.description }}>
             {description}
           </p>
         </div>
@@ -601,10 +615,10 @@ const Leads: React.FC<LeadsProps> = ({
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: colors.heading }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading }}>
             {title}
           </h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: leadsColors.description }}>
             {description}
           </p>
         </div>
@@ -622,7 +636,7 @@ const Leads: React.FC<LeadsProps> = ({
                style={{ borderColor: colors.accent }}></div>
           
           {/* Form */}
-          <div className="p-8 md:p-16 relative" style={{ backgroundColor: colors.cardBackground || 'transparent' }}>
+          <div className="p-8 md:p-16 relative" style={{ backgroundColor: leadsColors.cardBackground }}>
             {/* Success Overlay */}
             {submitStatus === 'success' && (
               <div className="absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in">
