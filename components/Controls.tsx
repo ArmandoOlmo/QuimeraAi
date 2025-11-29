@@ -2524,9 +2524,24 @@ const Controls: React.FC = () => {
             </div>
             
             <hr className="border-editor-border/50" />
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Section Colors</label>
             <ColorControl label="Background" value={data?.newsletter.colors.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
-            <ColorControl label="Title" value={data?.newsletter.colors.heading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Card Box</label>
+            <ColorControl label="Card Background" value={data?.newsletter.colors.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={(v) => setNestedData('newsletter.colors.cardBackground', v)} />
+            <ColorControl label="Card Border" value={data?.newsletter.colors.borderColor || '#374151'} onChange={(v) => setNestedData('newsletter.colors.borderColor', v)} />
+            <ColorControl label="Card Heading" value={data?.newsletter.colors.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
+            <ColorControl label="Card Text" value={data?.newsletter.colors.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Input Field</label>
+            <ColorControl label="Input Background" value={data?.newsletter.colors.inputBackground || '#111827'} onChange={(v) => setNestedData('newsletter.colors.inputBackground', v)} />
+            <ColorControl label="Input Text" value={data?.newsletter.colors.inputText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.inputText', v)} />
+            <ColorControl label="Input Border" value={data?.newsletter.colors.inputBorder || '#374151'} onChange={(v) => setNestedData('newsletter.colors.inputBorder', v)} />
+            
+            <hr className="border-editor-border/50" />
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Button</label>
             <ColorControl label="Button Background" value={data?.newsletter.colors.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
             <ColorControl label="Button Text" value={data?.newsletter.colors.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
         </div>
