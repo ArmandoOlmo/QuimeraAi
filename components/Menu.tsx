@@ -221,8 +221,8 @@ const ClassicMenuCard: React.FC<{
     const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
     const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Price is 30% opacity of the primary color
-    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
     // Use cardTitleColor if defined, otherwise fallback to previous logic
     const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
@@ -295,8 +295,8 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
     const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
     const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Price is 30% opacity of the primary color
-    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
     // Use cardTitleColor if defined, otherwise fallback to previous logic
     const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
@@ -387,8 +387,8 @@ const ElegantListCard: React.FC<{
     const cardBg = colors.cardBackground || 'transparent';
     const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Price is 30% opacity of the primary color
-    const priceColor = hexToRgba(colors.accent || '#4f46e5', 0.3);
+    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
     // Use cardTitleColor if defined, otherwise fallback to previous logic
     const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
     const textColor = hasLightBackground ? colors.accent : colors.text;
