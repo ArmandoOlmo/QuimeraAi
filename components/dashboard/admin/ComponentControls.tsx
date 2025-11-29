@@ -207,7 +207,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     };
 
     const handleColorChange = (colorName: string, value: string) => {
-        const newColors = { ...styles?.colors, [colorName]: value };
+        // Get default colors from componentStyles to ensure we don't lose any colors
+        const defaultColors = componentStyles[baseComponent]?.colors || {};
+        const currentColors = styles?.colors || {};
+        const newColors = { ...defaultColors, ...currentColors, [colorName]: value };
         updateComponentStyle(selectedComponentId, { colors: newColors }, isCustom);
     };
 

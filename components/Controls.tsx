@@ -1611,6 +1611,7 @@ const Controls: React.FC = () => {
               <h4 className="font-bold text-editor-text-primary text-sm">Section Colors</h4>
               <ColorControl label="Background" value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
               <ColorControl label="Title" value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
+              <ColorControl label="Description" value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
               <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
               <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
@@ -3587,6 +3588,7 @@ const Controls: React.FC = () => {
           </label>
           <ColorControl label="Background" value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
           <ColorControl label="Title" value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
+          <ColorControl label="Description" value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
           <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
           <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
         </div>
