@@ -9,13 +9,16 @@ interface TestimonialCardProps {
   name: string;
   title: string;
   delay?: string;
+  // Colors
   accentColor: string;
   textColor: string;
-  borderRadius: BorderRadiusSize;
+  descriptionColor: string;
   borderColor: string;
   cardBackground: string;
-  cardShadow: string;
+  // Style
+  borderRadius: BorderRadiusSize;
   borderStyle: string;
+  cardShadow: string;
   cardPadding: number;
   variant: TestimonialsVariant;
 }
@@ -66,13 +69,16 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   name, 
   title, 
   delay = '0s', 
+  // Colors
   accentColor, 
   textColor, 
-  borderRadius, 
+  descriptionColor,
   borderColor,
   cardBackground,
-  cardShadow,
+  // Style
+  borderRadius, 
   borderStyle,
+  cardShadow,
   cardPadding,
   variant
 }) => {
@@ -198,7 +204,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
         <div>
           <p className="font-bold font-body" style={{ color: textColor }}>{name}</p>
-          <p className="text-sm font-body opacity-80" style={{ color: textColor }}>{title}</p>
+          <p className="text-sm font-body" style={{ color: descriptionColor }}>{title}</p>
         </div>
       </div>
     </div>
@@ -260,6 +266,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       // Card-level colors
       cardHeading: ensureTextContrast(cardBg, actualColors.heading),
       cardText: ensureTextContrast(cardBg, actualColors.text),
+      cardDescription: ensureTextContrast(cardBg, actualColors.description),
     };
   }, [actualColors, cardBackground]);
   
@@ -280,13 +287,16 @@ const Testimonials: React.FC<TestimonialsProps> = ({
                 name={testimonial.name}
                 title={testimonial.title}
                 delay={`${(index + 1) * 0.2}s`}
+                // Colors
                 accentColor={actualColors.accent}
                 textColor={safeColors.cardText}
-                borderRadius={borderRadius}
+                descriptionColor={safeColors.cardDescription}
                 borderColor={actualColors.borderColor}
                 cardBackground={cardBackground}
-                cardShadow={cardShadow}
+                // Style
+                borderRadius={borderRadius}
                 borderStyle={borderStyle}
+                cardShadow={cardShadow}
                 cardPadding={cardPadding}
                 variant={testimonialsVariant}
             />
