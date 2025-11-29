@@ -1,4 +1,5 @@
 steps:
+  # Step 1: Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -23,5 +24,29 @@ steps:
       - '--build-arg'
       - 'CACHEBUST=$_CACHEBUST'
       - '.'
+
+  # Step 2: Push image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025'
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'quimeraai2025'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/quimeraai2025'
+      - '--region'
+      - '$_REGION'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+
 images:
   - 'gcr.io/$PROJECT_ID/quimeraai2025'
