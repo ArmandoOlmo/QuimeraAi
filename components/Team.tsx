@@ -224,7 +224,7 @@ const Team: React.FC<TeamProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true
 }) => {
-  // Get design tokens for secondary color
+  // Get design tokens for secondary color (for photo border fallback)
   const { colors: tokenColors } = useDesignTokens();
   const secondaryColor = tokenColors.secondary;
   // Use 50% of secondary color for photo border
@@ -242,7 +242,7 @@ const Team: React.FC<TeamProps> = ({
     <section 
       id="team" 
       className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
-      style={{ backgroundColor: secondaryColor }}
+      style={{ backgroundColor: colors.background || secondaryColor }}
     >
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
