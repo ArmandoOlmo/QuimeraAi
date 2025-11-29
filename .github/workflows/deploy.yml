@@ -1,29 +1,29 @@
-name: Deploy to Production
+name: 🚀 Deploy to Firebase
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub
 
 jobs:
   deploy:
-    name: Deploy to Firebase Hosting
+    name: Build & Deploy
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           
-      - name: Install dependencies
+      - name: 📚 Install dependencies
         run: npm ci
         
-      - name: Build production bundle
+      - name: 🔨 Build production bundle
         run: npm run build
         env:
           NODE_ENV: production
@@ -36,25 +36,19 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       
-      - name: Install Firebase CLI
+      - name: 🔥 Install Firebase CLI
         run: npm install -g firebase-tools
           
-      - name: Deploy to Firebase Hosting
+      - name: 🚀 Deploy to Firebase Hosting
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/firebase-sa.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-sa.json
           firebase deploy --only hosting --project ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
           rm /tmp/firebase-sa.json
-
-  post-deploy:
-    name: Post-Deploy Tasks
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    if: success()
-    
-    steps:
-      - name: Send deployment notification
+          
+      - name: ✅ Deploy Complete
         run: |
-          echo "🚀 Deployment to Firebase Hosting completed successfully!"
-          echo "Timestamp: $(date)"
-
+          echo "=========================================="
+          echo "🎉 Deploy completado exitosamente!"
+          echo "🌐 URL: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
+          echo "=========================================="
