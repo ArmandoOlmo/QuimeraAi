@@ -21,8 +21,6 @@ steps:
       - 'VITE_FIREBASE_APP_ID=$_VITE_FIREBASE_APP_ID'
       - '--build-arg'
       - 'VITE_FIREBASE_MEASUREMENT_ID=$_VITE_FIREBASE_MEASUREMENT_ID'
-      - '--build-arg'
-      - 'CACHEBUST=$_CACHEBUST'
       - '.'
 
   # Step 2: Push image to Container Registry
