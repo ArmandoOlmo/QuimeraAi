@@ -1418,6 +1418,7 @@ const Controls: React.FC = () => {
             <h4 className="font-bold text-editor-text-primary text-sm">Section Colors</h4>
             <ColorControl label="Background" value={data.pricing.colors.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
             <ColorControl label="Title" value={data.pricing.colors.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
+            <ColorControl label="Description" value={data.pricing.colors.description || data.pricing.colors.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
             <ColorControl label="Text" value={data.pricing.colors.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
             
             {/* Gradient Colors - Only for gradient variant */}
