@@ -327,6 +327,8 @@ export interface NewsletterData {
         buttonBackground?: string; 
         buttonText?: string;
         cardBackground?: string;
+        cardHeading?: string;
+        cardText?: string;
         inputBackground?: string;
         inputText?: string;
         inputBorder?: string;

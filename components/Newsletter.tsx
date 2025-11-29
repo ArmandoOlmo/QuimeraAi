@@ -44,8 +44,8 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
   return (
     <section id="newsletter" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
-        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
-        <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: colors.text }}>{description}</p>
+        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.cardHeading || colors.heading }}>{title}</h2>
+        <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: colors.cardText || colors.text }}>{description}</p>
         <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">
           <input
             type="email"

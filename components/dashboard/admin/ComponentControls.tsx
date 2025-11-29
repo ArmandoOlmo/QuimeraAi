@@ -815,6 +815,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Border" value={s.colors?.borderColor || '#374151'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Heading" value={s.colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
+                    <ColorControl label="Card Text" value={s.colors?.cardText || '#ffffff'} onChange={v => handleColorChange('cardText', v)} />
+                </div>
 
                 <hr className="border-editor-border/50" />
                 <h4 className="font-semibold text-editor-text-primary">Input Field</h4>
