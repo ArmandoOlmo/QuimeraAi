@@ -1,19 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { MessageSquare, X } from 'lucide-react';
-import { useEditor } from '../contexts/EditorContext';
-import { Lead } from '../types';
+import { useSafeEditor } from '../contexts/EditorContext';
+import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore from './chat/ChatCore';
 
 interface ChatbotWidgetProps {
     isPreview?: boolean;
+    // Props for standalone mode (outside EditorProvider)
+    standaloneConfig?: AiAssistantConfig;
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
-    isPreview = false
+    isPreview = false,
+    standaloneConfig
 }) => {
-    const { aiAssistantConfig, addLead, activeProject, data, componentOrder, sectionVisibility, view } = useEditor();
+    // Use safe editor context - may be null in public preview
+    const editorContext = useSafeEditor();
+    
+    // Use standalone config or editor context values
+    const aiAssistantConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
+    const addLead = editorContext?.addLead;
+    const activeProject = editorContext?.activeProject;
+    const data = editorContext?.data;
+    const componentOrder = editorContext?.componentOrder || [];
+    const sectionVisibility = editorContext?.sectionVisibility || {};
+    const view = editorContext?.view || 'preview';
     
     // Get appearance config with defaults
     const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();

@@ -3,9 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useEditor } from '../../contexts/EditorContext';
-import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Image as ImageIcon } from 'lucide-react';
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
+import ThumbnailEditor from '../ui/ThumbnailEditor';
 
 interface ProjectCardProps {
   project: Project;
@@ -24,9 +25,35 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const { createProjectFromTemplate, loadProject, deleteProject, user, userDocument } = useEditor();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showThumbnailEditor, setShowThumbnailEditor] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
   const isTemplate = project.status === 'Template';
+
+  // Extract actual colors from project (check theme.globalColors first, then fallback to section colors)
+  const getProjectColors = () => {
+    // Try globalColors first
+    const gc = project.theme?.globalColors;
+    if (gc?.primary || gc?.secondary || gc?.accent) {
+      return [gc.primary, gc.secondary, gc.accent, gc.background, gc.text].filter(Boolean) as string[];
+    }
+    
+    // Fallback to hero colors
+    const hc = project.data?.hero?.colors;
+    if (hc) {
+      return [hc.primary, hc.secondary, hc.background, hc.text, hc.heading].filter(Boolean) as string[];
+    }
+    
+    // Fallback to header colors
+    const headerC = project.data?.header?.colors;
+    if (headerC) {
+      return [headerC.background, headerC.text, headerC.accent].filter(Boolean) as string[];
+    }
+    
+    return [];
+  };
+  
+  const themeColors = getProjectColors();
 
   // Check if user can delete templates (only owner and superadmin)
   const canDeleteTemplate = () => {
@@ -205,8 +232,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
              </div>
           </div>
 
-          {/* Menu Button */}
-          <div ref={menuRef}>
+          {/* Color Swatches + Menu Button - Aligned */}
+          <div className="flex items-center gap-2">
+            {/* Color Swatches */}
+            {themeColors.length > 0 && (
+              <div className="flex gap-1 items-center">
+                {themeColors.map((color, index) => (
+                  <div
+                    key={index}
+                    className="w-3 h-3 rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Menu Button */}
+            <div ref={menuRef}>
              <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -235,14 +277,28 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                          {isTemplate ? 'Use Template' : 'Edit'}
                      </button>
                      {!isTemplate && (
-                       <button 
-                          onClick={handleExportClick}
-                          className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
-                          role="menuitem"
-                       >
-                           <Download size={16} aria-hidden="true" />
-                           Export
-                       </button>
+                       <>
+                         <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowMenu(false);
+                              setShowThumbnailEditor(true);
+                            }}
+                            className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
+                            role="menuitem"
+                         >
+                             <ImageIcon size={16} aria-hidden="true" />
+                             Change Thumbnail
+                         </button>
+                         <button 
+                            onClick={handleExportClick}
+                            className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
+                            role="menuitem"
+                         >
+                             <Download size={16} aria-hidden="true" />
+                             Export
+                         </button>
+                       </>
                      )}
                      {canDeleteTemplate() && (
                         <button 
@@ -256,6 +312,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                      )}
                  </div>
              )}
+            </div>
           </div>
         </div>
 
@@ -269,23 +326,32 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Bottom Section: Title and Date */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pointer-events-none">
-            <h3 
-                className="font-bold text-2xl text-white mb-2 line-clamp-2 pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors" 
-                title={project.name}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenProject();
-                }}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleOpenProject();
-                  }
-                }}
-            >
-                {project.name}
-            </h3>
+            <div className="flex items-center gap-3 mb-2">
+                {project.faviconUrl && (
+                    <img 
+                        src={project.faviconUrl} 
+                        alt="Favicon" 
+                        className="w-8 h-8 rounded-md object-contain bg-white/10 backdrop-blur-sm p-1 flex-shrink-0 border border-white/20"
+                    />
+                )}
+                <h3 
+                    className="font-bold text-2xl text-white line-clamp-2 pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors" 
+                    title={project.name}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenProject();
+                    }}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleOpenProject();
+                      }
+                    }}
+                >
+                    {project.name}
+                </h3>
+            </div>
             <div className="flex items-center text-white/90">
                 <Clock size={16} className="mr-2" aria-hidden="true"/> 
                 <time dateTime={project.lastUpdated} className="text-sm font-medium">
@@ -294,6 +360,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             </div>
         </div>
       </div>
+
+      {/* Thumbnail Editor Modal */}
+      {showThumbnailEditor && (
+        <ThumbnailEditor 
+          project={project} 
+          onClose={() => setShowThumbnailEditor(false)} 
+        />
+      )}
     </article>
   );
 };

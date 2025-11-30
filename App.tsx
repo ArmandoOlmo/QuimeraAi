@@ -4,6 +4,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import ModernAuth from './components/ModernAuth';
 import VerificationScreen from './components/VerificationScreen';
 import PublicLandingPage from './components/PublicLandingPage';
+import PublicWebsitePreview from './components/PublicWebsitePreview';
 import { auth, signOut } from './firebase';
 import ProfileModal from './components/dashboard/ProfileModal';
 import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
@@ -13,6 +14,12 @@ import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
 import ViewRouter from './components/ViewRouter';
+
+// Check if current URL is a preview route
+const isPreviewRoute = () => {
+  const hash = window.location.hash;
+  return hash.startsWith('#preview/');
+};
 
 // Simple hash-based routing
 type PublicRoute = 'landing' | 'login' | 'register';
@@ -181,11 +188,32 @@ const AuthGate: React.FC = () => {
 
 
 const App: React.FC = () => {
+  const [isPreview, setIsPreview] = useState(isPreviewRoute());
+
   // Initialize monitoring on app start
   useEffect(() => {
     initializeMonitoring();
   }, []);
 
+  // Listen for hash changes to detect preview route
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsPreview(isPreviewRoute());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Render preview route without authentication or EditorProvider
+  if (isPreview) {
+    return (
+      <ErrorBoundary>
+        <PublicWebsitePreview />
+      </ErrorBoundary>
+    );
+  }
+
+  // Normal app with authentication
   return (
     <ErrorBoundary>
       <EditorProvider>

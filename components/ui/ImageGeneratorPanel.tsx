@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
-import { Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus } from 'lucide-react';
+import { Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus, AlertTriangle } from 'lucide-react';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global';
@@ -117,7 +117,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [prompt, setPrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [style, setStyle] = useState('None');
-    const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('4K');
+    const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
     const [lighting, setLighting] = useState('None');
     const [cameraAngle, setCameraAngle] = useState('None');
     const [colorGrading, setColorGrading] = useState('None');
@@ -373,6 +373,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     </button>
                                 ))}
                             </div>
+                            {/* 4K Warning */}
+                            {resolution === '4K' && (
+                                <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
+                                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs text-amber-400">
+                                        {t('editor.warning4K', { defaultValue: '4K images are large and may slow down your website. Consider using 2K for better performance.' })}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Advanced Controls Toggle */}

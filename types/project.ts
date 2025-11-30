@@ -18,6 +18,7 @@ export interface Project {
     id: string;
     name: string;
     thumbnailUrl: string;
+    faviconUrl?: string;  // Favicon URL for the website
     status: 'Published' | 'Draft' | 'Template';
     lastUpdated: string;
     data: PageData;
@@ -45,6 +46,9 @@ export interface Project {
     compatibilityVersion?: string;
     createdAt?: string;
 }
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant } from '../types';
-import { useEditor } from '../contexts/EditorContext';
+import { useSafeEditor } from '../contexts/EditorContext';
 import { CheckCircle2, Mail, Phone, User } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 
@@ -63,7 +63,10 @@ const Leads: React.FC<LeadsProps> = ({
     titleFontSize = 'md', 
     descriptionFontSize = 'md'
 }) => {
-  const { addLead, activeProject } = useEditor();
+  // Use safe versions for public preview compatibility
+  const editorContext = useSafeEditor();
+  const addLead = editorContext?.addLead;
+  const activeProject = editorContext?.activeProject;
   
   // Get design tokens with primary color
   const { getColor } = useDesignTokens();

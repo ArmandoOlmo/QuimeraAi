@@ -2,8 +2,19 @@
 
 ## ✅ Estado Actual
 
-- **Firebase Hosting**: `quimeraai.web.app` tiene los últimos cambios (index-FSpskM6L.js)
-- **Dominio**: `quimera.ai` necesita ser configurado
+- **Firebase Hosting**: `quimeraai.web.app` ✅ Funcionando
+- **Dominio**: `quimera.ai` ⏳ Necesita ser configurado
+- **Proyecto Firebase**: `quimeraai`
+- **Site ID**: `quimeraai`
+
+## 🚀 Inicio Rápido
+
+Ejecuta el script de configuración:
+```bash
+./conectar-quimera-firebase.sh
+```
+
+Este script te guiará a través del proceso y verificará el estado actual.
 
 ## 📋 Pasos para Configurar el Dominio Personalizado
 
@@ -64,13 +75,25 @@ Una vez configurado el DNS:
 
 ## 🚀 Comandos Útiles
 
-### Verificar el estado del dominio:
+### Scripts disponibles:
 ```bash
-# Ver dominios configurados
-firebase hosting:channel:list --project=quimeraai --site=quimeraai
+# Script principal de configuración
+./conectar-quimera-firebase.sh
+
+# Verificar estado del dominio
+./verificar-dominio.sh
+```
+
+### Comandos manuales:
+```bash
+# Ver información del sitio Firebase
+firebase hosting:sites:get quimeraai --project=quimeraai
 
 # Verificar la versión deployada
 curl -sL https://quimeraai.web.app | grep -o 'assets/index-[^"]*\.js'
+
+# Verificar DNS actual
+dig quimera.ai A +short
 ```
 
 ### Si necesitas redesplegar:
@@ -108,6 +131,8 @@ Si tienes algún error:
 ---
 
 **Última actualización**: 24 de noviembre 2025, 15:50
+
+
 
 
 

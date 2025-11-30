@@ -593,3 +593,6 @@ Ver `MOBILE_QUICK_GUIDE.md`
 **Última actualización:** 28 de Noviembre, 2025
 
 
+
+
+

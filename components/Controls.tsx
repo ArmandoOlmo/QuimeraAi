@@ -232,13 +232,17 @@ const Controls: React.FC = () => {
       isSidebarOpen,
       uploadImageAndGetURL,
       menus,
-      setView
+      setView,
+      activeProject,
+      updateProjectFavicon
   } = useEditor();
   
   const [aiAssistField, setAiAssistField] = useState<{path: string, value: string, context: string} | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingKnowledge, setIsUploadingKnowledge] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
 
@@ -452,6 +456,80 @@ const Controls: React.FC = () => {
                           </div>
                       </div>
                   )}
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Favicon Upload Section */}
+              <div className="space-y-3">
+                  <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Website Favicon</label>
+                  <p className="text-xs text-editor-text-secondary">Upload a favicon (recommended: 32x32 or 64x64 PNG/ICO)</p>
+                  
+                  <div className="flex items-center gap-4">
+                      {activeProject?.faviconUrl ? (
+                          <div className="relative">
+                              <img 
+                                  src={activeProject.faviconUrl} 
+                                  alt="Favicon" 
+                                  className="w-12 h-12 rounded-lg border border-editor-border object-contain bg-editor-bg p-1"
+                              />
+                              <button
+                                  onClick={() => {
+                                      if (activeProject && window.confirm('Remove favicon?')) {
+                                          // We would need to implement removeFavicon, for now just upload a new one
+                                      }
+                                  }}
+                                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                                  title="Remove favicon"
+                              >
+                                  ×
+                              </button>
+                          </div>
+                      ) : (
+                          <div className="w-12 h-12 rounded-lg border-2 border-dashed border-editor-border flex items-center justify-center bg-editor-bg">
+                              <Upload size={16} className="text-editor-text-secondary" />
+                          </div>
+                      )}
+                      
+                      <input
+                          ref={faviconInputRef}
+                          type="file"
+                          accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
+                          className="hidden"
+                          onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file && activeProject) {
+                                  setIsUploadingFavicon(true);
+                                  try {
+                                      await updateProjectFavicon(activeProject.id, file);
+                                  } catch (error) {
+                                      console.error('Failed to upload favicon:', error);
+                                  } finally {
+                                      setIsUploadingFavicon(false);
+                                  }
+                              }
+                              e.target.value = '';
+                          }}
+                      />
+                      
+                      <button
+                          onClick={() => faviconInputRef.current?.click()}
+                          disabled={isUploadingFavicon}
+                          className="flex items-center gap-2 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors disabled:opacity-50"
+                      >
+                          {isUploadingFavicon ? (
+                              <>
+                                  <span className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                                  Uploading...
+                              </>
+                          ) : (
+                              <>
+                                  <Upload size={14} />
+                                  {activeProject?.faviconUrl ? 'Change' : 'Upload'}
+                              </>
+                          )}
+                      </button>
+                  </div>
               </div>
 
               <hr className="border-editor-border/50" />

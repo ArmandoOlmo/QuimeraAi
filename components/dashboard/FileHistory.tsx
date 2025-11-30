@@ -4,7 +4,7 @@ import { useEditor } from '../../contexts/EditorContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useAssetLibrary } from '../../hooks/useAssetLibrary';
 import { FileRecord } from '../../types';
-import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Calendar, HardDrive, Search, Filter, ArrowUpDown, CheckSquare, Square, Wand2, Loader2, Plus, ImageIcon } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Calendar, HardDrive, Search, Filter, ArrowUpDown, CheckSquare, Square, Wand2, Loader2, Plus, ImageIcon, AlertTriangle } from 'lucide-react';
 import DragDropZone from '../ui/DragDropZone';
 import Modal from '../ui/Modal';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
@@ -367,7 +367,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const [prompt, setPrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [style, setStyle] = useState('None');
-    const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('4K');
+    const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
     const [lighting, setLighting] = useState('None');
     const [cameraAngle, setCameraAngle] = useState('None');
     const [colorGrading, setColorGrading] = useState('None');
@@ -810,6 +810,15 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                     <option key={res.value} value={res.value}>{res.label}</option>
                                 ))}
                             </select>
+                            {/* 4K Warning */}
+                            {resolution === '4K' && (
+                                <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
+                                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                                        4K images are large and may slow down your website. Consider using 2K for better performance.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

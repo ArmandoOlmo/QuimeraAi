@@ -3,7 +3,7 @@
  * Provides easy access to design tokens with fallbacks
  */
 
-import { useEditor } from '../contexts/EditorContext';
+import { useEditor, useSafeEditor } from '../contexts/EditorContext';
 import { DesignTokens } from '../types';
 
 interface UseDesignTokensReturn {
@@ -29,9 +29,11 @@ interface UseDesignTokensReturn {
 /**
  * Hook to access design tokens throughout the application
  * Provides helper functions and quick access to common tokens
+ * Now uses useSafeEditor to work outside EditorProvider (public preview)
  */
 export const useDesignTokens = (): UseDesignTokensReturn => {
-  const { designTokens } = useEditor();
+  const editorContext = useSafeEditor();
+  const designTokens = editorContext?.designTokens || null;
 
   /**
    * Get a color value from design tokens by path
@@ -130,6 +132,81 @@ export const mergeColorsWithTokens = (
     // Keep other colors from component as they might be specific
   };
 };
+
+/**
+ * Safe version of useDesignTokens that works outside EditorProvider
+ * Returns default values if not inside the provider
+ */
+export const useSafeDesignTokens = (): UseDesignTokensReturn => {
+  const editorContext = useSafeEditor();
+  const designTokens = editorContext?.designTokens || null;
+
+  const getColor = (path: string, fallback: string = '#000000'): string => {
+    if (!designTokens) return fallback;
+
+    const keys = path.split('.');
+    let value: any = designTokens.colors;
+
+    for (const key of keys) {
+      if (value && typeof value === 'object' && key in value) {
+        value = value[key];
+      } else {
+        return fallback;
+      }
+    }
+
+    return typeof value === 'string' ? value : fallback;
+  };
+
+  const getSpacing = (
+    key: keyof DesignTokens['spacing'],
+    fallback: string = '1rem'
+  ): string => {
+    if (!designTokens) return fallback;
+    return designTokens.spacing[key] || fallback;
+  };
+
+  const getFontSize = (
+    key: keyof DesignTokens['typography']['fontSizes'],
+    fallback: string = '1rem'
+  ): string => {
+    if (!designTokens) return fallback;
+    return designTokens.typography.fontSizes[key] || fallback;
+  };
+
+  const getShadow = (
+    key: keyof DesignTokens['shadows'],
+    fallback: string = 'none'
+  ): string => {
+    if (!designTokens) return fallback;
+    return designTokens.shadows[key] || fallback;
+  };
+
+  const colors = {
+    primary: getColor('primary.main', '#4f46e5'),
+    primaryLight: getColor('primary.light', '#6366f1'),
+    primaryDark: getColor('primary.dark', '#4338ca'),
+    secondary: getColor('secondary.main', '#10b981'),
+    secondaryLight: getColor('secondary.light', '#34d399'),
+    secondaryDark: getColor('secondary.dark', '#059669'),
+    success: getColor('success.main', '#10b981'),
+    warning: getColor('warning.main', '#f59e0b'),
+    error: getColor('error.main', '#ef4444'),
+    info: getColor('info.main', '#3b82f6'),
+  };
+
+  return {
+    designTokens,
+    getColor,
+    getSpacing,
+    getFontSize,
+    getShadow,
+    colors,
+  };
+};
+
+
+
 
 
 

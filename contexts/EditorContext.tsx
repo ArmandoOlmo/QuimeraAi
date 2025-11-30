@@ -114,6 +114,8 @@ interface EditorContextType {
     openProfileModal: () => void;
     closeProfileModal: () => void;
     renameActiveProject: (newName: string) => Promise<void>;
+    updateProjectThumbnail: (projectId: string, file: File) => Promise<void>;
+    updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
     exportProjectAsHtml: () => void;
     saveProject: () => Promise<void>;
     createProjectFromTemplate: (templateId: string, newName?: string) => Promise<void>;
@@ -301,6 +303,15 @@ export const useEditor = () => {
     return context;
 };
 
+/**
+ * Safe version of useEditor that returns null if not inside EditorProvider
+ * Useful for components that can work both inside and outside the editor
+ */
+export const useSafeEditor = (): EditorContextType | null => {
+    const context = useContext(EditorContext);
+    return context || null;
+};
+
 const allComponents = initialData.componentOrder;
 const defaultComponentStatus = allComponents.reduce((acc, comp) => {
     acc[comp] = true;
@@ -366,6 +377,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Auto-save timer ref
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
+    const projectsRef = useRef<Project[]>([]); // Ref to keep latest projects for auto-save
 
     // Project AI Assistant Config
     const [aiAssistantConfig, setAiAssistantConfig] = useState<AiAssistantConfig>({
@@ -1253,6 +1265,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
+    // Keep projectsRef in sync with latest projects state for auto-save
+    useEffect(() => {
+        projectsRef.current = projects;
+    }, [projects]);
+
     // Auto-save effect: saves project automatically when data changes (including templates)
     useEffect(() => {
         // Skip if missing required data
@@ -1274,8 +1291,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // Set debounced auto-save (2 seconds after last change)
         autoSaveTimerRef.current = setTimeout(async () => {
             try {
-                // Get fresh references
-                const projectToSave = projects.find(p => p.id === activeProjectId);
+                // Get fresh references from ref to avoid stale closure
+                const projectToSave = projectsRef.current.find(p => p.id === activeProjectId);
                 if (!projectToSave || !user) return;
 
                 // Check permissions for templates
@@ -1651,6 +1668,98 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             setProjects(prev => prev.map(p => p.id === activeProjectId ? { ...p, name: newName, lastUpdated: newLastUpdated } : p));
         } catch (error) {
             console.error("Error renaming project:", error);
+        }
+    };
+
+    const updateProjectThumbnail = async (projectId: string, file: File) => {
+        if (!user) return;
+        
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+        
+        const newLastUpdated = new Date().toISOString();
+        
+        try {
+            // Upload image to storage
+            const fileName = `${Date.now()}_${file.name}`;
+            const storagePath = project.status === 'Template' 
+                ? `templates/${projectId}/thumbnail_${fileName}`
+                : `users/${user.uid}/projects/${projectId}/thumbnail_${fileName}`;
+            
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            
+            // Update in Firestore
+            if (project.status === 'Template') {
+                const userRole = userDocument?.role || '';
+                if (!['owner', 'superadmin'].includes(userRole)) {
+                    console.warn("Only superadmin/owner can update template thumbnails");
+                    return;
+                }
+                
+                const templateDocRef = doc(db, 'templates', projectId);
+                await updateDoc(templateDocRef, { thumbnailUrl: downloadURL, lastUpdated: newLastUpdated });
+            } else {
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
+                await updateDoc(projectDocRef, { thumbnailUrl: downloadURL, lastUpdated: newLastUpdated });
+            }
+            
+            // Update local state
+            setProjects(prev => prev.map(p => 
+                p.id === projectId ? { ...p, thumbnailUrl: downloadURL, lastUpdated: newLastUpdated } : p
+            ));
+            
+            console.log("✅ Thumbnail updated successfully");
+        } catch (error) {
+            console.error("Error updating thumbnail:", error);
+            throw error;
+        }
+    };
+
+    const updateProjectFavicon = async (projectId: string, file: File) => {
+        if (!user) return;
+        
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+        
+        const newLastUpdated = new Date().toISOString();
+        
+        try {
+            // Upload favicon to storage - use user_uploads path which has proper permissions
+            const fileName = `${Date.now()}_${file.name}`;
+            const storagePath = project.status === 'Template' 
+                ? `user_uploads/${user.uid}/templates/${projectId}/favicon_${fileName}`
+                : `user_uploads/${user.uid}/projects/${projectId}/favicon_${fileName}`;
+            
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            
+            // Update in Firestore
+            if (project.status === 'Template') {
+                const userRole = userDocument?.role || '';
+                if (!['owner', 'superadmin'].includes(userRole)) {
+                    console.warn("Only superadmin/owner can update template favicons");
+                    return;
+                }
+                
+                const templateDocRef = doc(db, 'templates', projectId);
+                await updateDoc(templateDocRef, { faviconUrl: downloadURL, lastUpdated: newLastUpdated });
+            } else {
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
+                await updateDoc(projectDocRef, { faviconUrl: downloadURL, lastUpdated: newLastUpdated });
+            }
+            
+            // Update local state
+            setProjects(prev => prev.map(p => 
+                p.id === projectId ? { ...p, faviconUrl: downloadURL, lastUpdated: newLastUpdated } : p
+            ));
+            
+            console.log("✅ Favicon updated successfully");
+        } catch (error) {
+            console.error("Error updating favicon:", error);
+            throw error;
         }
     };
 
@@ -4157,6 +4266,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         verificationEmail, setVerificationEmail,
         isProfileModalOpen, openProfileModal, closeProfileModal,
         renameActiveProject,
+        updateProjectThumbnail,
+        updateProjectFavicon,
         exportProjectAsHtml,
         saveProject,
         createProjectFromTemplate,

@@ -287,6 +287,9 @@ const Faq: React.FC<FaqProps> = ({
     // Ensure text color has good contrast with background
     const safeTextColor = ensureTextContrast(bgColor, colors.text);
     
+    // Ensure description color has good contrast with background
+    const safeDescriptionColor = ensureTextContrast(bgColor, colors.description || colors.text);
+    
     // For card backgrounds (used in cards/gradient variants), ensure contrast
     const cardBg = colors.cardBackground || bgColor;
     const safeCardTextColor = ensureTextContrast(cardBg, colors.text);
@@ -300,6 +303,7 @@ const Faq: React.FC<FaqProps> = ({
     return {
       heading: safeHeadingColor,
       text: safeTextColor,
+      description: safeDescriptionColor,
       cardHeading: safeCardHeadingColor,
       cardText: safeCardTextColor,
       border: safeBorderColor,
@@ -342,7 +346,7 @@ const Faq: React.FC<FaqProps> = ({
     <section id="faq" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background || primaryColor }}>
       <div className="text-center max-w-3xl mx-auto mb-16">
         <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
-        <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.text }}>
+        <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
           {description}
         </p>
       </div>

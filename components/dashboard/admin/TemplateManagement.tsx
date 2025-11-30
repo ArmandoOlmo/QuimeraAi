@@ -19,9 +19,11 @@ import {
     Archive,
     Globe,
     Filter,
-    Star
+    Star,
+    Image as ImageIcon
 } from 'lucide-react';
 import { Project } from '../../../types';
+import ThumbnailEditor from '../../ui/ThumbnailEditor';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -44,6 +46,30 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     // Preview and Filters States
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [thumbnailEditTemplate, setThumbnailEditTemplate] = useState<Project | null>(null);
+
+    // Helper to extract actual colors from template (check theme.globalColors first, then section colors)
+    const getThemeColors = (template: Project): string[] => {
+        // Try globalColors first
+        const gc = template.theme?.globalColors;
+        if (gc?.primary || gc?.secondary || gc?.accent) {
+            return [gc.primary, gc.secondary, gc.accent, gc.background, gc.text].filter(Boolean) as string[];
+        }
+        
+        // Fallback to hero colors
+        const hc = template.data?.hero?.colors;
+        if (hc) {
+            return [hc.primary, hc.secondary, hc.background, hc.text, hc.heading].filter(Boolean) as string[];
+        }
+        
+        // Fallback to header colors
+        const headerC = template.data?.header?.colors;
+        if (headerC) {
+            return [headerC.background, headerC.text, headerC.accent].filter(Boolean) as string[];
+        }
+        
+        return [];
+    };
 
     const templates = projects.filter(p => p.status === 'Template');
     const userProjects = projects.filter(p => p.status !== 'Template');
@@ -359,11 +385,25 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
                                     </div>
 
-                                    {/* Category Badge */}
-                                    <div className="absolute top-4 left-4 z-20">
+                                    {/* Top Section: Category Badge + Color Swatches */}
+                                    <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center">
+                                        {/* Category Badge */}
                                         <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg bg-editor-accent/20 text-editor-accent border-editor-accent/30">
                                             {template.category || template.brandIdentity?.industry || 'General'}
                                         </span>
+
+                                        {/* Color Swatches */}
+                                        {getThemeColors(template).length > 0 && (
+                                            <div className="flex gap-1">
+                                                {getThemeColors(template).map((color, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="w-3 h-3 rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
+                                                        style={{ backgroundColor: color }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Content at Bottom */}
@@ -382,6 +422,16 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             >
                                                 <Edit size={16} />
                                                 Edit
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setThumbnailEditTemplate(template);
+                                                }} 
+                                                className="p-2.5 bg-white/90 text-blue-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                title="Change Thumbnail"
+                                            >
+                                                <ImageIcon size={18} />
                                             </button>
                                             <button 
                                                 onClick={(e) => {
@@ -430,6 +480,18 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             className="w-24 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                                             onClick={() => setPreviewTemplate(template)}
                                         />
+                                        {/* Color Swatches */}
+                                        {getThemeColors(template).length > 0 && (
+                                            <div className="absolute bottom-1 right-1 flex gap-0.5">
+                                                {getThemeColors(template).map((color, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="w-2 h-2 rounded-[2px] shadow-sm border border-white/50"
+                                                        style={{ backgroundColor: color }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                         {template.isArchived && (
                                             <div className="absolute inset-0 bg-black/60 rounded flex items-center justify-center">
                                                 <Archive className="w-6 h-6 text-white" />
@@ -461,6 +523,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         >
                                             <Edit size={14} />
                                             Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => setThumbnailEditTemplate(template)} 
+                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors" 
+                                            title="Change Thumbnail"
+                                        >
+                                            <ImageIcon size={18} />
                                         </button>
                                         <button 
                                             onClick={() => duplicateTemplate(template.id)} 
@@ -515,6 +584,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 </main>
             </div>
 
+            {/* Thumbnail Editor Modal */}
+            {thumbnailEditTemplate && (
+                <ThumbnailEditor 
+                    project={thumbnailEditTemplate} 
+                    onClose={() => setThumbnailEditTemplate(null)} 
+                />
+            )}
+
             {/* Preview Modal */}
             {previewTemplate && (
                 <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
@@ -545,13 +622,25 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
 
                         <div className="p-6">
-                            {/* Large Preview Image */}
-                            <div className="mb-6 rounded-lg overflow-hidden">
+                            {/* Large Preview Image with Color Swatches */}
+                            <div className="mb-6 rounded-lg overflow-hidden relative">
                                 <img 
                                     src={previewTemplate.thumbnailUrl} 
                                     alt={previewTemplate.name}
                                     className="w-full h-auto"
                                 />
+                                {/* Color Swatches */}
+                                {getThemeColors(previewTemplate).length > 0 && (
+                                    <div className="absolute bottom-4 right-4 flex gap-1.5">
+                                        {getThemeColors(previewTemplate).map((color, index) => (
+                                            <div
+                                                key={index}
+                                                className="w-5 h-5 rounded-md shadow-lg border border-white/40"
+                                                style={{ backgroundColor: color }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Template Details */}
@@ -656,6 +745,16 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 >
                                     <Edit size={18} />
                                     Edit Template
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setPreviewTemplate(null);
+                                        setThumbnailEditTemplate(previewTemplate);
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    <ImageIcon size={18} />
+                                    Change Thumbnail
                                 </button>
                                 <button 
                                     onClick={() => {

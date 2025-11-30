@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
-import { useEditor } from '../contexts/EditorContext';
+import { useSafeEditor } from '../contexts/EditorContext';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 
@@ -82,22 +82,26 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
     );
 };
 
-const Header: React.FC<HeaderData> = ({ 
+const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElement> }> = ({ 
     style, layout, isSticky, glassEffect, height,
     logoType, logoText, logoImageUrl, logoWidth,
     links, hoverStyle,
     ctaText, showCta, buttonBorderRadius, 
     showLogin, loginText, loginUrl,
     colors,
-    isPreviewMode = false
+    isPreviewMode = false,
+    containerRef
 }) => {
-  const { previewRef } = useEditor();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  // Use safe versions of hooks that work outside EditorProvider (for public preview)
+  const editorContext = useSafeEditor();
+  const previewRef = containerRef || editorContext?.previewRef || null;
   
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
+  
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Use primary color for navbar background
   const primaryColor = getColor('primary.main', '#4f46e5');

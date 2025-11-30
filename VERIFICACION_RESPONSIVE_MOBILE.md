@@ -505,3 +505,6 @@ Para reportar problemas de responsive design o sugerir mejoras:
 **Próxima revisión:** Después de cada actualización mayor de componentes
 
 
+
+
+
