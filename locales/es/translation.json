@@ -159,7 +159,21 @@
     "template": "Plantilla",
     "newProject": "Nuevo Proyecto",
     "new": "Nuevo",
-    "startBuilding": "Empieza a crear"
+    "startBuilding": "Empieza a crear",
+    "instructionsTitle": "¿Cómo usar Quimera.ai?",
+    "instructionsSubtitle": "Sigue estos pasos para crear tu sitio web",
+    "step1Title": "Crea tu proyecto",
+    "step1Desc": "Haz clic en \"Nuevo Proyecto\" y describe tu negocio para generar tu sitio con IA",
+    "step2Title": "Personaliza el diseño",
+    "step2Desc": "Edita colores, textos, imágenes y secciones desde el editor visual",
+    "step3Title": "O usa una plantilla",
+    "step3Desc": "Explora plantillas profesionales en la sección \"Plantillas\" del menú",
+    "step4Title": "Publica tu sitio",
+    "step4Desc": "Conecta tu dominio o usa nuestro hosting gratuito para publicar",
+    "instructionsTip": "💡 Puedes cerrar esta guía y siempre verla de nuevo desde la configuración",
+    "gotIt": "Entendido, ocultar",
+    "help": "Ayuda",
+    "showHelp": "Mostrar guía"
   },
   "editor": {
     "title": "Editor",
@@ -1323,6 +1337,27 @@
     "errorInvalidResponse": "La respuesta de AI no contiene JSON válido",
     "errorInvalidColor": "Color inválido para:",
     "errorGeneric": "Error al generar la paleta con AI"
+  },
+  "userTemplates": {
+    "title": "Plantillas",
+    "searchPlaceholder": "Buscar plantillas...",
+    "howToUseTitle": "¿Cómo usar las plantillas?",
+    "step1": "Explora las plantillas disponibles y encuentra una que se ajuste a tu industria",
+    "step2": "Haz clic en una plantilla para ver la vista previa con todos los detalles",
+    "step3": "Presiona \"Usar esta plantilla\" para crear tu sitio web basado en ella",
+    "step4": "Personaliza colores, textos e imágenes en el editor para hacerla tuya",
+    "availableTemplates": "Plantillas disponibles",
+    "showing": "Mostrando",
+    "preview": "Vista previa",
+    "noTemplatesFound": "No se encontraron plantillas",
+    "tryAdjustingFilters": "Intenta ajustar los filtros de búsqueda",
+    "includedSections": "Secciones incluidas",
+    "whatHappensNext": "¿Qué pasa después?",
+    "nextStep1": "Se creará una copia de esta plantilla como tu nuevo proyecto",
+    "nextStep2": "Serás redirigido al editor para personalizar tu sitio",
+    "nextStep3": "Podrás modificar textos, colores, imágenes y más",
+    "useThisTemplate": "Usar esta plantilla",
+    "creating": "Creando tu sitio..."
   }
 }
 

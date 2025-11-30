@@ -158,7 +158,21 @@
     "template": "Template",
     "newProject": "New Project",
     "new": "New",
-    "startBuilding": "Start creating"
+    "startBuilding": "Start creating",
+    "instructionsTitle": "How to use Quimera.ai?",
+    "instructionsSubtitle": "Follow these steps to create your website",
+    "step1Title": "Create your project",
+    "step1Desc": "Click on \"New Project\" and describe your business to generate your site with AI",
+    "step2Title": "Customize the design",
+    "step2Desc": "Edit colors, texts, images and sections from the visual editor",
+    "step3Title": "Or use a template",
+    "step3Desc": "Browse professional templates in the \"Templates\" section of the menu",
+    "step4Title": "Publish your site",
+    "step4Desc": "Connect your domain or use our free hosting to publish",
+    "instructionsTip": "💡 You can close this guide and always see it again from settings",
+    "gotIt": "Got it, hide",
+    "help": "Help",
+    "showHelp": "Show guide"
   },
   "editor": {
     "title": "Editor",
@@ -1162,6 +1176,27 @@
     "errorInvalidResponse": "AI response doesn't contain valid JSON",
     "errorInvalidColor": "Invalid color for:",
     "errorGeneric": "Error generating palette with AI"
+  },
+  "userTemplates": {
+    "title": "Templates",
+    "searchPlaceholder": "Search templates...",
+    "howToUseTitle": "How to use templates?",
+    "step1": "Browse available templates and find one that fits your industry",
+    "step2": "Click on a template to see the preview with all details",
+    "step3": "Press \"Use this template\" to create your website based on it",
+    "step4": "Customize colors, texts and images in the editor to make it yours",
+    "availableTemplates": "Available templates",
+    "showing": "Showing",
+    "preview": "Preview",
+    "noTemplatesFound": "No templates found",
+    "tryAdjustingFilters": "Try adjusting search filters",
+    "includedSections": "Included sections",
+    "whatHappensNext": "What happens next?",
+    "nextStep1": "A copy of this template will be created as your new project",
+    "nextStep2": "You'll be redirected to the editor to customize your site",
+    "nextStep3": "You can modify texts, colors, images and more",
+    "useThisTemplate": "Use this template",
+    "creating": "Creating your site..."
   }
 }
 

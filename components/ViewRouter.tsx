@@ -19,6 +19,7 @@ import LeadsDashboard from './dashboard/leads/LeadsDashboard';
 import DomainsDashboard from './dashboard/domains/DomainsDashboard';
 import SEODashboard from './dashboard/SEODashboard';
 import FinanceDashboard from './dashboard/finance/FinanceDashboard';
+import UserTemplates from './dashboard/UserTemplates';
 
 interface ViewRouterProps {
     view: View;
@@ -49,6 +50,7 @@ const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
     'domains': DomainsDashboard,
     'seo': SEODashboard,
     'finance': FinanceDashboard,
+    'templates': UserTemplates,
 };
 
 /**

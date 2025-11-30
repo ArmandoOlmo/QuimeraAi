@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -48,6 +48,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const defaultNavItems: NavItemData[] = [
     { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard', isFixed: true },
     { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites' },
+    { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates' },
     { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation' },
     { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms' },
     { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant' },

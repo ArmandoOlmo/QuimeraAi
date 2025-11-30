@@ -37,7 +37,7 @@ export type FontFamily =
   'nobile' | 'cardo' | 'asap' | 'questrial' | 'dancing-script' | 'amatic-sc';
 
 // View Types
-export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance';
+export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates';
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
 
 // Page Section Types
@@ -67,6 +67,10 @@ export interface ThemeData {
     fontFamilyHeader: FontFamily;
     fontFamilyBody: FontFamily;
     fontFamilyButton: FontFamily;
+    // All Caps options (uppercase transform)
+    headingsAllCaps?: boolean;   // Apply to section titles/headings
+    buttonsAllCaps?: boolean;    // Apply to buttons
+    navLinksAllCaps?: boolean;   // Apply to navigation links
     // Global Colors
     pageBackground: string;
     globalColors: GlobalColors;

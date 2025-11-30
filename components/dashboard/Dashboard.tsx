@@ -11,7 +11,7 @@ import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import LanguageSelector from '../ui/LanguageSelector';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2 } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { importProjectFromFile } from '../../utils/projectImporter';
 import { downloadMultipleProjectsAsJSON } from '../../utils/projectExporter';
@@ -35,6 +35,17 @@ const Dashboard: React.FC = () => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Instructions banner visibility (persisted in localStorage)
+  const [showInstructions, setShowInstructions] = useState(() => {
+    const saved = localStorage.getItem('quimera_show_instructions');
+    return saved !== 'false'; // Show by default
+  });
+  
+  const dismissInstructions = () => {
+    setShowInstructions(false);
+    localStorage.setItem('quimera_show_instructions', 'false');
+  };
   
   // Filters & Sorting
   const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
@@ -346,6 +357,21 @@ const Dashboard: React.FC = () => {
                     </>
                 )}
                 
+                {/* Help/Instructions Button - Only on Dashboard when instructions are hidden */}
+                {isDashboard && !showInstructions && (
+                    <button 
+                        onClick={() => {
+                            setShowInstructions(true);
+                            localStorage.setItem('quimera_show_instructions', 'true');
+                        }}
+                        className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        title={t('dashboard.showHelp', 'Mostrar guía')}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        <span className="hidden lg:inline">{t('dashboard.help', 'Ayuda')}</span>
+                    </button>
+                )}
+                
                 {/* Separator */}
                 <div className="hidden sm:block h-6 w-px bg-border/50 mx-1"></div>
                 
@@ -462,6 +488,140 @@ const Dashboard: React.FC = () => {
                                         <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.published')}</span>
                                     </div>
                                  </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* Instructions Banner - Dismissible */}
+                {isDashboard && showInstructions && (
+                    <section className="w-full animate-fade-in">
+                        <div className="relative flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0">
+                            {/* Floating Image - Outside the box, full height */}
+                            <div className="hidden lg:flex relative z-10 flex-shrink-0 -mr-6 items-end">
+                                <img 
+                                    src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FALeTxAC97FPhl7ymtEhAn.jpg?alt=media&token=e1ed6666-f72c-41bc-ad51-165161f361c2"
+                                    alt="Quimera AI Guide"
+                                    className="w-auto h-full max-h-[400px] object-contain"
+                                />
+                            </div>
+                            
+                            {/* Content Box */}
+                            <div className="relative flex-1 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden lg:pl-10">
+                                {/* Background decoration */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                                
+                                {/* Close button */}
+                                <button 
+                                    onClick={dismissInstructions}
+                                    className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
+                                    aria-label={t('common.close')}
+                                >
+                                    <X size={18} />
+                                </button>
+                                
+                                {/* Content Section */}
+                                <div className="relative z-10 p-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-3 bg-primary/20 rounded-xl">
+                                            <BookOpen className="w-6 h-6 text-primary" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-foreground">
+                                                {t('dashboard.instructionsTitle', '¿Cómo usar Quimera.ai?')}
+                                            </h2>
+                                            <p className="text-sm text-muted-foreground">
+                                                {t('dashboard.instructionsSubtitle', 'Sigue estos pasos para crear tu sitio web')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Step 1 */}
+                                        <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
+                                                1
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Sparkles className="w-4 h-4 text-primary" />
+                                                    <span className="font-semibold text-foreground text-sm">
+                                                        {t('dashboard.step1Title', 'Crea tu proyecto')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t('dashboard.step1Desc', 'Haz clic en "Nuevo Proyecto" y describe tu negocio para generar tu sitio con IA')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Step 2 */}
+                                        <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
+                                                2
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Palette className="w-4 h-4 text-purple-500" />
+                                                    <span className="font-semibold text-foreground text-sm">
+                                                        {t('dashboard.step2Title', 'Personaliza el diseño')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t('dashboard.step2Desc', 'Edita colores, textos, imágenes y secciones desde el editor visual')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Step 3 */}
+                                        <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
+                                                3
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <LayoutTemplate className="w-4 h-4 text-blue-500" />
+                                                    <span className="font-semibold text-foreground text-sm">
+                                                        {t('dashboard.step3Title', 'O usa una plantilla')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t('dashboard.step3Desc', 'Explora plantillas profesionales en la sección "Plantillas" del menú')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Step 4 */}
+                                        <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
+                                                4
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Rocket className="w-4 h-4 text-green-500" />
+                                                    <span className="font-semibold text-foreground text-sm">
+                                                        {t('dashboard.step4Title', 'Publica tu sitio')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t('dashboard.step4Desc', 'Conecta tu dominio o usa nuestro hosting gratuito para publicar')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('dashboard.instructionsTip', '💡 Puedes cerrar esta guía y siempre verla de nuevo desde la configuración')}
+                                        </p>
+                                        <button 
+                                            onClick={dismissInstructions}
+                                            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                        >
+                                            {t('dashboard.gotIt', 'Entendido, ocultar')}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
