@@ -297,6 +297,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         }
 
         setIsAiWorking(true);
+        let usedModel = 'gemini-2.5-flash';
         try {
             const ai = await getGoogleGenAI();
             let promptConfig;
@@ -320,10 +321,10 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                  }
             }
 
-            const modelName = promptConfig?.model || 'gemini-2.5-flash';
+            usedModel = promptConfig?.model || 'gemini-2.5-flash';
 
             const response = await ai.models.generateContent({
-                model: modelName,
+                model: usedModel,
                 contents: populatedPrompt,
             });
             
@@ -332,7 +333,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id,
-                    model: modelName,
+                    model: usedModel,
                     feature: `cms-${instruction}`,
                     success: true
                 });
@@ -347,7 +348,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id,
-                    model: promptConfig?.model || 'gemini-2.5-flash',
+                    model: usedModel,
                     feature: `cms-${instruction}`,
                     success: false,
                     errorMessage: error.message || 'Unknown error'
@@ -363,25 +364,25 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const generateSEO = async () => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsAiWorking(true);
+        let seoModelName = 'gemini-2.5-flash';
         try {
             const ai = await getGoogleGenAI();
             const contentPreview = editorRef.current?.innerText.substring(0, 2000) || '';
             
             const promptConfig = getPrompt('cms-generate-seo');
             let populatedPrompt = "";
-            let modelName = 'gemini-2.5-flash';
 
             if (promptConfig) {
                 populatedPrompt = promptConfig.template
                     .replace('{{title}}', title)
                     .replace('{{content}}', contentPreview);
-                modelName = promptConfig.model;
+                seoModelName = promptConfig.model;
             } else {
                 populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}`;
             }
 
             const response = await ai.models.generateContent({
-                model: modelName,
+                model: seoModelName,
                 contents: populatedPrompt,
                 config: { responseMimeType: "application/json" }
             });
@@ -391,7 +392,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id,
-                    model: modelName,
+                    model: seoModelName,
                     feature: 'cms-generate-seo',
                     success: true
                 });
@@ -406,7 +407,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id,
-                    model: modelName,
+                    model: seoModelName,
                     feature: 'cms-generate-seo',
                     success: false,
                     errorMessage: error.message || 'Unknown error'

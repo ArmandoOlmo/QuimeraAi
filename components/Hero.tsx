@@ -5,6 +5,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -140,7 +141,6 @@ const Hero: React.FC<HeroProps> = ({
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
 }) => {
-  console.log('🎯 Hero Classic rendering with imageUrl:', imageUrl);
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
   
@@ -289,7 +289,7 @@ const Hero: React.FC<HeroProps> = ({
             }`}
             style={{ 
               backgroundColor: secondaryButtonStyle === 'solid' 
-                ? `rgba(${parseInt(actualColors.secondaryButtonBackground.slice(1, 3), 16)}, ${parseInt(actualColors.secondaryButtonBackground.slice(3, 5), 16)}, ${parseInt(actualColors.secondaryButtonBackground.slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                ? hexToRgba(actualColors.secondaryButtonBackground, secondaryButtonOpacity / 100)
                 : 'transparent',
               borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
               color: actualColors.secondaryButtonText || '#ffffff'

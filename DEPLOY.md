@@ -91,3 +91,4 @@ Los secrets están configurados en:
 - **Firebase Console**: https://console.firebase.google.com/project/quimeraai
 - **GitHub Secrets**: https://github.com/ArmandoOlmo/QuimeraAi/settings/secrets/actions
 
+

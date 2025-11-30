@@ -197,6 +197,7 @@ interface EditorContextType {
     createNewTemplate: () => Promise<void>;
     archiveTemplate: (templateId: string, isArchived: boolean) => Promise<void>;
     duplicateTemplate: (templateId: string) => Promise<void>;
+    updateTemplateInState: (templateId: string, updates: Partial<Project>) => void;
 
     // Component Studio
     componentStyles: ComponentStyles;
@@ -340,11 +341,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const getDeletedTemplateIds = (): Set<string> => {
         try {
             const stored = localStorage.getItem('deletedTemplateIds');
-            console.log('🔍 [Init] Reading deletedTemplateIds from localStorage:', stored);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 const ids = new Set(Array.isArray(parsed) ? parsed : []);
-                console.log('🔍 [Init] Parsed deleted template IDs:', [...ids]);
                 return ids;
             }
         } catch (e) {
@@ -1329,15 +1328,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // Save template to global templates collection
                     const templateDocRef = doc(db, 'templates', activeProjectId);
                     await setDoc(templateDocRef, dataToSave);
-                    console.log('✅ Auto-saved template to Firestore');
                 } else {
                     // Save regular project to user's projects collection
                     const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
                     await setDoc(projectDocRef, dataToSave);
-                    console.log('✅ Auto-saved project to Firestore');
                 }
                 
-                setProjects(prev => prev.map(p => p.id === activeProjectId ? updatedProject : p));
+                // Update projects ref without triggering re-render (Firestore is the source of truth)
+                projectsRef.current = projectsRef.current.map(p => p.id === activeProjectId ? updatedProject : p);
             } catch (error) {
                 console.error('❌ Auto-save error:', error);
             }
@@ -1680,11 +1678,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const newLastUpdated = new Date().toISOString();
         
         try {
-            // Upload image to storage
+            // Upload image to storage - always use user's folder to avoid permission issues
             const fileName = `${Date.now()}_${file.name}`;
-            const storagePath = project.status === 'Template' 
-                ? `templates/${projectId}/thumbnail_${fileName}`
-                : `users/${user.uid}/projects/${projectId}/thumbnail_${fileName}`;
+            const storagePath = `user_uploads/${user.uid}/thumbnails/${projectId}_${fileName}`;
             
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
@@ -2137,35 +2133,27 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             return;
         }
 
-        // Find a base template from Firestore, or create a minimal empty template
-        const baseTemplate = projects.find(p => p.status === 'Template') || {
-            id: 'empty-template',
-            name: 'Empty Template',
+        // Always use initialData for new templates - generic dummy content
+        const newTemplateId = `template-${Date.now()}`;
+        const newTemplate: Project = {
+            id: newTemplateId,
+            name: 'New Custom Template',
             status: 'Template' as const,
-            data: initialData.data,
-            theme: initialData.theme,
-            brandIdentity: initialData.brandIdentity,
-            componentOrder: initialData.componentOrder,
-            sectionVisibility: initialData.sectionVisibility,
+            data: JSON.parse(JSON.stringify(initialData.data)), // Deep clone to avoid mutations
+            theme: JSON.parse(JSON.stringify(initialData.theme)),
+            brandIdentity: JSON.parse(JSON.stringify(initialData.brandIdentity)),
+            componentOrder: [...initialData.componentOrder],
+            sectionVisibility: { ...initialData.sectionVisibility },
             thumbnailUrl: '',
             lastUpdated: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             isArchived: false,
             category: 'General',
             tags: [],
-            description: 'Empty template',
+            description: 'New template with placeholder content',
             isFeatured: false,
             author: 'Quimera AI',
             version: '1.0.0'
-        };
-        const newTemplateId = `template-${Date.now()}`;
-        const newTemplate: Project = {
-            ...baseTemplate,
-            id: newTemplateId,
-            name: 'New Custom Template',
-            status: 'Template',
-            lastUpdated: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
         };
         
         // Save to Firestore immediately
@@ -2247,6 +2235,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // Still add locally for UX
             setProjects(prev => [...prev, duplicatedTemplate]);
         }
+    };
+
+    // Update a template in local state (used after saving to Firestore)
+    const updateTemplateInState = (templateId: string, updates: Partial<Project>) => {
+        setProjects(prev => prev.map(p => 
+            p.id === templateId ? { ...p, ...updates } : p
+        ));
     };
 
     const deleteProject = async (projectId: string) => {
@@ -2342,8 +2337,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 createdAt: serverTimestamp() as any,
                 notes: '',
                 aiSummary: '',
-                projectId: currentProject?.id,
-                projectName: currentProject?.name
+                projectId: activeProject?.id,
+                projectName: activeProject?.name
             };
 
             const filesCol = collection(db, 'users', user.uid, 'files');
@@ -2547,13 +2542,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
 
         const ai = await getGoogleGenAI();
+        let enhanceModel = 'gemini-2.5-pro';
         try {
              const enhancerPrompt = getPrompt('image-prompt-enhancer');
-             let model = 'gemini-2.5-pro';
              let promptTemplate = `Enhance this image generation prompt... Original: "{{originalPrompt}}"`;
 
              if (enhancerPrompt) {
-                 model = enhancerPrompt.model;
+                 enhanceModel = enhancerPrompt.model;
                  promptTemplate = enhancerPrompt.template;
              }
 
@@ -2588,14 +2583,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
              }
 
              console.log('🎨 [enhancePrompt] Sending request:', {
-                 model,
+                 model: enhanceModel,
                  hasReferenceImages,
                  referenceImagesCount: referenceImages?.length || 0,
                  promptLength: draftPrompt.length
              });
 
              const response = await ai.models.generateContent({
-                model: model,
+                model: enhanceModel,
                 contents: contents,
             });
             
@@ -2603,7 +2598,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (user) {
                 logApiCall({
                     userId: user.uid,
-                    model: model,
+                    model: enhanceModel,
                     feature: 'image-prompt-enhancer',
                     success: true
                 });
@@ -2615,7 +2610,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (user) {
                 logApiCall({
                     userId: user.uid,
-                    model: model || 'gemini-2.5-pro',
+                    model: enhanceModel,
                     feature: 'image-prompt-enhancer',
                     success: false,
                     errorMessage: error.message || 'Unknown error'
@@ -2647,15 +2642,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             throw new Error("Please select an API key first.");
         }
 
-        const destination = options?.destination || 'user';
-        if (destination === 'global' && userDocument?.role !== 'superadmin') {
-             throw new Error("Unauthorized: Only admins can generate global images.");
+        // FORCE user destination for now to avoid Firebase Storage permission issues
+        // Only allow 'global' if explicitly set AND user has proper role
+        let destination: 'user' | 'global' = 'user';
+        if (options?.destination === 'global') {
+            const allowedRoles = ['superadmin', 'owner', 'admin'];
+            if (allowedRoles.includes(userDocument?.role || '')) {
+                destination = 'global';
+            }
         }
+        console.log('🖼️ generateImage destination:', destination, 'requested:', options?.destination);
 
         const ai = await getGoogleGenAI();
         
         const galleryPromptConfig = getPrompt('image-generation-gallery');
-        let modelName = 'gemini-3-pro-image-preview'; // Quimera AI - Nano Banana Pro (Updated per online docs)
+        let modelName = 'imagen-3.0-generate-001'; // Stable image generation model
         let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality';
 
         console.log('🔍 [EditorContext] galleryPromptConfig:', {
@@ -2843,7 +2844,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     const response = await ai.models.generateContent({
                         model: modelName,
                         contents: [{ role: 'user', parts: contentParts }],
-                        generationConfig,
+                        config: generationConfig,
                     });
                     
                     // Log API call success
@@ -3742,11 +3743,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
-        console.log('💾 updateComponentStyle called:', { componentId, newStyles, isCustom, userRole: userDocument?.role });
-        
         // Allow superadmin, admin, manager, and owner to edit components
         if (!['superadmin', 'admin', 'manager', 'owner'].includes(userDocument?.role || '')) {
-            console.warn('❌ Permission denied. User role:', userDocument?.role);
             return;
         }
         
@@ -3757,19 +3755,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // UPDATE LOCAL STATE ONLY - Force immutable update
             setComponentStyles(prev => {
                 const currentStyles = prev[componentId as EditableComponentID];
-                const updated = {
+                return {
                     ...prev,
                     [componentId]: {
                         ...currentStyles,
                         ...newStyles
                     }
                 };
-                console.log('🔄 Component Style Updated:');
-                console.log('  - Component ID:', componentId);
-                console.log('  - New styles:', newStyles);
-                console.log('  - Current styles:', currentStyles);
-                console.log('  - Updated styles:', updated[componentId as EditableComponentID]);
-                return updated;
             });
         }
     };
@@ -4323,6 +4315,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         createNewTemplate,
         archiveTemplate,
         duplicateTemplate,
+        updateTemplateInState,
         componentStyles,
         customComponents,
         updateComponentStyle,

@@ -42,7 +42,8 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     chatbot: MessageSquare,
     footer: Type,
     header: AlignJustify,
-    typography: Palette
+    typography: Type,
+    colors: Palette
 };
 
 const ComponentTree: React.FC<ComponentTreeProps> = ({
@@ -87,7 +88,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         chatbot: t('editor.aiChatbot'),
         footer: t('editor.footerSection'),
         header: t('editor.navigationSection'),
-        typography: t('editor.typographySection')
+        typography: t('editor.typographySection'),
+        colors: t('editor.colorsSection')
     };
 
     const handleDragStart = (e: React.DragEvent, section: PageSection) => {
@@ -123,13 +125,17 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     };
 
     // Group sections by category - hero is now in content so it can be dragged
-    // Fixed order: Global Styles (typography) → Navigation (header) → Footer
-    const structureSections = ['typography', 'header', 'footer'].filter(s => 
-        componentOrder.includes(s as PageSection)
-    ) as PageSection[];
+    // Fixed order: Colors → Typography → Navigation (header) → Footer
+    // Colors and Typography are ALWAYS visible (global config sections)
+    // Header and Footer depend on componentOrder
+    const structureSections = [
+        'colors' as PageSection,      // Always visible - global colors
+        'typography' as PageSection,  // Always visible - global fonts
+        ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[])
+    ];
     
     const contentSections = componentOrder.filter(s => 
-        !['header', 'footer', 'typography', 'chatbot', 'leads', 'newsletter'].includes(s) &&
+        !['header', 'footer', 'typography', 'colors', 'chatbot', 'leads', 'newsletter'].includes(s) &&
         componentStatus[s]
     );
     
@@ -147,8 +153,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        // Only typography and footer are fixed positions - hero can be moved
-        const isFixed = ['footer', 'typography'].includes(section);
+        // Only colors, typography and footer are fixed positions - hero can be moved
+        const isFixed = ['footer', 'typography', 'colors'].includes(section);
 
         return (
             <div

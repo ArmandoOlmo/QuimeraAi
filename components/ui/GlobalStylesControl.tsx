@@ -1,6 +1,6 @@
 /**
- * GlobalStylesControl - Control global de estilos separado en Tipografía y Colores
- * Facilita la gestión de estilos globales del sitio web
+ * GlobalStylesControl - Control global de estilos
+ * Puede mostrar solo colores, solo tipografía, o ambos (con tabs)
  * 
  * Al seleccionar una paleta predefinida, los colores se aplican a TODOS los componentes.
  * Luego el usuario puede personalizar colores individualmente por componente.
@@ -11,9 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { FontFamily, GlobalColors, PageData } from '../../types';
 import ColorControl from './ColorControl';
+import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
 import { hexToRgba } from '../../utils/colorUtils';
-import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2 } from 'lucide-react';
+import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
+
+export type GlobalStylesMode = 'colors' | 'typography' | 'both';
 
 const fontOptions: FontFamily[] = [
     'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
@@ -32,6 +35,10 @@ const formatFontName = (font: string) => {
 };
 
 type Tab = 'typography' | 'colors';
+
+interface GlobalStylesControlProps {
+    mode?: GlobalStylesMode;
+}
 
 /**
  * Genera el mapeo de colores de la paleta global a cada componente
@@ -192,15 +199,21 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
     };
 };
 
-const GlobalStylesControl: React.FC = () => {
+const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both' }) => {
     const { t } = useTranslation();
     const { theme, setTheme, updateComponentStyle, data, setData } = useEditor();
     const [activeTab, setActiveTab] = useState<Tab>('colors');
     const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
     const [isApplying, setIsApplying] = useState(false);
+    const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
 
     // Ensure globalColors exists with defaults
     const globalColors = theme.globalColors || getDefaultGlobalColors();
+    
+    // Determine which content to show based on mode
+    const showColors = mode === 'colors' || mode === 'both';
+    const showTypography = mode === 'typography' || mode === 'both';
+    const showTabs = mode === 'both';
 
     const handleFontChange = (key: 'fontFamilyHeader' | 'fontFamilyBody' | 'fontFamilyButton', value: FontFamily) => {
         setTheme(prev => ({ ...prev, [key]: value }));
@@ -259,17 +272,20 @@ const GlobalStylesControl: React.FC = () => {
      * Maneja la selección de una paleta predefinida
      * 1. Actualiza los colores globales del tema
      * 2. Propaga los colores a todos los componentes
+     * 3. Guarda los colores de preview para acceso rápido en el selector
      */
     const handlePaletteSelect = async (palette: ColorPalette) => {
         setIsApplying(true);
         setSelectedPaletteId(palette.id);
         
         try {
-            // 1. Actualizar colores globales del tema
+            // 1. Actualizar colores globales del tema y guardar colores de la paleta para acceso rápido
             setTheme(prev => ({
                 ...prev,
                 globalColors: palette.colors,
-                pageBackground: palette.colors.background
+                pageBackground: palette.colors.background,
+                // Guardar los colores de preview de la paleta para el selector de colores
+                paletteColors: palette.preview
             }));
 
             // 2. Aplicar colores a todos los componentes
@@ -287,6 +303,35 @@ const GlobalStylesControl: React.FC = () => {
     const handleResetColors = async () => {
         const defaultPalette = colorPalettes.find(p => p.id === 'modern-dark') || colorPalettes[0];
         await handlePaletteSelect(defaultPalette);
+    };
+
+    /**
+     * Callback cuando se genera una paleta desde Coolors.co
+     */
+    const handleCoolorsPaletteGenerated = async (colors: GlobalColors, preview: string[], _paletteName?: string) => {
+        setIsApplying(true);
+        try {
+            // Actualizar colores globales del tema Y guardar los colores de la paleta original
+            // El paletteName no se usa aquí ya que es para templates, pero lo aceptamos para cumplir la interfaz
+            setTheme(prev => ({
+                ...prev,
+                globalColors: colors,
+                pageBackground: colors.background,
+                // Guardar los colores originales de la paleta para acceso rápido en el selector
+                paletteColors: preview
+            }));
+
+            // Aplicar colores a todos los componentes
+            await applyPaletteToAllComponents(colors);
+            
+            // Cerrar el importador y limpiar selección de paleta predefinida
+            setShowCoolorsImporter(false);
+            setSelectedPaletteId(null);
+        } catch (error) {
+            console.error('Error applying Coolors palette:', error);
+        } finally {
+            setIsApplying(false);
+        }
     };
 
     const renderFontSelect = (label: string, key: 'fontFamilyHeader' | 'fontFamilyBody' | 'fontFamilyButton') => (
@@ -315,35 +360,59 @@ const GlobalStylesControl: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            {/* Tab Selector */}
-            <div className="flex bg-editor-bg rounded-lg p-1 border border-editor-border">
-                <button
-                    onClick={() => setActiveTab('colors')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
-                        activeTab === 'colors'
-                            ? 'bg-editor-accent text-editor-bg shadow-sm'
-                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
-                    }`}
-                >
-                    <Palette size={16} />
-                    {t('globalStyles.colors', 'Colores')}
-                </button>
-                <button
-                    onClick={() => setActiveTab('typography')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
-                        activeTab === 'typography'
-                            ? 'bg-editor-accent text-editor-bg shadow-sm'
-                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
-                    }`}
-                >
-                    <Type size={16} />
-                    {t('globalStyles.typography', 'Tipografía')}
-                </button>
-            </div>
+            {/* Tab Selector - Only show when mode is 'both' */}
+            {showTabs && (
+                <div className="flex bg-editor-bg rounded-lg p-1 border border-editor-border">
+                    <button
+                        onClick={() => setActiveTab('colors')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
+                            activeTab === 'colors'
+                                ? 'bg-editor-accent text-editor-bg shadow-sm'
+                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
+                        }`}
+                    >
+                        <Palette size={16} />
+                        {t('globalStyles.colors', 'Colores')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('typography')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
+                            activeTab === 'typography'
+                                ? 'bg-editor-accent text-editor-bg shadow-sm'
+                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
+                        }`}
+                    >
+                        <Type size={16} />
+                        {t('globalStyles.typography', 'Tipografía')}
+                    </button>
+                </div>
+            )}
 
-            {/* Colors Tab */}
-            {activeTab === 'colors' && (
+            {/* Colors Content - Show when mode is 'colors' OR when mode is 'both' and activeTab is 'colors' */}
+            {(mode === 'colors' || (showTabs && activeTab === 'colors')) && (
                 <div className="space-y-5">
+                    {/* Coolors.co Importer Section */}
+                    <div className="border border-dashed border-purple-500/30 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
+                            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Upload size={16} className="text-purple-400" />
+                                <span className="text-sm font-medium text-editor-text-primary">
+                                    {t('globalStyles.importFromCoolors', 'Importar paleta de Coolors.co')}
+                                </span>
+                            </div>
+                            <ChevronDown size={14} className={`text-purple-400 transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {showCoolorsImporter && (
+                            <div className="p-4 border-t border-purple-500/20">
+                                <CoolorsImporter onPaletteGenerated={handleCoolorsPaletteGenerated} />
+                            </div>
+                        )}
+                    </div>
+
                     {/* Palettes Section */}
                     <div>
                         <div className="flex items-center justify-between mb-3">
@@ -435,11 +504,13 @@ const GlobalStylesControl: React.FC = () => {
                                         label="Primario"
                                         value={globalColors.primary}
                                         onChange={(v) => handleColorChange('primary', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
                                         label="Secundario"
                                         value={globalColors.secondary}
                                         onChange={(v) => handleColorChange('secondary', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                                 <div className="mt-3">
@@ -447,6 +518,7 @@ const GlobalStylesControl: React.FC = () => {
                                         label="Acento"
                                         value={globalColors.accent}
                                         onChange={(v) => handleColorChange('accent', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                             </div>
@@ -462,11 +534,13 @@ const GlobalStylesControl: React.FC = () => {
                                             handleColorChange('background', v);
                                             setTheme(prev => ({ ...prev, pageBackground: v }));
                                         }}
+                                        paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
                                         label="Superficie"
                                         value={globalColors.surface}
                                         onChange={(v) => handleColorChange('surface', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                             </div>
@@ -479,11 +553,13 @@ const GlobalStylesControl: React.FC = () => {
                                         label="Texto"
                                         value={globalColors.text}
                                         onChange={(v) => handleColorChange('text', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
                                         label="Títulos"
                                         value={globalColors.heading}
                                         onChange={(v) => handleColorChange('heading', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                                 <div className="mt-3">
@@ -491,6 +567,7 @@ const GlobalStylesControl: React.FC = () => {
                                         label="Texto Secundario"
                                         value={globalColors.textMuted}
                                         onChange={(v) => handleColorChange('textMuted', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                             </div>
@@ -503,16 +580,19 @@ const GlobalStylesControl: React.FC = () => {
                                         label="Bordes"
                                         value={globalColors.border}
                                         onChange={(v) => handleColorChange('border', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
                                         label="Éxito"
                                         value={globalColors.success}
                                         onChange={(v) => handleColorChange('success', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
                                         label="Error"
                                         value={globalColors.error}
                                         onChange={(v) => handleColorChange('error', v)}
+                                        paletteColors={theme.paletteColors}
                                     />
                                 </div>
                             </div>
@@ -521,8 +601,8 @@ const GlobalStylesControl: React.FC = () => {
                 </div>
             )}
 
-            {/* Typography Tab */}
-            {activeTab === 'typography' && (
+            {/* Typography Content - Show when mode is 'typography' OR when mode is 'both' and activeTab is 'typography' */}
+            {(mode === 'typography' || (showTabs && activeTab === 'typography')) && (
                 <div className="space-y-5">
                     {/* Font Controls */}
                     <div className="bg-editor-panel-bg/30 p-4 rounded-lg border border-editor-border">

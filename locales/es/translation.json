@@ -323,7 +323,8 @@
     "aiChatbot": "Chatbot IA",
     "footerSection": "Pie de Página",
     "navigationSection": "Navegación",
-    "typographySection": "Tipografía"
+    "typographySection": "Tipografía",
+    "colorsSection": "Colores"
   },
   "cms": {
     "title": "Sistema de Gestión de Contenidos",
@@ -1292,6 +1293,36 @@
     "configureMetadata": "Configurar metadatos y apariencia",
     "generateFromContent": "Generar desde contenido",
     "generating": "Generando..."
+  },
+  "globalStyles": {
+    "colors": "Colores",
+    "typography": "Tipografía",
+    "presetPalettes": "Paletas Predefinidas",
+    "customColors": "Colores Personalizados",
+    "importFromCoolors": "Importar paleta de Coolors.co",
+    "globalFonts": "Fuentes Globales",
+    "headingsFont": "Títulos / Headings",
+    "bodyFont": "Texto / Body",
+    "buttonsFont": "Botones / UI",
+    "preview": "Vista Previa"
+  },
+  "coolorsImporter": {
+    "title": "Importar desde Coolors.co",
+    "placeholder": "Pega URL de coolors.co o los colores...",
+    "colorsDetected": "colores detectados",
+    "success": "¡Paleta aplicada exitosamente!",
+    "generating": "Generando paleta con AI...",
+    "generate": "Generar Paleta con AI",
+    "applying": "Aplicando...",
+    "applyDirect": "Aplicar Paleta (Rápido)",
+    "generateAI": "Optimizar con AI",
+    "helpTitle": "Ejemplos de formato aceptado:",
+    "errorNoColors": "No se detectaron colores válidos. Asegúrate de pegar una URL de Coolors.co",
+    "errorMinColors": "Necesitas al menos 3 colores para generar una paleta",
+    "errorNoProject": "No hay un proyecto activo",
+    "errorInvalidResponse": "La respuesta de AI no contiene JSON válido",
+    "errorInvalidColor": "Color inválido para:",
+    "errorGeneric": "Error al generar la paleta con AI"
   }
 }
 

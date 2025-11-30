@@ -2,6 +2,7 @@ import React from 'react';
 import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
+import { hexToRgba } from '../utils/colorUtils';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -69,7 +70,6 @@ const HeroModern: React.FC<HeroProps> = ({
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
 }) => {
-  console.log('🚀 HeroModern rendering with imageUrl:', imageUrl);
   const { getColor } = useDesignTokens();
   
   // Component colors take priority - user colors override defaults
@@ -183,7 +183,7 @@ const HeroModern: React.FC<HeroProps> = ({
                 }`}
                 style={{ 
                   backgroundColor: secondaryButtonStyle === 'solid' 
-                    ? `rgba(${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(1, 3), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(3, 5), 16)}, ${parseInt((actualColors.secondaryButtonBackground || '#334155').slice(5, 7), 16)}, ${secondaryButtonOpacity / 100})`
+                    ? hexToRgba(actualColors.secondaryButtonBackground || '#334155', secondaryButtonOpacity / 100)
                     : 'transparent',
                   borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
                   color: actualColors.secondaryButtonText

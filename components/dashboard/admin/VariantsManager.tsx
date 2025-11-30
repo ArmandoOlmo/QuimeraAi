@@ -69,10 +69,13 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
     await onUpdateVariants(variants, variantId);
   };
 
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return 'Unknown';
+  const formatDate = (date?: { seconds: number; nanoseconds: number; } | string): string => {
+    if (!date) return 'Unknown';
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      const dateObj = typeof date === 'string' 
+        ? new Date(date) 
+        : new Date(date.seconds * 1000);
+      return dateObj.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

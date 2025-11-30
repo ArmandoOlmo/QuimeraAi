@@ -54,8 +54,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         const userData = userSnap.data() as UserDocument;
                         
                         // Determine role
-                        const role = determineRole(firebaseUser.email || '');
-                        const finalUserData = {
+                        const role = determineRole(firebaseUser.email || '') as UserRole;
+                        const finalUserData: UserDocument = {
                             ...userData,
                             role: userData.role || role
                         };
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         setUserPermissions(getPermissions(finalUserData.role || 'user'));
                     } else {
                         // Create user document if doesn't exist
-                        const role = determineRole(firebaseUser.email || '');
+                        const role = determineRole(firebaseUser.email || '') as UserRole;
                         const newUserDoc: UserDocument = {
                             id: firebaseUser.uid,
                             name: firebaseUser.displayName || 'User',
@@ -122,6 +122,7 @@ export const useAuth = (): AuthContextType => {
     }
     return context;
 };
+
 
 
 

@@ -5,7 +5,9 @@ import { Palette, Type, Maximize2, Cloud, Sparkles, Monitor, Save, RotateCcw, Ch
 import { applyTokensToFullProject } from '../../../utils/designTokenApplier';
 
 const DesignTokensEditor: React.FC = () => {
-  const { designTokens, updateDesignTokens, projects, activeProject, updateProject } = useEditor();
+  const { designTokens, updateDesignTokens, projects, activeProject, saveProject } = useEditor();
+  // Alias for compatibility
+  const updateProject = saveProject;
   
   const [localTokens, setLocalTokens] = useState<DesignTokens>(designTokens || {
     colors: {

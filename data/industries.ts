@@ -201,3 +201,4 @@ export const INDUSTRY_CATEGORIES = {
     'other': ['personal-portfolio', 'freelancer', 'startup', 'agency', 'other'],
 };
 
+

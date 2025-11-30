@@ -5,7 +5,9 @@ import { Search, Download, Star, Eye, Package, X, Check } from 'lucide-react';
 import ComponentRating from './ComponentRating';
 
 const ComponentMarketplace: React.FC = () => {
-    const { customComponents, duplicateCustomComponent, userDocument } = useEditor();
+    const { customComponents, userDocument } = useEditor();
+    // TODO: Implement duplicateCustomComponent in EditorContext
+    const duplicateCustomComponent = async (_id: string) => { console.warn('duplicateCustomComponent not implemented'); };
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedComponent, setSelectedComponent] = useState<CustomComponent | null>(null);
@@ -273,7 +275,7 @@ const ComponentMarketplace: React.FC = () => {
                                 <div>
                                     <h4 className="text-sm font-bold text-editor-text-secondary mb-1">Last Updated</h4>
                                     <p className="text-editor-text-primary">
-                                        {selectedComponent.updatedAt ? new Date(selectedComponent.updatedAt).toLocaleDateString() : 'N/A'}
+                                        {selectedComponent.updatedAt ? new Date(selectedComponent.updatedAt.seconds * 1000).toLocaleDateString() : 'N/A'}
                                     </p>
                                 </div>
                             </div>

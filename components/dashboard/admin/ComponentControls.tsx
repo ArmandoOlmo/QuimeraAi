@@ -5,7 +5,7 @@ import { useEditor } from '../../../contexts/EditorContext';
 import { componentStyles } from '../../../data/componentStyles';
 import ColorControl from '../../ui/ColorControl';
 import IconSelector from '../../ui/IconSelector';
-import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2 } from 'lucide-react';
+import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palette } from 'lucide-react';
 import ResponsiveConfigEditor from './ResponsiveConfigEditor';
 import AnimationConfigurator from './AnimationConfigurator';
 
@@ -186,7 +186,7 @@ interface ComponentControlsProps {
 }
 
 const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponentId }) => {
-    const { componentStyles: contextStyles, customComponents, updateComponentStyle, activeProject, saveProject } = useEditor();
+    const { componentStyles: contextStyles, customComponents, updateComponentStyle, activeProject, saveProject, theme } = useEditor();
     const [activeTab, setActiveTab] = useState<'styles' | 'responsive' | 'animation'>('styles');
     const [localRefresh, setLocalRefresh] = useState(0);
 
@@ -519,12 +519,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 
                 <hr className="border-editor-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
                     {<ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />}
@@ -540,14 +561,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1a1a2e'} onChange={v => handleColorChange('cardBackground', v)} />}
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
                 <hr className="border-editor-border/50" />
                 <div className="flex items-center space-x-2">
@@ -754,12 +767,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
                     {<ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />}
@@ -775,14 +809,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1f2937'} onChange={v => handleColorChange('cardBackground', v)} />}
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -791,12 +817,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const s = styles as any;
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -810,7 +857,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary">Card Box</h4>
+                <h4 className="font-semibold text-editor-text-primary text-sm">Card Box Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Border" value={s.colors?.borderColor || '#374151'} onChange={v => handleColorChange('borderColor', v)} />
@@ -821,7 +868,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary">Input Field</h4>
+                <h4 className="font-semibold text-editor-text-primary text-sm">Input Field Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Input Background" value={s.colors?.inputBackground || '#111827'} onChange={v => handleColorChange('inputBackground', v)} />
                     <ColorControl label="Input Text" value={s.colors?.inputText || '#ffffff'} onChange={v => handleColorChange('inputText', v)} />
@@ -831,19 +878,57 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary">Button</h4>
+                <h4 className="font-semibold text-editor-text-primary text-sm">Button Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Button Background" value={s.colors?.buttonBackground || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
                     <ColorControl label="Button Text" value={s.colors?.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
                 </div>
+            </div>
+        );
+    };
+
+    const renderHowItWorksControls = () => {
+        const s = styles as any;
+        return (
+            <div className="space-y-4">
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
 
                 <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
                     <Type size={16} className="text-editor-accent" />
                     <h4 className="font-semibold text-editor-text-primary">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={s.colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Accent (Circle)" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Heading" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
+                    <ColorControl label="Description" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Text" value={s.colors?.text || '#94a3b8'} onChange={v => handleColorChange('text', v)} />
+                </div>
             </div>
         );
     };
@@ -852,12 +937,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const s = styles as any;
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
                     {<ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />}
@@ -870,14 +976,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
                     {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -887,10 +985,32 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const colors = (ctaStyles.colors || {}) as any;
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={ctaStyles.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={ctaStyles.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={ctaStyles.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={ctaStyles.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Body Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -903,14 +1023,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Gradient Start" value={colors.gradientStart || '#0000ff'} onChange={v => handleColorChange('gradientStart', v)} />
                     <ColorControl label="Gradient End" value={colors.gradientEnd || '#00ff00'} onChange={v => handleColorChange('gradientEnd', v)} />
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={ctaStyles.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={ctaStyles.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -920,7 +1032,21 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const colors = (s.colors || {}) as any;
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'sm'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'sm'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Body Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -933,14 +1059,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Link Hover" value={colors.linkHover || '#aaaaaa'} onChange={v => handleColorChange('linkHover', v)} />
                     <ColorControl label="Border" value={colors.border || 'transparent'} onChange={v => handleColorChange('border', v)} />
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'sm'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'sm'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -951,7 +1069,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Layout & Style</h4>
+                {/* ========== LAYOUT & STYLE ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout & Style</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label>Layout</Label>
@@ -1147,7 +1269,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#ffffff'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors.text || '#000000'} onChange={v => handleColorChange('text', v)} />
@@ -1225,13 +1351,35 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* --- STANDARD CONTROLS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -1250,14 +1398,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Title" value={colors.cardTitleColor || colors.heading || '#ffffff'} onChange={v => handleColorChange('cardTitleColor', v)} />
-                </div>
-
-                <hr className="border-editor-border/50" />
-
-                <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                <div className="grid grid-cols-2 gap-4">
-                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
                 </div>
             </div>
         );
@@ -1342,13 +1482,35 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* --- STANDARD CONTROLS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors.text || '#94a3b8'} onChange={v => handleColorChange('text', v)} />
@@ -1360,14 +1522,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Card Background" value={colors.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
-                </div>
-
-                <hr className="border-editor-border/50" />
-
-                <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                <div className="grid grid-cols-2 gap-4">
-                    <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                    <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
                 </div>
             </div>
         );
@@ -1410,13 +1564,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* --- STANDARD CONTROLS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -1429,14 +1603,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={colors.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border" value={colors.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -1482,13 +1648,33 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* --- STANDARD CONTROLS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Colors</h4>
+                {/* ========== LAYOUT ========== */}
+                <div className="flex items-center space-x-2">
+                    <AlignJustify size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-                
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== TYPOGRAPHY ========== */}
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== COLORS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -1501,14 +1687,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent / Border" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
                 </div>
-
-                <hr className="border-editor-border/50" />
-                <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
-                </div>
-                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
-                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
             </div>
         );
     };
@@ -1665,6 +1843,54 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <label className="text-xs font-bold text-editor-text-secondary uppercase">Button Font</label>
                             <p className="text-editor-text-primary font-semibold mt-1">{theme.fontFamilyButton}</p>
                             <p className="text-xs text-editor-text-secondary mt-1">Used for all buttons and CTAs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderColorsControls = () => {
+        const globalColors = theme.globalColors || {} as any;
+        return (
+            <div className="space-y-4">
+                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <h4 className="font-semibold text-editor-text-primary mb-2 flex items-center gap-2">
+                        <Palette size={16} className="text-editor-accent" />
+                        Global Colors
+                    </h4>
+                    <p className="text-sm text-editor-text-secondary">
+                        Colors are configured globally through <strong>Theme Settings</strong> in your project. 
+                        These colors apply to all components automatically:
+                    </p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Primary</label>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.primary || '#4f46e5' }} />
+                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.primary || '#4f46e5'}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Secondary</label>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.secondary || '#10b981' }} />
+                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.secondary || '#10b981'}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Background</label>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.background || '#0f172a' }} />
+                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.background || '#0f172a'}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Text</label>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.text || '#94a3b8' }} />
+                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.text || '#94a3b8'}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1985,16 +2211,18 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'testimonials': return renderTestimonialsControls();
             case 'faq': return renderFaqControls();
             case 'chatbot': return renderChatbotControls();
+            case 'colors': return renderColorsControls();
             case 'typography': return renderTypographyControls();
             case 'slideshow': return renderSlideshowControls();
             case 'newsletter':
                 return renderNewsletterControls();
+            case 'howItWorks':
+                return renderHowItWorksControls();
             // Standard handlers for all other components that share similar structure
             case 'pricing':
             case 'portfolio':
             case 'leads':
             case 'video':
-            case 'howItWorks':
                 return renderStandardControls();
             case 'footer':
                  return renderFooterControls();

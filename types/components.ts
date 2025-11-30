@@ -51,6 +51,7 @@ export interface HeroData {
     primaryCta: string;
     secondaryCta: string;
     imageUrl: string;
+    backgroundImage?: string;
     imageStyle: ImageStyle;
     imageDropShadow: boolean;
     imageBorderRadius: BorderRadiusSize;
@@ -108,7 +109,7 @@ export interface FeaturesData {
     items: FeatureItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
     gridColumns: number;
     imageHeight: number;
     imageObjectFit: ObjectFit;
@@ -375,7 +376,20 @@ export interface PortfolioData {
     items: PortfolioItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
+    colors: { 
+        background: string; 
+        accent: string; 
+        borderColor: string; 
+        text: string; 
+        heading: string; 
+        description?: string;
+        // Card colors
+        cardBackground?: string;
+        cardTitleColor?: string;
+        cardTextColor?: string;
+        cardOverlayStart?: string;
+        cardOverlayEnd?: string;
+    };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
@@ -424,7 +438,7 @@ export interface ServicesData {
     items: ServiceItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
@@ -553,7 +567,7 @@ export interface FooterData {
 // =============================================================================
 // MAP
 // =============================================================================
-export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night';
+export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night' | 'card-overlay';
 
 export interface MapData {
     title: string;

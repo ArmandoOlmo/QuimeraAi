@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { ensureTextContrast } from '../utils/colorUtils';
+import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
 
 interface TestimonialCardProps {
   quote: string;
@@ -121,14 +121,6 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
     const baseStyle: React.CSSProperties = {
       animationDelay: delay,
       padding: `${cardPadding}px`
-    };
-
-    // Convert hex to rgba for glassmorphism effect
-    const hexToRgba = (hex: string, alpha: number) => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
     switch(variant) {

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { Palette, Sparkles, History } from 'lucide-react';
+import { useSafeEditor } from '../../contexts/EditorContext';
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
     <input
@@ -17,6 +19,39 @@ const PRESET_COLORS = [
   '#F87171', '#FB923C', '#FBBF24', '#A3E635', '#4ADE80', '#34D399', '#2DD4BF', '#60A5FA',
   '#818CF8', '#A78BFA', '#C084FC', '#F472B6', '#F43F5E', '#DC2626', '#EA580C', '#D97706',
 ];
+
+const MAX_RECENT_COLORS = 8;
+const RECENT_COLORS_KEY = 'quimera-recent-colors';
+
+// Helper to get recent colors from localStorage
+const getRecentColors = (): string[] => {
+    try {
+        const stored = localStorage.getItem(RECENT_COLORS_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch {
+        return [];
+    }
+};
+
+// Helper to save recent colors to localStorage
+const saveRecentColor = (color: string): string[] => {
+    try {
+        const recent = getRecentColors();
+        // Normalize color to uppercase hex for comparison
+        const normalizedColor = color.toUpperCase();
+        
+        // Remove if already exists
+        const filtered = recent.filter(c => c.toUpperCase() !== normalizedColor);
+        
+        // Add to beginning
+        const updated = [color, ...filtered].slice(0, MAX_RECENT_COLORS);
+        
+        localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(updated));
+        return updated;
+    } catch {
+        return [];
+    }
+};
 
 const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
   useEffect(() => {
@@ -76,7 +111,19 @@ const formatColor = ({ hex, alpha }: { hex: string, alpha: number }): string => 
 };
 
 
-const ColorControl: React.FC<{ label: string; value: string; onChange: (value: string) => void; }> = ({ label, value, onChange }) => {
+interface ColorControlProps {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    /** Colores de la paleta importada para acceso rápido. 
+     * Si no se proporciona, se obtiene automáticamente del tema global */
+    paletteColors?: string[];
+}
+
+const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors }) => {
+    // Obtener los colores de la paleta del tema global si no se pasan como prop
+    const editor = useSafeEditor();
+    const paletteColors = propPaletteColors ?? editor?.theme?.paletteColors;
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -87,7 +134,17 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
     // Estado local para el input HEX que permite edición manual
     const [hexInput, setHexInput] = useState('');
     
-    useClickOutside(popoverRef, () => setIsOpen(false));
+    // Estado para colores recientes
+    const [recentColors, setRecentColors] = useState<string[]>(() => getRecentColors());
+    
+    useClickOutside(popoverRef, () => {
+        // Save current color to recent when closing
+        if (alpha >= 1 && hex) {
+            const updated = saveRecentColor(hex);
+            setRecentColors(updated);
+        }
+        setIsOpen(false);
+    });
 
     useLayoutEffect(() => {
         if (isOpen && triggerRef.current) {
@@ -129,8 +186,15 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
         setHexInput(hex.toUpperCase());
     }, [hex]);
 
-    const handleColorChange = (newHex: string, newAlpha: number) => {
-        onChange(formatColor({ hex: newHex, alpha: newAlpha }));
+    const handleColorChange = (newHex: string, newAlpha: number, saveToRecent: boolean = true) => {
+        const formattedColor = formatColor({ hex: newHex, alpha: newAlpha });
+        onChange(formattedColor);
+        
+        // Save to recent colors (only for solid colors, not while dragging)
+        if (saveToRecent && newAlpha >= 1) {
+            const updated = saveRecentColor(newHex);
+            setRecentColors(updated);
+        }
     };
     
     // Validar si un string es un color HEX válido
@@ -154,7 +218,7 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
                 processedHex = '#' + normalizedHex.slice(1).split('').map(c => c + c).join('');
             }
             
-            handleColorChange(processedHex, alpha);
+            handleColorChange(processedHex, alpha, false);
         }
     };
 
@@ -170,7 +234,14 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
                       ref={colorInputRef}
                       type="color"
                       value={hex}
-                      onChange={(e) => handleColorChange(e.target.value, alpha)}
+                      onChange={(e) => handleColorChange(e.target.value, alpha, false)}
+                      onBlur={(e) => {
+                          // Save to recent when user finishes picking
+                          if (alpha >= 1) {
+                              const updated = saveRecentColor(e.target.value);
+                              setRecentColors(updated);
+                          }
+                      }}
                       className="opacity-0 w-0 h-0 absolute"
                   />
               </div>
@@ -199,7 +270,7 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
                           type="number" 
                           min="0" max="100" 
                           value={Math.round(alpha * 100)} 
-                          onChange={(e) => handleColorChange(hex, parseInt(e.target.value) / 100)}
+                          onChange={(e) => handleColorChange(hex, parseInt(e.target.value) / 100, false)}
                       />
                   </div>
               </div>
@@ -208,11 +279,67 @@ const ColorControl: React.FC<{ label: string; value: string; onChange: (value: s
                       type="range"
                       min="0" max="1" step="0.01"
                       value={alpha}
-                      onChange={(e) => handleColorChange(hex, parseFloat(e.target.value))}
+                      onChange={(e) => handleColorChange(hex, parseFloat(e.target.value), false)}
                       className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
                   />
               </div>
               <hr className="border-editor-border/50" />
+              
+              {/* Recent Colors - colores usados recientemente */}
+              {recentColors.length > 0 && (
+                  <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                          <History size={12} className="text-editor-accent" />
+                          <span className="text-[10px] font-semibold text-editor-accent uppercase tracking-wider">
+                              Recientes
+                          </span>
+                      </div>
+                      <div className="flex gap-1.5 mb-3">
+                          {recentColors.map((color, idx) => (
+                              <button
+                                  key={`recent-${idx}`}
+                                  title={color}
+                                  className="flex-1 h-7 rounded-md transition-all hover:scale-105 hover:ring-2 hover:ring-editor-accent/50 focus:outline-none focus:ring-2 focus:ring-editor-accent border border-white/10 shadow-sm"
+                                  style={{ backgroundColor: color }}
+                                  onClick={() => handleColorChange(color, 1, false)}
+                              />
+                          ))}
+                      </div>
+                      <hr className="border-editor-border/50 mb-3" />
+                  </div>
+              )}
+              
+              {/* Palette Colors - colores de la paleta importada de Coolors.co */}
+              {paletteColors && paletteColors.length > 0 && (
+                  <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                          <Sparkles size={12} className="text-purple-400" />
+                          <span className="text-[10px] font-semibold text-purple-400 uppercase tracking-wider">
+                              Paleta Importada
+                          </span>
+                      </div>
+                      <div className="flex gap-1.5 mb-3">
+                          {paletteColors.map((color, idx) => (
+                              <button
+                                  key={`palette-${idx}`}
+                                  title={color}
+                                  className="flex-1 h-8 rounded-md transition-all hover:scale-105 hover:ring-2 hover:ring-purple-400/50 focus:outline-none focus:ring-2 focus:ring-purple-400 border border-white/10 shadow-sm"
+                                  style={{ backgroundColor: color }}
+                                  onClick={() => handleColorChange(color, 1)}
+                              />
+                          ))}
+                      </div>
+                      <hr className="border-editor-border/50 mb-3" />
+                  </div>
+              )}
+              
+              {/* Preset Colors */}
+              <div className="flex items-center gap-1.5 mb-2">
+                  <Palette size={12} className="text-editor-text-secondary" />
+                  <span className="text-[10px] font-medium text-editor-text-secondary uppercase tracking-wider">
+                      Presets
+                  </span>
+              </div>
               <div className="grid grid-cols-8 gap-1">
                   {PRESET_COLORS.map(color => (
                       <button

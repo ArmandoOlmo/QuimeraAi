@@ -202,3 +202,133 @@ export const getAlpha = (color: string): number => {
     }
 };
 
+/**
+ * Lightens a color by a given percentage (supports hex and rgba)
+ * @param color - Color string in hex or rgba format
+ * @param percent - Percentage to lighten (0-100)
+ * @returns Lightened color (preserves format and alpha)
+ */
+export const lightenColor = (color: string, percent: number): string => {
+    try {
+        const { r, g, b, alpha } = parseColorToRgb(color);
+        
+        const factor = percent / 100;
+        const newR = Math.round(r + (255 - r) * factor);
+        const newG = Math.round(g + (255 - g) * factor);
+        const newB = Math.round(b + (255 - b) * factor);
+        
+        // If original had alpha < 1, return rgba format
+        if (alpha < 1) {
+            return `rgba(${Math.max(0, Math.min(255, newR))}, ${Math.max(0, Math.min(255, newG))}, ${Math.max(0, Math.min(255, newB))}, ${alpha})`;
+        }
+        
+        const toHexComponent = (n: number) => {
+            const hex = Math.max(0, Math.min(255, n)).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+        
+        return `#${toHexComponent(newR)}${toHexComponent(newG)}${toHexComponent(newB)}`;
+    } catch {
+        return color; // Return original color on error
+    }
+};
+
+/**
+ * Derives missing color values from a template's color palette.
+ * When templates provide basic colors (primary, accent, background), this function
+ * automatically derives the remaining colors (buttonBackground, cardBackground, etc.)
+ * ensuring consistent theming across all components.
+ * 
+ * @param colors - The colors object from template data
+ * @param componentType - The type of component (hero, features, etc.)
+ * @returns Complete colors object with all derived values
+ */
+export const deriveColorsFromPalette = (
+    colors: Record<string, any>,
+    componentType: string
+): Record<string, any> => {
+    if (!colors) return colors;
+
+    const derived: Record<string, any> = { ...colors };
+    
+    // Get primary color (use accent or primary, whichever is available)
+    const primaryColor = colors.primary || colors.accent || '#4f46e5';
+    const accentColor = colors.accent || colors.primary || '#4f46e5';
+    const bgColor = colors.background || '#0f172a';
+    const textColor = colors.text || getContrastingTextColor(bgColor);
+    const headingColor = colors.heading || textColor;
+    
+    // Derive button colors if not explicitly set
+    if (!colors.buttonBackground) {
+        derived.buttonBackground = primaryColor;
+    }
+    if (!colors.buttonText) {
+        derived.buttonText = getContrastingTextColor(derived.buttonBackground || primaryColor);
+    }
+    
+    // Derive secondary button colors
+    if (!colors.secondaryButtonBackground) {
+        // Use a subtle version of background or a muted gray
+        derived.secondaryButtonBackground = isDarkColor(bgColor) ? '#334155' : '#e2e8f0';
+    }
+    if (!colors.secondaryButtonText) {
+        derived.secondaryButtonText = getContrastingTextColor(derived.secondaryButtonBackground);
+    }
+    
+    // Derive card background if not set
+    if (!colors.cardBackground) {
+        // Cards should be slightly different from section background
+        if (componentType === 'testimonials' || componentType === 'team') {
+            derived.cardBackground = isDarkColor(bgColor) 
+                ? lightenColor(bgColor, 10)  // Slightly lighter for dark themes
+                : darkenColor(bgColor, 5);    // Slightly darker for light themes
+        } else if (componentType === 'features' || componentType === 'services') {
+            // For feature cards, use primary color with reduced opacity effect
+            derived.cardBackground = hexToRgba(primaryColor, 0.15);
+        } else {
+            derived.cardBackground = bgColor;
+        }
+    }
+    
+    // Derive input field colors for form components
+    if (componentType === 'leads' || componentType === 'newsletter') {
+        if (!colors.inputBackground) {
+            derived.inputBackground = isDarkColor(bgColor) 
+                ? darkenColor(bgColor, 20)
+                : '#ffffff';
+        }
+        if (!colors.inputText) {
+            derived.inputText = getContrastingTextColor(derived.inputBackground || bgColor);
+        }
+        if (!colors.inputBorder) {
+            derived.inputBorder = isDarkColor(bgColor) 
+                ? lightenColor(bgColor, 20)
+                : darkenColor(bgColor, 20);
+        }
+    }
+    
+    // Derive border color if not set
+    if (!colors.borderColor) {
+        derived.borderColor = isDarkColor(bgColor)
+            ? lightenColor(bgColor, 15)
+            : darkenColor(bgColor, 15);
+    }
+    
+    // Derive gradient colors for CTA and pricing
+    if (componentType === 'cta' || componentType === 'pricing') {
+        if (!colors.gradientStart) {
+            derived.gradientStart = primaryColor;
+        }
+        if (!colors.gradientEnd) {
+            derived.gradientEnd = colors.secondary || accentColor;
+        }
+    }
+    
+    // Derive description color (often a muted version of text)
+    if (!colors.description) {
+        derived.description = textColor;
+    }
+    
+    return derived;
+};
+

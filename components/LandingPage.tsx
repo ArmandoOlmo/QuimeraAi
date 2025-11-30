@@ -25,6 +25,7 @@ import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useEditor } from '../contexts/EditorContext';
+import { deriveColorsFromPalette } from '../utils/colorUtils';
 
 const fontStacks: Record<FontFamily, string> = {
     roboto: "'Roboto', sans-serif",
@@ -94,12 +95,6 @@ const LandingPage: React.FC = () => {
     root.style.setProperty('--font-header', headerFont);
     root.style.setProperty('--font-body', bodyFont);
     root.style.setProperty('--font-button', buttonFont);
-    
-    console.log('🎨 Fonts Applied:', {
-      header: `${theme.fontFamilyHeader} → ${headerFont}`,
-      body: `${theme.fontFamilyBody} → ${bodyFont}`,
-      button: `${theme.fontFamilyButton} → ${buttonFont}`
-    });
   }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton]);
 
   // Handle Hash Routing for Articles
@@ -164,15 +159,22 @@ const LandingPage: React.FC = () => {
     // Merge custom component styles with base data and componentStyles
     const baseComponentData = data[customComp.baseComponent];
     const baseStyles = componentStyles[customComp.baseComponent as keyof typeof componentStyles];
+    
+    // Merge colors with priority: base data < base styles < custom styles
+    const mergedColors = {
+      ...baseComponentData?.colors,
+      ...baseStyles?.colors,
+      ...customComp.styles?.colors
+    };
+    
+    // Derive missing colors from palette
+    const derivedColors = deriveColorsFromPalette(mergedColors, customComp.baseComponent);
+    
     const mergedData = {
       ...baseComponentData,
       ...baseStyles,
       ...customComp.styles,
-      colors: {
-        ...baseComponentData?.colors,
-        ...baseStyles?.colors,
-        ...customComp.styles?.colors
-      }
+      colors: derivedColors
     };
 
     // Render the base component with custom styles
@@ -224,29 +226,38 @@ const LandingPage: React.FC = () => {
   };
 
   // Merge componentStyles (defaults) with data (user changes) - user changes take priority
+  // Then derive any missing colors from the template palette
+  const mergedHeroColors = {
+    ...componentStyles.hero?.colors,  // default colors first
+    ...data.hero.colors               // user color changes override
+  };
   const mergedHeroData = {
     ...componentStyles.hero,  // defaults first
     ...data.hero,             // user changes override defaults
-    colors: {
-      ...componentStyles.hero?.colors,  // default colors first
-      ...data.hero.colors               // user color changes override
-    }
+    colors: deriveColorsFromPalette(mergedHeroColors, 'hero')
   };
 
   // Helper function to merge componentStyles (defaults) with data (user changes)
   // User changes in data take priority over componentStyles defaults
+  // Then derive any missing colors from the template palette
   const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
     const componentData = data[componentKey];
     const styles = componentStyles[componentKey];
     if (!componentData || !styles) return componentData;
     
+    // First merge the colors: defaults, then user/template colors
+    const mergedColors = {
+      ...styles.colors,         // default colors first
+      ...componentData.colors   // user/template color changes override
+    };
+    
+    // Derive any missing colors from the template palette
+    const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
+    
     return {
       ...styles,           // defaults first
       ...componentData,    // user changes override defaults
-      colors: {
-        ...styles.colors,         // default colors first
-        ...componentData.colors   // user color changes override
-      }
+      colors: derivedColors
     };
   };
 
@@ -297,6 +308,7 @@ const LandingPage: React.FC = () => {
     footer: <Footer {...mergedFooterData} />,
     header: null,
     typography: null,
+    colors: null, // Global colors are managed via theme settings
   };
   
   // Font variables are now injected directly into :root via useEffect above

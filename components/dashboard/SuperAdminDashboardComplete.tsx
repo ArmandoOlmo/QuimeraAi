@@ -5,7 +5,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle, 
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap, 
     Store, FlaskConical, Accessibility, Languages, Search, FileText, 
-    Navigation, TrendingUp, Activity, Clock, Star, Settings, Grid3x3, List
+    Navigation, TrendingUp, Activity as ActivityIcon, Clock, Star, Settings, Grid3x3, List
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -392,7 +392,7 @@ const SuperAdminDashboard = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <StatCard title="Usuarios Activos" value="1,234" icon={<Users size={24} />} trend="+12.5%" trendUp={true} />
                             <StatCard title="Sitios Publicados" value="89" icon={<LayoutTemplate size={24} />} trend="+5.2%" trendUp={true} />
-                            <StatCard title="Uso de API" value="45.2K" icon={<Activity size={24} />} trend="-2.1%" trendUp={false} />
+                            <StatCard title="Uso de API" value="45.2K" icon={<ActivityIcon size={24} />} trend="-2.1%" trendUp={false} />
                             <StatCard title="Ingresos MRR" value="$12.5K" icon={<TrendingUp size={24} />} trend="+18.3%" trendUp={true} />
                         </div>
 
@@ -444,6 +444,7 @@ const SuperAdminDashboard = () => {
 };
 
 export default SuperAdminDashboard;
+
 
 
 

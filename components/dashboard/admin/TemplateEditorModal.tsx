@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap, Wand2, Upload, RefreshCw } from 'lucide-react';
-import { Project } from '../../../types';
+import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap, Wand2, Upload, RefreshCw, ChevronDown } from 'lucide-react';
+import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
 import Modal from '../../ui/Modal';
 import { useEditor } from '../../../contexts/EditorContext';
-import { getGoogleGenAI } from '../../../utils/genAiClient';
+import { generateContent, getGoogleGenAI } from '../../../utils/genAiClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
+import CoolorsImporter from '../../ui/CoolorsImporter';
 
 interface TemplateEditorModalProps {
     isOpen: boolean;
@@ -122,6 +123,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+    const [isGeneratingName, setIsGeneratingName] = useState(false);
     const [error, setError] = useState('');
     
     const [formData, setFormData] = useState({
@@ -131,9 +133,13 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
         tags: [] as string[],
         industries: [] as string[],
         thumbnailUrl: '',
+        heroImageUrl: '', // For setting hero background
+        globalColors: null as GlobalColors | null,
+        paletteColors: [] as string[],
     });
 
     const [tagInput, setTagInput] = useState('');
+    const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
     
     // Thumbnail generation state
     const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
@@ -162,6 +168,9 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                 tags: template.tags || [],
                 industries: template.industries || [],
                 thumbnailUrl: template.thumbnailUrl || '',
+                heroImageUrl: template.data?.hero?.imageUrl || '',
+                globalColors: template.theme?.globalColors || null,
+                paletteColors: template.theme?.paletteColors || [],
             });
             setAiSuggestions([]);
             setGeneratedThumbnail(null);
@@ -257,10 +266,13 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
         setIsGeneratingThumbnail(true);
         try {
-            const url = await generateImage(thumbnailPrompt, {
+            // Add explicit instruction to avoid text in the image
+            const enhancedPrompt = `${thumbnailPrompt}, absolutely no text, no words, no letters, no typography, no watermarks, no logos with text`;
+            
+            const url = await generateImage(enhancedPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
-                destination: 'global',
+                destination: 'user',
                 resolution: '2K',
             });
             setGeneratedThumbnail(url);
@@ -272,16 +284,20 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         }
     };
 
-    // Apply generated thumbnail
+    // Apply generated thumbnail - also stores it for hero
     const applyGeneratedThumbnail = () => {
         if (generatedThumbnail) {
-            setFormData(prev => ({ ...prev, thumbnailUrl: generatedThumbnail }));
+            setFormData(prev => ({ 
+                ...prev, 
+                thumbnailUrl: generatedThumbnail,
+                heroImageUrl: generatedThumbnail // Also save for hero
+            }));
             setShowThumbnailGenerator(false);
             setGeneratedThumbnail(null);
         }
     };
 
-    // Handle file upload for thumbnail
+    // Handle file upload for thumbnail - also sets hero image
     const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -291,7 +307,11 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Get the most recently uploaded file
             const latestFile = files[0];
             if (latestFile) {
-                setFormData(prev => ({ ...prev, thumbnailUrl: latestFile.downloadURL }));
+                setFormData(prev => ({ 
+                    ...prev, 
+                    thumbnailUrl: latestFile.downloadURL,
+                    heroImageUrl: latestFile.downloadURL // Also set for hero
+                }));
             }
         } catch (error) {
             console.error('Error uploading thumbnail:', error);
@@ -385,6 +405,11 @@ Return ONLY the JSON array, no other text.`;
                 }
             }
 
+            // Apply suggestions automatically
+            if (suggestedIds.length > 0) {
+                const merged = [...new Set([...formData.industries, ...suggestedIds])];
+                setFormData(prev => ({ ...prev, industries: merged }));
+            }
             setAiSuggestions(suggestedIds);
         } catch (error) {
             console.error('AI suggestion error:', error);
@@ -394,7 +419,7 @@ Return ONLY the JSON array, no other text.`;
         }
     };
 
-    // Apply AI suggestions
+    // Apply AI suggestions (for manual apply if needed)
     const applyAiSuggestions = () => {
         // Merge AI suggestions with existing selections (no duplicates)
         const merged = [...new Set([...formData.industries, ...aiSuggestions])];
@@ -418,14 +443,39 @@ Return ONLY the JSON array, no other text.`;
         setError('');
         
         try {
-            await onSave(template.id, {
+            // Build update object with current formData values
+            const updates: Partial<Project> = {
                 name: formData.name,
                 description: formData.description,
                 category: formData.category,
-                tags: formData.tags,
-                industries: formData.industries,
+                tags: formData.tags || [],
+                industries: formData.industries || [],
                 thumbnailUrl: formData.thumbnailUrl,
-            });
+            };
+            
+            // Include globalColors if a palette was imported
+            if (formData.globalColors) {
+                updates.theme = {
+                    ...template.theme,
+                    globalColors: formData.globalColors,
+                    paletteColors: formData.paletteColors || [],
+                    pageBackground: formData.globalColors.background,
+                };
+            }
+            
+            // Update hero image if a new one was generated
+            if (formData.heroImageUrl) {
+                updates.data = {
+                    ...template.data,
+                    hero: {
+                        ...template.data?.hero,
+                        imageUrl: formData.heroImageUrl,
+                        backgroundImage: formData.heroImageUrl,
+                    }
+                };
+            }
+            
+            await onSave(template.id, updates);
             onClose();
         } catch (err) {
             console.error('Failed to update template:', err);
@@ -469,367 +519,407 @@ Return ONLY the JSON array, no other text.`;
         return industryId;
     };
 
+    // Handle Coolors palette import
+    const handleCoolorsPaletteGenerated = async (colors: GlobalColors, allColors: string[], paletteName?: string) => {
+        // Use the AI-generated palette name directly, or keep current name
+        const newName = paletteName || formData.name;
+        
+        setFormData(prev => ({ 
+            ...prev, 
+            name: newName,
+            globalColors: colors,
+            paletteColors: allColors
+        }));
+        
+        setShowCoolorsImporter(false);
+    };
+
+    // Generate template name with AI based on colors
+    const handleGenerateNameWithAI = async () => {
+        if (!template) return;
+        
+        // Get colors from formData (if palette was imported) or from template
+        const colorsToAnalyze = (formData.paletteColors || []).length > 0 
+            ? formData.paletteColors 
+            : extractTemplateColors(template).colors;
+        
+        if (colorsToAnalyze.length === 0) {
+            setError('No colors found. Import a color palette first.');
+            return;
+        }
+        
+        setIsGeneratingName(true);
+        setError('');
+        
+        try {
+            const prompt = `You are a creative naming expert. Analyze these colors and create a short, memorable, creative name for this website template.
+
+Colors: ${colorsToAnalyze.join(', ')}
+
+Requirements:
+- Name must be in ENGLISH
+- Maximum 2-3 words
+- Be creative and evocative (e.g., "Arctic Dawn", "Coral Sunset", "Midnight Garden", "Golden Ember")
+- The name should evoke the mood/feeling of the color palette
+- Do NOT include generic words like "Template", "Theme", "Palette", "Design"
+- Just respond with the name, nothing else
+
+Name:`;
+
+            const text = await generateContent(prompt, template.id, 'gemini-2.0-flash');
+            
+            // Clean up the response
+            const cleanName = text
+                .trim()
+                .split('\n')[0]
+                .replace(/^["']|["']$/g, '')
+                .replace(/\.$/g, '')
+                .replace(/^Name:\s*/i, '')
+                .trim();
+            
+            if (cleanName && cleanName.length > 1 && cleanName.length < 50) {
+                // Replace name completely with AI-generated name
+                setFormData(prev => ({ ...prev, name: cleanName }));
+            } else {
+                setError('Could not generate a valid name. Try again.');
+            }
+        } catch (err) {
+            console.error('AI name generation failed:', err);
+            setError('Failed to generate name. Please try again.');
+        } finally {
+            setIsGeneratingName(false);
+        }
+    };
+
     // Extract colors for display
     const templateColors = template ? extractTemplateColors(template).colors : [];
 
     if (!template) return null;
 
+    // Combine template colors with imported palette colors for display
+    const paletteColors = formData.paletteColors || [];
+    const displayColors = paletteColors.length > 0 ? paletteColors : templateColors;
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <div className="p-6 border-b border-editor-border flex justify-between items-center">
-                <div>
-                    <h2 className="text-lg font-semibold text-white">
-                        {t('industries.title')} & Metadata
-                    </h2>
-                    <p className="text-sm text-editor-text-secondary mt-0.5">{template?.name}</p>
+        <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
+            {/* Compact Header */}
+            <div className="px-5 py-4 border-b border-editor-border flex justify-between items-center bg-gradient-to-r from-editor-bg to-editor-surface">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-semibold text-white">Template Editor</h2>
+                        <p className="text-xs text-editor-text-secondary">{template?.name}</p>
+                    </div>
                 </div>
                 <button 
                     onClick={onClose} 
-                    className="p-1 rounded-full hover:bg-editor-border transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-editor-border transition-colors"
                 >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                 </button>
             </div>
             
             <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-5" style={{ maxHeight: '70vh', overflowY: 'visible' }}>
+                <div className="p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     {error && (
-                        <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded-md">
+                        <p className="bg-red-500/10 text-red-400 text-sm p-2.5 rounded-lg mb-4">
                             {error}
                         </p>
                     )}
 
-                    {/* Category */}
-                    <div>
-                        <label className="block text-sm font-medium text-editor-text-secondary mb-1">
-                            {t('superadmin.sortByCategory')}
-                        </label>
-                        <input
-                            type="text"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            placeholder="e.g., Hospitality & Dining"
-                            className="w-full bg-editor-bg text-white p-2.5 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none"
-                        />
-                    </div>
-
-                    {/* Thumbnail Image Section */}
-                    <div className="bg-editor-bg/50 rounded-lg p-4 border border-editor-border">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                                <ImageIcon className="w-4 h-4 text-editor-accent" />
-                                <span className="text-sm font-medium text-editor-text-secondary">
-                                    {t('superadmin.templateThumbnail', { defaultValue: 'Template Thumbnail' })}
-                                </span>
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    accept="image/*"
-                                    onChange={handleThumbnailUpload}
-                                    className="hidden"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="flex items-center gap-1 px-2 py-1 text-xs bg-editor-border text-editor-text-secondary hover:text-white rounded transition-colors"
-                                >
-                                    <Upload className="w-3 h-3" />
-                                    {t('common.upload', { defaultValue: 'Upload' })}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowThumbnailGenerator(!showThumbnailGenerator)}
-                                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                                        showThumbnailGenerator
-                                            ? 'bg-editor-accent text-editor-bg'
-                                            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
-                                    }`}
-                                >
-                                    <Zap className="w-3 h-3" />
-                                    {t('editor.generateWithAI', { defaultValue: 'Generate with AI' })}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Current Thumbnail Preview */}
-                        <div className="mb-3">
-                            <div className="relative aspect-video w-full max-w-md bg-editor-border rounded-lg overflow-hidden">
-                                {formData.thumbnailUrl ? (
-                                    <img 
-                                        src={formData.thumbnailUrl} 
-                                        alt="Template thumbnail" 
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-editor-text-secondary">
-                                        <div className="text-center">
-                                            <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                            <p className="text-sm">{t('superadmin.noThumbnail', { defaultValue: 'No thumbnail set' })}</p>
+                    {/* Two Column Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        
+                        {/* LEFT COLUMN - Basic Info & Colors */}
+                        <div className="space-y-4">
+                            {/* Name & Category Row */}
+                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                                <div className="space-y-3">
+                                    {/* Name with AI Button */}
+                                    <div>
+                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">Nombre</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                                placeholder="Template name"
+                                                className="flex-1 bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateNameWithAI}
+                                                disabled={isGeneratingName || displayColors.length === 0}
+                                                className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-40"
+                                                title="Generar nombre con IA"
+                                            >
+                                                {isGeneratingName ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+                                            </button>
                                         </div>
+                                    </div>
+                                    
+                                    {/* Category */}
+                                    <div>
+                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">Categoría</label>
+                                        <input
+                                            type="text"
+                                            name="category"
+                                            value={formData.category}
+                                            onChange={handleChange}
+                                            placeholder="e.g., Hospitality & Dining"
+                                            className="w-full bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Colors Section - Compact */}
+                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <Palette className="w-4 h-4 text-purple-400" />
+                                        <span className="text-xs font-medium text-editor-text-secondary">Colores</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
+                                        className="text-[10px] px-2 py-1 bg-purple-600/20 text-purple-300 rounded-md hover:bg-purple-600/30 transition-colors flex items-center gap-1"
+                                    >
+                                        <Sparkles size={10} />
+                                        {showCoolorsImporter ? 'Cerrar' : 'Importar Coolors'}
+                                    </button>
+                                </div>
+                                
+                                {/* Color Swatches */}
+                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                    {displayColors.slice(0, 10).map((color, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="w-7 h-7 rounded-lg border border-white/10 shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                                            style={{ backgroundColor: color }}
+                                            title={color}
+                                        />
+                                    ))}
+                                    {displayColors.length === 0 && (
+                                        <p className="text-xs text-editor-text-secondary/50">Sin colores</p>
+                                    )}
+                                </div>
+
+                                {/* Coolors Importer - Inline */}
+                                {showCoolorsImporter && (
+                                    <div className="pt-3 border-t border-editor-border/50">
+                                        <CoolorsImporter 
+                                            onPaletteGenerated={handleCoolorsPaletteGenerated} 
+                                            projectId={template?.id || 'template-editor'}
+                                            generatePaletteName={true}
+                                        />
                                     </div>
                                 )}
                             </div>
-                        </div>
 
-                        {/* AI Thumbnail Generator */}
-                        {showThumbnailGenerator && (
-                            <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg border border-purple-500/30 animate-fade-in-up">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Sparkles className="w-4 h-4 text-purple-400" />
-                                    <span className="text-sm font-medium text-purple-300">
-                                        {t('superadmin.aiThumbnailGenerator', { defaultValue: 'AI Thumbnail Generator' })}
-                                    </span>
+                            {/* Industries Section */}
+                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Building2 className="w-4 h-4 text-editor-accent" />
+                                        <span className="text-xs font-medium text-editor-text-secondary">{t('industries.title')}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={suggestIndustriesWithAI}
+                                        disabled={isAiSuggesting}
+                                        className="text-[10px] px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                        {isAiSuggesting ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                        {isAiSuggesting ? 'Analizando...' : 'Sugerir IA'}
+                                    </button>
                                 </div>
 
-                                {/* Prompt Input */}
-                                <div className="mb-3">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="text-xs text-editor-text-secondary">
-                                            {t('editor.prompt', { defaultValue: 'Prompt' })}
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={generateThumbnailPromptSuggestion}
-                                                disabled={isEnhancingPrompt}
-                                                className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
-                                                title={t('superadmin.autoGeneratePrompt', { defaultValue: 'Auto-generate prompt from template' })}
-                                            >
-                                                {isEnhancingPrompt ? (
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                ) : (
-                                                    <Sparkles className="w-3 h-3" />
-                                                )}
-                                                {t('superadmin.suggest', { defaultValue: 'Suggest' })}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={handleEnhancePrompt}
-                                                disabled={isEnhancingPrompt || !thumbnailPrompt}
-                                                className="flex items-center gap-1 text-xs text-editor-accent hover:text-white disabled:opacity-50"
-                                            >
-                                                {isEnhancingPrompt ? (
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                ) : (
-                                                    <Wand2 className="w-3 h-3" />
-                                                )}
-                                                {t('editor.enhance', { defaultValue: 'Enhance' })}
-                                            </button>
+                                {/* AI Suggestions - Compact */}
+                                {aiSuggestions.length > 0 && (
+                                    <div className="mb-2 p-2 bg-purple-900/20 rounded-lg border border-purple-500/20">
+                                        <div className="flex flex-wrap gap-1">
+                                            {aiSuggestions.map(id => (
+                                                <button
+                                                    key={id}
+                                                    type="button"
+                                                    onClick={() => applySingleSuggestion(id)}
+                                                    className="text-[10px] px-2 py-0.5 bg-purple-600/50 text-purple-200 rounded-full hover:bg-purple-600 transition-colors"
+                                                >
+                                                    + {getIndustryLabel(id)}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
-                                    <textarea
-                                        value={thumbnailPrompt}
-                                        onChange={(e) => setThumbnailPrompt(e.target.value)}
-                                        placeholder={t('superadmin.describeThumbnail', { defaultValue: 'Describe the thumbnail you want to generate...' })}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none h-20"
-                                    />
-                                </div>
+                                )}
 
-                                {/* Style Selector */}
-                                <div className="mb-3">
-                                    <label className="block text-xs text-editor-text-secondary mb-1">
-                                        {t('editor.style', { defaultValue: 'Style' })}
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {THUMBNAIL_STYLES.map((s) => (
-                                            <button
-                                                key={s.value}
-                                                type="button"
-                                                onClick={() => setThumbnailStyle(s.value)}
-                                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                                                    thumbnailStyle === s.value
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-editor-border text-editor-text-secondary hover:bg-editor-border/70'
-                                                }`}
-                                            >
-                                                {s.label}
-                                            </button>
-                                        ))}
+                                <IndustrySelector
+                                    selectedIndustries={formData.industries}
+                                    onChange={(industries) => setFormData(prev => ({ ...prev, industries }))}
+                                    maxHeight="180px"
+                                />
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN - Thumbnail */}
+                        <div className="space-y-4">
+                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <ImageIcon className="w-4 h-4 text-editor-accent" />
+                                        <span className="text-xs font-medium text-editor-text-secondary">Miniatura</span>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        <input type="file" ref={fileInputRef} accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="p-1.5 text-xs bg-editor-border text-editor-text-secondary hover:text-white rounded-lg transition-colors"
+                                            title="Subir imagen"
+                                        >
+                                            <Upload className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowThumbnailGenerator(!showThumbnailGenerator)}
+                                            className={`p-1.5 text-xs rounded-lg transition-colors ${
+                                                showThumbnailGenerator
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                            }`}
+                                            title="Generar con IA"
+                                        >
+                                            <Zap className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </div>
 
-                                {/* Generate Button */}
-                                <button
-                                    type="button"
-                                    onClick={handleGenerateThumbnail}
-                                    disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
-                                    className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                                >
-                                    {isGeneratingThumbnail ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            {t('editor.dreaming', { defaultValue: 'Generating...' })}
-                                        </>
+                                {/* Thumbnail Preview */}
+                                <div className="relative aspect-video w-full bg-editor-bg rounded-lg overflow-hidden border border-editor-border/50">
+                                    {formData.thumbnailUrl ? (
+                                        <img src={formData.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
                                     ) : (
-                                        <>
-                                            <Zap className="w-4 h-4" />
-                                            {t('editor.generateImage', { defaultValue: 'Generate Thumbnail' })}
-                                        </>
+                                        <div className="flex items-center justify-center h-full text-editor-text-secondary/50">
+                                            <div className="text-center">
+                                                <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-30" />
+                                                <p className="text-xs">Sin miniatura</p>
+                                            </div>
+                                        </div>
                                     )}
-                                </button>
+                                </div>
 
-                                {/* Generated Thumbnail Preview */}
-                                {generatedThumbnail && (
-                                    <div className="mt-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs text-editor-text-secondary">
-                                                {t('superadmin.generatedThumbnail', { defaultValue: 'Generated Thumbnail' })}
-                                            </span>
-                                            <div className="flex gap-2">
+                                {/* AI Generator - Compact */}
+                                {showThumbnailGenerator && (
+                                    <div className="mt-3 p-3 bg-purple-900/10 rounded-lg border border-purple-500/20">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[10px] font-medium text-purple-300">Generador IA</span>
+                                            <div className="flex gap-1">
                                                 <button
                                                     type="button"
-                                                    onClick={handleGenerateThumbnail}
-                                                    disabled={isGeneratingThumbnail}
-                                                    className="flex items-center gap-1 text-xs text-editor-text-secondary hover:text-white"
-                                                    title={t('superadmin.regenerate', { defaultValue: 'Regenerate' })}
+                                                    onClick={generateThumbnailPromptSuggestion}
+                                                    disabled={isEnhancingPrompt}
+                                                    className="text-[10px] px-1.5 py-0.5 text-purple-400 hover:text-purple-300 disabled:opacity-50"
                                                 >
-                                                    <RefreshCw className={`w-3 h-3 ${isGeneratingThumbnail ? 'animate-spin' : ''}`} />
+                                                    {isEnhancingPrompt ? <Loader2 size={10} className="animate-spin" /> : 'Sugerir'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleEnhancePrompt}
+                                                    disabled={isEnhancingPrompt || !thumbnailPrompt}
+                                                    className="text-[10px] px-1.5 py-0.5 text-editor-accent hover:text-white disabled:opacity-50"
+                                                >
+                                                    Mejorar
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="relative aspect-video w-full bg-editor-border rounded-lg overflow-hidden mb-3">
-                                            <img 
-                                                src={generatedThumbnail} 
-                                                alt="Generated thumbnail" 
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={applyGeneratedThumbnail}
-                                            className="w-full py-2 bg-editor-accent text-editor-bg font-medium rounded-lg hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            {t('superadmin.useThumbnail', { defaultValue: 'Use This Thumbnail' })}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Template Colors Preview */}
-                    {templateColors.length > 0 && (
-                        <div className="bg-editor-bg/50 rounded-lg p-4 border border-editor-border">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Palette className="w-4 h-4 text-editor-accent" />
-                                <span className="text-sm font-medium text-editor-text-secondary">
-                                    {t('industries.templateColors')}
-                                </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {templateColors.map((color, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="flex items-center gap-2 px-2 py-1 bg-editor-border rounded"
-                                    >
-                                        <div
-                                            className="w-5 h-5 rounded border border-white/20"
-                                            style={{ backgroundColor: color }}
+                                        
+                                        <textarea
+                                            value={thumbnailPrompt}
+                                            onChange={(e) => setThumbnailPrompt(e.target.value)}
+                                            placeholder="Describe la imagen..."
+                                            className="w-full bg-editor-bg border border-editor-border rounded-lg p-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none resize-none h-16"
                                         />
-                                        <span className="text-xs text-editor-text-secondary font-mono">
-                                            {color}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Industries - Main feature with AI */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-sm font-medium text-editor-text-secondary">
-                                <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4" />
-                                    {t('industries.title')}
-                                </div>
-                            </label>
-                            
-                            {/* AI Suggest Button */}
-                            <button
-                                type="button"
-                                onClick={suggestIndustriesWithAI}
-                                disabled={isAiSuggesting}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm rounded-md hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 shadow-lg"
-                            >
-                                {isAiSuggesting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        {t('industries.analyzing')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-4 h-4" />
-                                        {t('industries.aiSuggest')}
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                        
-                        <p className="text-xs text-editor-text-secondary/70 mb-2">
-                            {t('industries.selectIndustries')} - AI analyzes colors to suggest matching industries
-                        </p>
+                                        {/* Style Pills - Horizontal Scroll */}
+                                        <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
+                                            {THUMBNAIL_STYLES.map((s) => (
+                                                <button
+                                                    key={s.value}
+                                                    type="button"
+                                                    onClick={() => setThumbnailStyle(s.value)}
+                                                    className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors ${
+                                                        thumbnailStyle === s.value
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-editor-border text-editor-text-secondary'
+                                                    }`}
+                                                >
+                                                    {s.label}
+                                                </button>
+                                            ))}
+                                        </div>
 
-                        {/* AI Suggestions */}
-                        {aiSuggestions.length > 0 && (
-                            <div className="mb-3 p-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/30">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-purple-300 flex items-center gap-1.5">
-                                        <Sparkles className="w-4 h-4" />
-                                        {t('industries.aiSuggestionsTitle')}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={applyAiSuggestions}
-                                        className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-                                    >
-                                        {t('industries.applyAll')}
-                                    </button>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {aiSuggestions.map(id => (
                                         <button
-                                            key={id}
                                             type="button"
-                                            onClick={() => applySingleSuggestion(id)}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-600/50 text-purple-200 text-sm rounded-full hover:bg-purple-600 transition-colors border border-purple-500/50"
+                                            onClick={handleGenerateThumbnail}
+                                            disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
+                                            className="w-full py-1.5 mt-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-lg disabled:opacity-40 flex items-center justify-center gap-1.5"
                                         >
-                                            <span>+</span>
-                                            {getIndustryLabel(id)}
+                                            {isGeneratingThumbnail ? (
+                                                <><Loader2 size={12} className="animate-spin" /> Generando...</>
+                                            ) : (
+                                                <><Zap size={12} /> Generar</>
+                                            )}
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        <IndustrySelector
-                            selectedIndustries={formData.industries}
-                            onChange={(industries) => setFormData(prev => ({ ...prev, industries }))}
-                            maxHeight="300px"
-                        />
+                                        {/* Generated Preview */}
+                                        {generatedThumbnail && (
+                                            <div className="mt-3">
+                                                <div className="relative aspect-video w-full bg-editor-border rounded-lg overflow-hidden mb-2">
+                                                    <img src={generatedThumbnail} alt="Generated" className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleGenerateThumbnail}
+                                                        disabled={isGeneratingThumbnail}
+                                                        className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                                                    >
+                                                        <RefreshCw size={12} className={isGeneratingThumbnail ? 'animate-spin' : ''} />
+                                                    </button>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={applyGeneratedThumbnail}
+                                                    className="w-full py-1.5 bg-editor-accent text-editor-bg text-xs font-medium rounded-lg flex items-center justify-center gap-1"
+                                                >
+                                                    <Save size={12} /> Usar esta imagen
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="p-6 border-t border-editor-border flex justify-end gap-3">
+                {/* Compact Footer */}
+                <div className="px-5 py-3 border-t border-editor-border flex justify-end gap-2 bg-editor-surface/30">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="px-4 py-1.5 text-sm text-editor-text-secondary hover:text-white transition-colors"
                     >
-                        {t('common.cancel')}
+                        Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-md hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-editor-accent text-white text-sm font-medium rounded-lg hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
                     >
-                        <Save className="w-4 h-4" />
-                        {isLoading ? t('common.loading') : t('common.save')}
+                        <Save className="w-3.5 h-3.5" />
+                        {isLoading ? 'Guardando...' : 'Guardar'}
                     </button>
                 </div>
             </form>

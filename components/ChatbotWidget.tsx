@@ -58,7 +58,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 if (entry.isIntersecting) {
                     const sectionId = entry.target.id;
                     if (sectionId) {
-                        console.log(`[ChatbotWidget] 📍 User scrolled to: ${sectionId}`);
                         setCurrentSection(sectionId);
                     }
                 }

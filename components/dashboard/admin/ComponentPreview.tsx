@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { EditableComponentID, PreviewDevice, PreviewOrientation, AnimationConfig } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { initialData } from '../../../data/initialData';
+import { deriveColorsFromPalette } from '../../../utils/colorUtils';
 import PreviewStatesSelector, { PreviewState } from './PreviewStatesSelector';
 import AnimatedPreviewWrapper from './AnimatedPreviewWrapper';
-import { Loader2, AlertCircle, FileQuestion, Type } from 'lucide-react';
+import { Loader2, AlertCircle, FileQuestion, Type, Palette } from 'lucide-react';
 import Header from '../../Header';
 import Hero from '../../Hero';
 import HeroModern from '../../HeroModern';
@@ -122,50 +123,64 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         const heroVariant = (styles as any).heroVariant;
         console.log('🎨 Rendering component:', baseComponent, 'heroVariant:', heroVariant, 'Full styles:', styles);
 
+        // Merge mockContent colors with styles colors, then derive missing colors
+        const mergedColors = {
+            ...(mockContent as any)?.colors,
+            ...(styles as any)?.colors
+        };
+        const derivedColors = deriveColorsFromPalette(mergedColors, baseComponent);
+        
+        // Create merged props with derived colors
+        const mergedProps = {
+            ...mockContent as any,
+            ...styles,
+            colors: derivedColors
+        };
+
         switch (baseComponent) {
             case 'header':
-                return <Header {...mockContent as any} {...styles} isPreviewMode={true} />;
+                return <Header {...mergedProps} isPreviewMode={true} />;
             case 'hero':
                 console.log('🔍 Hero check: heroVariant=', heroVariant);
                 return heroVariant === 'modern'
-                    ? <HeroModern {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
+                    ? <HeroModern {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
                     : heroVariant === 'gradient'
-                        ? <HeroGradient {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
+                        ? <HeroGradient {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
                         : heroVariant === 'fitness'
-                            ? <HeroFitness {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />
-                            : <Hero {...mockContent as any} {...styles} borderRadius={styles.buttonBorderRadius || theme.buttonBorderRadius} />;
+                            ? <HeroFitness {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
+                            : <Hero {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
             case 'features':
-                return <Features {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Features {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'testimonials':
-                return <Testimonials {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Testimonials {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'cta':
-                 return <CTASection {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+                 return <CTASection {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'services':
-                return <Services {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Services {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'team':
-                return <Team {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Team {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'slideshow':
-                return <Slideshow {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Slideshow {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'pricing':
-                return <Pricing {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+                return <Pricing {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'faq':
-                return <Faq {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Faq {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'portfolio':
-                return <Portfolio {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Portfolio {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'leads':
-                return <Leads {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+                return <Leads {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'newsletter':
-                return <Newsletter {...mockContent as any} {...styles} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+                return <Newsletter {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'video':
-                return <Video {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Video {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'howItWorks':
-                return <HowItWorks {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <HowItWorks {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'map':
-                return <BusinessMap {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <BusinessMap {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'menu':
-                return <Menu {...mockContent as any} {...styles} borderRadius={theme.cardBorderRadius} />;
+                return <Menu {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'footer':
-                return <Footer {...mockContent as any} {...styles} />;
+                return <Footer {...mergedProps} />;
             case 'chatbot':
                 return <ChatbotWidget isPreview={true} />;
             case 'typography':
@@ -189,6 +204,42 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                                 <div>
                                     <button className="px-6 py-3 bg-editor-accent text-editor-bg rounded-md font-semibold" style={{ fontFamily: 'var(--font-button)' }}>Button Font Preview</button>
                                     <p className="text-sm text-editor-text-secondary mt-2">Using: {theme.fontFamilyButton}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            case 'colors':
+                const globalColors = (theme.globalColors || {}) as any;
+                return (
+                    <div className="p-8 text-center">
+                        <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="text-editor-text-secondary mb-4">
+                                <Palette size={48} className="mx-auto mb-4 text-editor-accent" />
+                                <h3 className="text-xl font-bold text-editor-text-primary mb-2">Global Color Settings</h3>
+                                <p className="text-sm">Colors are configured globally through Theme Settings and applied to all components.</p>
+                            </div>
+                            <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {[
+                                        { name: 'Primary', color: globalColors.primary || '#4f46e5' },
+                                        { name: 'Secondary', color: globalColors.secondary || '#10b981' },
+                                        { name: 'Accent', color: globalColors.accent || '#4f46e5' },
+                                        { name: 'Background', color: globalColors.background || '#0f172a' },
+                                        { name: 'Surface', color: globalColors.surface || '#1e293b' },
+                                        { name: 'Text', color: globalColors.text || '#94a3b8' },
+                                        { name: 'Heading', color: globalColors.heading || '#F9FAFB' },
+                                        { name: 'Border', color: globalColors.border || '#334155' },
+                                    ].map(({ name, color }) => (
+                                        <div key={name} className="text-center">
+                                            <div 
+                                                className="w-16 h-16 mx-auto rounded-lg border border-editor-border shadow-md mb-2"
+                                                style={{ backgroundColor: color }}
+                                            />
+                                            <p className="text-xs font-semibold text-editor-text-primary">{name}</p>
+                                            <p className="text-xs text-editor-text-secondary font-mono">{color}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

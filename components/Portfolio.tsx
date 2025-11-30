@@ -4,7 +4,6 @@ import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize, AnimationType }
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
-import { useDesignTokens } from '../hooks/useDesignTokens';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -16,6 +15,12 @@ interface PortfolioCardProps {
   borderColor: string;
   animationType?: AnimationType;
   enableAnimation?: boolean;
+  // Card-specific colors
+  cardBackground?: string;
+  cardTitleColor?: string;
+  cardTextColor?: string;
+  cardOverlayStart?: string;
+  cardOverlayEnd?: string;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -60,14 +65,22 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   borderRadius, 
   borderColor,
   animationType = 'fade-in-up',
-  enableAnimation = true
+  enableAnimation = true,
+  cardBackground = 'rgba(0,0,0,0.8)',
+  cardTitleColor = '#ffffff',
+  cardTextColor = 'rgba(255,255,255,0.9)',
+  cardOverlayStart = 'rgba(0,0,0,0.9)',
+  cardOverlayEnd = 'rgba(0,0,0,0.2)'
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
+  
+  // Build gradient style for overlay
+  const overlayGradient = `linear-gradient(to top, ${cardOverlayStart}, ${cardOverlayEnd})`;
   
   return (
     <div 
       className={`relative h-[400px] border transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`} 
-      style={{ animationDelay: delay, borderColor: borderColor }}
+      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: cardBackground }}
     >
       {/* Full Background Image */}
       <div className="absolute inset-0">
@@ -83,15 +96,15 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
           )}
       </div>
       
-      {/* Dark Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0" style={{ background: overlayGradient }} />
       
       {/* Content at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-        <h3 className="text-2xl font-bold text-white mb-3 font-header line-clamp-2">
+        <h3 className="text-2xl font-bold mb-3 font-header line-clamp-2" style={{ color: cardTitleColor }}>
           {title}
         </h3>
-        <p className="font-body text-sm text-white/90 line-clamp-3">
+        <p className="font-body text-sm line-clamp-3" style={{ color: cardTextColor }}>
           {description}
         </p>
       </div>
@@ -119,12 +132,8 @@ const Portfolio: React.FC<PortfolioProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true
 }) => {
-  // Get design tokens for secondary color
-  const { colors: tokenColors } = useDesignTokens();
-  const secondaryColor = tokenColors.secondary;
-  
   return (
-    <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: secondaryColor }}>
+    <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
@@ -145,6 +154,11 @@ const Portfolio: React.FC<PortfolioProps> = ({
                 borderColor={colors.borderColor}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
+                cardBackground={colors.cardBackground}
+                cardTitleColor={colors.cardTitleColor}
+                cardTextColor={colors.cardTextColor}
+                cardOverlayStart={colors.cardOverlayStart}
+                cardOverlayEnd={colors.cardOverlayEnd}
             />
           ))}
         </div>

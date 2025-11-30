@@ -6,9 +6,9 @@
 import { PageData } from './components';
 import { ThemeData, PageSection } from './ui';
 import { BrandIdentity } from './business';
-import { Menu } from './navigation';
+import { NavigationMenu } from './navigation';
 import { AiAssistantConfig } from './ai-assistant';
-import { ResponsiveStyles, ConditionalRule } from './features';
+import { ResponsiveStyles, ConditionalRule, ABTestConfig, ComponentStyles } from './features';
 import { SEOConfig } from './seo';
 
 // =============================================================================
@@ -29,11 +29,18 @@ export interface Project {
     isArchived?: boolean;
     sourceTemplateId?: string;
     imagePrompts?: Record<string, string>;
-    menus?: Menu[];
+    menus?: NavigationMenu[];
     aiAssistantConfig?: AiAssistantConfig;
     responsiveStyles?: Record<string, ResponsiveStyles>;
     conditionalRules?: ConditionalRule[];
     seoConfig?: SEOConfig;
+    
+    // A/B Testing
+    abTests?: ABTestConfig[];
+    
+    // Component customization
+    componentStatus?: Record<PageSection, boolean>;
+    componentStyles?: ComponentStyles;
     
     // Template-specific fields
     category?: string;
@@ -45,6 +52,9 @@ export interface Project {
     version?: string;
     compatibilityVersion?: string;
     createdAt?: string;
+    
+    // Industry classification for LLM template matching
+    industries?: string[];
 }
 
 

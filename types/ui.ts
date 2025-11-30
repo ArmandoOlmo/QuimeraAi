@@ -41,7 +41,7 @@ export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets'
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
 
 // Page Section Types
-export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'map' | 'menu';
+export type PageSection = 'hero' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map' | 'menu';
 
 // Global Color Palette
 export interface GlobalColors {
@@ -70,5 +70,8 @@ export interface ThemeData {
     // Global Colors
     pageBackground: string;
     globalColors: GlobalColors;
+    // Palette Colors - colores importados de Coolors.co u otras paletas
+    // Se muestran en el selector de colores para acceso rápido
+    paletteColors?: string[];
 }
 

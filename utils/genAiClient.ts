@@ -133,7 +133,7 @@ export const getGoogleGenAI = async () => {
  * Generate content using Gemini - automatically uses proxy in production
  * @param prompt The prompt to send to Gemini
  * @param projectId Project ID (required for proxy mode)
- * @param model Model to use (default: gemini-1.5-flash)
+ * @param model Model to use (default: gemini-2.5-flash)
  * @param config Generation configuration
  * @returns Generated text content
  */
@@ -157,11 +157,17 @@ export const generateContent = async (
         const response = await generateContentViaProxy(projectId, prompt, model, config, userId);
         return extractTextFromResponse(response);
     } else {
-        // Use direct API in development
+        // Use direct API in development (new @google/genai SDK)
         const genAI = await getGoogleGenAI();
-        const modelInstance = genAI.getGenerativeModel({ model });
-        const result = await modelInstance.generateContent(prompt);
-        return result.response.text();
+        const response = await genAI.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+                temperature: config.temperature,
+                maxOutputTokens: config.maxOutputTokens,
+            }
+        });
+        return response.text || '';
     }
 };
 

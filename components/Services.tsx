@@ -252,7 +252,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 }}
             >
                 <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{'--accent': accentColor} as any}>
-                     {React.cloneElement(icon as React.ReactElement, { size: 24 })}
+                     {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
                 </div>
                 <h3 className="text-xl font-bold mb-3 font-header">{title}</h3>
                 <p className="font-body text-sm opacity-70 mb-6 flex-grow" style={{ color: textColor }}>{description}</p>
@@ -270,7 +270,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             <div className={`flex gap-6 p-6 transition-all duration-300 ${radiusClass} ${animationClass}`} style={{ backgroundColor: cardBackground, animationDelay: delay }}>
                 <div className="flex-shrink-0 mt-1">
                     <div className="w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
-                        {React.cloneElement(icon as React.ReactElement, { size: 20 })}
+                        {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
                     </div>
                 </div>
                 <div>

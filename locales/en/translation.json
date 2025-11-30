@@ -322,7 +322,8 @@
     "aiChatbot": "AI Chatbot",
     "footerSection": "Footer",
     "navigationSection": "Navigation",
-    "typographySection": "Typography"
+    "typographySection": "Typography",
+    "colorsSection": "Colors"
   },
   "cms": {
     "title": "Content Management System",
@@ -1131,6 +1132,36 @@
     "scroll": "Scroll",
     "clip": "Clip",
     "assist": "Assist"
+  },
+  "globalStyles": {
+    "colors": "Colors",
+    "typography": "Typography",
+    "presetPalettes": "Preset Palettes",
+    "customColors": "Custom Colors",
+    "importFromCoolors": "Import palette from Coolors.co",
+    "globalFonts": "Global Fonts",
+    "headingsFont": "Headings Font",
+    "bodyFont": "Body Font",
+    "buttonsFont": "Buttons / UI Font",
+    "preview": "Preview"
+  },
+  "coolorsImporter": {
+    "title": "Import from Coolors.co",
+    "placeholder": "Paste Coolors.co URL or color codes...",
+    "colorsDetected": "colors detected",
+    "success": "Palette applied successfully!",
+    "generating": "Generating palette with AI...",
+    "generate": "Generate Palette with AI",
+    "applying": "Applying...",
+    "applyDirect": "Apply Palette (Fast)",
+    "generateAI": "Optimize with AI",
+    "helpTitle": "Accepted format examples:",
+    "errorNoColors": "No valid colors detected. Make sure to paste a Coolors.co URL",
+    "errorMinColors": "You need at least 3 colors to generate a palette",
+    "errorNoProject": "No active project",
+    "errorInvalidResponse": "AI response doesn't contain valid JSON",
+    "errorInvalidColor": "Invalid color for:",
+    "errorGeneric": "Error generating palette with AI"
   }
 }
 

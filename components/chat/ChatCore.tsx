@@ -510,10 +510,14 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 console.log('[ChatCore] 🔑 Using direct API mode');
 
                 const genai = await getGoogleGenAI();
+                // Include system context as first message in conversation
+                const contentsWithSystem = [
+                    { role: 'user', parts: [{ text: `System: ${systemContext}` }] },
+                    ...conversationHistory
+                ];
                 const result = await genai.models.generateContent({
                     model: 'gemini-2.5-flash',
-                    systemInstruction: systemContext,
-                    contents: conversationHistory
+                    contents: contentsWithSystem
                 });
 
                 botResponse = result.text;
@@ -967,12 +971,14 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                                 li: ({ node, ...props }) => <li className="ml-2" {...props} />,
                                                 strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
                                                 em: ({ node, ...props }) => <em className="italic" {...props} />,
-                                                code: ({ node, inline, ...props }) =>
-                                                    inline ? (
+                                                code: ({ node, className, ...props }) => {
+                                                    const isInline = !className?.includes('language-');
+                                                    return isInline ? (
                                                         <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono" {...props} />
                                                     ) : (
                                                         <code className="block bg-black/10 p-2 rounded my-2 text-xs font-mono overflow-x-auto" {...props} />
-                                                    ),
+                                                    );
+                                                },
                                                 a: ({ node, ...props }) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
                                                 h1: ({ node, ...props }) => <h1 className="text-base font-bold mb-2" {...props} />,
                                                 h2: ({ node, ...props }) => <h2 className="text-sm font-bold mb-2" {...props} />,

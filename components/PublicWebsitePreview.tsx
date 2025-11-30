@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily } from '../types';
+import { deriveColorsFromPalette } from '../utils/colorUtils';
 
 // Import all website components
 import Header from './Header';
@@ -264,20 +265,26 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     || data?.hero?.colors?.background 
     || '#0f172a';
 
-  // Helper to merge component data with styles
+  // Helper to merge component data with styles and derive missing colors from palette
   const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
     const componentData = data?.[componentKey];
     const styles = componentStyles?.[componentKey];
     if (!componentData) return componentData;
     if (!styles) return componentData;
     
+    // First merge the colors
+    const mergedColors = {
+      ...styles?.colors,
+      ...componentData?.colors
+    };
+    
+    // Derive any missing colors from the template palette
+    const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
+    
     return {
       ...styles,
       ...componentData,
-      colors: {
-        ...styles?.colors,
-        ...componentData?.colors
-      }
+      colors: derivedColors
     };
   };
 

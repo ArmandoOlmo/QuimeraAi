@@ -145,11 +145,11 @@ export interface ResponsiveStyles {
 // ANIMATION CONFIGURATION
 // =============================================================================
 export type AnimationTrigger = 'onLoad' | 'onScroll' | 'onClick' | 'onHover';
-export type AnimationType = 'fade' | 'slide' | 'scale' | 'rotate' | 'bounce' | 'custom';
+export type AdvancedAnimationType = 'fade' | 'slide' | 'scale' | 'rotate' | 'bounce' | 'custom';
 export type AnimationEasing = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'spring';
 
 export interface AnimationConfig {
-    type: AnimationType;
+    type: AdvancedAnimationType;
     duration: number;
     delay: number;
     easing: AnimationEasing;
@@ -231,10 +231,36 @@ export interface ABTestExperiment {
     winningVariant?: string;
 }
 
+// A/B Test Configuration for projects
+export interface ABTestVariant {
+    name: string;
+    config: Record<string, any>;
+    weight: number;
+}
+
+export interface ABTestGoal {
+    name: string;
+    type: 'clicks' | 'conversions' | 'time_on_page' | 'scroll_depth' | 'custom';
+    target?: number;
+}
+
+export interface ABTestConfig {
+    id: string;
+    name: string;
+    description: string;
+    variants: ABTestVariant[];
+    goals: ABTestGoal[];
+    isActive: boolean;
+    startDate?: { seconds: number; nanoseconds: number; };
+    endDate?: { seconds: number; nanoseconds: number; };
+    results?: Record<string, ExperimentMetrics>;
+    createdAt?: { seconds: number; nanoseconds: number; };
+}
+
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu';
+export type EditableComponentID = 'hero' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'colors';
 export type ComponentStyles = Record<EditableComponentID, any>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 
@@ -244,21 +270,28 @@ export interface ComponentVersion {
     author: string;
     changes: string;
     snapshot: any;
+    // Additional metadata
+    createdAt?: { seconds: number; nanoseconds: number; };
+    createdBy?: string;
+    notes?: string;
+    styles?: any;
 }
 
 export interface ComponentVariant {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     styles: any;
     thumbnail?: string;
     isDefault?: boolean;
+    createdAt?: { seconds: number; nanoseconds: number; } | string;
 }
 
 export interface ComponentPermissions {
     canEdit: string[];
     canView: string[];
     isPublic: boolean;
+    creator?: string;
 }
 
 export interface ComponentRating {
@@ -296,7 +329,9 @@ export interface CustomComponent {
     
     // Versioning
     version: number;
+    versions?: ComponentVersion[]; // Array of all versions
     versionHistory?: ComponentVersion[];
+    currentVersion?: number;
     lastModified?: { seconds: number; nanoseconds: number; };
     modifiedBy?: string;
     
@@ -307,6 +342,7 @@ export interface CustomComponent {
     
     // Variants
     variants?: ComponentVariant[];
+    activeVariant?: string; // ID of the currently active variant
     
     // Permissions & Usage
     permissions?: ComponentPermissions;
@@ -315,6 +351,7 @@ export interface CustomComponent {
     
     // Metadata
     createdAt: { seconds: number; nanoseconds: number; };
+    updatedAt?: { seconds: number; nanoseconds: number; };
     usageCount?: number;
     projectsUsing?: string[];
     

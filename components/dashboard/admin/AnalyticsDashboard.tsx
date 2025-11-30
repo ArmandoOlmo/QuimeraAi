@@ -33,10 +33,13 @@ const AnalyticsDashboard: React.FC = () => {
     team: 'Team Section',
     video: 'Video Section',
     howItWorks: 'How It Works',
+    map: 'Location Map',
+    menu: 'Restaurant Menu',
     chatbot: 'AI Chatbot',
     footer: 'Footer',
     header: 'Header',
     typography: 'Typography',
+    colors: 'Global Colors',
   };
 
   // Calculate analytics
@@ -75,7 +78,7 @@ const AnalyticsDashboard: React.FC = () => {
         projectCount: projectsUsing.length,
         trend: usageCount > projectsUsing.length * 2 ? 'up' : 
                usageCount < projectsUsing.length ? 'down' : 'stable',
-        lastUsed: component.lastModified ? new Date(component.lastModified) : undefined,
+        lastUsed: component.lastModified ? new Date(component.lastModified.seconds * 1000) : undefined,
       };
     });
 

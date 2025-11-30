@@ -40,7 +40,7 @@ type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, userDocument } = useEditor();
+    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, userDocument } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Search and Filter States
@@ -142,8 +142,10 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         const templateDocRef = doc(db, 'templates', templateId);
         await setDoc(templateDocRef, dataToSave);
         
-        // Force reload by navigating
-        window.location.reload();
+        // Update local state immediately so changes are visible
+        updateTemplateInState(templateId, updatedData);
+        
+        setEditingTemplate(null);
     };
 
     // Filter and sort templates
@@ -465,13 +467,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
                                     </div>
 
-                                    {/* Top Section: Category Badge + Color Swatches */}
-                                    <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center">
-                                        {/* Category Badge */}
-                                        <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg bg-editor-accent/20 text-editor-accent border-editor-accent/30">
-                                            {template.category || template.brandIdentity?.industry || 'General'}
-                                        </span>
-
+                                    {/* Top Section: Color Swatches */}
+                                    <div className="absolute top-4 right-4 z-20">
                                         {/* Color Swatches */}
                                         {getThemeColors(template).length > 0 && (
                                             <div className="flex gap-1">
@@ -612,20 +609,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-editor-text-primary truncate mb-1">{template.name}</h3>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <p className="text-sm text-editor-text-secondary">
-                                                {template.category || template.brandIdentity?.industry || 'General'}
-                                            </p>
-                                            {/* Industry tags in list view */}
-                                            {template.industries && template.industries.length > 0 && (
-                                                <div className="flex items-center gap-1">
-                                                    <Building2 className="w-3 h-3 text-editor-accent" />
-                                                    <span className="text-xs text-editor-accent">
-                                                        {template.industries.length} {t('industries.title').toLowerCase()}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        {/* Industry tags in list view */}
+                                        {template.industries && template.industries.length > 0 && (
+                                            <div className="flex items-center gap-1">
+                                                <Building2 className="w-3 h-3 text-editor-accent" />
+                                                <span className="text-xs text-editor-accent">
+                                                    {template.industries.length} {t('industries.title').toLowerCase()}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Actions */}
@@ -715,6 +707,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             {/* Thumbnail Editor Modal */}
             {thumbnailEditTemplate && (
                 <ThumbnailEditor 
+                    key={`thumbnail-${thumbnailEditTemplate.id}`}
                     project={thumbnailEditTemplate} 
                     onClose={() => setThumbnailEditTemplate(null)} 
                 />
@@ -744,9 +737,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
                                         )}
                                     </div>
-                                    <p className="text-sm text-editor-text-secondary">
-                                        {previewTemplate.category || previewTemplate.brandIdentity?.industry || 'General'}
-                                    </p>
                                 </div>
                                 <button 
                                     onClick={() => setPreviewTemplate(null)}
@@ -784,10 +774,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <div>
                                     <h3 className="font-semibold mb-3">Template Information</h3>
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-editor-text-secondary">Category:</span>
-                                            <span>{previewTemplate.category || previewTemplate.brandIdentity?.industry || 'General'}</span>
-                                        </div>
                                         <div className="flex justify-between">
                                             <span className="text-editor-text-secondary">Sites Using:</span>
                                             <span>{getTemplateUsage(previewTemplate.id)}</span>

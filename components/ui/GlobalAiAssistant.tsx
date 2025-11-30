@@ -876,6 +876,7 @@ const GlobalAiAssistant: React.FC = () => {
                     policiesContact: '',
                     specialInstructions: '',
                     faqs: [],
+                    knowledgeDocuments: [],
                     widgetColor: designPlan.palette?.primary || '#4f46e5',
                     isActive: true,
                     leadCaptureEnabled: true,

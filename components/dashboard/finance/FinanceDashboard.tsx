@@ -29,7 +29,13 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FinanceDashboard: React.FC = () => {
-    const { generateText, hasApiKey, handleApiError } = useEditor();
+    const { hasApiKey, handleApiError, getGoogleGenAI } = useEditor();
+    // AI text generation helper
+    const generateText = async (prompt: string, _options?: { systemPrompt?: string; temperature?: number }) => {
+        const ai = await getGoogleGenAI();
+        const result = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        return result.text;
+    };
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
     const [isUploading, setIsUploading] = useState(false);
@@ -246,7 +252,7 @@ Sé específico con números y porcentajes.`;
             const prompt = `Analiza este gasto y sugiere la categoría más apropiada:
 
 Proveedor: ${expense.supplier}
-Items: ${expense.items?.map(i => i.description).join(', ') || 'N/A'}
+Items: ${expense.items?.map((i: any) => typeof i === 'string' ? i : i.description).join(', ') || 'N/A'}
 Monto: $${expense.total}
 Categoría actual: ${expense.category}
 
@@ -431,7 +437,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                                             cx="50%"
                                                             cy="50%"
                                                             labelLine={false}
-                                                            label={entry => `${entry.percentage}%`}
+                                                            label={(entry: any) => `${entry.percentage}%`}
                                                             outerRadius={80}
                                                             fill="#8884d8"
                                                             dataKey="value"

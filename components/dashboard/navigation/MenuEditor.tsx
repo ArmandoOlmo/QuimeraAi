@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, MenuItem } from '../../../types';
+import { NavigationMenu, NavigationMenuItem } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
 import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
@@ -8,7 +8,7 @@ import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 
 interface MenuEditorProps {
-    menu: Menu;
+    menu: NavigationMenu;
     onClose: () => void;
     isNew: boolean;
 }
@@ -37,7 +37,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
     const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, data } = useEditor();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
-    const [items, setItems] = useState<MenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
+    const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
@@ -96,7 +96,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
         }
         
         setIsSaving(true);
-        const updatedMenu: Menu = {
+        const updatedMenu: NavigationMenu = {
             ...menu,
             title: title.trim(),
             handle: (handle || title).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -128,7 +128,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
     };
 
     const addMenuItem = () => {
-        const newItem: MenuItem = {
+        const newItem: NavigationMenuItem = {
             id: `item_${Date.now()}`,
             text: '',
             href: '',
@@ -138,7 +138,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
         setEditingItemId(newItem.id);
     };
 
-    const updateMenuItem = (id: string, data: Partial<MenuItem>) => {
+    const updateMenuItem = (id: string, data: Partial<NavigationMenuItem>) => {
         setItems(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
     };
 
@@ -189,14 +189,14 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
 
 
     // Link Picker Logic
-    const handleLinkSelect = (item: MenuItem, value: string) => {
+    const handleLinkSelect = (item: NavigationMenuItem, value: string) => {
         updateMenuItem(item.id, { href: value });
         setLinkPickerOpenId(null);
         setPickerCategory('root');
         setArticleSearch('');
     };
 
-    const renderLinkPickerContent = (item: MenuItem) => {
+    const renderLinkPickerContent = (item: NavigationMenuItem) => {
         if (pickerCategory === 'root') {
             return (
                 <div className="py-1">

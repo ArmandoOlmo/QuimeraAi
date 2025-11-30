@@ -359,4 +359,10 @@ export const componentStyles: ComponentStyles = {
     isConfigurable: false,
     configLocation: 'Theme Settings',
   },
+  colors: {
+    // Global colors are configured through Theme Settings
+    // This placeholder ensures the component can be selected in Studio
+    isConfigurable: false,
+    configLocation: 'Theme Settings',
+  },
 };

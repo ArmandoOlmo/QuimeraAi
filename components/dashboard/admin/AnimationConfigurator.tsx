@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { AnimationConfig, AnimationType, AnimationEasing, AnimationTrigger } from '../../../types';
+import { AnimationConfig, AdvancedAnimationType, AnimationEasing, AnimationTrigger } from '../../../types';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface AnimationConfiguratorProps {
@@ -13,7 +13,7 @@ const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <label className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
 );
 
-const animationTypes: { value: AnimationType; label: string; description: string }[] = [
+const animationTypes: { value: AdvancedAnimationType; label: string; description: string }[] = [
     { value: 'fade', label: 'Fade', description: 'Opacity transition' },
     { value: 'slide', label: 'Slide', description: 'Position movement' },
     { value: 'scale', label: 'Scale', description: 'Size transformation' },
@@ -38,7 +38,7 @@ const triggerOptions: { value: AnimationTrigger; label: string }[] = [
 ];
 
 const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ componentId, currentConfig, onUpdate }) => {
-    const [type, setType] = useState<AnimationType>(currentConfig?.type || 'fade');
+    const [type, setType] = useState<AdvancedAnimationType>(currentConfig?.type || 'fade');
     const [duration, setDuration] = useState(currentConfig?.duration || 500);
     const [delay, setDelay] = useState(currentConfig?.delay || 0);
     const [easing, setEasing] = useState<AnimationEasing>(currentConfig?.easing || 'easeOut');

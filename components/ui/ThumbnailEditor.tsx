@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
@@ -24,8 +24,9 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const { t } = useTranslation();
     const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
     const [isUploading, setIsUploading] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl);
+    const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl || '');
     const [dragActive, setDragActive] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     // AI Generation state
@@ -36,8 +37,13 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
     const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
 
-    // Extract actual colors from project (check theme.globalColors first, then section colors)
-    const getProjectColors = (): { name: string; color: string }[] => {
+    // Reset image loaded state when preview URL changes
+    useEffect(() => {
+        setImageLoaded(false);
+    }, [previewUrl]);
+
+    // Memoize theme colors to prevent re-renders
+    const themeColors = useMemo(() => {
         // Try globalColors first
         const gc = project.theme?.globalColors;
         if (gc?.primary || gc?.secondary || gc?.accent) {
@@ -73,9 +79,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
         }
         
         return [];
-    };
-    
-    const themeColors = getProjectColors();
+    }, [project.theme?.globalColors, project.data?.hero?.colors, project.data?.header?.colors]);
 
     // Analyze color palette for AI prompt generation
     const analyzeColorPalette = (colors: { name: string; color: string }[]): string => {
@@ -190,7 +194,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             const url = await generateImage(thumbnailPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
-                destination: 'global',
+                destination: 'user',
                 resolution: '2K',
             });
             setGeneratedThumbnail(url);
@@ -287,9 +291,12 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+        <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" 
+            onClick={onClose}
+        >
             <div 
-                className="bg-background border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
+                className="bg-background border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -341,11 +348,29 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
                     {/* Current Thumbnail Preview with Color Swatches */}
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
-                        <img 
-                            src={previewUrl} 
-                            alt="Thumbnail preview" 
-                            className="w-full h-full object-cover"
-                        />
+                        {previewUrl && !previewUrl.includes('data:image/svg+xml') ? (
+                            <>
+                                {!imageLoaded && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+                                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                )}
+                                <img 
+                                    src={previewUrl} 
+                                    alt="Thumbnail preview" 
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoad={() => setImageLoaded(true)}
+                                    onError={() => setImageLoaded(true)}
+                                />
+                            </>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
+                                <div className="text-center">
+                                    <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
+                                    <p className="text-sm text-muted-foreground">{t('superadmin.noThumbnail', { defaultValue: 'No thumbnail' })}</p>
+                                </div>
+                            </div>
+                        )}
                         
                         {/* Color Swatches - Bottom Right Corner */}
                         {themeColors.length > 0 && (

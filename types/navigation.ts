@@ -6,19 +6,26 @@
 // =============================================================================
 // NAVIGATION MENU
 // =============================================================================
-export interface MenuItem {
+export interface NavigationMenuItem {
     id: string;
     text: string;
     href: string;
     type: 'custom' | 'section' | 'page';
 }
 
-export interface Menu {
+/** @deprecated Use NavigationMenuItem instead */
+export type NavMenuItem = NavigationMenuItem;
+
+export interface NavigationMenu {
     id: string;
     title: string;
     handle: string;
-    items: MenuItem[];
+    items: NavigationMenuItem[];
 }
+
+/** @deprecated Use NavigationMenu instead */
+export type Menu = NavigationMenu;
+
 
 
 

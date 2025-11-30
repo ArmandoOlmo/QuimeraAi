@@ -130,3 +130,4 @@ echo -e "${GREEN}✨ Script completado${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 
+

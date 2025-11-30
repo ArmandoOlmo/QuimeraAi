@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
-import { PageSection, PricingTier } from '../types';
+import { PageSection, PricingTier, ServiceIcon } from '../types';
 import ColorControl from './ui/ColorControl';
 import GlobalStylesControl from './ui/GlobalStylesControl';
 import ImagePicker from './ui/ImagePicker';
@@ -796,7 +796,7 @@ const Controls: React.FC = () => {
                           <div className="grid grid-cols-2 gap-3">
                               <IconSelector 
                                   label={t('controls.icon')} 
-                                  value={data.hero.badgeIcon || 'sparkles'} 
+                                  value={(data.hero.badgeIcon || 'sparkles') as ServiceIcon} 
                                   onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
                                   size="sm"
                               />
@@ -2162,7 +2162,8 @@ const Controls: React.FC = () => {
       chatbot: 'AI Chatbot',
       footer: 'Footer',
       header: 'Navigation',
-      typography: 'Typography'
+      typography: 'Typography',
+      colors: 'Global Colors'
     };
     return labels[section] || section;
   };
@@ -2493,7 +2494,117 @@ const Controls: React.FC = () => {
               {renderListSectionControls('faq', 'Question', [{ key: 'question', label: 'Question', type: 'input' }, { key: 'answer', label: 'Answer', type: 'textarea' }])}
           </div>
       ) },
-      portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => renderListSectionControls('portfolio', 'Project', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'imageUrl', label: 'Image', type: 'image'}]) },
+      portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => (
+          <div className="space-y-4">
+              {/* Title & Description */}
+              <Input label="Title" value={data?.portfolio?.title} onChange={(e) => setNestedData('portfolio.title', e.target.value)} />
+              <FontSizeSelector label="Title Size" value={data?.portfolio?.titleFontSize || 'md'} onChange={(v) => setNestedData('portfolio.titleFontSize', v)} />
+              
+              <TextArea label="Description" value={data?.portfolio?.description} onChange={(e) => setNestedData('portfolio.description', e.target.value)} rows={2} />
+              <FontSizeSelector label="Description Size" value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
+
+              <hr className="border-editor-border/50" />
+
+              {/* Section Colors */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+                  <ColorControl label="Background" value={data?.portfolio?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('portfolio.colors.background', v)} />
+                  <ColorControl label="Heading" value={data?.portfolio?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('portfolio.colors.heading', v)} />
+                  <ColorControl label="Text" value={data?.portfolio?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('portfolio.colors.text', v)} />
+                  <ColorControl label="Accent" value={data?.portfolio?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('portfolio.colors.accent', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Card Colors */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+                  <ColorControl label="Card Background" value={data?.portfolio?.colors?.cardBackground || 'rgba(0,0,0,0.8)'} onChange={(v) => setNestedData('portfolio.colors.cardBackground', v)} />
+                  <ColorControl label="Card Title" value={data?.portfolio?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('portfolio.colors.cardTitleColor', v)} />
+                  <ColorControl label="Card Text" value={data?.portfolio?.colors?.cardTextColor || 'rgba(255,255,255,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardTextColor', v)} />
+                  <ColorControl label="Border Color" value={data?.portfolio?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('portfolio.colors.borderColor', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Card Overlay Gradient */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Overlay Gradient</label>
+                  <ColorControl label="Overlay Start (Bottom)" value={data?.portfolio?.colors?.cardOverlayStart || 'rgba(0,0,0,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayStart', v)} />
+                  <ColorControl label="Overlay End (Top)" value={data?.portfolio?.colors?.cardOverlayEnd || 'rgba(0,0,0,0.2)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayEnd', v)} />
+              </div>
+              
+              <hr className="border-editor-border/50" />
+              
+              {/* Spacing */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data?.portfolio?.paddingY || 'md'} onChange={(v) => setNestedData('portfolio.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data?.portfolio?.paddingX || 'md'} onChange={(v) => setNestedData('portfolio.paddingX', v)} />
+                  </div>
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Animation Controls */}
+              <AnimationControls
+                  animationType={data?.portfolio?.animationType || 'fade-in-up'}
+                  enableCardAnimation={data?.portfolio?.enableCardAnimation !== false}
+                  onChangeAnimationType={(type) => setNestedData('portfolio.animationType', type)}
+                  onToggleAnimation={(enabled) => setNestedData('portfolio.enableCardAnimation', enabled)}
+                  label="Card Animations"
+              />
+
+              <hr className="border-editor-border/50" />
+              
+              {/* Projects */}
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Projects</h4>
+              {(data?.portfolio?.items || []).map((item: any, index: number) => (
+                  <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+                      <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold text-editor-text-secondary">Project #{index + 1}</span>
+                          <button 
+                              onClick={() => {
+                                  const newItems = (data?.portfolio?.items || []).filter((_: any, i: number) => i !== index);
+                                  setNestedData('portfolio.items', newItems);
+                              }}
+                              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                          >
+                              <Trash2 size={14} />
+                          </button>
+                      </div>
+                      <input 
+                          placeholder="Title" 
+                          value={item.title} 
+                          onChange={(e) => setNestedData(`portfolio.items.${index}.title`, e.target.value)} 
+                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+                      />
+                      <textarea 
+                          placeholder="Description" 
+                          value={item.description} 
+                          onChange={(e) => setNestedData(`portfolio.items.${index}.description`, e.target.value)} 
+                          rows={2} 
+                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+                      />
+                      <ImagePicker 
+                          label="Image"
+                          value={item.imageUrl}
+                          onChange={(url) => setNestedData(`portfolio.items.${index}.imageUrl`, url)}
+                      />
+                  </div>
+              ))}
+              <button 
+                  onClick={() => {
+                      const newItems = [...(data?.portfolio?.items || []), { title: 'New Project', description: 'Project description', imageUrl: 'pending:placeholder' }];
+                      setNestedData('portfolio.items', newItems);
+                  }}
+                  className="w-full px-4 py-2 rounded-md text-xs font-bold border border-dashed border-editor-accent/50 text-editor-accent hover:bg-editor-accent/10 transition-colors"
+              >
+                  + Add Project
+              </button>
+          </div>
+      ) },
       leads: { label: 'Leads Form', icon: Mail, renderer: () => (
           <div className="space-y-4">
              {/* Variant Selector */}
@@ -2658,7 +2769,102 @@ const Controls: React.FC = () => {
       ) },
       slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: renderSlideshowControls },
       video: { label: 'Video', icon: MonitorPlay, renderer: renderVideoControls },
-      howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderListSectionControls('howItWorks', 'Step', [{key: 'title', label: 'Title', type: 'input'}, {key: 'description', label: 'Description', type: 'textarea'}, {key: 'icon', label: 'Icon', type: 'select', options: ['upload', 'process', 'magic-wand', 'download', 'share', 'search']}]) },
+      howItWorks: { label: 'How It Works', icon: Grid, renderer: () => (
+          <div className="space-y-4">
+              {/* Content */}
+              <Input label="Title" value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
+              <FontSizeSelector label="Title Size" value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
+              
+              <TextArea label="Description" value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
+              <FontSizeSelector label="Description Size" value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
+
+              {/* Steps Count */}
+              <div>
+                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Steps Count</label>
+                  <select 
+                      value={data?.howItWorks?.steps || 3} 
+                      onChange={(e) => setNestedData('howItWorks.steps', parseInt(e.target.value))}
+                      className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                  >
+                      <option value={3}>3 Steps</option>
+                      <option value={4}>4 Steps</option>
+                  </select>
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Colors */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
+                  <ColorControl label="Background" value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
+                  <ColorControl label="Heading" value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
+                  <ColorControl label="Description" value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
+                  <ColorControl label="Text" value={data?.howItWorks?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.text', v)} />
+                  <ColorControl label="Accent (Circle)" value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Spacing */}
+              <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+                  <div className="grid grid-cols-2 gap-3">
+                      <PaddingSelector label="Vertical" value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
+                      <PaddingSelector label="Horizontal" value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />
+                  </div>
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Steps Items */}
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Steps</h4>
+              {(data?.howItWorks?.items || []).map((item: any, index: number) => (
+                  <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+                      <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold text-editor-text-secondary">Step #{index + 1}</span>
+                          <button 
+                              onClick={() => {
+                                  const newItems = (data?.howItWorks?.items || []).filter((_: any, i: number) => i !== index);
+                                  setNestedData('howItWorks.items', newItems);
+                              }}
+                              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                          >
+                              <Trash2 size={14} />
+                          </button>
+                      </div>
+                      <input 
+                          placeholder="Title" 
+                          value={item.title} 
+                          onChange={(e) => setNestedData(`howItWorks.items.${index}.title`, e.target.value)} 
+                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+                      />
+                      <textarea 
+                          placeholder="Description" 
+                          value={item.description} 
+                          onChange={(e) => setNestedData(`howItWorks.items.${index}.description`, e.target.value)} 
+                          rows={2} 
+                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+                      />
+                      <select
+                          value={item.icon}
+                          onChange={(e) => setNestedData(`howItWorks.items.${index}.icon`, e.target.value)}
+                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                      >
+                          {['upload', 'process', 'magic-wand', 'download', 'share', 'search'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                  </div>
+              ))}
+              <button 
+                  onClick={() => {
+                      const newItems = [...(data?.howItWorks?.items || []), { title: 'New Step', description: 'Step description', icon: 'upload' }];
+                      setNestedData('howItWorks.items', newItems);
+                  }}
+                  className="w-full py-2 border-2 border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors text-sm"
+              >
+                  + Add Step
+              </button>
+          </div>
+      ) },
       map: { label: 'Map', icon: MapIcon, renderer: renderMapControls },
       menu: { label: 'Restaurant Menu', icon: MenuIcon, renderer: () => (
           <div className="space-y-4">
@@ -2767,7 +2973,8 @@ const Controls: React.FC = () => {
       chatbot: { label: 'AI Chatbot', icon: MessageSquare, renderer: renderChatbotControls },
       footer: { label: 'Footer', icon: Type, renderer: renderFooterControls },
       header: { label: 'Navigation Bar', icon: AlignJustify, renderer: renderHeaderControls },
-      typography: { label: 'Global Styles', icon: Palette, renderer: () => <GlobalStylesControl /> }
+      colors: { label: 'Colores', icon: Palette, renderer: () => <GlobalStylesControl mode="colors" /> },
+      typography: { label: 'Tipografía', icon: Type, renderer: () => <GlobalStylesControl mode="typography" /> }
   };
 
   if (!data) return null;
@@ -2775,9 +2982,9 @@ const Controls: React.FC = () => {
   const sortableSections = componentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
   
   // Get available components to add - users can add any component multiple times
-  // Only typography and footer are restricted (one instance each)
+  // Only colors, typography and footer are restricted (one instance each)
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
-    section => componentStatus[section] && section !== 'typography' && section !== 'footer'
+    section => componentStatus[section] && section !== 'typography' && section !== 'footer' && section !== 'colors'
   );
   
   const handleAddComponent = (section: PageSection) => {
@@ -3007,7 +3214,7 @@ const Controls: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <IconSelector 
                   label={t('controls.icon')} 
-                  value={data.hero.badgeIcon || 'sparkles'} 
+                  value={(data.hero.badgeIcon || 'sparkles') as ServiceIcon} 
                   onChange={(icon) => setNestedData('hero.badgeIcon', icon)} 
                   size="sm"
                 />

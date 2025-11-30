@@ -34,7 +34,6 @@ const EditorBubbleMenu: React.FC<EditorBubbleMenuProps> = ({ editor, onAICommand
     return (
         <BubbleMenu
             editor={editor}
-            tippyOptions={{ duration: 100, placement: 'top' }}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl flex items-center gap-0.5 p-1"
         >
             <BubbleButton

@@ -2,7 +2,7 @@
 import { initialData } from './initialData';
 import { Project, PageSection } from '../types';
 
-const ALL_SECTIONS: PageSection[] = ['typography', 'header', 'hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'map', 'menu', 'chatbot', 'footer'];
+const ALL_SECTIONS: PageSection[] = ['colors', 'typography', 'header', 'hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'map', 'menu', 'chatbot', 'footer'];
 const ALL_SECTIONS_VISIBLE = ALL_SECTIONS.reduce((acc, section) => {
     acc[section] = true;
     return acc;
@@ -32,14 +32,31 @@ export const initialProjects: Project[] = [
         coreValues: 'Authenticity, Taste, Atmosphere',
         language: 'English',
     },
-    componentOrder: ['typography', 'header', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer'],
+    componentOrder: ['colors', 'typography', 'header', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'newsletter', 'leads', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
+      // Border Radius
       cardBorderRadius: 'md',
       buttonBorderRadius: 'full',
+      // Typography
       fontFamilyHeader: 'playfair-display',
       fontFamilyBody: 'lato',
       fontFamilyButton: 'lato',
+      // Global Colors
+      pageBackground: '#18100A',
+      globalColors: {
+        primary: '#D4A373',
+        secondary: '#FAEDCD',
+        accent: '#D4A373',
+        background: '#18100A',
+        surface: '#241A15',
+        text: '#Eaddcf',
+        textMuted: '#a89a8c',
+        heading: '#FAEDCD',
+        border: '#3E2723',
+        success: '#22c55e',
+        error: '#ef4444',
+      },
     },
     imagePrompts: {
         'hero.imageUrl': 'High-end restaurant interior, warm cinematic lighting, beautifully plated gourmet dish in foreground, luxury dining atmosphere',
@@ -196,14 +213,31 @@ export const initialProjects: Project[] = [
         coreValues: 'Integrity, Experience, Justice',
         language: 'English',
     },
-    componentOrder: ['typography', 'header', 'hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['colors', 'typography', 'header', 'hero', 'features', 'services', 'video', 'team', 'testimonials', 'howItWorks', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
+      // Border Radius
       cardBorderRadius: 'none',
       buttonBorderRadius: 'none',
+      // Typography
       fontFamilyHeader: 'merriweather',
       fontFamilyBody: 'open-sans',
       fontFamilyButton: 'open-sans',
+      // Global Colors
+      pageBackground: '#ffffff',
+      globalColors: {
+        primary: '#c29d59',
+        secondary: '#0f172a',
+        accent: '#c29d59',
+        background: '#ffffff',
+        surface: '#f8fafc',
+        text: '#334155',
+        textMuted: '#64748b',
+        heading: '#0f172a',
+        border: '#e2e8f0',
+        success: '#22c55e',
+        error: '#ef4444',
+      },
     },
     imagePrompts: {
         'hero.imageUrl': 'Grand neoclassical courthouse columns, low angle view, symbolizing strength and justice, marble texture, golden hour sunlight',
@@ -345,14 +379,31 @@ export const initialProjects: Project[] = [
         coreValues: 'Strength, Discipline, Community',
         language: 'English',
     },
-    componentOrder: ['typography', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['colors', 'typography', 'hero', 'features', 'services', 'video', 'slideshow', 'team', 'pricing', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
+      // Border Radius
       cardBorderRadius: 'none',
       buttonBorderRadius: 'none',
+      // Typography
       fontFamilyHeader: 'oswald',
       fontFamilyBody: 'roboto',
       fontFamilyButton: 'oswald',
+      // Global Colors
+      pageBackground: '#000000',
+      globalColors: {
+        primary: '#ccff00',
+        secondary: '#ffffff',
+        accent: '#ccff00',
+        background: '#000000',
+        surface: '#0a0a0a',
+        text: '#d4d4d8',
+        textMuted: '#a1a1aa',
+        heading: '#ffffff',
+        border: '#27272a',
+        success: '#22c55e',
+        error: '#ef4444',
+      },
     },
     imagePrompts: {
         'hero.imageUrl': 'Intense gym atmosphere, athlete lifting heavy weights, chalk dust in air, dramatic neon green and black lighting, high contrast, sweat texture',
@@ -499,14 +550,31 @@ export const initialProjects: Project[] = [
         coreValues: 'Style, Comfort, Sustainability',
         language: 'English',
     },
-    componentOrder: ['typography', 'header', 'hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
+    componentOrder: ['colors', 'typography', 'header', 'hero', 'features', 'portfolio', 'services', 'video', 'slideshow', 'team', 'testimonials', 'faq', 'leads', 'newsletter', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
+      // Border Radius
       cardBorderRadius: 'xl',
       buttonBorderRadius: 'full',
+      // Typography
       fontFamilyHeader: 'montserrat',
       fontFamilyBody: 'mulish',
       fontFamilyButton: 'montserrat',
+      // Global Colors
+      pageBackground: '#ffffff',
+      globalColors: {
+        primary: '#fb7185',
+        secondary: '#fda4af',
+        accent: '#fb7185',
+        background: '#ffffff',
+        surface: '#fff1f2',
+        text: '#4b5563',
+        textMuted: '#6b7280',
+        heading: '#1f2937',
+        border: '#fce7f3',
+        success: '#22c55e',
+        error: '#ef4444',
+      },
     },
     imagePrompts: {
         'hero.imageUrl': 'Fashion editorial shot of a woman in a flowy pastel dress, golden hour sunlight, blurred garden background, high fashion pose, soft dreamy aesthetic',
@@ -660,14 +728,31 @@ export const initialProjects: Project[] = [
         coreValues: 'Quality, Trust, Performance',
         language: 'English',
     },
-    componentOrder: ['typography', 'header', 'hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer'],
+    componentOrder: ['colors', 'typography', 'header', 'hero', 'portfolio', 'features', 'services', 'video', 'team', 'testimonials', 'pricing', 'faq', 'leads', 'newsletter', 'howItWorks', 'cta', 'footer'],
     sectionVisibility: ALL_SECTIONS_VISIBLE,
     theme: {
+      // Border Radius
       cardBorderRadius: 'none',
       buttonBorderRadius: 'none',
+      // Typography
       fontFamilyHeader: 'exo-2',
       fontFamilyBody: 'roboto',
       fontFamilyButton: 'exo-2',
+      // Global Colors
+      pageBackground: '#1f2937',
+      globalColors: {
+        primary: '#ef4444',
+        secondary: '#d1d5db',
+        accent: '#ef4444',
+        background: '#1f2937',
+        surface: '#111827',
+        text: '#f3f4f6',
+        textMuted: '#9ca3af',
+        heading: '#ffffff',
+        border: '#374151',
+        success: '#22c55e',
+        error: '#ef4444',
+      },
     },
     imagePrompts: {
         'hero.imageUrl': 'Red luxury sports car speeding on a coastal highway at sunset, motion blur, photorealistic, cinematic lighting, sleek reflection',

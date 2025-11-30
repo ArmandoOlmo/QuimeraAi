@@ -112,6 +112,7 @@ export interface UserPreferences {
 
 export interface UserDocument {
     id: string;
+    uid?: string; // Firebase user ID (sometimes same as id)
     name: string;
     email: string;
     photoURL: string;
@@ -145,8 +146,8 @@ export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'negotiation' | 'wo
 export interface Lead {
     // Basic Info
     id: string;
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     phone?: string;
     
     // Address
@@ -169,7 +170,7 @@ export interface Lead {
     
     // CRM Fields
     status: LeadStatus;
-    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call';
+    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat';
     value?: number;
     probability?: number;
     expectedCloseDate?: { seconds: number; nanoseconds: number };
@@ -213,7 +214,7 @@ export interface LeadActivity {
     title: string;
     description?: string;
     createdAt: { seconds: number; nanoseconds: number };
-    createdBy: string;
+    createdBy?: string;
     metadata?: {
         oldStatus?: LeadStatus;
         newStatus?: LeadStatus;
@@ -454,6 +455,7 @@ export interface BrandGuidelines {
     secondaryColor?: string;
     logoUrl?: string;
     existingImages?: string[];
+    paletteId?: string;
 }
 
 export interface ImageGenerationProgress {
@@ -511,11 +513,13 @@ export interface OnboardingState {
 // =============================================================================
 export interface BrandIdentity {
     name: string;
+    businessName?: string;
     industry: string;
     targetAudience: string;
     toneOfVoice: 'Professional' | 'Playful' | 'Urgent' | 'Luxury' | 'Friendly' | 'Minimalist';
     coreValues: string;
     language: string;
+    logoUrl?: string;
 }
 
 

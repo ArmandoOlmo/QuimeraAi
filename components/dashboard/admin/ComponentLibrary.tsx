@@ -52,6 +52,7 @@ const componentNames: Record<PageSection, string> = {
     footer: 'Footer Section',
     header: 'Header / Navigation',
     typography: 'Global Typography',
+    colors: 'Global Colors',
 };
 
 const componentCategories: Record<PageSection, string> = {
@@ -75,6 +76,7 @@ const componentCategories: Record<PageSection, string> = {
     footer: 'navigation',
     header: 'navigation',
     typography: 'other',
+    colors: 'other',
 };
 
 const ComponentLibrary: React.FC = () => {

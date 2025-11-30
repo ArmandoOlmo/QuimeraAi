@@ -551,7 +551,7 @@ const Dashboard: React.FC = () => {
                                         active={filterStatus === 'Draft'} 
                                         count={draftCount}
                                         onClick={() => setFilterStatus('Draft')}
-                                        color="slate"
+                                        color="gray"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
