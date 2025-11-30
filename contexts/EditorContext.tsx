@@ -2656,7 +2656,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const ai = await getGoogleGenAI();
         
         const galleryPromptConfig = getPrompt('image-generation-gallery');
-        let modelName = 'imagen-3.0-generate-001'; // Stable image generation model
+        let modelName = 'gemini-3-pro-image-preview'; // Quimera AI - Nano Banana Pro
         let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality';
 
         console.log('🔍 [EditorContext] galleryPromptConfig:', {
