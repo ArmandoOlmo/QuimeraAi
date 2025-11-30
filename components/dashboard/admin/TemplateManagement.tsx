@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { 
@@ -20,10 +21,15 @@ import {
     Globe,
     Filter,
     Star,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Building2,
+    Settings2
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
+import TemplateEditorModal from './TemplateEditorModal';
+import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
+import { db, doc, setDoc } from '../../../firebase';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -33,12 +39,14 @@ type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, userDocument } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterIndustry, setFilterIndustry] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'archived'>('all');
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -47,6 +55,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [thumbnailEditTemplate, setThumbnailEditTemplate] = useState<Project | null>(null);
+    
+    // Template Editor Modal
+    const [editingTemplate, setEditingTemplate] = useState<Project | null>(null);
 
     // Helper to extract actual colors from template (check theme.globalColors first, then section colors)
     const getThemeColors = (template: Project): string[] => {
@@ -94,17 +105,60 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         return Array.from(cats).sort();
     }, [templates]);
 
+    // Get unique industries used in templates
+    const usedIndustries = useMemo(() => {
+        const industries = new Set<string>();
+        templates.forEach(t => {
+            if (t.industries && Array.isArray(t.industries)) {
+                t.industries.forEach(ind => industries.add(ind));
+            }
+        });
+        return Array.from(industries).sort();
+    }, [templates]);
+
+    // Get industry label for display
+    const getIndustryLabel = (industryId: string): string => {
+        const industry = INDUSTRIES.find(i => i.id === industryId);
+        if (industry) {
+            const key = industry.labelKey.replace('industries.', '');
+            return t(`industries.${key}`, { defaultValue: industryId });
+        }
+        return industryId;
+    };
+
+    // Update template in Firestore
+    const updateTemplate = async (templateId: string, updates: Partial<Project>) => {
+        const template = templates.find(t => t.id === templateId);
+        if (!template) throw new Error('Template not found');
+        
+        const updatedData = {
+            ...template,
+            ...updates,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        const { id, ...dataToSave } = updatedData;
+        
+        const templateDocRef = doc(db, 'templates', templateId);
+        await setDoc(templateDocRef, dataToSave);
+        
+        // Force reload by navigating
+        window.location.reload();
+    };
+
     // Filter and sort templates
     const filteredAndSortedTemplates = useMemo(() => {
         let result = [...templates];
 
-        // Apply search filter
+        // Apply search filter (also search in industries)
         if (searchTerm) {
+            const search = searchTerm.toLowerCase();
             result = result.filter(t => 
-                t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                t.brandIdentity?.industry?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                t.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                t.name.toLowerCase().includes(search) ||
+                t.description?.toLowerCase().includes(search) ||
+                t.brandIdentity?.industry?.toLowerCase().includes(search) ||
+                t.tags?.some(tag => tag.toLowerCase().includes(search)) ||
+                t.industries?.some(ind => getIndustryLabel(ind).toLowerCase().includes(search))
             );
         }
 
@@ -113,6 +167,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             result = result.filter(t => 
                 t.category === filterCategory || 
                 t.brandIdentity?.industry === filterCategory
+            );
+        }
+
+        // Apply industry filter
+        if (filterIndustry !== 'all') {
+            result = result.filter(t => 
+                t.industries?.includes(filterIndustry)
             );
         }
 
@@ -141,7 +202,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         });
 
         return result;
-    }, [templates, searchTerm, filterCategory, filterStatus, sortBy]);
+    }, [templates, searchTerm, filterCategory, filterIndustry, filterStatus, sortBy]);
 
     // Get most used template
     const getMostUsedTemplate = () => {
@@ -250,57 +311,76 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     <div className="px-4 sm:px-6 py-4 border-b border-editor-border bg-editor-panel-bg/50">
                         <div className="flex flex-wrap gap-3">
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-editor-text-secondary">Category</label>
+                                <label className="text-xs text-editor-text-secondary">{t('superadmin.sortByCategory')}</label>
                                 <select 
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
                                     className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
                                 >
-                                    <option value="all">All Categories</option>
+                                    <option value="all">{t('superadmin.allCategories')}</option>
                                     {categories.map(cat => (
                                         <option key={cat} value={cat}>{cat}</option>
                                     ))}
                                 </select>
                             </div>
 
+                            {/* Industry Filter */}
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-editor-text-secondary">Status</label>
+                                <label className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                    <Building2 className="w-3 h-3" />
+                                    {t('industries.title')}
+                                </label>
+                                <select 
+                                    value={filterIndustry}
+                                    onChange={(e) => setFilterIndustry(e.target.value)}
+                                    className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent min-w-[160px]"
+                                >
+                                    <option value="all">{t('superadmin.allCategories')}</option>
+                                    {usedIndustries.map(ind => (
+                                        <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs text-editor-text-secondary">{t('leads.status')}</label>
                                 <select 
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value as any)}
                                     className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
                                 >
-                                    <option value="all">All Templates</option>
-                                    <option value="active">Active</option>
-                                    <option value="archived">Archived</option>
+                                    <option value="all">{t('superadmin.allTemplates')}</option>
+                                    <option value="active">{t('superadmin.activeTemplates')}</option>
+                                    <option value="archived">{t('superadmin.archivedTemplates')}</option>
                                 </select>
                             </div>
 
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-editor-text-secondary">Sort By</label>
+                                <label className="text-xs text-editor-text-secondary">{t('leads.sort')}</label>
                                 <select 
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
                                     className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
                                 >
-                                    <option value="recent">Most Recent</option>
-                                    <option value="name">Name (A-Z)</option>
-                                    <option value="usage">Most Used</option>
-                                    <option value="category">Category</option>
+                                    <option value="recent">{t('superadmin.sortByRecent')}</option>
+                                    <option value="name">{t('superadmin.sortByName')}</option>
+                                    <option value="usage">{t('superadmin.sortByUsage')}</option>
+                                    <option value="category">{t('superadmin.sortByCategory')}</option>
                                 </select>
                             </div>
 
-                            {(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
+                            {(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all') && (
                                 <div className="flex items-end">
                                     <button 
                                         onClick={() => {
                                             setSearchTerm('');
                                             setFilterCategory('all');
+                                            setFilterIndustry('all');
                                             setFilterStatus('all');
                                         }}
                                         className="px-3 py-1.5 rounded-md text-sm text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                                     >
-                                        Clear Filters
+                                        {t('superadmin.clearFilters')}
                                     </button>
                                 </div>
                             )}
@@ -382,7 +462,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         )}
                                         
                                         {/* Hover Actions Overlay */}
-                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
                                     </div>
 
                                     {/* Top Section: Category Badge + Color Swatches */}
@@ -407,21 +487,51 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     </div>
 
                                     {/* Content at Bottom */}
-                                    <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+                                    <div className="absolute bottom-0 left-0 right-0 z-30 p-6">
                                         <h3 className="font-bold text-2xl text-white mb-3 line-clamp-2">{template.name}</h3>
                                         
+                                        {/* Industries Tags */}
+                                        {template.industries && template.industries.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mb-3">
+                                                {template.industries.slice(0, 3).map(ind => (
+                                                    <span 
+                                                        key={ind}
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/20 text-white text-xs rounded backdrop-blur-sm"
+                                                    >
+                                                        <Building2 className="w-3 h-3" />
+                                                        {getIndustryLabel(ind)}
+                                                    </span>
+                                                ))}
+                                                {template.industries.length > 3 && (
+                                                    <span className="px-2 py-0.5 bg-white/20 text-white text-xs rounded backdrop-blur-sm">
+                                                        +{template.industries.length - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        
                                         {/* Actions */}
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 relative z-40">
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     loadProject(template.id, true);
                                                 }} 
                                                 className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-semibold hover:scale-110 transition-transform shadow-2xl" 
-                                                title="Edit Template"
+                                                title={t('common.edit')}
                                             >
                                                 <Edit size={16} />
-                                                Edit
+                                                {t('common.edit')}
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingTemplate(template);
+                                                }} 
+                                                className="p-2.5 bg-white/90 text-purple-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                title={t('industries.title')}
+                                            >
+                                                <Settings2 size={18} />
                                             </button>
                                             <button 
                                                 onClick={(e) => {
@@ -439,7 +549,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     duplicateTemplate(template.id);
                                                 }} 
                                                 className="p-2.5 bg-white/90 text-green-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
-                                                title="Duplicate"
+                                                title={t('superadmin.duplicateTemplate')}
                                             >
                                                 <Copy size={18} />
                                             </button>
@@ -502,9 +612,20 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-editor-text-primary truncate mb-1">{template.name}</h3>
-                                        <p className="text-sm text-editor-text-secondary">
-                                            {template.category || template.brandIdentity?.industry || 'General'}
-                                        </p>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <p className="text-sm text-editor-text-secondary">
+                                                {template.category || template.brandIdentity?.industry || 'General'}
+                                            </p>
+                                            {/* Industry tags in list view */}
+                                            {template.industries && template.industries.length > 0 && (
+                                                <div className="flex items-center gap-1">
+                                                    <Building2 className="w-3 h-3 text-editor-accent" />
+                                                    <span className="text-xs text-editor-accent">
+                                                        {template.industries.length} {t('industries.title').toLowerCase()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Actions */}
@@ -512,17 +633,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <button 
                                             onClick={() => setPreviewTemplate(template)}
                                             className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors" 
-                                            title="Preview"
+                                            title={t('common.view')}
                                         >
                                             <Eye size={18} />
                                         </button>
                                         <button 
                                             onClick={() => loadProject(template.id, true)} 
                                             className="flex items-center gap-1.5 px-3 py-2 bg-editor-accent text-white rounded-md text-sm hover:bg-editor-accent/90 transition-colors" 
-                                            title="Edit"
+                                            title={t('common.edit')}
                                         >
                                             <Edit size={14} />
-                                            Edit
+                                            {t('common.edit')}
+                                        </button>
+                                        <button 
+                                            onClick={() => setEditingTemplate(template)}
+                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors" 
+                                            title={t('industries.title')}
+                                        >
+                                            <Settings2 size={18} />
                                         </button>
                                         <button 
                                             onClick={() => setThumbnailEditTemplate(template)} 
@@ -591,6 +719,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     onClose={() => setThumbnailEditTemplate(null)} 
                 />
             )}
+
+            {/* Template Editor Modal (Industries & Metadata) */}
+            <TemplateEditorModal
+                isOpen={!!editingTemplate}
+                onClose={() => setEditingTemplate(null)}
+                template={editingTemplate}
+                onSave={updateTemplate}
+            />
 
             {/* Preview Modal */}
             {previewTemplate && (
@@ -708,10 +844,28 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </div>
                             )}
 
+                            {/* Industries */}
+                            {previewTemplate.industries && previewTemplate.industries.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                        <Building2 className="w-4 h-4" />
+                                        {t('industries.title')}
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {previewTemplate.industries.map(ind => (
+                                            <span key={ind} className="bg-editor-accent/20 text-editor-accent px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                                                <Building2 className="w-3 h-3" />
+                                                {getIndustryLabel(ind)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Tags */}
                             {previewTemplate.tags && previewTemplate.tags.length > 0 && (
                                 <div className="mb-6">
-                                    <h3 className="font-semibold mb-3">Tags</h3>
+                                    <h3 className="font-semibold mb-3">{t('cms.tags')}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.tags.map(tag => (
                                             <span key={tag} className="bg-editor-border px-3 py-1 rounded-full text-sm">
@@ -749,6 +903,16 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <button 
                                     onClick={() => {
                                         setPreviewTemplate(null);
+                                        setEditingTemplate(previewTemplate);
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                >
+                                    <Settings2 size={18} />
+                                    {t('industries.title')}
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setPreviewTemplate(null);
                                         setThumbnailEditTemplate(previewTemplate);
                                     }}
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -764,7 +928,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     className="flex items-center gap-2 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
                                 >
                                     <Copy size={18} />
-                                    Duplicate
+                                    {t('superadmin.duplicateTemplate')}
                                 </button>
                                 <button 
                                     onClick={() => {
