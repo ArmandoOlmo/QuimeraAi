@@ -2844,7 +2844,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     const response = await ai.models.generateContent({
                         model: modelName,
                         contents: [{ role: 'user', parts: contentParts }],
-                        config: generationConfig,
+                        generationConfig,
                     });
                     
                     // Log API call success

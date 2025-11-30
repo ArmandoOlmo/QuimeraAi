@@ -510,14 +510,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 console.log('[ChatCore] 🔑 Using direct API mode');
 
                 const genai = await getGoogleGenAI();
-                // Include system context as first message in conversation
-                const contentsWithSystem = [
-                    { role: 'user', parts: [{ text: `System: ${systemContext}` }] },
-                    ...conversationHistory
-                ];
                 const result = await genai.models.generateContent({
                     model: 'gemini-2.5-flash',
-                    contents: contentsWithSystem
+                    systemInstruction: systemContext,
+                    contents: conversationHistory
                 });
 
                 botResponse = result.text;

@@ -562,19 +562,19 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     area: 'Image Generation',
     description: "Generates images using Quimera AI powered by Nano Banana Pro (Gemini 3 Pro Image) - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
     template: `{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality`,
-    model: 'gemini-3-pro-image-preview',
-    version: 10,
+    model: 'imagen-3.0-generate-001',
+    version: 11,
   },
   
   // Image Prompt Enhancer
   {
     name: 'image-prompt-enhancer',
     area: 'Image Generation',
-    description: 'Enhances raw user prompts for better image generation results optimized for Nano Banana Pro.',
-    template: `You are an expert prompt engineer specializing in Nano Banana Pro image generation. Your task is to enhance the user's prompt to create stunning, high-quality images.
+    description: 'Enhances raw user prompts for better image generation results optimized for Imagen 3.',
+    template: `You are an expert prompt engineer specializing in AI image generation. Your task is to enhance the user's prompt to create stunning, high-quality images.
 
 **IMPORTANT CONTEXT:**
-- Target Model: Nano Banana Pro (optimized for speed and quality)
+- Target Model: Imagen 3 (Google's latest image generation model)
 - Reference Images: {{hasReferenceImages}}
 
 {{referenceImagesInstruction}}
@@ -584,7 +584,7 @@ Generate or rewrite content for the specific UI element described below. Ensure 
 2. Add specific artistic details: composition, lighting, atmosphere
 3. Include technical parameters when relevant: camera angles, depth of field, color grading
 4. Consider app theme colors if specified (Light Mode: soft grays and whites with Cadmium Yellow, Dark Mode: deep purples with Cadmium Yellow, Black Mode: true blacks with Cadmium Yellow, Quimera Brand: Cadmium Yellow primary)
-5. Use vivid, descriptive language that Nano Banana Pro understands well
+5. Use vivid, descriptive language that produces high quality results
 6. Keep the prompt concise but highly descriptive (aim for 50-150 words)
 7. Consider the style and aesthetic preferences implied in the original prompt
 
@@ -592,10 +592,10 @@ Generate or rewrite content for the specific UI element described below. Ensure 
 "{{originalPrompt}}"
 
 **Your Task:**
-Provide ONLY the enhanced prompt text, without explanations or formatting. Make it detailed, evocative, and optimized for Nano Banana Pro's capabilities.
+Provide ONLY the enhanced prompt text, without explanations or formatting. Make it detailed, evocative, and optimized for professional image generation.
 
 **Enhanced Prompt:**`,
-    model: 'gemini-3-pro-image-preview',
+    model: 'gemini-2.0-flash',
     version: 2,
   },
   
