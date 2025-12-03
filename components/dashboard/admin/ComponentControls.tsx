@@ -531,6 +531,19 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
+                {/* ========== CARD STYLING ========== */}
+                <div className="flex items-center space-x-2">
+                    <Settings size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Card Styling</h4>
+                </div>
+                <BorderRadiusControl 
+                    label="Card Border Radius" 
+                    value={(s as any).borderRadius || 'xl'} 
+                    onChange={(v) => handleStyleChange('borderRadius', v)} 
+                />
+
+                <hr className="border-editor-border/50" />
+
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
                     <Type size={16} className="text-editor-accent" />
@@ -541,25 +554,31 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== COLORS ========== */}
+                {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
                     <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
-                    {<ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />}
+                    <ColorControl label="Background" value={s.colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Section Title" value={s.colors?.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    {<ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />}
-                    {<ColorControl label="Description Color" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />}
+                    <ColorControl label="Section Description" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== CARD COLORS ========== */}
+                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Background" value={s.colors?.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Title" value={s.colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
-                    {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1a1a2e'} onChange={v => handleColorChange('cardBackground', v)} />}
+                    <ColorControl label="Card Text" value={s.colors?.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
+                    <ColorControl label="Border Color" value={s.colors?.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
 
                 <hr className="border-editor-border/50" />
@@ -1266,6 +1285,19 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <option value="glow">Glow</option>
                     </select>
                 </div>
+                
+                <div>
+                    <div className="flex justify-between items-center">
+                        <Label>Link Font Size</Label>
+                        <span className="text-sm font-medium text-editor-text-primary">{s.linkFontSize || 14}px</span>
+                    </div>
+                    <input
+                        type="range" min="10" max="24" step="1"
+                        value={s.linkFontSize || 14}
+                        onChange={e => handleStyleChange('linkFontSize', parseInt(e.target.value, 10))}
+                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                    />
+                </div>
 
                 <hr className="border-editor-border/50" />
 
@@ -1375,29 +1407,34 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== COLORS ========== */}
+                {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
                     <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
-                    <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
+                    <ColorControl label="Section Title" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Description" value={colors.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Section Text" value={colors.text || '#94a3b8'} onChange={v => handleColorChange('text', v)} />
                     <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
-                    <ColorControl label="Border Color" value={colors.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== CARD COLORS ========== */}
+                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Price Color" value={colors.priceColor || '#10b981'} onChange={v => handleColorChange('priceColor', v)} />
                     <ColorControl label="Card Background" value={colors.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Title" value={colors.cardTitleColor || '#ffffff'} onChange={v => handleColorChange('cardTitleColor', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Card Title" value={colors.cardTitleColor || colors.heading || '#ffffff'} onChange={v => handleColorChange('cardTitleColor', v)} />
+                    <ColorControl label="Card Text" value={colors.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
+                    <ColorControl label="Price Color" value={colors.priceColor || '#10b981'} onChange={v => handleColorChange('priceColor', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Border Color" value={colors.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
             </div>
         );
@@ -1586,21 +1623,29 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== COLORS ========== */}
+                {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
                     <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
-                    <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
+                    <ColorControl label="Section Title" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Section Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== CARD COLORS ========== */}
+                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Title" value={colors.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
+                    <ColorControl label="Card Text" value={colors.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Accent" value={colors.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border" value={colors.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
             </div>
@@ -1670,22 +1715,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== COLORS ========== */}
+                {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
                     <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors.background || '#000000'} onChange={v => handleColorChange('background', v)} />
-                    <ColorControl label="Text" value={colors.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
+                    <ColorControl label="Section Title" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Heading" value={colors.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Section Description" value={colors.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== CARD COLORS ========== */}
+                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Accent / Border" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Card Background" value={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Name" value={colors.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Role" value={colors.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
                 </div>
             </div>
         );
@@ -2223,6 +2276,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'portfolio':
             case 'leads':
             case 'video':
+            case 'banner':
+            case 'heroSplit':
                 return renderStandardControls();
             case 'footer':
                  return renderFooterControls();

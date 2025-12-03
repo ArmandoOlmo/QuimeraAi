@@ -29,3 +29,5 @@ echo "📖 Consulta CONFIGURAR_RESTRICCIONES_AHORA.md para instrucciones detalla
 
 
 
+
+

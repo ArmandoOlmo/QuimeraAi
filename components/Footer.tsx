@@ -62,7 +62,7 @@ const Footer: React.FC<FooterData> = ({
                 className="h-10 md:h-12 w-auto mb-4 object-contain"
               />
             ) : (
-              <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading }}>{title}</h3>
+              <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
             )}
             <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-xs`} style={{ color: actualColors.text }}>
               {description}
@@ -71,7 +71,7 @@ const Footer: React.FC<FooterData> = ({
 
           {linkColumns.map((column, index) => (
             <div key={index} className="lg:col-span-2">
-              <h4 className="font-semibold text-site-heading mb-4 font-header" style={{ color: actualColors.heading }}>{column.title}</h4>
+              <h4 className="font-semibold text-site-heading mb-4 font-header" style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{column.title}</h4>
               <ul className="space-y-2 font-body">
                 {column.links.map((link, linkIndex) => (
                   <li key={linkIndex}>

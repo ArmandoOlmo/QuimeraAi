@@ -35,7 +35,7 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
             />
         )}
         {showText && (
-            <span className="text-2xl font-bold font-header tracking-tight transition-colors" style={{ color: textColor }}>{logoText}</span>
+            <span className="hidden md:inline text-2xl font-bold font-header tracking-tight transition-colors" style={{ color: textColor }}>{logoText}</span>
         )}
     </a>
   );
@@ -49,9 +49,10 @@ interface NavLinksProps {
   className?: string;
   isMobile?: boolean;
   onLinkClick?: () => void;
+  linkFontSize?: number;
 }
 
-const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick }) => {
+const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, linkFontSize = 14 }) => {
   
     const getHoverClass = () => {
         if (isMobile) return '';
@@ -71,8 +72,13 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
             <a 
                 href={link.href} 
                 onClick={onLinkClick}
-                className={`relative transition-all duration-300 font-header font-medium tracking-wide ${isMobile ? 'text-2xl py-2 block' : 'text-sm'} ${getHoverClass()}`}
-                style={{ color: textColor }}
+                className={`relative transition-all duration-300 font-header font-medium ${isMobile ? 'text-2xl py-2 block' : ''} ${getHoverClass()}`}
+                style={{ 
+                  color: textColor, 
+                  fontSize: isMobile ? undefined : `${linkFontSize}px`,
+                  textTransform: 'var(--navlinks-transform, none)' as any,
+                  letterSpacing: 'var(--navlinks-spacing, normal)'
+                }}
             >
                 {link.text}
             </a>
@@ -90,7 +96,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
     showLogin, loginText, loginUrl,
     colors,
     isPreviewMode = false,
-    containerRef
+    containerRef,
+    linkFontSize = 14
 }) => {
   // Use safe versions of hooks that work outside EditorProvider (for public preview)
   const editorContext = useSafeEditor();
@@ -106,9 +113,13 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   // Use primary color for navbar background
   const primaryColor = getColor('primary.main', '#4f46e5');
   
+  // For transparent style, background should default to transparent, not primary color
+  const isTransparentStyle = style === 'sticky-transparent';
+  const defaultBackground = isTransparentStyle ? 'transparent' : primaryColor;
+  
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background || primaryColor, // Fallback to primary if not set
+    background: colors.background || defaultBackground,
     text: colors.text,
     accent: colors.accent || primaryColor,
   };
@@ -183,7 +194,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
             <>
                 <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-center">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" />
+                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                 </div>
                 <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center">
                     {showLogin && <LoginButton />}
@@ -195,7 +206,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
         return (
              <>
                  <div className="hidden md:flex flex-1 justify-start items-center">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" />
+                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                  </div>
                  <div className="flex-shrink-0 mx-auto">
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
@@ -213,7 +224,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
                  </div>
                  <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" />
+                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="ml-8 flex items-center">
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
@@ -226,7 +237,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
             <>
                 <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-end items-center gap-8">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" />
+                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="flex items-center ml-4">
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
@@ -241,12 +252,31 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const computedHeight = layout === 'stack' ? 'auto' : `${height}px`;
   const computedMinHeight = layout === 'stack' ? `${height + 40}px` : `${height}px`;
 
-  const positionClass = (isSticky || style === 'floating') ? (isPreviewMode ? 'relative' : 'sticky') : 'relative';
+  // For transparent style, use absolute positioning so navbar overlays the content below (e.g., Hero)
+  // This allows the Hero to start from the top and be visible behind the transparent navbar
+  const getPositionClass = () => {
+    if (style === 'sticky-transparent') {
+      // Absolute positioning so it overlays content, but sticky when scrolled for better UX
+      return isScrolled ? 'sticky' : 'absolute';
+    }
+    if (style === 'floating') {
+      return isPreviewMode ? 'absolute' : 'fixed';
+    }
+    if (isSticky) {
+      return isPreviewMode ? 'relative' : 'sticky';
+    }
+    return 'relative';
+  };
+  
+  const positionClass = getPositionClass();
+
+  // For transparent style, header should not take up space in the document flow
+  const shouldNotTakeSpace = style === 'floating' || (style === 'sticky-transparent' && !isScrolled);
 
   return (
     <header 
-        className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out`}
-        style={{ height: style === 'floating' ? 0 : 'auto' }} 
+        className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''}`}
+        style={{ height: shouldNotTakeSpace ? 0 : 'auto' }} 
     >
       {/* === SCROLL PROGRESS BAR === */}
       <div 

@@ -3,14 +3,14 @@ import React, { useState, useMemo } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
-import { 
-    Menu, Plus, Search, Filter, MoreVertical, 
-    Mail, Phone, MessageSquare, Bot, LayoutGrid, 
+import {
+    Menu, Plus, Search, Filter, MoreVertical,
+    Mail, Phone, MessageSquare, Bot, LayoutGrid,
     DollarSign, CheckCircle2, XCircle, Clock,
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Edit, MapPin,
-    Globe, Briefcase, Linkedin
+    Globe, Briefcase, Linkedin, BookOpen
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
@@ -21,6 +21,8 @@ import LeadsFilters, { LeadsFiltersState } from './LeadsFilters';
 import LeadsTableView from './LeadsTableView';
 import LeadsListView from './LeadsListView';
 import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManager';
+import LeadsLibrary from './LeadsLibrary';
+import AddLeadModal from './AddLeadModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 const LEAD_STAGES: { id: LeadStatus; label: string; color: string }[] = [
@@ -44,7 +46,7 @@ const CARD_COLORS = [
 
 const EMOJI_MARKERS = [
     // Status & Priority
-    '🔥', '⭐', '💎', '⚠️', '📞', '❓', '🚫', '✅', '💰', '🤝', '📅', '⚡', 
+    '🔥', '⭐', '💎', '⚠️', '📞', '❓', '🚫', '✅', '💰', '🤝', '📅', '⚡',
     '🚩', '🟢', '🟡', '🔴', '✨', '💡', '🚀', '🛒', '🔔', '❤️', '👍', '👎',
     // Office & Work
     '🏆', '🎁', '🎉', '📝', '📁', '📊', '📈', '📉', '📌', '📍', '📎', '🔒',
@@ -92,7 +94,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
     const scoreColor = (lead.aiScore || 0) > 75 ? 'bg-green-500' : (lead.aiScore || 0) > 40 ? 'bg-yellow-500' : 'bg-red-500';
 
     return (
-        <div 
+        <div
             draggable
             onDragStart={(e) => onDragStart(e, lead.id)}
             onClick={() => onClick(lead)}
@@ -100,7 +102,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
         >
             {/* Color Picker Popover */}
             {showPalette && (
-                <div 
+                <div
                     className="absolute top-2 right-8 z-20 bg-popover border border-border rounded-lg shadow-xl p-2 flex gap-1.5 animate-fade-in-up"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
@@ -117,7 +119,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
             {/* Emoji Picker Popover */}
             {showEmojiPicker && (
-                <div 
+                <div
                     className="absolute top-8 right-[-1rem] z-30 bg-popover border border-border rounded-lg shadow-xl p-3 grid grid-cols-6 gap-2 animate-fade-in-up w-72 max-h-60 overflow-y-auto custom-scrollbar"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
@@ -131,7 +133,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                             {e}
                         </button>
                     ))}
-                     <button
+                    <button
                         onClick={(evt) => handleEmojiUpdate(evt, undefined)}
                         className="text-xs text-muted-foreground hover:text-red-500 col-span-6 border-t border-border pt-2 mt-1 font-medium"
                         title="Clear"
@@ -143,14 +145,14 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
             {/* Emoji Marker Badge */}
             {lead.emojiMarker && (
-                 <div className="absolute -top-3 -right-3 z-20">
-                     <button 
+                <div className="absolute -top-3 -right-3 z-20">
+                    <button
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
                         className="h-8 w-8 flex items-center justify-center text-xl bg-card rounded-full shadow-sm border border-border hover:scale-110 transition-transform"
-                     >
-                         {lead.emojiMarker}
-                     </button>
-                 </div>
+                    >
+                        {lead.emojiMarker}
+                    </button>
+                </div>
             )}
 
             <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
@@ -159,7 +161,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                     {(() => {
                         const sourceConfig = getSourceConfig(lead.source);
                         return (
-                            <span 
+                            <span
                                 className={`${sourceConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1`}
                                 title={sourceConfig.label}
                             >
@@ -168,13 +170,13 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                             </span>
                         );
                     })()}
-                    
+
                     {/* Lead Score Badge */}
                     {(lead.leadScore !== undefined || lead.aiScore !== undefined) && (() => {
                         const score = lead.leadScore || lead.aiScore || 0;
                         const scoreInfo = getLeadScoreLabel(score);
                         return (
-                            <div 
+                            <div
                                 className={`${scoreInfo.color} text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1`}
                                 title={`${scoreInfo.label}: ${score}/100`}
                             >
@@ -197,20 +199,20 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
                 <span className="text-[10px] text-muted-foreground flex items-center">
                     <Clock size={10} className="mr-1" />
-                    {lead.createdAt && lead.createdAt.seconds 
-                        ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() 
+                    {lead.createdAt && lead.createdAt.seconds
+                        ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString()
                         : 'Just now'}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button 
-                        className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-yellow-500 transition-colors" 
+                    <button
+                        className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-yellow-500 transition-colors"
                         title="Add Emoji Marker"
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
                     >
                         <Smile size={12} />
                     </button>
-                    <button 
-                        className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors" 
+                    <button
+                        className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors"
                         title="Change Color"
                         onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); setShowEmojiPicker(false); }}
                     >
@@ -233,13 +235,14 @@ const LeadsDashboard: React.FC = () => {
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    
+    const [activeTab, setActiveTab] = useState<'pipeline' | 'library'>('pipeline');
+
     // View Mode
     const [viewMode, setViewMode] = useState<'kanban' | 'table' | 'list'>('kanban');
-    
+
     // Bulk Actions
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
-    
+
     // Advanced Filters
     const [filters, setFilters] = useState<LeadsFiltersState>({
         search: '',
@@ -250,14 +253,14 @@ const LeadsDashboard: React.FC = () => {
         tags: [],
         dateRange: { start: '', end: '' }
     });
-    
+
     // Custom Fields Configuration
     const [customFieldsConfig, setCustomFieldsConfig] = useState<CustomFieldDefinition[]>([]);
-    
+
     // Edit Mode States
     const [isEditMode, setIsEditMode] = useState(false);
     const [editForm, setEditForm] = useState<Partial<Lead>>({});
-    
+
     // AI States
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isDrafting, setIsDrafting] = useState(false);
@@ -268,7 +271,7 @@ const LeadsDashboard: React.FC = () => {
         const totalValue = leads.reduce((acc, lead) => acc + (lead.value || 0), 0);
         const wonLeads = leads.filter(l => l.status === 'won');
         const conversionRate = leads.length > 0 ? (wonLeads.length / leads.length) * 100 : 0;
-        
+
         return {
             totalValue,
             conversionRate: conversionRate.toFixed(1),
@@ -311,29 +314,29 @@ const LeadsDashboard: React.FC = () => {
         return leads.filter(lead => {
             // Text search
             const searchLower = searchQuery.toLowerCase();
-            const matchesSearch = !searchQuery || 
+            const matchesSearch = !searchQuery ||
                 lead.name.toLowerCase().includes(searchLower) ||
                 lead.email.toLowerCase().includes(searchLower) ||
                 lead.company?.toLowerCase().includes(searchLower);
-            
+
             // Status filter
             const matchesStatus = filters.statuses.length === 0 || filters.statuses.includes(lead.status);
-            
+
             // Source filter
             const matchesSource = filters.sources.length === 0 || filters.sources.includes(lead.source);
-            
+
             // Value range filter
             const leadValue = lead.value || 0;
             const matchesValue = leadValue >= filters.valueRange.min && leadValue <= filters.valueRange.max;
-            
+
             // AI Score filter
             const leadScore = lead.aiScore || 0;
             const matchesScore = leadScore >= filters.scoreRange.min && leadScore <= filters.scoreRange.max;
-            
+
             // Tags filter
-            const matchesTags = filters.tags.length === 0 || 
+            const matchesTags = filters.tags.length === 0 ||
                 (lead.tags && filters.tags.some(tag => lead.tags?.includes(tag)));
-            
+
             // Date range filter
             let matchesDate = true;
             if (filters.dateRange.start || filters.dateRange.end) {
@@ -348,49 +351,36 @@ const LeadsDashboard: React.FC = () => {
                     matchesDate = matchesDate && leadDate <= endDate;
                 }
             }
-            
-            return matchesSearch && matchesStatus && matchesSource && matchesValue && 
-                   matchesScore && matchesTags && matchesDate;
+
+            return matchesSearch && matchesStatus && matchesSource && matchesValue &&
+                matchesScore && matchesTags && matchesDate;
         });
     }, [leads, searchQuery, filters]);
 
-    // --- Add Lead Form State ---
-    const [newLeadForm, setNewLeadForm] = useState<Partial<Lead>>({
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        value: 0,
-        source: 'manual',
-        status: 'new'
-    });
-
-    const handleAddSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newLeadForm.name || !newLeadForm.email) return;
-        
+    const handleAddSubmit = async (leadData: Partial<Lead>) => {
         await addLead({
-            name: newLeadForm.name,
-            email: newLeadForm.email,
-            phone: newLeadForm.phone,
-            company: newLeadForm.company,
-            value: Number(newLeadForm.value),
+            name: leadData.name || '',
+            email: leadData.email || '',
+            phone: leadData.phone,
+            company: leadData.company,
+            jobTitle: leadData.jobTitle,
+            industry: leadData.industry,
+            value: Number(leadData.value) || 0,
             source: 'manual',
             status: 'new',
             notes: '',
         } as any);
-        
+
         setIsAddModalOpen(false);
-        setNewLeadForm({ name: '', email: '', phone: '', company: '', value: 0 });
     };
 
     const handleDelete = async () => {
-        if(selectedLead && window.confirm('Are you sure you want to delete this lead?')) {
+        if (selectedLead && window.confirm('Are you sure you want to delete this lead?')) {
             await deleteLead(selectedLead.id);
             setSelectedLead(null);
         }
     };
-    
+
     const handleEnterEditMode = () => {
         if (selectedLead) {
             setEditForm({
@@ -412,12 +402,12 @@ const LeadsDashboard: React.FC = () => {
             setIsEditMode(true);
         }
     };
-    
+
     const handleCancelEdit = () => {
         setIsEditMode(false);
         setEditForm({});
     };
-    
+
     const handleSaveEdit = async () => {
         if (!selectedLead) return;
         await updateLead(selectedLead.id, editForm);
@@ -425,16 +415,16 @@ const LeadsDashboard: React.FC = () => {
         setIsEditMode(false);
         setEditForm({});
     };
-    
+
     // Bulk Actions Handlers
     const handleToggleSelect = (leadId: string) => {
-        setSelectedLeadIds(prev => 
-            prev.includes(leadId) 
+        setSelectedLeadIds(prev =>
+            prev.includes(leadId)
                 ? prev.filter(id => id !== leadId)
                 : [...prev, leadId]
         );
     };
-    
+
     const handleToggleSelectAll = () => {
         if (selectedLeadIds.length === filteredLeads.length) {
             setSelectedLeadIds([]);
@@ -442,25 +432,25 @@ const LeadsDashboard: React.FC = () => {
             setSelectedLeadIds(filteredLeads.map(l => l.id));
         }
     };
-    
+
     // Export to CSV
     const handleExportCSV = () => {
-        const leadsToExport = selectedLeadIds.length > 0 
+        const leadsToExport = selectedLeadIds.length > 0
             ? leads.filter(l => selectedLeadIds.includes(l.id))
             : filteredLeads;
-        
+
         if (leadsToExport.length === 0) {
             alert('No leads to export');
             return;
         }
-        
+
         // CSV Headers
         const headers = [
-            'Name', 'Email', 'Phone', 'Company', 'Status', 'Source', 
-            'Value', 'AI Score', 'AI Analysis', 'Recommended Action', 
+            'Name', 'Email', 'Phone', 'Company', 'Status', 'Source',
+            'Value', 'AI Score', 'AI Analysis', 'Recommended Action',
             'Notes', 'Tags', 'Created At'
         ];
-        
+
         // CSV Rows
         const rows = leadsToExport.map(lead => [
             lead.name,
@@ -477,13 +467,13 @@ const LeadsDashboard: React.FC = () => {
             lead.tags?.join('; ') || '',
             lead.createdAt.seconds ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() : ''
         ]);
-        
+
         // Create CSV content
         const csvContent = [
             headers.join(','),
             ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
         ].join('\n');
-        
+
         // Download CSV
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -494,18 +484,18 @@ const LeadsDashboard: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clear selection after export
         if (selectedLeadIds.length > 0) {
             setSelectedLeadIds([]);
         }
     };
-    
+
     // --- AI Logic ---
     const handleAnalyzeLead = async () => {
         if (!selectedLead) return;
         if (hasApiKey === false) { await promptForKeySelection(); return; }
-        
+
         setIsAnalyzing(true);
         try {
             const ai = await getGoogleGenAI();
@@ -523,13 +513,13 @@ const LeadsDashboard: React.FC = () => {
                     "action": "Recommended next step (Email, Call, Meeting, or Discard)"
                 }
             `;
-            
+
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: { responseMimeType: 'application/json' }
             });
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -539,18 +529,18 @@ const LeadsDashboard: React.FC = () => {
                     success: true
                 });
             }
-            
+
             const data = JSON.parse(response.text);
-            
+
             await updateLead(selectedLead.id, {
                 aiScore: data.score,
                 aiAnalysis: data.analysis,
                 recommendedAction: data.action
             });
-            
+
             // Update local state to reflect immediately
             setSelectedLead(prev => prev ? ({ ...prev, aiScore: data.score, aiAnalysis: data.analysis, recommendedAction: data.action }) : null);
-            
+
         } catch (e: any) {
             // Log failed API call
             if (user) {
@@ -583,11 +573,11 @@ const LeadsDashboard: React.FC = () => {
                 Context: ${selectedLead.notes}
                 My Goal: Move them to the next stage of the pipeline.
             `;
-             const response = await ai.models.generateContent({
+            const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             });
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -597,7 +587,7 @@ const LeadsDashboard: React.FC = () => {
                     success: true
                 });
             }
-            
+
             setEmailDraft(response.text);
         } catch (e: any) {
             // Log failed API call
@@ -621,7 +611,7 @@ const LeadsDashboard: React.FC = () => {
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
                 <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
@@ -629,267 +619,307 @@ const LeadsDashboard: React.FC = () => {
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2">
-                            <LayoutGrid className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">Leads CRM</h1>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <LayoutGrid className="text-primary w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-foreground">Leads CRM</h1>
+                            </div>
+                            <div className="flex items-center bg-muted/50 p-1 rounded-lg border border-border/50">
+                                <button
+                                    onClick={() => setActiveTab('pipeline')}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    Pipeline
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('library')}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    Library
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                         {/* Stats Row (Hidden on small mobile) */}
-                        <div className="hidden md:flex items-center gap-6">
-                            <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pipeline Value</p>
-                                <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Conversion Rate</p>
-                                <div className="flex items-center text-green-500">
-                                    <p className="text-lg font-bold mr-1">{stats.conversionRate}%</p>
-                                    <ArrowUpRight size={14} />
+                        {activeTab === 'pipeline' && (
+                            <>
+                                {/* Stats Row (Hidden on small mobile) */}
+                                <div className="hidden md:flex items-center gap-6">
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pipeline Value</p>
+                                        <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Conversion Rate</p>
+                                        <div className="flex items-center text-green-500">
+                                            <p className="text-lg font-bold mr-1">{stats.conversionRate}%</p>
+                                            <ArrowUpRight size={14} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Active Leads</p>
+                                        <p className="text-lg font-bold text-foreground">{stats.activeLeads}</p>
+                                    </div>
                                 </div>
-                            </div>
-                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Active Leads</p>
-                                <p className="text-lg font-bold text-foreground">{stats.activeLeads}</p>
-                            </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                            {/* View Mode Selector */}
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setViewMode('kanban')}
-                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                    title="Kanban View"
-                                >
-                                    <Columns className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('table')}
-                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                    title="Table View"
-                                >
-                                    <Table className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                    title="List View"
-                                >
-                                    <List className="w-4 h-4" />
-                                </button>
-                            </div>
-                            
-                            <div className="relative hidden sm:block">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search..." 
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
-                                />
-                            </div>
-                            <CustomFieldsManager 
-                                customFieldsConfig={customFieldsConfig}
-                                onSaveConfig={setCustomFieldsConfig}
-                            />
-                            <button 
-                                onClick={handleExportCSV}
-                                className="h-9 w-9 flex items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                                title="Export to CSV"
-                            >
-                                <Download className="w-4 h-4" />
-                            </button>
-                            <button 
-                                onClick={() => setIsAddModalOpen(true)}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 whitespace-nowrap"
-                            >
-                                <Plus className="w-4 h-4" /> Add Lead
-                            </button>
-                        </div>
+                                <div className="flex items-center gap-2">
+                                    {/* View Mode Selector */}
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => setViewMode('kanban')}
+                                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            title="Kanban View"
+                                        >
+                                            <Columns className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('table')}
+                                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            title="Table View"
+                                        >
+                                            <Table className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('list')}
+                                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            title="List View"
+                                        >
+                                            <List className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <div className="relative hidden sm:block">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
+                                        />
+                                    </div>
+                                    <CustomFieldsManager
+                                        customFieldsConfig={customFieldsConfig}
+                                        onSaveConfig={setCustomFieldsConfig}
+                                    />
+                                    <button
+                                        onClick={handleExportCSV}
+                                        className="h-9 w-9 flex items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                        title="Export to CSV"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsAddModalOpen(true)}
+                                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 whitespace-nowrap"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add Lead
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </header>
 
-                {/* Bulk Actions Bar */}
-                {selectedLeadIds.length > 0 && (
-                    <div className="sticky top-14 z-10 bg-primary text-primary-foreground px-6 py-3 border-b border-primary-foreground/20 flex items-center justify-between animate-slide-down">
-                        <div className="flex items-center gap-4">
-                            <span className="font-bold text-sm">
-                                {selectedLeadIds.length} lead{selectedLeadIds.length > 1 ? 's' : ''} selected
-                            </span>
-                            <button
-                                onClick={() => setSelectedLeadIds([])}
-                                className="text-xs hover:underline opacity-90"
-                            >
-                                Clear Selection
-                            </button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {/* Export Selected */}
-                            <button
-                                onClick={handleExportCSV}
-                                className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 hover:bg-secondary transition-colors"
-                            >
-                                <Download size={14} />
-                                Export Selected
-                            </button>
-                            
-                            {/* Change Status Dropdown */}
-                            <select
-                                onChange={async (e) => {
-                                    if (e.target.value) {
-                                        await Promise.all(
-                                            selectedLeadIds.map(id => updateLeadStatus(id, e.target.value as LeadStatus))
-                                        );
-                                        setSelectedLeadIds([]);
-                                        e.target.value = '';
-                                    }
-                                }}
-                                className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-medium outline-none"
-                            >
-                                <option value="">Change Status...</option>
-                                {LEAD_STAGES.map(stage => (
-                                    <option key={stage.id} value={stage.id}>{stage.label}</option>
-                                ))}
-                            </select>
-                            
-                            {/* Delete Selected */}
-                            <button
-                                onClick={async () => {
-                                    if (window.confirm(`Are you sure you want to delete ${selectedLeadIds.length} lead(s)?`)) {
-                                        await Promise.all(selectedLeadIds.map(id => deleteLead(id)));
-                                        setSelectedLeadIds([]);
-                                    }
-                                }}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
-                            >
-                                <Trash2 size={14} />
-                                Delete Selected
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Filters Section */}
-                <div className="px-6 pt-4">
-                    <LeadsFilters 
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        availableTags={availableTags}
-                    />
-                </div>
-
-                {/* Main Content Area */}
-                <main className="flex-1 overflow-x-auto overflow-y-hidden p-6 pt-4">
-                    {viewMode === 'kanban' && (
-                        <div className="flex h-full gap-6 min-w-max">
-                            {LEAD_STAGES.map(stage => {
-                                const stageLeads = filteredLeads.filter(l => l.status === stage.id);
-                                return (
-                                    <div 
-                                        key={stage.id}
-                                        className="w-[320px] flex flex-col h-full rounded-2xl bg-secondary/20 border border-border/50"
-                                        onDragOver={handleDragOver}
-                                        onDrop={(e) => handleDrop(e, stage.id)}
+                {activeTab === 'library' ? (
+                    <LeadsLibrary />
+                ) : (
+                    <>
+                        {/* Bulk Actions Bar */}
+                        {selectedLeadIds.length > 0 && (
+                            <div className="sticky top-14 z-10 bg-primary text-primary-foreground px-6 py-3 border-b border-primary-foreground/20 flex items-center justify-between animate-slide-down">
+                                <div className="flex items-center gap-4">
+                                    <span className="font-bold text-sm">
+                                        {selectedLeadIds.length} lead{selectedLeadIds.length > 1 ? 's' : ''} selected
+                                    </span>
+                                    <button
+                                        onClick={() => setSelectedLeadIds([])}
+                                        className="text-xs hover:underline opacity-90"
                                     >
-                                        {/* Column Header */}
-                                        <div className="p-4 flex items-center justify-between shrink-0">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
-                                                <h3 className="font-bold text-sm text-foreground">{stage.label}</h3>
-                                                <span className="bg-background px-2 py-0.5 rounded-full text-xs text-muted-foreground border border-border font-mono">
-                                                    {stageLeads.length}
-                                                </span>
-                                            </div>
-                                            <button className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-background transition-colors">
-                                                <MoreVertical size={14} />
-                                            </button>
-                                        </div>
+                                        Clear Selection
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {/* Export Selected */}
+                                    <button
+                                        onClick={handleExportCSV}
+                                        className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 hover:bg-secondary transition-colors"
+                                    >
+                                        <Download size={14} />
+                                        Export Selected
+                                    </button>
 
-                                        {/* Cards Container */}
-                                        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 custom-scrollbar">
-                                            {stageLeads.map(lead => (
-                                                <LeadCard 
-                                                    key={lead.id} 
-                                                    lead={lead} 
-                                                    onDragStart={handleDragStart}
-                                                    onClick={() => { setEmailDraft(''); setSelectedLead(lead); }}
-                                                />
-                                            ))}
-                                            {stageLeads.length === 0 && (
-                                                <div className="h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center text-muted-foreground/50 text-xs font-medium italic">
-                                                    Drop items here
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    {/* Change Status Dropdown */}
+                                    <select
+                                        onChange={async (e) => {
+                                            if (e.target.value) {
+                                                await Promise.all(
+                                                    selectedLeadIds.map(id => updateLeadStatus(id, e.target.value as LeadStatus))
+                                                );
+                                                setSelectedLeadIds([]);
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                        className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-medium outline-none"
+                                    >
+                                        <option value="">Change Status...</option>
+                                        {LEAD_STAGES.map(stage => (
+                                            <option key={stage.id} value={stage.id}>{stage.label}</option>
+                                        ))}
+                                    </select>
 
-                    {viewMode === 'table' && (
-                        <LeadsTableView 
-                            leads={filteredLeads}
-                            onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
-                            onDelete={deleteLead}
-                            selectedLeadIds={selectedLeadIds}
-                            onToggleSelect={handleToggleSelect}
-                            onToggleSelectAll={handleToggleSelectAll}
-                        />
-                    )}
+                                    {/* Delete Selected */}
+                                    <button
+                                        onClick={async () => {
+                                            if (window.confirm(`Are you sure you want to delete ${selectedLeadIds.length} lead(s)?`)) {
+                                                await Promise.all(selectedLeadIds.map(id => deleteLead(id)));
+                                                setSelectedLeadIds([]);
+                                            }
+                                        }}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
+                                    >
+                                        <Trash2 size={14} />
+                                        Delete Selected
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                    {viewMode === 'list' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                            <LeadsListView 
-                                leads={filteredLeads}
-                                selectedLeadId={selectedLead?.id || null}
-                                onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
-                                selectedLeadIds={selectedLeadIds}
-                                onToggleSelect={handleToggleSelect}
+                        {/* Filters Section */}
+                        <div className="px-6 pt-4">
+                            <LeadsFilters
+                                filters={filters}
+                                onFiltersChange={setFilters}
+                                availableTags={availableTags}
                             />
-                            {selectedLead && (
-                                <div className="bg-card border border-border rounded-xl p-6 overflow-y-auto custom-scrollbar">
-                                    <h3 className="text-lg font-bold mb-4">Quick Preview</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="text-xs font-bold text-muted-foreground uppercase">Name</label>
-                                            <p className="text-sm text-foreground">{selectedLead.name}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-muted-foreground uppercase">Email</label>
-                                            <p className="text-sm text-foreground">{selectedLead.email}</p>
-                                        </div>
-                                        {selectedLead.company && (
-                                            <div>
-                                                <label className="text-xs font-bold text-muted-foreground uppercase">Company</label>
-                                                <p className="text-sm text-foreground">{selectedLead.company}</p>
+                        </div>
+
+                        {/* Main Content Area */}
+                        <main className="flex-1 overflow-x-auto overflow-y-hidden p-6 pt-4">
+                            {viewMode === 'kanban' && (
+                                <div className="flex h-full gap-6 min-w-max">
+                                    {LEAD_STAGES.map(stage => {
+                                        const stageLeads = filteredLeads.filter(l => l.status === stage.id);
+                                        return (
+                                            <div
+                                                key={stage.id}
+                                                className="w-[320px] flex flex-col h-full rounded-2xl bg-secondary/20 border border-border/50"
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, stage.id)}
+                                            >
+                                                {/* Column Header */}
+                                                <div className="p-4 flex items-center justify-between shrink-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
+                                                        <h3 className="font-bold text-sm text-foreground">{stage.label}</h3>
+                                                        <span className="bg-background px-2 py-0.5 rounded-full text-xs text-muted-foreground border border-border font-mono">
+                                                            {stageLeads.length}
+                                                        </span>
+                                                    </div>
+                                                    <button className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-background transition-colors">
+                                                        <MoreVertical size={14} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Cards Container */}
+                                                <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 custom-scrollbar">
+                                                    {stageLeads.map(lead => (
+                                                        <LeadCard
+                                                            key={lead.id}
+                                                            lead={lead}
+                                                            onDragStart={handleDragStart}
+                                                            onClick={() => { setEmailDraft(''); setSelectedLead(lead); }}
+                                                        />
+                                                    ))}
+                                                    {stageLeads.length === 0 && (
+                                                        <div className="h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center text-muted-foreground/50 text-xs font-medium italic">
+                                                            Drop items here
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                        {selectedLead.value && (
-                                            <div>
-                                                <label className="text-xs font-bold text-muted-foreground uppercase">Value</label>
-                                                <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
-                                            </div>
-                                        )}
-                                        <button 
-                                            onClick={() => setSelectedLead(selectedLead)}
-                                            className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold hover:opacity-90"
-                                        >
-                                            View Full Details
-                                        </button>
-                                    </div>
+                                        );
+                                    })}
                                 </div>
                             )}
-                        </div>
-                    )}
-                </main>
+
+                            {viewMode === 'table' && (
+                                <LeadsTableView
+                                    leads={filteredLeads}
+                                    onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
+                                    onDelete={deleteLead}
+                                    selectedLeadIds={selectedLeadIds}
+                                    onToggleSelect={handleToggleSelect}
+                                    onToggleSelectAll={handleToggleSelectAll}
+                                />
+                            )}
+
+                            {viewMode === 'list' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                                    <LeadsListView
+                                        leads={filteredLeads}
+                                        selectedLeadId={selectedLead?.id || null}
+                                        onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
+                                        selectedLeadIds={selectedLeadIds}
+                                        onToggleSelect={handleToggleSelect}
+                                    />
+                                    {selectedLead && (
+                                        <div className="bg-card border border-border rounded-xl p-6 overflow-y-auto custom-scrollbar">
+                                            <h3 className="text-lg font-bold mb-4">Quick Preview</h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-xs font-bold text-muted-foreground uppercase">Name</label>
+                                                    <p className="text-sm text-foreground">{selectedLead.name}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-muted-foreground uppercase">Email</label>
+                                                    <p className="text-sm text-foreground">{selectedLead.email}</p>
+                                                </div>
+                                                {selectedLead.company && (
+                                                    <div>
+                                                        <label className="text-xs font-bold text-muted-foreground uppercase">Company</label>
+                                                        <p className="text-sm text-foreground">{selectedLead.company}</p>
+                                                    </div>
+                                                )}
+                                                {selectedLead.value && (
+                                                    <div>
+                                                        <label className="text-xs font-bold text-muted-foreground uppercase">Value</label>
+                                                        <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => setSelectedLead(selectedLead)}
+                                                    className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold hover:opacity-90"
+                                                >
+                                                    View Full Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </main>
+                    </>
+                )}
+
+                {/* Modals */}
+                {/* ... existing modals ... */}
+                {/* I need to make sure I don't cut off the modals if they are outside the main content */}
+                {/* The original code had modals at the end. I should check where they are. */}
+                {/* Wait, I can't see the end of the file in the previous view_file. */}
+                {/* I will assume the modals are after the main content. */}
+                {/* Let's close the fragment before the modals if they are there, or just close it at the end of the main content area. */}
+                {/* The view_file showed up to line 800. I need to be careful. */}
+                {/* I will use a safer approach: wrap the content I KNOW is there. */}
+
+                {/* Actually, I'll just wrap the Bulk Actions, Filters, and Main Content. */}
+                {/* The modals are likely at the bottom of the component. */}
+                {/* I'll check the end of the file first to be safe. */}
 
                 {/* Lead Detail Modal */}
-                <Modal 
-                    isOpen={!!selectedLead} 
+                <Modal
+                    isOpen={!!selectedLead}
                     onClose={() => setSelectedLead(null)}
                     maxWidth="max-w-3xl"
                     className="bg-card"
@@ -900,10 +930,10 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
                                         {isEditMode ? (
-                                            <input 
+                                            <input
                                                 type="text"
                                                 value={editForm.name || ''}
-                                                onChange={e => setEditForm({...editForm, name: e.target.value})}
+                                                onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                                                 className="text-2xl font-bold text-foreground bg-secondary/20 border border-border rounded-lg px-3 py-1 outline-none focus:ring-2 focus:ring-primary/50"
                                             />
                                         ) : (
@@ -916,17 +946,17 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
                                     <p className="text-muted-foreground flex items-center gap-2 text-sm">
                                         {isEditMode ? (
-                                            <input 
+                                            <input
                                                 type="text"
                                                 placeholder="Company name"
                                                 value={editForm.company || ''}
-                                                onChange={e => setEditForm({...editForm, company: e.target.value})}
+                                                onChange={e => setEditForm({ ...editForm, company: e.target.value })}
                                                 className="bg-secondary/20 border border-border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                             />
                                         ) : (
-                                            selectedLead.company && <span className="flex items-center"><Building2 size={14} className="mr-1"/> {selectedLead.company}</span>
+                                            selectedLead.company && <span className="flex items-center"><Building2 size={14} className="mr-1" /> {selectedLead.company}</span>
                                         )}
-                                        <span className="w-1 h-1 bg-muted-foreground rounded-full"/>
+                                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
                                         <span>Added {selectedLead.createdAt && selectedLead.createdAt.seconds ? new Date(selectedLead.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
                                     </p>
                                 </div>
@@ -947,18 +977,18 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-sm font-bold text-purple-500 flex items-center uppercase tracking-wider">
-                                            <Sparkles size={14} className="mr-2"/> AI CRM Intelligence
+                                            <Sparkles size={14} className="mr-2" /> AI CRM Intelligence
                                         </h3>
-                                        <button 
+                                        <button
                                             onClick={handleAnalyzeLead}
                                             disabled={isAnalyzing}
                                             className="text-xs font-bold bg-purple-500 text-white px-3 py-1.5 rounded-lg hover:bg-purple-600 transition-colors flex items-center disabled:opacity-50"
                                         >
-                                            {isAnalyzing ? <Loader2 size={12} className="animate-spin mr-1"/> : <Sparkles size={12} className="mr-1"/>}
+                                            {isAnalyzing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
                                             Analyze Lead
                                         </button>
                                     </div>
-                                    
+
                                     {selectedLead.aiScore !== undefined ? (
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-4">
@@ -968,9 +998,9 @@ const LeadsDashboard: React.FC = () => {
                                                         <span>{selectedLead.aiScore}%</span>
                                                     </div>
                                                     <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                                        <div 
-                                                            className={`h-full transition-all duration-1000 ${selectedLead.aiScore > 75 ? 'bg-green-500' : selectedLead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} 
-                                                            style={{ width: `${selectedLead.aiScore}%` }} 
+                                                        <div
+                                                            className={`h-full transition-all duration-1000 ${selectedLead.aiScore > 75 ? 'bg-green-500' : selectedLead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${selectedLead.aiScore}%` }}
                                                         />
                                                     </div>
                                                 </div>
@@ -997,20 +1027,20 @@ const LeadsDashboard: React.FC = () => {
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
                                                         <Mail size={16} className="text-primary" />
-                                                        <input 
+                                                        <input
                                                             type="email"
                                                             value={editForm.email || ''}
-                                                            onChange={e => setEditForm({...editForm, email: e.target.value})}
+                                                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                                                             className="flex-1 bg-secondary/20 border border-border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <Phone size={16} className="text-primary" />
-                                                        <input 
+                                                        <input
                                                             type="tel"
                                                             placeholder="Phone number"
                                                             value={editForm.phone || ''}
-                                                            onChange={e => setEditForm({...editForm, phone: e.target.value})}
+                                                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                                                             className="flex-1 bg-secondary/20 border border-border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
@@ -1037,10 +1067,10 @@ const LeadsDashboard: React.FC = () => {
                                             {isEditMode ? (
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xl font-bold text-green-500">$</span>
-                                                    <input 
+                                                    <input
                                                         type="number"
                                                         value={editForm.value || 0}
-                                                        onChange={e => setEditForm({...editForm, value: Number(e.target.value)})}
+                                                        onChange={e => setEditForm({ ...editForm, value: Number(e.target.value) })}
                                                         className="flex-1 bg-secondary/20 border border-border rounded px-3 py-1 text-xl font-bold text-green-500 outline-none focus:ring-2 focus:ring-primary/50"
                                                     />
                                                 </div>
@@ -1051,7 +1081,7 @@ const LeadsDashboard: React.FC = () => {
                                         <div>
                                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Source</label>
                                             <p className="text-sm text-foreground capitalize flex items-center gap-2">
-                                                {selectedLead.source === 'chatbot' ? <Bot size={16}/> : <LayoutGrid size={16}/>}
+                                                {selectedLead.source === 'chatbot' ? <Bot size={16} /> : <LayoutGrid size={16} />}
                                                 {selectedLead.source}
                                             </p>
                                         </div>
@@ -1071,7 +1101,7 @@ const LeadsDashboard: React.FC = () => {
                                                     type="text"
                                                     placeholder="e.g. Marketing Director"
                                                     value={editForm.jobTitle || ''}
-                                                    onChange={e => setEditForm({...editForm, jobTitle: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, jobTitle: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
@@ -1088,7 +1118,7 @@ const LeadsDashboard: React.FC = () => {
                                                     type="text"
                                                     placeholder="e.g. Technology, Healthcare"
                                                     value={editForm.industry || ''}
-                                                    onChange={e => setEditForm({...editForm, industry: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, industry: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
@@ -1107,7 +1137,7 @@ const LeadsDashboard: React.FC = () => {
                                                     type="url"
                                                     placeholder="https://example.com"
                                                     value={editForm.website || ''}
-                                                    onChange={e => setEditForm({...editForm, website: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, website: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
@@ -1130,7 +1160,7 @@ const LeadsDashboard: React.FC = () => {
                                                     type="url"
                                                     placeholder="https://linkedin.com/in/..."
                                                     value={editForm.linkedIn || ''}
-                                                    onChange={e => setEditForm({...editForm, linkedIn: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, linkedIn: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
@@ -1160,7 +1190,7 @@ const LeadsDashboard: React.FC = () => {
                                                 value={editForm.address?.street || ''}
                                                 onChange={e => setEditForm({
                                                     ...editForm,
-                                                    address: {...(editForm.address || {}), street: e.target.value}
+                                                    address: { ...(editForm.address || {}), street: e.target.value }
                                                 })}
                                                 className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                             />
@@ -1171,7 +1201,7 @@ const LeadsDashboard: React.FC = () => {
                                                     value={editForm.address?.city || ''}
                                                     onChange={e => setEditForm({
                                                         ...editForm,
-                                                        address: {...(editForm.address || {}), city: e.target.value}
+                                                        address: { ...(editForm.address || {}), city: e.target.value }
                                                     })}
                                                     className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
@@ -1181,7 +1211,7 @@ const LeadsDashboard: React.FC = () => {
                                                     value={editForm.address?.state || ''}
                                                     onChange={e => setEditForm({
                                                         ...editForm,
-                                                        address: {...(editForm.address || {}), state: e.target.value}
+                                                        address: { ...(editForm.address || {}), state: e.target.value }
                                                     })}
                                                     className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
@@ -1193,7 +1223,7 @@ const LeadsDashboard: React.FC = () => {
                                                     value={editForm.address?.zipCode || ''}
                                                     onChange={e => setEditForm({
                                                         ...editForm,
-                                                        address: {...(editForm.address || {}), zipCode: e.target.value}
+                                                        address: { ...(editForm.address || {}), zipCode: e.target.value }
                                                     })}
                                                     className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
@@ -1203,7 +1233,7 @@ const LeadsDashboard: React.FC = () => {
                                                     value={editForm.address?.country || ''}
                                                     onChange={e => setEditForm({
                                                         ...editForm,
-                                                        address: {...(editForm.address || {}), country: e.target.value}
+                                                        address: { ...(editForm.address || {}), country: e.target.value }
                                                     })}
                                                     className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
@@ -1229,9 +1259,9 @@ const LeadsDashboard: React.FC = () => {
                                 <div>
                                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Notes</label>
                                     {isEditMode ? (
-                                        <textarea 
+                                        <textarea
                                             value={editForm.notes || ''}
-                                            onChange={e => setEditForm({...editForm, notes: e.target.value})}
+                                            onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
                                             className="w-full bg-secondary/20 border border-border rounded-xl p-4 min-h-[100px] text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-y"
                                             placeholder="Add notes about this lead..."
                                         />
@@ -1249,7 +1279,7 @@ const LeadsDashboard: React.FC = () => {
                                         <div className="grid grid-cols-2 gap-4">
                                             {customFieldsConfig.map(fieldDef => {
                                                 const currentValue = selectedLead.customFields?.find(f => f.id === fieldDef.id);
-                                                
+
                                                 return (
                                                     <div key={fieldDef.id}>
                                                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">
@@ -1269,7 +1299,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             } else {
                                                                                 updatedFields.push({ ...fieldDef, value: e.target.value });
                                                                             }
-                                                                            setEditForm({...editForm, customFields: updatedFields});
+                                                                            setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
                                                                         className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     />
@@ -1286,7 +1316,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             } else {
                                                                                 updatedFields.push({ ...fieldDef, value: Number(e.target.value) });
                                                                             }
-                                                                            setEditForm({...editForm, customFields: updatedFields});
+                                                                            setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
                                                                         className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     />
@@ -1302,7 +1332,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             } else {
                                                                                 updatedFields.push({ ...fieldDef, value: e.target.value });
                                                                             }
-                                                                            setEditForm({...editForm, customFields: updatedFields});
+                                                                            setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
                                                                         className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     >
@@ -1325,7 +1355,7 @@ const LeadsDashboard: React.FC = () => {
                                                                                 } else {
                                                                                     updatedFields.push({ ...fieldDef, value: e.target.checked });
                                                                                 }
-                                                                                setEditForm({...editForm, customFields: updatedFields});
+                                                                                setEditForm({ ...editForm, customFields: updatedFields });
                                                                             }}
                                                                             className="rounded border-border"
                                                                         />
@@ -1348,7 +1378,7 @@ const LeadsDashboard: React.FC = () => {
                                 {/* Activity Timeline */}
                                 {!isEditMode && (
                                     <div className="border-t border-border pt-6">
-                                        <LeadsTimeline 
+                                        <LeadsTimeline
                                             activities={getLeadActivities(selectedLead.id)}
                                             onAddActivity={async (activity) => {
                                                 await addLeadActivity(selectedLead.id, activity);
@@ -1360,7 +1390,7 @@ const LeadsDashboard: React.FC = () => {
                                 {/* Tasks & Reminders */}
                                 {!isEditMode && (
                                     <div className="border-t border-border pt-6">
-                                        <LeadTasksList 
+                                        <LeadTasksList
                                             tasks={getLeadTasks(selectedLead.id)}
                                             onAddTask={async (task) => {
                                                 await addLeadTask(selectedLead.id, {
@@ -1381,46 +1411,46 @@ const LeadsDashboard: React.FC = () => {
 
                                 {/* Email Draft Section */}
                                 <div className="border-t border-border pt-6">
-                                     <div className="flex justify-between items-center mb-3">
-                                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Quick Email Draft</label>
-                                         <button 
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Quick Email Draft</label>
+                                        <button
                                             onClick={handleDraftEmail}
                                             disabled={isDrafting}
                                             className="text-xs text-primary hover:underline font-bold flex items-center disabled:opacity-50"
                                         >
-                                            {isDrafting ? <Loader2 size={12} className="animate-spin mr-1"/> : <Sparkles size={12} className="mr-1"/>}
+                                            {isDrafting ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
                                             Draft with AI
                                         </button>
-                                     </div>
-                                     {emailDraft ? (
-                                         <div className="bg-card border border-border rounded-lg p-3 relative group">
-                                             <textarea 
-                                                className="w-full bg-transparent text-sm text-foreground outline-none resize-y min-h-[150px]" 
-                                                value={emailDraft} 
+                                    </div>
+                                    {emailDraft ? (
+                                        <div className="bg-card border border-border rounded-lg p-3 relative group">
+                                            <textarea
+                                                className="w-full bg-transparent text-sm text-foreground outline-none resize-y min-h-[150px]"
+                                                value={emailDraft}
                                                 onChange={(e) => setEmailDraft(e.target.value)}
-                                             />
-                                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-bold shadow-sm" onClick={() => {navigator.clipboard.writeText(emailDraft); alert("Copied!")}}>Copy</button>
-                                              </div>
-                                         </div>
-                                     ) : (
-                                         <div className="text-xs text-muted-foreground italic bg-secondary/10 p-3 rounded border border-dashed border-border/50">
-                                             Click "Draft with AI" to generate a personalized outreach email.
-                                         </div>
-                                     )}
+                                            />
+                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-bold shadow-sm" onClick={() => { navigator.clipboard.writeText(emailDraft); alert("Copied!") }}>Copy</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground italic bg-secondary/10 p-3 rounded border border-dashed border-border/50">
+                                            Click "Draft with AI" to generate a personalized outreach email.
+                                        </div>
+                                    )}
                                 </div>
-                                
+
                                 {/* Quick Actions */}
                                 <div className="pt-6 border-t border-border flex justify-between items-center">
                                     {isEditMode ? (
                                         <>
-                                            <button 
+                                            <button
                                                 onClick={handleCancelEdit}
                                                 className="flex items-center px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-sm font-bold transition-colors"
                                             >
                                                 <XCircle size={16} className="mr-2" /> Cancel
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={handleSaveEdit}
                                                 className="flex items-center px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors shadow-md"
                                             >
@@ -1430,14 +1460,14 @@ const LeadsDashboard: React.FC = () => {
                                     ) : (
                                         <>
                                             <div className="flex gap-2">
-                                                <button onClick={() => window.location.href=`mailto:${selectedLead.email}`} className="flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-colors shadow-md">
+                                                <button onClick={() => window.location.href = `mailto:${selectedLead.email}`} className="flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-colors shadow-md">
                                                     <Mail size={16} className="mr-2" /> Send Email
                                                 </button>
                                                 <button className="flex items-center px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-sm font-bold transition-colors">
                                                     <Calendar size={16} className="mr-2" /> Schedule Meeting
                                                 </button>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={handleDelete}
                                                 className="flex items-center px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 text-sm font-bold transition-colors"
                                             >
@@ -1452,96 +1482,11 @@ const LeadsDashboard: React.FC = () => {
                 </Modal>
 
                 {/* Add Lead Modal */}
-                <Modal 
-                    isOpen={isAddModalOpen} 
+                <AddLeadModal
+                    isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
-                    maxWidth="max-w-md"
-                    className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
-                >
-                     <div className="p-5 border-b border-border bg-secondary/10 flex justify-between items-center">
-                        <h3 className="font-bold text-lg text-foreground">Add New Lead</h3>
-                        <button onClick={() => setIsAddModalOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors"><XCircle size={24} /></button>
-                     </div>
-                     <form onSubmit={handleAddSubmit} className="p-6 space-y-5">
-                         <div>
-                             <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Full Name</label>
-                             <input 
-                                required 
-                                value={newLeadForm.name} 
-                                onChange={e => setNewLeadForm({...newLeadForm, name: e.target.value})}
-                                className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                placeholder="e.g. John Doe"
-                             />
-                         </div>
-                         <div>
-                             <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Email</label>
-                             <input 
-                                required 
-                                type="email"
-                                value={newLeadForm.email} 
-                                onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})}
-                                className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                placeholder="e.g. john@example.com"
-                             />
-                         </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                 <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Phone</label>
-                                 <input 
-                                    type="tel"
-                                    value={newLeadForm.phone} 
-                                    onChange={e => setNewLeadForm({...newLeadForm, phone: e.target.value})}
-                                    className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                    placeholder="Optional"
-                                 />
-                            </div>
-                            <div>
-                                 <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Job Title</label>
-                                 <input 
-                                    value={newLeadForm.jobTitle} 
-                                    onChange={e => setNewLeadForm({...newLeadForm, jobTitle: e.target.value})}
-                                    className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                    placeholder="Optional"
-                                 />
-                            </div>
-                         </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                 <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Company</label>
-                                 <input 
-                                    value={newLeadForm.company} 
-                                    onChange={e => setNewLeadForm({...newLeadForm, company: e.target.value})}
-                                    className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                    placeholder="Optional"
-                                 />
-                            </div>
-                            <div>
-                                 <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Industry</label>
-                                 <input 
-                                    value={newLeadForm.industry} 
-                                    onChange={e => setNewLeadForm({...newLeadForm, industry: e.target.value})}
-                                    className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                    placeholder="Optional"
-                                 />
-                            </div>
-                         </div>
-                         <div>
-                             <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Value ($)</label>
-                             <input 
-                                type="number"
-                                value={newLeadForm.value} 
-                                onChange={e => setNewLeadForm({...newLeadForm, value: Number(e.target.value)})}
-                                className="w-full bg-secondary/20 border border-border/50 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-                                placeholder="0"
-                             />
-                         </div>
-                         <div className="pt-4">
-                             <button type="submit" className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-[0.98]">
-                                 Create Lead
-                             </button>
-                         </div>
-                     </form>
-                </Modal>
+                    onSubmit={handleAddSubmit}
+                />
             </div>
         </div>
     );

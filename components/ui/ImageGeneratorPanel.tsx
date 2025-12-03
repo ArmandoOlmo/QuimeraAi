@@ -131,9 +131,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     // Reference Images State
     const [referenceImages, setReferenceImages] = useState<string[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { uploadFile } = useEditor();
 
-    const processFiles = (files: FileList | File[]) => {
+    const processFiles = async (files: FileList | File[]) => {
         const remainingSlots = 14 - referenceImages.length;
 
         if (remainingSlots <= 0) {
@@ -142,16 +144,48 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         }
 
         const filesToProcess = Array.from(files).slice(0, remainingSlots);
+        setIsUploading(true);
 
-        filesToProcess.forEach(file => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setReferenceImages(prev => [...prev, reader.result as string]);
-                };
-                reader.readAsDataURL(file);
+        let successCount = 0;
+        let failCount = 0;
+        const successfulUrls: string[] = [];
+
+        try {
+            for (const file of filesToProcess) {
+                if (file.type.startsWith('image/')) {
+                    try {
+                        const url = await uploadFile(file);
+                        if (url) {
+                            successfulUrls.push(url);
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (error) {
+                        console.error(`Error uploading ${file.name}:`, error);
+                        failCount++;
+                    }
+                }
             }
-        });
+
+            if (successfulUrls.length > 0) {
+                setReferenceImages(prev => [...prev, ...successfulUrls]);
+            }
+
+            // Mostrar feedback al usuario
+            if (failCount > 0 && successCount > 0) {
+                alert(t('editor.partialUploadFailed', { 
+                    defaultValue: `${successCount} image(s) uploaded, ${failCount} failed. Check console for details.` 
+                }));
+            } else if (failCount > 0 && successCount === 0) {
+                alert(t('editor.uploadFailed', { defaultValue: 'Failed to upload images. Please try again.' }));
+            }
+        } catch (error) {
+            console.error("Error processing reference images:", error);
+            alert(t('editor.uploadFailed', { defaultValue: 'Failed to upload some images' }));
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const handleReferenceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -311,20 +345,26 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         {referenceImages.length < 14 && (
                                             <button
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="aspect-square flex flex-col items-center justify-center gap-1 border border-editor-border rounded-md hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-accent transition-colors"
+                                                disabled={isUploading}
+                                                className="aspect-square flex flex-col items-center justify-center gap-1 border border-editor-border rounded-md hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <Plus size={16} />
-                                                <span className="text-[10px]">{t('editor.add')}</span>
+                                                {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                                                <span className="text-[10px]">{isUploading ? '...' : t('editor.add')}</span>
                                             </button>
                                         )}
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="w-full flex flex-col items-center gap-2 text-editor-text-secondary py-4"
+                                        disabled={isUploading}
+                                        className="w-full flex flex-col items-center gap-2 text-editor-text-secondary py-4 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <Upload size={24} />
-                                        <span className="text-xs font-medium">{t('editor.clickOrDrag')}</span>
+                                        {isUploading ? (
+                                            <Loader2 size={24} className="animate-spin text-editor-accent" />
+                                        ) : (
+                                            <Upload size={24} />
+                                        )}
+                                        <span className="text-xs font-medium">{isUploading ? t('editor.uploading', { defaultValue: 'Uploading...' }) : t('editor.clickOrDrag')}</span>
                                         <span className="text-xs opacity-70">{t('editor.upToImages')}</span>
                                     </button>
                                 )}

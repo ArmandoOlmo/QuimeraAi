@@ -148,3 +148,5 @@ echo -e "${GREEN}✨ Configuración completada${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 
+
+

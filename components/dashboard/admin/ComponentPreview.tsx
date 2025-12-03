@@ -28,6 +28,7 @@ import Footer from '../../Footer';
 import ChatbotWidget from '../../ChatbotWidget';
 import BusinessMap from '../../BusinessMap';
 import Menu from '../../Menu';
+import Banner from '../../Banner';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;
@@ -54,6 +55,17 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
     const { componentStyles, customComponents, theme } = useEditor();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
     const [renderKey, setRenderKey] = useState(0);
+    
+    // Inject All Caps CSS variables from theme
+    useEffect(() => {
+        const root = document.documentElement;
+        root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
+        root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
+        root.style.setProperty('--buttons-transform', theme.buttonsAllCaps ? 'uppercase' : 'none');
+        root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
+        root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
+        root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
+    }, [theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
     
     // Force re-render when componentStyles change
     React.useEffect(() => {
@@ -150,9 +162,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                             ? <HeroFitness {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
                             : <Hero {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
             case 'features':
-                return <Features {...mergedProps} borderRadius={theme.cardBorderRadius} />;
+                return <Features {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} />;
             case 'testimonials':
-                return <Testimonials {...mergedProps} borderRadius={theme.cardBorderRadius} />;
+                return <Testimonials {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} cardShadow={(styles as any).cardShadow} borderStyle={(styles as any).borderStyle} cardPadding={(styles as any).cardPadding} testimonialsVariant={(styles as any).testimonialsVariant} />;
             case 'cta':
                  return <CTASection {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'services':
@@ -179,6 +191,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <BusinessMap {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'menu':
                 return <Menu {...mergedProps} borderRadius={theme.cardBorderRadius} />;
+            case 'banner':
+                return <Banner {...mergedProps} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'footer':
                 return <Footer {...mergedProps} />;
             case 'chatbot':

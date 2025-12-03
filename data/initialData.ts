@@ -31,6 +31,7 @@ const pageData: PageData = {
       accent: '#ffffff',
     },
     buttonBorderRadius: 'xl',
+    linkFontSize: 14,
   },
   hero: {
     heroVariant: 'modern',
@@ -76,6 +77,27 @@ const pageData: PageData = {
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
   },
+  heroSplit: {
+    headline: "Transform Your Vision",
+    subheadline: "Experience the perfect blend of innovation and design. Our solutions help you stand out in a competitive market.",
+    buttonText: "Get Started",
+    buttonUrl: "#cta",
+    imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect fill='%23111827' width='800' height='600'/%3E%3Ctext fill='%236B7280' font-family='system-ui,sans-serif' font-size='32' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E800 × 600%3C/text%3E%3C/svg%3E",
+    imagePosition: 'right',
+    maxHeight: 500,
+    angleIntensity: 15,
+    colors: {
+      textBackground: '#ffffff',
+      imageBackground: '#000000',
+      heading: '#111827',
+      text: '#4b5563',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+    headlineFontSize: 'lg',
+    subheadlineFontSize: 'md',
+    buttonBorderRadius: 'xl',
+  },
   features: {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
@@ -104,6 +126,7 @@ const pageData: PageData = {
     imageObjectFit: 'cover',
     animationType: 'fade-in-up',
     enableCardAnimation: true,
+    borderRadius: 'xl',
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -632,6 +655,30 @@ const pageData: PageData = {
       heading: '#ffffff',
     },
   },
+  banner: {
+    bannerVariant: 'classic',
+    headline: 'Discover Something Amazing',
+    subheadline: 'Join thousands of customers who have transformed their experience with our solution.',
+    buttonText: 'Get Started',
+    buttonUrl: '#cta',
+    showButton: true,
+    backgroundImageUrl: '',
+    backgroundOverlayOpacity: 50,
+    height: 400,
+    textAlignment: 'center',
+    paddingY: 'lg',
+    paddingX: 'md',
+    headlineFontSize: 'lg',
+    subheadlineFontSize: 'md',
+    colors: {
+      background: '#0f172a',
+      overlayColor: '#000000',
+      heading: '#ffffff',
+      text: '#ffffff',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+  },
 };
 
 const theme: ThemeData = {
@@ -640,6 +687,9 @@ const theme: ThemeData = {
     fontFamilyHeader: 'poppins',
     fontFamilyBody: 'mulish',
     fontFamilyButton: 'poppins',
+    headingsAllCaps: false,
+    buttonsAllCaps: false,
+    navLinksAllCaps: false,
     pageBackground: '#0f172a',
     globalColors: {
         primary: '#4f46e5',
@@ -665,7 +715,7 @@ const brandIdentity: BrandIdentity = {
     language: 'English',
 };
 
-const componentOrder: PageSection[] = ['colors', 'typography', 'header', 'hero', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
+const componentOrder: PageSection[] = ['colors', 'typography', 'header', 'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
 
 const sectionVisibility = componentOrder.reduce((acc, section) => {
     (acc as any)[section] = true;

@@ -31,6 +31,10 @@ export * from './domains';
 // Project Types
 export * from './project';
 
+// Appointment Types
+export * from './appointments';
+
+
 
 
 

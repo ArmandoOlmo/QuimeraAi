@@ -144,7 +144,12 @@ const HeroModern: React.FC<HeroProps> = ({
          {/* Título Principal */}
          <h1 
             className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight mb-8 leading-[1.1] animate-fade-in-up font-header`}
-            style={{ animationDelay: '0.1s', color: actualColors.heading }}
+            style={{ 
+              animationDelay: '0.1s', 
+              color: actualColors.heading,
+              textTransform: 'var(--headings-transform, none)' as any,
+              letterSpacing: 'var(--headings-spacing, normal)'
+            }}
             dangerouslySetInnerHTML={{ __html: styledHeadline }}
          />
          
@@ -161,7 +166,12 @@ const HeroModern: React.FC<HeroProps> = ({
              <a 
                 href="#cta"
                 className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
-                style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
+                style={{ 
+                  backgroundColor: actualColors.buttonBackground, 
+                  color: actualColors.buttonText,
+                  textTransform: 'var(--buttons-transform, none)' as any,
+                  letterSpacing: 'var(--buttons-spacing, normal)'
+                }}
              >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {primaryCta}
@@ -186,7 +196,9 @@ const HeroModern: React.FC<HeroProps> = ({
                     ? hexToRgba(actualColors.secondaryButtonBackground || '#334155', secondaryButtonOpacity / 100)
                     : 'transparent',
                   borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
-                  color: actualColors.secondaryButtonText
+                  color: actualColors.secondaryButtonText,
+                  textTransform: 'var(--buttons-transform, none)' as any,
+                  letterSpacing: 'var(--buttons-spacing, normal)'
                 }}
              >
                 <span className="flex items-center justify-center gap-2">

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, Images, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -53,6 +53,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms' },
     { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant' },
     { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads' },
+    { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments' },
     { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains' },
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo' },
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance' },

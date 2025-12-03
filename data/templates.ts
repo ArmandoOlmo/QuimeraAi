@@ -2,7 +2,7 @@
 import { initialData } from './initialData';
 import { Project, PageSection } from '../types';
 
-const ALL_SECTIONS: PageSection[] = ['colors', 'typography', 'header', 'hero', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'map', 'menu', 'chatbot', 'footer'];
+const ALL_SECTIONS: PageSection[] = ['colors', 'typography', 'header', 'hero', 'banner', 'features', 'services', 'howItWorks', 'team', 'video', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'map', 'menu', 'chatbot', 'footer'];
 const ALL_SECTIONS_VISIBLE = ALL_SECTIONS.reduce((acc, section) => {
     acc[section] = true;
     return acc;

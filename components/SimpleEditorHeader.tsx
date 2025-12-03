@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
 import ThemeToggle from './ui/ThemeToggle';
 import LanguageSelector from './ui/LanguageSelector';
-import { Menu, LayoutDashboard, Check, CloudUpload, Globe, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Menu, LayoutDashboard, Check, CloudUpload, Globe, Monitor, Tablet, Smartphone, SlidersHorizontal } from 'lucide-react';
 import { PreviewDevice } from '../types';
 
 interface SimpleEditorHeaderProps {
@@ -22,7 +22,9 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     previewDevice,
     setPreviewDevice,
     previewOrientation,
-    setPreviewOrientation
+    setPreviewOrientation,
+    isSidebarOpen,
+    setIsSidebarOpen
   } = useEditor();
 
   const [isEditingName, setIsEditingName] = useState(false);
@@ -99,7 +101,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
   return (
     <header className="h-14 px-4 md:px-6 border-b border-border flex items-center gap-4 bg-background z-20 sticky top-0" role="banner">
       <div className="flex items-center gap-4 min-w-0 flex-1">
-        {/* Mobile Menu Button */}
+        {/* Mobile Menu Button - Dashboard Sidebar */}
         {onMenuClick && (
           <button 
             onClick={onMenuClick}
@@ -109,6 +111,19 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
             <Menu className="w-4 h-4" />
           </button>
         )}
+        
+        {/* Mobile Controls Button - Editor Controls Panel */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className={`h-9 w-9 flex items-center justify-center hover:bg-border/40 rounded-full transition-colors md:hidden ${
+            isSidebarOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+          }`}
+          title={t('editor.toggleControls')}
+          aria-label={t('editor.toggleControls')}
+          aria-pressed={isSidebarOpen}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+        </button>
         
         {/* Dashboard Button */}
         <button 

@@ -41,11 +41,15 @@ interface NewsletterProps extends NewsletterData {
 }
 
 const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+  // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
+  const headingColor = colors.heading || colors.cardHeading || '#ffffff';
+  const textColor = colors.text || colors.cardText || '#ffffff';
+  
   return (
     <section id="newsletter" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
-        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.cardHeading || colors.heading }}>{title}</h2>
-        <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: colors.cardText || colors.text }}>{description}</p>
+        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+        <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: textColor }}>{description}</p>
         <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">
           <input
             type="email"
@@ -62,7 +66,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
           <button
             type="submit"
             className={`text-white font-bold py-3 px-8 hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-            style={{ backgroundColor: colors.buttonBackground || colors.accent, color: colors.buttonText || '#ffffff' }}
+            style={{ backgroundColor: colors.buttonBackground || colors.accent, color: colors.buttonText || '#ffffff', textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
           >
             {buttonText}
           </button>

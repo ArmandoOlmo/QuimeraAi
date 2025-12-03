@@ -5,6 +5,7 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -23,6 +24,7 @@ import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
+import Banner from './Banner';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
@@ -95,7 +97,15 @@ const LandingPage: React.FC = () => {
     root.style.setProperty('--font-header', headerFont);
     root.style.setProperty('--font-body', bodyFont);
     root.style.setProperty('--font-button', buttonFont);
-  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton]);
+    
+    // All Caps variables
+    root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--buttons-transform', theme.buttonsAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
+  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
 
   // Handle Hash Routing for Articles
   useEffect(() => {
@@ -191,9 +201,9 @@ const LandingPage: React.FC = () => {
               ? <HeroFitness {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
               : <Hero {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />;
       case 'features':
-        return <Features {...mergedData} borderRadius={borderRadius} />;
+        return <Features {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} />;
       case 'testimonials':
-        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} />;
+        return <Testimonials {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} cardShadow={mergedData.cardShadow} borderStyle={mergedData.borderStyle} cardPadding={mergedData.cardPadding} testimonialsVariant={mergedData.testimonialsVariant} />;
       case 'slideshow':
         return <Slideshow {...mergedData} borderRadius={borderRadius} />;
       case 'pricing':
@@ -276,8 +286,10 @@ const LandingPage: React.FC = () => {
   const mergedHowItWorksData = mergeComponentData('howItWorks');
   const mergedMapData = mergeComponentData('map');
   const mergedMenuData = mergeComponentData('menu');
+  const mergedBannerData = mergeComponentData('banner');
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
+  const mergedHeroSplitData = mergeComponentData('heroSplit');
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
@@ -289,8 +301,9 @@ const LandingPage: React.FC = () => {
             ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
             : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
     ),
-    features: <Features {...mergedFeaturesData} borderRadius={theme.cardBorderRadius} />,
-    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} />,
+    heroSplit: <HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} />,
+    features: <Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} />,
+    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} />,
     slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
     pricing: <Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
     faq: <Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} />,
@@ -304,6 +317,7 @@ const LandingPage: React.FC = () => {
     howItWorks: <HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} />,
     map: <BusinessMap {...mergedMapData} borderRadius={theme.cardBorderRadius} />,
     menu: <Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} />,
+    banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
     footer: <Footer {...mergedFooterData} />,
     header: null,

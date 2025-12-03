@@ -4,7 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
-import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
+import { hexToRgba } from '../utils/colorUtils';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -12,6 +12,7 @@ interface FeatureCardProps {
   description: string;
   delay?: string;
   accentColor: string;
+  headingColor: string;
   textColor: string;
   borderRadius: BorderRadiusSize;
   borderColor: string;
@@ -68,6 +69,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   title, 
   description, 
   delay = '0s', 
+  headingColor,
   textColor, 
   borderRadius, 
   borderColor,
@@ -102,7 +104,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         />
       )}
       <div className="p-8">
-        <h3 className="text-2xl font-bold mb-3 font-header" style={{ color: textColor }}>{title}</h3>
+        <h3 className="text-2xl font-bold mb-3 font-header" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
         <p className="font-body opacity-90" style={{ color: textColor }}>{description}</p>
       </div>
     </div>
@@ -180,22 +182,22 @@ const Features: React.FC<FeaturesProps> = ({
     heading: colors.heading,
     description: colors.description || colors.text,
     cardBackground: colors.cardBackground || primaryColor,
+    // Separate card colors
+    cardHeading: (colors as any).cardHeading,
+    cardText: (colors as any).cardText,
   };
   
-  // Calculate contrast-safe colors based on backgrounds
+  // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
-    const bgColor = actualColors.background || '#ffffff';
-    const cardBg = actualColors.cardBackground || bgColor;
-    
     return {
       // Section-level colors (for titles on section background)
-      heading: ensureTextContrast(bgColor, actualColors.heading),
-      text: ensureTextContrast(bgColor, actualColors.text),
-      // Description uses exact user-selected color without auto-contrast adjustment
-      description: actualColors.description,
-      // Card-level colors (for text inside cards)
-      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
-      cardText: ensureTextContrast(cardBg, actualColors.text),
+      heading: actualColors.heading || '#ffffff',
+      text: actualColors.text || '#94a3b8',
+      // Description uses exact user-selected color
+      description: actualColors.description || actualColors.text || '#94a3b8',
+      // Card-level colors (for text inside cards) - independent from section colors
+      cardHeading: actualColors.cardHeading || '#ffffff',
+      cardText: actualColors.cardText || '#94a3b8',
     };
   }, [actualColors]);
   
@@ -248,7 +250,7 @@ const Features: React.FC<FeaturesProps> = ({
                   <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
                   <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
                 </div>
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading }}>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                   {title}
                 </h2>
               </div>
@@ -314,7 +316,7 @@ const Features: React.FC<FeaturesProps> = ({
                       
                       <h3 
                         className={`${isLarge ? 'text-2xl md:text-3xl' : 'text-xl'} font-bold mb-3 group-hover:translate-x-2 transition-transform duration-300 font-header`}
-                        style={{ color: safeColors.cardHeading }}
+                        style={{ color: safeColors.cardHeading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
                       >
                         {feature.title}
                       </h3>
@@ -358,7 +360,7 @@ const Features: React.FC<FeaturesProps> = ({
     <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
             {description}
           </p>
@@ -372,6 +374,7 @@ const Features: React.FC<FeaturesProps> = ({
                 description={feature.description}
                 delay={getAnimationDelay(index)}
                 accentColor={actualColors.accent}
+                headingColor={safeColors.cardHeading}
                 textColor={safeColors.cardText}
                 borderRadius={borderRadius}
                 borderColor={actualColors.borderColor}

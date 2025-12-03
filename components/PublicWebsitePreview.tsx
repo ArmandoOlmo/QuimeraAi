@@ -32,6 +32,7 @@ import HowItWorks from './HowItWorks';
 import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import MenuComponent from './Menu';
+import Banner from './Banner';
 import BlogPost from './BlogPost';
 
 // Font stacks for CSS injection
@@ -212,6 +213,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       root.style.setProperty('--font-header', headerFont);
       root.style.setProperty('--font-body', bodyFont);
       root.style.setProperty('--font-button', buttonFont);
+      
+      // All Caps variables
+      root.style.setProperty('--headings-transform', project.theme.headingsAllCaps ? 'uppercase' : 'none');
+      root.style.setProperty('--headings-spacing', project.theme.headingsAllCaps ? '0.05em' : 'normal');
+      root.style.setProperty('--buttons-transform', project.theme.buttonsAllCaps ? 'uppercase' : 'none');
+      root.style.setProperty('--buttons-spacing', project.theme.buttonsAllCaps ? '0.05em' : 'normal');
+      root.style.setProperty('--navlinks-transform', project.theme.navLinksAllCaps ? 'uppercase' : 'none');
+      root.style.setProperty('--navlinks-spacing', project.theme.navLinksAllCaps ? '0.05em' : 'normal');
     }
   }, [project?.theme]);
 
@@ -349,7 +358,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'features':
         return <Features {...compData} borderRadius={borderRadius} />;
       case 'testimonials':
-        return <Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} />;
+        return <Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} testimonialsVariant={compData.testimonialsVariant} />;
       case 'slideshow':
         return <Slideshow {...compData} borderRadius={borderRadius} />;
       case 'pricing':
@@ -376,6 +385,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return <BusinessMap {...compData} borderRadius={borderRadius} />;
       case 'menu':
         return <MenuComponent {...compData} borderRadius={borderRadius} />;
+      case 'banner':
+        return <Banner {...compData} buttonBorderRadius={buttonBorderRadius} />;
       default:
         return null;
     }

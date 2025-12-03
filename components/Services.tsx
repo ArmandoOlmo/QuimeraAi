@@ -187,6 +187,7 @@ interface ServiceCardProps {
   title: string;
   description: string;
   accentColor: string;
+  headingColor: string;
   textColor: string;
   borderRadius: BorderRadiusSize;
   borderColor: string;
@@ -203,6 +204,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   title, 
   description, 
   accentColor, 
+  headingColor,
   textColor, 
   borderRadius, 
   borderColor, 
@@ -232,7 +234,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                         {icon}
                     </div>
                 </div>
-                <h3 className="relative z-10 text-2xl font-bold mb-3 font-header text-inherit group-hover:text-[var(--accent)] transition-colors" style={{'--accent': accentColor} as any}>
+                <h3 className="relative z-10 text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: headingColor, '--accent': accentColor, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
                     {title}
                 </h3>
                 <p className="relative z-10 font-body opacity-80 leading-relaxed" style={{ color: textColor }}>{description}</p>
@@ -254,7 +256,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{'--accent': accentColor} as any}>
                      {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
                 </div>
-                <h3 className="text-xl font-bold mb-3 font-header">{title}</h3>
+                <h3 className="text-xl font-bold mb-3 font-header" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
                 <p className="font-body text-sm opacity-70 mb-6 flex-grow" style={{ color: textColor }}>{description}</p>
                 
                 <div className="mt-auto pt-4 flex items-center text-sm font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0" style={{ color: accentColor }}>
@@ -274,7 +276,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold mb-2 font-header flex items-center gap-2">
+                    <h3 className="text-xl font-bold mb-2 font-header flex items-center gap-2" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                         {title}
                     </h3>
                     <p className="font-body leading-relaxed opacity-80" style={{ color: textColor }}>{description}</p>
@@ -316,7 +318,7 @@ const Services: React.FC<ServicesProps> = ({
                     Our Services
                 </span>
             )}
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
             <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors.description || colors.text }}>
                 {description}
             </p>
@@ -334,7 +336,8 @@ const Services: React.FC<ServicesProps> = ({
                     title={service.title}
                     description={service.description}
                     accentColor={colors.accent}
-                    textColor={colors.text}
+                    headingColor={(colors as any).cardHeading || '#ffffff'}
+                    textColor={(colors as any).cardText || colors.text || '#94a3b8'}
                     borderRadius={borderRadius}
                     borderColor={colors.borderColor}
                     cardBackground={colors.cardBackground || 'rgba(255,255,255,0.05)'}

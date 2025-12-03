@@ -160,7 +160,11 @@ const HeroGradient: React.FC<HeroProps> = ({
                         {/* Headline */}
                         <h1 
                             className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight leading-[1.1] font-header`}
-                            style={{ color: actualColors.heading }}
+                            style={{ 
+                              color: actualColors.heading,
+                              textTransform: 'var(--headings-transform, none)' as any,
+                              letterSpacing: 'var(--headings-spacing, normal)'
+                            }}
                             dangerouslySetInnerHTML={{ __html: styledHeadline }}
                         />
 
@@ -178,7 +182,9 @@ const HeroGradient: React.FC<HeroProps> = ({
                                 href="#cta" 
                                 style={{ 
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
-                                    color: actualColors.buttonText 
+                                    color: actualColors.buttonText,
+                                    textTransform: 'var(--buttons-transform, none)' as any,
+                                    letterSpacing: 'var(--buttons-spacing, normal)'
                                 }} 
                                 className={`relative overflow-hidden group px-8 py-4 font-bold hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             >
@@ -200,7 +206,9 @@ const HeroGradient: React.FC<HeroProps> = ({
                                         ? hexToRgba(actualColors.secondaryButtonBackground || '#334155', secondaryButtonOpacity / 100)
                                         : 'transparent',
                                     borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
-                                    color: actualColors.secondaryButtonText 
+                                    color: actualColors.secondaryButtonText,
+                                    textTransform: 'var(--buttons-transform, none)' as any,
+                                    letterSpacing: 'var(--buttons-spacing, normal)'
                                 }}
                             >
                                 <span className="relative z-10">{secondaryCta}</span>

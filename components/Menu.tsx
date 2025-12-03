@@ -221,11 +221,10 @@ const ClassicMenuCard: React.FC<{
     const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
     const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    // Use specific colors - respect user's choices
     const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // Use cardTitleColor if defined, otherwise fallback to previous logic
-    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
-    const textColor = hasLightBackground ? colors.accent : colors.text;
+    const titleColor = colors.cardTitleColor || '#ffffff';
+    const textColor = colors.cardText || colors.text || '#94a3b8';
     
     return (
         <div 
@@ -262,7 +261,7 @@ const ClassicMenuCard: React.FC<{
         
         <div className="p-6">
             <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold font-header flex-1" style={{ color: titleColor }}>
+                <h3 className="text-xl font-bold font-header flex-1" style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     {item.name}
                 </h3>
                 <span 
@@ -293,13 +292,11 @@ const ClassicMenuCard: React.FC<{
 const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; index: number }> = ({ item, colors, borderRadius, index }) => {
     const isWide = index % 3 === 0;
     const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
-    const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    // Use specific colors - respect user's choices
     const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // Use cardTitleColor if defined, otherwise fallback to previous logic
-    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
-    const textColor = hasLightBackground ? colors.accent : colors.text;
+    const titleColor = colors.cardTitleColor || '#ffffff';
+    const textColor = colors.cardText || colors.text || '#94a3b8';
     
     return (
         <div 
@@ -348,7 +345,7 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                                 {item.category}
                             </span>
                         )}
-                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: titleColor, '--accent': colors.accent } as any}>
+                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: titleColor, '--accent': colors.accent, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
                             {item.name}
                         </h3>
                         <p className="text-sm leading-relaxed font-body mb-4 opacity-90" style={{ color: textColor }}>
@@ -385,13 +382,11 @@ const ElegantListCard: React.FC<{
 }> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     const cardBg = colors.cardBackground || 'transparent';
-    const hasLightBackground = isBackgroundLight(cardBg);
     
-    // Use priceColor if defined, otherwise fallback to accent with 30% opacity
+    // Use specific colors - respect user's choices
     const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    // Use cardTitleColor if defined, otherwise fallback to previous logic
-    const titleColor = colors.cardTitleColor || (hasLightBackground ? colors.accent : colors.heading);
-    const textColor = hasLightBackground ? colors.accent : colors.text;
+    const titleColor = colors.cardTitleColor || '#ffffff';
+    const textColor = colors.cardText || colors.text || '#94a3b8';
     
     return (
         <div 
@@ -428,7 +423,7 @@ const ElegantListCard: React.FC<{
             <div>
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2 font-header" style={{ color: titleColor }}>
+                        <h3 className="text-2xl font-bold mb-2 font-header" style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                             {item.name}
                         </h3>
                         {item.category && (
@@ -501,14 +496,16 @@ const Menu: React.FC<MenuProps> = ({
     // Group items by category if showCategories is true
     const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
     
-    // Use component colors - fallback to primary color only if not set
-    const sectionTitleColor = colors.heading || primaryColor;
-    const sectionTextColor = colors.text;
+    // Use component colors - respect user's choices
+    const sectionTitleColor = colors.heading || '#ffffff';
+    const sectionTextColor = colors.text || '#94a3b8';
     
-    // Use component cardBackground color - fallback to primary if not set
+    // Use component colors with proper fallbacks
     const menuColors = {
         ...colors,
         cardBackground: colors.cardBackground || primaryColor,
+        cardTitleColor: colors.cardTitleColor || '#ffffff',
+        cardText: colors.cardText || '#94a3b8',
     };
     
     return (
@@ -533,7 +530,7 @@ const Menu: React.FC<MenuProps> = ({
                 )}
                 <h2 
                     className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} 
-                    style={{ color: sectionTitleColor }}
+                    style={{ color: sectionTitleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
                 >
                     {title}
                 </h2>

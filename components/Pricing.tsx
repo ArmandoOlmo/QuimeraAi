@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
+import { hexToRgba } from '../utils/colorUtils';
 
 // Use primary color for section background
 
@@ -81,19 +81,16 @@ const Pricing: React.FC<PricingProps> = ({
     gradientEnd: colors.gradientEnd || '#10b981',
   };
 
-  // Calculate contrast-safe colors based on backgrounds
+  // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
-    const bgColor = actualColors.background || '#ffffff';
-    const cardBg = actualColors.cardBackground || '#1f2937';
-    
     return {
       // Section-level colors
-      heading: ensureTextContrast(bgColor, actualColors.heading),
-      text: ensureTextContrast(bgColor, actualColors.text),
-      description: ensureTextContrast(bgColor, actualColors.description),
+      heading: actualColors.heading || '#ffffff',
+      text: actualColors.text || '#94a3b8',
+      description: actualColors.description || actualColors.text || '#94a3b8',
       // Card-level colors
-      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
-      cardText: ensureTextContrast(cardBg, actualColors.text),
+      cardHeading: actualColors.heading || '#ffffff',
+      cardText: actualColors.text || '#94a3b8',
     };
   }, [actualColors]);
 
@@ -103,7 +100,7 @@ const Pricing: React.FC<PricingProps> = ({
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
         <div className="container mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
               <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
                 {description}
               </p>
@@ -180,7 +177,9 @@ const Pricing: React.FC<PricingProps> = ({
                     `}
                     style={{ 
                         backgroundColor: tier.featured ? actualColors.accent : actualColors.buttonBackground,
-                        color: actualColors.buttonText
+                        color: actualColors.buttonText,
+                        textTransform: 'var(--buttons-transform, none)' as any,
+                        letterSpacing: 'var(--buttons-spacing, normal)'
                      }}
                   >
                     {tier.buttonText}
@@ -315,7 +314,9 @@ const Pricing: React.FC<PricingProps> = ({
                         backgroundImage: tier.featured 
                           ? `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
                           : `linear-gradient(135deg, ${actualColors.buttonBackground}, ${actualColors.buttonBackground})`,
-                        color: actualColors.buttonText
+                        color: actualColors.buttonText,
+                        textTransform: 'var(--buttons-transform, none)' as any,
+                        letterSpacing: 'var(--buttons-spacing, normal)'
                      }}
                   >
                     {tier.buttonText}
@@ -341,7 +342,7 @@ const Pricing: React.FC<PricingProps> = ({
 
         <div className="container mx-auto relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                 {title}
               </h2>
               <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
@@ -430,7 +431,9 @@ const Pricing: React.FC<PricingProps> = ({
                         backgroundColor: tier.featured 
                           ? hexToRgba(actualColors.accent, 0.56)
                           : hexToRgba(actualColors.buttonBackground, 0.44),
-                        color: actualColors.buttonText
+                        color: actualColors.buttonText,
+                        textTransform: 'var(--buttons-transform, none)' as any,
+                        letterSpacing: 'var(--buttons-spacing, normal)'
                      }}
                   >
                     {tier.buttonText}
@@ -449,7 +452,7 @@ const Pricing: React.FC<PricingProps> = ({
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
         <div className="container mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-20">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading }}>
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                 {title}
               </h2>
               <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
@@ -520,12 +523,14 @@ const Pricing: React.FC<PricingProps> = ({
                     rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className={`
                       w-full text-center block font-medium py-3 px-8 border
-                      transition-all duration-300 font-button text-sm uppercase tracking-wider
+                      transition-all duration-300 font-button text-sm
                     `}
                     style={{ 
                         backgroundColor: tier.featured ? actualColors.accent : 'transparent',
                         borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
-                        color: tier.featured ? actualColors.buttonText : safeColors.cardHeading
+                        color: tier.featured ? actualColors.buttonText : safeColors.cardHeading,
+                        textTransform: 'var(--buttons-transform, none)' as any,
+                        letterSpacing: 'var(--buttons-spacing, normal)'
                      }}
                   >
                     {tier.buttonText}

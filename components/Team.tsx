@@ -14,6 +14,8 @@ interface TeamMemberCardProps {
   delay?: string;
   variant?: TeamVariant;
   accentColor?: string;
+  nameColor?: string;
+  roleColor?: string;
   cardBackground?: string;
   animationType?: AnimationType;
   enableAnimation?: boolean;
@@ -53,6 +55,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   delay = '0s', 
   variant = 'classic',
   accentColor = '#4f46e5',
+  nameColor = '#ffffff',
+  roleColor = '#94a3b8',
   cardBackground = 'transparent',
   animationType = 'fade-in-up',
   enableAnimation = true,
@@ -80,8 +84,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             key={imageUrl} 
           />
         )}
-        <h3 className="text-xl font-bold text-site-heading mb-1 font-header">{name}</h3>
-        <p className="text-primary font-semibold font-body" style={{ color: accentColor }}>{role}</p>
+        <h3 className="text-xl font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
+        <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
       </div>
     );
   }
@@ -115,8 +119,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           />
         </div>
         <div className="p-6 text-center">
-          <h3 className="text-xl font-bold text-site-heading mb-2 font-header">{name}</h3>
-          <p className="font-semibold font-body" style={{ color: accentColor }}>{role}</p>
+          <h3 className="text-xl font-bold mb-2 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
+          <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
         </div>
       </div>
     );
@@ -143,10 +147,10 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           />
         </div>
         <div className="text-center">
-          <h3 className="text-lg font-bold text-site-heading mb-1 font-header">{name}</h3>
+          <h3 className="text-lg font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
           <p 
             className="text-sm font-medium font-body uppercase tracking-wider"
-            style={{ color: accentColor }}
+            style={{ color: roleColor }}
           >
             {role}
           </p>
@@ -187,14 +191,14 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             </div>
             
             {/* Name - always visible but moves up on hover */}
-            <h3 className="text-2xl font-bold font-header transform transition-transform duration-300 group-hover:-translate-y-2">
+            <h3 className="text-2xl font-bold font-header transform transition-transform duration-300 group-hover:-translate-y-2" style={{ color: nameColor }}>
               {name}
             </h3>
             
             {/* Additional info appears on hover */}
             <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 mt-2">
               <div className="w-12 h-1 mb-2" style={{ backgroundColor: accentColor }} />
-              <p className="text-sm text-gray-300">
+              <p className="text-sm" style={{ color: roleColor }}>
                 Team Member
               </p>
             </div>
@@ -227,8 +231,8 @@ const Team: React.FC<TeamProps> = ({
   // Get design tokens for secondary color (for photo border fallback)
   const { colors: tokenColors } = useDesignTokens();
   const secondaryColor = tokenColors.secondary;
-  // Use 50% of secondary color for photo border
-  const photoBorderColor = hexToRgba(secondaryColor, 0.5);
+  // Use user-defined photo border color, or fall back to 50% of secondary color
+  const photoBorderColor = (colors as any).photoBorderColor || hexToRgba(secondaryColor, 0.5);
   
   // Grid columns based on variant
   const gridClasses = {
@@ -269,6 +273,8 @@ const Team: React.FC<TeamProps> = ({
                 delay={getAnimationDelay(index, 0.15)}
                 variant={teamVariant}
                 accentColor={colors.accent || '#4f46e5'}
+                nameColor={(colors as any).cardHeading || '#ffffff'}
+                roleColor={(colors as any).cardText || '#94a3b8'}
                 cardBackground={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}

@@ -16,6 +16,7 @@ import CMSDashboard from './cms/CMSDashboard';
 import NavigationDashboard from './dashboard/navigation/NavigationDashboard';
 import AiAssistantDashboard from './dashboard/ai/AiAssistantDashboard';
 import LeadsDashboard from './dashboard/leads/LeadsDashboard';
+import AppointmentsDashboard from './dashboard/appointments/AppointmentsDashboard';
 import DomainsDashboard from './dashboard/domains/DomainsDashboard';
 import SEODashboard from './dashboard/SEODashboard';
 import FinanceDashboard from './dashboard/finance/FinanceDashboard';
@@ -47,6 +48,7 @@ const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
     'navigation': NavigationDashboard,
     'ai-assistant': AiAssistantDashboard,
     'leads': LeadsDashboard,
+    'appointments': AppointmentsDashboard,
     'domains': DomainsDashboard,
     'seo': SEODashboard,
     'finance': FinanceDashboard,

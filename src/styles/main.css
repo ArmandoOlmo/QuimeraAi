@@ -368,6 +368,14 @@ html.palette-rose-coral .theme-btn-active {
   --font-header: 'Plus Jakarta Sans', sans-serif;
   --font-body: 'Ubuntu', sans-serif;
   --font-button: 'Ubuntu', sans-serif;
+  
+  /* All Caps - default values */
+  --headings-transform: none;
+  --headings-spacing: normal;
+  --buttons-transform: none;
+  --buttons-spacing: normal;
+  --navlinks-transform: none;
+  --navlinks-spacing: normal;
 }
 
 /* ============================================
@@ -402,6 +410,25 @@ body {
 /* ============================================
    UTILITY CLASSES
    ============================================ */
+
+/* All Caps Typography Transforms */
+/* Headings - applied to section titles */
+.heading-caps {
+  text-transform: var(--headings-transform, none);
+  letter-spacing: var(--headings-spacing, normal);
+}
+
+/* Buttons - applied to all buttons */
+.button-caps {
+  text-transform: var(--buttons-transform, none);
+  letter-spacing: var(--buttons-spacing, normal);
+}
+
+/* Nav Links - applied to navigation links */
+.navlink-caps {
+  text-transform: var(--navlinks-transform, none);
+  letter-spacing: var(--navlinks-spacing, normal);
+}
 
 /* Drag & Drop */
 .drag-container:active {

@@ -181,3 +181,5 @@ cat /Users/armandoolmo/QuimeraAppCursor/QuimeraAi/INSTALAR_Y_DEPLOYAR_AHORA.md
 
 
 
+
+

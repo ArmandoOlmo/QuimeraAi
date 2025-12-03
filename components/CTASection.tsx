@@ -45,14 +45,14 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
-  // Merge component colors with Design Tokens (component colors take priority)
+  // Use component colors directly - respect user's choices
   const actualColors = {
     background: colors.background || '#0f172a',
     gradientStart: colors.gradientStart || getColor('primary.main', '#4f46e5'),
     gradientEnd: colors.gradientEnd || getColor('secondary.main', '#10b981'),
     text: colors.text || '#ffffff',
-    heading: colors.heading,
-    description: colors.description || colors.text || 'rgba(255, 255, 255, 0.8)',
+    heading: colors.heading || '#ffffff',
+    description: colors.description || colors.text || '#ffffff',
     buttonBackground: colors.buttonBackground || '#ffffff',
     buttonText: colors.buttonText || '#4f46e5',
   };
@@ -74,7 +74,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                   <span className="text-white/90 text-sm font-medium">Limited Time Offer</span>
                 </div>
                 
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-black text-white mb-4 font-header leading-tight`} style={{ color: actualColors.heading }}>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-black text-white mb-4 font-header leading-tight`} style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     {title}
                 </h2>
                 <p 
@@ -89,7 +89,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                   <a 
                       href="#" 
                       className={`group inline-flex items-center gap-3 font-bold py-4 px-10 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-                      style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
+                      style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
                   >
                       <span>{buttonText}</span>
                       <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -30,8 +30,67 @@ const fontOptions: FontFamily[] = [
     'nobile', 'cardo', 'asap', 'questrial', 'dancing-script', 'amatic-sc'
 ];
 
+// Font stacks for CSS font-family property
+const fontStacks: Record<FontFamily, string> = {
+    roboto: "'Roboto', sans-serif",
+    'open-sans': "'Open Sans', sans-serif",
+    lato: "'Lato', sans-serif",
+    'slabo-27px': "'Slabo 27px', serif",
+    oswald: "'Oswald', sans-serif",
+    'source-sans-pro': "'Source Sans Pro', sans-serif",
+    montserrat: "'Montserrat', sans-serif",
+    raleway: "'Raleway', sans-serif",
+    'pt-sans': "'PT Sans', sans-serif",
+    merriweather: "'Merriweather', serif",
+    lora: "'Lora', serif",
+    ubuntu: "'Ubuntu', sans-serif",
+    'playfair-display': "'Playfair Display', serif",
+    'crimson-text': "'Crimson Text', serif",
+    poppins: "'Poppins', sans-serif",
+    arvo: "'Arvo', serif",
+    mulish: "'Mulish', sans-serif",
+    'noto-sans': "'Noto Sans', sans-serif",
+    'noto-serif': "'Noto Serif', serif",
+    inconsolata: "'Inconsolata', monospace",
+    'indie-flower': "'Indie Flower', cursive",
+    cabin: "'Cabin', sans-serif",
+    'fira-sans': "'Fira Sans', sans-serif",
+    pacifico: "'Pacifico', cursive",
+    'josefin-sans': "'Josefin Sans', sans-serif",
+    anton: "'Anton', sans-serif",
+    'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
+    arimo: "'Arimo', sans-serif",
+    lobster: "'Lobster', cursive",
+    'bree-serif': "'Bree Serif', serif",
+    vollkorn: "'Vollkorn', serif",
+    abel: "'Abel', sans-serif",
+    'archivo-narrow': "'Archivo Narrow', sans-serif",
+    'francois-one': "'Francois One', sans-serif",
+    signika: "'Signika', sans-serif",
+    oxygen: "'Oxygen', sans-serif",
+    quicksand: "'Quicksand', sans-serif",
+    'pt-serif': "'PT Serif', serif",
+    bitter: "'Bitter', serif",
+    'exo-2': "'Exo 2', sans-serif",
+    'varela-round': "'Varela Round', sans-serif",
+    dosis: "'Dosis', sans-serif",
+    'noticia-text': "'Noticia Text', serif",
+    'titillium-web': "'Titillium Web', sans-serif",
+    nobile: "'Nobile', sans-serif",
+    cardo: "'Cardo', serif",
+    asap: "'Asap', sans-serif",
+    questrial: "'Questrial', sans-serif",
+    'dancing-script': "'Dancing Script', cursive",
+    'amatic-sc': "'Amatic SC', cursive",
+};
+
 const formatFontName = (font: string) => {
     return font.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
+// Get the CSS font-family value for a font
+const getFontStack = (font: FontFamily): string => {
+    return fontStacks[font] || "'Poppins', sans-serif";
 };
 
 type Tab = 'typography' | 'colors';
@@ -613,6 +672,64 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         {renderFontSelect(t('globalStyles.headingsFont', 'Títulos / Headings'), 'fontFamilyHeader')}
                         {renderFontSelect(t('globalStyles.bodyFont', 'Texto / Body'), 'fontFamilyBody')}
                         {renderFontSelect(t('globalStyles.buttonsFont', 'Botones / UI'), 'fontFamilyButton')}
+                        
+                        {/* All Caps Toggles Section */}
+                        <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-4">
+                            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                {t('globalStyles.allCapsOptions', 'All Caps (Mayúsculas)')}
+                            </label>
+                            
+                            {/* Headings All Caps */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-sm text-editor-text-primary">
+                                        {t('globalStyles.headingsAllCaps', 'Títulos')}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setTheme(prev => ({ ...prev, headingsAllCaps: !prev.headingsAllCaps }))}
+                                    className={`${theme.headingsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                >
+                                    <span
+                                        className={`${theme.headingsAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                    />
+                                </button>
+                            </div>
+                            
+                            {/* Buttons All Caps */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-sm text-editor-text-primary">
+                                        {t('globalStyles.buttonsAllCaps', 'Botones')}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setTheme(prev => ({ ...prev, buttonsAllCaps: !prev.buttonsAllCaps }))}
+                                    className={`${theme.buttonsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                >
+                                    <span
+                                        className={`${theme.buttonsAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                    />
+                                </button>
+                            </div>
+                            
+                            {/* Nav Links All Caps */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-sm text-editor-text-primary">
+                                        {t('globalStyles.navLinksAllCaps', 'Links de Navegación')}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setTheme(prev => ({ ...prev, navLinksAllCaps: !prev.navLinksAllCaps }))}
+                                    className={`${theme.navLinksAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                >
+                                    <span
+                                        className={`${theme.navLinksAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Font Preview */}
@@ -628,11 +745,31 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 borderWidth: '1px'
                             }}
                         >
+                            {/* Nav Links Preview */}
+                            <div className="flex gap-4 mb-4 pb-3 border-b border-white/10">
+                                {['Inicio', 'Servicios', 'Contacto'].map((link) => (
+                                    <span 
+                                        key={link}
+                                        className="text-sm"
+                                        style={{ 
+                                            fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
+                                            color: globalColors.text,
+                                            textTransform: theme.navLinksAllCaps ? 'uppercase' : 'none',
+                                            letterSpacing: theme.navLinksAllCaps ? '0.05em' : 'normal'
+                                        }}
+                                    >
+                                        {link}
+                                    </span>
+                                ))}
+                            </div>
+                            
                             <h3 
-                                className="text-xl mb-2"
+                                className="text-xl mb-2 font-bold"
                                 style={{ 
-                                    fontFamily: formatFontName(theme.fontFamilyHeader || 'poppins'),
-                                    color: globalColors.heading
+                                    fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
+                                    color: globalColors.heading,
+                                    textTransform: theme.headingsAllCaps ? 'uppercase' : 'none',
+                                    letterSpacing: theme.headingsAllCaps ? '0.05em' : 'normal'
                                 }}
                             >
                                 Título de Ejemplo
@@ -640,7 +777,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <p 
                                 className="text-sm mb-4"
                                 style={{ 
-                                    fontFamily: formatFontName(theme.fontFamilyBody || 'mulish'),
+                                    fontFamily: getFontStack(theme.fontFamilyBody || 'mulish'),
                                     color: globalColors.text
                                 }}
                             >
@@ -649,9 +786,11 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <button 
                                 className="px-4 py-2 rounded-md text-sm font-medium"
                                 style={{ 
-                                    fontFamily: formatFontName(theme.fontFamilyButton || 'poppins'),
+                                    fontFamily: getFontStack(theme.fontFamilyButton || 'poppins'),
                                     backgroundColor: globalColors.primary,
-                                    color: '#ffffff'
+                                    color: '#ffffff',
+                                    textTransform: theme.buttonsAllCaps ? 'uppercase' : 'none',
+                                    letterSpacing: theme.buttonsAllCaps ? '0.05em' : 'normal'
                                 }}
                             >
                                 Botón de Ejemplo

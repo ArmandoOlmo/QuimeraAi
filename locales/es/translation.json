@@ -198,6 +198,7 @@
     "code": "Código",
     "untitledProject": "Proyecto Sin Título",
     "toggleSidebar": "Alternar Panel Lateral",
+    "toggleControls": "Mostrar/Ocultar Controles",
     "goToDashboard": "Ir al Panel de Control",
     "renameProject": "Renombrar proyecto",
     "previewOnDesktop": "Vista previa en escritorio",
@@ -319,6 +320,7 @@
     "structure": "Estructura",
     "integrations": "Integraciones",
     "heroSection": "Sección Hero",
+    "bannerSection": "Banner",
     "featuresSection": "Características",
     "testimonialsSection": "Testimonios",
     "servicesSection": "Servicios",
@@ -1358,6 +1360,97 @@
     "nextStep3": "Podrás modificar textos, colores, imágenes y más",
     "useThisTemplate": "Usar esta plantilla",
     "creating": "Creando tu sitio..."
+  },
+  "appointments": {
+    "title": "Citas",
+    "create": "Nueva Cita",
+    "edit": "Editar Cita",
+    "delete": "Eliminar Cita",
+    "upcoming": "Próximas",
+    "past": "Pasadas",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "thisWeek": "Esta Semana",
+    "noAppointments": "No hay citas",
+    "createFirst": "Crea tu primera cita para comenzar",
+    "types": {
+      "call": "Llamada",
+      "video_call": "Videollamada",
+      "in_person": "Presencial",
+      "demo": "Demo",
+      "consultation": "Consulta",
+      "follow_up": "Seguimiento",
+      "discovery": "Discovery",
+      "closing": "Cierre"
+    },
+    "status": {
+      "scheduled": "Programada",
+      "confirmed": "Confirmada",
+      "in_progress": "En Progreso",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "no_show": "No Show",
+      "rescheduled": "Reprogramada"
+    },
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
+    "form": {
+      "title": "Título",
+      "description": "Descripción",
+      "type": "Tipo de Cita",
+      "priority": "Prioridad",
+      "startDate": "Fecha de Inicio",
+      "endDate": "Fecha de Fin",
+      "timezone": "Zona Horaria",
+      "location": "Ubicación",
+      "virtual": "Virtual",
+      "physical": "Presencial",
+      "phone": "Teléfono",
+      "meetingUrl": "Enlace de Reunión",
+      "address": "Dirección",
+      "participants": "Participantes",
+      "addParticipant": "Agregar Participante",
+      "reminders": "Recordatorios",
+      "tags": "Etiquetas",
+      "aiPrep": "Preparación con IA"
+    },
+    "ai": {
+      "title": "Preparación con IA",
+      "generate": "Generar Preparación",
+      "regenerate": "Regenerar",
+      "summary": "Resumen",
+      "talkingPoints": "Puntos a Cubrir",
+      "questions": "Preguntas Sugeridas",
+      "objections": "Posibles Objeciones",
+      "strategy": "Estrategia Recomendada",
+      "successProbability": "Probabilidad de Éxito"
+    },
+    "googleCalendar": {
+      "connect": "Conectar con Google Calendar",
+      "disconnect": "Desconectar",
+      "connected": "Conectado",
+      "sync": "Sincronizar",
+      "syncing": "Sincronizando...",
+      "lastSync": "Última Sincronización"
+    },
+    "views": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes",
+      "list": "Lista"
+    },
+    "actions": {
+      "join": "Unirse",
+      "reschedule": "Reprogramar",
+      "cancel": "Cancelar",
+      "complete": "Completar",
+      "export": "Exportar",
+      "duplicate": "Duplicar"
+    }
   }
 }
 

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { FaqData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
 import { Plus, Minus, ChevronDown, HelpCircle } from 'lucide-react';
-import { ensureTextContrast, hasGoodContrast, darkenColor, hexToRgba } from '../utils/colorUtils';
+import { hexToRgba } from '../utils/colorUtils';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -276,37 +276,22 @@ const Faq: React.FC<FaqProps> = ({
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  // Calculate contrast-safe colors based on background
-  // Use component background color - fallback to primary only if not set
+  // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
-    const bgColor = colors.background || primaryColor || '#ffffff';
-    
-    // Ensure heading color has good contrast with background
-    const safeHeadingColor = ensureTextContrast(bgColor, colors.heading);
-    
-    // Ensure text color has good contrast with background
-    const safeTextColor = ensureTextContrast(bgColor, colors.text);
-    
-    // Ensure description color has good contrast with background
-    const safeDescriptionColor = ensureTextContrast(bgColor, colors.description || colors.text);
-    
-    // For card backgrounds (used in cards/gradient variants), ensure contrast
-    const cardBg = colors.cardBackground || bgColor;
-    const safeCardTextColor = ensureTextContrast(cardBg, colors.text);
-    const safeCardHeadingColor = ensureTextContrast(cardBg, colors.heading);
-    
-    // Calculate a visible border color if needed
-    const safeBorderColor = colors.borderColor || (hasGoodContrast(bgColor, colors.borderColor || '#333333') 
-      ? colors.borderColor 
-      : darkenColor(bgColor, 20));
+    // Section-level colors
+    const sectionHeading = colors.heading || '#F9FAFB';
+    const sectionDescription = colors.description || '#94a3b8';
+    // Card/Question-level colors  
+    const questionText = colors.text || '#F9FAFB';
+    const answerText = colors.text || '#94a3b8';
     
     return {
-      heading: safeHeadingColor,
-      text: safeTextColor,
-      description: safeDescriptionColor,
-      cardHeading: safeCardHeadingColor,
-      cardText: safeCardTextColor,
-      border: safeBorderColor,
+      heading: sectionHeading,
+      text: questionText,
+      description: sectionDescription,
+      cardHeading: questionText,
+      cardText: answerText,
+      border: colors.borderColor || '#334155',
     };
   }, [colors]);
 
@@ -345,7 +330,7 @@ const Faq: React.FC<FaqProps> = ({
   return (
     <section id="faq" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background || primaryColor }}>
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
         <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
           {description}
         </p>

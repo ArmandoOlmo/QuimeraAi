@@ -13,6 +13,7 @@ interface CreateComponentModalProps {
 // Re-using componentOptions from ComponentDesigner.tsx
 const componentOptions: { id: EditableComponentID, name: string }[] = [
     { id: 'hero', name: 'Hero Section' },
+    { id: 'banner', name: 'Banner Section' },
     { id: 'features', name: 'Features Section' },
     { id: 'services', name: 'Services Section' },
     { id: 'testimonials', name: 'Testimonials Section' },

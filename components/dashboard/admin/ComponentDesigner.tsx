@@ -20,6 +20,7 @@ interface ComponentDesignerProps {
 const componentOptions: { id: EditableComponentID, name: string, icon: React.ReactNode }[] = [
     { id: 'header', name: 'Navigation Bar', icon: <AlignJustify size={18} /> },
     { id: 'hero', name: 'Hero', icon: <Image size={18} /> },
+    { id: 'banner', name: 'Banner', icon: <Image size={18} /> },
     { id: 'features', name: 'Features', icon: <List size={18} /> },
     { id: 'services', name: 'Services', icon: <Wrench size={18} /> },
     { id: 'testimonials', name: 'Testimonials', icon: <Star size={18} /> },

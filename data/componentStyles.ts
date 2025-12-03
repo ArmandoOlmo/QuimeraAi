@@ -35,6 +35,22 @@ export const componentStyles: ComponentStyles = {
       secondaryButtonText: '#ffffff',
     },
   },
+  heroSplit: {
+    headlineFontSize: 'lg',
+    subheadlineFontSize: 'md',
+    maxHeight: 500,
+    angleIntensity: 15,
+    imagePosition: 'right',
+    buttonBorderRadius: 'xl',
+    colors: {
+      textBackground: '#ffffff',
+      imageBackground: '#000000',
+      heading: '#111827',
+      text: '#4b5563',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+  },
   features: {
     featuresVariant: 'classic',
     paddingY: 'lg',
@@ -46,6 +62,7 @@ export const componentStyles: ComponentStyles = {
     imageObjectFit: 'cover',
     animationType: 'fade-in-up',
     enableCardAnimation: true,
+    borderRadius: 'xl',
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -53,7 +70,7 @@ export const componentStyles: ComponentStyles = {
       text: '#94a3b8',
       heading: '#F9FAFB',
       description: '#94a3b8',
-      cardBackground: '#4f46e5',
+      cardBackground: '#1e293b',
     },
   },
   testimonials: {
@@ -302,6 +319,7 @@ export const componentStyles: ComponentStyles = {
     showLogin: true,
     loginText: 'Login',
     loginUrl: '#',
+    linkFontSize: 14,
     colors: {
       background: '#ffffff',
       text: '#0f172a',
@@ -352,6 +370,24 @@ export const componentStyles: ComponentStyles = {
     // This placeholder ensures the component can be selected in Studio
     isConfigurable: false,
     configLocation: 'AI Assistant Dashboard',
+  },
+  banner: {
+    bannerVariant: 'classic',
+    paddingY: 'lg',
+    paddingX: 'md',
+    height: 400,
+    backgroundOverlayOpacity: 50,
+    textAlignment: 'center',
+    headlineFontSize: 'lg',
+    subheadlineFontSize: 'md',
+    colors: {
+      background: '#0f172a',
+      overlayColor: '#000000',
+      heading: '#ffffff',
+      text: '#ffffff',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
   },
   typography: {
     // Typography is configured globally through Theme Settings

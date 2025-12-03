@@ -72,13 +72,23 @@ const Leads: React.FC<LeadsProps> = ({
   const { getColor } = useDesignTokens();
   const primaryColor = getColor('primary.main', '#4f46e5');
   
-  // Use component colors - fallback to primary color only if not set
+  // Use component colors directly - respect user's choices
   const leadsColors = {
     ...colors,
+    background: colors.background || '#0f172a',
     cardBackground: colors.cardBackground || primaryColor,
-    heading: colors.heading || primaryColor,
-    text: colors.text || '#ffffff',
-    description: colors.description || colors.text || 'rgba(255, 255, 255, 0.8)',
+    heading: colors.heading || '#F9FAFB',
+    text: colors.text || '#94a3b8',
+    description: colors.description || colors.text || '#94a3b8',
+    accent: colors.accent || '#4f46e5',
+    borderColor: colors.borderColor || '#334155',
+    inputBackground: colors.inputBackground || '#0f172a',
+    inputText: colors.inputText || '#F9FAFB',
+    inputBorder: colors.inputBorder || '#334155',
+    buttonBackground: colors.buttonBackground || colors.accent || '#4f46e5',
+    buttonText: colors.buttonText || '#ffffff',
+    gradientStart: colors.gradientStart || colors.accent || '#4f46e5',
+    gradientEnd: colors.gradientEnd || '#10b981',
   };
   
   const [formData, setFormData] = useState({
@@ -163,16 +173,16 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Classic Variant
   const renderClassic = () => (
-    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
+    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: leadsColors.background }}>
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 md:gap-16 items-center">
         <div className="text-center md:text-left mb-12 md:mb-0">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: leadsColors.heading }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: leadsColors.description }}>
             {description}
           </p>
         </div>
         <div className={`p-8 md:p-12 border relative ${borderRadiusClasses[cardBorderRadius]}`} 
-             style={{ backgroundColor: leadsColors.cardBackground, borderColor: colors.borderColor }}>
+             style={{ backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
           {/* Success Overlay */}
           {submitStatus === 'success' && (
             <div className={`absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in ${borderRadiusClasses[cardBorderRadius]}`}>
@@ -205,10 +215,10 @@ const Leads: React.FC<LeadsProps> = ({
                 disabled={isSubmitting}
                 className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                 style={{
-                  backgroundColor: colors.inputBackground || '#0f172a',
-                  borderColor: colors.inputBorder || '#334155',
-                  color: colors.inputText || '#F9FAFB',
-                  '--tw-ring-color': colors.accent
+                  backgroundColor: leadsColors.inputBackground,
+                  borderColor: leadsColors.inputBorder,
+                  color: leadsColors.inputText,
+                  '--tw-ring-color': leadsColors.accent
                 } as React.CSSProperties} 
               />
               <input 
@@ -221,10 +231,10 @@ const Leads: React.FC<LeadsProps> = ({
                 disabled={isSubmitting}
                 className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                 style={{
-                  backgroundColor: colors.inputBackground || '#0f172a',
-                  borderColor: colors.inputBorder || '#334155',
-                  color: colors.inputText || '#F9FAFB',
-                  '--tw-ring-color': colors.accent
+                  backgroundColor: leadsColors.inputBackground,
+                  borderColor: leadsColors.inputBorder,
+                  color: leadsColors.inputText,
+                  '--tw-ring-color': leadsColors.accent
                 } as React.CSSProperties} 
               />
             </div>
@@ -237,10 +247,10 @@ const Leads: React.FC<LeadsProps> = ({
               disabled={isSubmitting}
               className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`} 
               style={{
-                backgroundColor: colors.inputBackground || '#0f172a',
-                borderColor: colors.inputBorder || '#334155',
-                color: colors.inputText || '#F9FAFB',
-                '--tw-ring-color': colors.accent
+                backgroundColor: leadsColors.inputBackground,
+                borderColor: leadsColors.inputBorder,
+                color: leadsColors.inputText,
+                '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties} 
             />
             <textarea 
@@ -252,17 +262,17 @@ const Leads: React.FC<LeadsProps> = ({
               disabled={isSubmitting}
               className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`} 
               style={{
-                backgroundColor: colors.inputBackground || '#0f172a',
-                borderColor: colors.inputBorder || '#334155',
-                color: colors.inputText || '#F9FAFB',
-                '--tw-ring-color': colors.accent
+                backgroundColor: leadsColors.inputBackground,
+                borderColor: leadsColors.inputBorder,
+                color: leadsColors.inputText,
+                '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties}
             ></textarea>
             <button 
               type="submit" 
               disabled={isSubmitting}
               className={`w-full text-white font-bold py-4 px-8 shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${borderRadiusClasses[buttonBorderRadius]}`} 
-              style={{ backgroundColor: colors.buttonBackground || colors.accent, color: colors.buttonText || '#ffffff' }}
+              style={{ backgroundColor: leadsColors.buttonBackground, color: leadsColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
@@ -285,13 +295,13 @@ const Leads: React.FC<LeadsProps> = ({
   // Render Split Gradient Variant
   const renderSplitGradient = () => (
     <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} 
-             style={{ backgroundColor: colors.background }}>
+             style={{ backgroundColor: leadsColors.background }}>
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-0 items-stretch">
           {/* Left Side - Gradient Info */}
           <div className="relative p-12 md:p-16 flex flex-col justify-center text-white"
                style={{ 
-                 background: `linear-gradient(135deg, ${colors.gradientStart || colors.accent} 0%, ${colors.gradientEnd || colors.buttonBackground} 100%)`
+                 background: `linear-gradient(135deg, ${leadsColors.gradientStart} 0%, ${leadsColors.gradientEnd} 100%)`
                }}>
             <div className="relative z-10">
               <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
@@ -358,7 +368,7 @@ const Leads: React.FC<LeadsProps> = ({
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.heading }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
                     Nombre completo *
                   </label>
                   <input 
@@ -371,16 +381,16 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
-                      backgroundColor: colors.inputBackground || '#f8fafc',
-                      borderColor: colors.inputBorder || '#e2e8f0',
-                      color: colors.inputText || '#0f172a',
-                      '--tw-ring-color': colors.accent
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
                     } as React.CSSProperties} 
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.heading }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
                     Email *
                   </label>
                   <input 
@@ -393,16 +403,16 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
-                      backgroundColor: colors.inputBackground || '#f8fafc',
-                      borderColor: colors.inputBorder || '#e2e8f0',
-                      color: colors.inputText || '#0f172a',
-                      '--tw-ring-color': colors.accent
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
                     } as React.CSSProperties} 
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.heading }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
                     Empresa
                   </label>
                   <input 
@@ -414,16 +424,16 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
-                      backgroundColor: colors.inputBackground || '#f8fafc',
-                      borderColor: colors.inputBorder || '#e2e8f0',
-                      color: colors.inputText || '#0f172a',
-                      '--tw-ring-color': colors.accent
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
                     } as React.CSSProperties} 
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.heading }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
                     Mensaje
                   </label>
                   <textarea 
@@ -435,10 +445,10 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`} 
                     style={{
-                      backgroundColor: colors.inputBackground || '#f8fafc',
-                      borderColor: colors.inputBorder || '#e2e8f0',
-                      color: colors.inputText || '#0f172a',
-                      '--tw-ring-color': colors.accent
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
                     } as React.CSSProperties}
                   ></textarea>
                 </div>
@@ -449,8 +459,10 @@ const Leads: React.FC<LeadsProps> = ({
                 disabled={isSubmitting}
                 className={`w-full font-bold py-4 px-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-button disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${borderRadiusClasses[buttonBorderRadius]}`} 
                 style={{ 
-                  background: `linear-gradient(135deg, ${colors.gradientStart || colors.accent} 0%, ${colors.gradientEnd || colors.buttonBackground} 100%)`,
-                  color: colors.buttonText || '#ffffff' 
+                  background: `linear-gradient(135deg, ${leadsColors.gradientStart} 0%, ${leadsColors.gradientEnd} 100%)`,
+                  color: leadsColors.buttonText,
+                  textTransform: 'var(--buttons-transform, none)' as any,
+                  letterSpacing: 'var(--buttons-spacing, normal)'
                 }}
               >
                 {isSubmitting ? (
@@ -475,19 +487,19 @@ const Leads: React.FC<LeadsProps> = ({
   // Render Floating Glass Variant
   const renderFloatingGlass = () => (
     <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative`} 
-             style={{ backgroundColor: colors.background }}>
+             style={{ backgroundColor: leadsColors.background }}>
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 rounded-full opacity-20 blur-3xl"
-             style={{ backgroundColor: colors.gradientStart || colors.accent }}></div>
+             style={{ backgroundColor: leadsColors.gradientStart }}></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full opacity-20 blur-3xl"
-             style={{ backgroundColor: colors.gradientEnd || colors.buttonBackground }}></div>
+             style={{ backgroundColor: leadsColors.gradientEnd }}></div>
       </div>
       
       <div className="max-w-4xl mx-auto relative">
         {/* Title Section */}
         <div className="text-center mb-12">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
             {title}
           </h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: leadsColors.description }}>
@@ -520,7 +532,7 @@ const Leads: React.FC<LeadsProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: colors.text }} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.text }} />
                 <input 
                   type="text" 
                   name="name"
@@ -531,14 +543,14 @@ const Leads: React.FC<LeadsProps> = ({
                   disabled={isSubmitting}
                   className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
-                    color: colors.heading || '#ffffff',
-                    '--tw-ring-color': colors.accent
+                    color: leadsColors.inputText,
+                    '--tw-ring-color': leadsColors.accent
                   } as React.CSSProperties} 
                 />
               </div>
               
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: colors.text }} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.text }} />
                 <input 
                   type="email" 
                   name="email"
@@ -549,8 +561,8 @@ const Leads: React.FC<LeadsProps> = ({
                   disabled={isSubmitting}
                   className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
-                    color: colors.heading || '#ffffff',
-                    '--tw-ring-color': colors.accent
+                    color: leadsColors.inputText,
+                    '--tw-ring-color': leadsColors.accent
                   } as React.CSSProperties} 
                 />
               </div>
@@ -565,8 +577,8 @@ const Leads: React.FC<LeadsProps> = ({
               disabled={isSubmitting}
               className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
-                color: colors.heading || '#ffffff',
-                '--tw-ring-color': colors.accent
+                color: leadsColors.inputText,
+                '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties} 
             />
             
@@ -579,8 +591,8 @@ const Leads: React.FC<LeadsProps> = ({
               disabled={isSubmitting}
               className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
-                color: colors.heading || '#ffffff',
-                '--tw-ring-color': colors.accent
+                color: leadsColors.inputText,
+                '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties}
             ></textarea>
             
@@ -589,8 +601,10 @@ const Leads: React.FC<LeadsProps> = ({
               disabled={isSubmitting}
               className={`w-full font-bold py-4 px-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-button disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${borderRadiusClasses[buttonBorderRadius]}`} 
               style={{ 
-                background: `linear-gradient(135deg, ${colors.gradientStart || colors.accent} 0%, ${colors.gradientEnd || colors.buttonBackground} 100%)`,
-                color: colors.buttonText || '#ffffff' 
+                background: `linear-gradient(135deg, ${leadsColors.gradientStart} 0%, ${leadsColors.gradientEnd} 100%)`,
+                color: leadsColors.buttonText,
+                textTransform: 'var(--buttons-transform, none)' as any,
+                letterSpacing: 'var(--buttons-spacing, normal)'
               }}
             >
               {isSubmitting ? (
@@ -614,11 +628,11 @@ const Leads: React.FC<LeadsProps> = ({
   // Render Minimal Border Variant
   const renderMinimalBorder = () => (
     <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
-             style={{ backgroundColor: colors.background }}>
+             style={{ backgroundColor: leadsColors.background }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
             {title}
           </h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: leadsColors.description }}>
@@ -630,13 +644,13 @@ const Leads: React.FC<LeadsProps> = ({
         <div className="relative">
           {/* Decorative Border Elements */}
           <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 opacity-50" 
-               style={{ borderColor: colors.accent }}></div>
+               style={{ borderColor: leadsColors.accent }}></div>
           <div className="absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 opacity-50" 
-               style={{ borderColor: colors.accent }}></div>
+               style={{ borderColor: leadsColors.accent }}></div>
           <div className="absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 opacity-50" 
-               style={{ borderColor: colors.accent }}></div>
+               style={{ borderColor: leadsColors.accent }}></div>
           <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 opacity-50" 
-               style={{ borderColor: colors.accent }}></div>
+               style={{ borderColor: leadsColors.accent }}></div>
           
           {/* Form */}
           <div className="p-8 md:p-16 relative" style={{ backgroundColor: leadsColors.cardBackground }}>
@@ -663,7 +677,7 @@ const Leads: React.FC<LeadsProps> = ({
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium uppercase tracking-wide" style={{ color: colors.text }}>
+                  <label className="text-sm font-medium uppercase tracking-wide" style={{ color: leadsColors.text }}>
                     Nombre *
                   </label>
                   <input 
@@ -676,15 +690,15 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} bg-transparent border-b-2 border-t-0 border-x-0 rounded-none px-0 focus:border-b-2 disabled:opacity-50`} 
                     style={{
-                      borderColor: colors.inputBorder || colors.borderColor,
-                      color: colors.heading,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
                       '--tw-ring-color': 'transparent'
                     } as React.CSSProperties} 
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium uppercase tracking-wide" style={{ color: colors.text }}>
+                  <label className="text-sm font-medium uppercase tracking-wide" style={{ color: leadsColors.text }}>
                     Email *
                   </label>
                   <input 
@@ -697,8 +711,8 @@ const Leads: React.FC<LeadsProps> = ({
                     disabled={isSubmitting}
                     className={`${inputBaseClasses} bg-transparent border-b-2 border-t-0 border-x-0 rounded-none px-0 focus:border-b-2 disabled:opacity-50`} 
                     style={{
-                      borderColor: colors.inputBorder || colors.borderColor,
-                      color: colors.heading,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
                       '--tw-ring-color': 'transparent'
                     } as React.CSSProperties} 
                   />
@@ -706,7 +720,7 @@ const Leads: React.FC<LeadsProps> = ({
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wide" style={{ color: colors.text }}>
+                <label className="text-sm font-medium uppercase tracking-wide" style={{ color: leadsColors.text }}>
                   Empresa
                 </label>
                 <input 
@@ -718,15 +732,15 @@ const Leads: React.FC<LeadsProps> = ({
                   disabled={isSubmitting}
                   className={`${inputBaseClasses} bg-transparent border-b-2 border-t-0 border-x-0 rounded-none px-0 focus:border-b-2 disabled:opacity-50`} 
                   style={{
-                    borderColor: colors.inputBorder || colors.borderColor,
-                    color: colors.heading,
+                    borderColor: leadsColors.inputBorder,
+                    color: leadsColors.inputText,
                     '--tw-ring-color': 'transparent'
                   } as React.CSSProperties} 
                 />
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wide" style={{ color: colors.text }}>
+                <label className="text-sm font-medium uppercase tracking-wide" style={{ color: leadsColors.text }}>
                   Mensaje
                 </label>
                 <textarea 
@@ -738,8 +752,8 @@ const Leads: React.FC<LeadsProps> = ({
                   disabled={isSubmitting}
                   className={`${inputBaseClasses} bg-transparent border-b-2 border-t-0 border-x-0 rounded-none px-0 focus:border-b-2 disabled:opacity-50`} 
                   style={{
-                    borderColor: colors.inputBorder || colors.borderColor,
-                    color: colors.heading,
+                    borderColor: leadsColors.inputBorder,
+                    color: leadsColors.inputText,
                     '--tw-ring-color': 'transparent'
                   } as React.CSSProperties}
                 ></textarea>
@@ -751,16 +765,19 @@ const Leads: React.FC<LeadsProps> = ({
                   disabled={isSubmitting}
                   className={`group relative font-bold py-4 px-12 overflow-hidden transition-all duration-300 font-button disabled:opacity-50 disabled:cursor-not-allowed border-2 ${borderRadiusClasses[buttonBorderRadius]}`} 
                   style={{ 
-                    borderColor: colors.accent,
-                    color: colors.buttonText || colors.accent
+                    borderColor: leadsColors.accent,
+                    color: leadsColors.accent,
+                    backgroundColor: 'transparent',
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.accent;
-                    e.currentTarget.style.color = colors.buttonText || '#ffffff';
+                    e.currentTarget.style.backgroundColor = leadsColors.accent;
+                    e.currentTarget.style.color = leadsColors.buttonText;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = colors.buttonText || colors.accent;
+                    e.currentTarget.style.color = leadsColors.accent;
                   }}
                 >
                   <span className="relative z-10">

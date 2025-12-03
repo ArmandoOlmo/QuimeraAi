@@ -32,6 +32,16 @@ VITE_GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # VITE_GOOGLE_AI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # ===========================================
+# Google Calendar Integration (OPTIONAL)
+# ===========================================
+# Get these from: https://console.cloud.google.com
+# APIs & Services > Credentials > OAuth 2.0 Client IDs
+# Enable Google Calendar API first!
+
+VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+VITE_GOOGLE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# ===========================================
 # Other AI API Keys (OPTIONAL)
 # ===========================================
 # Only needed if you integrate other AI services

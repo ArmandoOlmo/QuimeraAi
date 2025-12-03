@@ -37,6 +37,7 @@ export interface HeaderData {
     colors: { background: string; text: string; accent: string; border?: string };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
+    linkFontSize?: number;
 }
 
 // =============================================================================
@@ -94,6 +95,33 @@ export interface HeroData {
 }
 
 // =============================================================================
+// HERO SPLIT (Angled Image/Text Split)
+// =============================================================================
+export type ImageSide = 'left' | 'right';
+
+export interface HeroSplitData {
+    headline: string;
+    subheadline: string;
+    buttonText: string;
+    buttonUrl?: string;
+    imageUrl: string;
+    imagePosition: ImageSide; // Which side the image is on
+    maxHeight: number; // Max height in pixels (default 500)
+    angleIntensity: number; // 0-30, controls the diagonal cut angle
+    colors: {
+        textBackground: string; // Background color for text side
+        imageBackground: string; // Background color for image side (visible if image doesn't cover)
+        heading: string;
+        text: string;
+        buttonBackground: string;
+        buttonText: string;
+    };
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+    buttonBorderRadius?: BorderRadiusSize;
+}
+
+// =============================================================================
 // FEATURES
 // =============================================================================
 export interface FeatureItem {
@@ -109,7 +137,7 @@ export interface FeaturesData {
     items: FeatureItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; cardHeading?: string; cardText?: string; };
     gridColumns: number;
     imageHeight: number;
     imageObjectFit: ObjectFit;
@@ -117,6 +145,7 @@ export interface FeaturesData {
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    borderRadius?: BorderRadiusSize;
 }
 
 // =============================================================================
@@ -438,7 +467,7 @@ export interface ServicesData {
     items: ServiceItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; cardHeading?: string; cardText?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
@@ -462,7 +491,7 @@ export interface TeamData {
     items: TeamMember[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; text: string; heading: string; description?: string; accent?: string; cardBackground?: string; };
+    colors: { background: string; text: string; heading: string; description?: string; accent?: string; cardBackground?: string; cardHeading?: string; cardText?: string; photoBorderColor?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     teamVariant?: TeamVariant;
@@ -507,7 +536,7 @@ export interface HowItWorksData {
     items: HowItWorksItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; text: string; heading: string; description?: string; };
+    colors: { background: string; accent: string; text: string; heading: string; description?: string; stepTitle?: string; iconColor?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
 }
@@ -625,6 +654,7 @@ export interface MenuData {
         cardBackground?: string;
         priceColor?: string;
         cardTitleColor?: string;
+        cardText?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -637,11 +667,45 @@ export interface MenuData {
 }
 
 // =============================================================================
+// BANNER
+// =============================================================================
+export type BannerVariant = 'classic' | 'gradient-overlay' | 'side-text' | 'centered';
+export type TextAlignment = 'left' | 'center' | 'right';
+
+export interface BannerData {
+    bannerVariant?: BannerVariant;
+    headline: string;
+    subheadline: string;
+    buttonText?: string;
+    buttonUrl?: string;
+    showButton?: boolean;
+    backgroundImageUrl: string;
+    backgroundOverlayOpacity: number; // 0-100
+    height: number; // en px
+    textAlignment: TextAlignment;
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: {
+        background: string;
+        overlayColor: string;
+        heading: string;
+        text: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 export interface PageData {
     header: HeaderData;
     hero: HeroData;
+    heroSplit: HeroSplitData;
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;
@@ -659,5 +723,6 @@ export interface PageData {
     footer: FooterData;
     map: MapData;
     menu: MenuData;
+    banner: BannerData;
 }
 

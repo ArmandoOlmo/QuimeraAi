@@ -49,7 +49,7 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
     return (
         <section id="how-it-works" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
             <div className="text-center max-w-3xl mx-auto mb-16">
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
                 <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>
                     {description}
                 </p>
@@ -76,9 +76,9 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
                             className="w-20 h-20 rounded-full flex items-center justify-center mb-6 relative z-10"
                             style={{ backgroundColor: colors.accent }}
                         >
-                            <span className="text-white">{howItWorksIcons[item.icon]}</span>
+                            <span style={{ color: (colors as any).iconColor || '#ffffff' }}>{howItWorksIcons[item.icon]}</span>
                         </div>
-                        <h3 className="text-xl font-bold text-site-heading mb-2 font-header">{item.title}</h3>
+                        <h3 className="text-xl font-bold mb-2 font-header" style={{ color: (colors as any).stepTitle || '#ffffff', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{item.title}</h3>
                         <p className="font-body" style={{ color: colors.text }}>{item.description}</p>
                     </div>
                 ))}

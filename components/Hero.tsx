@@ -260,7 +260,11 @@ const Hero: React.FC<HeroProps> = ({
         
         <h1 
             className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
-            style={{ color: actualColors.heading }}
+            style={{ 
+              color: actualColors.heading,
+              textTransform: 'var(--headings-transform, none)' as any,
+              letterSpacing: 'var(--headings-spacing, normal)'
+            }}
             dangerouslySetInnerHTML={{ __html: styledHeadline }}
         />
         <p 
@@ -272,7 +276,12 @@ const Hero: React.FC<HeroProps> = ({
         <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a 
             href="#cta" 
-            style={{ backgroundColor: actualColors.buttonBackground || actualColors.primary, color: actualColors.buttonText || '#ffffff' }} 
+            style={{ 
+              backgroundColor: actualColors.buttonBackground || actualColors.primary, 
+              color: actualColors.buttonText || '#ffffff',
+              textTransform: 'var(--buttons-transform, none)' as any,
+              letterSpacing: 'var(--buttons-spacing, normal)'
+            }} 
             className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
@@ -292,7 +301,9 @@ const Hero: React.FC<HeroProps> = ({
                 ? hexToRgba(actualColors.secondaryButtonBackground, secondaryButtonOpacity / 100)
                 : 'transparent',
               borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
-              color: actualColors.secondaryButtonText || '#ffffff'
+              color: actualColors.secondaryButtonText || '#ffffff',
+              textTransform: 'var(--buttons-transform, none)' as any,
+              letterSpacing: 'var(--buttons-spacing, normal)'
             }}
           >
             <span className="relative z-10">{secondaryCta}</span>

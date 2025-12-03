@@ -101,7 +101,7 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
       
       {/* Content at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-        <h3 className="text-2xl font-bold mb-3 font-header line-clamp-2" style={{ color: cardTitleColor }}>
+        <h3 className="text-2xl font-bold mb-3 font-header line-clamp-2" style={{ color: cardTitleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
           {title}
         </h3>
         <p className="font-body text-sm line-clamp-3" style={{ color: cardTextColor }}>
@@ -136,7 +136,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
     <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
             {description}
           </p>

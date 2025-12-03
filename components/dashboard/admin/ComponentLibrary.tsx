@@ -33,6 +33,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
 
 const componentNames: Record<PageSection, string> = {
     hero: 'Hero Section',
+    heroSplit: 'Hero Split (Angled)',
     features: 'Features Section',
     testimonials: 'Testimonials Section',
     slideshow: 'Slideshow Section',
@@ -48,6 +49,7 @@ const componentNames: Record<PageSection, string> = {
     howItWorks: 'How It Works Section',
     map: 'Location Map',
     menu: 'Restaurant Menu',
+    banner: 'Banner Section',
     chatbot: 'AI Chatbot Widget',
     footer: 'Footer Section',
     header: 'Header / Navigation',
@@ -57,6 +59,7 @@ const componentNames: Record<PageSection, string> = {
 
 const componentCategories: Record<PageSection, string> = {
     hero: 'hero',
+    heroSplit: 'hero',
     features: 'content',
     testimonials: 'content',
     slideshow: 'media',
@@ -72,6 +75,7 @@ const componentCategories: Record<PageSection, string> = {
     howItWorks: 'content',
     map: 'other',
     menu: 'content',
+    banner: 'hero',
     chatbot: 'other',
     footer: 'navigation',
     header: 'navigation',

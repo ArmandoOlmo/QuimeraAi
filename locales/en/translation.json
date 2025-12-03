@@ -197,6 +197,7 @@
     "code": "Code",
     "untitledProject": "Untitled Project",
     "toggleSidebar": "Toggle Sidebar",
+    "toggleControls": "Toggle Editor Controls",
     "goToDashboard": "Go to Dashboard",
     "renameProject": "Rename project",
     "previewOnDesktop": "Preview on desktop",
@@ -318,6 +319,7 @@
     "structure": "Structure",
     "integrations": "Integrations",
     "heroSection": "Hero Section",
+    "bannerSection": "Banner",
     "featuresSection": "Features",
     "testimonialsSection": "Testimonials",
     "servicesSection": "Services",
@@ -1197,6 +1199,97 @@
     "nextStep3": "You can modify texts, colors, images and more",
     "useThisTemplate": "Use this template",
     "creating": "Creating your site..."
+  },
+  "appointments": {
+    "title": "Appointments",
+    "create": "New Appointment",
+    "edit": "Edit Appointment",
+    "delete": "Delete Appointment",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "noAppointments": "No appointments",
+    "createFirst": "Create your first appointment to get started",
+    "types": {
+      "call": "Call",
+      "video_call": "Video Call",
+      "in_person": "In Person",
+      "demo": "Demo",
+      "consultation": "Consultation",
+      "follow_up": "Follow Up",
+      "discovery": "Discovery",
+      "closing": "Closing"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "confirmed": "Confirmed",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "no_show": "No Show",
+      "rescheduled": "Rescheduled"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "type": "Appointment Type",
+      "priority": "Priority",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "timezone": "Timezone",
+      "location": "Location",
+      "virtual": "Virtual",
+      "physical": "Physical",
+      "phone": "Phone",
+      "meetingUrl": "Meeting Link",
+      "address": "Address",
+      "participants": "Participants",
+      "addParticipant": "Add Participant",
+      "reminders": "Reminders",
+      "tags": "Tags",
+      "aiPrep": "AI Preparation"
+    },
+    "ai": {
+      "title": "AI Preparation",
+      "generate": "Generate Preparation",
+      "regenerate": "Regenerate",
+      "summary": "Summary",
+      "talkingPoints": "Talking Points",
+      "questions": "Suggested Questions",
+      "objections": "Potential Objections",
+      "strategy": "Recommended Strategy",
+      "successProbability": "Success Probability"
+    },
+    "googleCalendar": {
+      "connect": "Connect with Google Calendar",
+      "disconnect": "Disconnect",
+      "connected": "Connected",
+      "sync": "Sync",
+      "syncing": "Syncing...",
+      "lastSync": "Last Sync"
+    },
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "list": "List"
+    },
+    "actions": {
+      "join": "Join",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "complete": "Complete",
+      "export": "Export",
+      "duplicate": "Duplicate"
+    }
   }
 }
 

@@ -1,16 +1,16 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
-import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens } from '../types';
+import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
-import { 
-    auth, 
-    db, 
+import {
+    auth,
+    db,
     storage,
-    doc, 
-    getDoc, 
+    doc,
+    getDoc,
     setDoc,
     updateDoc,
     deleteDoc,
@@ -45,7 +45,7 @@ const generateHtml = (project: Project) => {
             return `family=${f}`;
         })
         .join('&');
-    
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -125,14 +125,14 @@ interface EditorContextType {
     setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
     files: FileRecord[];
     isFilesLoading: boolean;
-    uploadFile: (file: File) => Promise<void>;
+    uploadFile: (file: File) => Promise<string | undefined>;
     deleteFile: (fileId: string, storagePath: string) => Promise<void>;
     updateFileNotes: (fileId: string, notes: string) => Promise<void>;
     generateFileSummary: (fileId: string, downloadURL: string) => Promise<void>;
     uploadImageAndGetURL: (file: File, path: string) => Promise<string>;
-    generateImage: (prompt: string, options?: { 
-        aspectRatio?: string, 
-        style?: string, 
+    generateImage: (prompt: string, options?: {
+        aspectRatio?: string,
+        style?: string,
         destination?: 'user' | 'global',
         resolution?: '1K' | '2K' | '4K',
         lighting?: string,
@@ -149,7 +149,7 @@ interface EditorContextType {
         onProgress: (current: number, total: number, section: string, imageUrl?: string) => void
     ) => Promise<{ success: boolean; generatedImages: Record<string, string>; failedPaths: string[] }>;
     enhancePrompt: (draftPrompt: string, referenceImages?: string[]) => Promise<string>;
-    
+
     // Global File Management (Super Admin)
     globalFiles: FileRecord[];
     isGlobalFilesLoading: boolean;
@@ -164,15 +164,15 @@ interface EditorContextType {
     fetchAllUsers: () => Promise<void>;
     updateUserRole: (userId: string, role: UserRole) => Promise<void>;
     deleteUserRecord: (userId: string) => Promise<void>;
-    
+
     // Sistema de permisos
     userPermissions: RolePermissions;
     canPerform: (permission: keyof RolePermissions) => boolean;
     isUserOwner: boolean;
-    
+
     // Gestión de administradores
     createAdmin: (email: string, name: string, role: UserRole) => Promise<void>;
-    
+
     // Tenant Management
     tenants: Tenant[];
     fetchTenants: () => Promise<void>;
@@ -186,7 +186,7 @@ interface EditorContextType {
     fetchAllPrompts: () => Promise<void>;
     savePrompt: (prompt: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => Promise<void>;
     deletePrompt: (promptId: string) => Promise<void>;
-    
+
     // Global Assistant (Super Admin)
     globalAssistantConfig: GlobalAssistantConfig;
     saveGlobalAssistantConfig: (config: GlobalAssistantConfig) => Promise<void>;
@@ -233,7 +233,7 @@ interface EditorContextType {
     menus: Menu[];
     saveMenu: (menu: Menu) => Promise<void>;
     deleteMenu: (menuId: string) => Promise<void>;
-    
+
     // AI Assistant Configuration (Project Level)
     aiAssistantConfig: AiAssistantConfig;
     saveAiAssistantConfig: (config: AiAssistantConfig) => Promise<void>;
@@ -245,7 +245,7 @@ interface EditorContextType {
     setOnboardingState: React.Dispatch<React.SetStateAction<OnboardingState>>;
     saveOnboardingStateToFirebase: (state: OnboardingState) => Promise<void>;
     clearOnboardingState: () => Promise<void>;
-    
+
     // User Preferences (synced across devices)
     sidebarOrder: string[];
     setSidebarOrder: React.Dispatch<React.SetStateAction<string[]>>;
@@ -257,18 +257,25 @@ interface EditorContextType {
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
-    
+
     // Lead Activities
     leadActivities: LeadActivity[];
     addLeadActivity: (leadId: string, activity: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => Promise<void>;
     getLeadActivities: (leadId: string) => LeadActivity[];
-    
+
     // Lead Tasks
     leadTasks: LeadTask[];
     addLeadTask: (leadId: string, task: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => Promise<void>;
     updateLeadTask: (taskId: string, data: Partial<LeadTask>) => Promise<void>;
     deleteLeadTask: (taskId: string) => Promise<void>;
     getLeadTasks: (leadId: string) => LeadTask[];
+
+    // Leads Library
+    libraryLeads: LibraryLead[];
+    isLoadingLibraryLeads: boolean;
+    addLibraryLead: (lead: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported'>) => Promise<void>;
+    deleteLibraryLead: (leadId: string) => Promise<void>;
+    importLibraryLead: (leadId: string) => Promise<void>;
 
     // Domain Management
     domains: Domain[];
@@ -283,7 +290,7 @@ interface EditorContextType {
     hasApiKey: boolean | null;
     promptForKeySelection: () => Promise<void>;
     handleApiError: (error: any) => void;
-    
+
     // Usage & Billing
     usage: { used: number; limit: number; plan: string } | null;
     isLoadingUsage: boolean;
@@ -328,7 +335,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
     const previewRef = useRef<HTMLDivElement>(null);
     const [activeSection, setActiveSection] = useState<PageSection | null>(null);
-    
+
     // Auth state
     const [user, setUser] = useState<User | null>(null);
     const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
@@ -351,9 +358,9 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
         return new Set();
     };
-    
+
     const deletedTemplateIdsRef = useRef<Set<string>>(getDeletedTemplateIds());
-    
+
     // Project state - initialized empty, will be loaded from Firestore
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -366,11 +373,11 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [brandIdentity, setBrandIdentity] = useState<BrandIdentity>(initialData.brandIdentity);
     const [componentOrder, setComponentOrder] = useState<PageSection[]>(initialData.componentOrder as PageSection[]);
     const [sectionVisibility, setSectionVisibility] = useState<Record<PageSection, boolean>>(initialData.sectionVisibility as Record<PageSection, boolean>);
-    
+
     // Navigation Menus
     const [menus, setMenus] = useState<Menu[]>([
-        { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{id: '1', text: 'Home', href: '#hero', type: 'section'}] },
-        { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{id: '1', text: 'Contact', href: '#contact', type: 'section'}] }
+        { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{ id: '1', text: 'Home', href: '#hero', type: 'section' }] },
+        { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{ id: '1', text: 'Contact', href: '#contact', type: 'section' }] }
     ]);
 
     // Auto-save timer ref
@@ -463,12 +470,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
     const [leadTasks, setLeadTasks] = useState<LeadTask[]>([]);
 
+    // Leads Library State
+    const [libraryLeads, setLibraryLeads] = useState<LibraryLead[]>([]);
+    const [isLoadingLibraryLeads, setIsLoadingLibraryLeads] = useState(false);
+
     // Theme mode - Load from localStorage first, then sync from Firebase
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
         const saved = localStorage.getItem('themeMode');
         return (saved as ThemeMode) || 'dark';
     });
-    
+
     // Sidebar order - Load from localStorage first, then sync from Firebase
     const [sidebarOrder, setSidebarOrder] = useState<string[]>(() => {
         const saved = localStorage.getItem('sidebar-nav-order');
@@ -482,12 +493,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Global File Management State
     const [globalFiles, setGlobalFiles] = useState<FileRecord[]>([]);
     const [isGlobalFilesLoading, setIsGlobalFilesLoading] = useState(false);
-    
+
     // Super Admin State
     const [adminView, setAdminView] = useState<AdminView>('main');
     const [allUsers, setAllUsers] = useState<UserDocument[]>([]);
     const [tenants, setTenants] = useState<Tenant[]>([]);
-    
+
     // Sistema de permisos
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
     const [isUserOwner, setIsUserOwner] = useState(false);
@@ -524,10 +535,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
-    
+
     // SEO Configuration State
     const [seoConfig, setSeoConfig] = useState<SEOConfig | null>(null);
-    
+
     // Usage & Billing State
     const [usage, setUsage] = useState<{ used: number; limit: number; plan: string } | null>(null);
     const [isLoadingUsage, setIsLoadingUsage] = useState(true);
@@ -536,6 +547,92 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
 
+    // Leads Library Logic
+    useEffect(() => {
+        if (!user) {
+            setLibraryLeads([]);
+            return;
+        }
+
+        setIsLoadingLibraryLeads(true);
+        const q = query(
+            collection(db, 'users', user.uid, 'libraryLeads'),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const leadsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as LibraryLead[];
+            setLibraryLeads(leadsData);
+            setIsLoadingLibraryLeads(false);
+        }, (error) => {
+            console.error("Error fetching library leads:", error);
+            setIsLoadingLibraryLeads(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    const addLibraryLead = async (leadData: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported'>) => {
+        if (!user) return;
+        try {
+            await addDoc(collection(db, 'users', user.uid, 'libraryLeads'), {
+                ...leadData,
+                isImported: false,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error adding library lead:", error);
+            throw error;
+        }
+    };
+
+    const deleteLibraryLead = async (leadId: string) => {
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, 'users', user.uid, 'libraryLeads', leadId));
+        } catch (error) {
+            console.error("Error deleting library lead:", error);
+            throw error;
+        }
+    };
+
+    const importLibraryLead = async (leadId: string) => {
+        if (!user) return;
+        try {
+            const leadToImport = libraryLeads.find(l => l.id === leadId);
+            if (!leadToImport) throw new Error("Lead not found");
+
+            // Create in main CRM
+            const newLeadRef = await addDoc(collection(db, 'users', user.uid, 'leads'), {
+                name: leadToImport.name,
+                email: leadToImport.email,
+                phone: leadToImport.phone || '',
+                company: leadToImport.company || '',
+                source: leadToImport.source || 'library_import',
+                status: 'new',
+                value: 0,
+                notes: leadToImport.notes || '',
+                tags: [...(leadToImport.tags || []), 'imported'],
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+
+            // Update library lead status
+            await updateDoc(doc(db, 'users', user.uid, 'libraryLeads', leadId), {
+                isImported: true,
+                importedAt: serverTimestamp(),
+                importedLeadId: newLeadRef.id
+            });
+
+        } catch (error) {
+            console.error("Error importing library lead:", error);
+            throw error;
+        }
+    };
     // Effects
     useEffect(() => {
         const checkApiKey = async () => {
@@ -589,293 +686,295 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 setHasApiKey(!!cachedKey);
             }
         };
-        
+
         checkApiKey();
-        
-        // Moved fetchGlobalSettings and fetchComponentDefaults inside auth state change to avoid permission errors on initial load
-        
-        const fetchGlobalSettings = async () => {
-            try {
-                const compDoc = await getDoc(doc(db, 'settings', 'components'));
-                if (compDoc.exists()) {
-                    const status = compDoc.data().status;
-                    // Merge saved status with defaults, ensuring new components are enabled by default
-                    // This allows new components to be automatically available when added to the system
-                    const mergedStatus = { ...defaultComponentStatus };
-                    Object.keys(status).forEach(key => {
-                        mergedStatus[key as PageSection] = status[key];
-                    });
-                    setComponentStatus(mergedStatus);
-                } else {
-                    // If no document exists, use defaults
-                    setComponentStatus(defaultComponentStatus);
-                }
+    }, []);
 
-                const assistantDoc = await getDoc(doc(db, 'settings', 'global_assistant'));
-                if (assistantDoc.exists()) {
-                    setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
-                }
+    // Moved fetchGlobalSettings and fetchComponentDefaults inside auth state change to avoid permission errors on initial load
 
-                const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
-                if (tokensDoc.exists()) {
-                    setDesignTokens(tokensDoc.data() as DesignTokens);
-                } else {
-                    // Initialize with default tokens if none exist
-                    const defaultTokens: DesignTokens = {
-                        colors: {
-                            primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
-                            secondary: { main: '#10b981', light: '#34d399', dark: '#059669' },
-                            success: { main: '#10b981', light: '#34d399', dark: '#059669' },
-                            warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
-                            error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
-                            info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
-                            neutral: {
-                                50: '#f9fafb',
-                                100: '#f3f4f6',
-                                200: '#e5e7eb',
-                                300: '#d1d5db',
-                                400: '#9ca3af',
-                                500: '#6b7280',
-                                600: '#4b5563',
-                                700: '#374151',
-                                800: '#1f2937',
-                                900: '#111827',
-                            },
-                        },
-                        spacing: {
-                            xs: '0.25rem',
-                            sm: '0.5rem',
-                            md: '1rem',
-                            lg: '1.5rem',
-                            xl: '2rem',
-                            '2xl': '3rem',
-                            '3xl': '4rem',
-                            '4xl': '5rem',
-                        },
-                        typography: {
-                            fontFamilies: {
-                                heading: 'Inter, system-ui, sans-serif',
-                                body: 'Inter, system-ui, sans-serif',
-                                mono: 'Fira Code, monospace',
-                            },
-                            fontSizes: {
-                                xs: '0.75rem',
-                                sm: '0.875rem',
-                                base: '1rem',
-                                lg: '1.125rem',
-                                xl: '1.25rem',
-                                '2xl': '1.5rem',
-                                '3xl': '1.875rem',
-                                '4xl': '2.25rem',
-                                '5xl': '3rem',
-                                '6xl': '3.75rem',
-                            },
-                            fontWeights: {
-                                light: 300,
-                                normal: 400,
-                                medium: 500,
-                                semibold: 600,
-                                bold: 700,
-                            },
-                            lineHeights: {
-                                tight: 1.25,
-                                normal: 1.5,
-                                relaxed: 1.75,
-                            },
-                        },
-                        shadows: {
-                            sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                            md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                            lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                            xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-                            '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-                        },
-                        animations: {
-                            durations: {
-                                fast: '150ms',
-                                normal: '300ms',
-                                slow: '500ms',
-                            },
-                            easings: {
-                                linear: 'linear',
-                                easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
-                                easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
-                                easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                            },
-                        },
-                        breakpoints: {
-                            sm: '640px',
-                            md: '768px',
-                            lg: '1024px',
-                            xl: '1280px',
-                            '2xl': '1536px',
-                        },
-                    };
-                    setDesignTokens(defaultTokens);
-                }
-            } catch (error) {
-                console.warn("Error fetching global settings:", error);
-            }
-        };
-
-        const setupComponentDefaultsListener = () => {
-            try {
-                // Real-time listener for component defaults
-                const componentDefaultsCol = collection(db, "componentDefaults");
-                const unsubscribe = onSnapshot(componentDefaultsCol, (snapshot) => {
-                    const loadedStyles: any = {};
-                    snapshot.forEach((doc) => {
-                        loadedStyles[doc.id] = doc.data().styles;
-                    });
-                    if (Object.keys(loadedStyles).length > 0) {
-                        setComponentStyles(prev => ({ ...prev, ...loadedStyles }));
-                        console.log("✅ Component defaults updated in real-time");
-                    }
-                }, (error) => {
-                    // Silently handle expected errors (empty collection, no permissions yet)
-                    if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
-                        console.warn("⚠️ Component defaults listener: waiting for permissions");
-                    } else {
-                        console.error("Error in component defaults listener:", error);
-                    }
+    const fetchGlobalSettings = async () => {
+        try {
+            const compDoc = await getDoc(doc(db, 'settings', 'components'));
+            if (compDoc.exists()) {
+                const status = compDoc.data().status;
+                // Merge saved status with defaults, ensuring new components are enabled by default
+                // This allows new components to be automatically available when added to the system
+                const mergedStatus = { ...defaultComponentStatus };
+                Object.keys(status).forEach(key => {
+                    mergedStatus[key as PageSection] = status[key];
                 });
-                return unsubscribe;
-            } catch (e) {
-                console.error("Error setting up component defaults listener:", e);
-                return () => {};
+                setComponentStatus(mergedStatus);
+            } else {
+                // If no document exists, use defaults
+                setComponentStatus(defaultComponentStatus);
             }
-        };
 
-        const fetchAllFiles = async (userId: string) => {
-            setIsFilesLoading(true);
-            try {
-                const filesCol = collection(db, 'users', userId, 'files');
-                const q = query(filesCol, orderBy('createdAt', 'desc'));
-                const filesSnapshot = await getDocs(q);
-                const userFiles = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
-                setFiles(userFiles);
-            } catch (error) {
-                console.error("Error loading user files:", error);
-                setFiles([]);
-            } finally {
-                setIsFilesLoading(false);
+            const assistantDoc = await getDoc(doc(db, 'settings', 'global_assistant'));
+            if (assistantDoc.exists()) {
+                setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
             }
-        };
-        
-        const fetchUserDomains = async (userId: string) => {
-             try {
-                 const domainsCol = collection(db, 'users', userId, 'domains');
-                 const q = query(domainsCol, orderBy('createdAt', 'desc'));
-                 const snap = await getDocs(q);
-                 const userDomains = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Domain));
-                 setDomains(userDomains);
-             } catch (error) {
-                 console.error("Error loading user domains:", error);
-             }
-        };
 
-        // Load templates from Firestore (global collection)
-        const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
-            try {
-                const templatesCol = collection(db, 'templates');
-                const q = query(templatesCol, orderBy('lastUpdated', 'desc'));
-                const templateSnapshot = await getDocs(q);
-                
-                const deletedIds = new Set<string>();
-                const activeTemplates: Project[] = [];
-                
-                templateSnapshot.docs.forEach(docSnap => {
-                    const data = docSnap.data();
-                    // Check if template is marked as deleted
-                    if (data.isDeleted === true) {
-                        deletedIds.add(docSnap.id);
-                    } else {
-                        activeTemplates.push({ 
-                            id: docSnap.id, 
-                            ...data,
-                            status: 'Template' as const
-                        } as Project);
-                    }
+            const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
+            if (tokensDoc.exists()) {
+                setDesignTokens(tokensDoc.data() as DesignTokens);
+            } else {
+                // Initialize with default tokens if none exist
+                const defaultTokens: DesignTokens = {
+                    colors: {
+                        primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
+                        secondary: { main: '#10b981', light: '#34d399', dark: '#059669' },
+                        success: { main: '#10b981', light: '#34d399', dark: '#059669' },
+                        warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
+                        error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
+                        info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
+                        neutral: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: '#e5e7eb',
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
+                            900: '#111827',
+                        },
+                    },
+                    spacing: {
+                        xs: '0.25rem',
+                        sm: '0.5rem',
+                        md: '1rem',
+                        lg: '1.5rem',
+                        xl: '2rem',
+                        '2xl': '3rem',
+                        '3xl': '4rem',
+                        '4xl': '5rem',
+                    },
+                    typography: {
+                        fontFamilies: {
+                            heading: 'Inter, system-ui, sans-serif',
+                            body: 'Inter, system-ui, sans-serif',
+                            mono: 'Fira Code, monospace',
+                        },
+                        fontSizes: {
+                            xs: '0.75rem',
+                            sm: '0.875rem',
+                            base: '1rem',
+                            lg: '1.125rem',
+                            xl: '1.25rem',
+                            '2xl': '1.5rem',
+                            '3xl': '1.875rem',
+                            '4xl': '2.25rem',
+                            '5xl': '3rem',
+                            '6xl': '3.75rem',
+                        },
+                        fontWeights: {
+                            light: 300,
+                            normal: 400,
+                            medium: 500,
+                            semibold: 600,
+                            bold: 700,
+                        },
+                        lineHeights: {
+                            tight: 1.25,
+                            normal: 1.5,
+                            relaxed: 1.75,
+                        },
+                    },
+                    shadows: {
+                        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                        md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                        '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+                    },
+                    animations: {
+                        durations: {
+                            fast: '150ms',
+                            normal: '300ms',
+                            slow: '500ms',
+                        },
+                        easings: {
+                            linear: 'linear',
+                            easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+                            easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
+                            easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        },
+                    },
+                    breakpoints: {
+                        sm: '640px',
+                        md: '768px',
+                        lg: '1024px',
+                        xl: '1280px',
+                        '2xl': '1536px',
+                    },
+                };
+                setDesignTokens(defaultTokens);
+            }
+        } catch (error) {
+            console.warn("Error fetching global settings:", error);
+        }
+    };
+
+    const setupComponentDefaultsListener = () => {
+        try {
+            // Real-time listener for component defaults
+            const componentDefaultsCol = collection(db, "componentDefaults");
+            const unsubscribe = onSnapshot(componentDefaultsCol, (snapshot) => {
+                const loadedStyles: any = {};
+                snapshot.forEach((doc) => {
+                    loadedStyles[doc.id] = doc.data().styles;
                 });
-                
-                console.log(`✅ Loaded ${activeTemplates.length} templates from Firestore (${deletedIds.size} deleted)`);
-                
-                // Persist deleted template IDs to localStorage
-                if (deletedIds.size > 0) {
-                    deletedIds.forEach(id => deletedTemplateIdsRef.current.add(id));
-                    localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+                if (Object.keys(loadedStyles).length > 0) {
+                    setComponentStyles(prev => ({ ...prev, ...loadedStyles }));
+                    console.log("✅ Component defaults updated in real-time");
                 }
-                
-                return { templates: activeTemplates, deletedIds };
-            } catch (error) {
-                console.error("Error loading templates from Firestore:", error);
-                // Return cached deleted IDs even on error
-                return { templates: [], deletedIds: deletedTemplateIdsRef.current };
-            }
-        };
+            }, (error) => {
+                // Silently handle expected errors (empty collection, no permissions yet)
+                if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
+                    console.warn("⚠️ Component defaults listener: waiting for permissions");
+                } else {
+                    console.error("Error in component defaults listener:", error);
+                }
+            });
+            return unsubscribe;
+        } catch (e) {
+            console.error("Error setting up component defaults listener:", e);
+            return () => { };
+        }
+    };
 
-        const loadUserProjects = async (userId: string) => {
-            setIsLoadingProjects(true);
+    const fetchAllFiles = async (userId: string) => {
+        setIsFilesLoading(true);
+        try {
+            const filesCol = collection(db, 'users', userId, 'files');
+            const q = query(filesCol, orderBy('createdAt', 'desc'));
+            const filesSnapshot = await getDocs(q);
+            const userFiles = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
+            setFiles(userFiles);
+        } catch (error) {
+            console.error("Error loading user files:", error);
+            setFiles([]);
+        } finally {
+            setIsFilesLoading(false);
+        }
+    };
+
+    const fetchUserDomains = async (userId: string) => {
+        try {
+            const domainsCol = collection(db, 'users', userId, 'domains');
+            const q = query(domainsCol, orderBy('createdAt', 'desc'));
+            const snap = await getDocs(q);
+            const userDomains = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Domain));
+            setDomains(userDomains);
+        } catch (error) {
+            console.error("Error loading user domains:", error);
+        }
+    };
+
+    // Load templates from Firestore (global collection)
+    const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
+        try {
+            const templatesCol = collection(db, 'templates');
+            const q = query(templatesCol, orderBy('lastUpdated', 'desc'));
+            const templateSnapshot = await getDocs(q);
+
+            const deletedIds = new Set<string>();
+            const activeTemplates: Project[] = [];
+
+            templateSnapshot.docs.forEach(docSnap => {
+                const data = docSnap.data();
+                // Check if template is marked as deleted
+                if (data.isDeleted === true) {
+                    deletedIds.add(docSnap.id);
+                } else {
+                    activeTemplates.push({
+                        id: docSnap.id,
+                        ...data,
+                        status: 'Template' as const
+                    } as Project);
+                }
+            });
+
+            console.log(`✅ Loaded ${activeTemplates.length} templates from Firestore (${deletedIds.size} deleted)`);
+
+            // Persist deleted template IDs to localStorage
+            if (deletedIds.size > 0) {
+                deletedIds.forEach(id => deletedTemplateIdsRef.current.add(id));
+                localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+            }
+
+            return { templates: activeTemplates, deletedIds };
+        } catch (error) {
+            console.error("Error loading templates from Firestore:", error);
+            // Return cached deleted IDs even on error
+            return { templates: [], deletedIds: deletedTemplateIdsRef.current };
+        }
+    };
+
+    const loadUserProjects = async (userId: string) => {
+        setIsLoadingProjects(true);
+        try {
+            // Load user projects
+            const projectsCol = collection(db, 'users', userId, 'projects');
+            const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
+            const projectSnapshot = await getDocs(q);
+            const userProjects = projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+
+            // Load templates from Firestore (includes deleted template IDs)
+            // This also updates deletedTemplateIdsRef with Firestore deleted IDs
+            const { templates: firestoreTemplates } = await loadGlobalTemplates();
+
+            // Merge: Firestore templates + user projects (NO hardcoded templates)
+            console.log('🔍 [Load] Templates from Firestore:', firestoreTemplates.length);
+            console.log('🔍 [Load] User projects:', userProjects.length);
+
+            setProjects([...firestoreTemplates, ...userProjects]);
+        } catch (error) {
+            console.error("Error loading user projects:", error);
+            // On error, try to load at least templates from Firestore
             try {
-                // Load user projects
-                const projectsCol = collection(db, 'users', userId, 'projects');
-                const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
-                const projectSnapshot = await getDocs(q);
-                const userProjects = projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                
-                // Load templates from Firestore (includes deleted template IDs)
-                // This also updates deletedTemplateIdsRef with Firestore deleted IDs
                 const { templates: firestoreTemplates } = await loadGlobalTemplates();
-                
-                // Merge: Firestore templates + user projects (NO hardcoded templates)
-                console.log('🔍 [Load] Templates from Firestore:', firestoreTemplates.length);
-                console.log('🔍 [Load] User projects:', userProjects.length);
-                
-                setProjects([...firestoreTemplates, ...userProjects]);
-            } catch (error) {
-                console.error("Error loading user projects:", error);
-                // On error, try to load at least templates from Firestore
-                try {
-                    const { templates: firestoreTemplates } = await loadGlobalTemplates();
-                    setProjects(firestoreTemplates);
-                } catch (templateError) {
-                    console.error("Error loading templates from Firestore:", templateError);
-                    setProjects([]);
-                }
-            } finally {
-                setIsLoadingProjects(false);
+                setProjects(firestoreTemplates);
+            } catch (templateError) {
+                console.error("Error loading templates from Firestore:", templateError);
+                setProjects([]);
             }
-        };
+        } finally {
+            setIsLoadingProjects(false);
+        }
+    };
 
-        const setupCustomComponentsListener = () => {
-            try {
-                // Real-time listener for custom components
-                const customComponentsCol = collection(db, 'customComponents');
-                const q = query(customComponentsCol, orderBy('createdAt', 'desc'));
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
-                    setCustomComponents(components);
-                    if (components.length > 0) {
-                        console.log("✅ Custom components updated in real-time:", components.length);
-                    }
-                }, (error) => {
-                    // Silently handle permission errors or missing index errors
-                    // These are expected when the collection is empty or index doesn't exist yet
-                    if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
-                        console.warn("⚠️ Custom components listener: waiting for index or permissions");
-                        setCustomComponents([]);
-                    } else {
-                        console.error("Error in custom components listener:", error);
-                    }
-                });
-                return unsubscribe;
-            } catch (error) {
-                console.error("Error setting up custom components listener:", error);
-                return () => {};
-            }
-        };
-        
-        // Store cleanup functions for real-time listeners
+    const setupCustomComponentsListener = () => {
+        try {
+            // Real-time listener for custom components
+            const customComponentsCol = collection(db, 'customComponents');
+            const q = query(customComponentsCol, orderBy('createdAt', 'desc'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
+                setCustomComponents(components);
+                if (components.length > 0) {
+                    console.log("✅ Custom components updated in real-time:", components.length);
+                }
+            }, (error) => {
+                // Silently handle permission errors or missing index errors
+                // These are expected when the collection is empty or index doesn't exist yet
+                if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
+                    console.warn("⚠️ Custom components listener: waiting for index or permissions");
+                    setCustomComponents([]);
+                } else {
+                    console.error("Error in custom components listener:", error);
+                }
+            });
+            return unsubscribe;
+        } catch (error) {
+            console.error("Error setting up custom components listener:", error);
+            return () => { };
+        }
+    };
+
+    // Store cleanup functions for real-time listeners
+    useEffect(() => {
         let unsubscribeComponentDefaults: (() => void) | null = null;
         let unsubscribeCustomComponents: (() => void) | null = null;
 
@@ -885,12 +984,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 if (currentUser) {
                     // Fetch global configs only when authenticated to avoid permission errors
                     fetchGlobalSettings();
-                    
+
                     // Setup real-time listeners for component defaults
                     unsubscribeComponentDefaults = setupComponentDefaultsListener();
 
                     const userDocRef = doc(db, 'users', currentUser.uid);
-                    
+
                     let finalUserDoc: Omit<UserDocument, 'id'>;
 
                     try {
@@ -898,7 +997,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         if (userDocSnap.exists()) {
                             finalUserDoc = userDocSnap.data() as Omit<UserDocument, 'id'>;
                         } else {
-                             const newUserDocData = {
+                            const newUserDocData = {
                                 name: currentUser.displayName || 'Unnamed User',
                                 email: currentUser.email!,
                                 photoURL: currentUser.photoURL || '',
@@ -908,25 +1007,25 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         }
                     } catch (error) {
                         console.error("Error fetching/creating user document:", error);
-                         finalUserDoc = {
+                        finalUserDoc = {
                             name: currentUser.displayName || 'User',
                             email: currentUser.email!,
                             photoURL: currentUser.photoURL || '',
                         };
                     }
-                    
+
                     // Auto-asignar rol de owner al email del creador
                     if (isOwner(currentUser.email!) && finalUserDoc.role !== 'owner') {
-                         try {
-                             finalUserDoc.role = 'owner';
-                             await updateDoc(userDocRef, { role: 'owner' });
-                         } catch (e) {
-                             console.warn("Failed to auto-promote owner (permission error):", e);
-                         }
+                        try {
+                            finalUserDoc.role = 'owner';
+                            await updateDoc(userDocRef, { role: 'owner' });
+                        } catch (e) {
+                            console.warn("Failed to auto-promote owner (permission error):", e);
+                        }
                     }
 
                     setUserDocument({ ...finalUserDoc, id: currentUser.uid });
-                    
+
                     // Load user preferences from Firebase (sync across devices)
                     if (finalUserDoc.preferences) {
                         if (finalUserDoc.preferences.themeMode) {
@@ -938,17 +1037,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                             localStorage.setItem('sidebar-nav-order', JSON.stringify(finalUserDoc.preferences.sidebarOrder));
                         }
                     }
-                    
+
                     // Load persisted onboarding state if exists
                     if (finalUserDoc.onboardingState) {
                         setOnboardingState(finalUserDoc.onboardingState);
                         // If user had an ongoing onboarding, reopen it
-                        if (finalUserDoc.onboardingState.step !== 'basics' || 
+                        if (finalUserDoc.onboardingState.step !== 'basics' ||
                             finalUserDoc.onboardingState.businessName) {
                             setIsOnboardingOpen(true);
                         }
                     }
-                    
+
                     loadUserProjects(currentUser.uid);
                     fetchAllFiles(currentUser.uid);
                     fetchUserDomains(currentUser.uid);
@@ -970,7 +1069,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         unsubscribeCustomComponents();
                         unsubscribeCustomComponents = null;
                     }
-                    
+
                     setUserDocument(null);
                     // Load templates from Firestore when user logs out (public templates only)
                     try {
@@ -993,7 +1092,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 setLoadingAuth(false);
             }
         });
-        
+
         // Cleanup function to unsubscribe from all listeners
         return () => {
             unsubscribe();
@@ -1027,8 +1126,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const postsCol = collection(db, 'users', user.uid, 'posts');
                 const q = query(postsCol, orderBy('updatedAt', 'desc'));
-                
-                unsubscribe = onSnapshot(q, 
+
+                unsubscribe = onSnapshot(q,
                     (snapshot) => {
                         const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CMSPost));
                         setCmsPosts(posts);
@@ -1063,8 +1162,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const leadsCol = collection(db, 'users', user.uid, 'leads');
                 const q = query(leadsCol, orderBy('createdAt', 'desc'));
-                
-                unsubscribe = onSnapshot(q, 
+
+                unsubscribe = onSnapshot(q,
                     (snapshot) => {
                         const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
                         setLeads(leadsData);
@@ -1088,7 +1187,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (unsubscribe) unsubscribe();
         };
     }, [user]);
-    
+
     // Usage & Billing Real-time Subscription
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
@@ -1097,8 +1196,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             setIsLoadingUsage(true);
             try {
                 const usageRef = doc(db, 'users', user.uid, 'usage', 'current');
-                
-                unsubscribe = onSnapshot(usageRef, 
+
+                unsubscribe = onSnapshot(usageRef,
                     (snapshot) => {
                         if (snapshot.exists()) {
                             const usageData = snapshot.data();
@@ -1146,7 +1245,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (unsubscribe) unsubscribe();
         };
     }, [user]);
-    
+
     // Lead Activities Real-time Subscription
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
@@ -1155,8 +1254,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
                 const q = query(activitiesCol, orderBy('createdAt', 'desc'));
-                
-                unsubscribe = onSnapshot(q, 
+
+                unsubscribe = onSnapshot(q,
                     (snapshot) => {
                         const activitiesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadActivity));
                         setLeadActivities(activitiesData);
@@ -1176,7 +1275,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (unsubscribe) unsubscribe();
         };
     }, [user]);
-    
+
     // Lead Tasks Real-time Subscription
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
@@ -1185,8 +1284,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
                 const q = query(tasksCol, orderBy('createdAt', 'desc'));
-                
-                unsubscribe = onSnapshot(q, 
+
+                unsubscribe = onSnapshot(q,
                     (snapshot) => {
                         const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadTask));
                         setLeadTasks(tasksData);
@@ -1213,11 +1312,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         root.classList.remove('light', 'dark', 'black'); // Remove all existing theme classes
         root.classList.add(themeMode); // Add the current one
     }, [themeMode]);
-    
+
     // Sync themeMode to localStorage and Firebase
     useEffect(() => {
         localStorage.setItem('themeMode', themeMode);
-        
+
         // Save to Firebase if user is authenticated
         if (user && userDocument) {
             const userDocRef = doc(db, 'users', user.uid);
@@ -1226,12 +1325,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }).catch(err => console.warn('Failed to sync themeMode to Firebase:', err));
         }
     }, [themeMode, user?.uid]); // Only depend on user.uid to avoid infinite loops
-    
+
     // Sync sidebarOrder to localStorage and Firebase
     useEffect(() => {
         if (sidebarOrder.length > 0) {
             localStorage.setItem('sidebar-nav-order', JSON.stringify(sidebarOrder));
-            
+
             // Save to Firebase if user is authenticated
             if (user && userDocument) {
                 const userDocRef = doc(db, 'users', user.uid);
@@ -1241,7 +1340,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }
         }
     }, [sidebarOrder, user?.uid]); // Only depend on user.uid to avoid infinite loops
-    
+
     // Persist onboarding state to Firebase (so user doesn't lose progress)
     const saveOnboardingStateToFirebase = async (state: OnboardingState) => {
         if (!user) return;
@@ -1252,7 +1351,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.warn('Failed to save onboarding state:', err);
         }
     };
-    
+
     // Clear onboarding state from Firebase when completed
     const clearOnboardingState = async () => {
         if (!user) return;
@@ -1333,7 +1432,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
                     await setDoc(projectDocRef, dataToSave);
                 }
-                
+
                 // Update projects ref without triggering re-render (Firestore is the source of truth)
                 projectsRef.current = projectsRef.current.map(p => p.id === activeProjectId ? updatedProject : p);
             } catch (error) {
@@ -1356,7 +1455,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const toggleDashboardSidebar = () => {
         setIsDashboardSidebarCollapsed(prev => !prev);
     };
-    
+
     const onSectionSelect = (section: PageSection) => {
         setActiveSection(section);
         const element = document.getElementById(section);
@@ -1378,7 +1477,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const defaultChatbot = initialData.data.chatbot;
             const defaultTestimonials = initialData.data.testimonials;
             const defaultHeader = initialData.data.header;
-            
+
             // Merge header with defaults for new fields (ensure header always exists)
             const mergedHeader = loadedData.header ? {
                 ...defaultHeader,
@@ -1388,7 +1487,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     ...loadedData.header.colors
                 }
             } : defaultHeader;
-            
+
             // Merge testimonials with defaults for new fields
             const mergedTestimonials = loadedData.testimonials ? {
                 ...defaultTestimonials,
@@ -1398,7 +1497,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     ...loadedData.testimonials.colors
                 }
             } : defaultTestimonials;
-            
+
             // Merge CTA with defaults for new fields
             const defaultCta = initialData.data.cta;
             const mergedCta = loadedData.cta ? {
@@ -1409,7 +1508,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     ...loadedData.cta.colors
                 }
             } : defaultCta;
-            
+
             // Merge Map with defaults for new fields (ensure map always exists)
             const defaultMap = initialData.data.map;
             const mergedMap = loadedData.map ? {
@@ -1420,7 +1519,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     ...loadedData.map?.colors
                 }
             } : defaultMap;
-            
+
             // Merge Menu with defaults for new fields (ensure menu always exists)
             const defaultMenu = initialData.data.menu;
             const mergedMenu = loadedData.menu ? {
@@ -1431,17 +1530,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     ...loadedData.menu?.colors
                 }
             } : defaultMenu;
-            
+
             const mergedData = {
-                 ...loadedData,
-                 header: mergedHeader,
-                 chatbot: loadedData.chatbot || defaultChatbot,
-                 testimonials: mergedTestimonials,
-                 cta: mergedCta,
-                 map: mergedMap,
-                 menu: mergedMenu
+                ...loadedData,
+                header: mergedHeader,
+                chatbot: loadedData.chatbot || defaultChatbot,
+                testimonials: mergedTestimonials,
+                cta: mergedCta,
+                map: mergedMap,
+                menu: mergedMenu
             };
-            
+
             // Validate and fix critical fields to prevent runtime errors
             if (mergedData.hero) {
                 // Ensure headline is always a valid string
@@ -1450,39 +1549,39 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 } else {
                     mergedData.hero.headline = String(mergedData.hero.headline);
                 }
-                
+
                 // Ensure subheadline is always a valid string
                 if (!mergedData.hero.subheadline || typeof mergedData.hero.subheadline !== 'string') {
                     mergedData.hero.subheadline = 'Your business description';
                 } else {
                     mergedData.hero.subheadline = String(mergedData.hero.subheadline);
                 }
-                
+
                 // Ensure CTAs are strings
                 if (!mergedData.hero.primaryCta || typeof mergedData.hero.primaryCta !== 'string') {
                     mergedData.hero.primaryCta = 'Get Started';
                 } else {
                     mergedData.hero.primaryCta = String(mergedData.hero.primaryCta);
                 }
-                
+
                 if (!mergedData.hero.secondaryCta || typeof mergedData.hero.secondaryCta !== 'string') {
                     mergedData.hero.secondaryCta = 'Learn More';
                 } else {
                     mergedData.hero.secondaryCta = String(mergedData.hero.secondaryCta);
                 }
             }
-            
+
             // Validate footer.socialLinks to ensure it's always an array
             if (mergedData.footer) {
                 if (!Array.isArray(mergedData.footer.socialLinks)) {
                     mergedData.footer.socialLinks = [];
                 }
             }
-            
+
             setData(mergedData);
             setTheme(projectToLoad.theme);
             setBrandIdentity(projectToLoad.brandIdentity || initialData.brandIdentity);
-            
+
             // Ensure 'header' is in componentOrder for legacy projects
             let order = projectToLoad.componentOrder;
             if (!order.includes('header' as PageSection)) {
@@ -1498,13 +1597,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     order = ['header' as PageSection, ...order];
                 }
             }
-            
+
             // Ensure 'map' is in componentOrder for legacy projects
             if (!order.includes('map' as PageSection)) {
                 // Insert before chatbot if it exists, otherwise before footer
                 const chatbotIndex = order.indexOf('chatbot' as PageSection);
                 const footerIndex = order.indexOf('footer' as PageSection);
-                
+
                 if (chatbotIndex !== -1) {
                     const newOrder = [...order];
                     newOrder.splice(chatbotIndex, 0, 'map' as PageSection);
@@ -1517,14 +1616,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     order = [...order, 'map' as PageSection];
                 }
             }
-            
+
             // Ensure 'menu' is in componentOrder for legacy projects
             if (!order.includes('menu' as PageSection)) {
                 // Insert after map and before chatbot if they exist, otherwise before footer
                 const mapIndex = order.indexOf('map' as PageSection);
                 const chatbotIndex = order.indexOf('chatbot' as PageSection);
                 const footerIndex = order.indexOf('footer' as PageSection);
-                
+
                 if (mapIndex !== -1) {
                     const newOrder = [...order];
                     newOrder.splice(mapIndex + 1, 0, 'menu' as PageSection);
@@ -1541,7 +1640,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     order = [...order, 'menu' as PageSection];
                 }
             }
-            
+
             // Ensure 'chatbot' is in componentOrder for legacy projects
             if (!order.includes('chatbot')) {
                 // Insert before footer or at end
@@ -1554,15 +1653,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     order = [...order, 'chatbot'];
                 }
             }
-            
+
             // Ensure 'typography' is in componentOrder for legacy projects
             if (!order.includes('typography' as PageSection)) {
                 // Add at the very beginning (before header)
                 order = ['typography' as PageSection, ...order];
             }
-            
+
             setComponentOrder(order);
-            
+
             // Ensure sectionVisibility includes header, typography, map and menu
             const visibility = {
                 ...projectToLoad.sectionVisibility,
@@ -1573,7 +1672,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             };
             setSectionVisibility(visibility);
             setMenus(Array.isArray(projectToLoad.menus) ? projectToLoad.menus : [{ id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }]);
-            
+
             // Load AI Config if exists, otherwise use defaults
             if (projectToLoad.aiAssistantConfig) {
                 setAiAssistantConfig(projectToLoad.aiAssistantConfig);
@@ -1618,7 +1717,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (navigateToEditor) {
                 setView('editor');
             }
-            
+
             if (fromAdmin && projectToLoad.status === 'Template') {
                 setIsEditingTemplate(true);
             } else {
@@ -1631,7 +1730,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         setIsEditingTemplate(false);
         setView('superadmin');
     };
-    
+
     const renameActiveProject = async (newName: string) => {
         if (!activeProjectId || !user || !activeProject) return;
         const newLastUpdated = new Date().toISOString();
@@ -1643,11 +1742,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     console.warn("Only superadmin/owner can rename templates");
                     return;
                 }
-                
+
                 // Update global templates collection
                 const templateDocRef = doc(db, 'templates', activeProjectId);
                 await updateDoc(templateDocRef, { name: newName, lastUpdated: newLastUpdated });
-                
+
                 // Also update in user's projects collection if it exists there
                 try {
                     const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
@@ -1661,7 +1760,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
                 await updateDoc(projectDocRef, { name: newName, lastUpdated: newLastUpdated });
             }
-            
+
             // Update local state
             setProjects(prev => prev.map(p => p.id === activeProjectId ? { ...p, name: newName, lastUpdated: newLastUpdated } : p));
         } catch (error) {
@@ -1671,21 +1770,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateProjectThumbnail = async (projectId: string, file: File) => {
         if (!user) return;
-        
+
         const project = projects.find(p => p.id === projectId);
         if (!project) return;
-        
+
         const newLastUpdated = new Date().toISOString();
-        
+
         try {
             // Upload image to storage - always use user's folder to avoid permission issues
             const fileName = `${Date.now()}_${file.name}`;
             const storagePath = `user_uploads/${user.uid}/thumbnails/${projectId}_${fileName}`;
-            
+
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(storageRef);
-            
+
             // Update in Firestore
             if (project.status === 'Template') {
                 const userRole = userDocument?.role || '';
@@ -1693,19 +1792,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     console.warn("Only superadmin/owner can update template thumbnails");
                     return;
                 }
-                
+
                 const templateDocRef = doc(db, 'templates', projectId);
                 await updateDoc(templateDocRef, { thumbnailUrl: downloadURL, lastUpdated: newLastUpdated });
             } else {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
                 await updateDoc(projectDocRef, { thumbnailUrl: downloadURL, lastUpdated: newLastUpdated });
             }
-            
+
             // Update local state
-            setProjects(prev => prev.map(p => 
+            setProjects(prev => prev.map(p =>
                 p.id === projectId ? { ...p, thumbnailUrl: downloadURL, lastUpdated: newLastUpdated } : p
             ));
-            
+
             console.log("✅ Thumbnail updated successfully");
         } catch (error) {
             console.error("Error updating thumbnail:", error);
@@ -1715,23 +1814,23 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateProjectFavicon = async (projectId: string, file: File) => {
         if (!user) return;
-        
+
         const project = projects.find(p => p.id === projectId);
         if (!project) return;
-        
+
         const newLastUpdated = new Date().toISOString();
-        
+
         try {
             // Upload favicon to storage - use user_uploads path which has proper permissions
             const fileName = `${Date.now()}_${file.name}`;
-            const storagePath = project.status === 'Template' 
+            const storagePath = project.status === 'Template'
                 ? `user_uploads/${user.uid}/templates/${projectId}/favicon_${fileName}`
                 : `user_uploads/${user.uid}/projects/${projectId}/favicon_${fileName}`;
-            
+
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(storageRef);
-            
+
             // Update in Firestore
             if (project.status === 'Template') {
                 const userRole = userDocument?.role || '';
@@ -1739,19 +1838,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     console.warn("Only superadmin/owner can update template favicons");
                     return;
                 }
-                
+
                 const templateDocRef = doc(db, 'templates', projectId);
                 await updateDoc(templateDocRef, { faviconUrl: downloadURL, lastUpdated: newLastUpdated });
             } else {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
                 await updateDoc(projectDocRef, { faviconUrl: downloadURL, lastUpdated: newLastUpdated });
             }
-            
+
             // Update local state
-            setProjects(prev => prev.map(p => 
+            setProjects(prev => prev.map(p =>
                 p.id === projectId ? { ...p, faviconUrl: downloadURL, lastUpdated: newLastUpdated } : p
             ));
-            
+
             console.log("✅ Favicon updated successfully");
         } catch (error) {
             console.error("Error updating favicon:", error);
@@ -1765,22 +1864,22 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // Update Thumbnail with Hero Image if available
         let thumbnailUrl = activeProject.thumbnailUrl;
         if (data.hero.imageUrl && data.hero.imageUrl.trim() !== '') {
-             thumbnailUrl = data.hero.imageUrl;
+            thumbnailUrl = data.hero.imageUrl;
         }
 
-        const updatedProject: Project = { 
-            ...activeProject, 
-            data, 
-            theme, 
+        const updatedProject: Project = {
+            ...activeProject,
+            data,
+            theme,
             brandIdentity,
-            componentOrder, 
-            sectionVisibility, 
+            componentOrder,
+            sectionVisibility,
             thumbnailUrl,
             menus,
             aiAssistantConfig, // Include AI Config in save
-            lastUpdated: new Date().toISOString() 
+            lastUpdated: new Date().toISOString()
         };
-        
+
         const { id, ...dataToSave } = updatedProject;
 
         try {
@@ -1791,11 +1890,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     console.warn("Only superadmin/owner can save templates");
                     return;
                 }
-                
+
                 // Save to global templates collection
                 const templateDocRef = doc(db, 'templates', activeProject.id);
                 await setDoc(templateDocRef, dataToSave);
-                
+
                 setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
                 console.log('✅ Template saved to Firestore (global templates collection)');
                 return;
@@ -1804,7 +1903,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // Save regular user project
             const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProject.id);
             await setDoc(projectDocRef, dataToSave);
-            
+
             setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
             console.log('✅ Project saved to Firestore');
         } catch (error) {
@@ -1824,7 +1923,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
     };
-    
+
     // Helper function to update nested object using dot notation string path
     const updateNestedData = (obj: any, path: string, value: any) => {
         const keys = path.split('.');
@@ -1838,10 +1937,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const hydrateProjectImages = async (project: Project) => {
         if (!user || !project.imagePrompts) return;
-        
+
         // Check for API Key before starting heavy ops
         if (hasApiKey === false) {
-             await promptForKeySelection();
+            await promptForKeySelection();
         }
 
         console.log("Auto-generating images for project...");
@@ -1852,36 +1951,36 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         // To avoid rate limits and massive parallel requests, we process sequentially
         for (const [path, prompt] of Object.entries(prompts)) {
-             try {
-                 // Use high quality model for initial generation
-                 const imageUrl = await generateImage(prompt, { aspectRatio: '16:9', style: 'Photorealistic' }); 
-                 updateNestedData(newProjectData, path, imageUrl);
-                 hasUpdates = true;
-                 
-                 // If we generated the hero image, update the project thumbnail
-                 if (path === 'hero.imageUrl') {
-                     newThumbnailUrl = imageUrl;
-                 }
-                 
-                 // Update state incrementally to show progress if currently viewing
-                 if (activeProjectId === project.id) {
-                      setData(prev => {
-                          if (!prev) return null;
-                          const updated = JSON.parse(JSON.stringify(prev));
-                          updateNestedData(updated, path, imageUrl);
-                          return updated;
-                      });
-                 }
-             } catch (e) {
-                 console.error(`Failed to generate image for ${path}:`, e);
-             }
+            try {
+                // Use high quality model for initial generation
+                const imageUrl = await generateImage(prompt, { aspectRatio: '16:9', style: 'Photorealistic' });
+                updateNestedData(newProjectData, path, imageUrl);
+                hasUpdates = true;
+
+                // If we generated the hero image, update the project thumbnail
+                if (path === 'hero.imageUrl') {
+                    newThumbnailUrl = imageUrl;
+                }
+
+                // Update state incrementally to show progress if currently viewing
+                if (activeProjectId === project.id) {
+                    setData(prev => {
+                        if (!prev) return null;
+                        const updated = JSON.parse(JSON.stringify(prev));
+                        updateNestedData(updated, path, imageUrl);
+                        return updated;
+                    });
+                }
+            } catch (e) {
+                console.error(`Failed to generate image for ${path}:`, e);
+            }
         }
 
         if (hasUpdates) {
-             // Save final state to Firestore to persist generated images
+            // Save final state to Firestore to persist generated images
             try {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', project.id);
-                await updateDoc(projectDocRef, { 
+                await updateDoc(projectDocRef, {
                     data: newProjectData,
                     thumbnailUrl: newThumbnailUrl // Save the thumbnail URL
                 });
@@ -1944,10 +2043,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             try {
                 console.log(`🖼️ [generateProjectImagesWithProgress] Generating image ${i + 1}/${entries.length}: ${path}`);
-                
-                const imageUrl = await generateImage(prompt, { 
-                    aspectRatio, 
-                    style: 'Photorealistic' 
+
+                const imageUrl = await generateImage(prompt, {
+                    aspectRatio,
+                    style: 'Photorealistic'
                 });
 
                 generatedImages[path] = imageUrl;
@@ -1968,7 +2067,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 failedPaths.push(path);
                 // Leave the field empty for failed images (will show placeholder)
                 updateNestedData(newProjectData, path, '');
-                
+
                 // Still report progress even on failure
                 onProgress(i + 1, entries.length, section);
             }
@@ -1978,15 +2077,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (Object.keys(generatedImages).length > 0 || failedPaths.length > 0) {
             try {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', project.id);
-                await updateDoc(projectDocRef, { 
+                await updateDoc(projectDocRef, {
                     data: newProjectData,
                     thumbnailUrl: newThumbnailUrl
                 });
-                
+
                 // Update project list state
-                setProjects(prev => prev.map(p => 
-                    p.id === project.id 
-                        ? { ...p, data: newProjectData, thumbnailUrl: newThumbnailUrl } 
+                setProjects(prev => prev.map(p =>
+                    p.id === project.id
+                        ? { ...p, data: newProjectData, thumbnailUrl: newThumbnailUrl }
                         : p
                 ));
 
@@ -2010,18 +2109,18 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const template = projects.find(p => p.id === templateId);
         if (template) {
             const { id, ...templateData } = template;
-            
+
             // Filter disabled components
             const validComponentOrder = templateData.componentOrder.filter(
                 (comp: PageSection) => componentStatus[comp] !== false
             );
-            
+
             const validSectionVisibility = Object.keys(templateData.sectionVisibility).reduce((acc, key) => {
                 const section = key as PageSection;
                 acc[section] = templateData.sectionVisibility[section] && componentStatus[section];
                 return acc;
             }, {} as Record<PageSection, boolean>);
-            
+
             const newProjectData = {
                 ...templateData,
                 name: newName || `${template.name} Copy`,
@@ -2035,9 +2134,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const projectsCol = collection(db, 'users', user.uid, 'projects');
                 const docRef = await addDoc(projectsCol, newProjectData);
-                
+
                 const newProject: Project = { ...newProjectData, id: docRef.id };
-                
+
                 setProjects(prev => [newProject, ...prev]);
                 loadProject(newProject.id);
 
@@ -2051,7 +2150,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }
         }
     };
-    
+
     const addNewProject = async (project: Project): Promise<string> => {
         console.log("🚀 [addNewProject] Starting...", {
             projectId: project.id,
@@ -2126,7 +2225,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const createNewTemplate = async () => {
         if (!user) return;
-        
+
         const userRole = userDocument?.role || '';
         if (!['owner', 'superadmin'].includes(userRole)) {
             console.warn("Only superadmin/owner can create templates");
@@ -2155,13 +2254,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             author: 'Quimera AI',
             version: '1.0.0'
         };
-        
+
         // Save to Firestore immediately
         try {
             const { id, ...dataToSave } = newTemplate;
             const templateDocRef = doc(db, 'templates', newTemplateId);
             await setDoc(templateDocRef, dataToSave);
-            
+
             setProjects(prev => [...prev, newTemplate]);
             loadProject(newTemplate.id, true);
             console.log('✅ New template created and saved to Firestore');
@@ -2175,7 +2274,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const archiveTemplate = async (templateId: string, isArchived: boolean) => {
         if (!user) return;
-        
+
         const userRole = userDocument?.role || '';
         if (!['owner', 'superadmin'].includes(userRole)) {
             console.warn("Only superadmin/owner can archive templates");
@@ -2184,11 +2283,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         // Update locally first (optimistic update)
         setProjects(prev => prev.map(p => p.id === templateId ? { ...p, isArchived } : p));
-        
+
         // Persist to Firestore
         try {
             const templateDocRef = doc(db, 'templates', templateId);
-            await updateDoc(templateDocRef, { 
+            await updateDoc(templateDocRef, {
                 isArchived,
                 lastUpdated: new Date().toISOString()
             });
@@ -2202,7 +2301,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const duplicateTemplate = async (templateId: string) => {
         if (!user) return;
-        
+
         const userRole = userDocument?.role || '';
         if (!['owner', 'superadmin'].includes(userRole)) {
             console.warn("Only superadmin/owner can duplicate templates");
@@ -2211,7 +2310,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         const template = projects.find(p => p.id === templateId);
         if (!template) return;
-        
+
         const newTemplateId = `template-${Date.now()}`;
         const duplicatedTemplate: Project = {
             ...template,
@@ -2221,13 +2320,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             createdAt: new Date().toISOString(),
             isArchived: false,
         };
-        
+
         // Save to Firestore
         try {
             const { id, ...dataToSave } = duplicatedTemplate;
             const templateDocRef = doc(db, 'templates', newTemplateId);
             await setDoc(templateDocRef, dataToSave);
-            
+
             setProjects(prev => [...prev, duplicatedTemplate]);
             console.log('✅ Template duplicated and saved to Firestore');
         } catch (error) {
@@ -2239,7 +2338,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     // Update a template in local state (used after saving to Firestore)
     const updateTemplateInState = (templateId: string, updates: Partial<Project>) => {
-        setProjects(prev => prev.map(p => 
+        setProjects(prev => prev.map(p =>
             p.id === templateId ? { ...p, ...updates } : p
         ));
     };
@@ -2270,17 +2369,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const templateDocRef = doc(db, 'templates', projectId);
                 // Mark as deleted instead of deleting - this prevents hardcoded templates from reappearing
-                await setDoc(templateDocRef, { 
+                await setDoc(templateDocRef, {
                     isDeleted: true,
                     deletedAt: new Date().toISOString(),
                     name: projectToDelete?.name || 'Deleted Template'
                 });
-                
+
                 // Also persist to local cache to prevent reappearing on errors/logout
                 deletedTemplateIdsRef.current.add(projectId);
                 const idsToStore = [...deletedTemplateIdsRef.current];
                 localStorage.setItem('deletedTemplateIds', JSON.stringify(idsToStore));
-                
+
                 console.log('✅ Template marked as deleted in Firestore and cached locally');
                 console.log('🔍 [Delete] Saved to localStorage:', idsToStore);
                 console.log('🔍 [Delete] Verification - localStorage now contains:', localStorage.getItem('deletedTemplateIds'));
@@ -2296,15 +2395,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         // 2. Handle User Projects
         if (!user) {
-             throw new Error("User not authenticated");
+            throw new Error("User not authenticated");
         }
 
         // Optimistic Update
         setProjects(prev => prev.filter(p => p.id !== projectId));
         if (activeProjectId === projectId) {
-             setActiveProjectId(null);
-             setData(null);
-             setView('dashboard');
+            setActiveProjectId(null);
+            setData(null);
+            setView('dashboard');
         }
 
         try {
@@ -2319,9 +2418,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             throw error;
         }
     };
-    
-    const uploadFile = async (file: File) => {
-        if (!user) return;
+
+    const uploadFile = async (file: File): Promise<string | undefined> => {
+        if (!user) throw new Error("Authentication required to upload files.");
         setIsFilesLoading(true);
         try {
             const storageRef = ref(storage, `user_uploads/${user.uid}/${file.name}`);
@@ -2346,13 +2445,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             setFiles(prev => [{ id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord, ...prev]);
 
+            return downloadURL;
+
         } catch (error) {
             console.error("Error uploading file:", error);
+            throw error;
         } finally {
             setIsFilesLoading(false);
         }
     };
-    
+
     const deleteFile = async (fileId: string, storagePath: string) => {
         if (!user) return;
         try {
@@ -2367,7 +2469,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.error("Error deleting file:", error);
         }
     };
-    
+
     const updateFileNotes = async (fileId: string, notes: string) => {
         if (!user) return;
         setFiles(prev => prev.map(f => f.id === fileId ? { ...f, notes } : f));
@@ -2450,7 +2552,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             setHasApiKey(false);
         }
     };
-    
+
     const promptForKeySelection = async () => {
         const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
         if (typeof aiStudio?.openSelectKey === 'function') {
@@ -2462,7 +2564,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const generateFileSummary = async (fileId: string, downloadURL: string) => {
         if (!user) return;
-         if (hasApiKey === false) {
+        if (hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
@@ -2480,10 +2582,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const fileContent = await fileResponse.text();
 
             const populatedPrompt = summaryPrompt.template.replace('{{fileContent}}', fileContent);
-            
+
             const ai = await getGoogleGenAI();
             const response = await ai.models.generateContent({ model: summaryPrompt.model, contents: populatedPrompt });
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -2493,9 +2595,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     success: true
                 });
             }
-            
+
             const summary = response.text.trim();
-            
+
             const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
             await updateDoc(fileDocRef, { aiSummary: summary });
 
@@ -2544,56 +2646,56 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const ai = await getGoogleGenAI();
         let enhanceModel = 'gemini-2.5-pro';
         try {
-             const enhancerPrompt = getPrompt('image-prompt-enhancer');
-             let promptTemplate = `Enhance this image generation prompt... Original: "{{originalPrompt}}"`;
+            const enhancerPrompt = getPrompt('image-prompt-enhancer');
+            let promptTemplate = `Enhance this image generation prompt... Original: "{{originalPrompt}}"`;
 
-             if (enhancerPrompt) {
-                 enhanceModel = enhancerPrompt.model;
-                 promptTemplate = enhancerPrompt.template;
-             }
+            if (enhancerPrompt) {
+                enhanceModel = enhancerPrompt.model;
+                promptTemplate = enhancerPrompt.template;
+            }
 
-             // Prepare template variables
-             const hasReferenceImages = referenceImages && referenceImages.length > 0;
-             const referenceImagesInstruction = hasReferenceImages 
-                 ? `**ANALYZE THE REFERENCE IMAGES PROVIDED BELOW:** The user has uploaded ${referenceImages.length} reference image(s). Carefully examine the visual style, composition, color palette, lighting, mood, and artistic techniques present in these images. Incorporate these visual elements into your enhanced prompt to help Nano Banana Pro generate an image that matches or is inspired by the reference images.`
-                 : 'No reference images provided. Focus on enhancing the text prompt with rich descriptive details.';
+            // Prepare template variables
+            const hasReferenceImages = referenceImages && referenceImages.length > 0;
+            const referenceImagesInstruction = hasReferenceImages
+                ? `**ANALYZE THE REFERENCE IMAGES PROVIDED BELOW:** The user has uploaded ${referenceImages.length} reference image(s). Carefully examine the visual style, composition, color palette, lighting, mood, and artistic techniques present in these images. Incorporate these visual elements into your enhanced prompt to help Nano Banana Pro generate an image that matches or is inspired by the reference images.`
+                : 'No reference images provided. Focus on enhancing the text prompt with rich descriptive details.';
 
-             const filledPrompt = promptTemplate
-                 .replace('{{originalPrompt}}', draftPrompt)
-                 .replace('{{hasReferenceImages}}', hasReferenceImages ? `YES (${referenceImages.length} image(s) provided)` : 'NO')
-                 .replace('{{referenceImagesInstruction}}', referenceImagesInstruction);
+            const filledPrompt = promptTemplate
+                .replace('{{originalPrompt}}', draftPrompt)
+                .replace('{{hasReferenceImages}}', hasReferenceImages ? `YES (${referenceImages.length} image(s) provided)` : 'NO')
+                .replace('{{referenceImagesInstruction}}', referenceImagesInstruction);
 
-             // Build the contents array
-             const contents: any[] = [filledPrompt];
-             
-             // Add reference images if provided (for vision models like gemini-3-pro-image)
-             if (hasReferenceImages && referenceImages) {
-                 referenceImages.forEach((imgDataUrl) => {
-                     // Extract base64 data from data URL (format: data:image/jpeg;base64,...)
-                     const base64Data = imgDataUrl.includes(',') ? imgDataUrl.split(',')[1] : imgDataUrl;
-                     const mimeType = imgDataUrl.match(/data:(image\/[a-z]+);/)?.[1] || 'image/jpeg';
-                     
-                     contents.push({
-                         inlineData: {
-                             mimeType: mimeType,
-                             data: base64Data
-                         }
-                     });
-                 });
-             }
+            // Build the contents array
+            const contents: any[] = [filledPrompt];
 
-             console.log('🎨 [enhancePrompt] Sending request:', {
-                 model: enhanceModel,
-                 hasReferenceImages,
-                 referenceImagesCount: referenceImages?.length || 0,
-                 promptLength: draftPrompt.length
-             });
+            // Add reference images if provided (for vision models like gemini-3-pro-image)
+            if (hasReferenceImages && referenceImages) {
+                referenceImages.forEach((imgDataUrl) => {
+                    // Extract base64 data from data URL (format: data:image/jpeg;base64,...)
+                    const base64Data = imgDataUrl.includes(',') ? imgDataUrl.split(',')[1] : imgDataUrl;
+                    const mimeType = imgDataUrl.match(/data:(image\/[a-z]+);/)?.[1] || 'image/jpeg';
 
-             const response = await ai.models.generateContent({
+                    contents.push({
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: base64Data
+                        }
+                    });
+                });
+            }
+
+            console.log('🎨 [enhancePrompt] Sending request:', {
+                model: enhanceModel,
+                hasReferenceImages,
+                referenceImagesCount: referenceImages?.length || 0,
+                promptLength: draftPrompt.length
+            });
+
+            const response = await ai.models.generateContent({
                 model: enhanceModel,
                 contents: contents,
             });
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -2603,7 +2705,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     success: true
                 });
             }
-            
+
             return response.text.trim();
         } catch (error: any) {
             // Log failed API call
@@ -2622,9 +2724,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const generateImage = async (prompt: string, options?: { 
-        aspectRatio?: string, 
-        style?: string, 
+    const generateImage = async (prompt: string, options?: {
+        aspectRatio?: string,
+        style?: string,
         destination?: 'user' | 'global',
         resolution?: '1K' | '2K' | '4K',
         lighting?: string,
@@ -2636,7 +2738,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         referenceImages?: string[]
     }): Promise<string> => {
         if (!user) throw new Error("Authentication required to generate images.");
-        
+
         if (hasApiKey === false) {
             await promptForKeySelection();
             throw new Error("Please select an API key first.");
@@ -2654,7 +2756,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         console.log('🖼️ generateImage destination:', destination, 'requested:', options?.destination);
 
         const ai = await getGoogleGenAI();
-        
+
         const galleryPromptConfig = getPrompt('image-generation-gallery');
         let modelName = 'gemini-3-pro-image-preview'; // Quimera AI - Nano Banana Pro
         let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality';
@@ -2681,7 +2783,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             themeColors: options?.themeColors,
             depthOfField: options?.depthOfField,
         });
-        
+
         console.log('📋 [EditorContext] Using template:', promptTemplate);
 
         // Build the prompt with proper handling
@@ -2693,9 +2795,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             .replace('{{colorGrading}}', options?.colorGrading ? options.colorGrading : '')
             .replace('{{themeColors}}', options?.themeColors ? options.themeColors : '')
             .replace('{{depthOfField}}', options?.depthOfField ? options.depthOfField : '');
-        
+
         console.log('🔄 [EditorContext] After replacements (before cleanup):', finalPrompt);
-        
+
         // Clean up extra commas and spaces
         finalPrompt = finalPrompt
             .replace(/,\s*,/g, ',')      // Remove duplicate commas
@@ -2703,7 +2805,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             .replace(/,\s*$/g, '')       // Remove trailing comma
             .replace(/\s*,\s*/g, ', ')   // Normalize spacing around commas
             .trim();
-        
+
         console.log('✅ [EditorContext] Final prompt sent to API:', finalPrompt);
 
         try {
@@ -2758,7 +2860,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 const response = await ai.models.generateImages(generateRequest);
                 base64Image = response.generatedImages?.[0]?.image?.imageBytes;
-                
+
                 // Log API call
                 if (user) {
                     logApiCall({
@@ -2782,9 +2884,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 // Also add nested imageConfig (other SDKs/Models expect it here)
                 if (options?.aspectRatio) {
-                     generationConfig.imageConfig = {
-                         aspectRatio: options.aspectRatio
-                     };
+                    generationConfig.imageConfig = {
+                        aspectRatio: options.aspectRatio
+                    };
                 }
 
                 // Add person generation setting
@@ -2811,17 +2913,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 // Build content parts (text + optional reference images)
                 const contentParts: any[] = [];
-                
+
                 // Prepare reference images array (support both singular and plural options)
                 const referenceImages = options?.referenceImages || (options?.referenceImage ? [options.referenceImage] : []);
-                
+
                 // Add reference images if provided (Nano Banana Pro supports up to 14 images)
                 if (referenceImages.length > 0) {
                     referenceImages.forEach((imgData) => {
                         // Extract base64 data from data URL
                         const base64Data = imgData.split(',')[1];
                         const mimeType = imgData.split(';')[0].split(':')[1];
-                        
+
                         contentParts.push({
                             inlineData: {
                                 mimeType: mimeType,
@@ -2829,10 +2931,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                             }
                         });
                     });
-                    
+
                     // Modify prompt to indicate we're using reference images
-                    contentParts.push({ 
-                        text: `Using the provided reference images as style guide: ${finalPrompt}` 
+                    contentParts.push({
+                        text: `Using the provided reference images as style guide: ${finalPrompt}`
                     });
                 } else {
                     contentParts.push({ text: finalPrompt });
@@ -2846,7 +2948,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         contents: [{ role: 'user', parts: contentParts }],
                         generationConfig,
                     });
-                    
+
                     // Log API call success
                     if (user) {
                         logApiCall({
@@ -2857,7 +2959,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                             success: true
                         });
                     }
-                    
+
                     // Extract image from response parts
                     if (response.candidates && response.candidates[0].content.parts) {
                         for (const part of response.candidates[0].content.parts) {
@@ -2869,15 +2971,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     }
                 } catch (error: any) {
                     console.warn(`⚠️ generateContent failed for ${modelName}, trying generateImages fallback...`, error);
-                    
+
                     // Fallback crítico: Si generateContent falla (ej: 404 Not Found), 
                     // intentamos usar la API de imagen dedicada (generateImages) con un modelo SEGURO
                     if (error.message && (error.message.includes('not found') || error.message.includes('404') || error.message.includes('not supported'))) {
-                         // Try Fast model which is widely available
-                         const fallbackModel = 'imagen-3.0-fast-generate-001';
-                         console.log(`🔄 Switching to fallback model: ${fallbackModel}`);
-                         
-                         const generateRequest: any = {
+                        // Try Fast model which is widely available
+                        const fallbackModel = 'imagen-3.0-fast-generate-001';
+                        console.log(`🔄 Switching to fallback model: ${fallbackModel}`);
+
+                        const generateRequest: any = {
                             model: fallbackModel,
                             prompt: finalPrompt,
                             config: {
@@ -2886,14 +2988,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                                 personGeneration: 'allow_adult',
                             }
                         };
-                        
+
                         // Si hay imagen de referencia, intentamos pasarla (aunque generateImages a veces requiere otro formato)
                         // Para fallback, usamos solo la primera imagen
                         const refImages = options?.referenceImages || (options?.referenceImage ? [options.referenceImage] : []);
                         if (refImages.length > 0) {
-                             const base64Data = refImages[0].split(',')[1];
-                             generateRequest.referenceImage = { imageBytes: base64Data };
-                             generateRequest.prompt = `Style reference: ${finalPrompt}`;
+                            const base64Data = refImages[0].split(',')[1];
+                            generateRequest.referenceImage = { imageBytes: base64Data };
+                            generateRequest.prompt = `Style reference: ${finalPrompt}`;
                         }
 
                         try {
@@ -2901,20 +3003,20 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                             base64Image = response.generatedImages?.[0]?.image?.imageBytes;
                         } catch (fallbackError: any) {
                             console.warn(`⚠️ First fallback failed (${fallbackModel}), trying LAST RESORT (imagen-2)...`, fallbackError);
-                             
-                             // Debug available models if possible
-                             try {
-                                 // Note: listModels might not be directly available on the simple client interface depending on version
-                                 // But if it is, it helps debug
-                                 // const models = await ai.models.list(); 
-                                 // console.log('Available models:', models);
-                             } catch (e) {}
 
-                             // ULTIMATE FALLBACK: Imagen 2 (Legacy but reliable)
-                             const lastResortRequest = { ...generateRequest, model: 'image-generation-002' };
-                             // Remove unsupported params for legacy model if needed, or just retry
-                             const response = await ai.models.generateImages(lastResortRequest);
-                             base64Image = response.generatedImages?.[0]?.image?.imageBytes;
+                            // Debug available models if possible
+                            try {
+                                // Note: listModels might not be directly available on the simple client interface depending on version
+                                // But if it is, it helps debug
+                                // const models = await ai.models.list(); 
+                                // console.log('Available models:', models);
+                            } catch (e) { }
+
+                            // ULTIMATE FALLBACK: Imagen 2 (Legacy but reliable)
+                            const lastResortRequest = { ...generateRequest, model: 'image-generation-002' };
+                            // Remove unsupported params for legacy model if needed, or just retry
+                            const response = await ai.models.generateImages(lastResortRequest);
+                            base64Image = response.generatedImages?.[0]?.image?.imageBytes;
                         }
                     } else {
                         // Si es otro error (ej: quota, safety), lo lanzamos
@@ -2924,7 +3026,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }
 
             if (!base64Image) {
-                 throw new Error("No image data returned from AI.");
+                throw new Error("No image data returned from AI.");
             }
 
             // Convert Base64 to Blob for upload
@@ -2935,18 +3037,18 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'image/jpeg' });
-            
+
             // Upload to Storage
             const fileName = `generated-ai-${Date.now()}.jpg`;
             let storagePath = '';
             let firestoreCol;
 
             if (destination === 'global') {
-                 storagePath = `global_assets/generated/${fileName}`;
-                 firestoreCol = collection(db, 'global_files');
+                storagePath = `global_assets/generated/${fileName}`;
+                firestoreCol = collection(db, 'global_files');
             } else {
-                 storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
-                 firestoreCol = collection(db, 'users', user.uid, 'files');
+                storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
+                firestoreCol = collection(db, 'users', user.uid, 'files');
             }
 
             const storageRef = ref(storage, storagePath);
@@ -2970,7 +3072,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         }
                     ]
                 });
-                
+
                 const titleText = titleResponse.text?.trim();
                 if (titleText && titleText.length > 0 && titleText.length < 100) {
                     // Clean up the title and create a valid filename
@@ -3000,10 +3102,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             };
 
             const docRef = await addDoc(firestoreCol, newFileRecord);
-            
+
             // Update State
             const fullRecord = { id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord;
-            
+
             if (destination === 'global') {
                 setGlobalFiles(prev => [fullRecord, ...prev]);
             } else {
@@ -3040,7 +3142,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // Deep clone current menus to avoid reference issues
         const currentMenus = [...menus];
         let updatedMenusList: Menu[] = [];
-        
+
         if (currentMenus.some(m => m.id === menu.id)) {
             updatedMenusList = currentMenus.map(m => m.id === menu.id ? menu : m);
         } else {
@@ -3073,35 +3175,35 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deleteMenu = async (menuId: string) => {
         if (!activeProjectId) return;
-        
+
         const updatedMenusList = menus.filter(m => m.id !== menuId);
 
         // 1. Update Menus State
         setMenus(updatedMenusList);
 
-         // 2. Update Projects State
-         setProjects(prev => prev.map(p => {
+        // 2. Update Projects State
+        setProjects(prev => prev.map(p => {
             if (p.id === activeProjectId) {
                 return { ...p, menus: updatedMenusList };
             }
             return p;
         }));
 
-         // 3. Persist
-         if (user) {
-             try {
+        // 3. Persist
+        if (user) {
+            try {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
                 await updateDoc(projectDocRef, { menus: updatedMenusList });
             } catch (e) {
                 console.error("Error deleting menu from project", e);
             }
-         }
+        }
     };
 
     const saveAiAssistantConfig = async (config: AiAssistantConfig) => {
         setAiAssistantConfig(config);
         if (activeProjectId && user) {
-             try {
+            try {
                 const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
                 await updateDoc(projectDocRef, { aiAssistantConfig: config });
             } catch (e) {
@@ -3113,10 +3215,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // SEO Configuration Logic
     const updateSeoConfig = async (updates: Partial<SEOConfig>) => {
         if (!activeProjectId || !user) return;
-        
+
         const newConfig = { ...seoConfig, ...updates } as SEOConfig;
         setSeoConfig(newConfig);
-        
+
         try {
             const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
             await updateDoc(projectDocRef, { seoConfig: newConfig });
@@ -3164,26 +3266,26 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         try {
             const leadRef = doc(db, 'users', user.uid, 'leads', leadId);
             await deleteDoc(leadRef);
-            
+
             // Also delete all activities and tasks associated with this lead
             const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
             const activitiesSnapshot = await getDocs(query(activitiesCol));
             const deleteActivitiesPromises = activitiesSnapshot.docs
                 .filter(doc => doc.data().leadId === leadId)
                 .map(doc => deleteDoc(doc.ref));
-            
+
             const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
             const tasksSnapshot = await getDocs(query(tasksCol));
             const deleteTasksPromises = tasksSnapshot.docs
                 .filter(doc => doc.data().leadId === leadId)
                 .map(doc => deleteDoc(doc.ref));
-            
+
             await Promise.all([...deleteActivitiesPromises, ...deleteTasksPromises]);
         } catch (error) {
-             console.error("Error deleting lead:", error);
+            console.error("Error deleting lead:", error);
         }
     };
-    
+
     // Lead Activities
     const addLeadActivity = async (leadId: string, activityData: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => {
         if (!user) return;
@@ -3201,13 +3303,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.error("Error adding lead activity:", error);
         }
     };
-    
+
     const getLeadActivities = (leadId: string): LeadActivity[] => {
         return leadActivities
             .filter(activity => activity.leadId === leadId)
             .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
     };
-    
+
     // Lead Tasks
     const addLeadTask = async (leadId: string, taskData: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => {
         if (!user) return;
@@ -3224,7 +3326,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.error("Error adding lead task:", error);
         }
     };
-    
+
     const updateLeadTask = async (taskId: string, data: Partial<LeadTask>) => {
         if (!user) return;
         try {
@@ -3234,7 +3336,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.error("Error updating lead task:", error);
         }
     };
-    
+
     const deleteLeadTask = async (taskId: string) => {
         if (!user) return;
         try {
@@ -3244,7 +3346,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             console.error("Error deleting lead task:", error);
         }
     };
-    
+
     const getLeadTasks = (leadId: string): LeadTask[] => {
         return leadTasks
             .filter(task => task.leadId === leadId)
@@ -3256,7 +3358,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 return a.dueDate.seconds - b.dueDate.seconds;
             });
     };
-    
+
     // Domain Logic
     const addDomain = async (domainData: Domain) => {
         if (!user) return;
@@ -3265,51 +3367,51 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         try {
             const domainsCol = collection(db, 'users', user.uid, 'domains');
             await setDoc(doc(domainsCol, domainData.id), newDomain);
-        } catch(e) {
-             console.error("Error adding domain", e);
+        } catch (e) {
+            console.error("Error adding domain", e);
         }
     };
-    
+
     const updateDomain = async (id: string, data: Partial<Domain>) => {
         if (!user) return;
-        setDomains(prev => prev.map(d => d.id === id ? {...d, ...data} : d));
+        setDomains(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
         try {
             const docRef = doc(db, 'users', user.uid, 'domains', id);
             await updateDoc(docRef, data);
-        } catch(e) {
+        } catch (e) {
             console.error("Error updating domain", e);
         }
     };
-    
+
     const deleteDomain = async (id: string) => {
         if (!user) return;
         setDomains(prev => prev.filter(d => d.id !== id));
         try {
-             const docRef = doc(db, 'users', user.uid, 'domains', id);
-             await deleteDoc(docRef);
-        } catch(e) {
-             console.error("Error deleting domain", e);
+            const docRef = doc(db, 'users', user.uid, 'domains', id);
+            await deleteDoc(docRef);
+        } catch (e) {
+            console.error("Error deleting domain", e);
         }
     };
-    
+
     const verifyDomain = async (id: string): Promise<boolean> => {
         if (!user) return false;
-        
+
         const domain = domains.find(d => d.id === id);
         if (!domain) return false;
-        
+
         try {
             // Use deployment service for real DNS verification
             const result = await deploymentService.verifyDNS(domain.name);
-            
+
             if (result.verified) {
-                await updateDomain(id, { 
+                await updateDomain(id, {
                     status: 'active',
                     dnsRecords: result.records
                 });
                 return true;
             } else {
-                await updateDomain(id, { 
+                await updateDomain(id, {
                     status: 'pending',
                     dnsRecords: result.records
                 });
@@ -3323,26 +3425,26 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const deployDomain = async (
-        domainId: string, 
+        domainId: string,
         provider: 'vercel' | 'cloudflare' | 'netlify' = 'vercel'
     ): Promise<boolean> => {
         if (!user) return false;
-        
+
         const domain = domains.find(d => d.id === domainId);
         if (!domain || !domain.projectId) {
             console.error('Domain or project not found');
             return false;
         }
-        
+
         const project = projects.find(p => p.id === domain.projectId);
         if (!project) {
             console.error('Project not found');
             return false;
         }
-        
+
         try {
             // Update status to deploying
-            await updateDomain(domainId, { 
+            await updateDomain(domainId, {
                 status: 'deploying',
                 deployment: {
                     provider,
@@ -3357,10 +3459,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     )
                 ]
             });
-            
+
             // Perform actual deployment
             const result = await deploymentService.deployProject(project, domain, provider);
-            
+
             if (result.success) {
                 // Update with success
                 await updateDomain(domainId, {
@@ -3444,25 +3546,25 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateUserRole = async (userId: string, newRole: UserRole) => {
         // Todos los usuarios pueden cambiar roles
-        
+
         const targetUser = allUsers.find(u => u.id === userId);
         if (!targetUser) return;
-        
+
         // No se puede cambiar el rol del owner
         if (isOwner(targetUser.email)) {
             throw new Error('No se puede cambiar el rol del Owner');
         }
-        
+
         // Solo owner puede asignar/desasignar superadmin
         if ((newRole === 'superadmin' || targetUser.role === 'superadmin') && !isUserOwner) {
             throw new Error('Solo el Owner puede gestionar Super Admins');
         }
-        
+
         // No se puede asignar rol de owner
         if (newRole === 'owner') {
             throw new Error('No se puede asignar el rol de Owner');
         }
-        
+
         try {
             const userDocRef = doc(db, 'users', userId);
             await updateDoc(userDocRef, { role: newRole });
@@ -3475,12 +3577,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deleteUserRecord = async (userId: string) => {
         // Todos los usuarios pueden eliminar usuarios
-        
+
         const targetUser = allUsers.find(u => u.id === userId);
         if (targetUser && isOwner(targetUser.email)) {
             throw new Error('No se puede eliminar al Owner');
         }
-        
+
         // This only deletes the Firestore record, not the Auth user.
         // This is a simplification for the current feature scope.
         const userDocRef = doc(db, 'users', userId);
@@ -3492,7 +3594,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const canPerform = (permission: keyof RolePermissions): boolean => {
         return userPermissions[permission] || false;
     };
-    
+
     // Helper para verificar si tiene rol administrativo
     const isAdmin = (): boolean => {
         return ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
@@ -3501,24 +3603,24 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Función para crear administrador
     const createAdmin = async (email: string, name: string, role: UserRole) => {
         // Todos los usuarios pueden crear administradores
-        
+
         // Solo owner puede crear superadmins
         if (role === 'superadmin' && !isUserOwner) {
             throw new Error('Solo el Owner puede crear Super Admins');
         }
-        
+
         // No se puede crear otro owner
         if (role === 'owner') {
             throw new Error('Solo puede haber un Owner en el sistema');
         }
-        
+
         try {
             // Verificar si el usuario ya existe
             const existingUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
             if (existingUser) {
                 throw new Error('Ya existe un usuario con este email');
             }
-            
+
             const newAdminDoc = {
                 email,
                 name,
@@ -3527,12 +3629,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 createdBy: userDocument?.email,
                 createdAt: serverTimestamp()
             };
-            
+
             // Crear documento en Firestore
             // Nota: En producción necesitarás una Cloud Function para crear el usuario en Auth
             const usersCol = collection(db, 'users');
             await addDoc(usersCol, newAdminDoc);
-            
+
             await fetchAllUsers(); // Refresh lista
         } catch (error) {
             console.error('Error creating admin:', error);
@@ -3567,15 +3669,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const createTenant = async (data: { 
-        type: 'individual' | 'agency'; 
-        name: string; 
-        email: string; 
+    const createTenant = async (data: {
+        type: 'individual' | 'agency';
+        name: string;
+        email: string;
         plan: string;
         companyName?: string;
     }): Promise<string> => {
         // Todos los usuarios pueden crear tenants
-        
+
         try {
             const tenantDoc = {
                 type: data.type,
@@ -3601,7 +3703,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     brandingEnabled: false
                 }
             };
-            
+
             const docRef = await addDoc(collection(db, 'tenants'), tenantDoc);
             await fetchTenants(); // Refresh list
             return docRef.id;
@@ -3613,7 +3715,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
         // Todos los usuarios pueden actualizar tenants
-        
+
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
             await updateDoc(tenantRef, data);
@@ -3625,7 +3727,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deleteTenant = async (tenantId: string) => {
         // Todos los usuarios pueden eliminar tenants
-        
+
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
             await deleteDoc(tenantRef);
@@ -3637,10 +3739,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateTenantStatus = async (tenantId: string, status: TenantStatus) => {
         // Todos los usuarios pueden actualizar el estado de tenants
-        
+
         try {
             const tenantRef = doc(db, 'tenants', tenantId);
-            await updateDoc(tenantRef, { 
+            await updateDoc(tenantRef, {
                 status,
                 lastStatusChangeAt: serverTimestamp()
             });
@@ -3652,11 +3754,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const updateTenantLimits = async (tenantId: string, limits: Partial<TenantLimits>) => {
         // Todos los usuarios pueden actualizar límites de tenants
-        
+
         try {
             const tenant = tenants.find(t => t.id === tenantId);
             if (!tenant) return;
-            
+
             const updatedLimits = { ...tenant.limits, ...limits };
             const tenantRef = doc(db, 'tenants', tenantId);
             await updateDoc(tenantRef, { limits: updatedLimits });
@@ -3670,7 +3772,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // Search in DB prompts first, then fallback to default file
         const dbPrompt = prompts.find(p => p.name === name);
         const defaultPrompt = defaultPrompts.find(p => p.name === name) as LLMPrompt | undefined;
-        
+
         // Auto-migrate outdated prompts in DB
         if (dbPrompt && defaultPrompt && dbPrompt.version !== undefined && defaultPrompt.version !== undefined) {
             if (dbPrompt.version < defaultPrompt.version) {
@@ -3684,7 +3786,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 return defaultPrompt;
             }
         }
-        
+
         return dbPrompt || defaultPrompt;
     };
 
@@ -3699,10 +3801,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 if (isAdmin()) {
                     console.log('No prompts found, seeding database with defaults...');
                     const seedPromises = defaultPrompts.map(promptData => {
-                        const dataToSave = { 
-                            ...promptData, 
-                            createdAt: serverTimestamp(), 
-                            updatedAt: serverTimestamp() 
+                        const dataToSave = {
+                            ...promptData,
+                            createdAt: serverTimestamp(),
+                            updatedAt: serverTimestamp()
                         };
                         return addDoc(collection(db, 'prompts'), dataToSave);
                     });
@@ -3747,7 +3849,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (!['superadmin', 'admin', 'manager', 'owner'].includes(userDocument?.role || '')) {
             return;
         }
-        
+
         if (isCustom) {
             // UPDATE LOCAL STATE ONLY
             setCustomComponents(prev => prev.map(c => c.id === componentId ? { ...c, styles: { ...c.styles, ...newStyles } } : c));
@@ -3768,7 +3870,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const saveComponent = async (componentId: string, changeDescription?: string) => {
         // Todos los usuarios pueden guardar componentes
-        
+
         try {
             // Check if Custom
             const customComp = customComponents.find(c => c.id === componentId);
@@ -3788,7 +3890,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 ].slice(-10); // Keep only last 10 versions
 
                 const docRef = doc(db, 'customComponents', componentId);
-                await updateDoc(docRef, { 
+                await updateDoc(docRef, {
                     styles: customComp.styles,
                     version: newVersion.version,
                     versionHistory: updatedVersionHistory,
@@ -3797,15 +3899,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 });
 
                 // Update local state
-                setCustomComponents(prev => prev.map(c => 
-                    c.id === componentId 
-                        ? { 
-                            ...c, 
+                setCustomComponents(prev => prev.map(c =>
+                    c.id === componentId
+                        ? {
+                            ...c,
                             version: newVersion.version,
                             versionHistory: updatedVersionHistory,
                             lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 },
                             modifiedBy: user?.uid || ''
-                        } 
+                        }
                         : c
                 ));
 
@@ -3816,12 +3918,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // Check if Standard
             // We need to get the current style from state. Note: componentStyles is the state.
             const currentStyle = componentStyles[componentId as EditableComponentID];
-            
+
             if (currentStyle) {
-                 const docRef = doc(db, 'componentDefaults', componentId);
-                 // Use setDoc with merge to create or update
-                 await setDoc(docRef, { styles: currentStyle }, { merge: true });
-                 console.log("Saved standard component", componentId);
+                const docRef = doc(db, 'componentDefaults', componentId);
+                // Use setDoc with merge to create or update
+                await setDoc(docRef, { styles: currentStyle }, { merge: true });
+                console.log("Saved standard component", componentId);
             }
         } catch (e) {
             console.error("Error saving component:", e);
@@ -3831,7 +3933,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const createNewCustomComponent = async (name: string, baseComponent: EditableComponentID): Promise<CustomComponent> => {
         // Todos los usuarios pueden crear componentes personalizados
-        
+
         const newComponentData: Omit<CustomComponent, 'id' | 'createdAt'> = {
             name,
             baseComponent,
@@ -3862,7 +3964,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                 lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
             };
-            
+
             setCustomComponents(prev => [createdComponent, ...prev]);
             return createdComponent;
         } catch (error) {
@@ -3877,7 +3979,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         try {
             const docRef = doc(db, 'customComponents', componentId);
             await deleteDoc(docRef);
-            
+
             setCustomComponents(prev => prev.filter(c => c.id !== componentId));
         } catch (error) {
             console.error("Error deleting custom component:", error);
@@ -3934,7 +4036,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         try {
             const docRef = doc(db, 'customComponents', componentId);
-            await updateDoc(docRef, { 
+            await updateDoc(docRef, {
                 name: newName.trim(),
                 lastModified: serverTimestamp(),
                 modifiedBy: user?.uid || '',
@@ -4067,21 +4169,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         // Update component with old snapshot
         const docRef = doc(db, 'customComponents', componentId);
-        await updateDoc(docRef, { 
+        await updateDoc(docRef, {
             styles: targetVersion.snapshot,
             lastModified: serverTimestamp(),
             modifiedBy: user?.uid || ''
         });
 
         // Update local state
-        setCustomComponents(prev => prev.map(c => 
-            c.id === componentId 
-                ? { 
-                    ...c, 
+        setCustomComponents(prev => prev.map(c =>
+            c.id === componentId
+                ? {
+                    ...c,
                     styles: targetVersion.snapshot,
                     lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 },
                     modifiedBy: user?.uid || ''
-                } 
+                }
                 : c
         ));
     };
@@ -4090,7 +4192,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (!user) return;
 
         // Track custom components usage
-        const customComponentIds = componentIds.filter(id => 
+        const customComponentIds = componentIds.filter(id =>
             customComponents.some(c => c.id === id)
         );
 
@@ -4162,12 +4264,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // If updating an existing post, check if slug changed
             if (id) {
                 const oldPost = cmsPosts.find(p => p.id === id);
-                
+
                 // If we found the old post and the slug is different
                 if (oldPost && oldPost.slug !== post.slug) {
                     const oldLink = `#article:${oldPost.slug}`;
                     const newLink = `#article:${post.slug}`;
-                    
+
                     let hasMenuUpdates = false;
 
                     // Map through menus to find and replace the link
@@ -4181,7 +4283,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                             }
                             return item;
                         });
-                        
+
                         if (menuChanged) {
                             return { ...menu, items: newItems };
                         }
@@ -4192,16 +4294,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     if (hasMenuUpdates) {
                         // 1. Update Local State
                         setMenus(updatedMenus);
-                        
+
                         // 2. Update Project in Firestore
                         if (activeProjectId) {
-                             try {
-                                 const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                                 await updateDoc(projectDocRef, { menus: updatedMenus });
-                                 console.log(`[Ref Integrity] Updated menus linking to ${oldLink} -> ${newLink}`);
-                             } catch (err) {
-                                 console.error("Failed to update menu references for slug change:", err);
-                             }
+                            try {
+                                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                                await updateDoc(projectDocRef, { menus: updatedMenus });
+                                console.log(`[Ref Integrity] Updated menus linking to ${oldLink} -> ${newLink}`);
+                            } catch (err) {
+                                console.error("Failed to update menu references for slug change:", err);
+                            }
                         }
                     }
                 }
@@ -4209,13 +4311,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // --- END FIX ---
 
             if (id && id.length > 0) {
-                 const postRef = doc(db, 'users', user.uid, 'posts', id);
-                 await updateDoc(postRef, { ...data, updatedAt: new Date().toISOString() });
-                 // Optimistic update removed, relying on snapshot
+                const postRef = doc(db, 'users', user.uid, 'posts', id);
+                await updateDoc(postRef, { ...data, updatedAt: new Date().toISOString() });
+                // Optimistic update removed, relying on snapshot
             } else {
-                 const postsCol = collection(db, 'users', user.uid, 'posts');
-                 const now = new Date().toISOString();
-                 await addDoc(postsCol, { ...data, authorId: user.uid, createdAt: now, updatedAt: now });
+                const postsCol = collection(db, 'users', user.uid, 'posts');
+                const now = new Date().toISOString();
+                await addDoc(postsCol, { ...data, authorId: user.uid, createdAt: now, updatedAt: now });
             }
         } catch (error) {
             console.error("Error saving post:", error);
@@ -4229,7 +4331,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const postRef = doc(db, 'users', user.uid, 'posts', postId);
             await deleteDoc(postRef);
         } catch (error) {
-             console.error("Error deleting post:", error);
+            console.error("Error deleting post:", error);
         }
     };
 
@@ -4369,6 +4471,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         updateLeadTask,
         deleteLeadTask,
         getLeadTasks,
+        // Leads Library
+        libraryLeads,
+        isLoadingLibraryLeads,
+        addLibraryLead,
+        deleteLibraryLead,
+        importLibraryLead,
         // Domains
         domains,
         addDomain,
@@ -4385,6 +4493,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         setSeoConfig,
         updateSeoConfig
     };
-    
+
     return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;
 };

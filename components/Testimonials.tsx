@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { ensureTextContrast, hexToRgba } from '../utils/colorUtils';
+import { hexToRgba } from '../utils/colorUtils';
 
 interface TestimonialCardProps {
   quote: string;
@@ -245,28 +245,25 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   // Use component cardBackground color (falls back to primary if not set)
   const cardBackground = actualColors.cardBackground;
   
-  // Calculate contrast-safe colors based on backgrounds
+  // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
-    const bgColor = actualColors.background || '#ffffff';
-    const cardBg = cardBackground;
-    
     return {
-      // Section-level colors - use component heading color (with contrast check)
-      heading: ensureTextContrast(bgColor, actualColors.heading),
-      text: ensureTextContrast(bgColor, actualColors.text),
-      description: ensureTextContrast(bgColor, actualColors.description),
+      // Section-level colors
+      heading: actualColors.heading || '#ffffff',
+      text: actualColors.text || '#94a3b8',
+      description: actualColors.description || actualColors.text || '#94a3b8',
       // Card-level colors
-      cardHeading: ensureTextContrast(cardBg, actualColors.heading),
-      cardText: ensureTextContrast(cardBg, actualColors.text),
-      cardDescription: ensureTextContrast(cardBg, actualColors.description),
+      cardHeading: actualColors.heading || '#ffffff',
+      cardText: actualColors.text || '#94a3b8',
+      cardDescription: actualColors.description || actualColors.text || '#94a3b8',
     };
-  }, [actualColors, cardBackground]);
+  }, [actualColors]);
   
   return (
     <section id="testimonials" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
       <div>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
             {description}
           </p>
