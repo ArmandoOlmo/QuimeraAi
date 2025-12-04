@@ -18,9 +18,10 @@ interface LogoProps {
   logoImageUrl: string;
   logoWidth: number;
   textColor: string;
+  forceShowText?: boolean; // For mobile drawer where text should always show
 }
 
-const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor }) => {
+const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor, forceShowText = false }) => {
   const showImage = (logoType === 'image' || logoType === 'both') && logoImageUrl;
   const showText = (logoType === 'text' || logoType === 'both');
 
@@ -35,7 +36,12 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
             />
         )}
         {showText && (
-            <span className="hidden md:inline text-2xl font-bold font-header tracking-tight transition-colors" style={{ color: textColor }}>{logoText}</span>
+            <span 
+              className={`${forceShowText ? '' : 'hidden md:inline'} text-2xl font-bold font-header tracking-tight transition-colors`} 
+              style={{ color: textColor }}
+            >
+              {logoText}
+            </span>
         )}
     </a>
   );
@@ -437,7 +443,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
           <div className="flex flex-col h-full p-6 pt-20 safe-area-inset-right">
               {/* Logo section */}
               <div className="mb-6">
-                  <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={Math.min(logoWidth, 120)} textColor={colors.text} />
+                  <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={Math.min(logoWidth, 120)} textColor={colors.text} forceShowText />
               </div>
               
               {/* Navigation links - Touch optimized with staggered animation */}
