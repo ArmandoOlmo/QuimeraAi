@@ -14,7 +14,7 @@ import {
     Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, HelpCircle, 
     Layout, Image, List, Star, PlaySquare, Users, DollarSign, 
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, PanelLeftClose, PanelLeftOpen
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns
 } from 'lucide-react';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
@@ -249,6 +249,15 @@ const Controls: React.FC = () => {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
   const [isTreeHiddenMobile, setIsTreeHiddenMobile] = useState(false);
+
+  // Auto-hide tree on mobile when a section is selected, show when closed
+  React.useEffect(() => {
+    if (activeSection) {
+      setIsTreeHiddenMobile(true);
+    } else {
+      setIsTreeHiddenMobile(false);
+    }
+  }, [activeSection]);
 
   // Close add component dropdown when clicking outside
   useClickOutside(addComponentRef, () => setIsAddComponentOpen(false));
@@ -4289,14 +4298,6 @@ const Controls: React.FC = () => {
           {/* Header with Close Button */}
           <div className="flex-shrink-0 p-4 border-b border-editor-border bg-editor-panel-bg/30">
             <div className="flex items-center justify-between mb-1">
-              {/* Mobile Tree Toggle Button */}
-              <button
-                onClick={() => setIsTreeHiddenMobile(!isTreeHiddenMobile)}
-                className="p-1 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-panel-bg rounded transition-colors md:hidden mr-2"
-                title={isTreeHiddenMobile ? t('controls.showTree') : t('controls.hideTree')}
-              >
-                {isTreeHiddenMobile ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-              </button>
               <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex-1">
                 {t('controls.properties')}
               </h3>
@@ -4307,10 +4308,10 @@ const Controls: React.FC = () => {
                   // Close sidebar on mobile when closing properties
                   setIsSidebarOpen(false);
                 }}
-                className="p-2 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded-lg transition-colors touch-manipulation"
+                className="p-2.5 md:p-2 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded-xl md:rounded-lg transition-colors touch-manipulation"
                 title={t('controls.closePropertiesPanel')}
               >
-                <X size={18} />
+                <X size={20} className="md:w-[18px] md:h-[18px]" />
               </button>
             </div>
             <p className="text-base font-semibold text-editor-text-primary">
