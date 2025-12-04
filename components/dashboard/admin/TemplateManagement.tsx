@@ -228,12 +228,20 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                        {/* Botón hamburguesa para abrir sidebar en móvil */}
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors flex-shrink-0"
+                            title="Open menu"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
                         <button onClick={onBack} className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden transition-colors flex-shrink-0" title="Back to Admin">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <LayoutTemplate className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary hidden xs:block truncate">Templates</h1>
+                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">Templates</h1>
                         </div>
                         
                         {/* Search Bar - Desktop */}
