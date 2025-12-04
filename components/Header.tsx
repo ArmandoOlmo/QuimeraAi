@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { Menu, X, ArrowRight } from 'lucide-react';
@@ -67,12 +67,27 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
 
     return (
       <ul className={className}>
-        {links.map((link) => (
-          <li key={link.text} className="relative">
+        {links.map((link, index) => (
+          <li 
+            key={link.text} 
+            className="relative"
+            style={isMobile ? { 
+              animationDelay: `${index * 50}ms`,
+              animation: 'slideInFromRight 0.3s ease-out forwards',
+              opacity: 0,
+            } : undefined}
+          >
             <a 
                 href={link.href} 
                 onClick={onLinkClick}
-                className={`relative transition-all duration-300 font-header font-medium ${isMobile ? 'text-2xl py-2 block' : ''} ${getHoverClass()}`}
+                className={`
+                  relative transition-all duration-300 font-header font-medium
+                  ${isMobile 
+                    ? 'text-xl py-4 px-4 -mx-4 block rounded-xl hover:bg-white/5 active:bg-white/10 touch-manipulation' 
+                    : ''
+                  } 
+                  ${getHoverClass()}
+                `}
                 style={{ 
                   color: textColor, 
                   fontSize: isMobile ? undefined : `${linkFontSize}px`,
@@ -109,6 +124,41 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  
+  // Touch gesture state for swipe-to-close mobile drawer
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
+  const touchCurrentX = useRef<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  // Handle touch start for swipe gesture
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchCurrentX.current = e.touches[0].clientX;
+    setIsDragging(true);
+  }, []);
+
+  // Handle touch move for swipe gesture  
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return;
+    touchCurrentX.current = e.touches[0].clientX;
+    const diff = touchCurrentX.current - touchStartX.current;
+    // Only allow dragging right (to close, since drawer opens from right)
+    if (diff > 0) {
+      setDragOffset(Math.min(diff, 350));
+    }
+  }, [isDragging]);
+
+  // Handle touch end for swipe gesture
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    // If dragged more than 80px, close the drawer
+    if (dragOffset > 80) {
+      setIsMenuOpen(false);
+    }
+    setDragOffset(0);
+  }, [dragOffset]);
   
   // Use primary color for navbar background
   const primaryColor = getColor('primary.main', '#4f46e5');
@@ -301,7 +351,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
           {/* Desktop Layouts */}
           {renderLayout()}
 
-          {/* Mobile Toggle */}
+          {/* Mobile Toggle - Touch optimized with minimum 44px target */}
           <div className="md:hidden flex items-center relative z-50 ml-auto">
             {/* In Stack layout mobile, ensure logo is visible if it wasn't rendered in the main flow due to responsiveness */}
              {layout === 'stack' && (
@@ -320,9 +370,16 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
 
             <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                className="p-2 focus:outline-none transition-transform active:scale-90"
+                className="
+                  flex items-center justify-center w-11 h-11 -mr-2
+                  rounded-full hover:bg-white/10 active:bg-white/20
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50
+                  transition-all duration-200 touch-manipulation active:scale-95
+                "
                 style={{ color: isMenuOpen ? colors.text : finalTextColor }}
-                aria-label="Toggle menu"
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -331,42 +388,81 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
         </div>
       </div>
       
-      {/* Mobile Menu Overlay */}
-      <div 
-        className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-30 transition-opacity duration-300 md:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setIsMenuOpen(false)}
-      />
-
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu Overlay - Enhanced with smooth transition */}
       <div 
         className={`
-            fixed top-0 right-0 bottom-0 w-[85%] max-w-sm z-40 transform transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) md:hidden
+          fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
+          transition-all duration-300 ease-out md:hidden 
+          ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+        `}
+        onClick={() => setIsMenuOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Mobile Menu Drawer - Enhanced with swipe gestures and safe areas */}
+      <div 
+        ref={drawerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={`
+            fixed top-0 right-0 bottom-0 w-[85vw] max-w-[340px] z-40 
+            transform transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden
+            shadow-2xl
             ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
-        style={{ backgroundColor: colors.background }}
+        style={{ 
+          backgroundColor: colors.background,
+          transform: isMenuOpen && isDragging 
+            ? `translateX(${dragOffset}px)` 
+            : undefined,
+          transition: isDragging ? 'none' : undefined,
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
-          <div className="flex flex-col h-full p-8 pt-24 relative">
-              <div className="absolute top-6 left-8">
-                  <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={Math.min(logoWidth, 100)} textColor={colors.text} />
+          {/* Close button - Touch optimized with 44px minimum target */}
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center 
+                      rounded-full hover:bg-white/10 active:bg-white/20 
+                      transition-colors touch-manipulation active:scale-95 z-10"
+            style={{ color: colors.text }}
+            aria-label="Close menu"
+          >
+            <X size={24} />
+          </button>
+
+          <div className="flex flex-col h-full p-6 pt-20 safe-area-inset-right">
+              {/* Logo section */}
+              <div className="mb-6">
+                  <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={Math.min(logoWidth, 120)} textColor={colors.text} />
               </div>
-              <nav className="flex-1 flex flex-col space-y-6 mt-4">
+              
+              {/* Navigation links - Touch optimized with staggered animation */}
+              <nav className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
                    <NavLinks 
                         links={links} 
                         textColor={colors.text} 
                         accentColor={colors.accent} 
                         hoverStyle="simple" 
-                        className="flex flex-col space-y-4" 
+                        className="flex flex-col space-y-2" 
                         isMobile
                         onLinkClick={() => setIsMenuOpen(false)}
                     />
               </nav>
               
-              <div className="pt-8 border-t border-white/10 space-y-4">
+              {/* Footer actions - Touch optimized */}
+              <div className="pt-6 border-t border-white/10 space-y-3 safe-area-inset-bottom">
                  {showLogin && (
                      <a 
                         href={loginUrl || '#'} 
-                        className="block w-full text-center py-2 font-bold text-sm hover:opacity-70 transition-opacity"
+                        className="block w-full text-center py-3 font-bold text-base 
+                                  rounded-xl hover:bg-white/5 active:bg-white/10 
+                                  transition-colors touch-manipulation"
                         style={{ color: colors.text }}
+                        onClick={() => setIsMenuOpen(false)}
                      >
                          {loginText}
                      </a>

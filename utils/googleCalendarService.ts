@@ -75,6 +75,35 @@ let gisInited = false;
 let tokenClient: any = null;
 let accessToken: string | null = null;
 
+// Storage key for persisting connection state
+const STORAGE_KEY = 'quimera_google_calendar_connected';
+
+/**
+ * Guarda el estado de conexión
+ */
+const saveConnectionState = (connected: boolean): void => {
+    try {
+        if (connected) {
+            localStorage.setItem(STORAGE_KEY, 'true');
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    } catch (e) {
+        console.warn('Could not save connection state:', e);
+    }
+};
+
+/**
+ * Obtiene el estado de conexión guardado
+ */
+export const getSavedConnectionState = (): boolean => {
+    try {
+        return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch (e) {
+        return false;
+    }
+};
+
 // =============================================================================
 // INITIALIZATION
 // =============================================================================
@@ -167,28 +196,36 @@ export const initializeTokenClient = (
 export const requestAuthorization = (): Promise<string> => {
     return new Promise((resolve, reject) => {
         if (!tokenClient) {
-            reject(new Error('Token client not initialized'));
+            reject(new Error('Token client not initialized. Please reload the page.'));
             return;
         }
+        
+        console.log('🔐 Requesting Google authorization...');
         
         // Set up one-time callback
         const originalCallback = tokenClient.callback;
         tokenClient.callback = (response: any) => {
             tokenClient.callback = originalCallback;
+            
             if (response.error) {
+                console.error('❌ Google auth error:', response.error);
+                saveConnectionState(false);
                 reject(new Error(response.error));
                 return;
             }
+            
+            console.log('✅ Google authorization successful!');
             accessToken = response.access_token;
+            saveConnectionState(true);
             resolve(response.access_token);
         };
         
-        // If no token or token expired, request new one
-        if (!accessToken) {
+        // Request access token - always prompt consent for reliability
+        try {
             tokenClient.requestAccessToken({ prompt: 'consent' });
-        } else {
-            // Try to use existing token, will get new one if expired
-            tokenClient.requestAccessToken({ prompt: '' });
+        } catch (e: any) {
+            console.error('❌ Error requesting access token:', e);
+            reject(new Error('Error al abrir la ventana de autorización. Por favor, permite las ventanas emergentes.'));
         }
     });
 };
@@ -197,10 +234,19 @@ export const requestAuthorization = (): Promise<string> => {
  * Revoca el acceso
  */
 export const revokeAccess = (): void => {
+    console.log('🔓 Revoking Google access...');
+    saveConnectionState(false);
+    
     if (accessToken) {
-        window.google.accounts.oauth2.revoke(accessToken, () => {
+        try {
+            window.google.accounts.oauth2.revoke(accessToken, () => {
+                accessToken = null;
+                console.log('✅ Google access revoked');
+            });
+        } catch (e) {
+            console.warn('Error revoking token:', e);
             accessToken = null;
-        });
+        }
     }
 };
 

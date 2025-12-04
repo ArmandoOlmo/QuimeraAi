@@ -226,37 +226,55 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
-                    <div className="flex items-center gap-4 flex-1">
-                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden transition-colors" title="Back to Admin">
-                            <ArrowLeft className="w-4 h-4" />
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
+                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                        <button onClick={onBack} className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden transition-colors flex-shrink-0" title="Back to Admin">
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                             <LayoutTemplate className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary hidden sm:block">Website Templates</h1>
+                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary hidden xs:block truncate">Templates</h1>
                         </div>
                         
-                        {/* Search Bar */}
-                        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-md px-3 py-1.5">
-                            <Search className="w-4 h-4 text-editor-text-secondary" />
+                        {/* Search Bar - Desktop */}
+                        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder="Search templates..."
-                                className="flex-1 bg-transparent outline-none text-sm"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary">
+                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
                                     <X className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-1">
-                        {/* View Mode Toggle */}
-                        <div className="hidden sm:flex items-center gap-0.5 bg-editor-border/40 rounded-md p-1">
+                    <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                        {/* View Mode Toggle - Mobile */}
+                        <div className="flex sm:hidden items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-2 transition-all rounded ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary'}`}
+                                title="Grid View"
+                            >
+                                <Grid size={18} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-2 transition-all rounded ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary'}`}
+                                title="List View"
+                            >
+                                <List size={18} />
+                            </button>
+                        </div>
+
+                        {/* View Mode Toggle - Desktop */}
+                        <div className="hidden sm:flex items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-1.5 transition-all ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
@@ -276,18 +294,18 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         {/* Filter Toggle */}
                         <button 
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${showFilters ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                            className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                         >
-                            <Filter className="w-4 h-4" />
-                            <span className="hidden lg:inline">Filters</span>
+                            <Filter className="w-5 h-5 sm:w-4 sm:h-4" />
+                            <span className="hidden lg:inline ml-1.5">Filters</span>
                         </button>
 
-                        <button onClick={createNewTemplate} className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-accent hover:text-editor-accent/80">
-                            <Plus className="w-4 h-4" />
-                            <span className="hidden sm:inline">New</span>
+                        <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-editor-accent hover:bg-editor-accent/10">
+                            <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline ml-1.5">New</span>
                         </button>
                         
-                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
                             <ArrowLeft className="w-4 h-4" />
                             <span className="hidden lg:inline">Back</span>
                         </button>
@@ -295,29 +313,34 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 </header>
 
                 {/* Mobile Search */}
-                <div className="md:hidden px-4 py-3 border-b border-editor-border">
-                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-md px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary" />
+                <div className="md:hidden px-3 py-3 border-b border-editor-border bg-editor-bg/50">
+                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-xl px-4 py-2.5">
+                        <Search className="w-5 h-5 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder="Search templates..."
-                            className="flex-1 bg-transparent outline-none text-sm"
+                            className="flex-1 bg-transparent outline-none text-base min-w-0"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
+                        {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary p-1 flex-shrink-0">
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="px-4 sm:px-6 py-4 border-b border-editor-border bg-editor-panel-bg/50">
-                        <div className="flex flex-wrap gap-3">
-                            <div className="flex flex-col gap-1">
+                    <div className="px-3 sm:px-6 py-4 border-b border-editor-border bg-editor-panel-bg/50">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('superadmin.sortByCategory')}</label>
                                 <select 
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
+                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
                                 >
                                     <option value="all">{t('superadmin.allCategories')}</option>
                                     {categories.map(cat => (
@@ -327,7 +350,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             {/* Industry Filter */}
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary flex items-center gap-1">
                                     <Building2 className="w-3 h-3" />
                                     {t('industries.title')}
@@ -335,7 +358,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <select 
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
-                                    className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent min-w-[160px]"
+                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full sm:min-w-[160px]"
                                 >
                                     <option value="all">{t('superadmin.allCategories')}</option>
                                     {usedIndustries.map(ind => (
@@ -344,12 +367,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </select>
                             </div>
 
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('leads.status')}</label>
                                 <select 
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value as any)}
-                                    className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
+                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
                                 >
                                     <option value="all">{t('superadmin.allTemplates')}</option>
                                     <option value="active">{t('superadmin.activeTemplates')}</option>
@@ -357,12 +380,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </select>
                             </div>
 
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('leads.sort')}</label>
                                 <select 
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="bg-editor-border/40 px-3 py-1.5 rounded-md text-sm outline-none border border-transparent focus:border-editor-accent"
+                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
                                 >
                                     <option value="recent">{t('superadmin.sortByRecent')}</option>
                                     <option value="name">{t('superadmin.sortByName')}</option>
@@ -372,7 +395,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             {(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all') && (
-                                <div className="flex items-end">
+                                <div className="col-span-2 sm:col-span-1 flex items-end">
                                     <button 
                                         onClick={() => {
                                             setSearchTerm('');
@@ -380,7 +403,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             setFilterIndustry('all');
                                             setFilterStatus('all');
                                         }}
-                                        className="px-3 py-1.5 rounded-md text-sm text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                        className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg text-sm text-editor-text-secondary hover:text-editor-text-primary bg-editor-border/30 hover:bg-editor-border/50 transition-colors"
                                     >
                                         {t('superadmin.clearFilters')}
                                     </button>
@@ -390,9 +413,51 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     </div>
                 )}
 
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                    {/* Statistics - Simple inline */}
-                    <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
+                <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto">
+                    {/* Statistics - Mobile Cards / Desktop Inline */}
+                    {/* Mobile: Grid of compact cards */}
+                    <div className="grid grid-cols-2 gap-2 mb-4 sm:hidden">
+                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
+                            <div className="flex items-center gap-2 mb-1">
+                                <LayoutTemplate size={16} className="text-editor-accent" />
+                                <span className="text-xs text-editor-text-secondary">Templates</span>
+                            </div>
+                            <div className="text-xl font-bold">{templates.length}</div>
+                            <span className="text-xs text-editor-text-secondary">{activeTemplates} active</span>
+                        </div>
+                        
+                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Globe size={16} className="text-blue-500" />
+                                <span className="text-xs text-editor-text-secondary">Sites</span>
+                            </div>
+                            <div className="text-xl font-bold">{totalSitesUsingTemplates}</div>
+                            <span className="text-xs text-editor-text-secondary">created</span>
+                        </div>
+                        
+                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
+                            <div className="flex items-center gap-2 mb-1">
+                                <TrendingUp size={16} className="text-green-500" />
+                                <span className="text-xs text-editor-text-secondary">Popular</span>
+                            </div>
+                            <div className="text-sm font-bold truncate">{mostUsedTemplate?.name || 'N/A'}</div>
+                            <span className="text-xs text-editor-text-secondary">
+                                {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} uses` : ''}
+                            </span>
+                        </div>
+                        
+                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Archive size={16} className="text-orange-500" />
+                                <span className="text-xs text-editor-text-secondary">Archived</span>
+                            </div>
+                            <div className="text-xl font-bold">{archivedTemplates}</div>
+                            <span className="text-xs text-editor-text-secondary">templates</span>
+                        </div>
+                    </div>
+
+                    {/* Desktop: Inline stats */}
+                    <div className="hidden sm:flex flex-wrap items-center gap-6 mb-6 text-sm">
                         <div className="flex items-center gap-2">
                             <LayoutTemplate size={16} className="text-editor-accent" />
                             <span className="text-editor-text-secondary">Total Templates:</span>
@@ -433,11 +498,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                     {/* Templates Grid */}
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                             {filteredAndSortedTemplates.map(template => (
                                 <div 
                                     key={template.id} 
-                                    className={`relative rounded-2xl overflow-hidden group hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 h-[400px] ${template.isArchived ? 'opacity-50' : ''}`}
+                                    className={`relative rounded-2xl overflow-hidden group hover:shadow-2xl sm:hover:scale-[1.02] transition-all duration-500 h-[320px] sm:h-[400px] ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
                                     {/* Full Background Image */}
                                     <div 
@@ -447,7 +512,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <img 
                                             src={template.thumbnailUrl} 
                                             alt={template.name} 
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                            className="w-full h-full object-cover sm:group-hover:scale-110 transition-transform duration-700" 
                                         />
                                         
                                         {/* Dark Gradient Overlay */}
@@ -457,25 +522,25 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         {template.isArchived && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                                                 <div className="text-center">
-                                                    <Archive className="w-12 h-12 text-white mx-auto mb-2" />
+                                                    <Archive className="w-10 h-10 sm:w-12 sm:h-12 text-white mx-auto mb-2" />
                                                     <span className="text-white text-sm font-semibold">Archived</span>
                                                 </div>
                                             </div>
                                         )}
                                         
-                                        {/* Hover Actions Overlay */}
-                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
+                                        {/* Hover Actions Overlay - Desktop only */}
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
                                     </div>
 
                                     {/* Top Section: Color Swatches */}
-                                    <div className="absolute top-4 right-4 z-20">
+                                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20">
                                         {/* Color Swatches */}
                                         {getThemeColors(template).length > 0 && (
                                             <div className="flex gap-1">
                                                 {getThemeColors(template).map((color, index) => (
                                                     <div
                                                         key={index}
-                                                        className="w-3 h-3 rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
+                                                        className="w-4 h-4 sm:w-3 sm:h-3 rounded-[4px] sm:rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
                                                         style={{ backgroundColor: color }}
                                                     />
                                                 ))}
@@ -484,48 +549,48 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     </div>
 
                                     {/* Content at Bottom */}
-                                    <div className="absolute bottom-0 left-0 right-0 z-30 p-6">
-                                        <h3 className="font-bold text-2xl text-white mb-3 line-clamp-2">{template.name}</h3>
+                                    <div className="absolute bottom-0 left-0 right-0 z-30 p-4 sm:p-6">
+                                        <h3 className="font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3 line-clamp-2">{template.name}</h3>
                                         
                                         {/* Industries Tags */}
                                         {template.industries && template.industries.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-3">
-                                                {template.industries.slice(0, 3).map(ind => (
+                                                {template.industries.slice(0, 2).map(ind => (
                                                     <span 
                                                         key={ind}
-                                                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/20 text-white text-xs rounded backdrop-blur-sm"
+                                                        className="inline-flex items-center gap-1 px-2 py-1 sm:py-0.5 bg-white/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm"
                                                     >
                                                         <Building2 className="w-3 h-3" />
-                                                        {getIndustryLabel(ind)}
+                                                        <span className="hidden xs:inline">{getIndustryLabel(ind)}</span>
                                                     </span>
                                                 ))}
-                                                {template.industries.length > 3 && (
-                                                    <span className="px-2 py-0.5 bg-white/20 text-white text-xs rounded backdrop-blur-sm">
-                                                        +{template.industries.length - 3}
+                                                {template.industries.length > 2 && (
+                                                    <span className="px-2 py-1 sm:py-0.5 bg-white/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm">
+                                                        +{template.industries.length - 2}
                                                     </span>
                                                 )}
                                             </div>
                                         )}
                                         
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 relative z-40">
+                                        {/* Actions - Always visible on mobile, hover on desktop */}
+                                        <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 relative z-40">
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     loadProject(template.id, true);
                                                 }} 
-                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-semibold hover:scale-110 transition-transform shadow-2xl" 
+                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-white text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} />
-                                                {t('common.edit')}
+                                                <span className="hidden xs:inline">{t('common.edit')}</span>
                                             </button>
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setEditingTemplate(template);
                                                 }} 
-                                                className="p-2.5 bg-white/90 text-purple-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                className="p-3 sm:p-2.5 bg-white/90 text-purple-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={18} />
@@ -535,7 +600,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     setThumbnailEditTemplate(template);
                                                 }} 
-                                                className="p-2.5 bg-white/90 text-blue-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                className="p-3 sm:p-2.5 bg-white/90 text-blue-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={18} />
@@ -545,7 +610,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     duplicateTemplate(template.id);
                                                 }} 
-                                                className="p-2.5 bg-white/90 text-green-600 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                className="p-3 sm:p-2.5 bg-white/90 text-green-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex" 
                                                 title={t('superadmin.duplicateTemplate')}
                                             >
                                                 <Copy size={18} />
@@ -560,7 +625,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                             });
                                                         }
                                                     }} 
-                                                    className="p-2.5 bg-white/90 text-red-500 rounded-full hover:scale-110 transition-transform shadow-2xl" 
+                                                    className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex" 
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={18} />
@@ -577,102 +642,108 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {filteredAndSortedTemplates.map(template => (
                                 <div 
                                     key={template.id} 
-                                    className={`bg-editor-panel-bg p-4 rounded-lg border border-editor-border flex items-center gap-4 hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
+                                    className={`bg-editor-panel-bg p-3 sm:p-4 rounded-xl border border-editor-border hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
-                                    {/* Thumbnail */}
-                                    <div className="relative flex-shrink-0">
-                                        <img 
-                                            src={template.thumbnailUrl} 
-                                            alt={template.name} 
-                                            className="w-24 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                                            onClick={() => setPreviewTemplate(template)}
-                                        />
-                                        {/* Color Swatches */}
-                                        {getThemeColors(template).length > 0 && (
-                                            <div className="absolute bottom-1 right-1 flex gap-0.5">
-                                                {getThemeColors(template).map((color, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="w-2 h-2 rounded-[2px] shadow-sm border border-white/50"
-                                                        style={{ backgroundColor: color }}
-                                                    />
-                                                ))}
+                                    {/* Mobile: Stacked layout */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                        {/* Thumbnail + Info row on mobile */}
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            {/* Thumbnail */}
+                                            <div className="relative flex-shrink-0">
+                                                <img 
+                                                    src={template.thumbnailUrl} 
+                                                    alt={template.name} 
+                                                    className="w-20 h-14 sm:w-24 sm:h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                    onClick={() => setPreviewTemplate(template)}
+                                                />
+                                                {/* Color Swatches */}
+                                                {getThemeColors(template).length > 0 && (
+                                                    <div className="absolute bottom-1 right-1 flex gap-0.5">
+                                                        {getThemeColors(template).map((color, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-[3px] sm:rounded-[2px] shadow-sm border border-white/50"
+                                                                style={{ backgroundColor: color }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {template.isArchived && (
+                                                    <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
+                                                        <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        {template.isArchived && (
-                                            <div className="absolute inset-0 bg-black/60 rounded flex items-center justify-center">
-                                                <Archive className="w-6 h-6 text-white" />
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-editor-text-primary truncate mb-1">{template.name}</h3>
-                                        {/* Industry tags in list view */}
-                                        {template.industries && template.industries.length > 0 && (
-                                            <div className="flex items-center gap-1">
-                                                <Building2 className="w-3 h-3 text-editor-accent" />
-                                                <span className="text-xs text-editor-accent">
-                                                    {template.industries.length} {t('industries.title').toLowerCase()}
-                                                </span>
+                                            {/* Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-editor-text-primary truncate text-sm sm:text-base mb-1">{template.name}</h3>
+                                                {/* Industry tags in list view */}
+                                                {template.industries && template.industries.length > 0 && (
+                                                    <div className="flex items-center gap-1">
+                                                        <Building2 className="w-3 h-3 text-editor-accent flex-shrink-0" />
+                                                        <span className="text-xs text-editor-accent truncate">
+                                                            {template.industries.length} {t('industries.title').toLowerCase()}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={() => setPreviewTemplate(template)}
-                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors" 
-                                            title={t('common.view')}
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => loadProject(template.id, true)} 
-                                            className="flex items-center gap-1.5 px-3 py-2 bg-editor-accent text-white rounded-md text-sm hover:bg-editor-accent/90 transition-colors" 
-                                            title={t('common.edit')}
-                                        >
-                                            <Edit size={14} />
-                                            {t('common.edit')}
-                                        </button>
-                                        <button 
-                                            onClick={() => setEditingTemplate(template)}
-                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors" 
-                                            title={t('industries.title')}
-                                        >
-                                            <Settings2 size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => setThumbnailEditTemplate(template)} 
-                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors" 
-                                            title="Change Thumbnail"
-                                        >
-                                            <ImageIcon size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => duplicateTemplate(template.id)} 
-                                            className="p-2 text-editor-text-secondary rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors" 
-                                            title="Duplicate"
-                                        >
-                                            <Copy size={18} />
-                                        </button>
-                                        {canDeleteTemplates() && (
+                                        {/* Actions - Scrollable on mobile */}
+                                        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-shrink-0">
                                             <button 
-                                                onClick={() => {
-                                                    if (window.confirm(`Delete "${template.name}"?`)) {
-                                                        deleteProject(template.id).catch(err => {
-                                                            alert(err.message || 'No tienes permisos para borrar templates');
-                                                        });
-                                                    }
-                                                }} 
-                                                className="p-2 text-editor-text-secondary rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors" 
-                                                title="Delete"
+                                                onClick={() => setPreviewTemplate(template)}
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors flex-shrink-0" 
+                                                title={t('common.view')}
                                             >
-                                                <Trash2 size={18} />
+                                                <Eye size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
-                                        )}
+                                            <button 
+                                                onClick={() => loadProject(template.id, true)} 
+                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-editor-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-editor-accent/90 transition-colors flex-shrink-0" 
+                                                title={t('common.edit')}
+                                            >
+                                                <Edit size={16} className="sm:w-[14px] sm:h-[14px]" />
+                                                <span className="hidden xs:inline">{t('common.edit')}</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setEditingTemplate(template)}
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors flex-shrink-0" 
+                                                title={t('industries.title')}
+                                            >
+                                                <Settings2 size={20} className="sm:w-[18px] sm:h-[18px]" />
+                                            </button>
+                                            <button 
+                                                onClick={() => setThumbnailEditTemplate(template)} 
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors flex-shrink-0" 
+                                                title="Change Thumbnail"
+                                            >
+                                                <ImageIcon size={20} className="sm:w-[18px] sm:h-[18px]" />
+                                            </button>
+                                            <button 
+                                                onClick={() => duplicateTemplate(template.id)} 
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors flex-shrink-0" 
+                                                title="Duplicate"
+                                            >
+                                                <Copy size={20} className="sm:w-[18px] sm:h-[18px]" />
+                                            </button>
+                                            {canDeleteTemplates() && (
+                                                <button 
+                                                    onClick={() => {
+                                                        if (window.confirm(`Delete "${template.name}"?`)) {
+                                                            deleteProject(template.id).catch(err => {
+                                                                alert(err.message || 'No tienes permisos para borrar templates');
+                                                            });
+                                                        }
+                                                    }} 
+                                                    className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0" 
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={20} className="sm:w-[18px] sm:h-[18px]" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -723,33 +794,38 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
             {/* Preview Modal */}
             {previewTemplate && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
+                <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
                     <div 
-                        className="bg-editor-panel-bg rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto"
+                        className="bg-editor-panel-bg rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="sticky top-0 bg-editor-panel-bg border-b border-editor-border p-6 z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h2 className="text-2xl font-bold">{previewTemplate.name}</h2>
+                        {/* Mobile drag indicator */}
+                        <div className="sm:hidden flex justify-center pt-3 pb-1">
+                            <div className="w-10 h-1 bg-editor-border/60 rounded-full" />
+                        </div>
+
+                        <div className="sticky top-0 bg-editor-panel-bg border-b border-editor-border p-4 sm:p-6 z-10">
+                            <div className="flex justify-between items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                                        <h2 className="text-xl sm:text-2xl font-bold truncate">{previewTemplate.name}</h2>
                                         {previewTemplate.isFeatured && (
-                                            <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                                            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500 flex-shrink-0" />
                                         )}
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => setPreviewTemplate(null)}
-                                    className="p-2 rounded-full hover:bg-editor-border transition-colors"
+                                    className="p-2.5 sm:p-2 rounded-full hover:bg-editor-border transition-colors flex-shrink-0 -mt-1 -mr-1"
                                 >
-                                    <X size={24} />
+                                    <X size={22} className="sm:w-6 sm:h-6" />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Large Preview Image with Color Swatches */}
-                            <div className="mb-6 rounded-lg overflow-hidden relative">
+                            <div className="mb-4 sm:mb-6 rounded-xl overflow-hidden relative">
                                 <img 
                                     src={previewTemplate.thumbnailUrl} 
                                     alt={previewTemplate.name}
@@ -757,11 +833,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 />
                                 {/* Color Swatches */}
                                 {getThemeColors(previewTemplate).length > 0 && (
-                                    <div className="absolute bottom-4 right-4 flex gap-1.5">
+                                    <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 flex gap-1 sm:gap-1.5">
                                         {getThemeColors(previewTemplate).map((color, index) => (
                                             <div
                                                 key={index}
-                                                className="w-5 h-5 rounded-md shadow-lg border border-white/40"
+                                                className="w-6 h-6 sm:w-5 sm:h-5 rounded-lg sm:rounded-md shadow-lg border border-white/40"
                                                 style={{ backgroundColor: color }}
                                             />
                                         ))}
@@ -770,53 +846,53 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             {/* Template Details */}
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <h3 className="font-semibold mb-3">Template Information</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                                <div className="bg-editor-bg/50 rounded-xl p-4">
+                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">Template Information</h3>
+                                    <div className="space-y-2.5 sm:space-y-2 text-sm">
+                                        <div className="flex justify-between items-center">
                                             <span className="text-editor-text-secondary">Sites Using:</span>
-                                            <span>{getTemplateUsage(previewTemplate.id)}</span>
+                                            <span className="font-medium">{getTemplateUsage(previewTemplate.id)}</span>
                                         </div>
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between items-center">
                                             <span className="text-editor-text-secondary">Last Updated:</span>
-                                            <span>{previewTemplate.lastUpdated}</span>
+                                            <span className="font-medium text-xs sm:text-sm truncate ml-2">{previewTemplate.lastUpdated}</span>
                                         </div>
                                         {previewTemplate.author && (
-                                            <div className="flex justify-between">
+                                            <div className="flex justify-between items-center">
                                                 <span className="text-editor-text-secondary">Author:</span>
-                                                <span>{previewTemplate.author}</span>
+                                                <span className="font-medium">{previewTemplate.author}</span>
                                             </div>
                                         )}
                                         {previewTemplate.version && (
-                                            <div className="flex justify-between">
+                                            <div className="flex justify-between items-center">
                                                 <span className="text-editor-text-secondary">Version:</span>
-                                                <span>{previewTemplate.version}</span>
+                                                <span className="font-medium">{previewTemplate.version}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between items-center">
                                             <span className="text-editor-text-secondary">Status:</span>
-                                            <span className={previewTemplate.isArchived ? 'text-orange-500' : 'text-green-500'}>
+                                            <span className={`font-medium ${previewTemplate.isArchived ? 'text-orange-500' : 'text-green-500'}`}>
                                                 {previewTemplate.isArchived ? 'Archived' : 'Active'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h3 className="font-semibold mb-3">Brand Identity</h3>
-                                    <div className="space-y-2 text-sm">
+                                <div className="bg-editor-bg/50 rounded-xl p-4">
+                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">Brand Identity</h3>
+                                    <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div>
-                                            <span className="text-editor-text-secondary">Business:</span>
-                                            <p>{previewTemplate.brandIdentity?.name || 'N/A'}</p>
+                                            <span className="text-editor-text-secondary text-xs">Business:</span>
+                                            <p className="font-medium">{previewTemplate.brandIdentity?.name || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary">Target Audience:</span>
-                                            <p>{previewTemplate.brandIdentity?.targetAudience || 'N/A'}</p>
+                                            <span className="text-editor-text-secondary text-xs">Target Audience:</span>
+                                            <p className="font-medium">{previewTemplate.brandIdentity?.targetAudience || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary">Tone:</span>
-                                            <p>{previewTemplate.brandIdentity?.toneOfVoice || 'N/A'}</p>
+                                            <span className="text-editor-text-secondary text-xs">Tone:</span>
+                                            <p className="font-medium">{previewTemplate.brandIdentity?.toneOfVoice || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -824,22 +900,22 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Description */}
                             {previewTemplate.description && (
-                                <div className="mb-6">
-                                    <h3 className="font-semibold mb-3">Description</h3>
-                                    <p className="text-sm text-editor-text-secondary">{previewTemplate.description}</p>
+                                <div className="mb-4 sm:mb-6">
+                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Description</h3>
+                                    <p className="text-sm text-editor-text-secondary leading-relaxed">{previewTemplate.description}</p>
                                 </div>
                             )}
 
                             {/* Industries */}
                             {previewTemplate.industries && previewTemplate.industries.length > 0 && (
-                                <div className="mb-6">
-                                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                <div className="mb-4 sm:mb-6">
+                                    <h3 className="font-semibold mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                                         <Building2 className="w-4 h-4" />
                                         {t('industries.title')}
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.industries.map(ind => (
-                                            <span key={ind} className="bg-editor-accent/20 text-editor-accent px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                                            <span key={ind} className="bg-editor-accent/20 text-editor-accent px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm flex items-center gap-1">
                                                 <Building2 className="w-3 h-3" />
                                                 {getIndustryLabel(ind)}
                                             </span>
@@ -850,11 +926,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Tags */}
                             {previewTemplate.tags && previewTemplate.tags.length > 0 && (
-                                <div className="mb-6">
-                                    <h3 className="font-semibold mb-3">{t('cms.tags')}</h3>
+                                <div className="mb-4 sm:mb-6">
+                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('cms.tags')}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.tags.map(tag => (
-                                            <span key={tag} className="bg-editor-border px-3 py-1 rounded-full text-sm">
+                                            <span key={tag} className="bg-editor-border px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm">
                                                 {tag}
                                             </span>
                                         ))}
@@ -863,11 +939,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             )}
 
                             {/* Sections Included */}
-                            <div className="mb-6">
-                                <h3 className="font-semibold mb-3">Included Sections</h3>
-                                <div className="flex flex-wrap gap-2">
+                            <div className="mb-4 sm:mb-6">
+                                <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Included Sections</h3>
+                                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                     {previewTemplate.componentOrder.map(section => (
-                                        <span key={section} className="bg-editor-accent/10 text-editor-accent px-3 py-1 rounded text-sm">
+                                        <span key={section} className="bg-editor-accent/10 text-editor-accent px-2.5 sm:px-3 py-1 rounded-lg sm:rounded text-xs sm:text-sm">
                                             {section}
                                         </span>
                                     ))}
@@ -875,53 +951,53 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-3 pt-6 border-t border-editor-border">
+                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-editor-border">
                                 <button 
                                     onClick={() => {
                                         loadProject(previewTemplate.id, true);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-accent text-white rounded-xl sm:rounded-lg hover:bg-editor-accent/90 transition-colors text-sm font-medium"
                                 >
                                     <Edit size={18} />
-                                    Edit Template
+                                    <span className="hidden xs:inline">Edit</span>
                                 </button>
                                 <button 
                                     onClick={() => {
                                         setPreviewTemplate(null);
                                         setEditingTemplate(previewTemplate);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 text-white rounded-xl sm:rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
                                 >
                                     <Settings2 size={18} />
-                                    {t('industries.title')}
+                                    <span className="hidden xs:inline">{t('industries.title')}</span>
                                 </button>
                                 <button 
                                     onClick={() => {
                                         setPreviewTemplate(null);
                                         setThumbnailEditTemplate(previewTemplate);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-xl sm:rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                                 >
                                     <ImageIcon size={18} />
-                                    Change Thumbnail
+                                    <span className="hidden xs:inline">Thumbnail</span>
                                 </button>
                                 <button 
                                     onClick={() => {
                                         duplicateTemplate(previewTemplate.id);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
                                 >
                                     <Copy size={18} />
-                                    {t('superadmin.duplicateTemplate')}
+                                    <span className="hidden xs:inline">{t('superadmin.duplicateTemplate')}</span>
                                 </button>
                                 <button 
                                     onClick={() => {
                                         archiveTemplate(previewTemplate.id, !previewTemplate.isArchived);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
+                                    className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
                                 >
                                     {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
                                     {previewTemplate.isArchived ? 'Activate' : 'Archive'}

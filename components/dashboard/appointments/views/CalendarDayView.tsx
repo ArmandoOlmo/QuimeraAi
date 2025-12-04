@@ -91,26 +91,26 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     dayStart.setHours(0, 0, 0, 0);
     
     return (
-        <div className="flex-1 flex overflow-hidden bg-background">
-            {/* Left sidebar with day info */}
-            <div className="w-80 border-r border-border flex flex-col">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-background">
+            {/* Left sidebar with day info - Hidden on mobile, shown as header */}
+            <div className="hidden md:flex md:w-72 lg:w-80 border-r border-border flex-col">
                 {/* Day header */}
                 <div className={`
-                    p-6 border-b border-border
+                    p-4 lg:p-6 border-b border-border
                     ${isCurrentDay ? 'bg-primary/5' : ''}
                 `}>
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
                         {currentDate.toLocaleDateString('es-ES', { weekday: 'long' })}
                     </p>
-                    <p className={`text-4xl font-bold ${isCurrentDay ? 'text-primary' : 'text-foreground'}`}>
+                    <p className={`text-3xl lg:text-4xl font-bold ${isCurrentDay ? 'text-primary' : 'text-foreground'}`}>
                         {currentDate.getDate()}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                        {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                        {currentDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                     </p>
                     
                     {isCurrentDay && (
-                        <div className="mt-4 flex items-center gap-2 text-sm text-primary">
+                        <div className="mt-3 flex items-center gap-2 text-sm text-primary">
                             <div className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -121,10 +121,10 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                 </div>
                 
                 {/* Appointments list for the day */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-2 lg:space-y-3">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-foreground">
-                            Citas del día
+                            Citas
                         </h3>
                         <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
                             {dayAppointments.length}
@@ -132,17 +132,17 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     </div>
                     
                     {dayAppointments.length === 0 ? (
-                        <div className="text-center py-8">
-                            <Clock className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
+                        <div className="text-center py-6">
+                            <Clock className="mx-auto h-10 w-10 text-muted-foreground/30 mb-2" />
                             <p className="text-sm text-muted-foreground">
-                                No hay citas para este día
+                                Sin citas
                             </p>
                             <button
                                 onClick={() => onSlotClick(currentDate, workingHoursStart)}
-                                className="mt-3 text-sm text-primary hover:underline flex items-center gap-1 mx-auto"
+                                className="mt-2 text-sm text-primary hover:underline flex items-center gap-1 mx-auto"
                             >
                                 <Plus size={14} />
-                                Crear una cita
+                                Crear
                             </button>
                         </div>
                     ) : (
@@ -157,6 +157,29 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                         ))
                     )}
                 </div>
+            </div>
+            
+            {/* Mobile day header */}
+            <div className={`
+                md:hidden px-4 py-3 border-b border-border flex items-center justify-between
+                ${isCurrentDay ? 'bg-primary/5' : ''}
+            `}>
+                <div className="flex items-center gap-3">
+                    <p className={`text-2xl font-bold ${isCurrentDay ? 'text-primary' : 'text-foreground'}`}>
+                        {currentDate.getDate()}
+                    </p>
+                    <div>
+                        <p className="text-sm font-medium text-foreground">
+                            {currentDate.toLocaleDateString('es-ES', { weekday: 'short', month: 'short' })}
+                        </p>
+                        {isCurrentDay && (
+                            <span className="text-xs text-primary">Hoy</span>
+                        )}
+                    </div>
+                </div>
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                    {dayAppointments.length} cita{dayAppointments.length !== 1 ? 's' : ''}
+                </span>
             </div>
             
             {/* Main timeline view */}

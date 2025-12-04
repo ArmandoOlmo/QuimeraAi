@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import { 
     Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle, 
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap, 
@@ -37,11 +39,36 @@ type AdminFeature = {
     description: string;
     icon: React.ReactNode;
     category: 'core' | 'content' | 'development' | 'analytics' | 'system';
+    route: string;
     isPremium?: boolean;
     isNew?: boolean;
 };
 
 type ViewMode = 'grid' | 'list' | 'compact';
+
+// Route mapping for admin features
+const ADMIN_ROUTES: Record<string, string> = {
+    'admins': ROUTES.ADMIN_ADMINS,
+    'tenants': ROUTES.ADMIN_TENANTS,
+    'languages': ROUTES.ADMIN_LANGUAGES,
+    'prompts': ROUTES.ADMIN_PROMPTS,
+    'stats': ROUTES.ADMIN_STATS,
+    'billing': ROUTES.ADMIN_BILLING,
+    'templates': ROUTES.ADMIN_TEMPLATES,
+    'components': ROUTES.ADMIN_COMPONENTS,
+    'content': ROUTES.ADMIN_CONTENT,
+    'landing-navigation': ROUTES.ADMIN_LANDING_NAVIGATION,
+    'marketplace': ROUTES.ADMIN_MARKETPLACE,
+    'design-tokens': ROUTES.ADMIN_DESIGN_TOKENS,
+    'conditional-rules': ROUTES.ADMIN_CONDITIONAL_RULES,
+    'ab-testing': ROUTES.ADMIN_AB_TESTING,
+    'accessibility': ROUTES.ADMIN_ACCESSIBILITY,
+    'analytics': ROUTES.ADMIN_ANALYTICS,
+    'images': ROUTES.ADMIN_IMAGES,
+    'global-assistant': ROUTES.ADMIN_GLOBAL_ASSISTANT,
+    'global-seo': ROUTES.ADMIN_GLOBAL_SEO,
+    'app-info': ROUTES.ADMIN_APP_INFO,
+};
 
 // Components
 const AdminCard: React.FC<{ 
@@ -131,42 +158,54 @@ const CategoryChip: React.FC<{
 
 const SuperAdminDashboard = () => {
     const { t } = useTranslation();
-    const { setView, adminView, setAdminView } = useEditor();
+    const { adminView, setAdminView } = useEditor();
+    const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
+    // Navigate back to admin main
+    const handleBack = () => {
+        navigate(ROUTES.SUPERADMIN);
+        setAdminView('main');
+    };
+
+    // Navigate to dashboard
+    const handleBackToDashboard = () => {
+        navigate(ROUTES.DASHBOARD);
+    };
+
     const adminFeatures: AdminFeature[] = [
         // Core Management
-        { id: 'admins', title: t('superadmin.adminManagement'), description: t('superadmin.adminManagementDesc'), icon: <Shield size={24} />, category: 'core' },
-        { id: 'tenants', title: t('superadmin.tenantManagement'), description: t('superadmin.tenantManagementDesc'), icon: <Users size={24} />, category: 'core' },
-        { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core' },
-        { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core' },
-        { id: 'billing', title: t('superadmin.billing'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', isPremium: true },
+        { id: 'admins', title: t('superadmin.adminManagement'), description: t('superadmin.adminManagementDesc'), icon: <Shield size={24} />, category: 'core', route: ROUTES.ADMIN_ADMINS },
+        { id: 'tenants', title: t('superadmin.tenantManagement'), description: t('superadmin.tenantManagementDesc'), icon: <Users size={24} />, category: 'core', route: ROUTES.ADMIN_TENANTS },
+        { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES },
+        { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO },
+        { id: 'billing', title: t('superadmin.billing'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', route: ROUTES.ADMIN_BILLING, isPremium: true },
         
         // Content Management
-        { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content' },
-        { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content' },
-        { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content' },
-        { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content' },
-        { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content' },
+        { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES },
+        { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS },
+        { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT },
+        { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES },
+        { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION },
         
         // Development & Design
-        { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development' },
-        { id: 'marketplace', title: t('superadmin.marketplace'), description: t('superadmin.marketplaceDesc'), icon: <Store size={24} />, category: 'development' },
-        { id: 'conditional-rules', title: t('superadmin.conditionalRules'), description: t('superadmin.conditionalRulesDesc'), icon: <Zap size={24} />, category: 'development' },
-        { id: 'accessibility', title: t('superadmin.accessibilityChecker'), description: t('superadmin.accessibilityCheckerDesc'), icon: <Accessibility size={24} />, category: 'development' },
+        { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS },
+        { id: 'marketplace', title: t('superadmin.marketplace'), description: t('superadmin.marketplaceDesc'), icon: <Store size={24} />, category: 'development', route: ROUTES.ADMIN_MARKETPLACE },
+        { id: 'conditional-rules', title: t('superadmin.conditionalRules'), description: t('superadmin.conditionalRulesDesc'), icon: <Zap size={24} />, category: 'development', route: ROUTES.ADMIN_CONDITIONAL_RULES },
+        { id: 'accessibility', title: t('superadmin.accessibilityChecker'), description: t('superadmin.accessibilityCheckerDesc'), icon: <Accessibility size={24} />, category: 'development', route: ROUTES.ADMIN_ACCESSIBILITY },
         
         // Analytics & Testing
-        { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics' },
-        { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics' },
-        { id: 'ab-testing', title: t('superadmin.abTesting'), description: t('superadmin.abTestingDesc'), icon: <FlaskConical size={24} />, category: 'analytics', isNew: true },
+        { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS },
+        { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS },
+        { id: 'ab-testing', title: t('superadmin.abTesting'), description: t('superadmin.abTestingDesc'), icon: <FlaskConical size={24} />, category: 'analytics', route: ROUTES.ADMIN_AB_TESTING, isNew: true },
         
         // System & AI
-        { id: 'global-assistant', title: t('superadmin.globalAssistant'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'system' },
-        { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system' },
-        { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system' },
+        { id: 'global-assistant', title: t('superadmin.globalAssistant'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_ASSISTANT },
+        { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS },
+        { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO },
     ];
 
     const categories = useMemo(() => {
@@ -195,53 +234,34 @@ const SuperAdminDashboard = () => {
         });
     }, [adminFeatures, selectedCategory, searchQuery]);
 
-    const handleCardClick = (id: string) => {
-        switch (id) {
-            case 'admins': setAdminView('admins'); break;
-            case 'tenants': setAdminView('tenants'); break;
-            case 'languages': setAdminView('languages'); break;
-            case 'prompts': setAdminView('prompts'); break;
-            case 'stats': setAdminView('stats'); break;
-            case 'billing': setAdminView('billing'); break;
-            case 'templates': setAdminView('templates'); break;
-            case 'components': setAdminView('components'); break;
-            case 'content': setAdminView('content'); break;
-            case 'landing-navigation': setAdminView('landing-navigation'); break;
-            case 'marketplace': setAdminView('marketplace'); break;
-            case 'design-tokens': setAdminView('design-tokens'); break;
-            case 'conditional-rules': setAdminView('conditional-rules'); break;
-            case 'ab-testing': setAdminView('ab-testing'); break;
-            case 'accessibility': setAdminView('accessibility'); break;
-            case 'analytics': setAdminView('analytics'); break;
-            case 'images': setAdminView('images'); break;
-            case 'global-assistant': setAdminView('global-assistant'); break;
-            case 'global-seo': setAdminView('global-seo'); break;
-            case 'app-info': setAdminView('app-info'); break;
-            default: break;
-        }
+    const handleCardClick = (feature: AdminFeature) => {
+        // Navigate to the feature route
+        navigate(feature.route);
+        // Also update EditorContext for backwards compatibility
+        setAdminView(feature.id as any);
     };
 
-    // Views rendering
-    if (adminView === 'admins') return <AdminManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'tenants') return <TenantManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'languages') return <LanguageManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'prompts') return <LLMPromptManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'stats') return <UsageStatistics onBack={() => setAdminView('main')} />;
-    if (adminView === 'billing') return <BillingManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'templates') return <TemplateManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'components') return <ComponentsDashboard onBack={() => setAdminView('main')} />;
-    if (adminView === 'images') return <ImageLibraryManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'global-assistant') return <GlobalAssistantSettings onBack={() => setAdminView('main')} />;
-    if (adminView === 'global-seo') return <GlobalSEOSettings onBack={() => setAdminView('main')} />;
-    if (adminView === 'app-info') return <AppInformationSettings onBack={() => setAdminView('main')} />;
-    if (adminView === 'content') return <ContentManagementDashboard onBack={() => setAdminView('main')} />;
-    if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={() => setAdminView('main')} />;
-    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.componentMarketplace')} onBack={() => setAdminView('main')}><ComponentMarketplace /></AdminViewLayout>;
-    if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={() => setAdminView('main')}><DesignTokensEditor /></AdminViewLayout>;
-    if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={() => setAdminView('main')}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
-    if (adminView === 'ab-testing') return <AdminViewLayout title={t('superadmin.abTestingTitle')} onBack={() => setAdminView('main')} noPadding><ABTestingDashboard /></AdminViewLayout>;
-    if (adminView === 'accessibility') return <AdminViewLayout title={t('superadmin.accessibilityCheckerTitle')} onBack={() => setAdminView('main')} noPadding><AccessibilityChecker /></AdminViewLayout>;
-    if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={() => setAdminView('main')} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+    // Views rendering based on adminView state
+    if (adminView === 'admins') return <AdminManagement onBack={handleBack} />;
+    if (adminView === 'tenants') return <TenantManagement onBack={handleBack} />;
+    if (adminView === 'languages') return <LanguageManagement onBack={handleBack} />;
+    if (adminView === 'prompts') return <LLMPromptManagement onBack={handleBack} />;
+    if (adminView === 'stats') return <UsageStatistics onBack={handleBack} />;
+    if (adminView === 'billing') return <BillingManagement onBack={handleBack} />;
+    if (adminView === 'templates') return <TemplateManagement onBack={handleBack} />;
+    if (adminView === 'components') return <ComponentsDashboard onBack={handleBack} />;
+    if (adminView === 'images') return <ImageLibraryManagement onBack={handleBack} />;
+    if (adminView === 'global-assistant') return <GlobalAssistantSettings onBack={handleBack} />;
+    if (adminView === 'global-seo') return <GlobalSEOSettings onBack={handleBack} />;
+    if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
+    if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
+    if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
+    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.componentMarketplace')} onBack={handleBack}><ComponentMarketplace /></AdminViewLayout>;
+    if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
+    if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={handleBack}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
+    if (adminView === 'ab-testing') return <AdminViewLayout title={t('superadmin.abTestingTitle')} onBack={handleBack} noPadding><ABTestingDashboard /></AdminViewLayout>;
+    if (adminView === 'accessibility') return <AdminViewLayout title={t('superadmin.accessibilityCheckerTitle')} onBack={handleBack} noPadding><AccessibilityChecker /></AdminViewLayout>;
+    if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
@@ -286,7 +306,7 @@ const SuperAdminDashboard = () => {
                             </button>
                         </div>
                         <button 
-                            onClick={() => setView('dashboard')} 
+                            onClick={handleBackToDashboard} 
                             className="flex items-center text-sm font-medium text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
@@ -338,7 +358,7 @@ const SuperAdminDashboard = () => {
                         {filteredFeatures.length > 0 ? (
                             <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : viewMode === 'list' ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'}`}>
                                 {filteredFeatures.map(feature => (
-                                    <AdminCard key={feature.id} feature={feature} onClick={() => handleCardClick(feature.id)} viewMode={viewMode} />
+                                    <AdminCard key={feature.id} feature={feature} onClick={() => handleCardClick(feature)} viewMode={viewMode} />
                                 ))}
                             </div>
                         ) : (
@@ -371,4 +391,3 @@ const SuperAdminDashboard = () => {
 };
 
 export default SuperAdminDashboard;
-

@@ -232,7 +232,7 @@ const CMSDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-auto">
+                    <div className="flex items-center gap-1 sm:gap-2 ml-auto">
                         {/* Búsqueda Desktop - Compacta */}
                         <div className="relative group hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-4 h-4" />
@@ -245,40 +245,42 @@ const CMSDashboard: React.FC = () => {
                             />
                         </div>
 
-                        {/* Búsqueda Móvil */}
-                        <div className="md:hidden flex items-center gap-2">
+                        {/* Búsqueda Móvil - Expandable */}
+                        <div className="md:hidden">
                             {isMobileSearchOpen ? (
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search..." 
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-secondary/50 border border-border rounded-lg py-1.5 pl-9 pr-8 outline-none text-sm"
-                                        autoFocus
-                                    />
+                                <div className="absolute left-0 right-0 top-full bg-background border-b border-border p-3 flex items-center gap-2 animate-slide-down z-30">
+                                    <div className="flex-1 relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search posts..." 
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full bg-secondary/50 border border-border rounded-lg py-2 pl-9 pr-4 outline-none text-sm"
+                                            autoFocus
+                                        />
+                                    </div>
                                     <button
                                         onClick={() => {
                                             setIsMobileSearchOpen(false);
                                             setSearchQuery('');
                                         }}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
+                                        className="p-2 text-muted-foreground hover:text-foreground rounded-lg"
                                     >
-                                        <XIcon size={14} />
+                                        <XIcon size={18} />
                                     </button>
                                 </div>
                             ) : (
                                 <button
                                     onClick={() => setIsMobileSearchOpen(true)}
-                                    className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-md transition-colors"
+                                    className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-md transition-colors"
                                 >
                                     <Search className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
 
-                        {/* Botón Export */}
+                        {/* Botón Export - Desktop only */}
                         {cmsPosts.length > 0 && (
                             <button 
                                 onClick={handleExport}
@@ -289,79 +291,134 @@ const CMSDashboard: React.FC = () => {
                             </button>
                         )}
 
-                        {/* Botón Crear con IA */}
+                        {/* Botón Crear con IA - Mobile compact */}
                         <button 
                             onClick={handleAiCreate}
-                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-bold transition-all text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200"
+                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-bold transition-all text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200"
                         >
-                            <Sparkles className="w-4 h-4" />
-                            <span>Crear con IA</span>
+                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">Crear con IA</span>
+                            <span className="sm:hidden">IA</span>
                         </button>
 
                         <button 
                             onClick={handleCreateNew}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline">New Post</span>
-                            <span className="sm:hidden">New</span>
                         </button>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
-                    <div className="max-w-7xl mx-auto h-full space-y-6">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+                    <div className="max-w-7xl mx-auto h-full space-y-4 sm:space-y-6">
                         
-                        {/* Métricas - Simple inline stats */}
+                        {/* Métricas - Mobile optimized */}
                         {cmsPosts.length > 0 && (
-                            <div className="flex items-center gap-8 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="text-primary" size={18} />
-                                    <span className="text-muted-foreground">Total:</span>
-                                    <span className="font-bold text-foreground">{metrics.total}</span>
+                            <>
+                                {/* Desktop metrics */}
+                                <div className="hidden sm:flex items-center gap-8 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="text-primary" size={18} />
+                                        <span className="text-muted-foreground">Total:</span>
+                                        <span className="font-bold text-foreground">{metrics.total}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="text-green-500" size={18} />
+                                        <span className="text-muted-foreground">Published:</span>
+                                        <span className="font-bold text-green-500">{metrics.published}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <Edit3 className="text-yellow-500" size={18} />
+                                        <span className="text-muted-foreground">Drafts:</span>
+                                        <span className="font-bold text-yellow-500">{metrics.drafts}</span>
+                                    </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-2">
-                                    <Globe className="text-green-500" size={18} />
-                                    <span className="text-muted-foreground">Published:</span>
-                                    <span className="font-bold text-green-500">{metrics.published}</span>
+                                {/* Mobile metrics - compact grid */}
+                                <div className="sm:hidden grid grid-cols-3 gap-2">
+                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
+                                        <FileText className="text-primary mx-auto mb-1" size={16} />
+                                        <p className="text-lg font-bold text-foreground">{metrics.total}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase">Total</p>
+                                    </div>
+                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
+                                        <Globe className="text-green-500 mx-auto mb-1" size={16} />
+                                        <p className="text-lg font-bold text-green-500">{metrics.published}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase">Published</p>
+                                    </div>
+                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
+                                        <Edit3 className="text-yellow-500 mx-auto mb-1" size={16} />
+                                        <p className="text-lg font-bold text-yellow-500">{metrics.drafts}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase">Drafts</p>
+                                    </div>
                                 </div>
-                                
-                                <div className="flex items-center gap-2">
-                                    <Edit3 className="text-yellow-500" size={18} />
-                                    <span className="text-muted-foreground">Drafts:</span>
-                                    <span className="font-bold text-yellow-500">{metrics.drafts}</span>
-                                </div>
-                            </div>
+                            </>
                         )}
 
                         {/* Barra de Filtros */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3 flex-wrap">
-                                <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-muted-foreground font-medium">
-                                    {filteredAndSortedPosts.length} of {cmsPosts.length} posts
-                                </span>
-                                
-                                {/* Filtros activos */}
-                                {(statusFilter !== 'all' || dateRange !== 'all') && (
-                                    <button 
-                                        onClick={() => {
-                                            setStatusFilter('all');
-                                            setDateRange('all');
-                                        }}
-                                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                        <div className="space-y-3">
+                            {/* Top row - Count and view toggles */}
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-muted-foreground font-medium">
+                                        {filteredAndSortedPosts.length} of {cmsPosts.length}
+                                    </span>
+                                    
+                                    {/* Filtros activos */}
+                                    {(statusFilter !== 'all' || dateRange !== 'all') && (
+                                        <button 
+                                            onClick={() => {
+                                                setStatusFilter('all');
+                                                setDateRange('all');
+                                            }}
+                                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                                        >
+                                            <XIcon size={12} /> Clear
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                    {/* Orden asc/desc */}
+                                    <button
+                                        onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                        className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
+                                        title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                                     >
-                                        <XIcon size={12} /> Clear filters
+                                        {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
                                     </button>
-                                )}
+
+                                    {/* Vista Grid/List */}
+                                    <div className="flex gap-0.5 sm:gap-1">
+                                        <button
+                                            onClick={() => setViewMode('grid')}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            title="Grid View"
+                                        >
+                                            <Grid size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('list')}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            title="List View"
+                                        >
+                                            <List size={14} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-wrap">
+                            {/* Filters row - Horizontal scroll on mobile */}
+                            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
                                 {/* Filtro de estado */}
                                 <select 
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="published">Published</option>
@@ -372,7 +429,7 @@ const CMSDashboard: React.FC = () => {
                                 <select 
                                     value={dateRange}
                                     onChange={(e) => setDateRange(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
                                     <option value="all">All Time</option>
                                     <option value="today">Today</option>
@@ -384,38 +441,11 @@ const CMSDashboard: React.FC = () => {
                                 <select 
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
                                     <option value="date">Sort by Date</option>
                                     <option value="title">Sort by Title</option>
                                 </select>
-
-                                {/* Orden asc/desc */}
-                                <button
-                                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                    className="h-9 w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
-                                    title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                                >
-                                    {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-                                </button>
-
-                                {/* Vista Grid/List */}
-                                <div className="flex gap-1">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                        title="Grid View"
-                                    >
-                                        <Grid size={14} />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                        title="List View"
-                                    >
-                                        <List size={14} />
-                                    </button>
-                                </div>
                             </div>
                         </div>
 
@@ -446,107 +476,181 @@ const CMSDashboard: React.FC = () => {
                                 </button>
                             </div>
                         ) : viewMode === 'list' ? (
-                            /* Vista de Lista */
-                            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                                <table className="w-full">
-                                    <thead className="bg-secondary/20 border-b border-border">
-                                        <tr>
-                                            <th className="p-4 text-left w-12">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
-                                                    onChange={handleSelectAll}
-                                                    className="rounded border-border"
-                                                />
-                                            </th>
-                                            <th className="p-4 text-left text-xs font-medium text-muted-foreground">Title</th>
-                                            <th className="p-4 text-left text-xs font-medium text-muted-foreground">Status</th>
-                                            <th className="p-4 text-left text-xs font-medium text-muted-foreground">Date</th>
-                                            <th className="p-4 text-left text-xs font-medium text-muted-foreground w-32">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {filteredAndSortedPosts.map(post => (
-                                            <tr key={post.id} className="hover:bg-secondary/30 transition-colors group">
-                                                <td className="p-4">
+                            /* Vista de Lista - Mobile optimized */
+                            <>
+                                {/* Desktop Table View */}
+                                <div className="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
+                                    <table className="w-full">
+                                        <thead className="bg-secondary/20 border-b border-border">
+                                            <tr>
+                                                <th className="p-4 text-left w-12">
                                                     <input 
                                                         type="checkbox" 
-                                                        checked={selectedPosts.includes(post.id)}
-                                                        onChange={() => handleSelectPost(post.id)}
+                                                        checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
+                                                        onChange={handleSelectAll}
                                                         className="rounded border-border"
                                                     />
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 rounded overflow-hidden bg-secondary flex-shrink-0">
-                                                            {post.featuredImage ? (
-                                                                <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center">
-                                                                    <FileText size={20} className="text-muted-foreground opacity-30" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="overflow-hidden">
-                                                            <p className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</p>
-                                                            <p className="text-xs text-muted-foreground line-clamp-1">{post.excerpt || 'No excerpt'}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                                                        post.status === 'published' 
-                                                            ? 'bg-green-500/10 text-green-500' 
-                                                            : 'bg-yellow-500/10 text-yellow-500'
-                                                    }`}>
-                                                        {post.status}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4 text-sm text-muted-foreground">
-                                                    {new Date(post.updatedAt).toLocaleDateString()}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => handleQuickPreview(post)}
-                                                            className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
-                                                            title="Quick Preview"
-                                                        >
-                                                            <Eye size={14} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleEdit(post)}
-                                                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit2 size={14} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDuplicate(post)}
-                                                            className="p-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
-                                                            title="Duplicate"
-                                                        >
-                                                            <Copy size={14} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDelete(post.id)}
-                                                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                </th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Title</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Status</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Date</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground w-32">Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {filteredAndSortedPosts.map(post => (
+                                                <tr key={post.id} className="hover:bg-secondary/30 transition-colors group">
+                                                    <td className="p-4">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={selectedPosts.includes(post.id)}
+                                                            onChange={() => handleSelectPost(post.id)}
+                                                            className="rounded border-border"
+                                                        />
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 rounded overflow-hidden bg-secondary flex-shrink-0">
+                                                                {post.featuredImage ? (
+                                                                    <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center">
+                                                                        <FileText size={20} className="text-muted-foreground opacity-30" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="overflow-hidden">
+                                                                <p className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</p>
+                                                                <p className="text-xs text-muted-foreground line-clamp-1">{post.excerpt || 'No excerpt'}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
+                                                            post.status === 'published' 
+                                                                ? 'bg-green-500/10 text-green-500' 
+                                                                : 'bg-yellow-500/10 text-yellow-500'
+                                                        }`}>
+                                                            {post.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-sm text-muted-foreground">
+                                                        {new Date(post.updatedAt).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button 
+                                                                onClick={() => handleQuickPreview(post)}
+                                                                className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
+                                                                title="Quick Preview"
+                                                            >
+                                                                <Eye size={14} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleEdit(post)}
+                                                                className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDuplicate(post)}
+                                                                className="p-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
+                                                                title="Duplicate"
+                                                            >
+                                                                <Copy size={14} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDelete(post.id)}
+                                                                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Mobile List View - Card-based */}
+                                <div className="sm:hidden space-y-3">
+                                    {filteredAndSortedPosts.map(post => (
+                                        <div 
+                                            key={post.id} 
+                                            className="bg-card border border-border rounded-xl p-3 active:bg-secondary/30 transition-colors"
+                                            onClick={() => handleEdit(post)}
+                                        >
+                                            <div className="flex gap-3">
+                                                {/* Thumbnail */}
+                                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                                                    {post.featuredImage ? (
+                                                        <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <FileText size={24} className="text-muted-foreground opacity-30" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Content */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                                        <h4 className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</h4>
+                                                        <span className={`flex-shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                                                            post.status === 'published' 
+                                                                ? 'bg-green-500/10 text-green-500' 
+                                                                : 'bg-yellow-500/10 text-yellow-500'
+                                                        }`}>
+                                                            {post.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{post.excerpt || 'No excerpt'}</p>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                            <Calendar size={10} />
+                                                            {new Date(post.updatedAt).toLocaleDateString()}
+                                                        </span>
+                                                        
+                                                        {/* Quick actions */}
+                                                        <div className="flex items-center gap-0.5">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
+                                                                className="p-1.5 text-muted-foreground hover:text-blue-500 rounded transition-colors"
+                                                            >
+                                                                <Eye size={14} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDuplicate(post); }}
+                                                                className="p-1.5 text-muted-foreground hover:text-green-500 rounded transition-colors"
+                                                            >
+                                                                <Copy size={14} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
+                                                                className="p-1.5 text-muted-foreground hover:text-red-500 rounded transition-colors"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         ) : (
-                            /* Vista de Grid */
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            /* Vista de Grid - Mobile optimized */
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                 {filteredAndSortedPosts.map(post => (
-                                    <div key={post.id} className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] h-[400px]">
+                                    <div 
+                                        key={post.id} 
+                                        className="group relative rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl sm:hover:scale-[1.02] h-[280px] sm:h-[400px]"
+                                        onClick={() => handleEdit(post)}
+                                    >
                                         {/* Full Background Image */}
                                         <div className="relative w-full h-full overflow-hidden">
                                             {post.featuredImage ? (
@@ -557,7 +661,8 @@ const CMSDashboard: React.FC = () => {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-secondary">
-                                                    <FileText size={60} className="text-muted-foreground opacity-20" />
+                                                    <FileText size={40} className="sm:hidden text-muted-foreground opacity-20" />
+                                                    <FileText size={60} className="hidden sm:block text-muted-foreground opacity-20" />
                                                 </div>
                                             )}
                                             
@@ -565,14 +670,30 @@ const CMSDashboard: React.FC = () => {
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
                                             {/* Top Section: Status Badge */}
-                                            <div className="absolute top-4 left-4 z-20">
-                                                <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
+                                            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20">
+                                                <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
                                                     {post.status}
                                                 </span>
                                             </div>
 
-                                            {/* Hover Actions Overlay */}
-                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] gap-3 z-10">
+                                            {/* Mobile: Always visible quick actions at top right */}
+                                            <div className="sm:hidden absolute top-3 right-3 z-20 flex gap-1">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
+                                                    className="bg-white/90 text-blue-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
+                                                    className="bg-white/90 text-red-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+
+                                            {/* Desktop: Hover Actions Overlay */}
+                                            <div className="hidden sm:flex absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
                                                     className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
@@ -604,20 +725,22 @@ const CMSDashboard: React.FC = () => {
                                             </div>
 
                                             {/* Bottom Section: Title and Date */}
-                                            <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
-                                                <h3 className="font-bold text-2xl text-white line-clamp-2 mb-3 group-hover:text-primary/90 transition-colors" title={post.title}>
+                                            <div className="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
+                                                <h3 className="font-bold text-lg sm:text-2xl text-white line-clamp-2 mb-2 sm:mb-3 group-hover:text-primary/90 transition-colors" title={post.title}>
                                                     {post.title}
                                                 </h3>
                                                 <div className="flex items-center justify-between text-white/90">
                                                     <div className="flex items-center">
-                                                        <Calendar size={16} className="mr-2"/> 
-                                                        <span className="text-sm font-medium">
-                                                            Updated {new Date(post.updatedAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                                                        <Calendar size={12} className="sm:hidden mr-1.5"/> 
+                                                        <Calendar size={16} className="hidden sm:block mr-2"/> 
+                                                        <span className="text-xs sm:text-sm font-medium">
+                                                            {new Date(post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                         </span>
                                                     </div>
                                                     {post.status === 'published' && (
                                                         <div title="Published">
-                                                            <Globe size={16} className="text-green-400" />
+                                                            <Globe size={14} className="sm:hidden text-green-400" />
+                                                            <Globe size={16} className="hidden sm:block text-green-400" />
                                                         </div>
                                                     )}
                                                 </div>
@@ -628,45 +751,55 @@ const CMSDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Quick Preview Modal */}
+                        {/* Quick Preview Modal - Mobile optimized */}
                         {previewPost && (
-                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPreviewPost(null)}>
-                                <div className="bg-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                                    <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-lg line-clamp-1">{previewPost.title}</h3>
-                                            <p className="text-xs text-muted-foreground mt-1">
+                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewPost(null)}>
+                                <div 
+                                    className="bg-card w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in" 
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Header */}
+                                    <div className="sticky top-0 bg-card border-b border-border px-4 py-3 sm:p-4 flex items-center justify-between z-10 shrink-0">
+                                        {/* Mobile drag indicator */}
+                                        <div className="sm:hidden absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-border rounded-full" />
+                                        
+                                        <div className="flex-1 min-w-0 pr-2">
+                                            <h3 className="font-bold text-base sm:text-lg line-clamp-1">{previewPost.title}</h3>
+                                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                                                 {new Date(previewPost.updatedAt).toLocaleDateString()} • {previewPost.status}
                                             </p>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                                             <button 
                                                 onClick={() => {
                                                     handleEdit(previewPost);
                                                     setPreviewPost(null);
                                                 }}
-                                                className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+                                                className="px-2.5 py-1.5 sm:px-3 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
                                             >
                                                 Edit
                                             </button>
                                             <button 
                                                 onClick={() => setPreviewPost(null)}
-                                                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                                                className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg transition-colors"
                                             >
-                                                <XIcon size={20} />
+                                                <XIcon size={18} className="sm:hidden" />
+                                                <XIcon size={20} className="hidden sm:block" />
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="p-6">
+                                    
+                                    {/* Content - scrollable */}
+                                    <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                                         {previewPost.featuredImage && (
                                             <img 
                                                 src={previewPost.featuredImage} 
                                                 alt={previewPost.title} 
-                                                className="w-full rounded-lg mb-6"
+                                                className="w-full rounded-lg mb-4 sm:mb-6"
                                             />
                                         )}
                                         {previewPost.excerpt && (
-                                            <p className="text-muted-foreground italic mb-4 pb-4 border-b border-border">
+                                            <p className="text-sm sm:text-base text-muted-foreground italic mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
                                                 {previewPost.excerpt}
                                             </p>
                                         )}
@@ -679,22 +812,22 @@ const CMSDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Bulk Actions Bar */}
+                        {/* Bulk Actions Bar - Mobile optimized */}
                         {selectedPosts.length > 0 && (
-                            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl shadow-2xl p-4 flex items-center gap-4 z-50 animate-fade-in-up">
-                                <span className="text-sm font-medium text-foreground">
+                            <div className="fixed bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto bg-card border border-border rounded-xl shadow-2xl p-3 sm:p-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 z-50 animate-fade-in-up">
+                                <span className="text-xs sm:text-sm font-medium text-foreground">
                                     {selectedPosts.length} selected
                                 </span>
                                 <div className="flex items-center gap-2">
                                     <button 
                                         onClick={handleBulkDelete}
-                                        className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
+                                        className="px-2.5 sm:px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
                                     >
-                                        <Trash2 size={12} /> Delete
+                                        <Trash2 size={12} /> <span className="hidden sm:inline">Delete</span>
                                     </button>
                                     <button 
                                         onClick={() => setSelectedPosts([])}
-                                        className="px-3 py-1.5 text-xs bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors"
+                                        className="px-2.5 sm:px-3 py-1.5 text-xs bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors"
                                     >
                                         Cancel
                                     </button>

@@ -74,39 +74,38 @@ const DayGroup: React.FC<DayGroupProps> = ({
     };
     
     return (
-        <div className={`mb-8 ${isPast ? 'opacity-60' : ''}`}>
+        <div className={`mb-6 sm:mb-8 ${isPast ? 'opacity-60' : ''}`}>
             {/* Date header */}
-            <div className="flex items-center gap-3 mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10">
                 <div className={`
-                    flex items-center gap-2 px-3 py-1.5 rounded-full
+                    flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full
                     ${isCurrentDay 
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-muted text-foreground'
                     }
                 `}>
-                    <Calendar size={14} />
-                    <span className="font-semibold text-sm capitalize">
+                    <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
+                    <span className="font-semibold text-xs sm:text-sm capitalize">
                         {getDateLabel()}
                     </span>
                 </div>
                 
                 {!isCurrentDay && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
                         {dateObj.toLocaleDateString('es-ES', { 
                             day: 'numeric', 
-                            month: 'short',
-                            year: dateObj.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined 
+                            month: 'short'
                         })}
                     </span>
                 )}
                 
-                <span className="text-xs text-muted-foreground ml-auto">
-                    {appointments.length} cita{appointments.length !== 1 ? 's' : ''}
+                <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">
+                    {appointments.length}
                 </span>
             </div>
             
             {/* Appointments grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {appointments.map((apt, index) => (
                     <AppointmentCard
                         key={apt.id}
@@ -193,13 +192,13 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
     let animationDelay = 0;
     
     return (
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
             {/* Upcoming section */}
             {upcoming.length > 0 && (
-                <section className="mb-12">
-                    <div className="flex items-center gap-2 mb-6">
-                        <h2 className="text-xl font-bold text-foreground">Próximas</h2>
-                        <ChevronRight size={20} className="text-muted-foreground" />
+                <section className="mb-8 sm:mb-12">
+                    <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                        <h2 className="text-lg sm:text-xl font-bold text-foreground">Próximas</h2>
+                        <ChevronRight size={18} className="sm:w-5 sm:h-5 text-muted-foreground" />
                     </div>
                     
                     {upcoming.map((group) => {
@@ -223,9 +222,9 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             {/* Past section */}
             {past.length > 0 && (
                 <section>
-                    <div className="flex items-center gap-2 mb-6">
-                        <h2 className="text-xl font-bold text-foreground">Pasadas</h2>
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                    <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                        <h2 className="text-lg sm:text-xl font-bold text-foreground">Pasadas</h2>
+                        <span className="text-[10px] sm:text-xs bg-muted px-1.5 sm:px-2 py-0.5 rounded-full text-muted-foreground">
                             {past.reduce((sum, g) => sum + g.appointments.length, 0)}
                         </span>
                     </div>

@@ -33,6 +33,7 @@ import { Modality } from '@google/genai';
 import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApiKey, getCachedApiKey } from '../utils/genAiClient';
 import { deploymentService } from '../utils/deploymentService';
 import { logApiCall } from '../services/apiLoggingService';
+import { router } from '../hooks/useRouter';
 
 
 // Helper to generate HTML. This is a simplification.
@@ -1715,7 +1716,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             }
 
             if (navigateToEditor) {
+                // Update view state immediately for responsive UI
                 setView('editor');
+                // Navigate using router to update URL properly
+                router.navigateToEditor(projectId);
             }
 
             if (fromAdmin && projectToLoad.status === 'Template') {

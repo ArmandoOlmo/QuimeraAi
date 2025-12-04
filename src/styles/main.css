@@ -612,6 +612,29 @@ body {
   100% { transform: translateX(200%) skewX(-15deg); }
 }
 
+/* Mobile Navigation Animations */
+@keyframes slideInFromLeft {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes slideInFromRight {
+  from { 
+    opacity: 0; 
+    transform: translateX(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
 /* Animation Classes */
 .animate-hero-float { animation: heroFloat 6s ease-in-out infinite; }
 .animate-shimmer { animation: shimmer 2s infinite linear; }
@@ -632,3 +655,91 @@ body {
 .animate-text-gradient { background-size: 200% auto; animation: text-gradient 4s linear infinite; }
 .animate-gradient-border { background: linear-gradient(90deg, #4f46e5, #10b981, #4f46e5); background-size: 200% 200%; animation: gradient-rotate 3s ease infinite; }
 .animate-shine::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); animation: shine 3s ease-in-out infinite; }
+
+/* ============================================
+   MOBILE OPTIMIZATIONS
+   ============================================ */
+
+/* Safe Area Support for notched devices (iPhone X+) */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling for iOS */
+.scroll-smooth-ios {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Mobile-first button reset for better touch targets */
+@media (max-width: 1023px) {
+  button, 
+  [role="button"],
+  a[href] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger touch targets on mobile for nav items */
+  nav button,
+  nav a {
+    padding: 12px 16px;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom thin scrollbar for sidebar navigation */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}

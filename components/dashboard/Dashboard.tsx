@@ -2,6 +2,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectCard from './ProjectCard';
 import ProjectCardSkeleton from './ProjectCardSkeleton';
@@ -25,10 +27,10 @@ const Dashboard: React.FC = () => {
     projects, 
     isLoadingProjects,
     view, 
-    setView, 
     setIsOnboardingOpen,
     addNewProject
   } = useEditor();
+  const { navigate } = useRouter();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -682,7 +684,7 @@ const Dashboard: React.FC = () => {
                                 {t('dashboard.recentProjects')}
                                 </h2>
                                 {allUserProjects.length > 0 && (
-                                <button onClick={() => setView('websites')} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
+                                <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
                                     {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
                                 </button>
                                 )}

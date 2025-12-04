@@ -405,56 +405,53 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 </div>
                 
                 {/* Time & Location */}
-                <div className="space-y-2.5 mb-4">
+                <div className="space-y-2 sm:space-y-2.5 mb-3 sm:mb-4">
                     {/* Date & Time */}
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <div className={`
-                            p-1.5 rounded-lg bg-white/5 
+                            p-1 sm:p-1.5 rounded-lg bg-white/5 
                             ${textColorClasses[typeConfig.color]}
                         `}>
-                            <Clock size={14} />
+                            <Clock size={12} className="sm:w-3.5 sm:h-3.5" />
                         </div>
-                        <div>
+                        <div className="flex flex-wrap items-center">
                             <span className="text-foreground font-medium">
                                 {today ? 'Hoy' : startDate.toLocaleDateString('es-ES', { 
-                                    weekday: 'short', 
                                     day: 'numeric', 
                                     month: 'short' 
                                 })}
                             </span>
-                            <span className="text-muted-foreground mx-1.5">·</span>
+                            <span className="text-muted-foreground mx-1">·</span>
                             <span className="text-muted-foreground">
-                                {formatTime(appointment.startDate)} - {formatTime(appointment.endDate)}
+                                {formatTime(appointment.startDate)}
                             </span>
-                            <span className="text-muted-foreground/60 ml-1.5">
-                                ({formatDuration(duration)})
+                            <span className="text-muted-foreground/60 ml-1 hidden sm:inline">
+                                - {formatTime(appointment.endDate)} ({formatDuration(duration)})
                             </span>
                         </div>
                     </div>
                     
-                    {/* Location */}
+                    {/* Location - Hidden on very small screens */}
                     {appointment.location && (
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="hidden xs:flex items-center gap-2 text-xs sm:text-sm">
                             <div className={`
-                                p-1.5 rounded-lg bg-white/5 
+                                p-1 sm:p-1.5 rounded-lg bg-white/5 
                                 ${textColorClasses[typeConfig.color]}
                             `}>
                                 {appointment.location.type === 'virtual' ? (
-                                    <Video size={14} />
+                                    <Video size={12} className="sm:w-3.5 sm:h-3.5" />
                                 ) : appointment.location.type === 'phone' ? (
-                                    <Phone size={14} />
+                                    <Phone size={12} className="sm:w-3.5 sm:h-3.5" />
                                 ) : (
-                                    <MapPin size={14} />
+                                    <MapPin size={12} className="sm:w-3.5 sm:h-3.5" />
                                 )}
                             </div>
-                            <span className="text-muted-foreground truncate">
+                            <span className="text-muted-foreground truncate max-w-[150px] sm:max-w-none">
                                 {appointment.location.type === 'virtual' 
-                                    ? appointment.location.meetingUrl 
-                                        ? new URL(appointment.location.meetingUrl).hostname.replace('www.', '')
-                                        : 'Enlace pendiente'
+                                    ? 'Virtual'
                                     : appointment.location.type === 'phone'
-                                        ? appointment.location.phoneNumber || 'Llamada telefónica'
-                                        : appointment.location.address || 'Ubicación pendiente'
+                                        ? 'Llamada'
+                                        : 'Presencial'
                                 }
                             </span>
                         </div>
@@ -462,23 +459,23 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 </div>
                 
                 {/* Participants */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-1 sm:gap-2">
                         {/* Avatar stack */}
-                        <div className="flex -space-x-2">
-                            {appointment.participants.slice(0, 4).map((participant, index) => (
+                        <div className="flex -space-x-1.5 sm:-space-x-2">
+                            {appointment.participants.slice(0, 3).map((participant, index) => (
                                 <div
                                     key={participant.id}
                                     className={`
-                                        relative w-8 h-8 rounded-full 
+                                        relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
                                         ${getAvatarColor(participant.name)}
                                         flex items-center justify-center
-                                        text-xs font-bold text-white
+                                        text-[10px] sm:text-xs font-bold text-white
                                         border-2 border-card
                                         transition-transform duration-300
                                         hover:scale-110 hover:z-10
                                     `}
-                                    style={{ zIndex: 4 - index }}
+                                    style={{ zIndex: 3 - index }}
                                     title={participant.name}
                                 >
                                     {participant.avatar ? (
@@ -490,52 +487,43 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     ) : (
                                         getInitials(participant.name)
                                     )}
-                                    
-                                    {/* Status indicator */}
-                                    {participant.status === 'accepted' && (
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
-                                    )}
-                                    {participant.status === 'declined' && (
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-card" />
-                                    )}
                                 </div>
                             ))}
                             
-                            {appointment.participants.length > 4 && (
+                            {appointment.participants.length > 3 && (
                                 <div className="
-                                    relative w-8 h-8 rounded-full 
+                                    relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
                                     bg-muted
                                     flex items-center justify-center
-                                    text-xs font-bold text-muted-foreground
+                                    text-[10px] sm:text-xs font-bold text-muted-foreground
                                     border-2 border-card
                                 ">
-                                    +{appointment.participants.length - 4}
+                                    +{appointment.participants.length - 3}
                                 </div>
                             )}
                         </div>
                         
-                        {/* Participant count */}
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                            {appointment.participants.length} participante{appointment.participants.length !== 1 ? 's' : ''}
+                        {/* Participant count - hidden on mobile */}
+                        <span className="text-xs text-muted-foreground hidden md:inline">
+                            {appointment.participants.length}
                         </span>
                     </div>
                     
                     {/* Right side indicators */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                         {/* AI Insights indicator */}
                         {appointment.aiInsights && (
                             <div className={`
-                                flex items-center gap-1 px-2 py-1 rounded-full
+                                flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full
                                 bg-purple-500/10 text-purple-500
-                                text-xs font-medium
+                                text-[10px] sm:text-xs font-medium
                             `}>
-                                <Sparkles size={12} />
-                                <span className="hidden sm:inline">IA</span>
+                                <Sparkles size={10} className="sm:w-3 sm:h-3" />
                             </div>
                         )}
                         
-                        {/* Relative time */}
-                        <span className="text-xs text-muted-foreground">
+                        {/* Relative time - shortened on mobile */}
+                        <span className="text-[10px] sm:text-xs text-muted-foreground max-w-[60px] sm:max-w-none truncate">
                             {getRelativeTime(appointment.startDate)}
                         </span>
                     </div>

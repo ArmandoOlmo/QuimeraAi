@@ -65,6 +65,9 @@ import {
     requestAuthorization,
     revokeAccess,
     isAuthenticated,
+    getSavedConnectionState,
+    syncAppointmentToGoogle,
+    getCalendarEvents,
 } from '../../../utils/googleCalendarService';
 
 // =============================================================================
@@ -153,18 +156,41 @@ const AppointmentsDashboard: React.FC = () => {
     }, []);
     
     const handleCreateAppointment = useCallback(async (data: Partial<Appointment>) => {
+        let createdAppointment: Appointment | null = null;
+        
         if (editingAppointment) {
             // Update existing appointment
             await updateAppointment(editingAppointment.id, data);
+            createdAppointment = { ...editingAppointment, ...data } as Appointment;
         } else {
-            // Create new appointment
-            await createAppointment(data);
+            // Create new appointment - returns the full Appointment object with id
+            createdAppointment = await createAppointment(data);
         }
+        
+        // Auto-sync to Google Calendar if connected
+        if (isGoogleConnected && createdAppointment) {
+            try {
+                console.log('🔄 Auto-syncing to Google Calendar...');
+                
+                const syncResult = await syncAppointmentToGoogle(createdAppointment, 'primary', true);
+                
+                if (syncResult.syncStatus === 'synced') {
+                    await updateAppointment(createdAppointment.id, { googleSync: syncResult });
+                    console.log('✅ Auto-synced to Google Calendar!');
+                } else {
+                    console.warn('⚠️ Sync completed with status:', syncResult.syncStatus);
+                }
+            } catch (syncError) {
+                console.error('⚠️ Error auto-syncing to Google:', syncError);
+                // Don't fail the creation, just log the sync error
+            }
+        }
+        
         setIsCreateModalOpen(false);
         setCreateModalInitialDate(undefined);
         setCreateModalInitialHour(undefined);
         setEditingAppointment(null);
-    }, [createAppointment, updateAppointment, editingAppointment]);
+    }, [createAppointment, updateAppointment, editingAppointment, isGoogleConnected]);
     
     const handleEditAppointment = useCallback(() => {
         if (selectedAppointment) {
@@ -242,24 +268,32 @@ const AppointmentsDashboard: React.FC = () => {
         
         const initGoogle = async () => {
             try {
+                console.log('🔄 Initializing Google Calendar API...');
                 await loadGoogleApiScripts();
                 await initializeGapiClient();
                 initializeTokenClient(
                     (token) => {
+                        console.log('✅ Token received via callback');
                         setIsGoogleConnected(true);
                         setGoogleError(null);
                     },
                     (error) => {
+                        console.error('❌ Token error:', error.message);
                         setGoogleError(error.message);
                         setIsGoogleConnected(false);
                     }
                 );
-                // Check if already authenticated
-                if (isAuthenticated()) {
+                
+                // Check if already authenticated or was previously connected
+                const wasConnected = getSavedConnectionState();
+                if (isAuthenticated() || wasConnected) {
+                    console.log('📌 Restoring previous connection state');
                     setIsGoogleConnected(true);
                 }
+                
+                console.log('✅ Google Calendar API initialized');
             } catch (error: any) {
-                console.error('Error initializing Google API:', error);
+                console.error('❌ Error initializing Google API:', error);
                 setGoogleError('Error al inicializar Google API');
             }
         };
@@ -278,11 +312,19 @@ const AppointmentsDashboard: React.FC = () => {
         setGoogleError(null);
         
         try {
-            await requestAuthorization();
+            console.log('🔗 Connecting to Google Calendar...');
+            const token = await requestAuthorization();
+            console.log('✅ Connected! Token received:', token ? 'Yes' : 'No');
             setIsGoogleConnected(true);
+            setGoogleError(null);
         } catch (error: any) {
-            console.error('Error connecting to Google:', error);
-            setGoogleError(error.message || 'Error al conectar con Google Calendar');
+            console.error('❌ Error connecting to Google:', error);
+            // Check for popup blocked
+            if (error.message?.includes('popup')) {
+                setGoogleError('Por favor, permite las ventanas emergentes para conectar con Google Calendar');
+            } else {
+                setGoogleError(error.message || 'Error al conectar con Google Calendar');
+            }
             setIsGoogleConnected(false);
         } finally {
             setIsGoogleLoading(false);
@@ -309,16 +351,51 @@ const AppointmentsDashboard: React.FC = () => {
         }
         
         setIsGoogleLoading(true);
+        setGoogleError(null);
+        
         try {
-            // TODO: Implement full sync with Google Calendar
+            console.log('🔄 Syncing appointments to Google Calendar...');
+            
+            // Sync each appointment to Google Calendar
+            let syncedCount = 0;
+            let errorCount = 0;
+            
+            for (const appointment of appointments) {
+                try {
+                    console.log(`📅 Syncing: ${appointment.title}`);
+                    const syncResult = await syncAppointmentToGoogle(appointment, 'primary', true);
+                    
+                    if (syncResult.syncStatus === 'synced') {
+                        // Update the appointment with Google sync info
+                        await updateAppointment(appointment.id, {
+                            googleSync: syncResult,
+                        });
+                        syncedCount++;
+                        console.log(`✅ Synced: ${appointment.title}`);
+                    } else {
+                        errorCount++;
+                        console.error(`❌ Error syncing: ${appointment.title}`, syncResult.errorMessage);
+                    }
+                } catch (err) {
+                    errorCount++;
+                    console.error(`❌ Error syncing appointment ${appointment.title}:`, err);
+                }
+            }
+            
             await refresh();
-            setGoogleError(null);
+            
+            if (errorCount > 0) {
+                setGoogleError(`Sincronización completada con ${errorCount} errores`);
+            } else {
+                console.log(`✅ All ${syncedCount} appointments synced successfully!`);
+            }
         } catch (error: any) {
-            setGoogleError(error.message);
+            console.error('❌ Sync error:', error);
+            setGoogleError(error.message || 'Error al sincronizar con Google Calendar');
         } finally {
             setIsGoogleLoading(false);
         }
-    }, [isGoogleConnected, refresh]);
+    }, [isGoogleConnected, appointments, updateAppointment, refresh]);
     
     // Search filter
     const displayedAppointments = useMemo(() => {
@@ -365,23 +442,23 @@ const AppointmentsDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-16 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)} 
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                            className="lg:hidden h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
                         
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded-xl">
-                                <Calendar className="text-primary w-5 h-5" />
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg sm:rounded-xl">
+                                <Calendar className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-foreground">Citas</h1>
-                                <p className="text-xs text-muted-foreground hidden sm:block">
-                                    {todayAppointments.length} hoy · {upcomingAppointments.length} próximas
+                                <h1 className="text-base sm:text-lg font-bold text-foreground">Citas</h1>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
+                                    {todayAppointments.length} hoy · {upcomingAppointments.length} próx.
                                 </p>
                             </div>
                         </div>
@@ -405,7 +482,7 @@ const AppointmentsDashboard: React.FC = () => {
                         </div>
                         
                         {/* View Mode Toggle */}
-                        <div className="flex items-center bg-secondary/50 rounded-xl p-1">
+                        <div className="flex items-center bg-secondary/50 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
                             {[
                                 { id: 'day' as ViewMode, icon: CalendarDays, label: 'Día' },
                                 { id: 'week' as ViewMode, icon: CalendarRange, label: 'Semana' },
@@ -417,14 +494,14 @@ const AppointmentsDashboard: React.FC = () => {
                                     onClick={() => setViewMode(id)}
                                     title={label}
                                     className={`
-                                        p-2 rounded-lg transition-all duration-200
+                                        p-1.5 sm:p-2 rounded-md sm:rounded-lg transition-all duration-200
                                         ${viewMode === id 
                                             ? 'bg-background text-primary shadow-sm' 
                                             : 'text-muted-foreground hover:text-foreground'
                                         }
                                     `}
                                 >
-                                    <Icon size={18} />
+                                    <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
                                 </button>
                             ))}
                         </div>
@@ -455,55 +532,55 @@ const AppointmentsDashboard: React.FC = () => {
                                 setCreateModalInitialHour(undefined);
                                 setIsCreateModalOpen(true);
                             }}
-                            className="h-9 px-4 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm"
+                            className="h-8 sm:h-9 px-2.5 sm:px-4 bg-primary text-primary-foreground rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 hover:opacity-90 transition-opacity shadow-sm"
                         >
-                            <Plus size={18} />
-                            <span className="hidden sm:inline">Nueva Cita</span>
+                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                            <span className="hidden sm:inline">Nueva</span>
                         </button>
                     </div>
                 </header>
                 
                 {/* Secondary Header - Navigation & Filters */}
-                <div className="px-6 py-3 border-b border-border/50 flex items-center justify-between bg-background/80 backdrop-blur-sm">
+                <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-border/50 flex items-center justify-between bg-background/80 backdrop-blur-sm">
                     {/* Date Navigation */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                         <button
                             onClick={() => navigateDate('prev')}
-                            className="p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
                         </button>
                         
                         <button
                             onClick={() => navigateDate('today')}
-                            className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                            className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
                         >
                             Hoy
                         </button>
                         
                         <button
                             onClick={() => navigateDate('next')}
-                            className="p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight size={18} className="sm:w-5 sm:h-5" />
                         </button>
                         
-                        <h2 className="ml-2 text-lg font-bold text-foreground capitalize">
+                        <h2 className="ml-1 sm:ml-2 text-sm sm:text-lg font-bold text-foreground capitalize line-clamp-1 max-w-[120px] sm:max-w-none">
                             {getDateLabel()}
                         </h2>
                     </div>
                     
                     {/* Search & Filters */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                         {/* Search */}
                         <div className="relative hidden sm:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Buscar citas..."
+                                placeholder="Buscar..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-9 w-48 lg:w-64 bg-secondary/50 border border-border/50 rounded-xl pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/70"
+                                className="h-8 sm:h-9 w-32 sm:w-48 lg:w-64 bg-secondary/50 border border-border/50 rounded-xl pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/70"
                             />
                         </div>
                         
@@ -511,7 +588,7 @@ const AppointmentsDashboard: React.FC = () => {
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`
-                                h-9 px-3 rounded-xl flex items-center gap-2 text-sm font-medium transition-colors
+                                h-8 sm:h-9 px-2 sm:px-3 rounded-xl flex items-center gap-1 sm:gap-2 text-sm font-medium transition-colors
                                 ${showFilters || Object.values(filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))
                                     ? 'bg-primary/10 text-primary'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -519,19 +596,18 @@ const AppointmentsDashboard: React.FC = () => {
                             `}
                         >
                             <Filter size={16} />
-                            <span className="hidden lg:inline">Filtros</span>
                         </button>
                         
                         {/* Refresh */}
                         <button
                             onClick={refresh}
                             disabled={isLoading}
-                            className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                            className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
                         >
                             {isLoading ? (
-                                <Loader2 size={18} className="animate-spin" />
+                                <Loader2 size={16} className="sm:w-[18px] sm:h-[18px] animate-spin" />
                             ) : (
-                                <RefreshCw size={18} />
+                                <RefreshCw size={16} className="sm:w-[18px] sm:h-[18px]" />
                             )}
                         </button>
                     </div>

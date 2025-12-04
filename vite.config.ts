@@ -31,6 +31,13 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: true, // Permite acceso desde cualquier IP (equivalente a '0.0.0.0' pero más compatible)
         open: true, // Abre el navegador automáticamente
+        // SPA fallback - todas las rutas van a index.html
+        historyApiFallback: true,
+      },
+      // Configuración de preview server
+      preview: {
+        port: 3000,
+        host: true,
       },
       plugins: [react()],
       define: {

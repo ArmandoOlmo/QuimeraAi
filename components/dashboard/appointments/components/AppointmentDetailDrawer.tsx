@@ -210,10 +210,10 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                 <div className={`
                     relative overflow-hidden
                     bg-gradient-to-br ${gradientClasses[typeConfig.color]}
-                    p-6 pb-16
+                    p-4 sm:p-6 pb-14 sm:pb-16
                 `}>
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 opacity-10">
+                    {/* Background pattern - hidden on small screens for performance */}
+                    <div className="absolute inset-0 opacity-10 hidden sm:block">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
                     </div>
@@ -221,44 +221,44 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     {/* Close button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+                        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
                     >
-                        <X size={20} />
+                        <X size={18} className="sm:w-5 sm:h-5" />
                     </button>
                     
                     {/* Header content */}
                     <div className="relative z-[1]">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-white/80 text-sm font-medium">
+                        <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                            <span className="text-white/80 text-xs sm:text-sm font-medium">
                                 {typeConfig.label}
                             </span>
                             <span className="text-white/40">·</span>
                             <span className={`
-                                px-2 py-0.5 rounded-full text-xs font-semibold
+                                px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold
                                 bg-white/20 text-white
                             `}>
                                 {statusConfig.label}
                             </span>
                         </div>
                         
-                        <h2 className="text-2xl font-bold text-white mb-2">
+                        <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5 sm:mb-2 line-clamp-2">
                             {appointment.title}
                         </h2>
                         
-                        <div className="flex items-center gap-4 text-white/80 text-sm">
-                            <div className="flex items-center gap-1.5">
-                                <Calendar size={14} />
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/80 text-xs sm:text-sm">
+                            <div className="flex items-center gap-1">
+                                <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
                                 {startDate.toLocaleDateString('es-ES', { 
-                                    weekday: 'short', 
                                     day: 'numeric', 
                                     month: 'short' 
                                 })}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Clock size={14} />
-                                {formatTime(appointment.startDate)} - {formatTime(appointment.endDate)}
+                            <div className="flex items-center gap-1">
+                                <Clock size={12} className="sm:w-3.5 sm:h-3.5" />
+                                {formatTime(appointment.startDate)}
+                                <span className="hidden sm:inline">- {formatTime(appointment.endDate)}</span>
                             </div>
-                            <span className="text-white/60">
+                            <span className="text-white/60 hidden sm:inline">
                                 ({formatDuration(duration)})
                             </span>
                         </div>
@@ -266,17 +266,17 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                 </div>
                 
                 {/* Quick Actions Bar */}
-                <div className="px-6 -mt-8 relative z-10 flex gap-2">
+                <div className="px-4 sm:px-6 -mt-7 sm:-mt-8 relative z-10 flex gap-1.5 sm:gap-2">
                     {/* Join button */}
                     {appointment.location?.meetingUrl && (
                         <a
                             href={appointment.location.meetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-3 bg-card border border-border rounded-xl shadow-lg font-semibold text-sm text-foreground flex items-center justify-center gap-2 hover:bg-secondary transition-colors"
+                            className="flex-1 py-2.5 sm:py-3 bg-card border border-border rounded-xl shadow-lg font-semibold text-xs sm:text-sm text-foreground flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
-                            <Video size={18} className="text-primary" />
-                            Unirse
+                            <Video size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
+                            <span>Unirse</span>
                         </a>
                     )}
                     
@@ -284,14 +284,14 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     <div className="relative">
                         <button
                             onClick={() => setShowStatusMenu(!showStatusMenu)}
-                            className="h-full px-4 bg-card border border-border rounded-xl shadow-lg text-sm text-foreground flex items-center gap-2 hover:bg-secondary transition-colors"
+                            className="h-full px-2.5 sm:px-4 bg-card border border-border rounded-xl shadow-lg text-xs sm:text-sm text-foreground flex items-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
                             {isChangingStatus ? (
-                                <Loader2 size={16} className="animate-spin" />
+                                <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" />
                             ) : (
-                                <CheckCircle2 size={16} />
+                                <CheckCircle2 size={14} className="sm:w-4 sm:h-4" />
                             )}
-                            Estado
+                            <span className="hidden sm:inline">Estado</span>
                         </button>
                         
                         {showStatusMenu && (
@@ -712,29 +712,29 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                 </div>
                 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-border bg-secondary/20 flex gap-2">
+                <div className="p-3 sm:p-4 border-t border-border bg-secondary/20 flex gap-1.5 sm:gap-2">
                     <button
                         onClick={() => downloadAsICS(appointment)}
-                        className="flex-1 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                        className="flex-1 py-2 sm:py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                     >
-                        <Download size={16} />
-                        Exportar
+                        <Download size={14} className="sm:w-4 sm:h-4" />
+                        <span className="hidden xs:inline">Exportar</span>
                     </button>
                     {onEdit && (
                         <button
                             onClick={onEdit}
-                            className="flex-1 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                            className="flex-1 py-2 sm:py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                         >
-                            <Edit size={16} />
-                            Editar
+                            <Edit size={14} className="sm:w-4 sm:h-4" />
+                            <span className="hidden xs:inline">Editar</span>
                         </button>
                     )}
                     {onDelete && (
                         <button
                             onClick={onDelete}
-                            className="py-2.5 px-4 text-red-500 hover:bg-red-500/10 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                            className="py-2 sm:py-2.5 px-3 sm:px-4 text-red-500 hover:bg-red-500/10 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={14} className="sm:w-4 sm:h-4" />
                         </button>
                     )}
                 </div>

@@ -194,8 +194,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
             {/* Header with days */}
             <div className="flex border-b border-border sticky top-0 z-20 bg-background">
                 {/* Time column header */}
-                <div className="w-16 flex-shrink-0 border-r border-border p-2">
-                    <span className="text-xs text-muted-foreground font-medium">
+                <div className="w-10 sm:w-14 lg:w-16 flex-shrink-0 border-r border-border p-1 sm:p-2">
+                    <span className="text-[8px] sm:text-xs text-muted-foreground font-medium hidden sm:block">
                         GMT{new Date().getTimezoneOffset() / -60 >= 0 ? '+' : ''}{new Date().getTimezoneOffset() / -60}
                     </span>
                 </div>
@@ -210,16 +210,16 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                         <div
                             key={dayKey}
                             className={`
-                                flex-1 p-3 text-center border-r border-border last:border-r-0
-                                transition-colors
+                                flex-1 p-1.5 sm:p-3 text-center border-r border-border last:border-r-0
+                                transition-colors min-w-[80px] sm:min-w-0
                                 ${isCurrentDay ? 'bg-primary/5' : ''}
                             `}
                         >
-                            <p className={`text-xs font-medium uppercase tracking-wider ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <p className={`text-[10px] sm:text-xs font-medium uppercase tracking-wider ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
                                 {DAYS_ES[day.getDay()]}
                             </p>
                             <p className={`
-                                text-2xl font-bold mt-1
+                                text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1
                                 ${isCurrentDay 
                                     ? 'text-primary' 
                                     : 'text-foreground'
@@ -229,14 +229,14 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             </p>
                             {dayAppointments.length > 0 && (
                                 <div className={`
-                                    mt-1 inline-flex items-center justify-center
-                                    px-2 py-0.5 rounded-full text-xs font-medium
+                                    mt-0.5 sm:mt-1 inline-flex items-center justify-center
+                                    px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium
                                     ${isCurrentDay 
                                         ? 'bg-primary/20 text-primary' 
                                         : 'bg-muted text-muted-foreground'
                                     }
                                 `}>
-                                    {dayAppointments.length} cita{dayAppointments.length !== 1 ? 's' : ''}
+                                    {dayAppointments.length}
                                 </div>
                             )}
                         </div>
@@ -249,23 +249,23 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                 ref={scrollContainerRef}
                 className="flex-1 overflow-auto custom-scrollbar"
             >
-                <div className="flex min-w-[800px]">
+                <div className="flex min-w-[560px] sm:min-w-[700px] lg:min-w-[800px]">
                     {/* Time column */}
-                    <div className="w-16 flex-shrink-0 border-r border-border relative">
+                    <div className="w-10 sm:w-14 lg:w-16 flex-shrink-0 border-r border-border relative">
                         {HOURS.map(hour => (
                             <div
                                 key={hour}
-                                className="border-b border-border/30 flex items-start justify-end pr-2 pt-1"
+                                className="border-b border-border/30 flex items-start justify-end pr-1 sm:pr-2 pt-1"
                                 style={{ height: `${HOUR_HEIGHT}px` }}
                             >
                                 <span className={`
-                                    text-xs font-medium
+                                    text-[10px] sm:text-xs font-medium
                                     ${hour >= workingHoursStart && hour < workingHoursEnd 
                                         ? 'text-muted-foreground' 
                                         : 'text-muted-foreground/50'
                                     }
                                 `}>
-                                    {hour.toString().padStart(2, '0')}:00
+                                    {hour}
                                 </span>
                             </div>
                         ))}
