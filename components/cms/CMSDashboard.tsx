@@ -223,8 +223,8 @@ const CMSDashboard: React.FC = () => {
                 {/* Standardized Header */}
                 <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
-                            <Menu className="w-4 h-4" />
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
+                            <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <PenTool className="text-primary w-5 h-5" />

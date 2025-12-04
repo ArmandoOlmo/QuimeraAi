@@ -232,6 +232,7 @@ const Controls: React.FC = () => {
       componentStatus,
       componentStyles, // Access global defaults
       isSidebarOpen,
+      setIsSidebarOpen,
       uploadImageAndGetURL,
       menus,
       activeProject,
@@ -4303,11 +4304,13 @@ const Controls: React.FC = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   onSectionSelect(null as any);
+                  // Close sidebar on mobile when closing properties
+                  setIsSidebarOpen(false);
                 }}
-                className="p-1 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded transition-colors"
+                className="p-2 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded-lg transition-colors touch-manipulation"
                 title={t('controls.closePropertiesPanel')}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
             <p className="text-base font-semibold text-editor-text-primary">

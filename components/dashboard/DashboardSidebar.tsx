@@ -313,34 +313,34 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          setIsDragging(false);
+          setDragOffset(0);
+        }}
         className={`
             fixed lg:relative z-50 h-screen bg-background border-r border-border 
             shadow-2xl lg:shadow-xl flex flex-col
-            transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
+            ${isDragging ? '' : 'transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
             ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            ${isCollapsed ? 'w-[80px]' : 'w-[85vw] max-w-[320px] lg:w-72'}
+            ${isMobileOpen ? 'w-[85vw] max-w-[320px]' : 'w-0 lg:w-auto'}
+            ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
+            ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
             ${hiddenOnDesktop ? 'lg:hidden' : ''}
-            safe-area-inset-left
         `}
-        style={{
-          transform: isMobileOpen && isDragging 
-            ? `translateX(-${dragOffset}px)` 
-            : undefined,
-          // Add smooth transitions only when not dragging
-          transition: isDragging ? 'none' : undefined,
-        }}
+        style={isMobileOpen && isDragging && dragOffset > 0 ? {
+          transform: `translateX(-${dragOffset}px)`,
+        } : undefined}
         role="navigation"
         aria-label="Main navigation"
-        aria-hidden={!isMobileOpen}
       >
         {/* Header / Logo - Enhanced for mobile */}
         <div className="relative h-[72px] lg:h-[80px] flex items-center justify-between px-4 lg:px-0 lg:justify-center border-b border-border/50 lg:border-none">
-            <div className={`relative h-full flex items-center transition-all duration-300 ${isCollapsed ? 'lg:px-0 lg:justify-center' : 'lg:px-6 lg:w-full gap-3'}`}>
+            <div className={`relative h-full flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6 lg:w-full'}`}>
                  {/* Logo Image */}
                 <img 
                     src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
                     alt="Quimera Logo" 
-                    className="w-9 h-9 lg:w-10 lg:h-10 object-contain flex-shrink-0" 
+                    className="w-10 h-10 object-contain flex-shrink-0" 
                 />
                  {/* Text Logo (Hidden when collapsed on desktop) */}
                 <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>

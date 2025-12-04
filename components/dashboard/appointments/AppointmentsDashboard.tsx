@@ -446,7 +446,7 @@ const AppointmentsDashboard: React.FC = () => {
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)} 
-                            className="lg:hidden h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                            className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
                         >
                             <Menu className="w-5 h-5" />
                         </button>

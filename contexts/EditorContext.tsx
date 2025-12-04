@@ -1459,6 +1459,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const onSectionSelect = (section: PageSection) => {
         setActiveSection(section);
+        // Auto-open sidebar on mobile when selecting a section
+        if (section) {
+            setIsSidebarOpen(true);
+        }
         const element = document.getElementById(section);
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });

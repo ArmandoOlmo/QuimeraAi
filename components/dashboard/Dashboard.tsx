@@ -235,11 +235,11 @@ const Dashboard: React.FC = () => {
              <div className="flex items-center gap-4 flex-shrink-0">
                 <button 
                    onClick={() => setIsMobileMenuOpen(true)} 
-                   className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
+                   className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
                    aria-label="Open navigation menu"
                    aria-expanded={isMobileMenuOpen}
                 >
-                   <Menu className="w-4 h-4" />
+                   <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2">
                     <HeaderIcon className="text-primary" size={24} aria-hidden="true" />

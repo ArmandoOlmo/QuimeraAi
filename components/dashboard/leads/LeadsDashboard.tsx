@@ -623,8 +623,8 @@ const LeadsDashboard: React.FC = () => {
                     {/* Main header row */}
                     <div className="flex items-center justify-between h-[52px] sm:h-14">
                         <div className="flex items-center gap-2 sm:gap-4">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
-                                <Menu className="w-4 h-4" />
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
+                                <Menu className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2 sm:gap-4">
                                 <div className="flex items-center gap-1.5 sm:gap-2">
