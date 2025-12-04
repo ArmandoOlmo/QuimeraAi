@@ -18,15 +18,15 @@ interface LogoProps {
   logoImageUrl: string;
   logoWidth: number;
   textColor: string;
-  forceShowText?: boolean; // For mobile drawer where text should always show
+  compact?: boolean; // For mobile header - smaller text
 }
 
-const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor, forceShowText = false }) => {
+const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor, compact = false }) => {
   const showImage = (logoType === 'image' || logoType === 'both') && logoImageUrl;
   const showText = (logoType === 'text' || logoType === 'both');
 
   return (
-    <a href="#" className="flex items-center gap-3 flex-shrink-0 relative z-50 group">
+    <a href="#" className="flex items-center gap-2 md:gap-3 flex-shrink-0 relative z-50 group">
         {showImage && (
              <img
                 src={logoImageUrl}
@@ -37,7 +37,7 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
         )}
         {showText && (
             <span 
-              className={`${forceShowText ? '' : 'hidden md:inline'} text-2xl font-bold font-header tracking-tight transition-colors`} 
+              className={`${compact ? 'text-lg' : 'text-xl md:text-2xl'} font-bold font-header tracking-tight transition-colors truncate max-w-[150px] md:max-w-none`} 
               style={{ color: textColor }}
             >
               {logoText}
@@ -375,19 +375,19 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
              )}
 
             <button 
-                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                onClick={() => setIsMenuOpen(true)} 
                 className="
                   flex items-center justify-center w-11 h-11 -mr-2
                   rounded-full hover:bg-white/10 active:bg-white/20
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50
                   transition-all duration-200 touch-manipulation active:scale-95
                 "
-                style={{ color: isMenuOpen ? colors.text : finalTextColor }}
-                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                style={{ color: finalTextColor }}
+                aria-label="Open menu"
                 aria-expanded={isMenuOpen}
                 aria-controls="mobile-menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <Menu className="w-6 h-6" />
             </button>
           </div>
 
@@ -428,22 +428,19 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
         aria-modal="true"
         aria-label="Navigation menu"
       >
-          {/* Close button - Touch optimized with 44px minimum target */}
-          <button
-            onClick={() => setIsMenuOpen(false)}
-            className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center 
-                      rounded-full hover:bg-white/10 active:bg-white/20 
-                      transition-colors touch-manipulation active:scale-95 z-10"
-            style={{ color: colors.text }}
-            aria-label="Close menu"
-          >
-            <X size={24} />
-          </button>
-
-          <div className="flex flex-col h-full p-6 pt-20 safe-area-inset-right">
-              {/* Logo section */}
-              <div className="mb-6">
-                  <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={Math.min(logoWidth, 120)} textColor={colors.text} forceShowText />
+          <div className="flex flex-col h-full p-6 pt-6 safe-area-inset-right">
+              {/* Close button at top */}
+              <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-11 h-11 flex items-center justify-center 
+                              rounded-full hover:bg-white/10 active:bg-white/20 
+                              transition-colors touch-manipulation active:scale-95"
+                    style={{ color: colors.text }}
+                    aria-label="Close menu"
+                  >
+                    <X size={24} />
+                  </button>
               </div>
               
               {/* Navigation links - Touch optimized with staggered animation */}
