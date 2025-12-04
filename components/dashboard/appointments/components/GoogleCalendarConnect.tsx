@@ -41,12 +41,14 @@ interface GoogleCalendarConnectProps {
 // =============================================================================
 
 const GoogleCalendarIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19.5 4H18V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H4.5C3.12 4 2 5.12 2 6.5v13C2 20.88 3.12 22 4.5 22h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 5.12 20.88 4 19.5 4zM4.5 6H6v1c0 .55.45 1 1 1s1-.45 1-1V6h8v1c0 .55.45 1 1 1s1-.45 1-1V6h1.5c.28 0 .5.22.5.5V9H4V6.5c0-.28.22-.5.5-.5zm15 14H4.5c-.28 0-.5-.22-.5-.5V11h16v8.5c0 .28-.22.5-.5.5z"/>
-        <path fill="#EA4335" d="M7 13h3v3H7z"/>
-        <path fill="#FBBC05" d="M11 13h3v3h-3z"/>
-        <path fill="#34A853" d="M15 13h3v3h-3z"/>
-        <path fill="#4285F4" d="M7 17h3v2H7z"/>
+    <svg className={className} viewBox="0 0 24 24">
+        {/* Calendar base - gray */}
+        <path fill="#5F6368" d="M19.5 4H18V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H4.5C3.12 4 2 5.12 2 6.5v13C2 20.88 3.12 22 4.5 22h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 5.12 20.88 4 19.5 4zM4.5 6H6v1c0 .55.45 1 1 1s1-.45 1-1V6h8v1c0 .55.45 1 1 1s1-.45 1-1V6h1.5c.28 0 .5.22.5.5V9H4V6.5c0-.28.22-.5.5-.5zm15 14H4.5c-.28 0-.5-.22-.5-.5V11h16v8.5c0 .28-.22.5-.5.5z"/>
+        {/* Google colors squares */}
+        <rect fill="#EA4335" x="6" y="12" width="4" height="4" rx="0.5"/>
+        <rect fill="#FBBC05" x="11" y="12" width="4" height="4" rx="0.5"/>
+        <rect fill="#34A853" x="6" y="17" width="4" height="2" rx="0.5"/>
+        <rect fill="#4285F4" x="11" y="17" width="4" height="2" rx="0.5"/>
     </svg>
 );
 
@@ -166,14 +168,16 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     <button
                         onClick={handleConnect}
                         disabled={isLoading}
-                        className="w-full py-3 px-4 bg-white hover:bg-gray-50 border border-border rounded-xl font-medium text-foreground flex items-center justify-center gap-3 transition-colors shadow-sm disabled:opacity-50"
+                        className="w-full py-3 px-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-900 flex items-center justify-center gap-3 transition-colors shadow-sm disabled:opacity-50"
                     >
                         {isLoading ? (
-                            <Loader2 size={20} className="animate-spin" />
+                            <Loader2 size={20} className="animate-spin text-gray-700" />
                         ) : (
                             <GoogleCalendarIcon className="w-5 h-5" />
                         )}
-                        {isLoading ? 'Conectando...' : 'Conectar con Google Calendar'}
+                        <span className="text-gray-800">
+                            {isLoading ? 'Conectando...' : 'Conectar con Google Calendar'}
+                        </span>
                     </button>
                     
                     <p className="text-xs text-muted-foreground text-center mt-3">

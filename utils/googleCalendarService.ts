@@ -17,6 +17,13 @@ const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
+// Debug: Log credential status on load
+console.log('🔑 Google Calendar credentials status:', {
+    hasClientId: !!GOOGLE_CLIENT_ID,
+    hasApiKey: !!GOOGLE_API_KEY,
+    clientIdPrefix: GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.substring(0, 15) + '...' : 'NOT SET'
+});
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -113,8 +120,11 @@ export const getSavedConnectionState = (): boolean => {
  */
 export const loadGoogleApiScripts = (): Promise<void> => {
     return new Promise((resolve, reject) => {
+        console.log('📦 Loading Google API scripts...');
+        
         // Check if already loaded
         if (window.gapi && window.google?.accounts) {
+            console.log('✅ Google API scripts already loaded');
             resolve();
             return;
         }
@@ -125,16 +135,26 @@ export const loadGoogleApiScripts = (): Promise<void> => {
         gapiScript.async = true;
         gapiScript.defer = true;
         gapiScript.onload = () => {
+            console.log('✅ GAPI script loaded');
             // Load GIS
             const gisScript = document.createElement('script');
             gisScript.src = 'https://accounts.google.com/gsi/client';
             gisScript.async = true;
             gisScript.defer = true;
-            gisScript.onload = () => resolve();
-            gisScript.onerror = () => reject(new Error('Error loading Google Identity Services'));
+            gisScript.onload = () => {
+                console.log('✅ GIS script loaded');
+                resolve();
+            };
+            gisScript.onerror = (e) => {
+                console.error('❌ Error loading GIS script:', e);
+                reject(new Error('Error loading Google Identity Services'));
+            };
             document.head.appendChild(gisScript);
         };
-        gapiScript.onerror = () => reject(new Error('Error loading Google API'));
+        gapiScript.onerror = (e) => {
+            console.error('❌ Error loading GAPI script:', e);
+            reject(new Error('Error loading Google API'));
+        };
         document.head.appendChild(gapiScript);
     });
 };
@@ -143,18 +163,30 @@ export const loadGoogleApiScripts = (): Promise<void> => {
  * Inicializa el cliente GAPI
  */
 export const initializeGapiClient = async (): Promise<void> => {
-    if (gapiInited) return;
+    if (gapiInited) {
+        console.log('✅ GAPI client already initialized');
+        return;
+    }
+    
+    console.log('🔧 Initializing GAPI client...');
+    
+    if (!GOOGLE_API_KEY) {
+        console.warn('⚠️ GOOGLE_API_KEY not set - some features may not work');
+    }
     
     await new Promise<void>((resolve, reject) => {
         window.gapi.load('client', async () => {
             try {
+                console.log('📡 Loading GAPI client with discovery doc...');
                 await window.gapi.client.init({
                     apiKey: GOOGLE_API_KEY,
                     discoveryDocs: [DISCOVERY_DOC],
                 });
                 gapiInited = true;
+                console.log('✅ GAPI client initialized successfully');
                 resolve();
-            } catch (error) {
+            } catch (error: any) {
+                console.error('❌ Error initializing GAPI client:', error?.message || error);
                 reject(error);
             }
         });
@@ -168,22 +200,43 @@ export const initializeTokenClient = (
     onTokenReceived: (token: string) => void,
     onError: (error: Error) => void
 ): void => {
-    if (gisInited) return;
+    if (gisInited) {
+        console.log('✅ Token client already initialized');
+        return;
+    }
     
-    tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPES,
-        callback: (response: any) => {
-            if (response.error) {
-                onError(new Error(response.error));
-                return;
-            }
-            accessToken = response.access_token;
-            onTokenReceived(response.access_token);
-        },
-    });
+    console.log('🔐 Initializing token client...');
     
-    gisInited = true;
+    if (!GOOGLE_CLIENT_ID) {
+        console.error('❌ GOOGLE_CLIENT_ID not configured! Add VITE_GOOGLE_CLIENT_ID to your .env.local file');
+        onError(new Error('Google Client ID no configurado. Reinicia el servidor después de configurar VITE_GOOGLE_CLIENT_ID en .env.local'));
+        return;
+    }
+    
+    try {
+        console.log('🔑 Using Client ID:', GOOGLE_CLIENT_ID.substring(0, 15) + '...');
+        
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: SCOPES,
+            callback: (response: any) => {
+                if (response.error) {
+                    console.error('❌ Token callback error:', response.error);
+                    onError(new Error(response.error));
+                    return;
+                }
+                console.log('✅ Token received successfully');
+                accessToken = response.access_token;
+                onTokenReceived(response.access_token);
+            },
+        });
+        
+        gisInited = true;
+        console.log('✅ Token client initialized successfully');
+    } catch (error: any) {
+        console.error('❌ Error initializing token client:', error);
+        onError(error);
+    }
 };
 
 // =============================================================================
