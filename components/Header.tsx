@@ -357,122 +357,84 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
           {/* Desktop Layouts */}
           {renderLayout()}
 
-          {/* Mobile Toggle - Touch optimized with minimum 44px target */}
-          <div className="md:hidden flex items-center relative z-50 ml-auto">
-            {/* In Stack layout mobile, ensure logo is visible if it wasn't rendered in the main flow due to responsiveness */}
-             {layout === 'stack' && (
-                 <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center" style={{ left: '-80vw'}}> 
-                    {/* Positioning hack for stack mobile to keep logo visible, simplified below */}
-                 </div>
-             )}
-             {/* For stack layout on mobile, we usually want the logo left and menu right, standard behavior handles this via the mobile drawer */}
-             
-             {/* In Stack layout, the desktop logic hides the logo inside the flex col. We need a mobile-only logo if stack */}
-             {layout === 'stack' && (
-                 <div className="md:hidden absolute right-14 top-1/2 -translate-y-1/2">
-                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={80} textColor={finalTextColor} />
-                 </div>
-             )}
-
-            <button 
-                onClick={() => setIsMenuOpen(true)} 
-                className="
-                  flex items-center justify-center w-11 h-11 -mr-2
-                  rounded-full hover:bg-white/10 active:bg-white/20
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50
-                  transition-all duration-200 touch-manipulation active:scale-95
-                "
-                style={{ color: finalTextColor }}
-                aria-label="Open menu"
-                aria-expanded={isMenuOpen}
-                aria-controls="mobile-menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-          </div>
+          {/* Mobile Menu Button - Only visible on mobile */}
+          <button 
+            onClick={() => setIsMenuOpen(true)} 
+            className="md:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation ml-auto"
+            style={{ color: finalTextColor }}
+            aria-label="Abrir menú"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
 
         </div>
       </div>
       
-      {/* Mobile Menu Overlay - Enhanced with smooth transition */}
-      <div 
-        className={`
-          fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
-          transition-all duration-300 ease-out md:hidden 
-          ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-        `}
-        onClick={() => setIsMenuOpen(false)}
-        aria-hidden="true"
-      />
+      {/* ===== MOBILE MENU ===== */}
+      {/* Overlay */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[100] md:hidden"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
 
-      {/* Mobile Menu Drawer - Enhanced with swipe gestures and safe areas */}
+      {/* Drawer */}
       <div 
         ref={drawerRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         className={`
-            fixed top-0 right-0 bottom-0 w-[85vw] max-w-[340px] z-40 
-            transform transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden
-            shadow-2xl
-            ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
+          fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[101] 
+          transform transition-transform duration-300 ease-out md:hidden
+          ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
-        style={{ 
-          backgroundColor: colors.background,
-          transform: isMenuOpen && isDragging 
-            ? `translateX(${dragOffset}px)` 
-            : undefined,
-          transition: isDragging ? 'none' : undefined,
-        }}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
+        style={{ backgroundColor: colors.background }}
       >
-          <div className="flex flex-col h-full p-6 pt-6 safe-area-inset-right">
-              {/* Close button at top */}
-              <div className="flex justify-end mb-4">
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-11 h-11 flex items-center justify-center 
-                              rounded-full hover:bg-white/10 active:bg-white/20 
-                              transition-colors touch-manipulation active:scale-95"
-                    style={{ color: colors.text }}
-                    aria-label="Close menu"
-                  >
-                    <X size={24} />
-                  </button>
-              </div>
-              
-              {/* Navigation links - Touch optimized with staggered animation */}
-              <nav className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-                   <NavLinks 
-                        links={links} 
-                        textColor={colors.text} 
-                        accentColor={colors.accent} 
-                        hoverStyle="simple" 
-                        className="flex flex-col space-y-2" 
-                        isMobile
-                        onLinkClick={() => setIsMenuOpen(false)}
-                    />
-              </nav>
-              
-              {/* Footer actions - Touch optimized */}
-              <div className="pt-6 border-t border-white/10 space-y-3 safe-area-inset-bottom">
-                 {showLogin && (
-                     <a 
-                        href={loginUrl || '#'} 
-                        className="block w-full text-center py-3 font-bold text-base 
-                                  rounded-xl hover:bg-white/5 active:bg-white/10 
-                                  transition-colors touch-manipulation"
-                        style={{ color: colors.text }}
-                        onClick={() => setIsMenuOpen(false)}
-                     >
-                         {loginText}
-                     </a>
-                 )}
-                 {showCta && <CtaButton fullWidth />}
-              </div>
+        <div className="flex flex-col h-full p-5">
+          {/* Close button */}
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+              style={{ color: colors.text }}
+              aria-label="Cerrar menú"
+            >
+              <X size={24} />
+            </button>
           </div>
+          
+          {/* Navigation Links */}
+          <nav className="flex-1">
+            <ul className="space-y-1">
+              {links.map((link) => (
+                <li key={link.text}>
+                  <a 
+                    href={link.href} 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors"
+                    style={{ color: colors.text }}
+                  >
+                    {link.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            {showLogin && (
+              <a 
+                href={loginUrl || '#'} 
+                onClick={() => setIsMenuOpen(false)}
+                className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors"
+                style={{ color: colors.text }}
+              >
+                {loginText}
+              </a>
+            )}
+            {showCta && <CtaButton fullWidth />}
+          </div>
+        </div>
       </div>
     </header>
   );
