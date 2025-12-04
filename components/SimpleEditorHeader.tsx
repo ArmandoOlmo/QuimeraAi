@@ -5,14 +5,9 @@ import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import ThemeToggle from './ui/ThemeToggle';
 import LanguageSelector from './ui/LanguageSelector';
-import { Menu, LayoutDashboard, Check, CloudUpload, Globe, Monitor, Tablet, Smartphone, SlidersHorizontal } from 'lucide-react';
-import { PreviewDevice } from '../types';
+import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal } from 'lucide-react';
 
-interface SimpleEditorHeaderProps {
-  onMenuClick?: () => void;
-}
-
-const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) => {
+const SimpleEditorHeader: React.FC = () => {
   const { t } = useTranslation();
   const { 
     activeProject, 
@@ -20,10 +15,6 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     saveProject,
     isEditingTemplate, 
     exitTemplateEditor,
-    previewDevice,
-    setPreviewDevice,
-    previewOrientation,
-    setPreviewOrientation,
     isSidebarOpen,
     setIsSidebarOpen
   } = useEditor();
@@ -87,53 +78,29 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     }
   };
 
-  const deviceOptions: { name: PreviewDevice; icon: React.ReactNode }[] = [
-    { name: 'desktop', icon: <Monitor className="w-4 h-4" /> },
-    { name: 'tablet', icon: <Tablet className="w-4 h-4" /> },
-    { name: 'mobile', icon: <Smartphone className="w-4 h-4" /> },
-  ];
-
-  const orientationOptions = [
-    { value: 'portrait', label: t('editor.portrait'), short: 'P' },
-    { value: 'landscape', label: t('editor.landscape'), short: 'L' },
-  ] as const;
-
-  const orientationDisabled = previewDevice === 'desktop';
-
   return (
-    <header className="h-14 px-4 md:px-6 border-b border-border flex items-center gap-4 bg-background z-20 sticky top-0" role="banner">
-      <div className="flex items-center gap-4 min-w-0 flex-1">
-        {/* Mobile Menu Button - Dashboard Sidebar */}
-        {onMenuClick && (
-          <button 
-            onClick={onMenuClick}
-            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden"
-            title={t('common.menu')}
-          >
-            <Menu className="w-4 h-4" />
-          </button>
-        )}
+    <header className="h-14 px-3 md:px-6 border-b border-border flex items-center gap-2 md:gap-4 bg-background z-20 sticky top-0" role="banner">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+        {/* Dashboard Button - More prominent on mobile */}
+        <button 
+          title={t('editor.goToDashboard')} 
+          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl md:rounded-full transition-colors touch-manipulation"
+          onClick={handleGoToDashboard}
+        >
+          <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
+        </button>
         
         {/* Mobile Controls Button - Editor Controls Panel */}
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`h-9 w-9 flex items-center justify-center hover:bg-border/40 rounded-full transition-colors md:hidden ${
+          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center hover:bg-secondary/80 rounded-xl md:rounded-full transition-colors touch-manipulation md:hidden ${
             isSidebarOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
           }`}
           title={t('editor.toggleControls')}
           aria-label={t('editor.toggleControls')}
           aria-pressed={isSidebarOpen}
         >
-          <SlidersHorizontal className="w-4 h-4" />
-        </button>
-        
-        {/* Dashboard Button */}
-        <button 
-          title={t('editor.goToDashboard')} 
-          className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
-          onClick={handleGoToDashboard}
-        >
-          <LayoutDashboard className="w-4 h-4" />
+          <SlidersHorizontal className="w-5 h-5" />
         </button>
 
         {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
@@ -159,44 +126,6 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
               {projectName}
             </button>
           )}
-        </div>
-      </div>
-
-      {/* Device & Orientation Controls */}
-      <div className="hidden md:flex items-center gap-3">
-        <div className="flex items-center gap-1">
-          {deviceOptions.map(({ name, icon }) => (
-            <button
-              key={name}
-              title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
-              onClick={() => setPreviewDevice(name)}
-              className={`h-9 w-9 flex items-center justify-center transition-all ${
-                previewDevice === name 
-                  ? 'text-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {icon}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
-          {orientationOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setPreviewOrientation(option.value)}
-              disabled={orientationDisabled}
-              className={`h-9 w-9 text-xs font-semibold transition-all ${
-                previewOrientation === option.value
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              aria-label={`Preview ${option.label}`}
-              aria-pressed={previewOrientation === option.value}
-            >
-              {option.short}
-            </button>
-          ))}
         </div>
       </div>
 

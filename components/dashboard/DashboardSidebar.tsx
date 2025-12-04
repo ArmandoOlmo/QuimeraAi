@@ -318,11 +318,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           setDragOffset(0);
         }}
         className={`
-            fixed lg:relative z-50 h-screen bg-background border-r border-border 
-            shadow-2xl lg:shadow-xl flex flex-col
-            ${isDragging ? '' : 'transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
-            ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            ${isMobileOpen ? 'w-[85vw] max-w-[320px]' : 'w-0 lg:w-auto'}
+            fixed lg:relative z-50 h-[100dvh] lg:h-screen bg-background border-r border-border 
+            shadow-2xl lg:shadow-xl flex flex-col overflow-hidden
+            ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
+            ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full lg:translate-x-0'}
             ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
             ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
             ${hiddenOnDesktop ? 'lg:hidden' : ''}
@@ -412,47 +411,47 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         </nav>
 
         {/* Footer / User Profile / Theme - Optimized for mobile */}
-        <div className="p-3 lg:p-4 border-t border-border bg-card/50 backdrop-blur-sm safe-area-inset-bottom">
+        <div className="p-3 pb-6 lg:p-4 lg:pb-4 border-t border-border bg-card/50 backdrop-blur-sm safe-area-inset-bottom">
             
-            {/* Theme Selector Section - Touch optimized */}
-            <div className={`${isCollapsed ? 'hidden' : 'block mb-4'}`}>
+            {/* Theme Selector Section - Hidden on mobile, only visible on desktop */}
+            <div className={`${isCollapsed ? 'hidden' : 'hidden lg:block mb-4'}`}>
                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('common.themeColor')}</p>
-                 <div className="flex gap-1 lg:gap-2 bg-muted p-1 rounded-lg">
+                 <div className="flex gap-2 bg-muted p-1 rounded-lg">
                      <button 
                         onClick={() => setThemeMode('light')}
                         className={`
-                          flex-1 flex items-center justify-center py-2.5 lg:py-1.5 rounded-md transition-all touch-manipulation active:scale-95
+                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
                           ${themeMode === 'light' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                         `}
                         title={t('common.lightMode')}
                         aria-label={t('common.lightMode')}
                         aria-pressed={themeMode === 'light'}
                      >
-                         <Sun size={18} className="lg:w-4 lg:h-4" />
+                         <Sun size={16} />
                      </button>
                      <button 
                         onClick={() => setThemeMode('dark')}
                         className={`
-                          flex-1 flex items-center justify-center py-2.5 lg:py-1.5 rounded-md transition-all touch-manipulation active:scale-95
+                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
                           ${themeMode === 'dark' ? 'bg-card text-primary shadow-sm border border-border' : 'text-muted-foreground hover:text-foreground'}
                         `}
                         title={t('common.darkMode')}
                         aria-label={t('common.darkMode')}
                         aria-pressed={themeMode === 'dark'}
                      >
-                         <Moon size={18} className="lg:w-4 lg:h-4" />
+                         <Moon size={16} />
                      </button>
                      <button 
                         onClick={() => setThemeMode('black')}
                         className={`
-                          flex-1 flex items-center justify-center py-2.5 lg:py-1.5 rounded-md transition-all touch-manipulation active:scale-95
+                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
                           ${themeMode === 'black' ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}
                         `}
                         title={t('common.blackMode')}
                         aria-label={t('common.blackMode')}
                         aria-pressed={themeMode === 'black'}
                      >
-                         <Circle size={18} className="lg:w-4 lg:h-4" fill="currentColor" />
+                         <Circle size={16} fill="currentColor" />
                      </button>
                  </div>
             </div>
