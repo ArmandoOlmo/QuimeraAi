@@ -4,10 +4,13 @@ import { useEditor } from '../contexts/EditorContext';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import ThemeToggle from './ui/ThemeToggle';
-import LanguageSelector from './ui/LanguageSelector';
-import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal } from 'lucide-react';
+import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu } from 'lucide-react';
 
-const SimpleEditorHeader: React.FC = () => {
+interface SimpleEditorHeaderProps {
+  onOpenMobileMenu?: () => void;
+}
+
+const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMenu }) => {
   const { t } = useTranslation();
   const { 
     activeProject, 
@@ -81,6 +84,18 @@ const SimpleEditorHeader: React.FC = () => {
   return (
     <header className="h-14 px-3 md:px-6 border-b border-border flex items-center gap-2 md:gap-4 bg-background z-20 sticky top-0" role="banner">
       <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+        {/* Mobile Menu Button - Opens DashboardSidebar */}
+        {onOpenMobileMenu && (
+          <button 
+            onClick={onOpenMobileMenu}
+            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation lg:hidden"
+            title={t('common.menu')}
+            aria-label={t('common.menu')}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Dashboard Button - More prominent on mobile */}
         <button 
           title={t('editor.goToDashboard')} 
@@ -130,11 +145,8 @@ const SimpleEditorHeader: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Theme & Language - Language hidden on mobile */}
+        {/* Theme Toggle */}
         <ThemeToggle />
-        <div className="hidden md:block">
-          <LanguageSelector />
-        </div>
 
         {/* Save Button */}
         <button

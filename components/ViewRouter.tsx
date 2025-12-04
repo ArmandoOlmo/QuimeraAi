@@ -88,18 +88,16 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     // Editor View (default)
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
-            {/* Sidebar - Only visible on desktop, collapsed by default */}
-            <div className="hidden lg:block">
-                <DashboardSidebar 
-                    isMobileOpen={false} 
-                    onClose={() => {}}
-                    defaultCollapsed={true}
-                />
-            </div>
+            {/* Sidebar - Desktop: always visible collapsed, Mobile: controlled by isMobileMenuOpen */}
+            <DashboardSidebar 
+                isMobileOpen={isMobileMenuOpen} 
+                onClose={() => setIsMobileMenuOpen(false)}
+                defaultCollapsed={true}
+            />
             
             {/* Main Editor Content */}
             <div className="flex flex-col flex-1 min-w-0">
-                <SimpleEditorHeader />
+                <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
                 
                 <div className="flex flex-1 overflow-hidden relative">
                     {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
