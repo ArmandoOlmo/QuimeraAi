@@ -2,6 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
+import { useRouter } from '../hooks/useRouter';
+import { ROUTES } from '../routes/config';
 import { PageSection, PricingTier, ServiceIcon } from '../types';
 import ColorControl from './ui/ColorControl';
 import GlobalStylesControl from './ui/GlobalStylesControl';
@@ -9,10 +11,10 @@ import ImagePicker from './ui/ImagePicker';
 import IconSelector from './ui/IconSelector';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { 
-    Trash2, Plus, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, 
+    Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, HelpCircle, 
     Layout, Image, List, Star, PlaySquare, Users, DollarSign, 
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
@@ -232,10 +234,10 @@ const Controls: React.FC = () => {
       isSidebarOpen,
       uploadImageAndGetURL,
       menus,
-      setView,
       activeProject,
       updateProjectFavicon
   } = useEditor();
+  const { navigate } = useRouter();
   
   const [aiAssistField, setAiAssistField] = useState<{path: string, value: string, context: string} | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -245,6 +247,7 @@ const Controls: React.FC = () => {
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
+  const [isTreeHiddenMobile, setIsTreeHiddenMobile] = useState(false);
 
   // Close add component dropdown when clicking outside
   useClickOutside(addComponentRef, () => setIsAddComponentOpen(false));
@@ -573,7 +576,7 @@ const Controls: React.FC = () => {
                             ))}
                         </select>
                          <button 
-                            onClick={() => setView('navigation')}
+                            onClick={() => navigate(ROUTES.NAVIGATION)}
                             className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
                             title="Manage Menus"
                          >
@@ -1418,7 +1421,7 @@ const Controls: React.FC = () => {
                   <button
                       onClick={() => {
                           // Navigate to AI Assistant Dashboard
-                          setView('ai-assistant');
+                          navigate(ROUTES.AI_ASSISTANT);
                       }}
                       className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                   >
@@ -4260,8 +4263,11 @@ const Controls: React.FC = () => {
       md:relative md:inset-auto md:z-auto md:transform-none md:h-full
       ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
     `}>
-      {/* Left Panel: Component Tree - Siempre visible en desktop */}
-      <div className="w-64 flex-shrink-0 border-r border-editor-border">
+      {/* Left Panel: Component Tree - Siempre visible en desktop, colapsable en mobile cuando hay propiedades */}
+      <div className={`
+        w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300
+        ${activeSection && isTreeHiddenMobile ? 'hidden md:block' : ''}
+      `}>
         <ComponentTree
           componentOrder={componentOrder}
           activeSection={activeSection}
@@ -4282,7 +4288,15 @@ const Controls: React.FC = () => {
           {/* Header with Close Button */}
           <div className="flex-shrink-0 p-4 border-b border-editor-border bg-editor-panel-bg/30">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+              {/* Mobile Tree Toggle Button */}
+              <button
+                onClick={() => setIsTreeHiddenMobile(!isTreeHiddenMobile)}
+                className="p-1 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-panel-bg rounded transition-colors md:hidden mr-2"
+                title={isTreeHiddenMobile ? t('controls.showTree') : t('controls.hideTree')}
+              >
+                {isTreeHiddenMobile ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+              <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex-1">
                 {t('controls.properties')}
               </h3>
               <button

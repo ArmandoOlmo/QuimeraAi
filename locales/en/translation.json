@@ -988,6 +988,8 @@
     "badgeText": "Badge Text",
     "properties": "Properties",
     "closePropertiesPanel": "Close properties panel",
+    "showTree": "Show component tree",
+    "hideTree": "Hide component tree",
     "heroStyle": "Hero Style",
     "classic": "Classic",
     "twoColumn": "Two Column",

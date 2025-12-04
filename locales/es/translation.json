@@ -958,6 +958,8 @@
     "badgeText": "Texto de Insignia",
     "properties": "Propiedades",
     "closePropertiesPanel": "Cerrar panel de propiedades",
+    "showTree": "Mostrar árbol de componentes",
+    "hideTree": "Ocultar árbol de componentes",
     "heroStyle": "Estilo Hero",
     "classic": "Clásico",
     "twoColumn": "Dos Columnas",

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
+import { useRouter } from '../hooks/useRouter';
+import { ROUTES } from '../routes/config';
 import ThemeToggle from './ui/ThemeToggle';
 import LanguageSelector from './ui/LanguageSelector';
 import { Menu, LayoutDashboard, Check, CloudUpload, Globe, Monitor, Tablet, Smartphone, SlidersHorizontal } from 'lucide-react';
@@ -13,7 +15,6 @@ interface SimpleEditorHeaderProps {
 const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const { 
-    setView, 
     activeProject, 
     renameActiveProject, 
     saveProject,
@@ -26,6 +27,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     isSidebarOpen,
     setIsSidebarOpen
   } = useEditor();
+  const { navigate } = useRouter();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
@@ -81,7 +83,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
     if (isEditingTemplate) {
       exitTemplateEditor();
     } else {
-      setView('dashboard');
+      navigate(ROUTES.DASHBOARD);
     }
   };
 
@@ -134,7 +136,8 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
           <LayoutDashboard className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2">
+        {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
+        <div className="hidden md:flex items-center gap-2">
           <Globe className="text-primary" size={24} aria-hidden="true" />
           
           {/* Project Name */}
@@ -198,9 +201,11 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onMenuClick }) 
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Theme & Language */}
+        {/* Theme & Language - Language hidden on mobile */}
         <ThemeToggle />
-        <LanguageSelector />
+        <div className="hidden md:block">
+          <LanguageSelector />
+        </div>
 
         {/* Save Button */}
         <button
