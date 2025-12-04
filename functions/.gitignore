@@ -18,6 +18,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.*.local
+
+# Secret files
+*.secret
+*.key
+
+
+
+
 
 
 

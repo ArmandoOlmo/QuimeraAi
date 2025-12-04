@@ -507,16 +507,29 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
                     'Sorry, I could not generate a response.';
             } else {
-                console.log('[ChatCore] 🔑 Using direct API mode');
+                // Always use proxy for secure API access
+                console.log('[ChatCore] 🔐 Using secure proxy mode');
 
-                const genai = await getGoogleGenAI();
-                const result = await genai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    systemInstruction: systemContext,
-                    contents: conversationHistory
-                });
+                const fullPrompt = systemContext + '\n\n' +
+                    conversationHistory.map(msg =>
+                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
+                    ).join('\n\n');
 
-                botResponse = result.text;
+                const proxyResponse = await generateContentViaProxy(
+                    project.id,
+                    fullPrompt,
+                    'gemini-2.5-flash',
+                    {
+                        temperature: 0.9,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 2048
+                    },
+                    user?.uid
+                );
+
+                botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
+                    'Sorry, I could not generate a response.';
             }
 
             // Log API call

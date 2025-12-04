@@ -5,7 +5,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
-import { getGoogleGenAI } from '../../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 
 // --- DNS CONFIG COMPONENT ---
 const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
@@ -338,7 +338,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
 // --- DOMAIN SEARCH & BUY COMPONENT ---
 const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const { addDomain, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
+    const { addDomain, hasApiKey, promptForKeySelection, handleApiError, activeProject, user } = useEditor();
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [results, setResults] = useState<{ name: string, price: number, available: boolean }[]>([]);
@@ -356,14 +356,11 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         if (hasApiKey) {
             try {
-                 const ai = await getGoogleGenAI();
                  const prompt = `Generate 5 creative available domain names for a business related to "${query}". Return ONLY a JSON array of strings. Example: ["mybusiness.com", "getmybusiness.io"]`;
-                 const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                    config: { responseMimeType: 'application/json' }
-                 });
-                 const suggestions = JSON.parse(response.text) as string[];
+                 const projectId = activeProject?.id || 'domain-search';
+                 const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                 const responseText = extractTextFromResponse(response);
+                 const suggestions = JSON.parse(responseText) as string[];
                  
                  const mappedResults = suggestions.map(name => ({
                      name,

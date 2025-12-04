@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Project } from '../../types';
 
 interface ThumbnailEditorProps {
@@ -22,7 +22,7 @@ const THUMBNAIL_STYLES = [
 
 const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onUpdate }) => {
     const { t } = useTranslation();
-    const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
+    const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError, activeProject, user } = useEditor();
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl || '');
     const [dragActive, setDragActive] = useState(false);
@@ -116,7 +116,6 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
 
         setIsEnhancingPrompt(true);
         try {
-            const ai = await getGoogleGenAI();
             const colorAnalysis = analyzeColorPalette(themeColors);
             const colorList = themeColors.map(c => c.color).join(', ');
             
@@ -145,12 +144,11 @@ ${colorAnalysis}
 
 Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-            });
+            const projectId = activeProject?.id || project.id || 'thumbnail-prompt';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.0-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
 
-            setThumbnailPrompt(response.text.trim());
+            setThumbnailPrompt(responseText.trim());
         } catch (error) {
             console.error('Error generating prompt suggestion:', error);
             handleApiError(error);

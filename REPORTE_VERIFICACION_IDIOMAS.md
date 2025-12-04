@@ -425,3 +425,6 @@ Continuar con la **Fase 1** traduciendo `Controls.tsx` y `LeadsDashboard.tsx` pa
 
 
 
+
+
+

@@ -57,16 +57,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Handle touch start for swipe gesture
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Don't start drag if touching interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input, [role="button"]')) {
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     touchCurrentX.current = e.touches[0].clientX;
-    setIsDragging(true);
   }, []);
 
   // Handle touch move for swipe gesture
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.touches[0].clientX;
+    // Only start dragging after moving at least 10px (threshold to allow taps)
+    if (Math.abs(diff) > 10 && !isDragging) {
+      setIsDragging(true);
+    }
     if (!isDragging) return;
     touchCurrentX.current = e.touches[0].clientX;
-    const diff = touchStartX.current - touchCurrentX.current;
     // Only allow dragging left (to close)
     if (diff > 0) {
       setDragOffset(Math.min(diff, 300));
@@ -75,13 +83,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Handle touch end for swipe gesture
   const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
     // If dragged more than 100px, close the sidebar
-    if (dragOffset > 100) {
+    if (isDragging && dragOffset > 100) {
       onClose();
     }
+    setIsDragging(false);
     setDragOffset(0);
-  }, [dragOffset, onClose]);
+  }, [isDragging, dragOffset, onClose]);
 
   // Default navigation items with routes
   const defaultNavItems: NavItemData[] = [
@@ -308,68 +316,72 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         aria-hidden="true"
       />
 
-      <aside 
-        ref={sidebarRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={() => {
-          setIsDragging(false);
-          setDragOffset(0);
-        }}
-        className={`
-            fixed lg:relative z-50 h-[100dvh] lg:h-screen bg-background border-r border-border 
-            shadow-2xl lg:shadow-xl flex flex-col overflow-hidden
-            ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
-            ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full lg:translate-x-0'}
-            ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
-            ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
-            ${hiddenOnDesktop ? 'lg:hidden' : ''}
-        `}
-        style={isMobileOpen && isDragging && dragOffset > 0 ? {
-          transform: `translateX(-${dragOffset}px)`,
-        } : undefined}
-        role="navigation"
-        aria-label="Main navigation"
-      >
-        {/* Header / Logo - Enhanced for mobile */}
-        <div className="relative h-[72px] lg:h-[80px] flex items-center justify-between px-4 lg:px-0 lg:justify-center border-b border-border/50 lg:border-none">
-            <div className={`relative h-full flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6 lg:w-full'}`}>
-                 {/* Logo Image */}
-                <img 
-                    src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
-                    alt="Quimera Logo" 
-                    className="w-10 h-10 object-contain flex-shrink-0" 
-                />
-                 {/* Text Logo (Hidden when collapsed on desktop) */}
-                <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>
-                    Quimera<span className="text-primary">.ai</span>
-                </span>
-            </div>
-            
-            {/* Mobile Close Button - Touch optimized (min 44px) */}
-            <button 
-              onClick={onClose}
-              className="lg:hidden flex items-center justify-center w-11 h-11 -mr-2 rounded-full 
-                        text-muted-foreground hover:text-foreground hover:bg-secondary/80 
-                        active:scale-95 transition-all touch-manipulation"
-              aria-label={t('common.close')}
-            >
-              <X size={22} aria-hidden="true" />
-            </button>
-            
-             {/* Desktop Toggle Button */}
-            <div className="hidden lg:block absolute top-[calc(50%-12px)] -translate-y-1/2 z-50 -right-3">
-                <button 
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
-                    aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
-                    aria-expanded={!isCollapsed}
-                >
-                    {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
-                </button>
-            </div>
-        </div>
+      {/* Sidebar wrapper for proper positioning of toggle button */}
+      <div className={`
+        relative flex-shrink-0
+        ${hiddenOnDesktop ? 'lg:hidden' : ''}
+        ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
+        ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
+        ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
+      `}>
+        {/* Desktop Toggle Button - Aligned with editor header icons (h-14 = 56px, center = 28px) */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="hidden lg:flex absolute top-[16px] -right-3 z-[60] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+          aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
+          aria-expanded={!isCollapsed}
+        >
+          {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
+        </button>
+
+        <aside 
+          ref={sidebarRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={() => {
+            setIsDragging(false);
+            setDragOffset(0);
+          }}
+          className={`
+              fixed lg:relative z-50 h-[100dvh] lg:h-screen bg-background border-r border-border 
+              shadow-2xl lg:shadow-xl flex flex-col overflow-y-auto
+              ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
+              ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full lg:translate-x-0'}
+              lg:w-full
+          `}
+          style={isMobileOpen && isDragging && dragOffset > 0 ? {
+            transform: `translateX(-${dragOffset}px)`,
+          } : undefined}
+          role="navigation"
+          aria-label="Main navigation"
+        >
+          {/* Header / Logo - Enhanced for mobile */}
+          <div className="relative h-[72px] lg:h-[80px] flex items-center justify-between px-4 lg:px-0 lg:justify-center border-b border-border/50 lg:border-none flex-shrink-0">
+              <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}>
+                   {/* Logo Image */}
+                  <img 
+                      src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
+                      alt="Quimera Logo" 
+                      className="w-10 h-10 object-contain flex-shrink-0" 
+                  />
+                   {/* Text Logo (Hidden when collapsed on desktop) */}
+                  <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>
+                      Quimera<span className="text-primary">.ai</span>
+                  </span>
+              </div>
+              
+              {/* Mobile Close Button - Touch optimized (min 44px) */}
+              <button 
+                onClick={onClose}
+                className="lg:hidden flex items-center justify-center w-11 h-11 rounded-full 
+                          text-muted-foreground hover:text-foreground hover:bg-secondary/80 
+                          active:scale-95 transition-all touch-manipulation flex-shrink-0"
+                aria-label={t('common.close')}
+              >
+                <X size={22} aria-hidden="true" />
+              </button>
+          </div>
 
         {/* Navigation - Optimized for mobile with momentum scroll */}
         <nav 
@@ -518,7 +530,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 </div>
             </div>
         </div>
-      </aside>
+        </aside>
+      </div>
     </>
   );
 };

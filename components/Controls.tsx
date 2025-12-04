@@ -4266,13 +4266,23 @@ const Controls: React.FC = () => {
   };
 
   return (
-    <div className={`
-      bg-editor-bg border-r border-editor-border flex
-      ${activeSection ? 'w-full md:w-[600px] lg:w-[700px]' : 'w-64'}
-      fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
-      md:relative md:inset-auto md:z-auto md:transform-none md:h-full
-      ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-    `}>
+    <>
+      {/* Mobile Overlay - Click to close sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      
+      <div className={`
+        bg-editor-bg border-r border-editor-border flex
+        ${activeSection ? 'w-full md:w-[600px] lg:w-[700px]' : 'w-64'}
+        fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
+        md:relative md:inset-auto md:z-auto md:transform-none md:h-full
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
       {/* Left Panel: Component Tree - Siempre visible en desktop, colapsable en mobile cuando hay propiedades */}
       <div className={`
         w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300
@@ -4334,6 +4344,7 @@ const Controls: React.FC = () => {
         contextPrompt={aiAssistField?.context || ''}
       />
     </div>
+    </>
   );
 };
 

@@ -14,6 +14,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { extractExpenseFromReceipt } from '../../../utils/expenseExtractor';
 import { ExpenseRecord } from '../../../types/finance';
 import { useEditor } from '../../../contexts/EditorContext';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -29,12 +30,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FinanceDashboard: React.FC = () => {
-    const { hasApiKey, handleApiError, getGoogleGenAI } = useEditor();
-    // AI text generation helper
+    const { hasApiKey, handleApiError, activeProject, user } = useEditor();
+    // AI text generation helper - uses secure proxy
     const generateText = async (prompt: string, _options?: { systemPrompt?: string; temperature?: number }) => {
-        const ai = await getGoogleGenAI();
-        const result = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-        return result.text;
+        const projectId = activeProject?.id || 'finance-dashboard';
+        const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {
+            temperature: _options?.temperature || 0.7
+        }, user?.uid);
+        return extractTextFromResponse(response);
     };
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);

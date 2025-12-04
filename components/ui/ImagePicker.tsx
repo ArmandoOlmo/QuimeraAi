@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Filter } from 'lucide-react';
+import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Filter, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket } from 'lucide-react';
 import Modal from './Modal';
 import DragDropZone from './DragDropZone';
 import { searchFiles, filterFilesByType, FileTypeFilter } from '../../utils/fileHelpers';
@@ -19,11 +19,27 @@ const ASPECT_RATIOS = [
     { label: 'Portrait (9:16)', value: '9:16' },
     { label: 'Classic (4:3)', value: '4:3' },
     { label: 'Tall (3:4)', value: '3:4' },
+    { label: 'Cinematic (21:9)', value: '21:9' },
 ];
 
 const STYLES = [
     'None', 'Photorealistic', 'Cinematic', 'Anime', 'Digital Art', 
     'Oil Painting', '3D Render', 'Minimalist', 'Cyberpunk', 'Watercolor'
+];
+
+// Quimera AI Model Options
+const MODELS = [
+    { label: 'Vision Pro', value: 'gemini-3-pro-image-preview', description: 'Best quality, text in images', icon: 'vision' },
+    { label: 'Ultra', value: 'imagen-4.0-ultra-generate-001', description: 'Highest quality', icon: 'ultra' },
+    { label: 'Standard', value: 'imagen-4.0-generate-001', description: 'Balanced', icon: 'standard' },
+    { label: 'Fast', value: 'imagen-4.0-fast-generate-001', description: 'Fastest', icon: 'fast' },
+];
+
+const THINKING_LEVELS = [
+    { label: 'None', value: 'none' },
+    { label: 'Low', value: 'low' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'High', value: 'high' },
 ];
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => {
@@ -46,6 +62,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
     const [isGenerating, setIsGenerating] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+    
+    // Quimera AI Controls
+    const [selectedModel, setSelectedModel] = useState('gemini-3-pro-image-preview');
+    const [thinkingLevel, setThinkingLevel] = useState('high');
+    const [personGeneration, setPersonGeneration] = useState('allow_adult');
+    const [temperature, setTemperature] = useState(1.0);
+    const [negativePrompt, setNegativePrompt] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     const handleFileUpload = async (file: File) => {
         try {
@@ -63,7 +87,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
         if (!prompt.trim()) return;
         setIsGenerating(true);
         try {
-            const url = await generateImage(prompt, { aspectRatio, style });
+            const options = {
+                aspectRatio,
+                style,
+                // Quimera AI specific options
+                model: selectedModel,
+                thinkingLevel: thinkingLevel !== 'none' ? thinkingLevel : undefined,
+                personGeneration,
+                temperature,
+                negativePrompt: negativePrompt.trim() || undefined,
+            };
+                            console.log('✨ [ImagePicker] Quimera options:', options);
+            const url = await generateImage(prompt, options);
             setGeneratedImage(url);
             success('Image generated successfully');
         } catch (error) {
@@ -375,7 +410,36 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                             <div className="h-full flex flex-col">
                                 <div className="flex gap-6 h-full">
                                     {/* Controls Side */}
-                                    <div className="w-1/3 flex flex-col gap-5 border-r border-editor-border pr-6 overflow-y-auto">
+                                    <div className="w-1/3 flex flex-col gap-4 border-r border-editor-border pr-6 overflow-y-auto custom-scrollbar">
+                                        {/* Model Selector */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Sparkles size={12} className="text-editor-accent" />
+                                                <label className="block text-xs font-bold text-editor-text-secondary uppercase">Quimera Model</label>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1">
+                                                {MODELS.map(model => (
+                                                    <button
+                                                        key={model.value}
+                                                        onClick={() => setSelectedModel(model.value)}
+                                                        className={`text-xs py-1 px-2 rounded-full transition-all flex items-center gap-1 ${
+                                                            selectedModel === model.value 
+                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                        }`}
+                                                        title={model.description}
+                                                    >
+                                                        {model.icon === 'vision' && <Eye size={10} />}
+                                                        {model.icon === 'ultra' && <Flame size={10} />}
+                                                        {model.icon === 'standard' && <Layers size={10} />}
+                                                        {model.icon === 'fast' && <Rocket size={10} />}
+                                                        {model.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Prompt */}
                                         <div>
                                             <div className="flex justify-between items-center mb-2">
                                                 <label className="block text-sm font-bold text-white">Prompt</label>
@@ -393,18 +457,31 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 value={prompt}
                                                 onChange={(e) => setPrompt(e.target.value)}
                                                 placeholder="Describe the image you want to generate..."
-                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-editor-accent outline-none resize-none h-32 mb-4"
+                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-editor-accent outline-none resize-none h-24"
                                             />
                                         </div>
 
+                                        {/* Negative Prompt */}
+                                        <div>
+                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1">Negative Prompt</label>
+                                            <input
+                                                type="text"
+                                                value={negativePrompt}
+                                                onChange={(e) => setNegativePrompt(e.target.value)}
+                                                placeholder="What to avoid: blurry, distorted..."
+                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-editor-accent"
+                                            />
+                                        </div>
+
+                                        {/* Aspect Ratio */}
                                         <div>
                                             <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">Aspect Ratio</label>
-                                            <div className="grid grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-3 gap-1">
                                                 {ASPECT_RATIOS.map(ratio => (
                                                     <button
                                                         key={ratio.value}
                                                         onClick={() => setAspectRatio(ratio.value)}
-                                                        className={`text-xs py-2 rounded-md border transition-all ${aspectRatio === ratio.value ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold' : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-text-secondary'}`}
+                                                        className={`text-xs py-1.5 rounded-md border transition-all ${aspectRatio === ratio.value ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold' : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-text-secondary'}`}
                                                     >
                                                         {ratio.value}
                                                     </button>
@@ -412,12 +489,13 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                             </div>
                                         </div>
 
+                                        {/* Style */}
                                         <div>
                                             <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">Style</label>
                                             <select 
                                                 value={style}
                                                 onChange={(e) => setStyle(e.target.value)}
-                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-editor-accent"
+                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-editor-accent"
                                             >
                                                 {STYLES.map(s => (
                                                     <option key={s} value={s}>{s}</option>
@@ -425,13 +503,103 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                             </select>
                                         </div>
 
-                                        <div className="mt-auto pt-4 border-t border-editor-border">
+                                        {/* Advanced Controls Toggle */}
+                                        <div className="pt-2">
+                                            <button
+                                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                                className="text-xs text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center gap-2 w-full"
+                                            >
+                                                <Eye size={12} />
+                                                <span className="font-medium">Vision Pro Controls</span>
+                                                <span className="ml-auto text-editor-accent">{showAdvanced ? '−' : '+'}</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Advanced Controls - Clean Design */}
+                                        {showAdvanced && selectedModel === 'gemini-3-pro-image-preview' && (
+                                            <div className="space-y-3 pt-2">
+                                                {/* Thinking Level */}
+                                                <div>
+                                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                                        <Brain size={11} className="text-editor-text-secondary" />
+                                                        <label className="text-xs text-editor-text-secondary">Thinking</label>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        {THINKING_LEVELS.map(level => (
+                                                            <button
+                                                                key={level.value}
+                                                                onClick={() => setThinkingLevel(level.value)}
+                                                                className={`text-xs py-1 px-2 rounded-full transition-all ${
+                                                                    thinkingLevel === level.value 
+                                                                        ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                                }`}
+                                                            >
+                                                                {level.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Person Generation */}
+                                                <div>
+                                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                                        <Users size={11} className="text-editor-text-secondary" />
+                                                        <label className="text-xs text-editor-text-secondary">People</label>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => setPersonGeneration('allow_adult')}
+                                                            className={`text-xs py-1 px-2 rounded-full transition-all ${
+                                                                personGeneration === 'allow_adult' 
+                                                                    ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                            }`}
+                                                        >
+                                                            Allow
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setPersonGeneration('dont_allow')}
+                                                            className={`text-xs py-1 px-2 rounded-full transition-all ${
+                                                                personGeneration === 'dont_allow' 
+                                                                    ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                            }`}
+                                                        >
+                                                            Don't Allow
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Temperature */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Thermometer size={11} className="text-editor-text-secondary" />
+                                                            <label className="text-xs text-editor-text-secondary">Creativity</label>
+                                                        </div>
+                                                        <span className="text-xs text-editor-accent font-mono">{temperature.toFixed(1)}</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="2"
+                                                        step="0.1"
+                                                        value={temperature}
+                                                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                                                        className="w-full h-1 bg-editor-border rounded-full appearance-none cursor-pointer accent-editor-accent"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-auto pt-3 border-t border-editor-border">
                                             <button 
                                                 onClick={handleGenerate}
                                                 disabled={isGenerating || !prompt}
-                                                className="w-full py-3 bg-gradient-to-r from-editor-accent to-orange-500 text-white font-bold rounded-lg shadow-lg hover:shadow-editor-accent/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                                                className="w-full py-2.5 bg-gradient-to-r from-editor-accent to-orange-500 text-white font-bold rounded-lg shadow-lg hover:shadow-editor-accent/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
                                             >
-                                                {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
+                                                {isGenerating ? <Loader2 className="animate-spin mr-2" size={18} /> : <Zap className="mr-2" size={18} />}
                                                 {isGenerating ? 'Dreaming...' : 'Generate Image'}
                                             </button>
                                         </div>

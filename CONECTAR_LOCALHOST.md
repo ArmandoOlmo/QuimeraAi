@@ -194,3 +194,6 @@ VITE_GEMINI_API_KEY=tu-gemini-api-key (opcional)
 
 
 
+
+
+

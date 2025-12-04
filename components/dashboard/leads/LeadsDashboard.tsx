@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
-import { getGoogleGenAI } from '../../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import LeadsTimeline from './LeadsTimeline';
 import LeadTasksList from './LeadTasksList';
 import LeadsFilters, { LeadsFiltersState } from './LeadsFilters';
@@ -234,7 +234,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
 
 const LeadsDashboard: React.FC = () => {
-    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, hasApiKey, promptForKeySelection, handleApiError, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, user } = useEditor();
+    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, hasApiKey, promptForKeySelection, handleApiError, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, user, activeProject } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -503,7 +503,6 @@ const LeadsDashboard: React.FC = () => {
 
         setIsAnalyzing(true);
         try {
-            const ai = await getGoogleGenAI();
             const prompt = `
                 Analyze this sales lead based on professional criteria.
                 Lead Name: ${selectedLead.name}
@@ -511,7 +510,7 @@ const LeadsDashboard: React.FC = () => {
                 Value: $${selectedLead.value}
                 Notes: ${selectedLead.notes}
                 
-                Output JSON format:
+                Output ONLY valid JSON format:
                 {
                     "score": number (0-100),
                     "analysis": "1 sentence summary of potential",
@@ -519,11 +518,9 @@ const LeadsDashboard: React.FC = () => {
                 }
             `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: { responseMimeType: 'application/json' }
-            });
+            const projectId = activeProject?.id || 'leads-analysis';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
@@ -535,7 +532,7 @@ const LeadsDashboard: React.FC = () => {
                 });
             }
 
-            const data = JSON.parse(response.text);
+            const data = JSON.parse(responseText);
 
             await updateLead(selectedLead.id, {
                 aiScore: data.score,
@@ -570,7 +567,6 @@ const LeadsDashboard: React.FC = () => {
 
         setIsDrafting(true);
         try {
-            const ai = await getGoogleGenAI();
             const prompt = `
                 Write a short, professional intro email to this lead.
                 Name: ${selectedLead.name}
@@ -578,10 +574,10 @@ const LeadsDashboard: React.FC = () => {
                 Context: ${selectedLead.notes}
                 My Goal: Move them to the next stage of the pipeline.
             `;
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
+            
+            const projectId = activeProject?.id || 'leads-email-draft';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
@@ -593,7 +589,7 @@ const LeadsDashboard: React.FC = () => {
                 });
             }
 
-            setEmailDraft(response.text);
+            setEmailDraft(responseText);
         } catch (e: any) {
             // Log failed API call
             if (user) {

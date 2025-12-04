@@ -31,6 +31,7 @@ import {
 } from '../firebase';
 import { Modality } from '@google/genai';
 import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApiKey, getCachedApiKey } from '../utils/genAiClient';
+import { generateImageViaProxy, generateContentViaProxy, extractTextFromResponse, shouldUseProxy } from '../utils/geminiProxyClient';
 import { deploymentService } from '../utils/deploymentService';
 import { logApiCall } from '../services/apiLoggingService';
 import { router } from '../hooks/useRouter';
@@ -2591,8 +2592,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             const populatedPrompt = summaryPrompt.template.replace('{{fileContent}}', fileContent);
 
-            const ai = await getGoogleGenAI();
-            const response = await ai.models.generateContent({ model: summaryPrompt.model, contents: populatedPrompt });
+            const projectId = activeProject?.id || 'file-summary';
+            const response = await generateContentViaProxy(projectId, populatedPrompt, summaryPrompt.model, {}, user.uid);
 
             // Log API call
             if (user) {
@@ -2604,7 +2605,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 });
             }
 
-            const summary = response.text.trim();
+            const summary = extractTextFromResponse(response).trim();
 
             const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
             await updateDoc(fileDocRef, { aiSummary: summary });
@@ -2646,63 +2647,71 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const enhancePrompt = async (draftPrompt: string, referenceImages?: string[]): Promise<string> => {
-        if (hasApiKey === false) {
-            await promptForKeySelection();
-            throw new Error("Please select an API key.");
+        if (!user) throw new Error("Authentication required to enhance prompts.");
+
+        let enhanceModel = 'gemini-2.5-flash';
+        const enhancerPrompt = getPrompt('image-prompt-enhancer');
+        let promptTemplate = `Enhance this image generation prompt to be more detailed and descriptive for AI image generation. Keep it under 200 words. Original: "{{originalPrompt}}"`;
+
+        if (enhancerPrompt) {
+            enhanceModel = enhancerPrompt.model;
+            promptTemplate = enhancerPrompt.template;
         }
 
-        const ai = await getGoogleGenAI();
-        let enhanceModel = 'gemini-2.5-pro';
+        // Prepare template variables
+        const hasReferenceImages = referenceImages && referenceImages.length > 0;
+        const referenceImagesInstruction = hasReferenceImages
+            ? `**ANALYZE THE REFERENCE IMAGES PROVIDED BELOW:** The user has uploaded ${referenceImages.length} reference image(s). Carefully examine the visual style, composition, color palette, lighting, mood, and artistic techniques present in these images. Incorporate these visual elements into your enhanced prompt to help Quimera Vision Pro generate an image that matches or is inspired by the reference images.`
+            : 'No reference images provided. Focus on enhancing the text prompt with rich descriptive details.';
+
+        const filledPrompt = promptTemplate
+            .replace('{{originalPrompt}}', draftPrompt)
+            .replace('{{hasReferenceImages}}', hasReferenceImages ? `YES (${referenceImages.length} image(s) provided)` : 'NO')
+            .replace('{{referenceImagesInstruction}}', referenceImagesInstruction);
+
+        // 🔐 SECURE: Use proxy in production to keep API key safe
+        const useProxy = shouldUseProxy();
+        console.log(`✨ [enhancePrompt] Mode: ${useProxy ? 'PROXY (secure)' : 'DIRECT (development)'}`);
+
         try {
-            const enhancerPrompt = getPrompt('image-prompt-enhancer');
-            let promptTemplate = `Enhance this image generation prompt... Original: "{{originalPrompt}}"`;
-
-            if (enhancerPrompt) {
-                enhanceModel = enhancerPrompt.model;
-                promptTemplate = enhancerPrompt.template;
-            }
-
-            // Prepare template variables
-            const hasReferenceImages = referenceImages && referenceImages.length > 0;
-            const referenceImagesInstruction = hasReferenceImages
-                ? `**ANALYZE THE REFERENCE IMAGES PROVIDED BELOW:** The user has uploaded ${referenceImages.length} reference image(s). Carefully examine the visual style, composition, color palette, lighting, mood, and artistic techniques present in these images. Incorporate these visual elements into your enhanced prompt to help Nano Banana Pro generate an image that matches or is inspired by the reference images.`
-                : 'No reference images provided. Focus on enhancing the text prompt with rich descriptive details.';
-
-            const filledPrompt = promptTemplate
-                .replace('{{originalPrompt}}', draftPrompt)
-                .replace('{{hasReferenceImages}}', hasReferenceImages ? `YES (${referenceImages.length} image(s) provided)` : 'NO')
-                .replace('{{referenceImagesInstruction}}', referenceImagesInstruction);
-
-            // Build the contents array
-            const contents: any[] = [filledPrompt];
-
-            // Add reference images if provided (for vision models like gemini-3-pro-image)
-            if (hasReferenceImages && referenceImages) {
-                referenceImages.forEach((imgDataUrl) => {
-                    // Extract base64 data from data URL (format: data:image/jpeg;base64,...)
-                    const base64Data = imgDataUrl.includes(',') ? imgDataUrl.split(',')[1] : imgDataUrl;
-                    const mimeType = imgDataUrl.match(/data:(image\/[a-z]+);/)?.[1] || 'image/jpeg';
-
-                    contents.push({
-                        inlineData: {
-                            mimeType: mimeType,
-                            data: base64Data
-                        }
-                    });
+            if (useProxy) {
+                // Use secure proxy for prompt enhancement in production
+                console.log('✨ [enhancePrompt] Enhancing via proxy:', {
+                    model: enhanceModel,
+                    hasReferenceImages,
+                    promptLength: draftPrompt.length
                 });
+
+                const proxyResponse = await generateContentViaProxy(
+                    activeProject?.id || 'enhance-prompt',
+                    filledPrompt,
+                    enhanceModel,
+                    { temperature: 0.8 },
+                    user.uid
+                );
+
+                // Log API call
+                logApiCall({
+                    userId: user.uid,
+                    model: enhanceModel,
+                    feature: 'image-prompt-enhancer-proxy',
+                    success: true
+                });
+
+                return extractTextFromResponse(proxyResponse).trim();
             }
 
-            console.log('🎨 [enhancePrompt] Sending request:', {
-                model: enhanceModel,
-                hasReferenceImages,
-                referenceImagesCount: referenceImages?.length || 0,
-                promptLength: draftPrompt.length
-            });
-
-            const response = await ai.models.generateContent({
-                model: enhanceModel,
-                contents: contents,
-            });
+            // Always use secure proxy
+            console.log('🔐 [enhancePrompt] Using secure proxy for enhancement');
+            
+            const proxyProjectId = activeProject?.id || 'enhance-prompt-fallback';
+            const proxyResponse = await generateContentViaProxy(
+                proxyProjectId,
+                filledPrompt,
+                enhanceModel,
+                { temperature: 0.8 },
+                user.uid
+            );
 
             // Log API call
             if (user) {
@@ -2714,7 +2723,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 });
             }
 
-            return response.text.trim();
+            return extractTextFromResponse(proxyResponse).trim();
         } catch (error: any) {
             // Log failed API call
             if (user) {
@@ -2737,6 +2746,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         style?: string,
         destination?: 'user' | 'global',
         resolution?: '1K' | '2K' | '4K',
+        // Quimera AI specific options
+        model?: string,
+        thinkingLevel?: string,
+        personGeneration?: string,
+        temperature?: number,
+        negativePrompt?: string,
+        // Visual controls
         lighting?: string,
         cameraAngle?: string,
         colorGrading?: string,
@@ -2746,11 +2762,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         referenceImages?: string[]
     }): Promise<string> => {
         if (!user) throw new Error("Authentication required to generate images.");
-
-        if (hasApiKey === false) {
-            await promptForKeySelection();
-            throw new Error("Please select an API key first.");
-        }
 
         // FORCE user destination for now to avoid Firebase Storage permission issues
         // Only allow 'global' if explicitly set AND user has proper role
@@ -2763,33 +2774,143 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
         console.log('🖼️ generateImage destination:', destination, 'requested:', options?.destination);
 
+        // 🔐 SECURE: Use proxy in production to keep API key safe
+        const useProxy = shouldUseProxy();
+        console.log(`🎨 Image generation mode: ${useProxy ? 'PROXY (secure)' : 'DIRECT (development)'}`);
+
+        if (useProxy) {
+            // Use secure proxy for image generation in production
+            try {
+                const proxyResponse = await generateImageViaProxy(user.uid, prompt, {
+                    aspectRatio: options?.aspectRatio,
+                    style: options?.style,
+                    resolution: options?.resolution,
+                    // Quimera AI specific options
+                    model: options?.model,
+                    thinkingLevel: options?.thinkingLevel,
+                    personGeneration: options?.personGeneration,
+                    temperature: options?.temperature,
+                    negativePrompt: options?.negativePrompt,
+                    // Visual controls
+                    lighting: options?.lighting,
+                    cameraAngle: options?.cameraAngle,
+                    colorGrading: options?.colorGrading,
+                    themeColors: options?.themeColors,
+                    depthOfField: options?.depthOfField,
+                    // Reference images for style transfer
+                    referenceImages: options?.referenceImages
+                });
+
+                // Convert Base64 to Blob for upload
+                const byteCharacters = atob(proxyResponse.image);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: proxyResponse.mimeType || 'image/png' });
+
+                // Upload to Storage
+                const fileName = `generated-ai-${Date.now()}.${proxyResponse.mimeType?.includes('png') ? 'png' : 'jpg'}`;
+                let storagePath = '';
+                let firestoreCol;
+
+                if (destination === 'global') {
+                    storagePath = `global_assets/generated/${fileName}`;
+                    firestoreCol = collection(db, 'global_files');
+                } else {
+                    storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
+                    firestoreCol = collection(db, 'users', user.uid, 'files');
+                }
+
+                const storageRef = ref(storage, storagePath);
+                const snapshot = await uploadBytes(storageRef, blob);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
+                // Create DB Record with simplified notes (just the prompt)
+                const newFileRecord: Omit<FileRecord, 'id'> = {
+                    name: fileName,
+                    storagePath: snapshot.ref.fullPath,
+                    downloadURL,
+                    size: blob.size,
+                    type: proxyResponse.mimeType || 'image/png',
+                    createdAt: serverTimestamp() as any,
+                    notes: prompt,
+                    aiSummary: ''
+                };
+
+                const docRef = await addDoc(firestoreCol, newFileRecord);
+
+                // Update State
+                const fullRecord = { id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord;
+
+                if (destination === 'global') {
+                    setGlobalFiles(prev => [fullRecord, ...prev]);
+                } else {
+                    setFiles(prev => [fullRecord, ...prev]);
+                }
+
+                // Log API call
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id || 'no-project',
+                    model: 'proxy-image-generation',
+                    feature: 'image-generation-proxy',
+                    success: true
+                });
+
+                return downloadURL;
+            } catch (error: any) {
+                console.error("Proxy image generation failed:", error);
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id || 'no-project',
+                    model: 'proxy-image-generation',
+                    feature: 'image-generation-proxy',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+                throw error;
+            }
+        }
+
+        // Development mode: use direct API call
+        if (hasApiKey === false) {
+            await promptForKeySelection();
+            throw new Error("Please select an API key first.");
+        }
+
         const ai = await getGoogleGenAI();
 
         const galleryPromptConfig = getPrompt('image-generation-gallery');
-        let modelName = 'gemini-3-pro-image-preview'; // Quimera AI - Nano Banana Pro
+        // Use model from options if provided, otherwise use config or default to Quimera Vision Pro
+        let modelName = options?.model || galleryPromptConfig?.model || 'gemini-3-pro-image-preview';
         let promptTemplate = '{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality';
 
-        console.log('🔍 [EditorContext] galleryPromptConfig:', {
-            exists: !!galleryPromptConfig,
-            version: galleryPromptConfig?.version,
-            model: galleryPromptConfig?.model,
-            template: galleryPromptConfig?.template?.substring(0, 100) + '...',
+        console.log('✨ [EditorContext] Quimera AI Config:', {
+            selectedModel: options?.model,
+            configModel: galleryPromptConfig?.model,
+            finalModel: modelName,
+            thinkingLevel: options?.thinkingLevel,
+            personGeneration: options?.personGeneration,
+            temperature: options?.temperature,
         });
 
         if (galleryPromptConfig) {
-            modelName = galleryPromptConfig.model;
             promptTemplate = galleryPromptConfig.template;
         }
 
         // Build final prompt with all parameters and log them
         console.log('🎨 [EditorContext] Received options:', {
             prompt: prompt.substring(0, 50) + '...',
+            model: modelName,
             style: options?.style,
             lighting: options?.lighting,
             cameraAngle: options?.cameraAngle,
             colorGrading: options?.colorGrading,
             themeColors: options?.themeColors,
             depthOfField: options?.depthOfField,
+            negativePrompt: options?.negativePrompt,
         });
 
         console.log('📋 [EditorContext] Using template:', promptTemplate);
@@ -2880,10 +3001,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     });
                 }
             } else if (modelName.includes('gemini') || modelName.includes('nano')) {
-                // Use Gemini 3 Pro Image (Nano Banana Pro / Quimera AI) with advanced config
+                // Use Quimera Vision Pro (Gemini 3 Pro Image) with advanced config
                 // Strategy: Try multiple parameter locations for robust API compatibility
                 const generationConfig: any = {
-                    temperature: 1.0,           // Creatividad del modelo
+                    temperature: options?.temperature ?? 1.0,  // Use provided temperature or default
                     candidateCount: 1,          // Una imagen por turno
                     responseMimeType: 'image/jpeg',
                     // Add aspect ratio at root level (some SDKs/Models expect it here)
@@ -2897,11 +3018,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     };
                 }
 
-                // Add person generation setting
-                generationConfig.personGeneration = 'allow_adult';
+                // Add negative prompt if provided
+                if (options?.negativePrompt) {
+                    generationConfig.negativePrompt = options.negativePrompt;
+                    // Also append to the main prompt as some models prefer this
+                    finalPrompt = `${finalPrompt}. Avoid: ${options.negativePrompt}`;
+                }
+
+                // Add person generation setting (use provided or default to allow_adult)
+                generationConfig.personGeneration = options?.personGeneration || 'allow_adult';
 
                 // Add thinking level for Gemini 3 Pro (mejora texto en imagen y lógica espacial)
-                generationConfig.thinkingLevel = 'high';
+                // Higher thinking = better text rendering and spatial reasoning
+                generationConfig.thinkingLevel = options?.thinkingLevel || 'high';
 
                 // FALLBACK STRATEGY: Add aspect ratio to prompt text as well
                 // This is the most reliable way if config parameters are ignored
@@ -2910,12 +3039,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 }
 
                 // Debug: Log the configuration
-                console.log('🎨 Nano Banana Pro (Gemini 3 Pro Image) Config:', {
+                console.log('✨ Quimera Vision Pro Full Config:', {
                     model: modelName,
                     aspectRatio: generationConfig.aspectRatio,
                     imageConfig: generationConfig.imageConfig,
                     temperature: generationConfig.temperature,
                     thinkingLevel: generationConfig.thinkingLevel,
+                    personGeneration: generationConfig.personGeneration,
+                    negativePrompt: options?.negativePrompt,
                     resolution: options?.resolution,
                 });
 
@@ -2925,7 +3056,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 // Prepare reference images array (support both singular and plural options)
                 const referenceImages = options?.referenceImages || (options?.referenceImage ? [options.referenceImage] : []);
 
-                // Add reference images if provided (Nano Banana Pro supports up to 14 images)
+                // Add reference images if provided (Quimera Vision Pro supports up to 14 images)
                 if (referenceImages.length > 0) {
                     referenceImages.forEach((imgData) => {
                         // Extract base64 data from data URL

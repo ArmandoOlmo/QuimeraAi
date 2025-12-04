@@ -18,11 +18,17 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
 // Debug: Log credential status on load
-console.log('🔑 Google Calendar credentials status:', {
-    hasClientId: !!GOOGLE_CLIENT_ID,
-    hasApiKey: !!GOOGLE_API_KEY,
-    clientIdPrefix: GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.substring(0, 15) + '...' : 'NOT SET'
-});
+console.log('🔑 Google Calendar credentials status:');
+console.log('  - hasClientId:', !!GOOGLE_CLIENT_ID);
+console.log('  - hasApiKey:', !!GOOGLE_API_KEY);
+console.log('  - clientIdPrefix:', GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.substring(0, 15) + '...' : 'NOT SET');
+
+if (!GOOGLE_CLIENT_ID) {
+    console.warn('⚠️ VITE_GOOGLE_CLIENT_ID no está configurado. La sincronización con Google Calendar no funcionará.');
+}
+if (!GOOGLE_API_KEY) {
+    console.warn('⚠️ VITE_GOOGLE_API_KEY no está configurado. Algunas funciones podrían no funcionar.');
+}
 
 // =============================================================================
 // TYPES
@@ -186,7 +192,10 @@ export const initializeGapiClient = async (): Promise<void> => {
                 console.log('✅ GAPI client initialized successfully');
                 resolve();
             } catch (error: any) {
-                console.error('❌ Error initializing GAPI client:', error?.message || error);
+                console.error('❌ Error initializing GAPI client:');
+                console.error('  - message:', error?.message);
+                console.error('  - details:', error?.details);
+                console.error('  - error object:', JSON.stringify(error, null, 2));
                 reject(error);
             }
         });

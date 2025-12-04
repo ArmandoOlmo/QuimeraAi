@@ -1,7 +1,27 @@
-import { getGoogleGenAI } from './genAiClient';
+/**
+ * Expense Extractor using Gemini Vision API
+ * 
+ * NOTE: This functionality requires the Vision API which needs direct API access
+ * or an extended proxy that supports image uploads. The current proxy only supports
+ * text-based requests.
+ * 
+ * TODO: Extend the Gemini proxy to support multimodal (image + text) requests
+ * for features like receipt scanning.
+ */
 import { ExpenseRecord } from '../types/finance';
 
-export const extractExpenseFromReceipt = async (file: File): Promise<Partial<ExpenseRecord>> => {
+export const extractExpenseFromReceipt = async (_file: File): Promise<Partial<ExpenseRecord>> => {
+    // Vision API features require proxy extension to support image uploads
+    // For now, return a placeholder that prompts manual entry
+    console.warn('⚠️ Receipt scanning requires Vision API proxy extension. Manual entry required.');
+    
+    throw new Error(
+        'La función de escaneo de recibos está temporalmente deshabilitada. ' +
+        'Por favor, ingresa los datos del gasto manualmente.'
+    );
+    
+    /* 
+    // Original implementation (requires Vision API with direct access):
     const ai = await getGoogleGenAI();
     
     // Convertir archivo a base64
@@ -9,55 +29,31 @@ export const extractExpenseFromReceipt = async (file: File): Promise<Partial<Exp
         const reader = new FileReader();
         reader.onload = (e) => {
             const result = e.target?.result as string;
-            // Manejar tanto data:image/jpeg;base64, como raw base64 si fuera necesario, 
-            // pero FileReader.readAsDataURL devuelve el prefijo.
             const base64 = result.includes(',') ? result.split(',')[1] : result;
             resolve(base64);
         };
         reader.readAsDataURL(file);
     });
 
-    // Prompt optimizado para JSON
     const prompt = `
     Analiza esta imagen/documento de una factura o recibo.
-    Extrae la siguiente información en formato JSON estricto:
-    - date: fecha en formato YYYY-MM-DD (si no hay año, asume el actual)
-    - supplier: nombre del proveedor o negocio
-    - category: clasifícalo en una de estas categorías: [Inventario, Marketing, Oficina, Servicios, Viajes, Comidas, Nómina, Otros]
-    - subtotal: monto antes de impuestos (número)
-    - tax: monto de impuestos (número)
-    - total: monto total (número)
-    - currency: código de moneda (MXN, USD, EUR). Si no es claro, asume MXN si es en español, USD en inglés.
-    - items: array de strings con los nombres de los productos principales (máximo 5)
-    - confidence: un número del 0 al 1 indicando qué tan legible es el documento y qué tan seguro estás de los datos extraídos.
-    
-    Si algún campo no es visible, usa null o 0 según corresponda.
-    Responde SOLO con el JSON, sin bloques de código markdown.
+    Extrae la información en formato JSON estricto...
     `;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash', // Modelo rápido y económico
-            contents: [{
-                role: 'user',
-                parts: [
-                    { inlineData: { mimeType: file.type, data: base64Data } },
-                    { text: prompt }
-                ]
-            }]
-        });
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{
+            role: 'user',
+            parts: [
+                { inlineData: { mimeType: file.type, data: base64Data } },
+                { text: prompt }
+            ]
+        }]
+    });
 
-        const textResponse = response?.text || '{}';
-        
-        // Limpiar el markdown ```json ... ``` si Gemini lo incluye
-        const jsonString = textResponse.replace(/```json|```/g, '').trim();
-        
-        const parsedData = JSON.parse(jsonString);
-        
-        return parsedData;
-    } catch (error) {
-        console.error("Error extracting expense data with Gemini:", error);
-        throw new Error("No se pudo procesar el documento. Intenta con una imagen más clara.");
-    }
+    const textResponse = response?.text || '{}';
+    const jsonString = textResponse.replace(/```json|```/g, '').trim();
+    return JSON.parse(jsonString);
+    */
 };
 

@@ -11,6 +11,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { GoogleGenAI } from '@google/genai';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -125,7 +126,32 @@ async function getProjectData(projectId: string, userId?: string) {
         };
     }
 
-    // 2. Handle User Projects (if userId is provided)
+    // 2. Handle Global Assistant and special system contexts
+    // These don't require a real project in Firestore
+    if (projectId === 'anonymous' || 
+        projectId.startsWith('assistant-') || 
+        projectId.startsWith('global-') ||
+        projectId.startsWith('onboarding-') ||
+        projectId.startsWith('cms-') ||
+        projectId.startsWith('leads-') ||
+        projectId.startsWith('finance-') ||
+        projectId.startsWith('domain-') ||
+        projectId.startsWith('appointment-') ||
+        projectId.startsWith('content-') ||
+        projectId.startsWith('enhance-') ||
+        projectId.startsWith('ai-') ||
+        (userId && projectId === userId)) { // Allow userId as projectId
+        return {
+            exists: true,
+            data: {
+                userId: userId || 'anonymous',
+                planType: 'FREE',
+                aiAssistantConfig: { isActive: true }
+            }
+        };
+    }
+
+    // 3. Handle User Projects (if userId is provided)
     if (userId) {
         const userProjectDoc = await db.collection('users').doc(userId).collection('projects').doc(projectId).get();
         if (userProjectDoc.exists) {
@@ -133,7 +159,7 @@ async function getProjectData(projectId: string, userId?: string) {
         }
     }
 
-    // 3. Handle Top-Level Projects (Fallback)
+    // 4. Handle Top-Level Projects (Fallback)
     const projectDoc = await db.collection('projects').doc(projectId).get();
     if (projectDoc.exists) {
         return { exists: true, data: projectDoc.data() };
@@ -231,11 +257,11 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Get API key from environment variable (set via Firebase Config)
-        const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+        // Get API key from environment variable (.env file in functions directory)
+        const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured');
+            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
@@ -363,9 +389,11 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+        // Get API key from environment variable (.env file in functions directory)
+        const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
+            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
@@ -424,6 +452,283 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         } else {
             res.end();
         }
+    }
+});
+
+/**
+ * Gemini API Proxy - Generate Image
+ * 
+ * POST /api/gemini/image
+ * 
+ * Body:
+ * {
+ *   userId: string,
+ *   prompt: string,
+ *   model?: string,
+ *   aspectRatio?: string,
+ *   style?: string,
+ *   resolution?: string,
+ *   config?: object
+ * }
+ */
+export const generateImage = functions.https.onRequest(async (req, res) => {
+    // Enable CORS for all origins
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Max-Age', '3600');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    try {
+        const { 
+            userId, 
+            prompt, 
+            model = 'gemini-3-pro-image-preview', // Default to Quimera Vision Pro
+            aspectRatio = '1:1',
+            style,
+            resolution = '1K',
+            // Quimera AI specific options
+            thinkingLevel = 'high',
+            personGeneration = 'allow_adult',
+            temperature = 1.0,
+            negativePrompt,
+            // Reference images for style transfer (base64 data URLs)
+            referenceImages = [],
+            config = {}
+        } = req.body;
+
+        // Validate required fields
+        if (!userId || !prompt) {
+            res.status(400).json({
+                error: 'Missing required fields',
+                required: ['userId', 'prompt']
+            });
+            return;
+        }
+
+        // Rate limiting - use userId as projectId for image generation
+        const rateLimitCheck = await checkRateLimit(`image-gen-${userId}`, userId, 'PRO');
+        if (!rateLimitCheck.allowed) {
+            res.status(429).json({
+                error: rateLimitCheck.message,
+                resetAt: rateLimitCheck.resetAt
+            });
+            return;
+        }
+
+        // Get API key from environment variable (.env file in functions directory)
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
+            res.status(500).json({ error: 'API configuration error' });
+            return;
+        }
+
+        // Build enhanced prompt with style and visual controls
+        let enhancedPrompt = prompt;
+        if (style && style !== 'None') {
+            enhancedPrompt = `${prompt}, ${style} style`;
+        }
+        
+        // Add aspect ratio hint to prompt
+        if (aspectRatio && aspectRatio !== '1:1') {
+            enhancedPrompt = `${enhancedPrompt}, aspect ratio ${aspectRatio}`;
+        }
+
+        // Add visual controls from config
+        if (config.lighting) enhancedPrompt = `${enhancedPrompt}, ${config.lighting}`;
+        if (config.cameraAngle) enhancedPrompt = `${enhancedPrompt}, ${config.cameraAngle}`;
+        if (config.colorGrading) enhancedPrompt = `${enhancedPrompt}, ${config.colorGrading}`;
+        if (config.themeColors) enhancedPrompt = `${enhancedPrompt}, ${config.themeColors}`;
+        if (config.depthOfField) enhancedPrompt = `${enhancedPrompt}, ${config.depthOfField}`;
+
+        // Add quality hints
+        enhancedPrompt = `${enhancedPrompt}, high quality, professional, detailed`;
+
+        // Add negative prompt if provided
+        if (negativePrompt) {
+            enhancedPrompt = `${enhancedPrompt}. Avoid: ${negativePrompt}`;
+        }
+
+        // Determine actual model to use
+        // Map model names to actual API model identifiers
+        let actualModel = model;
+        if (model === 'gemini-3-pro-image-preview' || model.includes('nano')) {
+            // Quimera Vision Pro uses Gemini 2.0 Flash Exp for image generation
+            actualModel = 'gemini-2.0-flash-exp';
+        } else if (model.includes('imagen')) {
+            // Keep Imagen models as-is for generateImages API
+            actualModel = model;
+        }
+
+        console.log('✨ Quimera Vision Pro Image generation request:', {
+            userId,
+            requestedModel: model,
+            actualModel,
+            aspectRatio,
+            style,
+            resolution,
+            thinkingLevel,
+            personGeneration,
+            temperature,
+            negativePrompt: negativePrompt ? 'yes' : 'no',
+            promptLength: enhancedPrompt.length,
+            referenceImagesCount: referenceImages?.length || 0
+        });
+
+        // Use the Google Generative AI SDK for image generation
+        const genAI = new GoogleGenAI({ apiKey });
+
+        try {
+            let imageBase64: string | null = null;
+
+            if (actualModel.includes('imagen')) {
+                // Use generateImages API for Imagen models
+                const imageConfig: any = {
+                    numberOfImages: 1,
+                    aspectRatio: aspectRatio as any,
+                    personGeneration: personGeneration,
+                };
+
+                // Add image size based on resolution
+                if (resolution === '4K' || resolution === '2K') {
+                    imageConfig.imageSize = '2K'; // Imagen max is 2K
+                } else {
+                    imageConfig.imageSize = '1K';
+                }
+
+                const response = await genAI.models.generateImages({
+                    model: actualModel,
+                    prompt: enhancedPrompt,
+                    config: imageConfig,
+                });
+
+                imageBase64 = response.generatedImages?.[0]?.image?.imageBytes || null;
+            } else {
+                // Use generateContent with responseModalities for Gemini models (Quimera Vision Pro)
+                const generationConfig: any = {
+                    responseModalities: ['IMAGE', 'TEXT'],
+                    temperature: temperature,
+                };
+
+                // Add thinking level for better text rendering (Quimera Vision Pro feature)
+                if (thinkingLevel && thinkingLevel !== 'none') {
+                    generationConfig.thinkingLevel = thinkingLevel;
+                }
+
+                // Build content parts (text + optional reference images)
+                const contentParts: any[] = [];
+
+                // Add reference images if provided (Quimera Vision Pro supports up to 14 images)
+                if (referenceImages && referenceImages.length > 0) {
+                    console.log(`🖼️ Processing ${referenceImages.length} reference images for style transfer`);
+                    
+                    for (const imgDataUrl of referenceImages) {
+                        try {
+                            // Extract base64 data and mime type from data URL
+                            // Format: data:image/png;base64,iVBORw0KGgo...
+                            const matches = imgDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+                            if (matches && matches.length === 3) {
+                                const mimeType = matches[1];
+                                const base64Data = matches[2];
+                                
+                                contentParts.push({
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: base64Data
+                                    }
+                                });
+                                console.log(`✅ Added reference image: ${mimeType}`);
+                            } else {
+                                console.warn('⚠️ Invalid image data URL format, skipping');
+                            }
+                        } catch (err) {
+                            console.warn('⚠️ Error processing reference image:', err);
+                        }
+                    }
+
+                    // Add prompt with reference instruction
+                    contentParts.push({
+                        text: `Using the provided reference images as style guide, generate an image: ${enhancedPrompt}`
+                    });
+                } else {
+                    // No reference images, just text prompt
+                    contentParts.push({
+                        text: `Generate an image: ${enhancedPrompt}`
+                    });
+                }
+
+                const response = await genAI.models.generateContent({
+                    model: actualModel,
+                    contents: [{ role: 'user', parts: contentParts }],
+                    config: generationConfig
+                });
+
+                // Extract image from response parts
+                if (response.candidates?.[0]?.content?.parts) {
+                    for (const part of response.candidates[0].content.parts) {
+                        if ((part as any).inlineData?.data) {
+                            imageBase64 = (part as any).inlineData.data;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!imageBase64) {
+                console.error('No image in response');
+                res.status(500).json({ 
+                    error: 'No image generated',
+                    details: 'The model did not return an image'
+                });
+                return;
+            }
+
+            // Track usage asynchronously
+            trackUsage(`image-gen-${userId}`, userId, 1, model).catch(console.error);
+
+            // Return response
+            res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+            res.status(200).json({
+                success: true,
+                image: imageBase64,
+                mimeType: 'image/png',
+                metadata: {
+                    model: model,
+                    actualModel: actualModel,
+                    aspectRatio,
+                    style,
+                    resolution,
+                    thinkingLevel,
+                    remaining: rateLimitCheck.remaining
+                }
+            });
+
+        } catch (sdkError: any) {
+            console.error('✨ Quimera Vision Pro SDK error:', sdkError);
+            res.status(500).json({
+                error: 'Image generation failed',
+                message: sdkError?.message || 'Unknown SDK error'
+            });
+        }
+
+    } catch (error) {
+        console.error('Image generation proxy error:', error);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 });
 

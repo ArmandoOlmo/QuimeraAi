@@ -177,6 +177,115 @@ export async function getUsageStats(projectId: string) {
 }
 
 /**
+ * Image generation configuration
+ * Supports Quimera Vision Pro advanced controls
+ */
+export interface ImageGenerationConfig {
+    aspectRatio?: string;
+    style?: string;
+    resolution?: '1K' | '2K' | '4K';
+    // Quimera AI specific options
+    model?: string;
+    thinkingLevel?: string;
+    personGeneration?: string;
+    temperature?: number;
+    negativePrompt?: string;
+    // Visual controls
+    lighting?: string;
+    cameraAngle?: string;
+    colorGrading?: string;
+    themeColors?: string;
+    depthOfField?: string;
+    // Reference images for style transfer (base64 data URLs)
+    referenceImages?: string[];
+}
+
+/**
+ * Image generation response
+ */
+export interface ImageProxyResponse {
+    success: boolean;
+    image: string; // base64 encoded image
+    mimeType: string;
+    metadata: {
+        model: string;
+        aspectRatio: string;
+        style?: string;
+        remaining?: number;
+    };
+}
+
+/**
+ * Generate image using the secure Gemini proxy
+ * This keeps the API key secure on the server side
+ * Supports Quimera Vision Pro with full controls
+ */
+export async function generateImageViaProxy(
+    userId: string,
+    prompt: string,
+    config: ImageGenerationConfig = {}
+): Promise<ImageProxyResponse> {
+    try {
+        console.log('✨ Generating image via proxy (Quimera AI):', {
+            userId,
+            promptLength: prompt.length,
+            model: config.model,
+            thinkingLevel: config.thinkingLevel,
+            config
+        });
+
+        const response = await fetch(`${PROXY_BASE_URL}-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId,
+                prompt,
+                // Model selection (defaults to Quimera Vision Pro)
+                model: config.model || 'gemini-3-pro-image-preview',
+                aspectRatio: config.aspectRatio || '1:1',
+                style: config.style,
+                resolution: config.resolution || '1K',
+                // Quimera AI specific options
+                thinkingLevel: config.thinkingLevel,
+                personGeneration: config.personGeneration,
+                temperature: config.temperature,
+                negativePrompt: config.negativePrompt,
+                // Reference images for style transfer (base64 data URLs)
+                referenceImages: config.referenceImages,
+                // Visual controls
+                config: {
+                    lighting: config.lighting,
+                    cameraAngle: config.cameraAngle,
+                    colorGrading: config.colorGrading,
+                    themeColors: config.themeColors,
+                    depthOfField: config.depthOfField
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Image proxy error:', errorData);
+            throw new Error(errorData.error || `Image generation failed: ${response.status}`);
+        }
+
+        const data: ImageProxyResponse = await response.json();
+        
+        if (!data.success || !data.image) {
+            throw new Error('No image returned from proxy');
+        }
+
+        console.log('✅ Image generated successfully via proxy');
+        return data;
+    } catch (error) {
+        console.error('Image generation proxy error:', error);
+        throw error;
+    }
+}
+
+/**
  * Helper to extract text from Gemini proxy response
  */
 export function extractTextFromResponse(response: GeminiProxyResponse): string {
@@ -189,23 +298,13 @@ export function extractTextFromResponse(response: GeminiProxyResponse): string {
 }
 
 /**
- * Check if we should use the proxy (production mode)
+ * Check if we should use the proxy
+ * SECURITY: Always use proxy to keep API key secure on the server
  */
 export function shouldUseProxy(): boolean {
-    // Use proxy if:
-    // 1. Running in production (not localhost)
-    // 2. VITE_USE_GEMINI_PROXY is explicitly set to 'true'
-    // 3. No direct API key is available
-
-    const isProduction = !window.location.hostname.includes('localhost') &&
-        !window.location.hostname.includes('127.0.0.1');
-
-    const forceProxy = import.meta.env.VITE_USE_GEMINI_PROXY === 'true';
-
-    const hasDirectKey = !!(import.meta.env.VITE_GEMINI_API_KEY);
-
-    // Use proxy in production, or if forced, or if no direct key
-    return isProduction || forceProxy || !hasDirectKey;
+    // ALWAYS use proxy - API key is stored securely in Firebase Functions
+    // This ensures the API key is NEVER exposed in the browser
+    return true;
 }
 
 

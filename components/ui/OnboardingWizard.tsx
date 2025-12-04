@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import Modal from './Modal';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Sparkles, ArrowRight, Wand2, Palette, Type, Layout, Loader2, X, Briefcase, Target, Layers, Gem, Monitor, PenTool, Leaf, Megaphone, Smile, Building2, Package, Phone, Image as ImageIcon, Star, Plus, Trash2, Rocket, CheckCircle } from 'lucide-react';
 import GeneratingState from './GeneratingState';
 import GuidedTour from './GuidedTour';
@@ -127,7 +127,7 @@ const OptionCard = ({
 // --- Main Component ---
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) => {
-    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, saveOnboardingStateToFirebase, clearOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user, generateProjectImagesWithProgress } = useEditor();
+    const { addNewProject, handleApiError, hasApiKey, promptForKeySelection, getPrompt, onboardingState, setOnboardingState, saveOnboardingStateToFirebase, clearOnboardingState, componentStatus, componentStyles, customComponents, setView, uploadImageAndGetURL, loadProject, user, generateProjectImagesWithProgress, activeProject } = useEditor();
     
     // LOCAL form state - prevents lag by avoiding global context updates on every keystroke
     const [localFormState, setLocalFormState] = useState(onboardingState);
@@ -305,7 +305,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
         setFieldLoading(field);
         try {
-            const ai = await getGoogleGenAI();
             let promptName = '';
             
             switch(field) {
@@ -330,12 +329,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 .replace('{{audience}}', localFormState.audience || '')
                 .replace('{{aesthetic}}', localFormState.aesthetic || 'Minimalist');
 
-            const response = await ai.models.generateContent({
-                model: promptConfig.model,
-                contents: filledPrompt,
-            });
+            const projectId = activeProject?.id || 'onboarding-wizard';
+            const response = await generateContentViaProxy(projectId, filledPrompt, promptConfig.model, {}, user?.uid);
 
-            const text = response.text.trim();
+            const text = extractTextFromResponse(response).trim();
             
             // Para coreValues, convertir a array
             if (field === 'coreValues') {
@@ -386,14 +383,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                 .replace('{{availableComponents}}', availableComponentsList || 'All standard components')
                 .replace('{{customComponents}}', customComponentsList || 'None');
 
-            const ai = await getGoogleGenAI();
-            const response = await ai.models.generateContent({
-                model: promptConfig.model,
-                contents: filledPrompt,
-                config: { responseMimeType: 'application/json' }
-            });
+            const projectId = activeProject?.id || 'onboarding-design-plan';
+            const response = await generateContentViaProxy(projectId, filledPrompt, promptConfig.model, {}, user?.uid);
 
-            const jsonText = cleanJson(response.text);
+            const jsonText = cleanJson(extractTextFromResponse(response));
             const designPlan = JSON.parse(jsonText);
             
             updateState('designPlan', designPlan);
@@ -475,17 +468,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
             setGeneratingStatus('Writing persuasive copy & painting pixels...');
             console.log("🤖 [generateWebsite] Step 3: Calling AI API...");
 
-            const ai = await getGoogleGenAI();
-            const response = await ai.models.generateContent({
-                model: promptConfig.model,
-                contents: filledPrompt,
-                config: { responseMimeType: 'application/json' }
-            });
-            console.log("✅ [generateWebsite] AI response received (length:", response.text?.length || 0, "chars)");
+            const proxyProjectId = activeProject?.id || 'onboarding-website-gen';
+            const response = await generateContentViaProxy(proxyProjectId, filledPrompt, promptConfig.model, {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
+            console.log("✅ [generateWebsite] AI response received (length:", responseText?.length || 0, "chars)");
 
             setGeneratingStatus('Finalizing project...');
             console.log("🔍 [generateWebsite] Step 4: Parsing AI response...");
-            const jsonText = cleanJson(response.text);
+            const jsonText = cleanJson(responseText);
             let result;
             try {
                 result = JSON.parse(jsonText);
@@ -1338,7 +1328,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
             setFieldLoading('products');
             try {
-                const ai = await getGoogleGenAI();
                 const promptConfig = getPrompt('onboarding-products');
                 if (!promptConfig) throw new Error('Prompt onboarding-products not found');
 
@@ -1348,13 +1337,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     .replace('{{summary}}', onboardingState.summary || '')
                     .replace('{{offerings}}', onboardingState.offerings || '');
 
-                const response = await ai.models.generateContent({
-                    model: promptConfig.model,
-                    contents: filledPrompt,
-                    config: { responseMimeType: 'application/json' }
-                });
+                const projectId = activeProject?.id || 'onboarding-products';
+                const response = await generateContentViaProxy(projectId, filledPrompt, promptConfig.model, {}, user?.uid);
 
-                const jsonText = cleanJson(response.text);
+                const jsonText = cleanJson(extractTextFromResponse(response));
                 const productsData = JSON.parse(jsonText);
                 
                 // Convert to ProductInfo format with IDs
@@ -1559,7 +1545,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
                             setFieldLoading('faqs');
                             try {
-                                const ai = await getGoogleGenAI();
                                 const promptConfig = getPrompt('onboarding-faqs');
                                 if (!promptConfig) throw new Error('Prompt onboarding-faqs not found');
 
@@ -1569,13 +1554,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                                     .replace('{{summary}}', onboardingState.summary || '')
                                     .replace('{{audience}}', onboardingState.audience || '');
 
-                                const response = await ai.models.generateContent({
-                                    model: promptConfig.model,
-                                    contents: filledPrompt,
-                                    config: { responseMimeType: 'application/json' }
-                                });
+                                const projectId = activeProject?.id || 'onboarding-faqs';
+                                const response = await generateContentViaProxy(projectId, filledPrompt, promptConfig.model, {}, user?.uid);
 
-                                const jsonText = cleanJson(response.text);
+                                const jsonText = cleanJson(extractTextFromResponse(response));
                                 const faqsData = JSON.parse(jsonText);
                                 updateState('faqs', faqsData);
                             } catch (error) {
@@ -1663,7 +1645,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
 
             setFieldLoading('testimonials');
             try {
-                const ai = await getGoogleGenAI();
                 const promptConfig = getPrompt('onboarding-testimonials');
                 if (!promptConfig) throw new Error('Prompt onboarding-testimonials not found');
 
@@ -1673,13 +1654,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onClose }) 
                     .replace('{{summary}}', onboardingState.summary || '')
                     .replace('{{audience}}', onboardingState.audience || '');
 
-                const response = await ai.models.generateContent({
-                    model: promptConfig.model,
-                    contents: filledPrompt,
-                    config: { responseMimeType: 'application/json' }
-                });
+                const projectId = activeProject?.id || 'onboarding-testimonials';
+                const response = await generateContentViaProxy(projectId, filledPrompt, promptConfig.model, {}, user?.uid);
 
-                const jsonText = cleanJson(response.text);
+                const jsonText = cleanJson(extractTextFromResponse(response));
                 const testimonialsData = JSON.parse(jsonText);
                 
                 // Convert to TestimonialInfo format with IDs

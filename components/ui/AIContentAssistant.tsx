@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Sparkles, X, KeyRound, Wand2, Languages, AlignLeft, Type } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
 
@@ -27,7 +27,7 @@ type MagicAction = 'fix' | 'shorten' | 'expand' | 'tone' | 'translate';
 const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
   isOpen, onClose, onApply, initialText, contextPrompt,
 }) => {
-  const { getPrompt, hasApiKey, promptForKeySelection, handleApiError, brandIdentity } = useEditor();
+  const { getPrompt, hasApiKey, promptForKeySelection, handleApiError, brandIdentity, activeProject, user } = useEditor();
   const [customInstruction, setCustomInstruction] = useState('');
   const [generatedText, setGeneratedText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,8 +57,6 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
     setIsLoading(true);
     
     try {
-      const ai = await getGoogleGenAI();
-      
       // Prepare replacement variables including Brand Identity
       let populatedPrompt = promptTemplate.template
         .replace('{{context}}', contextPrompt)
@@ -76,12 +74,10 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
             .replace('{{language}}', brandIdentity.language);
       }
 
-      const response = await ai.models.generateContent({
-          model: promptTemplate.model,
-          contents: populatedPrompt,
-      });
+      const projectId = activeProject?.id || 'content-assistant';
+      const response = await generateContentViaProxy(projectId, populatedPrompt, promptTemplate.model, {}, user?.uid);
 
-      setGeneratedText(response.text.trim());
+      setGeneratedText(extractTextFromResponse(response).trim());
     } catch (error) {
       handleApiError(error);
       console.error('Error generating content:', error);

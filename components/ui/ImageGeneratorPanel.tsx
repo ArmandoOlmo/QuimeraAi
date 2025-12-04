@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
-import { Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus, AlertTriangle } from 'lucide-react';
+import { Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus, AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers, Rocket } from 'lucide-react';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global';
@@ -114,7 +114,53 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         { label: t('editor.tiltShift'), value: 'Tilt-Shift Effect' }
     ];
 
+    // Quimera AI Model Controls
+    const MODELS = [
+        { 
+            label: 'Quimera Vision Pro', 
+            value: 'gemini-3-pro-image-preview',
+            description: t('editor.quimeraVisionProDesc', { defaultValue: 'Best quality, text in images, thinking level' }),
+            icon: 'vision'
+        },
+        { 
+            label: 'Quimera Ultra', 
+            value: 'imagen-4.0-ultra-generate-001',
+            description: t('editor.quimeraUltraDesc', { defaultValue: 'Highest quality, slower generation' }),
+            icon: 'ultra'
+        },
+        { 
+            label: 'Quimera Standard', 
+            value: 'imagen-4.0-generate-001',
+            description: t('editor.quimeraStandardDesc', { defaultValue: 'Balanced quality and speed' }),
+            icon: 'standard'
+        },
+        { 
+            label: 'Quimera Fast', 
+            value: 'imagen-4.0-fast-generate-001',
+            description: t('editor.quimeraFastDesc', { defaultValue: 'Fastest generation, good quality' }),
+            icon: 'fast'
+        },
+    ];
+
+    const THINKING_LEVELS = [
+        { label: t('editor.none', { defaultValue: 'None' }), value: 'none', description: 'No thinking, fastest' },
+        { label: t('editor.low', { defaultValue: 'Low' }), value: 'low', description: 'Basic reasoning' },
+        { label: t('editor.medium', { defaultValue: 'Medium' }), value: 'medium', description: 'Balanced thinking' },
+        { label: t('editor.high', { defaultValue: 'High' }), value: 'high', description: 'Deep reasoning, best for text' },
+    ];
+
+    const PERSON_GENERATION = [
+        { label: t('editor.allowAdults', { defaultValue: 'Allow Adults' }), value: 'allow_adult', description: 'Generate adult people' },
+        { label: t('editor.dontAllow', { defaultValue: "Don't Allow" }), value: 'dont_allow', description: 'No people generation' },
+    ];
+
     const [prompt, setPrompt] = useState('');
+    // Quimera AI Controls
+    const [selectedModel, setSelectedModel] = useState('gemini-3-pro-image-preview');
+    const [thinkingLevel, setThinkingLevel] = useState('high');
+    const [personGeneration, setPersonGeneration] = useState('allow_adult');
+    const [temperature, setTemperature] = useState(1.0);
+    const [negativePrompt, setNegativePrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [style, setStyle] = useState('None');
     const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
@@ -133,7 +179,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { uploadFile } = useEditor();
+
+    // Helper function to convert File to base64 data URL
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
 
     const processFiles = async (files: FileList | File[]) => {
         const remainingSlots = 14 - referenceImages.length;
@@ -148,41 +203,44 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
         let successCount = 0;
         let failCount = 0;
-        const successfulUrls: string[] = [];
+        const successfulBase64s: string[] = [];
 
         try {
             for (const file of filesToProcess) {
                 if (file.type.startsWith('image/')) {
                     try {
-                        const url = await uploadFile(file);
-                        if (url) {
-                            successfulUrls.push(url);
+                        // Convert to base64 data URL instead of uploading to Storage
+                        // This is required for the image generation API
+                        const base64DataUrl = await fileToBase64(file);
+                        if (base64DataUrl) {
+                            successfulBase64s.push(base64DataUrl);
                             successCount++;
+                            console.log(`✅ [ImageGeneratorPanel] Converted ${file.name} to base64 for reference`);
                         } else {
                             failCount++;
                         }
                     } catch (error) {
-                        console.error(`Error uploading ${file.name}:`, error);
+                        console.error(`Error converting ${file.name} to base64:`, error);
                         failCount++;
                     }
                 }
             }
 
-            if (successfulUrls.length > 0) {
-                setReferenceImages(prev => [...prev, ...successfulUrls]);
+            if (successfulBase64s.length > 0) {
+                setReferenceImages(prev => [...prev, ...successfulBase64s]);
             }
 
             // Mostrar feedback al usuario
             if (failCount > 0 && successCount > 0) {
                 alert(t('editor.partialUploadFailed', { 
-                    defaultValue: `${successCount} image(s) uploaded, ${failCount} failed. Check console for details.` 
+                    defaultValue: `${successCount} image(s) loaded, ${failCount} failed. Check console for details.` 
                 }));
             } else if (failCount > 0 && successCount === 0) {
-                alert(t('editor.uploadFailed', { defaultValue: 'Failed to upload images. Please try again.' }));
+                alert(t('editor.uploadFailed', { defaultValue: 'Failed to load images. Please try again.' }));
             }
         } catch (error) {
             console.error("Error processing reference images:", error);
-            alert(t('editor.uploadFailed', { defaultValue: 'Failed to upload some images' }));
+            alert(t('editor.uploadFailed', { defaultValue: 'Failed to load some images' }));
         } finally {
             setIsUploading(false);
         }
@@ -228,6 +286,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 style,
                 destination,
                 resolution,
+                // Quimera AI specific options
+                model: selectedModel,
+                thinkingLevel: thinkingLevel !== 'none' ? thinkingLevel : undefined,
+                personGeneration,
+                temperature,
+                negativePrompt: negativePrompt.trim() || undefined,
+                // Visual controls
                 lighting: lighting !== 'None' ? lighting : undefined,
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
@@ -236,7 +301,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             };
 
-            console.log('🖼️ [ImageGeneratorPanel] Sending options to generateImage:', options);
+            console.log('✨ [ImageGeneratorPanel] Quimera options:', options);
 
             const url = await generateImage(prompt, options);
             setGeneratedImage(url);
@@ -275,8 +340,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 <div className="flex items-center gap-2 flex-wrap">
                     <Zap size={20} className="text-editor-accent" />
                     <h2 className="text-lg font-bold text-editor-text-primary">{t('editor.quimeraImageGenerator')}</h2>
-                    <span className="text-xs text-editor-accent bg-editor-accent/10 px-2 py-0.5 rounded-full border border-editor-accent/30 font-semibold">
-                        {t('editor.ultraHD')}
+                    <span className="text-xs text-editor-accent bg-editor-accent/10 px-2 py-0.5 rounded-full border border-editor-accent/30 font-semibold flex items-center gap-1">
+                        {selectedModel === 'gemini-3-pro-image-preview' ? <><Eye size={12} /> Quimera Vision Pro</> : t('editor.ultraHD')}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-editor-text-secondary">
+                        {MODELS.find(m => m.value === selectedModel)?.description}
                     </span>
                 </div>
             </div>
@@ -286,6 +356,43 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 <div className="flex gap-6 h-full flex-col md:flex-row">
                     {/* Controls Side */}
                     <div className="w-full md:w-1/3 flex flex-col gap-5 md:border-r border-editor-border md:pr-6 overflow-y-auto custom-scrollbar">
+                        {/* Model Selector */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles size={14} className="text-editor-accent" />
+                                <label className="block text-xs font-medium text-editor-text-secondary">
+                                    {t('editor.model', { defaultValue: 'Quimera Model' })}
+                                </label>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {MODELS.map(model => (
+                                    <button
+                                        key={model.value}
+                                        onClick={() => setSelectedModel(model.value)}
+                                        className={`text-xs py-1.5 px-3 rounded-full transition-all flex items-center gap-1.5 ${
+                                            selectedModel === model.value 
+                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                        }`}
+                                        title={model.description}
+                                    >
+                                        {model.icon === 'vision' && <Eye size={12} />}
+                                        {model.icon === 'ultra' && <Flame size={12} />}
+                                        {model.icon === 'standard' && <Layers size={12} />}
+                                        {model.icon === 'fast' && <Rocket size={12} />}
+                                        {model.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {selectedModel === 'gemini-3-pro-image-preview' && (
+                                <p className="text-xs text-editor-accent/80 mt-2 flex items-center gap-1">
+                                    <Brain size={11} />
+                                    {t('editor.quimeraVisionProActive', { defaultValue: 'Best for text & complex scenes' })}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Prompt */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="block text-sm font-bold text-editor-text-primary">{t('editor.prompt')}</label>
@@ -303,7 +410,20 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 placeholder={t('editor.describeImage')}
-                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-editor-text-primary focus:ring-2 focus:ring-editor-accent outline-none resize-none h-32 mb-4"
+                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-editor-text-primary focus:ring-2 focus:ring-editor-accent outline-none resize-none h-28"
+                            />
+                        </div>
+
+                        {/* Negative Prompt */}
+                        <div>
+                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
+                                {t('editor.negativePrompt', { defaultValue: 'Negative Prompt' })}
+                            </label>
+                            <textarea
+                                value={negativePrompt}
+                                onChange={(e) => setNegativePrompt(e.target.value)}
+                                placeholder={t('editor.negativePromptPlaceholder', { defaultValue: 'What to avoid: blurry, low quality, distorted...' })}
+                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-2 text-xs text-editor-text-primary focus:ring-2 focus:ring-editor-accent outline-none resize-none h-16"
                             />
                         </div>
 
@@ -372,13 +492,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">{t('editor.aspectRatio')}</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('editor.aspectRatio')}</label>
+                            <div className="flex flex-wrap gap-1.5">
                                 {ASPECT_RATIOS.map(ratio => (
                                     <button
                                         key={ratio.value}
                                         onClick={() => setAspectRatio(ratio.value)}
-                                        className={`text-xs py-2 rounded-md border transition-all ${aspectRatio === ratio.value ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold' : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-text-secondary hover:text-editor-text-primary'}`}
+                                        className={`text-xs py-1.5 px-3 rounded-full transition-all ${aspectRatio === ratio.value ? 'bg-editor-accent text-editor-bg font-medium' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'}`}
                                         title={ratio.label}
                                     >
                                         {ratio.value}
@@ -401,13 +521,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">{t('editor.resolution')}</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('editor.resolution')}</label>
+                            <div className="flex gap-1.5">
                                 {RESOLUTIONS.map(res => (
                                     <button
                                         key={res.value}
                                         onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
-                                        className={`text-xs py-2 rounded-md border transition-all ${resolution === res.value ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold' : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-text-secondary hover:text-editor-text-primary'}`}
+                                        className={`text-xs py-1.5 px-3 rounded-full transition-all ${resolution === res.value ? 'bg-editor-accent text-editor-bg font-medium' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'}`}
                                     >
                                         {res.label}
                                     </button>
@@ -437,6 +557,95 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
                         {showAdvanced && (
                             <>
+                                {/* Quimera Vision Pro Controls */}
+                                {selectedModel === 'gemini-3-pro-image-preview' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-editor-accent">
+                                            <Eye size={14} />
+                                            <span className="text-xs font-bold uppercase">{t('editor.quimeraVisionControls', { defaultValue: 'Vision Pro Controls' })}</span>
+                                        </div>
+
+                                        {/* Thinking Level */}
+                                        <div>
+                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                <Brain size={11} className="text-editor-text-secondary" />
+                                                <label className="text-xs text-editor-text-secondary">
+                                                    {t('editor.thinkingLevel', { defaultValue: 'Thinking' })}
+                                                </label>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                {THINKING_LEVELS.map(level => (
+                                                    <button
+                                                        key={level.value}
+                                                        onClick={() => setThinkingLevel(level.value)}
+                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${
+                                                            thinkingLevel === level.value 
+                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                        }`}
+                                                        title={level.description}
+                                                    >
+                                                        {level.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Person Generation */}
+                                        <div>
+                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                <Users size={11} className="text-editor-text-secondary" />
+                                                <label className="text-xs text-editor-text-secondary">
+                                                    {t('editor.personGeneration', { defaultValue: 'People' })}
+                                                </label>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                {PERSON_GENERATION.map(option => (
+                                                    <button
+                                                        key={option.value}
+                                                        onClick={() => setPersonGeneration(option.value)}
+                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${
+                                                            personGeneration === option.value 
+                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                        }`}
+                                                        title={option.description}
+                                                    >
+                                                        {option.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Temperature */}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Thermometer size={11} className="text-editor-text-secondary" />
+                                                    <label className="text-xs text-editor-text-secondary">
+                                                        {t('editor.temperature', { defaultValue: 'Creativity' })}
+                                                    </label>
+                                                </div>
+                                                <span className="text-xs text-editor-accent font-mono">{temperature.toFixed(1)}</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="2"
+                                                step="0.1"
+                                                value={temperature}
+                                                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                                                className="w-full h-1 bg-editor-border rounded-full appearance-none cursor-pointer accent-editor-accent"
+                                            />
+                                            <div className="flex justify-between text-[10px] text-editor-text-secondary/60 mt-1">
+                                                <span>{t('editor.precise', { defaultValue: 'Precise' })}</span>
+                                                <span>{t('editor.creative', { defaultValue: 'Creative' })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Visual Controls */}
                                 <div>
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">{t('editor.lighting')}</label>
                                     <select
@@ -529,13 +738,27 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 <p className="text-sm text-editor-accent flex items-center"><span className="w-2 h-2 bg-editor-accent rounded-full mr-2 animate-pulse"></span>{t('editor.savedToLibrary')}</p>
                                 <div className="flex gap-3">
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
                                             if (referenceImages.length >= 14) {
                                                 alert(t('editor.maxImagesAlert'));
                                                 return;
                                             }
                                             if (generatedImage) {
-                                                setReferenceImages(prev => [...prev, generatedImage]);
+                                                try {
+                                                    // Convert Firebase Storage URL to base64 data URL
+                                                    const response = await fetch(generatedImage);
+                                                    const blob = await response.blob();
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => {
+                                                        const base64DataUrl = reader.result as string;
+                                                        setReferenceImages(prev => [...prev, base64DataUrl]);
+                                                        console.log('✅ [ImageGeneratorPanel] Added generated image as reference (base64)');
+                                                    };
+                                                    reader.readAsDataURL(blob);
+                                                } catch (error) {
+                                                    console.error('Error converting image to base64:', error);
+                                                    alert(t('editor.uploadFailed', { defaultValue: 'Failed to add image as reference' }));
+                                                }
                                             }
                                         }}
                                         className="flex items-center gap-2 bg-editor-bg border border-editor-border text-editor-text-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-editor-panel-bg transition-colors"

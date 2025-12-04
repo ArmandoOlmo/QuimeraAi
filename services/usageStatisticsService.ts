@@ -136,7 +136,7 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 'gemini-2.5-pro': '#10b981',
                 'gemini-1.5-flash': '#f59e0b',
                 'gemini-1.5-pro': '#8b5cf6',
-                'gemini-3.0-pro-image-001': '#a855f7', // Quimera AI - Nano Banana Pro (Gemini 3 Pro Image)
+                'gemini-3.0-pro-image-001': '#a855f7', // Quimera Vision Pro
                 'gemini-3.0-pro-image': '#a855f7', // Alias (sin -001)
                 'imagen-4.0-generate-001': '#9333ea', // Imagen 4.0 Standard
                 'imagen-4.0-ultra-generate-001': '#8b5cf6', // Imagen 4.0 Ultra

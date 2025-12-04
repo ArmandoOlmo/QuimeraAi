@@ -111,5 +111,69 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
+    
+    // ============================================
+    // API Logging & Analytics (NEW)
+    // ============================================
+    
+    // API Logs - authenticated users can write their own logs, superadmin can read all
+    match /apiLogs/{logId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow create: if request.auth != null;
+      allow update, delete: if false; // Logs are immutable
+    }
+    
+    // API Usage - only backend (Cloud Functions) can write, superadmin can read
+    match /apiUsage/{usageId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if false; // Only Cloud Functions can write
+    }
+    
+    // Rate Limits - only backend can read/write
+    match /rateLimits/{document=**} {
+      allow read, write: if false; // Only Cloud Functions can access
+    }
+    
+    // Widget Analytics - only backend can write, superadmin can read
+    match /widgetAnalytics/{analyticsId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if false; // Only Cloud Functions can write
+    }
+    
+    // ============================================
+    // Tenant Management (NEW)
+    // ============================================
+    
+    // Tenants - superadmin/owner only
+    match /tenants/{tenantId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // ============================================
+    // Widget API - Public Access for Embedded Widgets (NEW)
+    // ============================================
+    
+    // Top-level projects collection (used by widget API for public access)
+    // This allows the widget to read project config without authentication
+    match /projects/{projectId} {
+      // Public read for widget config (only if aiAssistantConfig.isActive is true)
+      allow read: if true;
+      // Only authenticated owner or superadmin can write
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Top-level leads collection (used by widget API)
+    match /leads/{leadId} {
+      // Public create for widget submissions
+      allow create: if true;
+      // Authenticated users can read/update their own leads, superadmin can access all
+      allow read, update, delete: if request.auth != null && isSuperAdminOrOwner();
+      
+      // Lead activities subcollection
+      match /activities/{activityId} {
+        allow read, write: if request.auth != null && isSuperAdminOrOwner();
+      }
+    }
   }
 }

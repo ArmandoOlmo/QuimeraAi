@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditor } from '../../contexts/EditorContext';
-import { FunctionDeclaration, Type, LiveServerMessage, Modality, FunctionCallingConfigMode } from '@google/genai';
-import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, Wand2, X, User as UserIcon, Shield, KeyRound } from 'lucide-react';
+import { FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
+import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, X, User as UserIcon, Shield } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { initialData } from '../../data/initialData';
 import { LeadStatus, CMSPost, Lead, PageData } from '../../types';
 import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
 
@@ -784,18 +785,16 @@ const GlobalAiAssistant: React.FC = () => {
     }, [isLiveActive]);
 
     const performHeadlessGeneration = async (businessName: string, industry: string, description: string, tone: string) => {
-        const ai = await getGoogleGenAI();
         const getPrompt = getPromptRef.current;
 
         const designPrompt = getPrompt('onboarding-design-plan');
         if (!designPrompt) throw new Error("Design prompt not found");
         
         try {
-            const designResponse = await ai.models.generateContent({
-                model: designPrompt.model,
-                contents: designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta"),
-                config: { responseMimeType: 'application/json' }
-            });
+            const designContent = designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta");
+            
+            const projectId = activeProject?.id || 'headless-generation';
+            const designResponse = await generateContentViaProxy(projectId, designContent, designPrompt.model, {}, user?.uid);
             
             // Log API call
             if (user) {
@@ -807,16 +806,14 @@ const GlobalAiAssistant: React.FC = () => {
                 });
             }
             
-            const designPlan = JSON.parse(cleanJson(designResponse.text));
+            const designPlan = JSON.parse(cleanJson(extractTextFromResponse(designResponse)));
 
             const websitePrompt = getPrompt('onboarding-website-json');
             if (!websitePrompt) throw new Error("Website generation prompt not found");
 
-            const websiteResponse = await ai.models.generateContent({
-                model: websitePrompt.model,
-                contents: websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription),
-                config: { responseMimeType: 'application/json' }
-            });
+            const websiteContent = websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription);
+            
+            const websiteResponse = await generateContentViaProxy(projectId, websiteContent, websitePrompt.model, {}, user?.uid);
             
             // Log API call
             if (user) {
@@ -828,7 +825,7 @@ const GlobalAiAssistant: React.FC = () => {
                 });
             }
 
-            const result = JSON.parse(cleanJson(websiteResponse.text));
+            const result = JSON.parse(cleanJson(extractTextFromResponse(websiteResponse)));
             let generatedData = result.pageConfig?.data || result.data;
             if (!generatedData && result.hero) generatedData = result;
 
@@ -1712,74 +1709,90 @@ You: "✓ Made the hero button green and increased its size"
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
         
         if (!isLiveActive) {
-            if (hasApiKey === false) { await promptForKeySelection(); return; }
             setIsThinking(true);
             try {
-                 const ai = await getGoogleGenAI();
-                 const chat = ai.chats.create({
-                    // Use gemini-2.5-pro for better function calling obedience
-                    model: 'gemini-2.5-pro', 
-                    config: { 
-                        systemInstruction: getEffectiveSystemInstruction('chat'), 
-                        tools: [{ functionDeclarations: TOOLS }],
-                        toolConfig: {
-                            functionCallingConfig: {
-                                mode: FunctionCallingConfigMode.AUTO,
-                            }
+                // Build conversation history for the prompt
+                const historyText = messages
+                    .filter(m => !m.isToolOutput)
+                    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
+                    .join('\n');
+                
+                // Build tools description for the prompt
+                const toolsDescription = TOOLS.map(tool => 
+                    `- ${tool.name}: ${tool.description}. Parameters: ${JSON.stringify(tool.parameters)}`
+                ).join('\n');
+                
+                const systemPrompt = getEffectiveSystemInstruction('chat');
+                
+                // Full prompt with system instruction, tools, history, and user message
+                const fullPrompt = `${systemPrompt}
+
+AVAILABLE TOOLS (use these to help the user):
+${toolsDescription}
+
+IMPORTANT: When you need to use a tool, respond with ONLY a JSON object in this exact format:
+{"tool_call": {"name": "tool_name", "args": {"param1": "value1"}}}
+
+When you don't need to use a tool, respond normally with text.
+
+CONVERSATION HISTORY:
+${historyText}
+
+User: ${userMsg}`;
+
+                // Call the proxy API - use activeProject if available, otherwise use userId for rate limiting
+                const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
+                const response = await generateContentViaProxy(proxyProjectId, fullPrompt, 'gemini-2.5-flash', {
+                    temperature: 0.8,
+                    maxOutputTokens: 2048
+                }, user?.uid);
+                
+                let responseText = extractTextFromResponse(response).trim();
+                console.log('[Global Assistant] Proxy Response:', responseText);
+                
+                // Check if the response is a tool call
+                let turnCount = 0;
+                while (turnCount < 5) {
+                    try {
+                        // Try to parse as JSON tool call
+                        const parsed = JSON.parse(responseText);
+                        if (parsed.tool_call && parsed.tool_call.name) {
+                            turnCount++;
+                            console.log(`[Global Assistant] Tool call detected (turn ${turnCount}):`, parsed.tool_call);
+                            setIsExecutingCommands(true);
+                            
+                            const { result, error } = await executeTool(parsed.tool_call.name, parsed.tool_call.args || {});
+                            const feedback = result || error || "Done";
+                            
+                            // Send the tool result back to get final response
+                            const followUpPrompt = `${fullPrompt}
+
+Assistant called tool: ${parsed.tool_call.name}
+Tool result: ${feedback}
+
+Now provide a brief response to the user about what was done.`;
+                            
+                            const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, 'gemini-2.5-flash', {
+                                temperature: 0.7,
+                                maxOutputTokens: 1024
+                            }, user?.uid);
+                            
+                            responseText = extractTextFromResponse(followUpResponse).trim();
+                            continue;
                         }
-                    },
-                    history: messages.filter(m => !m.isToolOutput).map(m => ({ role: m.role, parts: [{ text: m.text }] }))
-                 });
-                 
-                 let response = await chat.sendMessage({ message: userMsg });
-                 console.log('[Global Assistant] Model Response:', {
-                    text: response.text,
-                    hasFunctionCalls: !!response.functionCalls,
-                    functionCallsCount: response.functionCalls?.length || 0
-                 });
-                 
-                 let functionCalls = response.functionCalls;
-                 let turnCount = 0;
-                 
-                 // Loop for multi-step tool execution
-                 while (functionCalls && functionCalls.length > 0 && turnCount < 5) {
-                    turnCount++;
-                    console.log(`[Global Assistant] Function calls detected (turn ${turnCount}):`, functionCalls.map(fc => ({
-                        name: fc.name,
-                        args: fc.args
-                    })));
-                    const functionResponses = [];
-                    setIsExecutingCommands(true);
-
-                    for (const call of functionCalls) {
-                        const { result, error } = await executeTool(call.name, call.args);
-                        const feedback = result || error || "Done";
-                        // Don't show tool outputs in chat - just execute silently
-                        functionResponses.push({ id: call.id, name: call.name, response: { result: feedback } });
+                    } catch (e) {
+                        // Not JSON, treat as regular text response
                     }
-                    
-                    // Send results back to model
-                    const toolParts = functionResponses.map(resp => ({ functionResponse: { id: resp.id, name: resp.name, response: resp.response } }));
-                    response = await chat.sendMessage({ message: toolParts });
-                    console.log('[Global Assistant] Model Response after tool execution:', {
-                        text: response.text,
-                        hasFunctionCalls: !!response.functionCalls,
-                        functionCallsCount: response.functionCalls?.length || 0
-                    });
-                    functionCalls = response.functionCalls;
-                 }
+                    break;
+                }
+                
                 setIsExecutingCommands(false);
-
-                 // Final response from model after tools are done
-                 if (response.text) {
-                     setMessages(prev => [...prev, { role: 'model', text: response.text }]);
-                 } else if (turnCount > 0) {
-                     // If model executed tools but returned no text, confirm completion
-                     setMessages(prev => [...prev, { role: 'model', text: "✓ Listo" }]);
-                 } else {
-                     // No tools called and no text response - shouldn't happen with AUTO mode
-                     setMessages(prev => [...prev, { role: 'model', text: "Lo siento, no pude procesar esa solicitud." }]);
-                 }
+                
+                if (responseText) {
+                    setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                } else {
+                    setMessages(prev => [...prev, { role: 'model', text: "✓ Listo" }]);
+                }
 
             } catch (e: any) { 
                 console.error(e); 
@@ -1807,30 +1820,14 @@ You: "✓ Made the hero button green and increased its size"
             <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0 cursor-pointer" onDoubleClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex items-center gap-3">
                     <div className="relative"><img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-white/10 rounded-full p-1 border border-white/20" /><div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-primary ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`}></div></div>
-                    <div><h3 className="font-bold text-sm leading-tight">Quimera Assistant</h3><p className="text-[10px] opacity-90 font-medium">{isLiveActive ? 'Listening...' : 'Online (Fast Mode)'}</p></div>
+                    <div><h3 className="font-bold text-sm leading-tight">Quimera Assistant</h3><p className="text-[10px] opacity-90 font-medium">{isLiveActive ? 'Listening...' : 'Online'}</p></div>
                 </div>
                 <div className="flex gap-1 items-center">
-                    <button onClick={() => { setIsOnboardingOpenRef.current(true); setIsOpen(false); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors mr-1"><Wand2 size={18} /></button>
                     <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors">{isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
                     <button onClick={() => { setIsOpen(false); stopLiveSession(); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><ChevronDown size={18} /></button>
                 </div>
             </div>
             <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
-                {hasApiKey === false && (
-                    <div className="absolute inset-0 z-30 bg-background/95 backdrop-blur flex flex-col items-center justify-center text-center p-6 gap-3">
-                        <KeyRound size={40} className="text-primary" />
-                        <h3 className="text-lg font-semibold">API key required</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            Selecciona una clave de Google AI Studio para que el asistente pueda ejecutar acciones y responder.
-                        </p>
-                        <button
-                            onClick={promptForKeySelection}
-                            className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-semibold shadow hover:opacity-90 transition"
-                        >
-                            Seleccionar API key
-                        </button>
-                    </div>
-                )}
                 {isLiveActive && (
                     <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-foreground animate-fade-in-up">
                         <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-8 relative"><div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-30"></div><img src={LOGO_URL} alt="Quimera Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" /></div>
@@ -1864,12 +1861,12 @@ You: "✓ Made the hero button green and increased its size"
                     {isThinking && <div className="flex justify-start"><div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden"><img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" /></div><div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground"><Loader2 size={14} className="animate-spin text-primary" /><span>Thinking...</span></div></div>}
                     <div ref={messagesEndRef} />
                 </div>
-                <div className="p-4 bg-card border-t border-border shrink-0 opacity-100 transition-opacity" style={{ opacity: hasApiKey === false ? 0.4 : 1 }}>
+                <div className="p-4 bg-card border-t border-border shrink-0">
                     <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
                          <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat"><Trash2 size={18} /></button>
                         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleTextSend()} placeholder="Type a message..." className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50" disabled={isLiveActive} />
-                        {globalAssistantConfig.enableLiveVoice && <button onClick={startLiveSession} disabled={isConnecting || isLiveActive} className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} title="Start Voice Mode">{isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}</button>}
-                        <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive || hasApiKey === false} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
+                        {globalAssistantConfig.enableLiveVoice && <button onClick={startLiveSession} disabled={isConnecting || isLiveActive || hasApiKey === false} className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} title="Start Voice Mode (requires API key)">{isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}</button>}
+                        <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
                     </div>
                      <div className="mt-2 flex justify-between items-center px-2">
                          <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>

@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Appointment, AppointmentAiInsights, Lead } from '../../../../types';
 import { useEditor } from '../../../../contexts/EditorContext';
-import { getGoogleGenAI } from '../../../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../../services/apiLoggingService';
 import { timestampToDate, formatDateOnly, formatTime } from '../utils/appointmentHelpers';
 
@@ -112,7 +112,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
     onInsightsGenerated,
     className = '',
 }) => {
-    const { user, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
+    const { user, hasApiKey, promptForKeySelection, handleApiError, activeProject } = useEditor();
     const [isGenerating, setIsGenerating] = useState(false);
     const [activeGeneration, setActiveGeneration] = useState<string | null>(null);
     
@@ -129,8 +129,6 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
         setActiveGeneration('full');
         
         try {
-            const ai = await getGoogleGenAI();
-            
             const participantInfo = appointment.participants.map(p => 
                 `- ${p.name} (${p.email})${p.company ? ` de ${p.company}` : ''}`
             ).join('\n');
@@ -176,15 +174,15 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 - Las preguntas deben ser abiertas y estratégicas
                 - Los tips deben ser accionables
                 - Las objeciones deben incluir cómo responderlas
+                
+                Responde SOLO con el JSON válido.
             `;
             
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: { responseMimeType: 'application/json' }
-            });
+            const projectId = activeProject?.id || 'appointment-ai-prep';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
             
-            const data = JSON.parse(response.text);
+            const data = JSON.parse(responseText);
             
             const newInsights: AppointmentAiInsights = {
                 summary: data.summary,
@@ -238,8 +236,6 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
         setActiveGeneration(section);
         
         try {
-            const ai = await getGoogleGenAI();
-            
             let prompt = '';
             
             switch (section) {
@@ -253,7 +249,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         3. Establecer urgencia
                         4. Avanzar en el proceso de venta
                         
-                        Devuelve JSON: { "questions": ["pregunta 1", "pregunta 2", ...] }
+                        Devuelve SOLO JSON válido: { "questions": ["pregunta 1", "pregunta 2", ...] }
                     `;
                     break;
                     
@@ -263,7 +259,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         genera las 5 objeciones más probables que el cliente podría presentar,
                         junto con respuestas efectivas para cada una.
                         
-                        Devuelve JSON: { "objections": ["Objeción: X | Respuesta: Y", ...] }
+                        Devuelve SOLO JSON válido: { "objections": ["Objeción: X | Respuesta: Y", ...] }
                     `;
                     break;
                     
@@ -277,18 +273,16 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         - Cómo presentar la propuesta de valor
                         - Cómo cerrar o establecer próximos pasos
                         
-                        Devuelve JSON: { "strategy": "Estrategia completa en un párrafo" }
+                        Devuelve SOLO JSON válido: { "strategy": "Estrategia completa en un párrafo" }
                     `;
                     break;
             }
             
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: { responseMimeType: 'application/json' }
-            });
+            const projectId = activeProject?.id || 'appointment-ai-section';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
             
-            const data = JSON.parse(response.text);
+            const data = JSON.parse(responseText);
             
             const updates: Partial<AppointmentAiInsights> = {};
             
@@ -568,5 +562,6 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 };
 
 export default AIPreparationPanel;
+
 
 

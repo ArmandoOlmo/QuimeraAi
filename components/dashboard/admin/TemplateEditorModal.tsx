@@ -5,7 +5,8 @@ import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
 import Modal from '../../ui/Modal';
 import { useEditor } from '../../../contexts/EditorContext';
-import { generateContent, getGoogleGenAI } from '../../../utils/genAiClient';
+import { generateContent } from '../../../utils/genAiClient';
+import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
 import CoolorsImporter from '../../ui/CoolorsImporter';
 
@@ -119,7 +120,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     onSave
 }) => {
     const { t } = useTranslation();
-    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt, uploadFile, files } = useEditor();
+    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt, uploadFile, files, user } = useEditor();
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
@@ -184,14 +185,15 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const generateThumbnailPromptSuggestion = async () => {
         if (!template) return;
 
-        if (hasApiKey === false) {
+        // In production, use proxy directly (no API key needed on client)
+        const useProxy = shouldUseProxy();
+        if (!useProxy && hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
 
         setIsEnhancingPrompt(true);
         try {
-            const ai = await getGoogleGenAI();
             const { colors, colorInfo } = extractTemplateColors(template);
             const colorAnalysis = analyzeColorPalette(colors);
             
@@ -220,12 +222,18 @@ ${colorAnalysis}
 
 Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-            });
+            // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
+            const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
+            
+            let responseText: string;
+            if (useProxy) {
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                responseText = extractTextFromResponse(proxyResponse);
+            } else {
+                responseText = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+            }
 
-            setThumbnailPrompt(response.text.trim());
+            setThumbnailPrompt(responseText.trim());
         } catch (error) {
             console.error('Error generating prompt suggestion:', error);
             handleApiError(error);
@@ -238,7 +246,9 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     const handleEnhancePrompt = async () => {
         if (!thumbnailPrompt.trim()) return;
         
-        if (hasApiKey === false) {
+        // In production, use proxy directly (no API key needed on client)
+        const useProxy = shouldUseProxy();
+        if (!useProxy && hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
@@ -259,7 +269,9 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     const handleGenerateThumbnail = async () => {
         if (!thumbnailPrompt.trim()) return;
 
-        if (hasApiKey === false) {
+        // In production, use proxy directly (no API key needed on client)
+        const useProxy = shouldUseProxy();
+        if (!useProxy && hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
@@ -322,7 +334,9 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     const suggestIndustriesWithAI = async () => {
         if (!template) return;
 
-        if (hasApiKey === false) {
+        // In production, use proxy directly (no API key needed on client)
+        const useProxy = shouldUseProxy();
+        if (!useProxy && hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
@@ -331,7 +345,6 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         setAiSuggestions([]);
 
         try {
-            const ai = await getGoogleGenAI();
             const { colors, colorInfo } = extractTemplateColors(template);
             const colorAnalysis = analyzeColorPalette(colors);
 
@@ -379,25 +392,31 @@ Example response: ["restaurant", "hotel", "cafe-coffee", "catering", "event-plan
 
 Return ONLY the JSON array, no other text.`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-            });
+            // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
+            const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
+            
+            let responseText: string;
+            if (useProxy) {
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                responseText = extractTextFromResponse(proxyResponse);
+            } else {
+                responseText = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+            }
 
             // Parse the response
             let suggestedIds: string[] = [];
             try {
                 // Clean up the response - remove markdown code blocks if present
-                let cleanedText = response.text.trim();
+                let cleanedText = responseText.trim();
                 cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
                 suggestedIds = JSON.parse(cleanedText);
                 
                 // Validate that all IDs exist in our list
                 suggestedIds = suggestedIds.filter(id => INDUSTRY_IDS.includes(id));
             } catch (parseError) {
-                console.error('Failed to parse AI response:', response.text);
+                console.error('Failed to parse AI response:', responseText);
                 // Try to extract IDs from text if JSON parsing failed
-                const matches = response.text.match(/"([a-z-]+)"/g);
+                const matches = responseText.match(/"([a-z-]+)"/g);
                 if (matches) {
                     suggestedIds = matches
                         .map(m => m.replace(/"/g, ''))
@@ -566,7 +585,17 @@ Requirements:
 
 Name:`;
 
-            const text = await generateContent(prompt, template.id, 'gemini-2.0-flash');
+            // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
+            const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
+            const useProxy = shouldUseProxy();
+            
+            let text: string;
+            if (useProxy) {
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                text = extractTextFromResponse(proxyResponse);
+            } else {
+                text = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+            }
             
             // Clean up the response
             const cleanName = text

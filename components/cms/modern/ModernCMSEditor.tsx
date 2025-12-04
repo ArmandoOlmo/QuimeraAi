@@ -26,7 +26,7 @@ import EditorMenuBar from './EditorMenuBar';
 import EditorBubbleMenu from './EditorBubbleMenu';
 import SlashCommands from './SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
-import { getGoogleGenAI } from '../../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import SimpleEditorHeader from '../../SimpleEditorHeader';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
 
@@ -36,7 +36,7 @@ interface ModernCMSEditorProps {
 }
 
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
-    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt } = useEditorContext();
+    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
     
     // Form State
     const [title, setTitle] = useState(post?.title || '');
@@ -257,7 +257,6 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
         setIsAiWorking(true);
         try {
-            const ai = await getGoogleGenAI();
             let promptConfig;
             let populatedPrompt = "";
             
@@ -287,12 +286,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
             const modelName = promptConfig?.model || 'gemini-2.0-flash-exp';
 
-            const response = await ai.models.generateContent({
-                model: modelName,
-                contents: populatedPrompt,
-            });
+            const projectId = activeProject?.id || 'modern-cms-editor';
+            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
             
-            const result = response.text.trim();
+            const result = extractTextFromResponse(response).trim();
             
             if (command === 'continue') {
                 editor?.chain().focus().insertContent(result).run();
@@ -313,7 +310,6 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsAiWorking(true);
         try {
-            const ai = await getGoogleGenAI();
             const contentPreview = editor?.getText().substring(0, 2000) || '';
             
             const promptConfig = getPrompt('cms-generate-seo');
@@ -326,15 +322,13 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     .replace('{{content}}', contentPreview);
                 modelName = promptConfig.model;
             } else {
-                populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}`;
+                populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}. Return ONLY valid JSON.`;
             }
 
-            const response = await ai.models.generateContent({
-                model: modelName,
-                contents: populatedPrompt,
-                config: { responseMimeType: "application/json" }
-            });
-            const data = JSON.parse(response.text);
+            const projectId = activeProject?.id || 'modern-cms-seo';
+            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
+            const data = JSON.parse(responseText);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
         } catch (error) { 

@@ -556,11 +556,11 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     version: 2,
   },
 
-  // Image Generation - Quimera AI (Nano Banana Pro)
+  // Image Generation - Quimera Vision Pro
   {
     name: 'image-generation-gallery',
     area: 'Image Generation',
-    description: "Generates images using Quimera AI powered by Nano Banana Pro (Gemini 3 Pro Image) - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
+    description: "Generates images using Quimera Vision Pro - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
     template: `{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality`,
     model: 'gemini-3-pro-image-preview',
     version: 12,

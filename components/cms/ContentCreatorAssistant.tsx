@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
 import { useEditor } from '../../contexts/EditorContext';
 
@@ -12,7 +12,7 @@ interface ContentCreatorAssistantProps {
 type Step = 'topic' | 'details' | 'generating' | 'preview';
 
 const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClose, onPostCreated }) => {
-    const { user, saveCMSPost } = useEditor();
+    const { user, saveCMSPost, activeProject } = useEditor();
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
     const [audience, setAudience] = useState('');
@@ -27,7 +27,6 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         setStep('generating');
 
         try {
-            const ai = await getGoogleGenAI();
             const prompt = `
                 Act as a professional content writer. Create a blog post structure based on the following inputs:
                 - Topic: ${topic}
@@ -43,20 +42,16 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 - seoDescription: SEO optimized description (155 characters max)
 
                 Make sure the content is engaging, well-structured, and valuable for the target audience.
-                Output purely valid JSON without any markdown formatting or code blocks.
+                Output ONLY valid JSON without any markdown formatting or code blocks.
             `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash-exp',
-                contents: prompt,
-                config: { 
-                    responseMimeType: "application/json",
-                    temperature: 0.9,
-                }
-            });
+            const projectId = activeProject?.id || 'content-creator-assistant';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.0-flash-exp', {
+                temperature: 0.9
+            }, user?.uid);
 
             console.log("📝 Raw response:", response);
-            const responseText = response.text;
+            const responseText = extractTextFromResponse(response);
             console.log("📝 Response text from AI:", responseText);
             
             // Limpiar la respuesta de posibles markdown code blocks

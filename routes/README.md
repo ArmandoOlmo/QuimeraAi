@@ -235,3 +235,6 @@ export const ROUTES = {
 
 5. **Usar Link/NavLink para enlaces**: Para accesibilidad y SEO, usa los componentes `Link` y `NavLink`.
 
+
+
+

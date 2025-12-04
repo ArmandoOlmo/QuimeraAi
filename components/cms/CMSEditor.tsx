@@ -13,7 +13,7 @@ import {
     ChevronDown, Table, Palette, 
     Heading1, Heading2, Heading3, Quote, Check, X as XIcon, Upload as UploadIcon, Hash
 } from 'lucide-react';
-import { getGoogleGenAI } from '../../utils/genAiClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
 import { logApiCall } from '../../services/apiLoggingService';
@@ -299,7 +299,6 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         setIsAiWorking(true);
         let usedModel = 'gemini-2.5-flash';
         try {
-            const ai = await getGoogleGenAI();
             let promptConfig;
             let populatedPrompt = "";
             
@@ -323,10 +322,8 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
             usedModel = promptConfig?.model || 'gemini-2.5-flash';
 
-            const response = await ai.models.generateContent({
-                model: usedModel,
-                contents: populatedPrompt,
-            });
+            const projectId = activeProject?.id || 'cms-editor';
+            const response = await generateContentViaProxy(projectId, populatedPrompt, usedModel, {}, user?.uid);
             
             // Log API call
             if (user) {
@@ -339,7 +336,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 });
             }
             
-            const result = response.text.trim();
+            const result = extractTextFromResponse(response).trim();
             execCmd('insertHTML', result);
 
         } catch (error: any) {
@@ -366,7 +363,6 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         setIsAiWorking(true);
         let seoModelName = 'gemini-2.5-flash';
         try {
-            const ai = await getGoogleGenAI();
             const contentPreview = editorRef.current?.innerText.substring(0, 2000) || '';
             
             const promptConfig = getPrompt('cms-generate-seo');
@@ -378,14 +374,12 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                     .replace('{{content}}', contentPreview);
                 seoModelName = promptConfig.model;
             } else {
-                populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}`;
+                populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}. Return ONLY valid JSON.`;
             }
 
-            const response = await ai.models.generateContent({
-                model: seoModelName,
-                contents: populatedPrompt,
-                config: { responseMimeType: "application/json" }
-            });
+            const projectId = activeProject?.id || 'cms-seo';
+            const response = await generateContentViaProxy(projectId, populatedPrompt, seoModelName, {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
             
             // Log API call
             if (user) {
@@ -398,7 +392,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 });
             }
             
-            const data = JSON.parse(response.text);
+            const data = JSON.parse(responseText);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
         } catch (error: any) {

@@ -5,7 +5,7 @@
  */
 
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
-import { generateContent, streamContent, getUsageStats } from './geminiProxy';
+import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
 
 // Export widget API functions
 export const widget = {
@@ -18,7 +18,8 @@ export const widget = {
 export const gemini = {
     generate: generateContent,
     stream: streamContent,
-    usage: getUsageStats
+    usage: getUsageStats,
+    image: generateImage
 };
 
 // Alternative flat exports for easier routing
@@ -28,6 +29,7 @@ export {
     trackWidgetAnalytics,
     generateContent,
     streamContent,
-    getUsageStats
+    getUsageStats,
+    generateImage
 };
 
