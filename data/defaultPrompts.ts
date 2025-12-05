@@ -542,6 +542,142 @@ Return ONLY valid JSON. No markdown.
     version: 4,
   },
 
+  // Onboarding - Generate Description (Step 2)
+  {
+    name: 'onboarding-generate-description',
+    area: 'Onboarding',
+    description: 'Generates a compelling business description during onboarding Step 2. Used by AI assist button.',
+    template: `You are a professional copywriter. Generate a compelling business description for:
+
+Business Name: {{businessName}}
+Industry: {{industry}}
+Language: {{language}}
+
+Requirements:
+- Write 2-3 paragraphs
+- Be professional but engaging
+- Highlight unique value propositions
+- Include a call to action
+- Output ONLY the description text, no JSON or markdown
+
+Generate the description:`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+
+  // Onboarding - Generate Services (Step 3)
+  {
+    name: 'onboarding-generate-services',
+    area: 'Onboarding',
+    description: 'Generates a list of services/products during onboarding Step 3. Used by AI assist button.',
+    template: `You are a business consultant. Generate a list of services/products for:
+
+Business Name: {{businessName}}
+Industry: {{industry}}
+Description: {{description}}
+Language: {{language}}
+
+Requirements:
+- Generate 4-6 relevant services or products
+- Each should have a name and brief description
+- Be specific to the industry
+- Output as JSON array with format: [{"name": "Service Name", "description": "Brief description"}]
+
+Generate the services:`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+
+  // Onboarding - Generate Component Content (Step 6)
+  {
+    name: 'onboarding-generate-component-content',
+    area: 'Onboarding',
+    description: 'Generates AI content for website components (testimonials, team, portfolio, pricing, etc.) during final generation.',
+    template: `Generate realistic content for a {{industry}} business called "{{businessName}}".
+Business description: {{description}}
+Language: {{language}}
+
+Generate ONLY for these sections: {{sectionsToGenerate}}
+
+Return JSON with this exact structure (only include sections that were requested):
+{
+  "testimonials": [
+    { "quote": "short testimonial 1", "name": "Customer Name", "title": "Role/Company" },
+    { "quote": "short testimonial 2", "name": "Customer Name", "title": "Role/Company" },
+    { "quote": "short testimonial 3", "name": "Customer Name", "title": "Role/Company" }
+  ],
+  "team": [
+    { "name": "Team Member 1", "role": "Position" },
+    { "name": "Team Member 2", "role": "Position" },
+    { "name": "Team Member 3", "role": "Position" }
+  ],
+  "portfolio": [
+    { "title": "Project 1", "description": "Brief description", "category": "Category" },
+    { "title": "Project 2", "description": "Brief description", "category": "Category" },
+    { "title": "Project 3", "description": "Brief description", "category": "Category" }
+  ],
+  "pricing": [
+    { "name": "Basic", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3"], "featured": false },
+    { "name": "Pro", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"], "featured": true },
+    { "name": "Enterprise", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5"], "featured": false }
+  ],
+  "howItWorks": [
+    { "title": "Step 1", "description": "Brief description" },
+    { "title": "Step 2", "description": "Brief description" },
+    { "title": "Step 3", "description": "Brief description" }
+  ],
+  "menu": [
+    { "name": "Item 1", "description": "Description", "price": "$X.XX", "category": "Category" },
+    { "name": "Item 2", "description": "Description", "price": "$X.XX", "category": "Category" },
+    { "name": "Item 3", "description": "Description", "price": "$X.XX", "category": "Category" },
+    { "name": "Item 4", "description": "Description", "price": "$X.XX", "category": "Category" }
+  ]
+}
+
+Keep all text SHORT and CONCISE. Return ONLY valid JSON.`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+
+  // Onboarding - Template Recommendation (Step 4)
+  {
+    name: 'onboarding-template-recommendation',
+    area: 'Onboarding',
+    description: 'Recommends the best template for a business based on industry, description, and available templates.',
+    template: `You are a web design expert selecting the PERFECT template for a specific business.
+
+IMPORTANT: Carefully analyze ALL templates before deciding. Do NOT default to the first option.
+
+BUSINESS DETAILS:
+- Name: "{{businessName}}"
+- Industry: {{industry}}
+- Description: {{description}}
+- Services: {{services}}
+
+IDEAL COLOR PALETTE for {{industry}} businesses: {{colorPreference}}
+
+ANALYZE ALL TEMPLATES:
+{{templateSummary}}
+
+SELECTION RULES:
+1. PRIORITIZE templates that list "{{industry}}" in their industries
+2. Match color mood to business personality ({{colorPreference}})
+3. Ensure template has the components this business needs
+4. Consider visual style appropriate for the industry
+
+DO NOT always pick the same template. Each business is unique.
+
+Return ONLY valid JSON:
+{
+  "templateId": "the-exact-template-id",
+  "templateName": "Template Name",
+  "matchScore": 75-95,
+  "matchReasons": ["industry reason", "color reason", "component reason"]
+}`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+
   // Brand Brain - Analysis
   {
     name: 'brand-identity-analysis',

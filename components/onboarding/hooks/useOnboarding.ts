@@ -343,26 +343,22 @@ export const useOnboarding = () => {
             throw new Error('Business name and industry are required');
         }
 
-        const prompt = `You are a professional copywriter. Generate a compelling business description for:
+        // Get prompt from centralized system (editable in Super Admin)
+        const promptConfig = getPrompt('onboarding-generate-description');
+        if (!promptConfig) {
+            throw new Error('Description generation prompt not found');
+        }
 
-Business Name: ${progress.businessName}
-Industry: ${progress.industry}
-Language: ${progress.language === 'es' ? 'Spanish' : 'English'}
-
-Requirements:
-- Write 2-3 paragraphs
-- Be professional but engaging
-- Highlight unique value propositions
-- Include a call to action
-- Output ONLY the description text, no JSON or markdown
-
-Generate the description:`;
+        const prompt = promptConfig.template
+            .replace('{{businessName}}', progress.businessName)
+            .replace('{{industry}}', progress.industry)
+            .replace('{{language}}', progress.language === 'es' ? 'Spanish' : 'English');
 
         try {
             const response = await generateContentViaProxy(
                 'onboarding-gen',
                 prompt,
-                'gemini-2.5-flash',
+                promptConfig.model,
                 {},
                 user?.uid
             );
@@ -372,33 +368,30 @@ Generate the description:`;
             console.error('Failed to generate description:', err);
             throw err;
         }
-    }, [progress, user]);
+    }, [progress, user, getPrompt]);
 
     const generateServices = useCallback(async (): Promise<OnboardingService[]> => {
         if (!progress?.businessName || !progress?.industry) {
             throw new Error('Business name and industry are required');
         }
 
-        const prompt = `You are a business consultant. Generate a list of services/products for:
+        // Get prompt from centralized system (editable in Super Admin)
+        const promptConfig = getPrompt('onboarding-generate-services');
+        if (!promptConfig) {
+            throw new Error('Services generation prompt not found');
+        }
 
-Business Name: ${progress.businessName}
-Industry: ${progress.industry}
-Description: ${progress.description || 'Not provided'}
-Language: ${progress.language === 'es' ? 'Spanish' : 'English'}
-
-Requirements:
-- Generate 4-6 relevant services or products
-- Each should have a name and brief description
-- Be specific to the industry
-- Output as JSON array with format: [{"name": "Service Name", "description": "Brief description"}]
-
-Generate the services:`;
+        const prompt = promptConfig.template
+            .replace('{{businessName}}', progress.businessName)
+            .replace('{{industry}}', progress.industry)
+            .replace('{{description}}', progress.description || 'Not provided')
+            .replace('{{language}}', progress.language === 'es' ? 'Spanish' : 'English');
 
         try {
             const response = await generateContentViaProxy(
                 'onboarding-gen',
                 prompt,
-                'gemini-2.5-flash',
+                promptConfig.model,
                 {},
                 user?.uid
             );
@@ -424,7 +417,7 @@ Generate the services:`;
                 { id: `service-${Date.now()}-1`, name: 'Service 2', description: 'Additional service', isAIGenerated: true },
             ];
         }
-    }, [progress, user]);
+    }, [progress, user, getPrompt]);
 
     const getTemplateRecommendation = useCallback(async (): Promise<TemplateRecommendation> => {
         if (!progress?.businessName || !progress?.industry) {
@@ -531,20 +524,8 @@ Generate the services:`;
         // Shuffle templates to avoid always picking the first one
         const shuffledSummary = [...templateSummary].sort(() => Math.random() - 0.5);
 
-        const prompt = `You are a web design expert selecting the PERFECT template for a specific business.
-
-IMPORTANT: Carefully analyze ALL ${templates.length} templates before deciding. Do NOT default to the first option.
-
-BUSINESS DETAILS:
-- Name: "${progress.businessName}"
-- Industry: ${progress.industry}
-- Description: ${progress.description || 'General business'}
-- Services: ${progress.services?.map(s => s.name).join(', ') || 'Various services'}
-
-IDEAL COLOR PALETTE for ${progress.industry} businesses: ${colorPref}
-
-ANALYZE ALL ${templates.length} TEMPLATES:
-${shuffledSummary.map(t => `
+        // Format template summary for the prompt
+        const templateSummaryText = shuffledSummary.map(t => `
 TEMPLATE #${t.index}: "${t.name}"
   ID: ${t.id}
   Industries: ${t.industries.length > 0 ? t.industries.join(', ') : 'General/All'}
@@ -558,23 +539,30 @@ TEMPLATE #${t.index}: "${t.name}"
       t.hasPricing ? 'Pricing' : '',
       t.hasMenu ? 'Menu' : ''
   ].filter(Boolean).join(', ') || 'Basic'}
-`).join('')}
+`).join('');
 
-SELECTION RULES:
-1. PRIORITIZE templates that list "${progress.industry}" in their industries
-2. Match color mood to business personality (${colorPref})
-3. Ensure template has the components this business needs
-4. Consider visual style appropriate for the industry
+        // Get prompt from centralized system (editable in Super Admin)
+        const promptConfig = getPrompt('onboarding-template-recommendation');
+        if (!promptConfig) {
+            console.error('Template recommendation prompt not found');
+            // Fallback to first template
+            return {
+                templateId: templates[0]?.id || 'default',
+                templateName: templates[0]?.name || 'Template',
+                matchScore: 70,
+                matchReasons: ['Default recommendation'],
+                suggestedComponents: componentDefaults.recommended,
+                disabledComponents: componentDefaults.disabled,
+            };
+        }
 
-DO NOT always pick the same template. Each business is unique.
-
-Return ONLY valid JSON:
-{
-  "templateId": "the-exact-template-id",
-  "templateName": "Template Name",
-  "matchScore": 75-95,
-  "matchReasons": ["industry reason", "color reason", "component reason"]
-}`;
+        const prompt = promptConfig.template
+            .replace('{{businessName}}', progress.businessName)
+            .replace(/\{\{industry\}\}/g, progress.industry)
+            .replace('{{description}}', progress.description || 'General business')
+            .replace('{{services}}', progress.services?.map(s => s.name).join(', ') || 'Various services')
+            .replace(/\{\{colorPreference\}\}/g, colorPref)
+            .replace('{{templateSummary}}', templateSummaryText);
 
         try {
             const response = await generateContentViaProxy(
@@ -630,7 +618,7 @@ Return ONLY valid JSON:
                 disabledComponents: componentDefaults.disabled,
             };
         }
-    }, [progress, templates, user]);
+    }, [progress, templates, user, getPrompt]);
 
     // =============================================================================
     // CONTENT GENERATION
@@ -961,48 +949,19 @@ Return ONLY valid JSON:
         
         if (isDev) console.log('📝 Generating AI content for:', toGenerate);
         
-        const prompt = `Generate realistic content for a ${ind} business called "${businessName}".
-Business description: ${description}
-Language: ${isSpanish ? 'Spanish' : 'English'}
+        // Get prompt from centralized system (editable in Super Admin)
+        const promptConfig = getPrompt('onboarding-generate-component-content');
+        if (!promptConfig) {
+            console.error('Component content generation prompt not found');
+            return {};
+        }
 
-Generate ONLY for these sections: ${toGenerate.join(', ')}
-
-Return JSON with this exact structure (only include sections that were requested):
-{
-  ${toGenerate.includes('testimonials') ? `"testimonials": [
-    { "quote": "short testimonial 1", "name": "Customer Name", "title": "Role/Company" },
-    { "quote": "short testimonial 2", "name": "Customer Name", "title": "Role/Company" },
-    { "quote": "short testimonial 3", "name": "Customer Name", "title": "Role/Company" }
-  ],` : ''}
-  ${toGenerate.includes('team') ? `"team": [
-    { "name": "Team Member 1", "role": "Position" },
-    { "name": "Team Member 2", "role": "Position" },
-    { "name": "Team Member 3", "role": "Position" }
-  ],` : ''}
-  ${toGenerate.includes('portfolio') ? `"portfolio": [
-    { "title": "Project 1", "description": "Brief description", "category": "Category" },
-    { "title": "Project 2", "description": "Brief description", "category": "Category" },
-    { "title": "Project 3", "description": "Brief description", "category": "Category" }
-  ],` : ''}
-  ${toGenerate.includes('pricing') ? `"pricing": [
-    { "name": "Basic", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3"], "featured": false },
-    { "name": "Pro", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"], "featured": true },
-    { "name": "Enterprise", "price": "$XX", "frequency": "/month", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5"], "featured": false }
-  ],` : ''}
-  ${toGenerate.includes('howItWorks') ? `"howItWorks": [
-    { "title": "Step 1", "description": "Brief description" },
-    { "title": "Step 2", "description": "Brief description" },
-    { "title": "Step 3", "description": "Brief description" }
-  ],` : ''}
-  ${toGenerate.includes('menu') ? `"menu": [
-    { "name": "Item 1", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 2", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 3", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 4", "description": "Description", "price": "$X.XX", "category": "Category" }
-  ],` : ''}
-}
-
-Keep all text SHORT and CONCISE. Return ONLY valid JSON.`;
+        const prompt = promptConfig.template
+            .replace('{{industry}}', ind)
+            .replace('{{businessName}}', businessName)
+            .replace('{{description}}', description)
+            .replace('{{language}}', isSpanish ? 'Spanish' : 'English')
+            .replace('{{sectionsToGenerate}}', toGenerate.join(', '));
 
         try {
             const response = await generateContentViaProxy(
@@ -1021,7 +980,7 @@ Keep all text SHORT and CONCISE. Return ONLY valid JSON.`;
             console.error('❌ Failed to generate component content:', err);
             return {};
         }
-    }, [user]);
+    }, [user, getPrompt]);
 
     // =============================================================================
     // APPLY BUSINESS DATA TO TEMPLATE (only enabled components)
