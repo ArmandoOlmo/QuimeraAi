@@ -41,6 +41,7 @@ import {
   limit,
   where,
   onSnapshot,
+  startAfter,
   enableMultiTabIndexedDbPersistence
 } from "firebase/firestore";
 
@@ -114,7 +115,8 @@ export {
   orderBy,
   limit,
   where,
-  onSnapshot
+  onSnapshot,
+  startAfter
 };
 
 export type { User };

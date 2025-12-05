@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
 import { Tenant, TenantStatus, TenantType, UserDocument } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
-import { 
-    ArrowLeft, Users, Trash2, Building2, User, Search, Filter, 
+import {
+    ArrowLeft, Users, Trash2, Building2, User, Search, Filter,
     Plus, ChevronDown, ChevronRight, MoreVertical, Edit2, UserPlus,
     Folder, HardDrive, Zap, DollarSign, CheckCircle, AlertCircle,
     Clock, XCircle
@@ -14,7 +14,7 @@ interface TenantManagementProps {
 }
 
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
-    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers } = useEditor();
+    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers, canPerform } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'individual' | 'agency'>('all');
@@ -37,8 +37,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     const filteredTenants = tenants.filter(tenant => {
         const matchesTab = activeTab === 'all' || tenant.type === activeTab;
         const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (tenant.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+            tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (tenant.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
         const matchesStatus = statusFilter === 'all' || tenant.status === statusFilter;
         return matchesTab && matchesSearch && matchesStatus;
     });
@@ -54,6 +54,10 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     };
 
     const handleDeleteTenant = async (tenantId: string) => {
+        if (!canPerform('canDeleteTenants')) {
+            alert('No tienes permiso para eliminar tenants.');
+            return;
+        }
         if (window.confirm('¿Estás seguro de eliminar este tenant? Esta acción no se puede deshacer.')) {
             await deleteTenant(tenantId);
         }
@@ -82,9 +86,9 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     };
 
     // Componente de métrica
-    const MetricCard: React.FC<{ 
-        title: string; 
-        value: number | string; 
+    const MetricCard: React.FC<{
+        title: string;
+        value: number | string;
         subtitle?: string;
         trend?: string;
         icon: React.ReactNode;
@@ -103,7 +107,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     // Componente de fila de tenant
     const TenantRow: React.FC<{ tenant: Tenant }> = ({ tenant }) => {
         const isExpanded = expandedTenants.has(tenant.id);
-        const tenantMembers = tenant.type === 'agency' 
+        const tenantMembers = tenant.type === 'agency'
             ? allUsers.filter(u => tenant.memberUserIds.includes(u.id))
             : [];
 
@@ -114,22 +118,22 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     <div className="flex items-center gap-4 flex-1">
                         {/* Botón expandir para agencias */}
                         {tenant.type === 'agency' && (
-                            <button 
+                            <button
                                 onClick={() => toggleExpanded(tenant.id)}
                                 className="text-editor-text-secondary hover:text-editor-text-primary"
                             >
                                 {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                             </button>
                         )}
-                        
+
                         {/* Icono de tipo */}
                         <div className={`p-3 rounded-lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
-                            {tenant.type === 'agency' ? 
-                                <Building2 size={24} className="text-blue-400" /> : 
+                            {tenant.type === 'agency' ?
+                                <Building2 size={24} className="text-blue-400" /> :
                                 <User size={24} className="text-purple-400" />
                             }
                         </div>
-                        
+
                         {/* Info principal */}
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -144,7 +148,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             )}
                         </div>
                     </div>
-                    
+
                     {/* Métricas */}
                     <div className="flex items-center gap-6 mr-6">
                         <div className="text-center">
@@ -154,7 +158,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             </div>
                             <span className="text-xs text-editor-text-secondary">Proyectos</span>
                         </div>
-                        
+
                         {tenant.type === 'agency' && (
                             <div className="text-center">
                                 <div className="flex items-center gap-1 text-editor-text-secondary">
@@ -164,7 +168,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <span className="text-xs text-editor-text-secondary">Usuarios</span>
                             </div>
                         )}
-                        
+
                         <div className="text-center">
                             <div className="flex items-center gap-1 text-editor-text-secondary">
                                 <HardDrive size={14} />
@@ -172,31 +176,33 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             </div>
                             <span className="text-xs text-editor-text-secondary">Almacenamiento</span>
                         </div>
-                        
+
                         <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-md text-sm font-medium">
                             {tenant.subscriptionPlan}
                         </div>
                     </div>
-                    
+
                     {/* Acciones */}
                     <div className="flex items-center gap-2">
-                        <button 
+                        <button
                             onClick={() => setSelectedTenant(tenant)}
                             className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-bg rounded-lg transition-colors"
                             title="Ver detalles"
                         >
                             <Edit2 size={18} />
                         </button>
-                        <button 
-                            onClick={() => handleDeleteTenant(tenant.id)}
-                            className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                            title="Eliminar"
-                        >
-                            <Trash2 size={18} />
-                        </button>
+                        {canPerform('canDeleteTenants') && (
+                            <button
+                                onClick={() => handleDeleteTenant(tenant.id)}
+                                className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Eliminar"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        )}
                     </div>
                 </div>
-                
+
                 {/* Vista expandida para agencias */}
                 {isExpanded && tenant.type === 'agency' && (
                     <div className="border-t border-editor-border p-4 bg-editor-bg/50">
@@ -210,15 +216,15 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 Invitar usuario
                             </button>
                         </div>
-                        
+
                         <div className="space-y-2">
                             {tenantMembers.length > 0 ? (
                                 tenantMembers.map(member => (
                                     <div key={member.id} className="flex items-center justify-between p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
                                         <div className="flex items-center gap-3">
-                                            <img 
-                                                src={member.photoURL || `https://ui-avatars.com/api/?name=${member.name}&background=3f3f46&color=e4e4e7`} 
-                                                alt={member.name} 
+                                            <img
+                                                src={member.photoURL || `https://ui-avatars.com/api/?name=${member.name}&background=3f3f46&color=e4e4e7`}
+                                                alt={member.name}
                                                 className="w-10 h-10 rounded-full object-cover"
                                             />
                                             <div>
@@ -255,24 +261,24 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button 
+                        <button
                             onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors"
-                            title="Back to Admin"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
+                            title="Volver"
                         >
-                            <ArrowLeft className="w-4 h-4" />
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Users className="text-editor-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold text-editor-text-primary">Gestión de Tenants</h1>
                         </div>
                     </div>
-                    <button 
+                    <button
                         onClick={onBack}
-                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Admin
+                        Volver
                     </button>
                 </header>
 
@@ -312,32 +318,29 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setActiveTab('all')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeTab === 'all' 
-                                            ? 'text-editor-accent' 
-                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
-                                    }`}
+                                    className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'all'
+                                        ? 'text-editor-accent'
+                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        }`}
                                 >
                                     Todos ({tenants.length})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('individual')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeTab === 'individual' 
-                                            ? 'text-editor-accent' 
-                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'individual'
+                                        ? 'text-editor-accent'
+                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        }`}
                                 >
                                     <User size={16} />
                                     Individuales ({individualCount})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('agency')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeTab === 'agency' 
-                                            ? 'text-editor-accent' 
-                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'agency'
+                                        ? 'text-editor-accent'
+                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        }`}
                                 >
                                     <Building2 size={16} />
                                     Agencias ({agencyCount})
@@ -356,7 +359,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         className="pl-10 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                     />
                                 </div>
-                                
+
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as TenantStatus | 'all')}
@@ -369,13 +372,15 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     <option value="expired">Expirados</option>
                                 </select>
 
-                                <button 
-                                    onClick={() => setShowCreateModal(true)}
-                                    className="flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
-                                >
-                                    <Plus size={16} />
-                                    Nuevo Tenant
-                                </button>
+                                {canPerform('canEditTenants') && (
+                                    <button
+                                        onClick={() => setShowCreateModal(true)}
+                                        className="flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
+                                    >
+                                        <Plus size={16} />
+                                        Nuevo Tenant
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -401,7 +406,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             <p className="text-editor-text-secondary mb-4">
                                 Intenta ajustar tus filtros o crea un nuevo tenant
                             </p>
-                            <button 
+                            <button
                                 onClick={() => setShowCreateModal(true)}
                                 className="inline-flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
                             >
@@ -413,20 +418,104 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 </main>
             </div>
 
-            {/* Modal de creación (placeholder) */}
+            {/* Modal de creación */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
                         <h2 className="text-xl font-bold text-editor-text-primary mb-4">Crear Nuevo Tenant</h2>
-                        <p className="text-editor-text-secondary mb-4">
-                            Esta funcionalidad se implementará en el contexto
-                        </p>
-                        <button 
-                            onClick={() => setShowCreateModal(false)}
-                            className="w-full px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
-                        >
-                            Cerrar
-                        </button>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            const data = {
+                                name: formData.get('name') as string,
+                                email: formData.get('email') as string,
+                                type: formData.get('type') as 'individual' | 'agency',
+                                plan: formData.get('plan') as string,
+                                companyName: formData.get('companyName') as string
+                            };
+
+                            try {
+                                setLoading(true);
+                                const { createTenant, userDocument } = useEditor();
+                                await createTenant(data);
+                                setShowCreateModal(false);
+                                // Refresh handled by createTenant internally calling fetchTenants
+                            } catch (error: any) {
+                                console.error('Error creating tenant:', error);
+                                console.error('Error code:', error.code);
+                                console.error('Error message:', error.message);
+                                alert(`Error al crear el tenant: ${error.message}`);
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Nombre</label>
+                                    <input
+                                        name="name"
+                                        required
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        placeholder="Nombre del tenant"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Email</label>
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        required
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        placeholder="admin@ejemplo.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Tipo</label>
+                                    <select
+                                        name="type"
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    >
+                                        <option value="individual">Individual</option>
+                                        <option value="agency">Agencia</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Plan</label>
+                                    <select
+                                        name="plan"
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    >
+                                        <option value="free">Gratuito</option>
+                                        <option value="pro">Pro</option>
+                                        <option value="enterprise">Enterprise</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Empresa (Opcional)</label>
+                                    <input
+                                        name="companyName"
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        placeholder="Nombre de la empresa"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="flex-1 px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? 'Creando...' : 'Crear Tenant'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
@@ -457,7 +546,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 </div>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={() => setSelectedTenant(null)}
                             className="w-full mt-6 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                         >

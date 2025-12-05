@@ -18,7 +18,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     const [editingPost, setEditingPost] = useState<CMSPost | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    
+
     // Filters
     const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
     const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
@@ -41,7 +41,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
         // Search
         if (searchQuery) {
-            filtered = filtered.filter(post => 
+            filtered = filtered.filter(post =>
                 post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 post.slug.toLowerCase().includes(searchQuery.toLowerCase())
@@ -60,7 +60,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                 const dateB = new Date(b.createdAt).getTime();
                 return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
             } else {
-                return sortOrder === 'asc' 
+                return sortOrder === 'asc'
                     ? a.title.localeCompare(b.title)
                     : b.title.localeCompare(a.title);
             }
@@ -80,7 +80,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     };
 
     const handleDelete = async (id: string) => {
-        if(window.confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+        if (window.confirm(t('contentManagement.deleteConfirm'))) {
             await deleteCMSPost(id);
         }
     };
@@ -100,7 +100,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
     const handleBulkDelete = async () => {
         if (selectedPosts.length === 0) return;
-        if (window.confirm(`Delete ${selectedPosts.length} article(s)? This action cannot be undone.`)) {
+        if (window.confirm(t('contentManagement.bulkDeleteConfirm', { count: selectedPosts.length }))) {
             for (const id of selectedPosts) {
                 await deleteCMSPost(id);
             }
@@ -109,7 +109,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     };
 
     const toggleSelectPost = (id: string) => {
-        setSelectedPosts(prev => 
+        setSelectedPosts(prev =>
             prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
         );
     };
@@ -124,13 +124,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
     if (isEditorOpen) {
         return (
-            <ModernCMSEditor 
-                post={editingPost} 
+            <ModernCMSEditor
+                post={editingPost}
                 onClose={() => {
                     setIsEditorOpen(false);
                     setEditingPost(null);
                     loadCMSPosts();
-                }} 
+                }}
             />
         );
     }
@@ -141,51 +141,51 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
                         >
-                            <MenuIcon className="w-4 h-4" />
+                            <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <FileText className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">Content Management</h1>
+                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('contentManagement.title')}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button 
+                        <button
                             onClick={onBack}
                             className="flex items-center text-sm font-medium h-9 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
-                            Back
+                            {t('contentManagement.back')}
                         </button>
                     </div>
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-background black:bg-background">
                     <div className="max-w-7xl mx-auto">
-                        
+
                         {/* Stats - Simple inline */}
                         <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
                             <div className="flex items-center gap-2">
                                 <FileText size={16} className="text-primary" />
-                                <span className="text-muted-foreground">Total Articles:</span>
+                                <span className="text-muted-foreground">{t('contentManagement.totalArticles')}:</span>
                                 <span className="font-bold">{cmsPosts.length}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Globe size={16} className="text-green-600" />
-                                <span className="text-muted-foreground">Published:</span>
+                                <span className="text-muted-foreground">{t('contentManagement.published')}:</span>
                                 <span className="font-bold text-green-600">{publishedCount}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Edit3 size={16} className="text-orange-600" />
-                                <span className="text-muted-foreground">Drafts:</span>
+                                <span className="text-muted-foreground">{t('contentManagement.drafts')}:</span>
                                 <span className="font-bold text-orange-600">{draftCount}</span>
                             </div>
                         </div>
@@ -197,9 +197,9 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 <div className="flex-1">
                                     <div className="relative">
                                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                        <input 
+                                        <input
                                             type="text"
-                                            placeholder="Search articles..."
+                                            placeholder={t('contentManagement.searchPlaceholder')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="w-full pl-10 pr-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm"
@@ -209,41 +209,41 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                 {/* Filters */}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <select 
+                                    <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value as any)}
                                         className="px-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm"
                                     >
-                                        <option value="all">All Status</option>
-                                        <option value="published">Published</option>
-                                        <option value="draft">Draft</option>
+                                        <option value="all">{t('contentManagement.allStatus')}</option>
+                                        <option value="published">{t('contentManagement.statusPublished')}</option>
+                                        <option value="draft">{t('contentManagement.statusDraft')}</option>
                                     </select>
 
-                                    <select 
+                                    <select
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value as any)}
                                         className="px-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm"
                                     >
-                                        <option value="date">Sort by Date</option>
-                                        <option value="title">Sort by Title</option>
+                                        <option value="date">{t('contentManagement.sortByDate')}</option>
+                                        <option value="title">{t('contentManagement.sortByTitle')}</option>
                                     </select>
 
-                                    <button 
+                                    <button
                                         onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                                         className="p-2 bg-secondary/30 border border-border rounded-lg hover:bg-secondary/50 transition-colors"
-                                        title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                                        title={sortOrder === 'asc' ? t('contentManagement.ascending') : t('contentManagement.descending')}
                                     >
                                         {sortOrder === 'asc' ? '↑' : '↓'}
                                     </button>
 
                                     <div className="flex border border-border rounded-lg overflow-hidden">
-                                        <button 
+                                        <button
                                             onClick={() => setViewMode('list')}
                                             className={`p-2 ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <List size={16} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setViewMode('grid')}
                                             className={`p-2 ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
@@ -251,12 +251,12 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         </button>
                                     </div>
 
-                                    <button 
+                                    <button
                                         onClick={handleCreateNew}
                                         className="flex items-center gap-2 px-3 py-2 text-primary font-medium text-sm transition-colors hover:text-primary/80"
                                     >
                                         <Plus size={16} />
-                                        New Article
+                                        {t('contentManagement.newArticle')}
                                     </button>
                                 </div>
                             </div>
@@ -265,14 +265,14 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             {selectedPosts.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">
-                                        {selectedPosts.length} article(s) selected
+                                        {t('contentManagement.articlesSelected', { count: selectedPosts.length })}
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={handleBulkDelete}
                                         className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                     >
                                         <Trash2 size={14} />
-                                        Delete Selected
+                                        {t('contentManagement.deleteSelected')}
                                     </button>
                                 </div>
                             )}
@@ -286,14 +286,14 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                         ) : filteredPosts.length === 0 ? (
                             <div className="bg-card border border-border rounded-lg p-12 text-center">
                                 <FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-30 mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">No articles found</h3>
+                                <h3 className="text-lg font-semibold mb-2">{t('contentManagement.noArticlesFound')}</h3>
                                 <p className="text-muted-foreground mb-6">
-                                    {searchQuery || statusFilter !== 'all' 
-                                        ? 'Try adjusting your filters' 
-                                        : 'Create your first article to get started'}
+                                    {searchQuery || statusFilter !== 'all'
+                                        ? t('contentManagement.adjustFilters')
+                                        : t('contentManagement.createFirst')}
                                 </p>
                                 {!searchQuery && statusFilter === 'all' && (
-                                    <button 
+                                    <button
                                         onClick={handleCreateNew}
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                                     >
@@ -305,15 +305,15 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredPosts.map(post => (
-                                    <div 
+                                    <div
                                         key={post.id}
                                         className="relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 h-[400px] group"
                                     >
                                         {/* Full Background Image */}
                                         <div className="absolute inset-0">
                                             {post.featuredImage ? (
-                                                <img 
-                                                    src={post.featuredImage} 
+                                                <img
+                                                    src={post.featuredImage}
                                                     alt={post.title}
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                 />
@@ -326,20 +326,19 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                         {/* Dark Gradient Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-                                        
+
                                         {/* Hover Overlay */}
                                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
 
                                         {/* Status Badge and Checkbox */}
                                         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start">
-                                            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg ${
-                                                post.status === 'published' 
-                                                    ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                                                    : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-                                            }`}>
+                                            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published'
+                                                ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                                                : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                                                }`}>
                                                 {post.status === 'published' ? 'Published' : 'Draft'}
                                             </span>
-                                            <input 
+                                            <input
                                                 type="checkbox"
                                                 checked={selectedPosts.includes(post.id)}
                                                 onChange={() => toggleSelectPost(post.id)}
@@ -353,7 +352,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">
                                                 {post.title}
                                             </h3>
-                                            
+
                                             {post.excerpt && (
                                                 <p className="text-sm text-white/80 line-clamp-2 mb-3">
                                                     {post.excerpt}
@@ -369,7 +368,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                             {/* Actions */}
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleEdit(post);
@@ -379,7 +378,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     <Edit3 size={16} />
                                                     Edit
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleDuplicate(post);
@@ -389,7 +388,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 >
                                                     <Copy size={18} />
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleDelete(post.id);
@@ -410,7 +409,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     <thead className="bg-secondary/20 border-b border-border">
                                         <tr>
                                             <th className="w-12 p-4">
-                                                <input 
+                                                <input
                                                     type="checkbox"
                                                     checked={selectedPosts.length === filteredPosts.length && filteredPosts.length > 0}
                                                     onChange={toggleSelectAll}
@@ -425,12 +424,12 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     </thead>
                                     <tbody className="divide-y divide-border">
                                         {filteredPosts.map(post => (
-                                            <tr 
+                                            <tr
                                                 key={post.id}
                                                 className="hover:bg-secondary/20 transition-colors group"
                                             >
                                                 <td className="p-4">
-                                                    <input 
+                                                    <input
                                                         type="checkbox"
                                                         checked={selectedPosts.includes(post.id)}
                                                         onChange={() => toggleSelectPost(post.id)}
@@ -449,11 +448,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
-                                                        post.status === 'published' 
-                                                            ? 'bg-green-500/10 text-green-600' 
-                                                            : 'bg-orange-500/10 text-orange-600'
-                                                    }`}>
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${post.status === 'published'
+                                                        ? 'bg-green-500/10 text-green-600'
+                                                        : 'bg-orange-500/10 text-orange-600'
+                                                        }`}>
                                                         {post.status === 'published' ? (
                                                             <>
                                                                 <Globe size={12} />
@@ -473,21 +471,21 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleEdit(post)}
                                                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
                                                             title="Edit"
                                                         >
                                                             <Edit3 size={14} />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleDuplicate(post)}
                                                             className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
                                                             title="Duplicate"
                                                         >
                                                             <Copy size={14} />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleDelete(post.id)}
                                                             className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
                                                             title="Delete"

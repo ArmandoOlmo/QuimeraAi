@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
 import { LiveServerMessage, Modality } from '@google/genai';
@@ -154,6 +155,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     currentPageContext
 }) => {
     const { hasApiKey, promptForKeySelection, handleApiError, user, activeProject } = useEditor();
+    const { t } = useTranslation();
 
     // Get lead capture config with defaults
     const leadConfig = config.leadCaptureConfig || {
@@ -162,7 +164,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         triggerAfterMessages: 3,
         requireEmailForAdvancedInfo: true,
         exitIntentEnabled: true,
-        exitIntentOffer: '🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento',
+        exitIntentOffer: t('chatbotWidget.exitIntentOffer'),
         intentKeywords: [],
         progressiveProfilingEnabled: true
     };
@@ -280,8 +282,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             } else {
                 const agentName = config.agentName || 'AI Assistant';
                 const welcomeMsg = appearance.messages?.welcomeMessageEnabled
-                    ? (appearance.messages.welcomeMessage || `Hello! I'm {agentName}. How can I help you today?`).replace('{agentName}', agentName)
-                    : `Hello! I'm ${agentName}. How can I help you today?`;
+                    ? (appearance.messages.welcomeMessage || t('chatbotWidget.welcomeMessageDefault', { agentName })).replace('{agentName}', agentName)
+                    : t('chatbotWidget.welcomeMessageDefault', { agentName });
 
                 const welcomeDelay = appearance.messages?.welcomeDelay || 0;
                 if (welcomeDelay > 0) {
@@ -352,12 +354,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     email: preChatData.email,
                     phone: preChatData.phone,
                     status: 'new',
-                    message: 'Iniciado desde pre-chat form',
+                    message: t('chatbotWidget.leadSourcePreChat'),
                     value: 0,
                     leadScore,
                     conversationTranscript: conversationText,
                     tags: ['chatbot', 'pre-chat-form'],
-                    notes: 'Lead capturado antes de iniciar conversación'
+                    notes: t('chatbotWidget.leadNotesPreChat')
                 });
             }
 
@@ -365,7 +367,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             setShowPreChatForm(false);
 
             // Start chat with personalized welcome
-            const welcomeMsg = `¡Hola ${preChatData.name}! Soy ${config.agentName}. ¿En qué puedo ayudarte hoy? 😊`;
+            const welcomeMsg = t('chatbotWidget.welcomePersonalized', { name: preChatData.name, agentName: config.agentName });
             setMessages([{ role: 'model', text: welcomeMsg }]);
         } catch (error) {
             console.error('Error capturing pre-chat lead:', error);
@@ -386,12 +388,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     name: quickLeadEmail.split('@')[0],
                     email: quickLeadEmail,
                     status: 'new',
-                    message: 'Capturado durante conversación',
+                    message: t('chatbotWidget.leadSourceConversation'),
                     value: 0,
                     leadScore,
                     conversationTranscript: conversationText,
                     tags: ['chatbot', 'mid-conversation', hasHighIntent ? 'high-intent' : 'low-intent'],
-                    notes: `Lead capturado después de ${messages.filter(m => m.role === 'user').length} mensajes`
+                    notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length })
                 });
             }
 
@@ -401,7 +403,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
             setMessages(prev => [...prev, {
                 role: 'model',
-                text: '¡Perfecto! Te contactaremos pronto. ¿En qué más puedo ayudarte? 😊'
+                text: t('chatbotWidget.contactSoon')
             }]);
         } catch (error) {
             console.error('Error capturing lead:', error);
@@ -416,7 +418,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         if (userMessagesCount >= leadConfig.triggerAfterMessages) {
             setMessages(prev => [...prev, {
                 role: 'model',
-                text: '¡Me encanta ayudarte! Para brindarte información más personalizada, ¿podrías compartir tu email? 📧'
+                text: t('chatbotWidget.askEmail')
             }]);
             setShowLeadCaptureModal(true);
         }
@@ -439,7 +441,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage)) {
             setMessages(prev => [...prev, {
                 role: 'model',
-                text: '¡Genial! Me encantaría ayudarte con eso. Para brindarte la mejor información, ¿podrías compartir tu email? 📧'
+                text: t('chatbotWidget.askEmailHighIntent')
             }]);
             setShowLeadCaptureModal(true);
             return;
@@ -505,7 +507,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 );
 
                 botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
-                    'Sorry, I could not generate a response.';
+                    t('chatbotWidget.errorResponse');
             } else {
                 // Always use proxy for secure API access
                 console.log('[ChatCore] 🔐 Using secure proxy mode');
@@ -561,7 +563,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             }
             handleApiError(error);
             console.error('ChatCore Error:', error);
-            setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error. Please try again.' }]);
+            setMessages(prev => [...prev, { role: 'model', text: t('chatbotWidget.genericError') }]);
         } finally {
             setIsLoading(false);
         }
@@ -584,7 +586,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         }
 
         if (!config.enableLiveVoice) {
-            alert("Live Voice is not enabled for this assistant.");
+            alert(t('chatbotWidget.liveVoiceDisabled'));
             return;
         }
 
@@ -654,7 +656,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         } catch (micErr) {
                             console.error("Mic Error:", micErr);
                             stopLiveSession();
-                            alert("Could not access microphone.");
+                            alert(t('chatbotWidget.micError'));
                         }
                     },
                     onmessage: async (message: LiveServerMessage) => {
@@ -710,7 +712,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             handleApiError(error);
             console.error("Connection failed:", error);
             setIsConnecting(false);
-            alert("Failed to start voice session.");
+            alert(t('chatbotWidget.sessionError'));
         }
     };
 
@@ -785,7 +787,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         <div>
                             <span className="font-bold text-sm block leading-tight">{config.agentName}</span>
                             <span className="text-[10px] opacity-80 block leading-tight">
-                                {isLiveActive ? 'Live Voice Session' : 'Chat Online'}
+                                {isLiveActive ? t('chatbotWidget.liveSession') : t('chatbotWidget.chatOnline')}
                             </span>
                         </div>
                     </div>
@@ -793,10 +795,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         {headerActions}
                         {onClose && (
                             <button
-                                onClick={onClose}
-                                className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
-                            >
-                                <Minimize2 size={18} />
+                                onClick={startLiveSession}
+                                className="p-2 rounded-full hover:bg-black/5 transition-colors text-primary"
+                                title={t('chatbotWidget.startVoice')}
+                            ><Minimize2 size={18} />
                             </button>
                         )}
                     </div>
@@ -956,8 +958,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                 )}
                                 <div
                                     className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${msg.role === 'user'
-                                            ? 'rounded-tr-sm'
-                                            : 'rounded-tl-sm markdown-content'
+                                        ? 'rounded-tr-sm'
+                                        : 'rounded-tl-sm markdown-content'
                                         }`}
                                     style={
                                         msg.role === 'user'
@@ -1042,38 +1044,43 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
             {/* Input Bar */}
             {!isLiveActive && !showPreChatForm && (
-                <div className="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2" style={{ backgroundColor: appearance.colors.inputBackground }}>
-                    {config.enableLiveVoice && (
+                <>
+                    <div className="p-2 text-center border-t text-[10px] opacity-50 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors.inputBorder, color: appearance.colors.inputText }}>
+                        <Sparkles size={10} /> {t('chatbotWidget.poweredBy')}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2" style={{ backgroundColor: appearance.colors.inputBackground }}>
+                        {config.enableLiveVoice && (
+                            <button
+                                onClick={startLiveSession}
+                                disabled={isConnecting}
+                                className={`p-2.5 rounded-full transition-all shadow-sm ${isConnecting ? 'bg-gray-100 text-gray-400' : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-200'}`}
+                                title="Start Real-time Voice"
+                            >
+                                {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
+                            </button>
+                        )}
+                        <input
+                            ref={inputRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('chatbotWidget.inputPlaceholder')}
+                            className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border border-gray-200 dark:border-gray-700"
+                            style={{
+                                '--tw-ring-color': appearance.colors.primaryColor + '40'
+                            } as React.CSSProperties}
+                            disabled={isLoading}
+                        />
                         <button
-                            onClick={startLiveSession}
-                            disabled={isConnecting}
-                            className={`p-2.5 rounded-full transition-all shadow-sm ${isConnecting ? 'bg-gray-100 text-gray-400' : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-200'}`}
-                            title="Start Real-time Voice"
+                            onClick={handleSend}
+                            disabled={!input.trim() || isLoading}
+                            className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: appearance.colors.primaryColor }}
                         >
-                            {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
+                            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                         </button>
-                    )}
-                    <input
-                        ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={appearance.messages.inputPlaceholder}
-                        className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border border-gray-200 dark:border-gray-700"
-                        style={{
-                            '--tw-ring-color': appearance.colors.primaryColor + '40'
-                        } as React.CSSProperties}
-                        disabled={isLoading}
-                    />
-                    <button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: appearance.colors.primaryColor }}
-                    >
-                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                    </button>
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );

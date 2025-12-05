@@ -45,7 +45,7 @@ html.light {
   --ring: 41 96% 58%;
   
   /* Radius */
-  --radius: 0.75rem;
+  --radius: 0.375rem;
 
   /* Editor Specific */
   --editor-bg: #F3F4F6;

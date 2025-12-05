@@ -20,28 +20,28 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
     const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
 
     const deviceOptions: { name: PreviewDevice; icon: React.ReactNode }[] = [
-      { name: 'desktop', icon: <Monitor /> },
-      { name: 'tablet', icon: <Tablet /> },
-      { name: 'mobile', icon: <Smartphone /> },
+        { name: 'desktop', icon: <Monitor /> },
+        { name: 'tablet', icon: <Tablet /> },
+        { name: 'mobile', icon: <Smartphone /> },
     ];
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
-            <DashboardSidebar 
-                isMobileOpen={isMobileMenuOpen} 
-                onClose={() => setIsMobileMenuOpen(false)} 
+            <DashboardSidebar
+                isMobileOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
                 hiddenOnDesktop={activeTab === 'studio'}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
                     <div className="flex items-center">
                         {activeTab !== 'studio' && (
-                            <button 
+                            <button
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2 transition-colors"
                                 title="Open menu"
                             >
-                                <Menu className="w-4 h-4" />
+                                <Menu className="w-5 h-5" />
                             </button>
                         )}
                         <div className="flex items-center gap-2">
@@ -70,11 +70,10 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                         key={orientation}
                                         onClick={() => setPreviewOrientation(orientation)}
                                         disabled={previewDevice === 'desktop'}
-                                        className={`h-8 w-9 text-xs font-semibold transition-all ${
-                                            previewOrientation === orientation
+                                        className={`h-8 w-9 text-xs font-semibold transition-all ${previewOrientation === orientation
                                                 ? 'text-editor-accent'
                                                 : 'text-editor-text-secondary hover:text-editor-text-primary'
-                                        } ${previewDevice === 'desktop' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            } ${previewDevice === 'desktop' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         aria-label={`Preview ${orientation}`}
                                     >
                                         {orientation === 'portrait' ? 'P' : 'L'}
@@ -84,12 +83,12 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                         </div>
                     )}
 
-                    <button 
+                    <button
                         onClick={onBack}
-                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Admin
+                        Volver
                     </button>
                 </header>
 

@@ -92,6 +92,8 @@ export interface HeroData {
     badgeBackgroundColor?: string;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
+    // Gradient overlay opacity for Modern variant (0-100)
+    gradientOpacity?: number;
 }
 
 // =============================================================================

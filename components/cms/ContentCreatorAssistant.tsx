@@ -12,7 +12,7 @@ interface ContentCreatorAssistantProps {
 type Step = 'topic' | 'details' | 'generating' | 'preview';
 
 const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClose, onPostCreated }) => {
-    const { user, saveCMSPost, activeProject } = useEditor();
+    const { user, saveCMSPost, activeProject, getPrompt } = useEditor();
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
     const [audience, setAudience] = useState('');
@@ -22,12 +22,27 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
     const handleGenerate = async () => {
         if (!topic) return;
-        
+
         setIsGenerating(true);
         setStep('generating');
 
         try {
-            const prompt = `
+            // Get dynamic prompt
+            const promptTemplate = getPrompt('content-creator-assistant');
+
+            let promptText = '';
+            let modelToUse = 'gemini-2.0-flash-exp'; // Default fallback
+
+            if (promptTemplate) {
+                promptText = promptTemplate.template
+                    .replace('{{topic}}', topic)
+                    .replace('{{audience}}', audience || 'General audience')
+                    .replace('{{tone}}', tone);
+                modelToUse = promptTemplate.model;
+            } else {
+                // Fallback if prompt is missing (shouldn't happen with sync)
+                console.warn('⚠️ Prompt "content-creator-assistant" not found, using fallback.');
+                promptText = `
                 Act as a professional content writer. Create a blog post structure based on the following inputs:
                 - Topic: ${topic}
                 - Target Audience: ${audience || 'General audience'}
@@ -43,17 +58,18 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
                 Make sure the content is engaging, well-structured, and valuable for the target audience.
                 Output ONLY valid JSON without any markdown formatting or code blocks.
-            `;
+                `;
+            }
 
             const projectId = activeProject?.id || 'content-creator-assistant';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.0-flash-exp', {
+            const response = await generateContentViaProxy(projectId, promptText, modelToUse, {
                 temperature: 0.9
             }, user?.uid);
 
             console.log("📝 Raw response:", response);
             const responseText = extractTextFromResponse(response);
             console.log("📝 Response text from AI:", responseText);
-            
+
             // Limpiar la respuesta de posibles markdown code blocks
             let cleanedText = responseText.trim();
             if (cleanedText.startsWith('```json')) {
@@ -61,7 +77,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             } else if (cleanedText.startsWith('```')) {
                 cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
             }
-            
+
             let parsedData = JSON.parse(cleanedText);
             console.log("✅ Parsed data:", parsedData);
 
@@ -90,7 +106,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
     const handleConfirm = async () => {
         console.log("🚀 Opening editor with post:", generatedPost);
-        
+
         if (!generatedPost || !user) {
             console.error("❌ Cannot confirm: missing data", { generatedPost, user });
             return;
@@ -114,15 +130,15 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             };
 
             console.log("💾 Saving post:", newPost);
-            
+
             // Guardamos el post - Firebase generará el ID automáticamente
             await saveCMSPost(newPost);
-            
+
             console.log("✅ Post saved successfully");
-            
+
             // Pequeño delay para asegurar que el post se guardó y se cargó en la lista
             await new Promise(resolve => setTimeout(resolve, 500));
-            
+
             // Notificamos al padre para que abra el editor
             // Usamos el post con los datos actuales, el padre debería recargarlo
             onPostCreated(newPost);
@@ -198,11 +214,10 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                         <button
                                             key={t}
                                             onClick={() => setTone(t)}
-                                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${
-                                                tone === t 
-                                                ? 'bg-primary text-primary-foreground border-primary' 
-                                                : 'bg-card border-border hover:border-primary/50'
-                                            }`}
+                                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t
+                                                    ? 'bg-primary text-primary-foreground border-primary'
+                                                    : 'bg-card border-border hover:border-primary/50'
+                                                }`}
                                         >
                                             {t}
                                         </button>
@@ -266,7 +281,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                         )}
                                     </div>
                                 </div>
-                                
+
                                 {/* Debug info - remove later */}
                                 <details className="text-xs text-muted-foreground">
                                     <summary className="cursor-pointer">Debug Info (click para ver)</summary>

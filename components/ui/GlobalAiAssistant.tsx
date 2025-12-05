@@ -625,7 +625,7 @@ const GlobalAiAssistant: React.FC = () => {
     const { 
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig, onSectionSelect,
-        theme, setTheme, setIsOnboardingOpen, isOnboardingOpen, onboardingState, setOnboardingState,
+        theme, setTheme,
         getPrompt, addNewProject, 
         // Added context items
         leads, addLead, updateLead, updateLeadStatus, deleteLead,
@@ -684,10 +684,6 @@ const GlobalAiAssistant: React.FC = () => {
     const customComponentsRef = useRef(customComponents);
     const lastToolCallRef = useRef<{ name: string; args: string; timestamp: number } | null>(null);
     const addNewProjectRef = useRef(addNewProject);
-    const setIsOnboardingOpenRef = useRef(setIsOnboardingOpen);
-    const isOnboardingOpenRef = useRef(isOnboardingOpen);
-    const setOnboardingStateRef = useRef(setOnboardingState);
-    const onboardingStateRef = useRef(onboardingState);
     const leadsRef = useRef(leads);
     const addLeadRef = useRef(addLead);
     const updateLeadRef = useRef(updateLead);
@@ -728,10 +724,6 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { componentStatusRef.current = componentStatus; }, [componentStatus]);
     useEffect(() => { customComponentsRef.current = customComponents; }, [customComponents]);
     useEffect(() => { addNewProjectRef.current = addNewProject; }, [addNewProject]);
-    useEffect(() => { setIsOnboardingOpenRef.current = setIsOnboardingOpen; }, [setIsOnboardingOpen]);
-    useEffect(() => { isOnboardingOpenRef.current = isOnboardingOpen; }, [isOnboardingOpen]);
-    useEffect(() => { setOnboardingStateRef.current = setOnboardingState; }, [setOnboardingState]);
-    useEffect(() => { onboardingStateRef.current = onboardingState; }, [onboardingState]);
     useEffect(() => { leadsRef.current = leads; }, [leads]);
     useEffect(() => { addLeadRef.current = addLead; }, [addLead]);
     useEffect(() => { updateLeadRef.current = updateLead; }, [updateLead]);

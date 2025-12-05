@@ -136,11 +136,32 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - 'lato', 'open-sans', 'roboto' (Neutral/Corporate)
 - 'space-grotesk', 'syne' (Futuristic)
 
-**Available Component Settings:**
-- cardBorderRadius / buttonBorderRadius: 'none' (Sharp), 'md' (Soft), 'xl' (Rounded), 'full' (Pill)
-- headerLayout: 'classic' (DEFAULT - use this unless there's a specific aesthetic reason), 'minimal', 'center', 'stack'
-- headerStyle: 'sticky-solid' (ALWAYS use solid - header must have solid brand color background)
-- heroImageStyle: 'default', 'glow', 'float', 'hexagon', 'polaroid'
+**Available Component Settings (use these EXACT values):**
+- cardBorderRadius: 'none' | 'md' | 'xl' | 'full'
+- buttonBorderRadius: 'none' | 'md' | 'xl' | 'full'
+- headerLayout: 'classic' | 'minimal' | 'center' | 'stack' (DEFAULT: 'classic')
+- headerStyle: 'sticky-solid' (ALWAYS use 'sticky-solid' - header must have solid brand color background)
+- heroImageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
+- heroImagePosition: 'left' | 'right'
+
+**Component Variant Options (for componentOrder selection):**
+- hero: Main landing section (REQUIRED)
+- features: Key benefits display [variants: classic, modern, bento-premium]
+- services: Services showcase [variants: cards, grid, minimal]
+- testimonials: Customer reviews [variants: classic, minimal-cards, glassmorphism, gradient-glow, floating-cards]
+- pricing: Pricing tiers [variants: classic, gradient, glassmorphism, minimalist]
+- faq: FAQ section [variants: classic, cards, gradient, minimal]
+- team: Team members [variants: classic, cards, minimal, overlay]
+- portfolio: Work showcase
+- slideshow: Image gallery [variants: classic, kenburns, cards3d, thumbnails]
+- menu: Restaurant menu [variants: classic, modern-grid, elegant-list]
+- leads: Contact form [variants: classic, split-gradient, floating-glass, minimal-border]
+- newsletter: Email signup
+- map: Location map [variants: modern, minimal, dark-tech, retro, night]
+- video: Video embed
+- howItWorks: Process steps
+- banner: Promotional banner [variants: classic, gradient-overlay, side-text, centered]
+- footer: Site footer (REQUIRED - always last)
 
 **CRITICAL COLOR RULES:**
 1. "primary" = BRAND COLOR = Used for header background, buttons, CTAs, accents
@@ -244,6 +265,35 @@ Generate a JSON object defining the visual strategy.
 
 **Design Plan:**
 {{designPlan}}
+
+**VALID COMPONENT VARIANTS (use these exact values):**
+- hero.heroVariant: 'classic' | 'modern' | 'gradient' | 'fitness'
+- hero.imageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
+- hero.imagePosition: 'left' | 'right'
+- features.featuresVariant: 'classic' | 'modern' | 'bento-premium'
+- testimonials.testimonialsVariant: 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'floating-cards'
+- pricing.pricingVariant: 'classic' | 'gradient' | 'glassmorphism' | 'minimalist'
+- faq.faqVariant: 'classic' | 'cards' | 'gradient' | 'minimal'
+- services.servicesVariant: 'cards' | 'grid' | 'minimal'
+- team.teamVariant: 'classic' | 'cards' | 'minimal' | 'overlay'
+- slideshow.slideshowVariant: 'classic' | 'kenburns' | 'cards3d' | 'thumbnails'
+- leads.leadsVariant: 'classic' | 'split-gradient' | 'floating-glass' | 'minimal-border'
+- menu.menuVariant: 'classic' | 'modern-grid' | 'elegant-list'
+- map.mapVariant: 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night'
+- banner.bannerVariant: 'classic' | 'gradient-overlay' | 'side-text' | 'centered'
+- header.layout: 'classic' | 'minimal' | 'center' | 'stack'
+- header.style: 'sticky-solid' | 'sticky-transparent' | 'floating'
+
+**VALID SIZE OPTIONS:**
+- paddingY/paddingX: 'sm' | 'md' | 'lg'
+- fontSize: 'sm' | 'md' | 'lg' | 'xl'
+- borderRadius: 'none' | 'md' | 'xl' | 'full'
+
+**VALID SERVICE ICONS:**
+code, terminal, cpu, database, server, cloud, globe, smartphone, brush, palette, megaphone, trending-up, chart, target, briefcase, mail, phone, users, heart, star, wrench, settings, package, shopping-cart, gift, truck, file, book, map-pin, home, building, clock, calendar, shield, lock, check-circle, utensils, coffee, wine, zap, award, trophy, rocket, lightbulb, sparkles
+
+**VALID BADGE ICONS (for hero.badgeIcon):**
+sparkles, zap, star, award, trophy, rocket, lightbulb, heart, check-circle, shield, target, trending-up
 
 **Instructions:**
 1.  **Apply the Design Plan:**
@@ -643,6 +693,130 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     version: 1
   },
 
+  // Content Creator Assistant
+  {
+    name: 'content-creator-assistant',
+    area: 'Content Generation',
+    description: 'Generates a full blog post structure based on topic, audience, and tone.',
+    template: `Act as a professional content writer. Create a blog post structure based on the following inputs:
+- Topic: {{topic}}
+- Target Audience: {{audience}}
+- Tone: {{tone}}
+
+Return a JSON object with the following fields:
+- title: A catchy title for the post (in Spanish if the topic is in Spanish, otherwise in English)
+- slug: A SEO-friendly slug (kebab-case)
+- excerpt: A short summary suitable for meta description (150-160 characters)
+- content: The HTML content of the post. It should be structured with <h2>, <h3>, <p>, and <ul>/<li> tags. The content should be comprehensive and detailed (at least 800 words).
+- seoTitle: SEO optimized title (60 characters max)
+- seoDescription: SEO optimized description (155 characters max)
+
+Make sure the content is engaging, well-structured, and valuable for the target audience.
+Output ONLY valid JSON without any markdown formatting or code blocks.`,
+    model: 'gemini-2.0-flash-exp',
+    version: 1
+  },
+
+  // Template Editor Prompts
+  {
+    name: 'template-thumbnail-suggestion',
+    area: 'Template Management',
+    description: 'Generates a prompt for creating a template thumbnail based on colors and description.',
+    template: `You are an expert in creating visual thumbnails for website templates.
+
+Generate a detailed, creative prompt for an AI image generator to create a stunning thumbnail image for this website template.
+
+**Template Information:**
+- Name: {{name}}
+- Category: {{category}}
+- Description: {{description}}
+
+**Color Palette:**
+{{colorInfo}}
+
+**Color Analysis:**
+{{colorAnalysis}}
+
+**Guidelines:**
+- The thumbnail should visually represent what the website looks like or what it's for
+- Include elements that match the industry/category
+- Use the color palette mentioned above
+- Make it eye-catching and professional
+- Include abstract shapes, mockups, or relevant imagery
+- DON'T include any text in the image
+
+Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`,
+    model: 'gemini-2.5-flash',
+    version: 1
+  },
+  {
+    name: 'template-industry-suggestion',
+    area: 'Template Management',
+    description: 'Suggests industries for a template based on its color palette and structure.',
+    template: `You are an expert in design psychology and color theory for business branding.
+
+Analyze this website template and suggest the most appropriate industries it would work well for.
+
+**Template Information:**
+- Name: {{name}}
+- Category: {{category}}
+- Description: {{description}}
+
+**Color Palette:**
+{{colorInfo}}
+
+**Color Analysis:**
+{{colorAnalysis}}
+
+**Template Components:**
+{{components}}
+
+**Available Industry IDs (you MUST only use these exact IDs):**
+{{industryList}}
+
+**Color Psychology Guidelines:**
+- Dark themes with neon accents → Technology, Gaming, Nightlife, Entertainment
+- Gold/Warm browns → Luxury, Restaurant, Real Estate, Legal, Finance
+- Green tones → Health, Wellness, Environment, Agriculture, Organic
+- Blue tones → Technology, Finance, Healthcare, Corporate, Trust-building
+- Red/Orange → Food, Restaurant, Energy, Sports, Urgency
+- Purple → Creative, Luxury, Beauty, Spiritual
+- Pink/Rose → Beauty, Fashion, Wedding, Feminine products
+- Black & White minimal → Photography, Art, Portfolio, Fashion, Architecture
+- Earth tones → Organic, Agriculture, Eco-friendly, Outdoor, Wellness
+- Bright/Vibrant → Children, Entertainment, Creative, Playful brands
+- Navy + Gold → Luxury, Legal, Finance, Real Estate
+
+Based on the color palette and template structure, suggest 5-10 industries that would be the BEST fit.
+Return ONLY a JSON array of industry IDs from the available list above.
+
+Example response: ["restaurant", "hotel", "cafe-coffee", "catering", "event-planning"]
+
+Return ONLY the JSON array, no other text.`,
+    model: 'gemini-2.5-flash',
+    version: 1
+  },
+  {
+    name: 'template-name-generation',
+    area: 'Template Management',
+    description: 'Generates a creative name for a template based on its color palette.',
+    template: `You are a creative naming expert. Analyze these colors and create a short, memorable, creative name for this website template.
+
+Colors: {{colors}}
+
+Requirements:
+- Name must be in ENGLISH
+- Maximum 2-3 words
+- Be creative and evocative (e.g., "Arctic Dawn", "Coral Sunset", "Midnight Garden", "Golden Ember")
+- The name should evoke the mood/feeling of the color palette
+- Do NOT include generic words like "Template", "Theme", "Palette", "Design"
+- Just respond with the name, nothing else
+
+Name:`,
+    model: 'gemini-2.5-flash',
+    version: 1
+  },
+
   // Global Assistant Main Persona
   {
     name: 'global-assistant-main',
@@ -806,5 +980,207 @@ SPECIAL CASE: If NO project loaded and user wants to edit content → ask which 
 OTHERWISE: JUST USE THE TOOLS IMMEDIATELY.`,
     model: 'gemini-2.5-pro',
     version: 8,
+  },
+
+  // ============================================================================
+  // TEMPLATE MATCHING PROMPTS
+  // ============================================================================
+  {
+    name: 'onboarding-template-selector',
+    area: 'Onboarding',
+    description: 'Selecciona el template más apropiado basándose en industria, estética y colores del cliente.',
+    template: `Eres un experto en diseño web que debe seleccionar el mejor template predefinido para un negocio.
+
+**INFORMACIÓN DEL CLIENTE:**
+- Negocio: {{businessName}}
+- Industria: {{industry}}
+- Estética deseada: {{aesthetic}}
+- Color Vibe: {{colorVibe}}
+- Resumen: {{summary}}
+
+**TEMPLATES DISPONIBLES:**
+{{templateContext}}
+
+**INSTRUCCIONES DE MATCHING:**
+
+1. **INDUSTRIA (Prioridad Alta - 50 puntos):**
+   - Busca coincidencia exacta en "Industria" del template
+   - Si no hay exacta, busca en "Categoría" o "Tags" términos relacionados
+   - Considera "Audiencia" como factor secundario
+
+2. **ESTÉTICA/TONO (Prioridad Media - 30 puntos):**
+   - Compara "{{aesthetic}}" con "Tono" del template
+   - Mapeo conocido:
+     * Elegant ↔ Luxury, Sophisticated, Premium
+     * Bold ↔ Urgent, Dynamic, Energetic
+     * Minimalist ↔ Professional, Clean, Modern
+     * Playful ↔ Friendly, Fun, Casual
+     * Tech ↔ Modern, Innovative
+     * Organic ↔ Natural, Authentic, Eco
+
+3. **COLORES (Prioridad Media - 20 puntos):**
+   - Analiza si "{{colorVibe}}" es compatible con la paleta del template
+   - Considera:
+     * Colores cálidos: dorados, marrones, rojos, naranjas
+     * Colores fríos: azules, verdes, grises, cyan
+     * Colores vibrantes: neón, saturados altos
+     * Colores neutros: blancos, negros, grises
+   - Si el template tiene tema oscuro y el vibe es "dark/bold/tech" → compatible
+   - Si el template tiene tema claro y el vibe es "fresh/clean/light" → compatible
+
+4. **DECISIÓN:**
+   - Score ≥ 60: Alta confianza (0.7-1.0)
+   - Score 30-59: Media confianza (0.4-0.6)
+   - Score < 30: Baja confianza (0.1-0.3), considerar generar desde cero
+
+**RESPONDE SOLO JSON:**
+{
+  "selectedTemplateId": "template-id del mejor match (o null si ninguno es bueno)",
+  "confidence": 0.0-1.0,
+  "score": número total de puntos (0-100),
+  "matchAnalysis": {
+    "industryMatch": "exact|related|none",
+    "toneMatch": "exact|similar|none",
+    "colorCompatibility": "high|medium|low"
+  },
+  "reasoning": "Explicación de 1-2 oraciones de por qué este template es el mejor match",
+  "colorAdjustments": {
+    "needed": boolean,
+    "newPrimary": "#hex o null (solo si el color vibe del cliente difiere significativamente)",
+    "reason": "Por qué se sugiere el ajuste de color"
+  },
+  "alternativeTemplateId": "segundo mejor match o null"
+}
+
+**SI NO HAY BUEN MATCH (score < 30):**
+{
+  "selectedTemplateId": null,
+  "confidence": 0,
+  "score": 0,
+  "matchAnalysis": {
+    "industryMatch": "none",
+    "toneMatch": "none",
+    "colorCompatibility": "low"
+  },
+  "reasoning": "No hay template adecuado para {{industry}} con estética {{aesthetic}}",
+  "colorAdjustments": { "needed": false },
+  "suggestNewTemplate": true,
+  "suggestedTemplateProfile": {
+    "industry": "{{industry}}",
+    "aesthetic": "{{aesthetic}}",
+    "colorVibe": "{{colorVibe}}"
+  }
+}`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+  {
+    name: 'onboarding-template-personalization',
+    area: 'Onboarding',
+    description: 'Personaliza el contenido de un template seleccionado para el negocio específico del cliente.',
+    template: `Eres un copywriter experto. Tu trabajo es ADAPTAR el contenido de un template web existente para un nuevo negocio, manteniendo la estructura y estilo visual.
+
+**NEGOCIO DEL CLIENTE:**
+- Nombre: {{businessName}}
+- Industria: {{industry}}
+- Resumen: {{summary}}
+- Audiencia objetivo: {{audience}}
+- Servicios/Productos: {{offerings}}
+- Objetivo del sitio: {{goal}}
+- Propuesta de valor única: {{uniqueValueProposition}}
+- Historia de la empresa: {{companyHistory}}
+- Valores centrales: {{coreValues}}
+
+**TEMPLATE BASE SELECCIONADO:**
+{{templateContext}}
+
+**TU TAREA:**
+1. MANTÉN la estructura y número de items de cada sección (si el template tiene 3 features, genera 3 features)
+2. ADAPTA todos los textos para que sean 100% relevantes a "{{industry}}"
+3. USA el tono apropiado para "{{audience}}"
+4. ENFÓCATE en "{{goal}}" como objetivo principal del sitio
+5. INCORPORA la propuesta de valor "{{uniqueValueProposition}}" en el hero
+
+**REGLAS CRÍTICAS:**
+- NO cambies la cantidad de features/services/testimonials - mantén la misma que el template original
+- NO inventes datos de contacto o precios específicos si no se proporcionaron
+- SÍ haz los textos específicos, convincentes y profesionales para la industria "{{industry}}"
+- SÍ usa terminología propia del sector
+- Los testimonials deben sonar auténticos y relevantes para esta industria
+- El hero headline debe capturar la esencia del negocio con impacto
+- Usa <span> para destacar palabras clave en el headline
+
+**RESPONDE SOLO JSON con esta estructura exacta:**
+{
+  "hero": {
+    "headline": "Título impactante con <span>palabra destacada</span>",
+    "subheadline": "2-3 oraciones que expliquen el valor único del negocio",
+    "primaryCta": "Texto del botón principal (acción clara)",
+    "secondaryCta": "Texto del botón secundario"
+  },
+  "features": {
+    "title": "Título de la sección de características",
+    "description": "Descripción breve de por qué estas características importan",
+    "items": [
+      { "title": "Característica 1", "description": "Descripción específica del beneficio" }
+    ]
+  },
+  "services": {
+    "title": "Título de servicios",
+    "description": "Descripción de los servicios",
+    "items": [
+      { "title": "Servicio 1", "description": "Descripción del servicio y su valor" }
+    ]
+  },
+  "testimonials": {
+    "title": "Título de testimonios",
+    "description": "Subtítulo de la sección",
+    "items": [
+      { "quote": "Testimonio realista y específico", "name": "Nombre Cliente", "title": "Cargo/Empresa" }
+    ]
+  },
+  "pricing": {
+    "title": "Título de precios",
+    "description": "Descripción de opciones",
+    "tiers": [
+      { 
+        "name": "Nombre del plan", 
+        "price": "$XX", 
+        "frequency": "/mes", 
+        "description": "Descripción breve", 
+        "features": ["beneficio1", "beneficio2", "beneficio3"], 
+        "buttonText": "Texto CTA" 
+      }
+    ]
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "description": "Respuestas a las dudas más comunes",
+    "items": [
+      { "question": "Pregunta relevante para {{industry}}?", "answer": "Respuesta útil y completa" }
+    ]
+  },
+  "cta": {
+    "title": "Call to action final persuasivo",
+    "description": "Motivación para tomar acción ahora",
+    "buttonText": "Acción clara"
+  },
+  "newsletter": {
+    "title": "Título para suscripción",
+    "description": "Incentivo para suscribirse (descuento, contenido exclusivo, etc.)",
+    "buttonText": "Suscribirse"
+  },
+  "team": {
+    "title": "Título de sección de equipo",
+    "description": "Descripción del equipo"
+  }
+}
+
+**IMPORTANTE:** 
+- Solo incluye las secciones que existan en el templateContext
+- El número de items en cada array DEBE coincidir con el template original
+- Escribe en el idioma apropiado para el negocio (español si es negocio hispanohablante)`,
+    model: 'gemini-2.5-flash',
+    version: 1,
   }
 ];

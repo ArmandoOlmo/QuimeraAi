@@ -120,13 +120,13 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     onSave
 }) => {
     const { t } = useTranslation();
-    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt, uploadFile, files, user } = useEditor();
+    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt, uploadFile, files, user, getPrompt } = useEditor();
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
     const [isGeneratingName, setIsGeneratingName] = useState(false);
     const [error, setError] = useState('');
-    
+
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -141,7 +141,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 
     const [tagInput, setTagInput] = useState('');
     const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
-    
+
     // Thumbnail generation state
     const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
     const [thumbnailPrompt, setThumbnailPrompt] = useState('');
@@ -150,7 +150,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
     const [thumbnailStyle, setThumbnailStyle] = useState('Minimalist');
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     const THUMBNAIL_STYLES = [
         { label: t('editor.minimalist', { defaultValue: 'Minimalist' }), value: 'Minimalist' },
         { label: t('editor.photorealistic', { defaultValue: 'Photorealistic' }), value: 'Photorealistic' },
@@ -180,7 +180,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
         }
         setError('');
     }, [template, isOpen]);
-    
+
     // Generate AI prompt suggestion based on template
     const generateThumbnailPromptSuggestion = async () => {
         if (!template) return;
@@ -196,8 +196,23 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
         try {
             const { colors, colorInfo } = extractTemplateColors(template);
             const colorAnalysis = analyzeColorPalette(colors);
-            
-            const prompt = `You are an expert in creating visual thumbnails for website templates.
+
+            // Get dynamic prompt
+            const promptTemplate = getPrompt('template-thumbnail-suggestion');
+            let promptText = '';
+            let modelToUse = 'gemini-2.5-flash';
+
+            if (promptTemplate) {
+                promptText = promptTemplate.template
+                    .replace('{{name}}', template.name)
+                    .replace('{{category}}', template.category || template.brandIdentity?.industry || 'Not specified')
+                    .replace('{{description}}', template.description || 'A professional website template')
+                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors.join(', '))
+                    .replace('{{colorAnalysis}}', colorAnalysis);
+                modelToUse = promptTemplate.model;
+            } else {
+                // Fallback
+                promptText = `You are an expert in creating visual thumbnails for website templates.
 
 Generate a detailed, creative prompt for an AI image generator to create a stunning thumbnail image for this website template.
 
@@ -221,16 +236,17 @@ ${colorAnalysis}
 - DON'T include any text in the image
 
 Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
+            }
 
             // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
             const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
-            
+
             let responseText: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
                 responseText = extractTextFromResponse(proxyResponse);
             } else {
-                responseText = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
 
             setThumbnailPrompt(responseText.trim());
@@ -245,7 +261,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     // Enhance existing prompt
     const handleEnhancePrompt = async () => {
         if (!thumbnailPrompt.trim()) return;
-        
+
         // In production, use proxy directly (no API key needed on client)
         const useProxy = shouldUseProxy();
         if (!useProxy && hasApiKey === false) {
@@ -280,7 +296,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         try {
             // Add explicit instruction to avoid text in the image
             const enhancedPrompt = `${thumbnailPrompt}, absolutely no text, no words, no letters, no typography, no watermarks, no logos with text`;
-            
+
             const url = await generateImage(enhancedPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
@@ -299,8 +315,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
     // Apply generated thumbnail - also stores it for hero
     const applyGeneratedThumbnail = () => {
         if (generatedThumbnail) {
-            setFormData(prev => ({ 
-                ...prev, 
+            setFormData(prev => ({
+                ...prev,
                 thumbnailUrl: generatedThumbnail,
                 heroImageUrl: generatedThumbnail // Also save for hero
             }));
@@ -319,8 +335,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Get the most recently uploaded file
             const latestFile = files[0];
             if (latestFile) {
-                setFormData(prev => ({ 
-                    ...prev, 
+                setFormData(prev => ({
+                    ...prev,
                     thumbnailUrl: latestFile.downloadURL,
                     heroImageUrl: latestFile.downloadURL // Also set for hero
                 }));
@@ -350,8 +366,25 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
             // Build a comprehensive prompt
             const industryList = INDUSTRIES.map(i => i.id).join(', ');
-            
-            const prompt = `You are an expert in design psychology and color theory for business branding.
+
+            // Get dynamic prompt
+            const promptTemplate = getPrompt('template-industry-suggestion');
+            let promptText = '';
+            let modelToUse = 'gemini-2.5-flash';
+
+            if (promptTemplate) {
+                promptText = promptTemplate.template
+                    .replace('{{name}}', template.name)
+                    .replace('{{category}}', template.category || template.brandIdentity?.industry || 'Not specified')
+                    .replace('{{description}}', template.description || 'Not provided')
+                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors.join(', '))
+                    .replace('{{colorAnalysis}}', colorAnalysis)
+                    .replace('{{components}}', template.componentOrder?.join(', ') || 'Standard layout')
+                    .replace('{{industryList}}', industryList);
+                modelToUse = promptTemplate.model;
+            } else {
+                // Fallback
+                promptText = `You are an expert in design psychology and color theory for business branding.
 
 Analyze this website template and suggest the most appropriate industries it would work well for.
 
@@ -391,16 +424,17 @@ Return ONLY a JSON array of industry IDs from the available list above.
 Example response: ["restaurant", "hotel", "cafe-coffee", "catering", "event-planning"]
 
 Return ONLY the JSON array, no other text.`;
+            }
 
             // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
             const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
-            
+
             let responseText: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
                 responseText = extractTextFromResponse(proxyResponse);
             } else {
-                responseText = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
 
             // Parse the response
@@ -410,7 +444,7 @@ Return ONLY the JSON array, no other text.`;
                 let cleanedText = responseText.trim();
                 cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
                 suggestedIds = JSON.parse(cleanedText);
-                
+
                 // Validate that all IDs exist in our list
                 suggestedIds = suggestedIds.filter(id => INDUSTRY_IDS.includes(id));
             } catch (parseError) {
@@ -457,10 +491,10 @@ Return ONLY the JSON array, no other text.`;
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!template) return;
-        
+
         setIsLoading(true);
         setError('');
-        
+
         try {
             // Build update object with current formData values
             const updates: Partial<Project> = {
@@ -471,7 +505,7 @@ Return ONLY the JSON array, no other text.`;
                 industries: formData.industries || [],
                 thumbnailUrl: formData.thumbnailUrl,
             };
-            
+
             // Include globalColors if a palette was imported
             if (formData.globalColors) {
                 updates.theme = {
@@ -481,7 +515,7 @@ Return ONLY the JSON array, no other text.`;
                     pageBackground: formData.globalColors.background,
                 };
             }
-            
+
             // Update hero image if a new one was generated
             if (formData.heroImageUrl) {
                 updates.data = {
@@ -493,7 +527,7 @@ Return ONLY the JSON array, no other text.`;
                     }
                 };
             }
-            
+
             await onSave(template.id, updates);
             onClose();
         } catch (err) {
@@ -542,36 +576,47 @@ Return ONLY the JSON array, no other text.`;
     const handleCoolorsPaletteGenerated = async (colors: GlobalColors, allColors: string[], paletteName?: string) => {
         // Use the AI-generated palette name directly, or keep current name
         const newName = paletteName || formData.name;
-        
-        setFormData(prev => ({ 
-            ...prev, 
+
+        setFormData(prev => ({
+            ...prev,
             name: newName,
             globalColors: colors,
             paletteColors: allColors
         }));
-        
+
         setShowCoolorsImporter(false);
     };
 
     // Generate template name with AI based on colors
     const handleGenerateNameWithAI = async () => {
         if (!template) return;
-        
+
         // Get colors from formData (if palette was imported) or from template
-        const colorsToAnalyze = (formData.paletteColors || []).length > 0 
-            ? formData.paletteColors 
+        const colorsToAnalyze = (formData.paletteColors || []).length > 0
+            ? formData.paletteColors
             : extractTemplateColors(template).colors;
-        
+
         if (colorsToAnalyze.length === 0) {
             setError('No colors found. Import a color palette first.');
             return;
         }
-        
+
         setIsGeneratingName(true);
         setError('');
-        
+
         try {
-            const prompt = `You are a creative naming expert. Analyze these colors and create a short, memorable, creative name for this website template.
+            // Get dynamic prompt
+            const promptTemplate = getPrompt('template-name-generation');
+            let promptText = '';
+            let modelToUse = 'gemini-2.5-flash';
+
+            if (promptTemplate) {
+                promptText = promptTemplate.template
+                    .replace('{{colors}}', colorsToAnalyze.join(', '));
+                modelToUse = promptTemplate.model;
+            } else {
+                // Fallback
+                promptText = `You are a creative naming expert. Analyze these colors and create a short, memorable, creative name for this website template.
 
 Colors: ${colorsToAnalyze.join(', ')}
 
@@ -584,19 +629,20 @@ Requirements:
 - Just respond with the name, nothing else
 
 Name:`;
+            }
 
             // Use secure proxy for production (prefix 'template-' for proxy to recognize it)
             const proxyProjectId = template.id.startsWith('template-') ? template.id : `template-${template.id}`;
             const useProxy = shouldUseProxy();
-            
+
             let text: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
                 text = extractTextFromResponse(proxyResponse);
             } else {
-                text = await generateContent(prompt, proxyProjectId, 'gemini-2.5-flash', {}, user?.uid);
+                text = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
-            
+
             // Clean up the response
             const cleanName = text
                 .trim()
@@ -605,7 +651,7 @@ Name:`;
                 .replace(/\.$/g, '')
                 .replace(/^Name:\s*/i, '')
                 .trim();
-            
+
             if (cleanName && cleanName.length > 1 && cleanName.length < 50) {
                 // Replace name completely with AI-generated name
                 setFormData(prev => ({ ...prev, name: cleanName }));
@@ -642,14 +688,14 @@ Name:`;
                         <p className="text-xs text-editor-text-secondary">{template?.name}</p>
                     </div>
                 </div>
-                <button 
-                    onClick={onClose} 
+                <button
+                    onClick={onClose}
                     className="p-1.5 rounded-lg hover:bg-editor-border transition-colors"
                 >
                     <X className="w-4 h-4" />
                 </button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
                 <div className="p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     {error && (
@@ -660,7 +706,7 @@ Name:`;
 
                     {/* Two Column Layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        
+
                         {/* LEFT COLUMN - Basic Info & Colors */}
                         <div className="space-y-4">
                             {/* Name & Category Row */}
@@ -689,7 +735,7 @@ Name:`;
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Category */}
                                     <div>
                                         <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">Categoría</label>
@@ -721,7 +767,7 @@ Name:`;
                                         {showCoolorsImporter ? 'Cerrar' : 'Importar Coolors'}
                                     </button>
                                 </div>
-                                
+
                                 {/* Color Swatches */}
                                 <div className="flex flex-wrap gap-1.5 mb-3">
                                     {displayColors.slice(0, 10).map((color, idx) => (
@@ -740,8 +786,8 @@ Name:`;
                                 {/* Coolors Importer - Inline */}
                                 {showCoolorsImporter && (
                                     <div className="pt-3 border-t border-editor-border/50">
-                                        <CoolorsImporter 
-                                            onPaletteGenerated={handleCoolorsPaletteGenerated} 
+                                        <CoolorsImporter
+                                            onPaletteGenerated={handleCoolorsPaletteGenerated}
                                             projectId={template?.id || 'template-editor'}
                                             generatePaletteName={true}
                                         />
@@ -814,11 +860,10 @@ Name:`;
                                         <button
                                             type="button"
                                             onClick={() => setShowThumbnailGenerator(!showThumbnailGenerator)}
-                                            className={`p-1.5 text-xs rounded-lg transition-colors ${
-                                                showThumbnailGenerator
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                                            }`}
+                                            className={`p-1.5 text-xs rounded-lg transition-colors ${showThumbnailGenerator
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                                }`}
                                             title="Generar con IA"
                                         >
                                             <Zap className="w-3.5 h-3.5" />
@@ -864,7 +909,7 @@ Name:`;
                                                 </button>
                                             </div>
                                         </div>
-                                        
+
                                         <textarea
                                             value={thumbnailPrompt}
                                             onChange={(e) => setThumbnailPrompt(e.target.value)}
@@ -879,11 +924,10 @@ Name:`;
                                                     key={s.value}
                                                     type="button"
                                                     onClick={() => setThumbnailStyle(s.value)}
-                                                    className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors ${
-                                                        thumbnailStyle === s.value
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-editor-border text-editor-text-secondary'
-                                                    }`}
+                                                    className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors ${thumbnailStyle === s.value
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-editor-border text-editor-text-secondary'
+                                                        }`}
                                                 >
                                                     {s.label}
                                                 </button>

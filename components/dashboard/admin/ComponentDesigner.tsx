@@ -71,8 +71,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
         setIsSaving(true);
         try {
             await saveComponent(selectedComponentId);
-            // Mostrar feedback de éxito
-            console.log("✅ Component saved successfully:", selectedComponentId);
+            // Component saved successfully
         } catch (error) {
             console.error("Error saving component:", error);
             alert("❌ Error al guardar el componente. Revisa la consola para más detalles.");

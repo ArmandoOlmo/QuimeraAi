@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
-import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, OnboardingState, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
+import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -20,6 +20,7 @@ import {
     orderBy,
     onAuthStateChanged,
     User,
+    updateProfile,
     ref,
     uploadBytes,
     getDownloadURL,
@@ -174,6 +175,8 @@ interface EditorContextType {
 
     // Gestión de administradores
     createAdmin: (email: string, name: string, role: UserRole) => Promise<void>;
+    updateUserProfile: (name: string, photoURL: string) => Promise<void>;
+    updateUserDetails: (userId: string, data: Partial<UserDocument>) => Promise<void>;
 
     // Tenant Management
     tenants: Tenant[];
@@ -188,6 +191,7 @@ interface EditorContextType {
     fetchAllPrompts: () => Promise<void>;
     savePrompt: (prompt: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => Promise<void>;
     deletePrompt: (promptId: string) => Promise<void>;
+    syncPrompts: () => Promise<void>;
 
     // Global Assistant (Super Admin)
     globalAssistantConfig: GlobalAssistantConfig;
@@ -239,14 +243,6 @@ interface EditorContextType {
     // AI Assistant Configuration (Project Level)
     aiAssistantConfig: AiAssistantConfig;
     saveAiAssistantConfig: (config: AiAssistantConfig) => Promise<void>;
-
-    // Website Builder State
-    isOnboardingOpen: boolean;
-    setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    onboardingState: OnboardingState;
-    setOnboardingState: React.Dispatch<React.SetStateAction<OnboardingState>>;
-    saveOnboardingStateToFirebase: (state: OnboardingState) => Promise<void>;
-    clearOnboardingState: () => Promise<void>;
 
     // User Preferences (synced across devices)
     sidebarOrder: string[];
@@ -301,6 +297,10 @@ interface EditorContextType {
     seoConfig: SEOConfig | null;
     setSeoConfig: React.Dispatch<React.SetStateAction<SEOConfig | null>>;
     updateSeoConfig: (updates: Partial<SEOConfig>) => Promise<void>;
+
+    // Onboarding
+    isOnboardingOpen: boolean;
+    setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -332,6 +332,7 @@ const defaultComponentStatus = allComponents.reduce((acc, comp) => {
 export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDashboardSidebarCollapsed, setIsDashboardSidebarCollapsed] = useState(false);
+    const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
     const [view, setView] = useState<View>('dashboard');
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
     const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
@@ -510,31 +511,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);
     const [customComponents, setCustomComponents] = useState<CustomComponent[]>([]);
 
-    // Website Builder State
-    const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-    const [onboardingState, setOnboardingState] = useState<OnboardingState>({
-        step: 'basics',
-        businessName: '',
-        industry: '',
-        summary: '',
-        audience: '',
-        offerings: '',
-        tone: 'Professional',
-        goal: '',
-        aesthetic: 'Minimalist',
-        colorVibe: '',
-        // Nuevos campos opcionales
-        companyHistory: undefined,
-        uniqueValueProposition: undefined,
-        coreValues: undefined,
-        yearsInBusiness: undefined,
-        products: undefined,
-        contactInfo: undefined,
-        brandGuidelines: undefined,
-        testimonials: undefined,
-        designPlan: undefined
-    });
-
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
 
@@ -639,6 +615,18 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     useEffect(() => {
         const checkApiKey = async () => {
             try {
+                // IMPORTANT: When using the proxy, the API key is stored securely on the server
+                // We don't need a local API key - the proxy handles authentication
+                // Import shouldUseProxy to check if proxy is active
+                const { shouldUseProxy } = await import('../utils/geminiProxyClient');
+                
+                if (shouldUseProxy()) {
+                    console.log('✅ [checkApiKey] Using secure proxy - API key managed by server');
+                    setHasApiKey(true);
+                    return;
+                }
+
+                // Fallback for development: check for local API key
                 // Primero, verificar si hay una API key ya cachada
                 const cachedKey = getCachedApiKey();
                 if (cachedKey) {
@@ -1019,8 +1007,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // Auto-asignar rol de owner al email del creador
                     if (isOwner(currentUser.email!) && finalUserDoc.role !== 'owner') {
                         try {
+                            console.log("Auto-promoting user to owner...");
                             finalUserDoc.role = 'owner';
-                            await updateDoc(userDocRef, { role: 'owner' });
+                            // Use setDoc with merge to ensure we can write even if updateDoc fails due to rules
+                            // (Rules allow write to own doc, so this should work)
+                            await setDoc(userDocRef, { role: 'owner' }, { merge: true });
+                            console.log("User auto-promoted to owner successfully.");
                         } catch (e) {
                             console.warn("Failed to auto-promote owner (permission error):", e);
                         }
@@ -1037,16 +1029,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         if (finalUserDoc.preferences.sidebarOrder && finalUserDoc.preferences.sidebarOrder.length > 0) {
                             setSidebarOrder(finalUserDoc.preferences.sidebarOrder);
                             localStorage.setItem('sidebar-nav-order', JSON.stringify(finalUserDoc.preferences.sidebarOrder));
-                        }
-                    }
-
-                    // Load persisted onboarding state if exists
-                    if (finalUserDoc.onboardingState) {
-                        setOnboardingState(finalUserDoc.onboardingState);
-                        // If user had an ongoing onboarding, reopen it
-                        if (finalUserDoc.onboardingState.step !== 'basics' ||
-                            finalUserDoc.onboardingState.businessName) {
-                            setIsOnboardingOpen(true);
                         }
                     }
 
@@ -1343,26 +1325,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     }, [sidebarOrder, user?.uid]); // Only depend on user.uid to avoid infinite loops
 
-    // Persist onboarding state to Firebase (so user doesn't lose progress)
-    const saveOnboardingStateToFirebase = async (state: OnboardingState) => {
-        if (!user) return;
-        try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { onboardingState: state });
-        } catch (err) {
-            console.warn('Failed to save onboarding state:', err);
+    // Helper to remove undefined values (Firebase doesn't accept them)
+    const removeUndefinedValues = (obj: any): any => {
+        if (obj === null || obj === undefined) return null;
+        if (typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(removeUndefinedValues);
+        
+        const cleaned: any = {};
+        for (const key in obj) {
+            if (obj[key] !== undefined) {
+                cleaned[key] = removeUndefinedValues(obj[key]);
+            }
         }
-    };
-
-    // Clear onboarding state from Firebase when completed
-    const clearOnboardingState = async () => {
-        if (!user) return;
-        try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { onboardingState: null });
-        } catch (err) {
-            console.warn('Failed to clear onboarding state:', err);
-        }
+        return cleaned;
     };
 
     // Keep projectsRef in sync with latest projects state for auto-save
@@ -2563,11 +2538,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const promptForKeySelection = async () => {
+        console.log('🔑 [promptForKeySelection] Attempting to get API key...');
         const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
+        
         if (typeof aiStudio?.openSelectKey === 'function') {
+            console.log('🔑 [promptForKeySelection] AI Studio available, opening key selector...');
             await aiStudio.openSelectKey();
             const key = await syncApiKeyFromAiStudio();
             setHasApiKey(Boolean(key));
+            if (key) {
+                console.log('✅ [promptForKeySelection] API key obtained successfully');
+            }
+        } else {
+            console.warn('⚠️ [promptForKeySelection] AI Studio not available');
+            // Show a user-friendly message
+            alert('Para usar las funciones de IA, necesitas configurar una API key de Google AI. Por favor, ve a la configuración de tu cuenta o contacta al administrador.');
         }
     };
 
@@ -2703,7 +2688,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             // Always use secure proxy
             console.log('🔐 [enhancePrompt] Using secure proxy for enhancement');
-            
+
             const proxyProjectId = activeProject?.id || 'enhance-prompt-fallback';
             const proxyResponse = await generateContentViaProxy(
                 proxyProjectId,
@@ -3781,6 +3766,70 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
+    // Update User Profile (Name & Photo)
+    const updateUserProfile = async (name: string, photoURL: string) => {
+        if (!user || !userDocument) return;
+
+        try {
+            // 1. Update Firestore
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+                name,
+                photoURL
+            });
+
+            // 2. Update Auth Profile
+            await updateProfile(user, {
+                displayName: name,
+                photoURL: photoURL
+            });
+
+            // 3. Update Local State
+            setUserDocument(prev => prev ? { ...prev, name, photoURL } : null);
+            setAllUsers(prev => prev.map(u => u.id === user.uid ? { ...u, name, photoURL } : u));
+
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            throw error;
+        }
+    };
+
+    // Update ANY User Details (Admin Function)
+    const updateUserDetails = async (userId: string, data: Partial<UserDocument>) => {
+        // Verify permissions (only admins can do this)
+        if (!isAdmin()) {
+            throw new Error("Unauthorized: Only admins can update user details");
+        }
+
+        try {
+            const userDocRef = doc(db, 'users', userId);
+
+            // Filter out sensitive or immutable fields just in case
+            const { id, uid, email, role, ...updatableData } = data as any;
+
+            await updateDoc(userDocRef, updatableData);
+
+            // Update local state
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatableData } : u));
+
+            // If updating self, also update userDocument
+            if (user && userId === user.uid) {
+                setUserDocument(prev => prev ? { ...prev, ...updatableData } : null);
+                // Also update Auth profile if name/photo changed
+                if (updatableData.name || updatableData.photoURL) {
+                    await updateProfile(user, {
+                        displayName: updatableData.name || user.displayName,
+                        photoURL: updatableData.photoURL || user.photoURL
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error("Error updating user details:", error);
+            throw error;
+        }
+    };
+
     // Tenant Management Functions (disponibles para todos)
     const fetchTenants = async () => {
         // Todos los usuarios pueden ver tenants
@@ -3981,6 +4030,40 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const promptDocRef = doc(db, 'prompts', promptId);
         await deleteDoc(promptDocRef);
         await fetchAllPrompts(); // Refresh list
+    };
+
+    const syncPrompts = async () => {
+        try {
+            console.log('🔄 Syncing default prompts...');
+            const promptsCol = collection(db, 'prompts');
+            const q = query(promptsCol);
+            const snapshot = await getDocs(q);
+            const dbPrompts = snapshot.docs.map(doc => doc.data() as LLMPrompt);
+            const dbPromptNames = new Set(dbPrompts.map(p => p.name));
+
+            const promptsToAdd = defaultPrompts.filter(dp => !dbPromptNames.has(dp.name));
+
+            if (promptsToAdd.length === 0) {
+                console.log('✅ All default prompts are already in the database.');
+                return;
+            }
+
+            console.log(`Creating ${promptsToAdd.length} missing prompts...`);
+            const promises = promptsToAdd.map(promptData => {
+                const dataToSave = {
+                    ...promptData,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+                return addDoc(promptsCol, dataToSave);
+            });
+
+            await Promise.all(promises);
+            console.log('✅ Prompts synced successfully.');
+            await fetchAllPrompts();
+        } catch (error) {
+            console.error("❌ Error syncing prompts:", error);
+        }
     };
 
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
@@ -4535,6 +4618,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         canPerform,
         isUserOwner,
         createAdmin,
+        updateUserProfile,
+        updateUserDetails,
         // Tenants
         tenants,
         fetchTenants,
@@ -4548,6 +4633,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         fetchAllPrompts,
         savePrompt,
         deletePrompt,
+        syncPrompts,
         // Global Assistant
         globalAssistantConfig,
         saveGlobalAssistantConfig,
@@ -4587,10 +4673,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         deleteMenu,
         aiAssistantConfig,
         saveAiAssistantConfig,
-        isOnboardingOpen, setIsOnboardingOpen,
-        onboardingState, setOnboardingState,
-        saveOnboardingStateToFirebase,
-        clearOnboardingState,
         // User Preferences
         sidebarOrder, setSidebarOrder,
         // Leads & CRM
@@ -4630,7 +4712,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // SEO Configuration
         seoConfig,
         setSeoConfig,
-        updateSeoConfig
+        updateSeoConfig,
+        // Onboarding
+        isOnboardingOpen,
+        setIsOnboardingOpen,
     };
 
     return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

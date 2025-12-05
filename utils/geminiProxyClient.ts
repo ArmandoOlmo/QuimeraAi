@@ -226,13 +226,7 @@ export async function generateImageViaProxy(
     config: ImageGenerationConfig = {}
 ): Promise<ImageProxyResponse> {
     try {
-        console.log('✨ Generating image via proxy (Quimera AI):', {
-            userId,
-            promptLength: prompt.length,
-            model: config.model,
-            thinkingLevel: config.thinkingLevel,
-            config
-        });
+        // Image generation request - logging disabled for production
 
         const response = await fetch(`${PROXY_BASE_URL}-image`, {
             method: 'POST',
@@ -277,7 +271,6 @@ export async function generateImageViaProxy(
             throw new Error('No image returned from proxy');
         }
 
-        console.log('✅ Image generated successfully via proxy');
         return data;
     } catch (error) {
         console.error('Image generation proxy error:', error);
@@ -288,9 +281,33 @@ export async function generateImageViaProxy(
 /**
  * Helper to extract text from Gemini proxy response
  */
-export function extractTextFromResponse(response: GeminiProxyResponse): string {
+export function extractTextFromResponse(response: GeminiProxyResponse | any): string {
     try {
-        return response.response.candidates[0]?.content?.parts[0]?.text || '';
+        // Handle various response structures
+        if (!response) return '';
+        
+        // Standard proxy response format
+        if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return response.response.candidates[0].content.parts[0].text;
+        }
+        
+        // Direct candidates format (fallback)
+        if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return response.candidates[0].content.parts[0].text;
+        }
+        
+        // Text directly in response
+        if (typeof response.text === 'string') {
+            return response.text;
+        }
+        
+        // Already a string
+        if (typeof response === 'string') {
+            return response;
+        }
+        
+        console.warn('Could not extract text from response, structure:', Object.keys(response || {}));
+        return '';
     } catch (error) {
         console.error('Error extracting text from response:', error);
         return '';

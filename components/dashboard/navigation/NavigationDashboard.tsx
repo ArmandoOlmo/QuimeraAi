@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
 import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info } from 'lucide-react';
@@ -7,6 +8,7 @@ import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 
 const NavigationDashboard: React.FC = () => {
+    const { t } = useTranslation();
     const { menus, deleteMenu, saveMenu, activeProject, projects, loadProject, data, setView } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
@@ -41,7 +43,7 @@ const NavigationDashboard: React.FC = () => {
     const handleCreateNew = () => {
         const newMenu: Menu = {
             id: `menu_${Date.now()}`,
-            title: 'Untitled Menu',
+            title: t('navigationDashboard.untitledMenu'),
             handle: '',
             items: []
         };
@@ -58,7 +60,7 @@ const NavigationDashboard: React.FC = () => {
         const duplicatedMenu: Menu = {
             ...menu,
             id: `menu_${Date.now()}`,
-            title: `${menu.title} (Copy)`,
+            title: `${menu.title} (${t('cms.copyLabel')})`,
             handle: `${menu.handle}-copy`,
         };
         await saveMenu(duplicatedMenu);
@@ -71,13 +73,13 @@ const NavigationDashboard: React.FC = () => {
         const usedInHeader = data?.header?.menuId === id;
         const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === id);
 
-        let confirmMessage = "Delete this menu? This action cannot be undone.";
+        let confirmMessage = t('navigationDashboard.deleteConfirm');
 
         if (usedInHeader || usedInFooter) {
             const locations = [];
-            if (usedInHeader) locations.push("Header");
-            if (usedInFooter) locations.push("Footer");
-            confirmMessage = `⚠️ This menu is currently being used in: ${locations.join(", ")}.\n\nDeleting it will remove these navigation links from your website.\n\nAre you sure you want to continue?`;
+            if (usedInHeader) locations.push(t('sections.header'));
+            if (usedInFooter) locations.push(t('sections.footer'));
+            confirmMessage = t('navigationDashboard.deleteUsedConfirm', { locations: locations.join(", ") }) + `\n\n` + t('navigationDashboard.deleteUsedWarning') + `\n\n` + t('navigationDashboard.deleteUsedQuestion');
         }
 
         if (window.confirm(confirmMessage)) {
@@ -120,13 +122,13 @@ const NavigationDashboard: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-2">
                             <MenuIcon className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">Navigation</h1>
+                            <h1 className="text-lg font-semibold text-foreground">{t('navigationDashboard.title')}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         {activeProject && (
                             <div className="flex items-center text-sm text-muted-foreground">
-                                <span className="mr-1.5">Project:</span>
+                                <span className="mr-1.5">{t('dashboard.projects')}:</span>
                                 <span className="font-semibold text-foreground">{activeProject.name}</span>
                             </div>
                         )}
@@ -142,15 +144,15 @@ const NavigationDashboard: React.FC = () => {
                                 <Info className="text-blue-500 flex-shrink-0" size={20} />
                                 <div className="flex-1">
                                     <h4 className="text-sm font-semibold text-foreground mb-1">
-                                        Connect your menus
+                                        {t('navigationDashboard.connectMenus')}
                                     </h4>
                                     <p className="text-xs text-muted-foreground">
-                                        Menus won't appear on your website until you assign them to your Header or Footer.
+                                        {t('navigationDashboard.connectMenusDesc')}
                                         <button
                                             onClick={() => setView('editor')}
                                             className="ml-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                         >
-                                            Go to Editor →
+                                            {t('navigationDashboard.goToEditor')}
                                         </button>
                                     </p>
                                 </div>
@@ -160,10 +162,10 @@ const NavigationDashboard: React.FC = () => {
                         {/* Search and Filters */}
                         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-lg font-semibold text-foreground">Menus</h2>
+                                <h2 className="text-lg font-semibold text-foreground">{t('navigationDashboard.menus')}</h2>
                                 {menus.length > 0 && (
                                     <span className="px-2 py-1 text-xs font-medium bg-secondary rounded-full text-muted-foreground">
-                                        {filteredMenus.length} of {menus.length}
+                                        {filteredMenus.length} {t('onboarding.of')} {menus.length}
                                     </span>
                                 )}
                             </div>
@@ -175,7 +177,7 @@ const NavigationDashboard: React.FC = () => {
                                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                         <input
                                             type="text"
-                                            placeholder="Search menus..."
+                                            placeholder={t('navigationDashboard.searchMenus')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="pl-9 pr-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none w-48"
@@ -188,10 +190,10 @@ const NavigationDashboard: React.FC = () => {
                                         onChange={(e) => setFilterUsage(e.target.value as any)}
                                         className="px-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                                     >
-                                        <option value="all">All menus</option>
-                                        <option value="used">In use</option>
-                                        <option value="unused">Not in use</option>
-                                        <option value="empty">Empty</option>
+                                        <option value="all">{t('navigationDashboard.allMenus')}</option>
+                                        <option value="used">{t('navigationDashboard.inUse')}</option>
+                                        <option value="unused">{t('navigationDashboard.notInUse')}</option>
+                                        <option value="empty">{t('navigationDashboard.empty')}</option>
                                     </select>
                                 </div>
                             )}
@@ -201,7 +203,7 @@ const NavigationDashboard: React.FC = () => {
                                     onClick={handleCreateNew}
                                     className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
                                 >
-                                    <Plus className="w-4 h-4" /> Add menu
+                                    <Plus className="w-4 h-4" /> {t('navigationDashboard.addMenu')}
                                 </button>
                             )}
                         </div>
@@ -212,8 +214,8 @@ const NavigationDashboard: React.FC = () => {
                                     <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <LayoutGrid className="text-muted-foreground opacity-50" />
                                     </div>
-                                    <h3 className="text-xl font-bold mb-2">Select a Project</h3>
-                                    <p className="text-muted-foreground">Choose a project to manage its navigation menus.</p>
+                                    <h3 className="text-xl font-bold mb-2">{t('navigationDashboard.selectProject')}</h3>
+                                    <p className="text-muted-foreground">{t('navigationDashboard.selectProjectDesc')}</p>
                                 </div>
 
                                 {userProjects.length > 0 ? (
@@ -237,7 +239,7 @@ const NavigationDashboard: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="text-center">
-                                        <p className="text-sm text-muted-foreground">You don't have any projects yet.</p>
+                                        <p className="text-sm text-muted-foreground">{t('navigationDashboard.noProjects')}</p>
                                     </div>
                                 )}
                             </div>
@@ -250,16 +252,16 @@ const NavigationDashboard: React.FC = () => {
                                             <Lightbulb className="text-yellow-500 flex-shrink-0" size={20} />
                                             <div className="flex-1">
                                                 <h4 className="text-sm font-semibold text-foreground mb-1">
-                                                    Empty menu detected
+                                                    {t('navigationDashboard.emptyMenuDetected')}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground mb-3">
-                                                    "{menus.find(m => m.items.length === 0)?.title}" doesn't have any items. Add navigation links to make it functional.
+                                                    "{menus.find(m => m.items.length === 0)?.title}" {t('navigationDashboard.emptyMenuDesc')}
                                                 </p>
                                                 <button
                                                     onClick={() => handleEdit(menus.find(m => m.items.length === 0)!)}
                                                     className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1"
                                                 >
-                                                    Add items now
+                                                    {t('navigationDashboard.addItemsNow')}
                                                     <ArrowRight size={12} />
                                                 </button>
                                             </div>
@@ -272,10 +274,10 @@ const NavigationDashboard: React.FC = () => {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="border-b border-border bg-secondary/20">
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Title</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Items</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">Usage</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground w-32">Actions</th>
+                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
+                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
+                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
+                                                    <th className="p-4 font-medium text-sm text-muted-foreground w-32">{t('common.actions')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border">
@@ -283,8 +285,8 @@ const NavigationDashboard: React.FC = () => {
                                                     <tr>
                                                         <td colSpan={4} className="p-8 text-center text-muted-foreground">
                                                             {searchQuery || filterUsage !== 'all'
-                                                                ? 'No menus match your filters.'
-                                                                : 'No menus found. Create one to get started.'}
+                                                                ? t('navigationDashboard.noMenusMatch')
+                                                                : t('navigationDashboard.noMenusFound')}
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -304,21 +306,21 @@ const NavigationDashboard: React.FC = () => {
                                                                         <div className="font-semibold text-foreground">{menu.title}</div>
                                                                         {isEmpty && (
                                                                             <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">
-                                                                                Empty
+                                                                                {t('navigationDashboard.empty')}
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">Handle: {menu.handle}</div>}
+                                                                    {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">{t('navigationDashboard.handle')}: {menu.handle}</div>}
                                                                 </td>
                                                                 <td className="p-4 text-sm">
                                                                     {isEmpty ? (
                                                                         <span className="text-orange-500 flex items-center gap-1">
                                                                             <AlertCircle size={14} />
-                                                                            No items yet
+                                                                            {t('navigationDashboard.empty')}
                                                                         </span>
                                                                     ) : (
                                                                         <span className="text-muted-foreground">
-                                                                            {menu.items.length} {menu.items.length === 1 ? 'item' : 'items'}
+                                                                            {menu.items.length} {menu.items.length === 1 ? t('navigationDashboard.item') : t('navigationDashboard.items')}
                                                                         </span>
                                                                     )}
                                                                 </td>
@@ -327,19 +329,19 @@ const NavigationDashboard: React.FC = () => {
                                                                         {usedInHeader && (
                                                                             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
                                                                                 <Layout size={12} />
-                                                                                Header
+                                                                                {t('sections.header')}
                                                                             </span>
                                                                         )}
                                                                         {usedInFooter && (
                                                                             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
                                                                                 <LayoutGrid size={12} />
-                                                                                Footer
+                                                                                {t('sections.footer')}
                                                                             </span>
                                                                         )}
                                                                         {!usedInHeader && !usedInFooter && (
                                                                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                                                                 <AlertCircle size={12} />
-                                                                                <span>Not assigned</span>
+                                                                                <span>{t('navigationDashboard.notAssigned')}</span>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -383,13 +385,13 @@ const NavigationDashboard: React.FC = () => {
                         {activeProject && (
                             <div className="mt-6 flex justify-between items-center">
                                 <div className="text-sm text-muted-foreground">
-                                    <p>Menus determine the links that appear in your website's header and footer.</p>
+                                    <p>{t('navigationDashboard.menusHelp')}</p>
                                 </div>
                                 <button
                                     onClick={() => loadProject(activeProject.id, false, false)}
                                     className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
                                 >
-                                    Refresh Project Data
+                                    {t('navigationDashboard.refreshData')}
                                 </button>
                             </div>
                         )}

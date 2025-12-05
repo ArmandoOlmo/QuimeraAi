@@ -2,25 +2,29 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 
+import { useLanguage } from '../../contexts/LanguageContext';
+
 interface LanguageSelectorProps {
   className?: string;
   variant?: 'dropdown' | 'minimal' | 'button';
 }
 
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({ 
-  className = '', 
-  variant = 'dropdown' 
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  className = '',
+  variant = 'dropdown'
 }) => {
   const { i18n, t } = useTranslation();
+  const { languages: allLanguages } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const languages = [
-    { code: 'es', name: 'Español', flag: '🇪🇸', shortName: 'ES' },
-    { code: 'en', name: 'English', flag: '🇺🇸', shortName: 'EN' }
-  ];
+  // Filter only enabled languages
+  const languages = allLanguages.filter(lang => lang.enabled).map(lang => ({
+    ...lang,
+    shortName: lang.code.toUpperCase()
+  }));
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0] || { code: 'es', name: 'Español', flag: '🇪🇸', shortName: 'ES' };
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -51,11 +55,10 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           <button
             key={lang.code}
             onClick={() => changeLanguage(lang.code)}
-            className={`flex items-center text-sm font-medium transition-all ${
-              i18n.language === lang.code
+            className={`flex items-center text-sm font-medium transition-all ${i18n.language === lang.code
                 ? 'text-editor-accent opacity-100'
                 : 'text-gray-400 hover:text-white opacity-70 hover:opacity-100'
-            }`}
+              }`}
             aria-label={`Switch to ${lang.name}`}
           >
             <span className="mr-1.5">{lang.flag}</span>
@@ -83,17 +86,17 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Globe size={16} className="text-muted-foreground" />
         <span className="text-lg leading-none">{currentLanguage.flag}</span>
         <span className="text-sm font-semibold hidden sm:inline">{currentLanguage.shortName}</span>
-        <ChevronDown 
-          size={14} 
-          className={`text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          size={14}
+          className={`text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
-      
+
       {isOpen && (
         <>
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          
+
           {/* Dropdown */}
           <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             {/* Header */}
@@ -102,7 +105,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 {t('language.selectLanguage')}
               </p>
             </div>
-            
+
             {/* Options */}
             <div className="py-1.5">
               {languages.map((lang) => (
@@ -112,8 +115,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                   className={`
                     w-full flex items-center gap-3 px-4 py-2.5 
                     transition-all duration-150
-                    ${i18n.language === lang.code 
-                      ? 'bg-primary/10 text-primary' 
+                    ${i18n.language === lang.code
+                      ? 'bg-primary/10 text-primary'
                       : 'text-foreground hover:bg-secondary/60'
                     }
                   `}

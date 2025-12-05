@@ -26,13 +26,13 @@ const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
                         const y = chartHeight - barHeight;
                         return (
                             <g key={item.month} className="group">
-                                <rect 
-                                    x={x} 
-                                    y={y} 
-                                    width={barWidth} 
-                                    height={barHeight} 
-                                    fill="currentColor" 
-                                    className="text-editor-accent/30 group-hover:text-editor-accent/60 transition-colors" 
+                                <rect
+                                    x={x}
+                                    y={y}
+                                    width={barWidth}
+                                    height={barHeight}
+                                    fill="currentColor"
+                                    className="text-editor-accent/30 group-hover:text-editor-accent/60 transition-colors"
                                     rx="4"
                                 />
                                 <text x={x + barWidth / 2} y={chartHeight + 20} textAnchor="middle" className="text-xs fill-current text-editor-text-secondary">{item.month}</text>
@@ -78,7 +78,7 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
                             );
                         })}
                     </svg>
-                     <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-3xl font-bold text-editor-text-primary">{total.toLocaleString()}</span>
                         <span className="text-sm text-editor-text-secondary">Total Calls</span>
                     </div>
@@ -121,7 +121,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                 setIsLoading(false);
             }
         };
-        
+
         loadData();
     }, []);
 
@@ -143,8 +143,8 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                     <AlertCircle className="w-12 h-12 text-red-500" />
                     <h3 className="text-xl font-semibold text-editor-text-primary">Error Loading Statistics</h3>
                     <p className="text-editor-text-secondary">{error}</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                     >
                         Retry
@@ -168,17 +168,17 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors" title="Back to Admin">
-                            <ArrowLeft className="w-4 h-4" />
+                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors" title="Volver">
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <BarChart3 className="text-editor-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold text-editor-text-primary">Usage Statistics</h1>
                         </div>
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Admin
+                        Volver
                     </button>
                 </header>
 
@@ -219,7 +219,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                                 ))}
                             </ul>
                         </div>
-                         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
+                        <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
                             <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Most Used Templates</h3>
                             <ul className="space-y-3">
                                 {data.popularTemplates.map(template => (

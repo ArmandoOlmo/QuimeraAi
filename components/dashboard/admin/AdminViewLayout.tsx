@@ -15,30 +15,30 @@ const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, childr
   return (
     <div className="flex h-screen bg-editor-bg text-editor-text-primary">
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors"
+              className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
               title="Open menu"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
             </button>
             <h2 className="text-lg font-semibold text-editor-text-primary">{title}</h2>
           </div>
-          <button 
-            onClick={onBack} 
-            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
             aria-label="Go back"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Admin
+            Volver
           </button>
         </header>
-        
+
         {/* Content */}
         <main className={`flex-1 overflow-auto ${noPadding ? '' : 'p-6'}`}>
           {children}

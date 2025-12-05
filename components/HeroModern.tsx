@@ -69,6 +69,7 @@ const HeroModern: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
+    gradientOpacity = 70,
 }) => {
   const { getColor } = useDesignTokens();
   
@@ -117,8 +118,13 @@ const HeroModern: React.FC<HeroProps> = ({
               alt="Hero Background" 
               className="w-full h-full object-cover scale-105 transition-transform duration-1000"
            />
-           {/* Gradient Overlay Mejorado con múltiples capas */}
-           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/95"></div>
+           {/* Gradient Overlay Mejorado con múltiples capas - Opacidad configurable */}
+           <div 
+              className="absolute inset-0 bg-gradient-to-b from-black via-black to-black"
+              style={{ 
+                background: `linear-gradient(to bottom, rgba(0,0,0,${gradientOpacity * 0.3 / 100}), rgba(0,0,0,${gradientOpacity * 0.7 / 100}), rgba(0,0,0,${gradientOpacity / 100}))`
+              }}
+           ></div>
            <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-transparent to-emerald-900/20"></div>
            
            {/* Efectos de luz decorativos opcionales */}

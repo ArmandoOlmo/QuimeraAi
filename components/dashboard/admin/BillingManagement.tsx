@@ -29,16 +29,16 @@ const AnnualRevenueChart: React.FC<{ data: { month: string; revenue: number }[] 
                 <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} className="min-w-[600px]">
                     <defs>
                         <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="var(--editor-accent)" stopOpacity="0.4"/>
-                            <stop offset="100%" stopColor="var(--editor-accent)" stopOpacity="0"/>
+                            <stop offset="0%" stopColor="var(--editor-accent)" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="var(--editor-accent)" stopOpacity="0" />
                         </linearGradient>
                     </defs>
                     <path d={areaPath} fill="url(#areaGradient)" />
                     <polyline points={points} fill="none" stroke="var(--editor-accent)" strokeWidth="2" />
                     {data.map((d, i) => {
-                         const x = (i / (data.length - 1)) * chartWidth;
-                         const y = chartHeight - (d.revenue / maxRevenue) * (chartHeight - 20);
-                         return (
+                        const x = (i / (data.length - 1)) * chartWidth;
+                        const y = chartHeight - (d.revenue / maxRevenue) * (chartHeight - 20);
+                        return (
                             <g key={i} className="group">
                                 <circle cx={x} cy={y} r="8" fill="var(--editor-accent)" fillOpacity="0" className="cursor-pointer group-hover:fill-opacity-50 transition-opacity" />
                                 <circle cx={x} cy={y} r="4" fill="var(--editor-accent)" className="cursor-pointer" />
@@ -48,7 +48,7 @@ const AnnualRevenueChart: React.FC<{ data: { month: string; revenue: number }[] 
                                     <text x={x} y={y - 18} textAnchor="middle" className="text-xs font-bold fill-current text-white">${d.revenue.toLocaleString()}</text>
                                 </g>
                             </g>
-                         );
+                        );
                     })}
                 </svg>
             </div>
@@ -113,7 +113,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
         setPlanToEdit(plan);
         setIsPlanEditorOpen(true);
     };
-    
+
     // In a real app, this would call an API. Here we just update local state.
     const handleSavePlan = (savedPlan: Plan) => {
         setData(prev => {
@@ -126,7 +126,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
             }
         });
     };
-    
+
     const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
         <div className={`p-4 rounded-lg border ${plan.isFeatured ? 'border-editor-accent' : 'border-editor-border'} bg-editor-panel-bg`}>
             <div className="flex justify-between items-start">
@@ -152,7 +152,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
 
     return (
         <>
-            <PlanEditorModal 
+            <PlanEditorModal
                 isOpen={isPlanEditorOpen}
                 onClose={() => setIsPlanEditorOpen(false)}
                 planToEdit={planToEdit}
@@ -164,17 +164,17 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors" title="Back to Admin">
-                                <ArrowLeft className="w-4 h-4" />
+                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors" title="Volver">
+                                <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
                                 <CreditCard className="text-editor-accent w-5 h-5" />
                                 <h1 className="text-lg font-semibold text-editor-text-primary">Payments & Plans</h1>
                             </div>
                         </div>
-                        <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+                        <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                             <ArrowLeft className="w-4 h-4" />
-                            Back to Admin
+                            Volver
                         </button>
                     </header>
                     <main className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-8">
@@ -193,7 +193,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                                 <h3 className="text-xl font-semibold text-editor-text-primary">Subscription Plans</h3>
                                 <button onClick={handleCreatePlan} className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors"><Plus size={16} className="mr-1.5" /> Create Plan</button>
                             </div>
-                            
+
                             {/* Mobile & Tablet View */}
                             <div className="lg:hidden space-y-4">
                                 {activePlans.map(plan => <PlanCard key={plan.id} plan={plan} />)}
@@ -231,12 +231,12 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                             </div>
                         </div>
                         <div>
-                             <h3 className="text-xl font-semibold text-editor-text-primary mb-4">Service Modules</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <h3 className="text-xl font-semibold text-editor-text-primary mb-4">Service Modules</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {data.serviceModules.map(module => (
                                     <div key={module.id} className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
                                         <div className="flex items-center space-x-3">
-                                            <div className="p-2 bg-editor-border rounded-md text-editor-accent"><CheckCircle size={20}/></div>
+                                            <div className="p-2 bg-editor-border rounded-md text-editor-accent"><CheckCircle size={20} /></div>
                                             <div>
                                                 <h4 className="font-semibold">{module.name}</h4>
                                                 <p className="text-xs text-editor-text-secondary">{module.description}</p>
@@ -244,7 +244,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                                         </div>
                                     </div>
                                 ))}
-                             </div>
+                            </div>
                         </div>
                     </main>
                 </div>

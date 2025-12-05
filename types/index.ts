@@ -34,6 +34,9 @@ export * from './project';
 // Appointment Types
 export * from './appointments';
 
+// Onboarding Types
+export * from './onboarding';
+
 
 
 

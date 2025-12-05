@@ -17,16 +17,19 @@ const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
-// Debug: Log credential status on load
-console.log('🔑 Google Calendar credentials status:');
-console.log('  - hasClientId:', !!GOOGLE_CLIENT_ID);
-console.log('  - hasApiKey:', !!GOOGLE_API_KEY);
-console.log('  - clientIdPrefix:', GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.substring(0, 15) + '...' : 'NOT SET');
+// Debug logging only in development
+const isDev = import.meta.env.DEV;
 
-if (!GOOGLE_CLIENT_ID) {
+if (isDev) {
+    console.log('🔑 Google Calendar credentials status:');
+    console.log('  - hasClientId:', !!GOOGLE_CLIENT_ID);
+    console.log('  - hasApiKey:', !!GOOGLE_API_KEY);
+}
+
+if (!GOOGLE_CLIENT_ID && isDev) {
     console.warn('⚠️ VITE_GOOGLE_CLIENT_ID no está configurado. La sincronización con Google Calendar no funcionará.');
 }
-if (!GOOGLE_API_KEY) {
+if (!GOOGLE_API_KEY && isDev) {
     console.warn('⚠️ VITE_GOOGLE_API_KEY no está configurado. Algunas funciones podrían no funcionar.');
 }
 

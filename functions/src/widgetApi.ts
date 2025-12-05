@@ -257,7 +257,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
             leadRef = await db.collection('users').doc(userId)
                 .collection('libraryLeads').add(lead);
             
-            console.log(`Lead saved to users/${userId}/libraryLeads/${leadRef.id}`);
+            // Successfully saved to user's library
         } else {
             // Fallback: save to top-level leads collection
             leadRef = await db.collection('leads').add({
@@ -273,7 +273,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
                 user: 'system'
             });
             
-            console.log(`Lead saved to leads/${leadRef.id} (fallback)`);
+            // Saved to fallback collection
         }
 
         res.status(201).json({

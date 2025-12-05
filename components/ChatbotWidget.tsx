@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { MessageSquare, X } from 'lucide-react';
 import { useSafeEditor } from '../contexts/EditorContext';
@@ -12,13 +13,14 @@ interface ChatbotWidgetProps {
     standaloneConfig?: AiAssistantConfig;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     isPreview = false,
     standaloneConfig
 }) => {
     // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
-    
+    const { t } = useTranslation();
+
     // Use standalone config or editor context values
     const aiAssistantConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
     const addLead = editorContext?.addLead;
@@ -27,17 +29,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const componentOrder = editorContext?.componentOrder || [];
     const sectionVisibility = editorContext?.sectionVisibility || {};
     const view = editorContext?.view || 'preview';
-    
+
     // Get appearance config with defaults
     const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
-    
+
     // Widget State
     const [isOpen, setIsOpen] = useState(false);
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [leadCaptured, setLeadCaptured] = useState(false);
     const messagesRef = useRef<any[]>([]);
     const [currentSection, setCurrentSection] = useState<string>('hero');
-    
+
     // Detect if we're in the editor (editor view showing the preview)
     // In editor mode, we disable pointer events to allow clicking through to other components
     const isInEditor = view === 'editor';
@@ -86,7 +88,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         triggerAfterMessages: 3,
         requireEmailForAdvancedInfo: true,
         exitIntentEnabled: true,
-        exitIntentOffer: '🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento',
+        exitIntentOffer: t('chatbotWidget.exitIntentOffer'),
         intentKeywords: [],
         progressiveProfilingEnabled: true
     };
@@ -110,7 +112,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             // The ChatCore will handle showing the lead capture modal
             return;
         }
-        
+
         setIsOpen(false);
     };
 
@@ -130,17 +132,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Widget content
     const widgetContent = (
-        <div 
-            className={`fixed z-[9999] flex flex-col items-end font-body ${isInEditor ? 'pointer-events-none' : ''}`} 
+        <div
+            className={`fixed z-[9999] flex flex-col items-end font-body ${isInEditor ? 'pointer-events-none' : ''}`}
             style={getPositionStyle()}
         >
             {/* Chat Window */}
-            <div 
+            <div
                 className={`
                     mb-4 ${sizeClasses.width} rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border
                     ${isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
                 `}
-                style={{ 
+                style={{
                     maxHeight: sizeClasses.height,
                     height: sizeClasses.height,
                     backgroundColor: appearance.colors.backgroundColor,
@@ -177,7 +179,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     hover:scale-110 transition-all duration-300 flex items-center justify-center group relative
                     ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                 `}
-                style={{ 
+                style={{
                     backgroundColor: appearance.colors.primaryColor,
                     color: appearance.colors.headerText
                 }}
@@ -191,7 +193,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     <MessageSquare size={28} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 scale-0' : 'scale-100'}`} />
                 )}
                 <X size={28} className={`absolute transition-transform duration-300 ${isOpen ? 'scale-100' : 'rotate-180 scale-0'}`} />
-                
+
                 {/* Notification Badge */}
                 {!isOpen && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
@@ -203,7 +205,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     );
 
     // Render the widget using a portal to ensure it's always on top
-    return typeof document !== 'undefined' 
+    return typeof document !== 'undefined'
         ? ReactDOM.createPortal(widgetContent, document.body)
         : null;
 };

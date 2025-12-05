@@ -4,7 +4,7 @@ service cloud.firestore {
     
     // User documents
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
       
       // User projects
       match /projects/{projectId} {
@@ -48,6 +48,11 @@ service cloud.firestore {
       
       // User domains
       match /domains/{domainId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User onboarding progress
+      match /onboardingProgress/{docId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
       

@@ -36,9 +36,7 @@ const ComponentRating: React.FC<ComponentRatingProps> = ({ component, onRatingAd
             helpful: 0,
         };
 
-        console.log('Submitting review:', newReview);
-        
-        // TODO: Save to Firebase
+        // TODO: Save to Firebase when ratings feature is implemented
         // const ratingsRef = collection(db, 'customComponents', component.id, 'ratings');
         // await addDoc(ratingsRef, newReview);
 
@@ -211,8 +209,7 @@ const ComponentRating: React.FC<ComponentRatingProps> = ({ component, onRatingAd
                             <button
                                 className="flex items-center gap-2 text-sm text-editor-text-secondary hover:text-editor-accent transition-colors"
                                 onClick={() => {
-                                    // TODO: Implement helpful vote
-                                    console.log('Mark as helpful:', rating.id);
+                                    // TODO: Implement helpful vote when ratings feature is complete
                                 }}
                             >
                                 <ThumbsUp size={16} />

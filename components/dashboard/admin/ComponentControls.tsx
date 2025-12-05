@@ -201,7 +201,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const { baseComponent, styles } = componentData;
 
     const handleStyleChange = async (key: string, value: any) => {
-        console.log('👉 handleStyleChange called:', key, value);
         await updateComponentStyle(selectedComponentId, { [key]: value }, isCustom);
         setLocalRefresh(prev => prev + 1); // Force re-render
     };
@@ -421,13 +420,42 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </>
                 )}
 
-                {/* Info for Modern variant */}
+                {/* Gradient Opacity Control for Modern variant */}
                 {currentVariant === 'modern' && (
-                    <div className="bg-editor-bg/50 p-4 rounded-lg border border-dashed border-editor-border">
-                        <p className="text-xs text-editor-text-secondary text-center">
-                            💡 <strong>Modern variant</strong> uses the hero image as a full-screen background. Users set the image via content editor.
-                        </p>
-                    </div>
+                    <>
+                        <hr className="border-editor-border/50" />
+                        <div>
+                            <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                                <Palette size={14} />
+                                Gradient Overlay
+                            </h4>
+                            <div className="space-y-4 bg-editor-bg/50 p-3 rounded-lg">
+                                <div>
+                                    <div className="flex justify-between items-center">
+                                        <Label>Overlay Opacity</Label>
+                                        <span className="text-sm font-medium text-editor-text-primary">{heroStyles.gradientOpacity ?? 70}%</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        step="5"
+                                        value={heroStyles.gradientOpacity ?? 70}
+                                        onChange={e => handleStyleChange('gradientOpacity', parseInt(e.target.value, 10))}
+                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                    />
+                                    <p className="text-xs text-editor-text-secondary mt-1">
+                                        Controls the darkness of the gradient overlay on the background image
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-editor-bg/50 p-4 rounded-lg border border-dashed border-editor-border">
+                            <p className="text-xs text-editor-text-secondary text-center">
+                                💡 <strong>Modern variant</strong> uses the hero image as a full-screen background. Users set the image via content editor.
+                            </p>
+                        </div>
+                    </>
                 )}
             </div>
         )

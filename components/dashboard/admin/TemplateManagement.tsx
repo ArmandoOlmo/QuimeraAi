@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { 
-    ArrowLeft, 
-    Menu, 
-    LayoutTemplate, 
-    Plus, 
-    Edit, 
+import {
+    ArrowLeft,
+    Menu,
+    LayoutTemplate,
+    Plus,
+    Edit,
     Trash2,
     Eye,
     EyeOff,
@@ -42,7 +42,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, userDocument } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
+
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -50,12 +50,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'archived'>('all');
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
-    
+
     // Preview and Filters States
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [thumbnailEditTemplate, setThumbnailEditTemplate] = useState<Project | null>(null);
-    
+
     // Template Editor Modal
     const [editingTemplate, setEditingTemplate] = useState<Project | null>(null);
 
@@ -66,19 +66,19 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         if (gc?.primary || gc?.secondary || gc?.accent) {
             return [gc.primary, gc.secondary, gc.accent, gc.background, gc.text].filter(Boolean) as string[];
         }
-        
+
         // Fallback to hero colors
         const hc = template.data?.hero?.colors;
         if (hc) {
             return [hc.primary, hc.secondary, hc.background, hc.text, hc.heading].filter(Boolean) as string[];
         }
-        
+
         // Fallback to header colors
         const headerC = template.data?.header?.colors;
         if (headerC) {
             return [headerC.background, headerC.text, headerC.accent].filter(Boolean) as string[];
         }
-        
+
         return [];
     };
 
@@ -130,21 +130,21 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const updateTemplate = async (templateId: string, updates: Partial<Project>) => {
         const template = templates.find(t => t.id === templateId);
         if (!template) throw new Error('Template not found');
-        
+
         const updatedData = {
             ...template,
             ...updates,
             lastUpdated: new Date().toISOString()
         };
-        
+
         const { id, ...dataToSave } = updatedData;
-        
+
         const templateDocRef = doc(db, 'templates', templateId);
         await setDoc(templateDocRef, dataToSave);
-        
+
         // Update local state immediately so changes are visible
         updateTemplateInState(templateId, updatedData);
-        
+
         setEditingTemplate(null);
     };
 
@@ -155,7 +155,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         // Apply search filter (also search in industries)
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
-            result = result.filter(t => 
+            result = result.filter(t =>
                 t.name.toLowerCase().includes(search) ||
                 t.description?.toLowerCase().includes(search) ||
                 t.brandIdentity?.industry?.toLowerCase().includes(search) ||
@@ -166,15 +166,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
         // Apply category filter
         if (filterCategory !== 'all') {
-            result = result.filter(t => 
-                t.category === filterCategory || 
+            result = result.filter(t =>
+                t.category === filterCategory ||
                 t.brandIdentity?.industry === filterCategory
             );
         }
 
         // Apply industry filter
         if (filterIndustry !== 'all') {
-            result = result.filter(t => 
+            result = result.filter(t =>
                 t.industries?.includes(filterIndustry)
             );
         }
@@ -209,7 +209,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     // Get most used template
     const getMostUsedTemplate = () => {
         if (templates.length === 0) return null;
-        return templates.reduce((prev, current) => 
+        return templates.reduce((prev, current) =>
             getTemplateUsage(current.id) > getTemplateUsage(prev.id) ? current : prev
         );
     };
@@ -229,21 +229,21 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                         {/* Botón hamburguesa para abrir sidebar en móvil */}
-                        <button 
+                        <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors flex-shrink-0"
+                            className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors flex-shrink-0"
                             title="Open menu"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <button onClick={onBack} className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden transition-colors flex-shrink-0" title="Back to Admin">
+                        <button onClick={onBack} className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors flex-shrink-0" title="Volver">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <LayoutTemplate className="text-editor-accent w-5 h-5" />
                             <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">Templates</h1>
                         </div>
-                        
+
                         {/* Search Bar - Desktop */}
                         <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
                             <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
@@ -261,7 +261,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         {/* View Mode Toggle - Mobile */}
                         <div className="flex sm:hidden items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
@@ -300,7 +300,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
 
                         {/* Filter Toggle */}
-                        <button 
+                        <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                         >
@@ -312,10 +312,10 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline ml-1.5">New</span>
                         </button>
-                        
-                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
+
+                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                             <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden lg:inline">Back</span>
+                            <span className="hidden lg:inline">Volver</span>
                         </button>
                     </div>
                 </header>
@@ -345,7 +345,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('superadmin.sortByCategory')}</label>
-                                <select 
+                                <select
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
                                     className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
@@ -363,7 +363,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <Building2 className="w-3 h-3" />
                                     {t('industries.title')}
                                 </label>
-                                <select 
+                                <select
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
                                     className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full sm:min-w-[160px]"
@@ -377,7 +377,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('leads.status')}</label>
-                                <select 
+                                <select
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value as any)}
                                     className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
@@ -390,7 +390,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-editor-text-secondary">{t('leads.sort')}</label>
-                                <select 
+                                <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
                                     className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
@@ -404,7 +404,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all') && (
                                 <div className="col-span-2 sm:col-span-1 flex items-end">
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             setSearchTerm('');
                                             setFilterCategory('all');
@@ -433,7 +433,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <div className="text-xl font-bold">{templates.length}</div>
                             <span className="text-xs text-editor-text-secondary">{activeTemplates} active</span>
                         </div>
-                        
+
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <Globe size={16} className="text-blue-500" />
@@ -442,7 +442,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <div className="text-xl font-bold">{totalSitesUsingTemplates}</div>
                             <span className="text-xs text-editor-text-secondary">created</span>
                         </div>
-                        
+
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <TrendingUp size={16} className="text-green-500" />
@@ -453,7 +453,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} uses` : ''}
                             </span>
                         </div>
-                        
+
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <Archive size={16} className="text-orange-500" />
@@ -472,14 +472,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <span className="font-bold">{templates.length}</span>
                             <span className="text-editor-text-secondary text-xs">({activeTemplates} active)</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <Globe size={16} className="text-blue-500" />
                             <span className="text-editor-text-secondary">Sites Created:</span>
                             <span className="font-bold">{totalSitesUsingTemplates}</span>
                             <span className="text-editor-text-secondary text-xs">from templates</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <TrendingUp size={16} className="text-green-500" />
                             <span className="text-editor-text-secondary">Most Popular:</span>
@@ -488,7 +488,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 {mostUsedTemplate ? `(${getTemplateUsage(mostUsedTemplate.id)} uses)` : ''}
                             </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <Archive size={16} className="text-orange-500" />
                             <span className="text-editor-text-secondary">Archived:</span>
@@ -508,24 +508,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     {viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                             {filteredAndSortedTemplates.map(template => (
-                                <div 
-                                    key={template.id} 
+                                <div
+                                    key={template.id}
                                     className={`relative rounded-2xl overflow-hidden group hover:shadow-2xl sm:hover:scale-[1.02] transition-all duration-500 h-[320px] sm:h-[400px] ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
                                     {/* Full Background Image */}
-                                    <div 
+                                    <div
                                         className="absolute inset-0 cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
-                                        <img 
-                                            src={template.thumbnailUrl} 
-                                            alt={template.name} 
-                                            className="w-full h-full object-cover sm:group-hover:scale-110 transition-transform duration-700" 
+                                        <img
+                                            src={template.thumbnailUrl}
+                                            alt={template.name}
+                                            className="w-full h-full object-cover sm:group-hover:scale-110 transition-transform duration-700"
                                         />
-                                        
+
                                         {/* Dark Gradient Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-                                        
+
                                         {/* Archived Overlay */}
                                         {template.isArchived && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
@@ -535,7 +535,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {/* Hover Actions Overlay - Desktop only */}
                                         <div className="absolute inset-0 bg-black/30 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
                                     </div>
@@ -559,12 +559,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     {/* Content at Bottom */}
                                     <div className="absolute bottom-0 left-0 right-0 z-30 p-4 sm:p-6">
                                         <h3 className="font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3 line-clamp-2">{template.name}</h3>
-                                        
+
                                         {/* Industries Tags */}
                                         {template.industries && template.industries.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-3">
                                                 {template.industries.slice(0, 2).map(ind => (
-                                                    <span 
+                                                    <span
                                                         key={ind}
                                                         className="inline-flex items-center gap-1 px-2 py-1 sm:py-0.5 bg-white/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm"
                                                     >
@@ -579,52 +579,52 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {/* Actions - Always visible on mobile, hover on desktop */}
                                         <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 relative z-40">
-                                            <button 
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     loadProject(template.id, true);
-                                                }} 
-                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-white text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
+                                                }}
+                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-white text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} />
                                                 <span className="hidden xs:inline">{t('common.edit')}</span>
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setEditingTemplate(template);
-                                                }} 
-                                                className="p-3 sm:p-2.5 bg-white/90 text-purple-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
+                                                }}
+                                                className="p-3 sm:p-2.5 bg-white/90 text-purple-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={18} />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setThumbnailEditTemplate(template);
-                                                }} 
-                                                className="p-3 sm:p-2.5 bg-white/90 text-blue-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl" 
+                                                }}
+                                                className="p-3 sm:p-2.5 bg-white/90 text-blue-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={18} />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     duplicateTemplate(template.id);
-                                                }} 
-                                                className="p-3 sm:p-2.5 bg-white/90 text-green-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex" 
+                                                }}
+                                                className="p-3 sm:p-2.5 bg-white/90 text-green-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex"
                                                 title={t('superadmin.duplicateTemplate')}
                                             >
                                                 <Copy size={18} />
                                             </button>
                                             {canDeleteTemplates() && (
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (window.confirm(`Delete "${template.name}"?`)) {
@@ -632,8 +632,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                                 alert(err.message || 'No tienes permisos para borrar templates');
                                                             });
                                                         }
-                                                    }} 
-                                                    className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex" 
+                                                    }}
+                                                    className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={18} />
@@ -648,8 +648,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         /* List View */
                         <div className="space-y-3">
                             {filteredAndSortedTemplates.map(template => (
-                                <div 
-                                    key={template.id} 
+                                <div
+                                    key={template.id}
                                     className={`bg-editor-panel-bg p-3 sm:p-4 rounded-xl border border-editor-border hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
                                     {/* Mobile: Stacked layout */}
@@ -658,9 +658,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <div className="flex items-start gap-3 flex-1 min-w-0">
                                             {/* Thumbnail */}
                                             <div className="relative flex-shrink-0">
-                                                <img 
-                                                    src={template.thumbnailUrl} 
-                                                    alt={template.name} 
+                                                <img
+                                                    src={template.thumbnailUrl}
+                                                    alt={template.name}
                                                     className="w-20 h-14 sm:w-24 sm:h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                                                     onClick={() => setPreviewTemplate(template)}
                                                 />
@@ -700,52 +700,52 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                                         {/* Actions - Scrollable on mobile */}
                                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-shrink-0">
-                                            <button 
+                                            <button
                                                 onClick={() => setPreviewTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors flex-shrink-0" 
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors flex-shrink-0"
                                                 title={t('common.view')}
                                             >
                                                 <Eye size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
-                                            <button 
-                                                onClick={() => loadProject(template.id, true)} 
-                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-editor-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-editor-accent/90 transition-colors flex-shrink-0" 
+                                            <button
+                                                onClick={() => loadProject(template.id, true)}
+                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-editor-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-editor-accent/90 transition-colors flex-shrink-0"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} className="sm:w-[14px] sm:h-[14px]" />
                                                 <span className="hidden xs:inline">{t('common.edit')}</span>
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => setEditingTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors flex-shrink-0" 
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors flex-shrink-0"
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
-                                            <button 
-                                                onClick={() => setThumbnailEditTemplate(template)} 
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors flex-shrink-0" 
+                                            <button
+                                                onClick={() => setThumbnailEditTemplate(template)}
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors flex-shrink-0"
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
-                                            <button 
-                                                onClick={() => duplicateTemplate(template.id)} 
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors flex-shrink-0" 
+                                            <button
+                                                onClick={() => duplicateTemplate(template.id)}
+                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors flex-shrink-0"
                                                 title="Duplicate"
                                             >
                                                 <Copy size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
                                             {canDeleteTemplates() && (
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (window.confirm(`Delete "${template.name}"?`)) {
                                                             deleteProject(template.id).catch(err => {
                                                                 alert(err.message || 'No tienes permisos para borrar templates');
                                                             });
                                                         }
-                                                    }} 
-                                                    className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0" 
+                                                    }}
+                                                    className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={20} className="sm:w-[18px] sm:h-[18px]" />
@@ -764,13 +764,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <LayoutTemplate className="w-16 h-16 text-editor-text-secondary/40 mb-4" />
                             <h3 className="text-lg font-semibold text-editor-text-primary mb-2">No templates found</h3>
                             <p className="text-sm text-editor-text-secondary mb-6 max-w-md">
-                                {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' 
+                                {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
                                     ? 'Try adjusting your search or filter criteria'
                                     : 'Get started by creating your first template'
                                 }
                             </p>
                             {!(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
-                                <button 
+                                <button
                                     onClick={createNewTemplate}
                                     className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
                                 >
@@ -785,10 +785,10 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
             {/* Thumbnail Editor Modal */}
             {thumbnailEditTemplate && (
-                <ThumbnailEditor 
+                <ThumbnailEditor
                     key={`thumbnail-${thumbnailEditTemplate.id}`}
-                    project={thumbnailEditTemplate} 
-                    onClose={() => setThumbnailEditTemplate(null)} 
+                    project={thumbnailEditTemplate}
+                    onClose={() => setThumbnailEditTemplate(null)}
                 />
             )}
 
@@ -803,7 +803,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             {/* Preview Modal */}
             {previewTemplate && (
                 <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
-                    <div 
+                    <div
                         className="bg-editor-panel-bg rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -822,7 +822,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         )}
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setPreviewTemplate(null)}
                                     className="p-2.5 sm:p-2 rounded-full hover:bg-editor-border transition-colors flex-shrink-0 -mt-1 -mr-1"
                                 >
@@ -834,8 +834,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="p-4 sm:p-6">
                             {/* Large Preview Image with Color Swatches */}
                             <div className="mb-4 sm:mb-6 rounded-xl overflow-hidden relative">
-                                <img 
-                                    src={previewTemplate.thumbnailUrl} 
+                                <img
+                                    src={previewTemplate.thumbnailUrl}
                                     alt={previewTemplate.name}
                                     className="w-full h-auto"
                                 />
@@ -960,7 +960,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Action Buttons */}
                             <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-editor-border">
-                                <button 
+                                <button
                                     onClick={() => {
                                         loadProject(previewTemplate.id, true);
                                         setPreviewTemplate(null);
@@ -970,7 +970,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <Edit size={18} />
                                     <span className="hidden xs:inline">Edit</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         setPreviewTemplate(null);
                                         setEditingTemplate(previewTemplate);
@@ -980,7 +980,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <Settings2 size={18} />
                                     <span className="hidden xs:inline">{t('industries.title')}</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         setPreviewTemplate(null);
                                         setThumbnailEditTemplate(previewTemplate);
@@ -990,7 +990,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <ImageIcon size={18} />
                                     <span className="hidden xs:inline">Thumbnail</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         duplicateTemplate(previewTemplate.id);
                                         setPreviewTemplate(null);
@@ -1000,16 +1000,33 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <Copy size={18} />
                                     <span className="hidden xs:inline">{t('superadmin.duplicateTemplate')}</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         archiveTemplate(previewTemplate.id, !previewTemplate.isArchived);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
                                 >
                                     {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
                                     {previewTemplate.isArchived ? 'Activate' : 'Archive'}
                                 </button>
+                                {canDeleteTemplates() && (
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm(`Delete "${previewTemplate.name}"?`)) {
+                                                deleteProject(previewTemplate.id)
+                                                    .then(() => setPreviewTemplate(null))
+                                                    .catch(err => {
+                                                        alert(err.message || 'No tienes permisos para borrar templates');
+                                                    });
+                                            }
+                                        }}
+                                        className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-red-500/10 text-red-500 rounded-xl sm:rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium"
+                                    >
+                                        <Trash2 size={18} />
+                                        Delete
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

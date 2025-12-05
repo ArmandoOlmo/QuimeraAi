@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { EditorProvider, useEditor } from './contexts/EditorContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
 import ProfileModal from './components/dashboard/ProfileModal';
 import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
-import OnboardingWizard from './components/ui/OnboardingWizard';
+import OnboardingModal from './components/onboarding/OnboardingModal';
 import GlobalSEO from './components/GlobalSEO';
 import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -35,23 +36,21 @@ interface AppContentProps {
   routeProjectId: string | null;
 }
 
-const AppContent: React.FC<AppContentProps> = ({ 
-  routeView, 
-  routeAdminView, 
-  routeProjectId 
+const AppContent: React.FC<AppContentProps> = ({
+  routeView,
+  routeAdminView,
+  routeProjectId
 }) => {
-  const { 
-    isSidebarOpen, 
-    setIsSidebarOpen, 
+  const {
+    isSidebarOpen,
+    setIsSidebarOpen,
     view,
     setView,
-    previewRef, 
+    previewRef,
     activeProjectId,
     loadProject,
-    data, 
-    userDocument, 
-    isOnboardingOpen, 
-    setIsOnboardingOpen,
+    data,
+    userDocument,
     setAdminView,
   } = useEditor();
   const seoConfig = useSEO();
@@ -62,14 +61,14 @@ const AppContent: React.FC<AppContentProps> = ({
     if (routeView && routeView !== view) {
       setView(routeView);
     }
-    
+
     // Sync adminView from route - always sync when on superadmin view
     if (routeView === 'superadmin') {
       // Use routeAdminView or default to 'main' for /admin root
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
-    
+
     // Sync projectId from route - load project if different
     if (routeProjectId && routeProjectId !== activeProjectId) {
       loadProject(routeProjectId, false, false);
@@ -89,7 +88,7 @@ const AppContent: React.FC<AppContentProps> = ({
         previewRef={previewRef}
       />
       <GlobalAiAssistant />
-      <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
+      <OnboardingModal />
     </>
   );
 };
@@ -99,16 +98,16 @@ const AppContent: React.FC<AppContentProps> = ({
 // =============================================================================
 
 const AuthGate: React.FC = () => {
-  const { 
-    user, 
-    loadingAuth, 
-    verificationEmail, 
-    setVerificationEmail, 
-    isProfileModalOpen, 
-    closeProfileModal, 
-    userDocument 
+  const {
+    user,
+    loadingAuth,
+    verificationEmail,
+    setVerificationEmail,
+    isProfileModalOpen,
+    closeProfileModal,
+    userDocument
   } = useEditor();
-  
+
   const { navigate } = useRouter();
 
   // Set user context for monitoring when user changes
@@ -146,10 +145,10 @@ const AuthGate: React.FC = () => {
     >
       {({ view, adminView, projectId }) => (
         <>
-          <AppContent 
-            routeView={view} 
-            routeAdminView={adminView} 
-            routeProjectId={projectId} 
+          <AppContent
+            routeView={view}
+            routeAdminView={adminView}
+            routeProjectId={projectId}
           />
           {isProfileModalOpen && (
             <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
@@ -177,10 +176,10 @@ const App: React.FC = () => {
     const handleNavigation = () => {
       setIsPreview(isPreviewRoute());
     };
-    
+
     // Listen to popstate for back/forward navigation
     window.addEventListener('popstate', handleNavigation);
-    
+
     return () => {
       window.removeEventListener('popstate', handleNavigation);
     };
@@ -200,7 +199,9 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <EditorProvider>
         <ToastProvider>
-          <AuthGate />
+          <LanguageProvider>
+            <AuthGate />
+          </LanguageProvider>
         </ToastProvider>
       </EditorProvider>
     </ErrorBoundary>

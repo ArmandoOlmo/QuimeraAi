@@ -19,25 +19,25 @@ export interface RolePermissions {
     canDeleteUsers: boolean;
     canManageRoles: boolean;
     canCreateSuperAdmin: boolean;
-    
+
     // Tenant Management
     canViewTenants: boolean;
     canEditTenants: boolean;
     canDeleteTenants: boolean;
     canManageTenantLimits: boolean;
-    
+
     // Global Configuration
     canEditGlobalSettings: boolean;
     canEditPrompts: boolean;
     canEditDesignTokens: boolean;
     canViewBilling: boolean;
     canEditBilling: boolean;
-    
+
     // Content & Projects
     canViewAllProjects: boolean;
     canEditAllProjects: boolean;
     canDeleteAllProjects: boolean;
-    
+
     // Statistics
     canViewUsageStats: boolean;
     canExportData: boolean;
@@ -63,38 +63,38 @@ export interface Tenant {
     name: string;
     email: string;
     logoUrl?: string;
-    
+
     // Business Information
     companyName?: string;
     taxId?: string;
     industry?: string;
     website?: string;
-    
+
     // Status & Dates
     status: TenantStatus;
     createdAt: { seconds: number; nanoseconds: number } | string;
     lastActiveAt?: { seconds: number; nanoseconds: number } | string;
     trialEndsAt?: { seconds: number; nanoseconds: number } | string;
-    
+
     // Subscription & Limits
     subscriptionPlan: string;
     limits: TenantLimits;
     usage: TenantUsage;
-    
+
     // Associated Users
     ownerUserId: string;
     memberUserIds: string[];
-    
+
     // Projects
     projectIds: string[];
-    
+
     // Settings
     settings?: {
         allowMemberInvites?: boolean;
         requireTwoFactor?: boolean;
         brandingEnabled?: boolean;
     };
-    
+
     // Billing
     billingInfo?: {
         mrr: number;
@@ -117,13 +117,13 @@ export interface UserDocument {
     email: string;
     photoURL: string;
     role?: UserRole;
-    
+
     // User Preferences (synced across devices via Firebase)
     preferences?: UserPreferences;
-    
+
     // Onboarding State (persisted to not lose progress)
     onboardingState?: OnboardingState;
-    
+
     // Tenant Relations
     tenantId?: string;
     tenantRole?: IndividualRole | AgencyRole;
@@ -131,7 +131,7 @@ export interface UserDocument {
         tenantId: string;
         role: AgencyRole;
     }>;
-    
+
     // Admin Metadata
     createdBy?: string;
     createdAt?: { seconds: number; nanoseconds: number } | string;
@@ -149,7 +149,7 @@ export interface Lead {
     name?: string;
     email?: string;
     phone?: string;
-    
+
     // Address
     address?: {
         street?: string;
@@ -158,16 +158,16 @@ export interface Lead {
         zipCode?: string;
         country?: string;
     };
-    
+
     // Additional Contact
     website?: string;
     linkedIn?: string;
-    
+
     // Professional Info
     company?: string;
     jobTitle?: string;
     industry?: string;
-    
+
     // CRM Fields
     status: LeadStatus;
     source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat';
@@ -176,23 +176,23 @@ export interface Lead {
     expectedCloseDate?: { seconds: number; nanoseconds: number };
     leadScore?: number;
     conversationTranscript?: string;
-    
+
     // Notes & Tags
     notes?: string;
     tags?: string[];
     message?: string;
-    
+
     // Metadata
     color?: string;
     emojiMarker?: string;
     createdAt: { seconds: number; nanoseconds: number; };
     lastContacted?: { seconds: number; nanoseconds: number; };
-    
+
     // AI Features
     aiScore?: number;
     aiAnalysis?: string;
     recommendedAction?: string;
-    
+
     // Custom Fields
     customFields?: LeadCustomField[];
 }
@@ -403,7 +403,7 @@ export interface CMSPost {
 export interface LLMPrompt {
     id: string;
     name: string;
-    area: 'Onboarding' | 'Content Generation' | 'Image Generation' | 'File Management' | 'Other';
+    area: 'Onboarding' | 'Content Generation' | 'Image Generation' | 'File Management' | 'Template Management' | 'Other';
     description: string;
     template: string;
     model: string;
@@ -415,8 +415,43 @@ export interface LLMPrompt {
 // =============================================================================
 // ONBOARDING
 // =============================================================================
-export type OnboardingStep = 'basics' | 'strategy' | 'aesthetic' | 'details' | 'products' | 'contact' | 'visuals' | 'review' | 'generating' | 'generating-images' | 'success';
+export type OnboardingStep = 'basics' | 'strategy' | 'aesthetic' | 'template-selection' | 'template-gallery' | 'details' | 'products' | 'contact' | 'visuals' | 'review' | 'generating' | 'generating-images' | 'success';
 export type AestheticType = 'Minimalist' | 'Bold' | 'Elegant' | 'Playful' | 'Tech' | 'Organic';
+
+// Template Matching Types
+export interface TemplateMatchAnalysis {
+    industryMatch: 'exact' | 'related' | 'none';
+    toneMatch: 'exact' | 'similar' | 'none';
+    colorCompatibility: 'high' | 'medium' | 'low';
+}
+
+export interface TemplateColorAdjustments {
+    needed: boolean;
+    newPrimary?: string;
+    newSecondary?: string;
+    reason?: string;
+}
+
+export interface TemplateSelectionResult {
+    selectedTemplateId: string | null;
+    confidence: number;
+    score: number;
+    matchAnalysis: TemplateMatchAnalysis;
+    reasoning: string;
+    colorAdjustments: TemplateColorAdjustments;
+    alternativeTemplateId?: string;
+    suggestNewTemplate?: boolean;
+}
+
+export interface TemplateBase {
+    id: string;
+    name: string;
+    theme: any;
+    data: any;
+    componentOrder: string[];
+    imagePrompts: Record<string, string>;
+    brandIdentity: any;
+}
 
 export interface ProductInfo {
     id: string;
@@ -468,44 +503,50 @@ export interface ImageGenerationProgress {
 
 export interface OnboardingState {
     step: OnboardingStep;
-    
+
     // Basics
     businessName: string;
     industry: string;
     summary: string;
-    
+
     // Strategy
     audience: string;
     offerings: string;
     goal: string;
-    
+
     // Aesthetic
     tone?: string;
     aesthetic: AestheticType;
     colorVibe: string;
-    
+
     // Details
     companyHistory?: string;
     uniqueValueProposition?: string;
     coreValues?: string[];
     yearsInBusiness?: string;
-    
+
     // Products/Services
     products?: ProductInfo[];
-    
+
     // Contact
     contactInfo?: ContactInfo;
-    
+
     // Visuals
     brandGuidelines?: BrandGuidelines;
     testimonials?: TestimonialInfo[];
     faqs?: Array<{ question: string; answer: string; }>;
-    
+
     // Generated
     designPlan?: any;
-    
+
     // Image Generation Progress
     imageProgress?: ImageGenerationProgress;
+
+    // Template Matching
+    templateSelectionResult?: TemplateSelectionResult;
+    templateBase?: TemplateBase;
+    useTemplateBase?: boolean;
+    isHybridTemplate?: boolean;
 }
 
 // =============================================================================

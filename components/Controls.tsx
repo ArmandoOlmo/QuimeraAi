@@ -942,6 +942,36 @@ const Controls: React.FC = () => {
                   </div>
               </div>
 
+              {/* ========== GRADIENT OVERLAY (Only for Modern) ========== */}
+              {currentVariant === 'modern' && (
+                  <>
+                      <hr className="border-editor-border/50" />
+                      <div>
+                          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+                              <Palette size={14} />
+                              {t('controls.gradientOverlay', { defaultValue: 'Gradient Overlay' })}
+                          </h4>
+                          <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+                              <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                      <label className="text-xs font-medium text-editor-text-secondary">{t('controls.overlayOpacity', { defaultValue: 'Overlay Opacity' })}</label>
+                                      <span className="text-xs text-editor-text-primary">{data.hero.gradientOpacity ?? 70}%</span>
+                                  </div>
+                                  <input
+                                      type="range" min="0" max="100" step="5"
+                                      value={data.hero.gradientOpacity ?? 70}
+                                      onChange={(e) => setNestedData('hero.gradientOpacity', parseInt(e.target.value))}
+                                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                  />
+                                  <p className="text-xs text-editor-text-secondary mt-1">
+                                      {t('controls.overlayOpacityHelp', { defaultValue: 'Controls the darkness of the gradient overlay on the background image' })}
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+                  </>
+              )}
+
               {/* ========== IMAGE (Only for Classic) ========== */}
               {currentVariant === 'classic' && (
                   <>
@@ -3700,6 +3730,34 @@ const Controls: React.FC = () => {
               className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
           </div>
+        )}
+
+        {/* Gradient Overlay Opacity - Only for Modern variant */}
+        {currentVariant === 'modern' && (
+          <>
+            <hr className="border-editor-border/50" />
+            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+              <Palette size={14} />
+              {t('controls.gradientOverlay', { defaultValue: 'Gradient Overlay' })}
+            </h4>
+            <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-medium text-editor-text-secondary">{t('controls.overlayOpacity', { defaultValue: 'Overlay Opacity' })}</label>
+                  <span className="text-xs text-editor-text-primary">{data.hero.gradientOpacity ?? 70}%</span>
+                </div>
+                <input
+                  type="range" min="0" max="100" step="5"
+                  value={data.hero.gradientOpacity ?? 70}
+                  onChange={(e) => setNestedData('hero.gradientOpacity', parseInt(e.target.value))}
+                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                />
+                <p className="text-xs text-editor-text-secondary mt-1">
+                  {t('controls.overlayOpacityHelp', { defaultValue: 'Controls the darkness of the gradient overlay on the background image' })}
+                </p>
+              </div>
+            </div>
+          </>
         )}
         
         {data.hero.showBadge !== false && (

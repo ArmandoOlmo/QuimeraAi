@@ -15,8 +15,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     // Translation-dependent constants
     const ASPECT_RATIOS = [
         { label: t('editor.square'), value: '1:1' },
-        { label: t('editor.landscape'), value: '16:9' },
-        { label: t('editor.portrait'), value: '9:16' },
+        { label: t('editor.aspectLandscape'), value: '16:9' },
+        { label: t('editor.aspectPortrait'), value: '9:16' },
         { label: t('editor.classic'), value: '4:3' },
         { label: t('editor.tall'), value: '3:4' },
         { label: t('editor.cinematic'), value: '21:9' },
@@ -116,26 +116,26 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
     // Quimera AI Model Controls
     const MODELS = [
-        { 
-            label: 'Quimera Vision Pro', 
+        {
+            label: 'Quimera Vision Pro',
             value: 'gemini-3-pro-image-preview',
             description: t('editor.quimeraVisionProDesc', { defaultValue: 'Best quality, text in images, thinking level' }),
             icon: 'vision'
         },
-        { 
-            label: 'Quimera Ultra', 
+        {
+            label: 'Quimera Ultra',
             value: 'imagen-4.0-ultra-generate-001',
             description: t('editor.quimeraUltraDesc', { defaultValue: 'Highest quality, slower generation' }),
             icon: 'ultra'
         },
-        { 
-            label: 'Quimera Standard', 
+        {
+            label: 'Quimera Standard',
             value: 'imagen-4.0-generate-001',
             description: t('editor.quimeraStandardDesc', { defaultValue: 'Balanced quality and speed' }),
             icon: 'standard'
         },
-        { 
-            label: 'Quimera Fast', 
+        {
+            label: 'Quimera Fast',
             value: 'imagen-4.0-fast-generate-001',
             description: t('editor.quimeraFastDesc', { defaultValue: 'Fastest generation, good quality' }),
             icon: 'fast'
@@ -232,8 +232,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             // Mostrar feedback al usuario
             if (failCount > 0 && successCount > 0) {
-                alert(t('editor.partialUploadFailed', { 
-                    defaultValue: `${successCount} image(s) loaded, ${failCount} failed. Check console for details.` 
+                alert(t('editor.partialUploadFailed', {
+                    defaultValue: `${successCount} image(s) loaded, ${failCount} failed. Check console for details.`
                 }));
             } else if (failCount > 0 && successCount === 0) {
                 alert(t('editor.uploadFailed', { defaultValue: 'Failed to load images. Please try again.' }));
@@ -369,11 +369,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     <button
                                         key={model.value}
                                         onClick={() => setSelectedModel(model.value)}
-                                        className={`text-xs py-1.5 px-3 rounded-full transition-all flex items-center gap-1.5 ${
-                                            selectedModel === model.value 
-                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                        className={`text-xs py-1.5 px-3 rounded-full transition-all flex items-center gap-1.5 ${selectedModel === model.value
+                                                ? 'bg-editor-accent text-editor-bg font-medium'
                                                 : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
-                                        }`}
+                                            }`}
                                         title={model.description}
                                     >
                                         {model.icon === 'vision' && <Eye size={12} />}
@@ -578,11 +577,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                     <button
                                                         key={level.value}
                                                         onClick={() => setThinkingLevel(level.value)}
-                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${
-                                                            thinkingLevel === level.value 
-                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${thinkingLevel === level.value
+                                                                ? 'bg-editor-accent text-editor-bg font-medium'
                                                                 : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
-                                                        }`}
+                                                            }`}
                                                         title={level.description}
                                                     >
                                                         {level.label}
@@ -604,11 +602,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                     <button
                                                         key={option.value}
                                                         onClick={() => setPersonGeneration(option.value)}
-                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${
-                                                            personGeneration === option.value 
-                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
+                                                        className={`text-xs py-1 px-2 rounded-full transition-all ${personGeneration === option.value
+                                                                ? 'bg-editor-accent text-editor-bg font-medium'
                                                                 : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
-                                                        }`}
+                                                            }`}
                                                         title={option.description}
                                                     >
                                                         {option.label}

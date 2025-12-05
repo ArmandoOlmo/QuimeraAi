@@ -35,10 +35,6 @@ interface UIContextType {
     openProfileModal: () => void;
     closeProfileModal: () => void;
     
-    // Onboarding
-    isOnboardingOpen: boolean;
-    setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    
     // Theme
     themeMode: ThemeMode;
     setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
@@ -65,9 +61,6 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     
     // Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    
-    // Onboarding
-    const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
     
     // Theme - Load from localStorage
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -117,8 +110,6 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         isProfileModalOpen,
         openProfileModal,
         closeProfileModal,
-        isOnboardingOpen,
-        setIsOnboardingOpen,
         themeMode,
         setThemeMode,
     };

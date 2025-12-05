@@ -3,15 +3,16 @@ import { useEditor } from '../../../contexts/EditorContext';
 import { LLMPrompt } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import PromptEditorModal from './PromptEditorModal';
-import { ArrowLeft, Menu, Bot, Plus, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Menu, Bot, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 
 interface LLMPromptManagementProps {
     onBack: () => void;
 }
 
 const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => {
-    const { prompts, fetchAllPrompts, deletePrompt } = useEditor();
+    const { prompts, fetchAllPrompts, deletePrompt, syncPrompts } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [promptToEdit, setPromptToEdit] = useState<LLMPrompt | null>(null);
@@ -39,6 +40,12 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
         if (window.confirm('Are you sure you want to delete this prompt? This cannot be undone.')) {
             deletePrompt(promptId);
         }
+    };
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        await syncPrompts();
+        setIsSyncing(false);
     };
 
     const groupedPrompts = prompts.reduce((acc, prompt) => {
@@ -70,14 +77,14 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
             </td>
             <td className="p-4 text-right">
                 <div className="inline-flex items-center space-x-2">
-                    <button 
+                    <button
                         onClick={() => handleEdit(prompt)}
                         className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent transition-colors"
                         title="Edit Prompt"
                     >
                         <Edit size={18} />
                     </button>
-                     <button 
+                    <button
                         onClick={() => handleDelete(prompt.id)}
                         className="p-2 text-editor-text-secondary rounded-full hover:bg-red-500/10 hover:text-red-400 transition-colors"
                         title="Delete Prompt"
@@ -88,7 +95,7 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
             </td>
         </tr>
     );
-    
+
     const PromptCard: React.FC<{ prompt: LLMPrompt }> = ({ prompt }) => (
         <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">
             <div className="mb-3">
@@ -101,15 +108,15 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                 <div className="flex justify-between"><span className="text-editor-text-secondary">Version:</span> <span className="font-semibold">{prompt.version}</span></div>
             </div>
             <div className="flex justify-end items-center space-x-2">
-                 <button onClick={() => handleEdit(prompt)} className="flex items-center text-xs font-semibold py-1.5 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"><Edit size={14} className="mr-1.5" /> Edit</button>
-                 <button onClick={() => handleDelete(prompt.id)} className="flex items-center text-xs font-semibold py-1.5 px-3 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"><Trash2 size={14} className="mr-1.5" /> Delete</button>
+                <button onClick={() => handleEdit(prompt)} className="flex items-center text-xs font-semibold py-1.5 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"><Edit size={14} className="mr-1.5" /> Edit</button>
+                <button onClick={() => handleDelete(prompt.id)} className="flex items-center text-xs font-semibold py-1.5 px-3 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"><Trash2 size={14} className="mr-1.5" /> Delete</button>
             </div>
         </div>
     );
 
     return (
         <>
-            <PromptEditorModal 
+            <PromptEditorModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 promptToEdit={promptToEdit}
@@ -120,12 +127,12 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button 
+                            <button
                                 onClick={onBack}
-                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors"
-                                title="Back to Admin"
+                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
+                                title="Volver"
                             >
-                                <ArrowLeft className="w-4 h-4" />
+                                <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
                                 <Bot className="text-editor-accent w-5 h-5" />
@@ -133,25 +140,34 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button 
+                            <button
                                 onClick={handleCreate}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                             >
                                 <Plus className="w-4 h-4" />
                                 Create Prompt
                             </button>
-                            <button 
+                            <button
+                                onClick={handleSync}
+                                disabled={isSyncing}
+                                className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary disabled:opacity-50"
+                                title="Sync missing default prompts"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                                <span className="hidden sm:inline">Sync Defaults</span>
+                            </button>
+                            <button
                                 onClick={onBack}
-                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                             >
                                 <ArrowLeft size={16} className="mr-1.5" />
-                                Back to Admin
+                                Volver
                             </button>
                         </div>
                     </header>
 
                     <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
-                         {/* Mobile & Tablet View */}
+                        {/* Mobile & Tablet View */}
                         <div className="lg:hidden">
                             {loading ? (
                                 <p className="text-center py-8 text-editor-text-secondary">Loading prompts...</p>
@@ -170,7 +186,7 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                                 ))
                             )}
                         </div>
-                        
+
                         {/* Desktop View */}
                         <div className="hidden lg:block bg-editor-panel-bg border border-editor-border rounded-lg overflow-x-auto">
                             <table className="w-full text-left">

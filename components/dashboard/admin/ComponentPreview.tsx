@@ -133,7 +133,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         }
 
         const heroVariant = (styles as any).heroVariant;
-        console.log('🎨 Rendering component:', baseComponent, 'heroVariant:', heroVariant, 'Full styles:', styles);
 
         // Merge mockContent colors with styles colors, then derive missing colors
         const mergedColors = {
@@ -153,7 +152,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             case 'header':
                 return <Header {...mergedProps} isPreviewMode={true} />;
             case 'hero':
-                console.log('🔍 Hero check: heroVariant=', heroVariant);
                 return heroVariant === 'modern'
                     ? <HeroModern {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
                     : heroVariant === 'gradient'

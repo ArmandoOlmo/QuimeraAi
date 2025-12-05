@@ -1,18 +1,61 @@
-import { db, collection, getDocs, doc, getDoc } from '../firebase';
+import { db, collection, getDocs, doc, getDoc, query, limit, orderBy, where, startAfter } from '../firebase';
 import { UsageData, MonthlyData, ApiCallStat, UserActivity, TemplateUsage } from '../types';
 import { getApiLogs } from './apiLoggingService';
 
+// Configuration for scalability
+const BATCH_SIZE = 50; // Process users in batches
+const MAX_USERS_TO_PROCESS = 500; // Limit for very large user bases
+
 /**
- * Fetches real usage data from Firestore
+ * Process users in batches for better scalability
+ */
+async function processUsersBatched(
+    processUser: (userId: string, userData: any) => Promise<void>,
+    maxUsers: number = MAX_USERS_TO_PROCESS
+): Promise<number> {
+    let processedCount = 0;
+    let lastDoc: any = null;
+    
+    while (processedCount < maxUsers) {
+        // Build query with pagination
+        const usersCol = collection(db, 'users');
+        let usersQuery = query(usersCol, orderBy('createdAt', 'desc'), limit(BATCH_SIZE));
+        
+        if (lastDoc) {
+            usersQuery = query(usersCol, orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(BATCH_SIZE));
+        }
+        
+        const snapshot = await getDocs(usersQuery);
+        
+        if (snapshot.empty) break;
+        
+        // Process batch in parallel
+        const batchPromises = snapshot.docs.map(doc => 
+            processUser(doc.id, doc.data()).catch(() => {})
+        );
+        await Promise.all(batchPromises);
+        
+        processedCount += snapshot.size;
+        lastDoc = snapshot.docs[snapshot.docs.length - 1];
+        
+        // Break if we got fewer than BATCH_SIZE (last batch)
+        if (snapshot.size < BATCH_SIZE) break;
+    }
+    
+    return processedCount;
+}
+
+/**
+ * Fetches real usage data from Firestore with pagination for scalability
  * @returns Promise with usage statistics
  */
 export const fetchRealUsageData = async (): Promise<UsageData> => {
     try {
-        // Obtener todos los usuarios
+        // Get total user count efficiently
         const usersCol = collection(db, 'users');
-        const usersSnapshot = await getDocs(usersCol);
+        const countSnapshot = await getDocs(query(usersCol, limit(1000)));
+        const totalUsers = countSnapshot.size;
         
-        const totalUsers = usersSnapshot.size;
         let totalProjects = 0;
         let projectsThisMonth = 0;
         const userStats: Array<{ id: string; name: string; email: string; photoURL: string; projectCount: number }> = [];
@@ -32,11 +75,8 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
         
         let newUsersThisMonth = 0;
         
-        // Procesar cada usuario
-        for (const userDoc of usersSnapshot.docs) {
-            const userData = userDoc.data();
-            const userId = userDoc.id;
-            
+        // Process users with batching
+        await processUsersBatched(async (userId, userData) => {
             // Contar usuarios nuevos este mes
             if (userData.createdAt) {
                 const createdDate = userData.createdAt.toDate ? userData.createdAt.toDate() : new Date(userData.createdAt);
@@ -54,46 +94,43 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 }
             }
             
-            // Obtener proyectos del usuario
-            try {
-                const projectsCol = collection(db, 'users', userId, 'projects');
-                const projectsSnapshot = await getDocs(projectsCol);
-                const userProjectCount = projectsSnapshot.size;
-                totalProjects += userProjectCount;
-                
-                // Contar proyectos creados este mes
-                projectsSnapshot.forEach((projectDoc) => {
-                    const projectData = projectDoc.data();
-                    if (projectData.createdAt) {
-                        const projectDate = projectData.createdAt.toDate ? projectData.createdAt.toDate() : new Date(projectData.createdAt);
-                        if (projectDate.getMonth() === currentMonth && projectDate.getFullYear() === currentYear) {
-                            projectsThisMonth++;
-                        }
+            // Obtener proyectos del usuario (limited for performance)
+            const projectsCol = collection(db, 'users', userId, 'projects');
+            const projectsQuery = query(projectsCol, limit(100)); // Limit projects per user
+            const projectsSnapshot = await getDocs(projectsQuery);
+            const userProjectCount = projectsSnapshot.size;
+            totalProjects += userProjectCount;
+            
+            // Contar proyectos creados este mes
+            projectsSnapshot.forEach((projectDoc) => {
+                const projectData = projectDoc.data();
+                if (projectData.createdAt) {
+                    const projectDate = projectData.createdAt.toDate ? projectData.createdAt.toDate() : new Date(projectData.createdAt);
+                    if (projectDate.getMonth() === currentMonth && projectDate.getFullYear() === currentYear) {
+                        projectsThisMonth++;
                     }
-                    
-                    // Contar uso de templates
-                    const templateId = projectData.templateId || projectData.template || 'custom';
-                    const templateName = projectData.templateName || projectData.name || templateId;
-                    if (!templateCounts[templateId]) {
-                        templateCounts[templateId] = { name: templateName, count: 0 };
-                    }
-                    templateCounts[templateId].count++;
-                });
-                
-                // Guardar estadísticas del usuario
-                if (userProjectCount > 0) {
-                    userStats.push({
-                        id: userId,
-                        name: userData.name || 'Unknown User',
-                        email: userData.email || '',
-                        photoURL: userData.photoURL || 'https://via.placeholder.com/100',
-                        projectCount: userProjectCount
-                    });
                 }
-            } catch (error) {
-                console.warn(`Error fetching projects for user ${userId}:`, error);
+                
+                // Contar uso de templates
+                const templateId = projectData.templateId || projectData.template || 'custom';
+                const templateName = projectData.templateName || projectData.name || templateId;
+                if (!templateCounts[templateId]) {
+                    templateCounts[templateId] = { name: templateName, count: 0 };
+                }
+                templateCounts[templateId].count++;
+            });
+            
+            // Guardar estadísticas del usuario (solo top usuarios)
+            if (userProjectCount > 0 && userStats.length < 20) {
+                userStats.push({
+                    id: userId,
+                    name: userData.name || 'Unknown User',
+                    email: userData.email || '',
+                    photoURL: userData.photoURL || 'https://via.placeholder.com/100',
+                    projectCount: userProjectCount
+                });
             }
-        }
+        });
         
         // Ordenar usuarios por cantidad de proyectos
         const topUsers = userStats

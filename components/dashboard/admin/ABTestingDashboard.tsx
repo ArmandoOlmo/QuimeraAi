@@ -39,8 +39,8 @@ const ABTestingDashboard: React.FC = () => {
     const pausedTests = allTests.filter(t => !t.isActive);
 
     const handleCreateTest = () => {
-        // In a real application, this would save to Firebase
-        console.log('Creating A/B test:', newTest);
+        // TODO: Implement save to Firebase when A/B testing feature is complete
+        // For now, show success message
         alert('A/B Test created successfully!');
         setShowCreateModal(false);
         setNewTest({
@@ -56,8 +56,7 @@ const ABTestingDashboard: React.FC = () => {
     };
 
     const handleToggleTest = (test: ABTestConfig & { projectId: string }) => {
-        // In a real application, this would update in Firebase
-        console.log(`Toggling test ${test.name}:`, !test.isActive);
+        // TODO: Implement toggle in Firebase when A/B testing is complete
         alert(`Test ${test.isActive ? 'paused' : 'resumed'}!`);
     };
 

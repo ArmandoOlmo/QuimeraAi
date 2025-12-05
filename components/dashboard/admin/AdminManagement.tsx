@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
-import { UserRole } from '../../../types';
-import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_COLORS, isOwner } from '../../../constants/roles';
-import { 
-    ArrowLeft, Users, Plus, Crown, Shield, UserCog, 
-    Eye, Trash2, AlertCircle 
+import { UserRole, UserDocument } from '../../../types';
+import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isOwner } from '../../../constants/roles';
+import AdminProfileView from './AdminProfileView';
+import {
+    ArrowLeft, Users, Plus, Crown, Shield, UserCog,
+    Eye, Trash2, AlertCircle
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 
@@ -13,9 +14,9 @@ interface AdminManagementProps {
 }
 
 const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
-    const { 
-        allUsers, 
-        fetchAllUsers, 
+    const {
+        allUsers,
+        fetchAllUsers,
         updateUserRole,
         deleteUserRecord,
         createAdmin,
@@ -23,7 +24,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
         isUserOwner,
         userDocument
     } = useEditor();
-    
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -31,19 +32,26 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
     const [newAdminName, setNewAdminName] = useState('');
     const [newAdminRole, setNewAdminRole] = useState<UserRole>('admin');
     const [errorMessage, setErrorMessage] = useState('');
+    const [selectedUser, setSelectedUser] = useState<UserDocument | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            await fetchAllUsers();
-            setLoading(false);
+            try {
+                await fetchAllUsers();
+            } catch (error: any) {
+                console.error("Error fetching users:", error);
+                setErrorMessage("Error al cargar usuarios: " + (error.message || "Error desconocido"));
+            } finally {
+                setLoading(false);
+            }
         };
         loadData();
     }, []);
 
     // Filtrar solo administradores (no usuarios comunes)
-    const admins = allUsers.filter(u => 
-        ['owner', 'superadmin', 'admin', 'manager'].includes(u.role || 'user')
+    const admins = allUsers.filter(u =>
+        ['owner', 'superadmin', 'admin', 'manager'].includes(u.role || 'user') || isOwner(u.email)
     );
 
     const getRoleIcon = (role: string) => {
@@ -56,14 +64,27 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
         }
     };
 
+    if (selectedUser) {
+        return (
+            <AdminProfileView
+                user={selectedUser}
+                onBack={() => {
+                    setSelectedUser(null);
+                    // Refresh data when returning
+                    fetchAllUsers();
+                }}
+            />
+        );
+    }
+
     const handleCreateAdmin = async () => {
         setErrorMessage('');
-        
+
         if (!newAdminEmail || !newAdminName) {
             setErrorMessage('Por favor completa todos los campos');
             return;
         }
-        
+
         try {
             await createAdmin(newAdminEmail, newAdminName, newAdminRole);
             setShowCreateModal(false);
@@ -100,21 +121,21 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button 
+                        <button
                             onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full md:hidden mr-2 transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
                             title="Volver"
                         >
-                            <ArrowLeft className="w-4 h-4" />
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Shield className="text-editor-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold">Gestión de Administradores</h1>
                         </div>
                     </div>
-                    <button 
+                    <button
                         onClick={onBack}
-                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Volver
@@ -199,19 +220,23 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="space-y-3">
                             {admins.map(admin => {
                                 const isAdminOwner = isOwner(admin.email);
-                                const canEdit = userPermissions.canManageRoles && 
-                                              !isAdminOwner && 
-                                              (isUserOwner || admin.role !== 'superadmin');
-                                
+                                const canEdit = userPermissions.canManageRoles &&
+                                    !isAdminOwner &&
+                                    (isUserOwner || admin.role !== 'superadmin');
+
                                 return (
-                                    <div key={admin.id} className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                                    <div
+                                        key={admin.id}
+                                        onClick={() => setSelectedUser(admin)}
+                                        className="bg-editor-panel-bg border border-editor-border rounded-lg p-4 border-b hover:bg-editor-border/30 transition-colors cursor-pointer group"
+                                    >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4 flex-1">
                                                 <div className="p-2 bg-editor-bg rounded-lg">
                                                     {getRoleIcon(admin.role || 'user')}
                                                 </div>
-                                                <img 
-                                                    src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.name}`} 
+                                                <img
+                                                    src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.name}`}
                                                     alt={admin.name}
                                                     className="w-12 h-12 rounded-full"
                                                 />
@@ -225,7 +250,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                         {ROLE_DESCRIPTIONS[admin.role || 'user']}
                                                     </p>
                                                 </div>
-                                            </div>
+                                            </div >
 
                                             <div className="flex items-center gap-4">
                                                 {/* Selector de rol */}
@@ -257,100 +282,104 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                     </button>
                                                 )}
                                             </div>
-                                        </div>
-                                    </div>
+                                        </div >
+                                    </div >
                                 );
                             })}
 
-                            {admins.length === 0 && (
-                                <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg">
-                                    <Shield size={48} className="mx-auto text-editor-text-secondary mb-4" />
-                                    <p className="text-lg font-semibold text-editor-text-primary mb-2">
-                                        No hay administradores
-                                    </p>
-                                    <p className="text-editor-text-secondary">
-                                        Crea el primer administrador del sistema
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                            {
+                                admins.length === 0 && (
+                                    <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg">
+                                        <Shield size={48} className="mx-auto text-editor-text-secondary mb-4" />
+                                        <p className="text-lg font-semibold text-editor-text-primary mb-2">
+                                            No hay administradores
+                                        </p>
+                                        <p className="text-editor-text-secondary">
+                                            Crea el primer administrador del sistema
+                                        </p>
+                                    </div>
+                                )
+                            }
+                        </div >
                     )}
-                </main>
-            </div>
+                </main >
+            </div >
 
             {/* Modal crear admin */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
-                        <h2 className="text-xl font-bold text-editor-text-primary mb-4">Crear Nuevo Administrador</h2>
-                        
-                        {errorMessage && (
-                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
-                                <p className="text-sm text-red-400">{errorMessage}</p>
-                            </div>
-                        )}
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-editor-text-secondary mb-1">Nombre</label>
-                                <input
-                                    type="text"
-                                    value={newAdminName}
-                                    onChange={(e) => setNewAdminName(e.target.value)}
-                                    placeholder="Juan Pérez"
-                                    className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-medium text-editor-text-secondary mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    value={newAdminEmail}
-                                    onChange={(e) => setNewAdminEmail(e.target.value)}
-                                    placeholder="juan@ejemplo.com"
-                                    className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-medium text-editor-text-secondary mb-1">Rol</label>
-                                <select
-                                    value={newAdminRole}
-                                    onChange={(e) => setNewAdminRole(e.target.value as UserRole)}
-                                    className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
-                                >
-                                    {isUserOwner && <option value="superadmin">Super Admin</option>}
-                                    <option value="admin">Admin</option>
-                                    <option value="manager">Manager</option>
-                                </select>
-                                <p className="text-xs text-editor-text-secondary mt-2">
-                                    {ROLE_DESCRIPTIONS[newAdminRole]}
-                                </p>
-                            </div>
-                        </div>
+            {
+                showCreateModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
+                            <h2 className="text-xl font-bold text-editor-text-primary mb-4">Crear Nuevo Administrador</h2>
 
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setErrorMessage('');
-                                }}
-                                className="flex-1 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleCreateAdmin}
-                                className="flex-1 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
-                            >
-                                Crear
-                            </button>
+                            {errorMessage && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                                    <p className="text-sm text-red-400">{errorMessage}</p>
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Nombre</label>
+                                    <input
+                                        type="text"
+                                        value={newAdminName}
+                                        onChange={(e) => setNewAdminName(e.target.value)}
+                                        placeholder="Juan Pérez"
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={newAdminEmail}
+                                        onChange={(e) => setNewAdminEmail(e.target.value)}
+                                        placeholder="juan@ejemplo.com"
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Rol</label>
+                                    <select
+                                        value={newAdminRole}
+                                        onChange={(e) => setNewAdminRole(e.target.value as UserRole)}
+                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    >
+                                        {isUserOwner && <option value="superadmin">Super Admin</option>}
+                                        <option value="admin">Admin</option>
+                                        <option value="manager">Manager</option>
+                                    </select>
+                                    <p className="text-xs text-editor-text-secondary mt-2">
+                                        {ROLE_DESCRIPTIONS[newAdminRole]}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => {
+                                        setShowCreateModal(false);
+                                        setErrorMessage('');
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleCreateAdmin}
+                                    className="flex-1 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
+                                >
+                                    Crear
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

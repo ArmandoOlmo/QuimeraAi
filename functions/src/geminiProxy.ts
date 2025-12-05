@@ -105,8 +105,12 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
 
     } catch (error) {
         console.error('Rate limit check error:', error);
-        // Fail open - allow request if rate limit check fails
-        return { allowed: true };
+        // SECURITY: Fail closed - deny request if rate limit check fails
+        // This prevents abuse if the rate limiting system is down
+        return { 
+            allowed: false, 
+            message: 'Rate limit service unavailable. Please try again later.' 
+        };
     }
 }
 
@@ -572,20 +576,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             actualModel = model;
         }
 
-        console.log('✨ Quimera Vision Pro Image generation request:', {
-            userId,
-            requestedModel: model,
-            actualModel,
-            aspectRatio,
-            style,
-            resolution,
-            thinkingLevel,
-            personGeneration,
-            temperature,
-            negativePrompt: negativePrompt ? 'yes' : 'no',
-            promptLength: enhancedPrompt.length,
-            referenceImagesCount: referenceImages?.length || 0
-        });
+        // Image generation request logged for debugging if needed
 
         // Use the Google Generative AI SDK for image generation
         const genAI = new GoogleGenAI({ apiKey });
@@ -632,8 +623,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 
                 // Add reference images if provided (Quimera Vision Pro supports up to 14 images)
                 if (referenceImages && referenceImages.length > 0) {
-                    console.log(`🖼️ Processing ${referenceImages.length} reference images for style transfer`);
-                    
+                    // Process reference images for style transfer
                     for (const imgDataUrl of referenceImages) {
                         try {
                             // Extract base64 data and mime type from data URL
@@ -649,7 +639,6 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                                         data: base64Data
                                     }
                                 });
-                                console.log(`✅ Added reference image: ${mimeType}`);
                             } else {
                                 console.warn('⚠️ Invalid image data URL format, skipping');
                             }

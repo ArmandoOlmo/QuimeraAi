@@ -78,7 +78,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
         setFormData(prev => {
             const currentPerms = prev.permissions || {};
             const scopePerm = currentPerms[scopeId] || { chat: true, voice: true };
-            
+
             return {
                 ...prev,
                 permissions: {
@@ -103,7 +103,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
     const toggleTemplate = (templateId: string, enabled: boolean) => {
         setFormData(prev => {
             const current = prev.enabledTemplates || [];
-            const updated = enabled 
+            const updated = enabled
                 ? [...current, templateId]
                 : current.filter(id => id !== templateId);
             return { ...prev, enabledTemplates: updated };
@@ -126,51 +126,51 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button 
+                        <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2 transition-colors"
                             title={t('common.openMenu')}
                         >
-                            <Menu className="w-4 h-4" />
+                            <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                             <MessageSquare className="text-editor-accent w-5 h-5" />
-                             <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant')}</h1>
+                            <MessageSquare className="text-editor-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant')}</h1>
                         </div>
                     </div>
-                     <div className="flex items-center gap-1">
-                         {showSuccess && (
-                             <span className="text-sm text-green-400 flex items-center animate-fade-in-up mr-2">
-                                 <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.saved')}
-                             </span>
-                         )}
-                        <button 
+                    <div className="flex items-center gap-1">
+                        {showSuccess && (
+                            <span className="text-sm text-green-400 flex items-center animate-fade-in-up mr-2">
+                                <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.saved')}
+                            </span>
+                        )}
+                        <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary disabled:opacity-50"
                         >
                             <Save className="w-4 h-4" />
                             {isSaving ? t('superadmin.saving') : t('common.save')}
                         </button>
-                        <button 
+                        <button
                             onClick={onBack}
-                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             {t('common.back')}
                         </button>
-                     </div>
+                    </div>
                 </header>
 
                 {/* Main Content */}
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
                     <div className="max-w-5xl mx-auto space-y-8">
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left Column: General & Scope */}
                             <div className="space-y-8">
@@ -181,7 +181,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             <h3 className="font-bold text-lg mb-1">{t('superadmin.assistantStatus')}</h3>
                                             <p className="text-sm text-editor-text-secondary">{t('superadmin.enableDisableGlobalChat')}</p>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => updateForm('isEnabled', !formData.isEnabled)}
                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-editor-accent' : 'bg-editor-border'}`}
                                         >
@@ -193,15 +193,15 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 {/* Language Settings (NEW) */}
                                 <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                                     <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
-                                        <Languages className="mr-2 text-editor-accent" size={20}/> Language & Intelligence
+                                        <Languages className="mr-2 text-editor-accent" size={20} /> Language & Intelligence
                                     </h3>
-                                    
+
                                     <div className="flex items-center justify-between">
-                                         <div>
-                                             <h4 className="text-sm font-bold text-editor-text-primary">Auto-Detect Language</h4>
-                                             <p className="text-xs text-editor-text-secondary">Automatically reply in the user's language.</p>
-                                         </div>
-                                         <button 
+                                        <div>
+                                            <h4 className="text-sm font-bold text-editor-text-primary">Auto-Detect Language</h4>
+                                            <p className="text-xs text-editor-text-secondary">Automatically reply in the user's language.</p>
+                                        </div>
+                                        <button
                                             onClick={() => updateForm('autoDetectLanguage', !formData.autoDetectLanguage)}
                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-editor-border'}`}
                                         >
@@ -212,8 +212,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     {!formData.autoDetectLanguage && (
                                         <div>
                                             <label className="block text-sm font-bold text-editor-text-primary mb-2">Primary / Fallback Language</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={formData.supportedLanguages}
                                                 onChange={(e) => updateForm('supportedLanguages', e.target.value)}
                                                 className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none"
@@ -225,22 +225,22 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                                 {/* Voice Settings */}
                                 <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                     <div className="flex items-center justify-between border-b border-editor-border pb-6">
-                                         <div>
-                                             <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-editor-accent" /> {t('superadmin.voiceSettings')}</h3>
-                                             <p className="text-sm text-editor-text-secondary">{t('superadmin.enableVoice')}</p>
-                                         </div>
-                                         <button 
+                                    <div className="flex items-center justify-between border-b border-editor-border pb-6">
+                                        <div>
+                                            <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-editor-accent" /> {t('superadmin.voiceSettings')}</h3>
+                                            <p className="text-sm text-editor-text-secondary">{t('superadmin.enableVoice')}</p>
+                                        </div>
+                                        <button
                                             onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-editor-border'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
-                                     </div>
+                                    </div>
 
-                                     <div>
-                                         <label className="block text-sm font-bold text-editor-text-primary mb-4 flex items-center"><Radio className="mr-2 text-editor-accent"/> {t('superadmin.selectVoice')}</label>
-                                         <div className="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-bold text-editor-text-primary mb-4 flex items-center"><Radio className="mr-2 text-editor-accent" /> {t('superadmin.selectVoice')}</label>
+                                        <div className="grid grid-cols-1 gap-3">
                                             {voices.map(v => (
                                                 <button
                                                     key={v.name}
@@ -256,23 +256,23 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                     </div>
                                                 </button>
                                             ))}
-                                         </div>
-                                     </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                 {/* Advanced Parameters */}
+                                {/* Advanced Parameters */}
                                 <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                                     <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
-                                        <Sliders className="mr-2 text-editor-accent" size={20}/> Model Parameters
+                                        <Sliders className="mr-2 text-editor-accent" size={20} /> Model Parameters
                                     </h3>
-                                    
+
                                     <div>
                                         <div className="flex justify-between mb-2">
                                             <label className="text-sm font-bold text-editor-text-primary">Temperature (Creativity)</label>
                                             <span className="text-xs font-mono bg-editor-bg px-2 py-0.5 rounded border border-editor-border">{formData.temperature}</span>
                                         </div>
-                                        <input 
-                                            type="range" 
+                                        <input
+                                            type="range"
                                             min="0" max="2" step="0.1"
                                             value={formData.temperature}
                                             onChange={(e) => updateForm('temperature', parseFloat(e.target.value))}
@@ -290,8 +290,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             <label className="text-sm font-bold text-editor-text-primary">Max Output Tokens</label>
                                             <span className="text-xs font-mono bg-editor-bg px-2 py-0.5 rounded border border-editor-border">{formData.maxTokens}</span>
                                         </div>
-                                        <input 
-                                            type="range" 
+                                        <input
+                                            type="range"
                                             min="100" max="2000" step="100"
                                             value={formData.maxTokens}
                                             onChange={(e) => updateForm('maxTokens', parseInt(e.target.value))}
@@ -352,16 +352,16 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                                 </span>
                                                             </td>
                                                             <td className="py-3 text-center">
-                                                                <input 
-                                                                    type="checkbox" 
+                                                                <input
+                                                                    type="checkbox"
                                                                     checked={perm.chat}
                                                                     onChange={(e) => handlePermissionChange(scope.id, 'chat', e.target.checked)}
                                                                     className="w-4 h-4 rounded border-editor-border text-editor-accent focus:ring-editor-accent bg-editor-bg cursor-pointer"
                                                                 />
                                                             </td>
                                                             <td className="py-3 text-center">
-                                                                <input 
-                                                                    type="checkbox" 
+                                                                <input
+                                                                    type="checkbox"
                                                                     checked={perm.voice}
                                                                     onChange={(e) => handlePermissionChange(scope.id, 'voice', e.target.checked)}
                                                                     className="w-4 h-4 rounded border-editor-border text-editor-accent focus:ring-editor-accent bg-editor-bg cursor-pointer"
@@ -394,12 +394,11 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h4 className="font-medium text-editor-text-primary">{template.name}</h4>
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded ${
-                                                        template.category === 'core' ? 'bg-blue-500/20 text-blue-400' :
-                                                        template.category === 'multilingual' ? 'bg-green-500/20 text-green-400' :
-                                                        template.category === 'technical' ? 'bg-purple-500/20 text-purple-400' :
-                                                        'bg-orange-500/20 text-orange-400'
-                                                    }`}>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded ${template.category === 'core' ? 'bg-blue-500/20 text-blue-400' :
+                                                            template.category === 'multilingual' ? 'bg-green-500/20 text-green-400' :
+                                                                template.category === 'technical' ? 'bg-purple-500/20 text-purple-400' :
+                                                                    'bg-orange-500/20 text-orange-400'
+                                                        }`}>
                                                         {template.category}
                                                     </span>
                                                 </div>
@@ -412,9 +411,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                     {t('superadmin.templatePreview')}
                                                 </button>
                                             </div>
-                                            
+
                                             <label className="relative inline-flex items-center cursor-pointer">
-                                                <input 
+                                                <input
                                                     type="checkbox"
                                                     checked={isTemplateEnabled(template.id)}
                                                     onChange={(e) => toggleTemplate(template.id, e.target.checked)}
@@ -447,7 +446,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 <p className="text-xs text-editor-text-secondary mb-3">
                                     {t('superadmin.systemPromptDesc')}
                                 </p>
-                                <textarea 
+                                <textarea
                                     className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
                                     value={formData.customInstructions || ''}
                                     onChange={(e) => updateForm('customInstructions', e.target.value)}
@@ -459,11 +458,11 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         {/* Instructions & Personality */}
                         <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                             <h3 className="font-bold text-lg border-b border-editor-border pb-2">Base System Instruction</h3>
-                            
+
                             <div>
                                 <label className="block text-sm font-bold text-editor-text-primary mb-2">Initial Greeting</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={formData.greeting}
                                     onChange={(e) => updateForm('greeting', e.target.value)}
                                     className="w-full bg-editor-bg border border-editor-border rounded-lg p-3 focus:ring-2 focus:ring-editor-accent outline-none text-editor-text-primary"
@@ -476,7 +475,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 <p className="text-xs text-editor-text-secondary mb-3">
                                     Define the core personality and behavior rules. This instruction is combined with enabled templates above, plus scope permissions and contextual data automatically.
                                 </p>
-                                <textarea 
+                                <textarea
                                     className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
                                     value={formData.systemInstruction}
                                     onChange={(e) => updateForm('systemInstruction', e.target.value)}
