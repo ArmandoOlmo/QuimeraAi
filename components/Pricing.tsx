@@ -1,9 +1,10 @@
 
 import React, { useMemo } from 'react';
-import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant } from '../types';
+import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba } from '../utils/colorUtils';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 
 // Use primary color for section background
 
@@ -44,6 +45,8 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 interface PricingProps extends PricingData {
     cardBorderRadius: BorderRadiusSize;
     buttonBorderRadius: BorderRadiusSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 const Pricing: React.FC<PricingProps> = ({ 
@@ -57,7 +60,9 @@ const Pricing: React.FC<PricingProps> = ({
     cardBorderRadius = 'xl', 
     buttonBorderRadius, 
     titleFontSize = 'md', 
-    descriptionFontSize = 'md' 
+    descriptionFontSize = 'md',
+    animationType = 'fade-in-up',
+    enableCardAnimation = true
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -115,10 +120,12 @@ const Pricing: React.FC<PricingProps> = ({
                     transform transition-all duration-300 hover:scale-105
                     ${borderRadiusClasses[cardBorderRadius]}
                     ${tier.featured ? 'border-2' : 'border'}
+                    ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
                   style={{ 
                       backgroundColor: actualColors.cardBackground,
-                      borderColor: tier.featured ? actualColors.accent : actualColors.borderColor
+                      borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
+                      animationDelay: getAnimationDelay(index)
                   }}
                 >
                   {tier.featured && (
@@ -224,12 +231,14 @@ const Pricing: React.FC<PricingProps> = ({
                     transform transition-all duration-500 hover:scale-105 hover:-translate-y-2
                     ${borderRadiusClasses[cardBorderRadius]}
                     ${tier.featured ? 'lg:scale-110' : ''}
+                    ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
                   style={{ 
                       backgroundColor: actualColors.cardBackground,
                       backgroundImage: tier.featured 
                         ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.08)}, ${hexToRgba(actualColors.gradientEnd, 0.08)})`
-                        : 'none'
+                        : 'none',
+                      animationDelay: getAnimationDelay(index)
                   }}
                 >
                   {/* Gradient border effect */}
@@ -360,9 +369,11 @@ const Pricing: React.FC<PricingProps> = ({
                     border border-white/10
                     transform transition-all duration-500 hover:scale-105
                     ${borderRadiusClasses[cardBorderRadius]}
+                    ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
                   style={{ 
-                      backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)'
+                      backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      animationDelay: getAnimationDelay(index)
                   }}
                 >
                   {tier.featured && (
@@ -468,10 +479,12 @@ const Pricing: React.FC<PricingProps> = ({
                     p-10 flex flex-col h-full
                     transition-all duration-300
                     ${tier.featured ? 'transform md:-translate-y-4' : ''}
+                    ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
                   style={{ 
                       backgroundColor: actualColors.cardBackground,
-                      borderTop: tier.featured ? `3px solid ${actualColors.accent}` : 'none'
+                      borderTop: tier.featured ? `3px solid ${actualColors.accent}` : 'none',
+                      animationDelay: getAnimationDelay(index)
                   }}
                 >
                   {tier.featured && (

@@ -14,7 +14,7 @@ import {
     Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, HelpCircle, 
     Layout, Image, List, Star, PlaySquare, Users, DollarSign, 
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2
 } from 'lucide-react';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
@@ -249,6 +249,10 @@ const Controls: React.FC = () => {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
   const [isTreeHiddenMobile, setIsTreeHiddenMobile] = useState(false);
+  
+  // State for map geocoding
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   // Auto-hide tree on mobile when a section is selected, show when closed
   React.useEffect(() => {
@@ -1669,6 +1673,17 @@ const Controls: React.FC = () => {
             >
                 <Plus size={14} /> Add Pricing Tier
             </button>
+
+            <hr className="border-editor-border/50" />
+
+            {/* Animation Controls */}
+            <AnimationControls
+                animationType={data.pricing.animationType || 'fade-in-up'}
+                enableCardAnimation={data.pricing.enableCardAnimation !== false}
+                onChangeAnimationType={(type) => setNestedData('pricing.animationType', type)}
+                onToggleAnimation={(enabled) => setNestedData('pricing.enableCardAnimation', enabled)}
+                label="Card Animations"
+            />
         </div>
       );
   }
@@ -2232,6 +2247,81 @@ const Controls: React.FC = () => {
     return labels[section] || section;
   };
 
+  // Function to geocode address - uses Google Maps client Geocoder or Nominatim fallback
+  const geocodeAddress = async () => {
+    const address = data?.map?.address;
+    if (!address || address.trim() === '') {
+      setGeocodeError('Please enter an address first');
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeocodeError(null);
+
+    try {
+      // Method 1: Try using Google Maps client Geocoder if available
+      if (typeof window !== 'undefined' && window.google?.maps?.Geocoder) {
+        const geocoder = new window.google.maps.Geocoder();
+        
+        geocoder.geocode({ address }, (results, status) => {
+          setIsGeocoding(false);
+          
+          if (status === 'OK' && results && results[0]) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            setNestedData('map.lat', lat);
+            setNestedData('map.lng', lng);
+            setGeocodeError(null);
+          } else if (status === 'ZERO_RESULTS') {
+            setGeocodeError('Location not found. Try a more specific address.');
+          } else {
+            // Fallback to Nominatim if Google fails
+            geocodeWithNominatim(address);
+          }
+        });
+        return;
+      }
+      
+      // Method 2: Fallback to Nominatim (OpenStreetMap) - free and no API key needed
+      await geocodeWithNominatim(address);
+      
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      setGeocodeError('Error searching location. Please try again.');
+      setIsGeocoding(false);
+    }
+  };
+
+  // Helper function for Nominatim geocoding (OpenStreetMap - free)
+  const geocodeWithNominatim = async (address: string) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'QuimeraAI/1.0'
+          }
+        }
+      );
+      const results = await response.json();
+      
+      if (results && results.length > 0) {
+        const { lat, lon } = results[0];
+        setNestedData('map.lat', parseFloat(lat));
+        setNestedData('map.lng', parseFloat(lon));
+        setGeocodeError(null);
+      } else {
+        setGeocodeError('Location not found. Try a more specific address.');
+      }
+    } catch (error) {
+      console.error('Nominatim geocoding error:', error);
+      setGeocodeError('Error searching location. Please try again.');
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const renderMapControls = () => {
     const contentTab = (
       <div className="space-y-4">
@@ -2247,12 +2337,66 @@ const Controls: React.FC = () => {
              <MapPin size={14} />
              Location
          </label>
-         <Input label="Address (Display)" value={data?.map.address} onChange={(e) => setNestedData('map.address', e.target.value)} placeholder="e.g. 123 Main St, City" />
          
-         <div className="grid grid-cols-2 gap-3">
+         {/* Address input with search button */}
+         <div className="space-y-2">
+           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Address</label>
+           <div className="flex gap-2">
+             <input 
+               type="text"
+               value={data?.map.address || ''} 
+               onChange={(e) => setNestedData('map.address', e.target.value)} 
+               placeholder="e.g. 123 Main St, City, Country"
+               className="flex-1 bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter') {
+                   e.preventDefault();
+                   geocodeAddress();
+                 }
+               }}
+             />
+             <button
+               onClick={geocodeAddress}
+               disabled={isGeocoding}
+               className="px-3 py-2 bg-editor-accent text-white rounded-md hover:bg-editor-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+               title="Search location"
+             >
+               {isGeocoding ? (
+                 <Loader2 size={16} className="animate-spin" />
+               ) : (
+                 <Search size={16} />
+               )}
+               <span className="text-xs font-medium">Find</span>
+             </button>
+           </div>
+           
+           {/* Error message */}
+           {geocodeError && (
+             <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+               <AlertCircle size={12} />
+               {geocodeError}
+             </p>
+           )}
+           
+           {/* Success indicator when coordinates are set */}
+           {data?.map.lat && data?.map.lng && !geocodeError && (
+             <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+               <MapPin size={12} />
+               Location set: {data.map.lat.toFixed(4)}, {data.map.lng.toFixed(4)}
+             </p>
+           )}
+         </div>
+         
+         {/* Manual coordinate inputs (collapsible) */}
+         <details className="mt-3">
+           <summary className="text-xs font-medium text-editor-text-secondary cursor-pointer hover:text-editor-text-primary transition-colors">
+             Manual coordinates (advanced)
+           </summary>
+           <div className="grid grid-cols-2 gap-3 mt-2 pl-2 border-l-2 border-editor-border">
              <Input label="Latitude" type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
              <Input label="Longitude" type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
-         </div>
+           </div>
+         </details>
          
          <div className="mt-2">
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Zoom Level: {data?.map.zoom}</label>
@@ -2333,7 +2477,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Title" value={data?.map.colors.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
           <ColorControl label="Text" value={data?.map.colors.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
           <ColorControl label="Marker/Accent" value={data?.map.colors.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
-          {data?.map.mapVariant === 'card-overlay' && (
+          {(data?.map.mapVariant === 'modern' || data?.map.mapVariant === 'card-overlay') && (
              <ColorControl label="Card Background" value={data?.map.colors.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
           )}
         </div>
@@ -2552,6 +2696,17 @@ const Controls: React.FC = () => {
                   {key: 'description', label: 'Description', type: 'textarea'}, 
                   {key: 'icon', label: 'Icon', type: 'icon-selector'}
               ])}
+
+              <hr className="border-editor-border/50" />
+
+              {/* Animation Controls */}
+              <AnimationControls
+                  animationType={data?.services?.animationType || 'fade-in-up'}
+                  enableCardAnimation={data?.services?.enableCardAnimation !== false}
+                  onChangeAnimationType={(type) => setNestedData('services.animationType', type)}
+                  onToggleAnimation={(enabled) => setNestedData('services.enableCardAnimation', enabled)}
+                  label="Card Animations"
+              />
           </div>
       ) },
       team: { label: 'Team', icon: Users, renderer: () => (
@@ -2649,6 +2804,17 @@ const Controls: React.FC = () => {
               >
                   <Plus size={14} /> Add Member
               </button>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Animation Controls */}
+              <AnimationControls
+                  animationType={data?.team?.animationType || 'fade-in-up'}
+                  enableCardAnimation={data?.team?.enableCardAnimation !== false}
+                  onChangeAnimationType={(type) => setNestedData('team.animationType', type)}
+                  onToggleAnimation={(enabled) => setNestedData('team.enableCardAnimation', enabled)}
+                  label="Card Animations"
+              />
           </div>
       ) },
       pricing: { label: 'Pricing', icon: DollarSign, renderer: renderPricingControls },
@@ -3211,6 +3377,17 @@ const Controls: React.FC = () => {
                   {key: 'imageUrl', label: 'Photo', type: 'image'}, 
                   {key: 'category', label: 'Category', type: 'input'}
               ])}
+
+              <hr className="border-editor-border/50" />
+
+              {/* Animation Controls */}
+              <AnimationControls
+                  animationType={data?.menu?.animationType || 'fade-in-up'}
+                  enableCardAnimation={data?.menu?.enableCardAnimation !== false}
+                  onChangeAnimationType={(type) => setNestedData('menu.animationType', type)}
+                  onToggleAnimation={(enabled) => setNestedData('menu.enableCardAnimation', enabled)}
+                  label="Card Animations"
+              />
           </div>
       ) },
       chatbot: { label: 'AI Chatbot', icon: MessageSquare, renderer: renderChatbotControls },
@@ -4294,6 +4471,15 @@ const Controls: React.FC = () => {
           <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
           <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
         </div>
+
+        {/* Animation Controls */}
+        <AnimationControls
+          animationType={data.testimonials.animationType || 'fade-in-up'}
+          enableCardAnimation={data.testimonials.enableCardAnimation !== false}
+          onChangeAnimationType={(type) => setNestedData('testimonials.animationType', type)}
+          onToggleAnimation={(enabled) => setNestedData('testimonials.enableCardAnimation', enabled)}
+          label="Card Animations"
+        />
       </div>
     );
 

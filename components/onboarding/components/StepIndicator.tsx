@@ -109,3 +109,4 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps =
 };
 
 export default StepIndicator;
+

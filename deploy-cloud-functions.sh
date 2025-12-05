@@ -108,7 +108,7 @@ cd ..
 echo -e "\n${BLUE}☁️  Desplegando Cloud Functions...${NC}"
 echo -e "${YELLOW}Esto puede tomar varios minutos...${NC}"
 
-firebase deploy --only functions:gemini-generate,functions:gemini-stream,functions:gemini-usage
+firebase deploy --only functions:gemini-generate,functions:gemini-stream,functions:gemini-usage,functions:gemini-image
 
 DEPLOY_STATUS=$?
 
@@ -119,6 +119,7 @@ if [ $DEPLOY_STATUS -eq 0 ]; then
     echo -e "  • ${BLUE}gemini-generate${NC}   - Generar contenido"
     echo -e "  • ${BLUE}gemini-stream${NC}     - Streaming de contenido"
     echo -e "  • ${BLUE}gemini-usage${NC}      - Estadísticas de uso"
+    echo -e "  • ${BLUE}gemini-image${NC}      - Generar imágenes"
     
     echo -e "\n${GREEN}🔗 URLs de las funciones:${NC}"
     REGION="us-central1"
@@ -126,6 +127,7 @@ if [ $DEPLOY_STATUS -eq 0 ]; then
     echo -e "  • Generate: ${BLUE}${BASE_URL}/gemini-generate${NC}"
     echo -e "  • Stream:   ${BLUE}${BASE_URL}/gemini-stream${NC}"
     echo -e "  • Usage:    ${BLUE}${BASE_URL}/gemini-usage${NC}"
+    echo -e "  • Image:    ${BLUE}${BASE_URL}/gemini-image${NC}"
     
     echo -e "\n${GREEN}📝 Siguiente paso:${NC}"
     echo -e "  Actualiza tu ${BLUE}.env.local${NC} con:"
@@ -149,12 +151,13 @@ fi
 
 # Paso 5: Verificar deployment
 echo -e "\n${BLUE}🔍 Verificando funciones deployadas...${NC}"
-firebase functions:list | grep gemini
+firebase functions:list | grep -E "gemini|image"
 echo -e "${GREEN}✅ Verificación completa${NC}"
 
 echo -e "\n${GREEN}🎉 ¡Todo listo!${NC}"
 echo -e "\n${YELLOW}📚 Para más información, consulta:${NC}"
 echo -e "  ${BLUE}GEMINI_PROXY_SETUP.md${NC}"
+
 
 
 

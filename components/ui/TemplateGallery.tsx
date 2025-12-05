@@ -567,3 +567,4 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
 };
 
 export default TemplateGallery;
+

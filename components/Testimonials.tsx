@@ -1,8 +1,9 @@
 
 import React, { useMemo } from 'react';
-import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant } from '../types';
+import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant, AnimationType } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba } from '../utils/colorUtils';
+import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 
 interface TestimonialCardProps {
   quote: string;
@@ -21,6 +22,9 @@ interface TestimonialCardProps {
   cardShadow: string;
   cardPadding: number;
   variant: TestimonialsVariant;
+  // Animations
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -80,8 +84,12 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   borderStyle,
   cardShadow,
   cardPadding,
-  variant
+  variant,
+  // Animations
+  animationType = 'fade-in-up',
+  enableAnimation = true
 }) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
   const getBorderClass = () => {
     switch(borderStyle) {
       case 'none':
@@ -176,7 +184,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 
   return (
     <div 
-      className={`flex flex-col justify-between animate-fade-in-up ${borderRadiusClasses[borderRadius]} ${variant === 'classic' ? shadowClasses[cardShadow || 'lg'] : ''} ${variant === 'classic' ? getBorderClass() : getVariantClasses()}`} 
+      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${variant === 'classic' ? shadowClasses[cardShadow || 'lg'] : ''} ${variant === 'classic' ? getBorderClass() : getVariantClasses()}`} 
       style={getCardStyle()}
     >
       {variant === 'gradient-shift' && (
@@ -208,6 +216,8 @@ interface TestimonialsProps extends TestimonialsData {
     cardShadow?: string;
     borderStyle?: string;
     cardPadding?: number;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
 }
 
 const Testimonials: React.FC<TestimonialsProps> = ({ 
@@ -223,7 +233,9 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   cardPadding = 32,
   titleFontSize = 'md', 
   descriptionFontSize = 'md',
-  testimonialsVariant = 'classic'
+  testimonialsVariant = 'classic',
+  animationType = 'fade-in-up',
+  enableCardAnimation = true
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -275,7 +287,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
                 quote={testimonial.quote}
                 name={testimonial.name}
                 title={testimonial.title}
-                delay={`${(index + 1) * 0.2}s`}
+                delay={getAnimationDelay(index)}
                 // Colors
                 accentColor={actualColors.accent}
                 textColor={safeColors.cardText}
@@ -288,6 +300,9 @@ const Testimonials: React.FC<TestimonialsProps> = ({
                 cardShadow={cardShadow}
                 cardPadding={cardPadding}
                 variant={testimonialsVariant}
+                // Animations
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
             />
           ))}
         </div>

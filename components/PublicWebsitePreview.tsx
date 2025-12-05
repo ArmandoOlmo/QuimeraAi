@@ -382,7 +382,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'howItWorks':
         return <HowItWorks {...compData} borderRadius={borderRadius} />;
       case 'map':
-        return <BusinessMap {...compData} borderRadius={borderRadius} />;
+        return <BusinessMap {...compData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={borderRadius} />;
       case 'menu':
         return <MenuComponent {...compData} borderRadius={borderRadius} />;
       case 'banner':

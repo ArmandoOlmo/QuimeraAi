@@ -565,16 +565,8 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             enhancedPrompt = `${enhancedPrompt}. Avoid: ${negativePrompt}`;
         }
 
-        // Determine actual model to use
-        // Map model names to actual API model identifiers
-        let actualModel = model;
-        if (model === 'gemini-3-pro-image-preview' || model.includes('nano')) {
-            // Quimera Vision Pro uses Gemini 2.0 Flash Exp for image generation
-            actualModel = 'gemini-2.0-flash-exp';
-        } else if (model.includes('imagen')) {
-            // Keep Imagen models as-is for generateImages API
-            actualModel = model;
-        }
+        // Use the model directly - gemini-3-pro-image-preview passes as-is to the API
+        const actualModel = model;
 
         // Image generation request logged for debugging if needed
 

@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import React, { useMemo, useCallback } from 'react';
+import { GoogleMap, Marker, useJsApiLoader, Libraries } from '@react-google-maps/api';
 import { MapData, BorderRadiusSize } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+
+// Define libraries outside component to prevent re-renders
+const libraries: Libraries = ['places', 'geocoding'];
 
 interface BusinessMapProps extends MapData {
     borderRadius?: BorderRadiusSize;
@@ -81,12 +84,18 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     // Only load Google Maps if we have a valid API key
     const hasValidApiKey = apiKey && apiKey.trim().length > 0;
     
-    const { isLoaded } = useJsApiLoader({
+    const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: hasValidApiKey ? apiKey : 'PLACEHOLDER_KEY',
+        googleMapsApiKey: hasValidApiKey ? apiKey : '',
+        libraries: libraries,
         // Prevent loading if no API key
-        ...(hasValidApiKey ? {} : { preventLoad: true }),
+        preventLoad: !hasValidApiKey,
     });
+    
+    // Log load error for debugging
+    if (loadError) {
+        console.error('Google Maps load error:', loadError);
+    }
 
     const center = useMemo(() => ({ lat: lat || 40.7128, lng: lng || -74.0060 }), [lat, lng]);
 

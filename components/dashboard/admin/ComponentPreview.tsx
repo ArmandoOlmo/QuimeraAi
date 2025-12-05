@@ -186,7 +186,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             case 'howItWorks':
                 return <HowItWorks {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'map':
-                return <BusinessMap {...mergedProps} borderRadius={theme.cardBorderRadius} />;
+                return <BusinessMap {...mergedProps} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} />;
             case 'menu':
                 return <Menu {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'banner':

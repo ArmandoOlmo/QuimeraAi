@@ -227,7 +227,7 @@ const LandingPage: React.FC = () => {
       case 'howItWorks':
         return <HowItWorks {...mergedData} borderRadius={borderRadius} />;
       case 'map':
-        return <BusinessMap {...mergedData} borderRadius={borderRadius} />;
+        return <BusinessMap {...mergedData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={borderRadius} />;
       case 'menu':
         return <Menu {...mergedData} borderRadius={borderRadius} />;
       default:
@@ -315,7 +315,7 @@ const LandingPage: React.FC = () => {
     team: <Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} />,
     video: <Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} />,
     howItWorks: <HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} />,
-    map: <BusinessMap {...mergedMapData} borderRadius={theme.cardBorderRadius} />,
+    map: <BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} />,
     menu: <Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} />,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive

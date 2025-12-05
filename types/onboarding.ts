@@ -317,3 +317,4 @@ export const INDUSTRY_COMPONENT_DEFAULTS: Record<string, {
 export const getIndustryComponentDefaults = (industry: string) => {
     return INDUSTRY_COMPONENT_DEFAULTS[industry] || INDUSTRY_COMPONENT_DEFAULTS['default'];
 };
+

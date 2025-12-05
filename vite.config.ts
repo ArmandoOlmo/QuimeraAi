@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => {
         open: true, // Abre el navegador automáticamente
         // SPA fallback - todas las rutas van a index.html
         historyApiFallback: true,
+        // HMR configuration to reduce WebSocket errors
+        hmr: {
+          overlay: false, // Disable error overlay
+        },
       },
       // Configuración de preview server
       preview: {

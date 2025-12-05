@@ -252,3 +252,4 @@ const Step6Generation: React.FC<Step6GenerationProps> = ({
 };
 
 export default Step6Generation;
+

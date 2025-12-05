@@ -326,3 +326,4 @@ export const COMPONENT_CATEGORIES = {
     navigation: ['header', 'footer'],
     other: ['map', 'chatbot'],
 };
+

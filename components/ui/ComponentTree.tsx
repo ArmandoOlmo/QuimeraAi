@@ -6,7 +6,7 @@ import {
     Briefcase, Mail, Send, MessageCircle, PlaySquare, 
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronRight, ChevronDown, Eye, EyeOff,
-    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette
+    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns
 } from 'lucide-react';
 
 interface ComponentTreeProps {
@@ -24,6 +24,7 @@ interface ComponentTreeProps {
 
 const sectionIcons: Record<PageSection, React.ElementType> = {
     hero: Image,
+    heroSplit: Columns,
     features: List,
     testimonials: Star,
     services: Layout,
@@ -71,6 +72,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const sectionLabels: Record<PageSection, string> = {
         hero: t('editor.heroSection'),
+        heroSplit: t('editor.heroSplitSection'),
         features: t('editor.featuresSection'),
         testimonials: t('editor.testimonialsSection'),
         services: t('editor.servicesSection'),

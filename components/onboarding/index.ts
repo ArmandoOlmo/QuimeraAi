@@ -20,3 +20,4 @@ export { default as ImageGenerationProgress } from './components/ImageGeneration
 
 // Hook
 export { useOnboarding } from './hooks/useOnboarding';
+

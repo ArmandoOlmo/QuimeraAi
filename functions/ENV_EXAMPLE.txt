@@ -25,3 +25,4 @@ GEMINI_API_KEY=your-gemini-api-key-here
 # - The .env file is ignored by git (see .gitignore)
 # - Use different keys for development and production
 # ===========================================
+

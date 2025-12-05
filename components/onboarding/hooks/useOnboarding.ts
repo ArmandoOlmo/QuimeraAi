@@ -41,6 +41,35 @@ const cleanJsonResponse = (text: string): string => {
     return cleaned;
 };
 
+// Geocode address using Nominatim (OpenStreetMap - free, no API key needed)
+const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    if (!address || address.trim() === '') return null;
+    
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+            {
+                headers: {
+                    'User-Agent': 'QuimeraAI/1.0'
+                }
+            }
+        );
+        const results = await response.json();
+        
+        if (results && results.length > 0) {
+            const { lat, lon } = results[0];
+            if (isDev) console.log('📍 Geocoded address:', address, '→', lat, lon);
+            return { lat: parseFloat(lat), lng: parseFloat(lon) };
+        }
+        
+        if (isDev) console.warn('📍 Could not geocode address:', address);
+        return null;
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null;
+    }
+};
+
 // Safe JSON parse with fallback
 const safeJsonParse = (text: string, fallback: any = {}): any => {
     if (!text || text.trim() === '') return fallback;
@@ -56,7 +85,8 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     // Second attempt: more aggressive cleaning
     try {
         let cleaned = text
-            .replace(/```[\s\S]*?```/g, '') // Remove all code blocks
+            .replace(/```json\s*/gi, '') // Remove json code block start
+            .replace(/```\s*/g, '') // Remove code block end markers
             .replace(/[\x00-\x1F\x7F]/g, ' ') // Remove ALL control chars
             .replace(/\n/g, ' ') // Replace newlines with spaces
             .replace(/\r/g, ' ') // Replace carriage returns
@@ -363,11 +393,28 @@ export const useOnboarding = () => {
                 user?.uid
             );
             const text = extractTextFromResponse(response);
-            const parsed = safeJsonParse(text, { description: '', tagline: '' });
+            const parsed = safeJsonParse(text, null);
+            
+            // If parsing succeeded and we have a description object
+            if (parsed && typeof parsed === 'object' && parsed.description) {
+                return {
+                    description: parsed.description,
+                    tagline: parsed.tagline || '',
+                };
+            }
+            
+            // Fallback: try to extract just the text content (remove JSON formatting)
+            let cleanText = text
+                .replace(/```json\s*/gi, '')
+                .replace(/```\s*/g, '')
+                .replace(/^\s*\{\s*"description"\s*:\s*"/i, '')
+                .replace(/"\s*,?\s*"tagline"\s*:\s*"[^"]*"\s*\}\s*$/i, '')
+                .replace(/"\s*\}\s*$/i, '')
+                .trim();
             
             return {
-                description: parsed.description || text.trim(), // Fallback to raw text if parsing fails
-                tagline: parsed.tagline || '',
+                description: cleanText || text.trim(),
+                tagline: '',
             };
         } catch (err) {
             console.error('Failed to generate description:', err);
@@ -571,10 +618,11 @@ TEMPLATE #${t.index}: "${t.name}"
 
         try {
             const response = await generateContentViaProxy(
-                user?.uid || 'onboarding-gen',
-                'onboarding-gen',
-                prompt,
-                { temperature: 0.7, maxTokens: 600 } // Higher temp for variety
+                'onboarding-template-rec',  // projectId (must start with 'onboarding-')
+                prompt,                      // prompt text
+                promptConfig.model,          // model from prompt config
+                { temperature: 0.7, maxOutputTokens: 600 },
+                user?.uid                    // userId (optional)
             );
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
@@ -668,14 +716,18 @@ TEMPLATE #${t.index}: "${t.name}"
     };
 
     // Generate image prompts for ALL enabled components with consistent style
+    // aiContent contains AI-generated data (menu items, team members, portfolio projects, etc.)
     const generateImagePrompts = useCallback((
         templateData: any, 
         businessName: string, 
         industry: string, 
-        enabledComponents: string[]
+        enabledComponents: string[],
+        aiContent: Record<string, any> = {},
+        businessDescription: string = ''
     ): Record<string, { prompt: string; aspectRatio: string; style: string }> => {
         const prompts: Record<string, { prompt: string; aspectRatio: string; style: string }> = {};
         const ind = industry?.replace(/-/g, ' ') || 'business';
+        const businessContext = businessDescription ? `, ${businessDescription.substring(0, 100)}` : '';
         
         // Consistent style for ALL images in this project
         const visualStyle = getIndustryStyle(industry);
@@ -688,7 +740,7 @@ TEMPLATE #${t.index}: "${t.name}"
         // HERO - main image (16:9 wide)
         if (templateData.hero && isEnabled('hero')) {
             prompts['hero.imageUrl'] = {
-                prompt: `${ind} business hero scene, ${consistency}, professional photography, ${noText}`,
+                prompt: `${ind} business hero scene${businessContext}, ${consistency}, professional photography, ${noText}`,
                 aspectRatio: IMAGE_CONFIG['hero'].aspectRatio,
                 style: 'Photorealistic'
             };
@@ -721,12 +773,16 @@ TEMPLATE #${t.index}: "${t.name}"
             };
         }
         
-        // FEATURES items (1:1 square)
+        // FEATURES items (1:1 square) - Use AI-generated feature titles for context
         if (templateData.features?.items && isEnabled('features')) {
-            const count = Math.min(templateData.features.items.length, 6);
+            const featuresItems = aiContent.features || [];
+            const count = Math.min(featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length, 6);
             for (let i = 0; i < count; i++) {
+                const featureItem = featuresItems[i];
+                const featureTitle = featureItem?.title || `concept ${i + 1}`;
+                const featureDesc = featureItem?.description ? `, ${featureItem.description}` : '';
                 prompts[`features.items[${i}].imageUrl`] = {
-                    prompt: `${ind} concept illustration ${i + 1}, ${consistency}, clean minimal, ${noText}`,
+                    prompt: `${ind} ${featureTitle}${featureDesc}, ${consistency}, clean minimal illustration, ${noText}`,
                     aspectRatio: IMAGE_CONFIG['features'].aspectRatio,
                     style: 'Photorealistic'
                 };
@@ -831,47 +887,66 @@ TEMPLATE #${t.index}: "${t.name}"
                 return teamDescriptions[memberIndex % teamDescriptions.length];
             };
             
-            const count = Math.min(templateData.team.items.length, 6);
+            // Use AI-generated team members if available
+            const teamMembers = aiContent.team || [];
+            const count = Math.min(teamMembers.length > 0 ? teamMembers.length : templateData.team.items.length, 6);
             for (let i = 0; i < count; i++) {
-                const teamDescription = getTeamPrompt(industry, i);
+                const teamMember = teamMembers[i];
+                // Use AI-generated role if available, otherwise fallback to industry-specific description
+                const memberRole = teamMember?.role ? `${teamMember.role} at ${ind} business` : getTeamPrompt(industry, i);
                 prompts[`team.items[${i}].imageUrl`] = {
-                    prompt: `Professional headshot portrait: ${teamDescription}, ${consistency}, neutral studio background, natural lighting, ${noText}`,
+                    prompt: `Professional headshot portrait: ${memberRole}, ${consistency}, neutral studio background, natural lighting, ${noText}`,
                     aspectRatio: IMAGE_CONFIG['team'].aspectRatio,
                     style: 'Photorealistic'
                 };
             }
         }
         
-        // PORTFOLIO items (4:3 landscape)
+        // PORTFOLIO items (4:3 landscape) - Use AI-generated portfolio titles and descriptions
         if (templateData.portfolio?.items && isEnabled('portfolio')) {
-            const count = Math.min(templateData.portfolio.items.length, 6);
+            const portfolioItems = aiContent.portfolio || [];
+            const count = Math.min(portfolioItems.length > 0 ? portfolioItems.length : templateData.portfolio.items.length, 6);
             for (let i = 0; i < count; i++) {
+                const portfolioItem = portfolioItems[i];
+                const projectTitle = portfolioItem?.title || `project ${i + 1}`;
+                const projectDesc = portfolioItem?.description ? `, ${portfolioItem.description}` : '';
+                const projectCategory = portfolioItem?.category ? `, ${portfolioItem.category}` : '';
                 prompts[`portfolio.items[${i}].imageUrl`] = {
-                    prompt: `${ind} project showcase ${i + 1}, ${consistency}, professional work, ${noText}`,
+                    prompt: `${ind} ${projectTitle}${projectDesc}${projectCategory}, ${consistency}, professional work showcase, ${noText}`,
                     aspectRatio: IMAGE_CONFIG['portfolio'].aspectRatio,
                     style: 'Photorealistic'
                 };
             }
         }
         
-        // MENU items (1:1 food photos)
+        // MENU items (1:1 food photos) - Use AI-generated menu item names and descriptions
         if (templateData.menu?.items && isEnabled('menu')) {
-            const count = Math.min(templateData.menu.items.length, 8);
+            const menuItems = aiContent.menu || [];
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6);
             for (let i = 0; i < count; i++) {
+                const menuItem = menuItems[i];
+                const dishName = menuItem?.name || 'delicious dish';
+                const dishDesc = menuItem?.description ? `, ${menuItem.description}` : '';
+                const dishCategory = menuItem?.category ? `, ${menuItem.category} cuisine` : '';
                 prompts[`menu.items[${i}].imageUrl`] = {
-                    prompt: `Delicious dish, ${consistency}, professional food photography, appetizing, ${noText}`,
+                    prompt: `${dishName}${dishDesc}${dishCategory}, ${ind} restaurant style, ${consistency}, professional food photography, appetizing, ${noText}`,
                     aspectRatio: IMAGE_CONFIG['menu'].aspectRatio,
                     style: 'Photorealistic'
                 };
             }
         }
         
-        // SLIDESHOW slides (16:9 wide)
-        if (templateData.slideshow?.slides && isEnabled('slideshow')) {
-            const count = Math.min(templateData.slideshow.slides.length, 5);
+        // SLIDESHOW/GALLERY items (16:9 wide) - Use AI-generated slide titles for context
+        if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
+            const slideshowItems = aiContent.slideshow || [];
+            const templateItems = templateData.slideshow.items || templateData.slideshow.slides || [];
+            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 5);
             for (let i = 0; i < count; i++) {
-                prompts[`slideshow.slides[${i}].imageUrl`] = {
-                    prompt: `${ind} showcase scene ${i + 1}, ${consistency}, professional quality, ${noText}`,
+                const slideItem = slideshowItems[i];
+                const slideTitle = slideItem?.title || `showcase scene ${i + 1}`;
+                const slideSubtitle = slideItem?.subtitle ? `, ${slideItem.subtitle}` : '';
+                prompts[`slideshow.items[${i}].imageUrl`] = {
+                    prompt: `${ind} ${slideTitle}${slideSubtitle}, ${consistency}, professional quality, ${noText}`,
                     aspectRatio: IMAGE_CONFIG['slideshow'].aspectRatio,
                     style: 'Photorealistic'
                 };
@@ -894,7 +969,197 @@ TEMPLATE #${t.index}: "${t.name}"
         return prompts;
     }, []);
 
-    const generateWebsiteContent = useCallback(async (): Promise<{
+    // NEW: Generate image prompts using LLM for better context understanding
+    const generateImagePromptsWithLLM = useCallback(async (
+        templateData: any,
+        businessName: string,
+        industry: string,
+        description: string,
+        enabledComponents: string[],
+        aiContent: Record<string, any>,
+        language: string
+    ): Promise<Record<string, { prompt: string; aspectRatio: string; style: string }>> => {
+        
+        // Helper to check if component is enabled
+        const isEnabled = (comp: string) => enabledComponents.includes(comp);
+        
+        // Build the list of images needed with their aspect ratios
+        const imagesToGenerate: { key: string; aspectRatio: string; description: string }[] = [];
+        
+        // HERO
+        if (templateData.hero && isEnabled('hero')) {
+            imagesToGenerate.push({ key: 'hero.imageUrl', aspectRatio: '16:9', description: 'Main hero banner image' });
+        }
+        
+        // HERO SPLIT
+        if (templateData.heroSplit && isEnabled('heroSplit')) {
+            imagesToGenerate.push({ key: 'heroSplit.imageUrl', aspectRatio: '3:4', description: 'Vertical split hero image' });
+        }
+        
+        // BANNER
+        if (templateData.banner && isEnabled('banner')) {
+            imagesToGenerate.push({ key: 'banner.backgroundImageUrl', aspectRatio: '21:9', description: 'Wide panoramic banner' });
+        }
+        
+        // CTA
+        if (templateData.cta?.backgroundImage !== undefined && isEnabled('cta')) {
+            imagesToGenerate.push({ key: 'cta.backgroundImage', aspectRatio: '16:9', description: 'Call to action background' });
+        }
+        
+        // FEATURES
+        if (templateData.features?.items && isEnabled('features')) {
+            const featuresItems = aiContent.features || [];
+            const count = Math.min(featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length, 6);
+            for (let i = 0; i < count; i++) {
+                const feature = featuresItems[i];
+                imagesToGenerate.push({ 
+                    key: `features.items[${i}].imageUrl`, 
+                    aspectRatio: '1:1', 
+                    description: `Feature: ${feature?.title || `Feature ${i + 1}`}` 
+                });
+            }
+        }
+        
+        // TEAM
+        if (templateData.team?.items && isEnabled('team')) {
+            const teamMembers = aiContent.team || [];
+            const count = Math.min(teamMembers.length > 0 ? teamMembers.length : templateData.team.items.length, 6);
+            for (let i = 0; i < count; i++) {
+                const member = teamMembers[i];
+                imagesToGenerate.push({ 
+                    key: `team.items[${i}].imageUrl`, 
+                    aspectRatio: '1:1', 
+                    description: `Team member: ${member?.name || 'Team Member'} - ${member?.role || 'Staff'}` 
+                });
+            }
+        }
+        
+        // PORTFOLIO
+        if (templateData.portfolio?.items && isEnabled('portfolio')) {
+            const portfolioItems = aiContent.portfolio || [];
+            const count = Math.min(portfolioItems.length > 0 ? portfolioItems.length : templateData.portfolio.items.length, 6);
+            for (let i = 0; i < count; i++) {
+                const project = portfolioItems[i];
+                imagesToGenerate.push({ 
+                    key: `portfolio.items[${i}].imageUrl`, 
+                    aspectRatio: '4:3', 
+                    description: `Portfolio: ${project?.title || `Project ${i + 1}`} - ${project?.description || ''}` 
+                });
+            }
+        }
+        
+        // MENU
+        if (templateData.menu?.items && isEnabled('menu')) {
+            const menuItems = aiContent.menu || [];
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6);
+            for (let i = 0; i < count; i++) {
+                const dish = menuItems[i];
+                imagesToGenerate.push({ 
+                    key: `menu.items[${i}].imageUrl`, 
+                    aspectRatio: '1:1', 
+                    description: `Menu dish: ${dish?.name || 'Dish'} - ${dish?.description || ''}` 
+                });
+            }
+        }
+        
+        // SLIDESHOW/GALLERY
+        if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
+            const slideshowItems = aiContent.slideshow || [];
+            const templateItems = templateData.slideshow.items || templateData.slideshow.slides || [];
+            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 5);
+            for (let i = 0; i < count; i++) {
+                const slide = slideshowItems[i];
+                imagesToGenerate.push({ 
+                    key: `slideshow.items[${i}].imageUrl`, 
+                    aspectRatio: '16:9', 
+                    description: `Gallery/Slideshow: ${slide?.title || `Image ${i + 1}`} - ${slide?.subtitle || ''}` 
+                });
+            }
+        }
+        
+        if (imagesToGenerate.length === 0) {
+            // Fallback to at least hero
+            imagesToGenerate.push({ key: 'hero.imageUrl', aspectRatio: '16:9', description: 'Main hero banner image' });
+        }
+        
+        // Get the LLM prompt
+        const promptConfig = getPrompt('onboarding-generate-image-prompts');
+        if (!promptConfig) {
+            console.warn('⚠️ LLM image prompt not found, falling back to static generation');
+            return generateImagePrompts(templateData, businessName, industry, enabledComponents, aiContent, description);
+        }
+        
+        // Format generated content for the prompt
+        const generatedContentStr = JSON.stringify(aiContent, null, 2);
+        
+        // Format images needed for the prompt
+        const imagesNeededStr = imagesToGenerate.map(img => 
+            `- ${img.key} (${img.aspectRatio}): ${img.description}`
+        ).join('\n');
+        
+        // Build the prompt
+        const prompt = promptConfig.template
+            .replace('{{businessName}}', businessName)
+            .replace(/\{\{industry\}\}/g, industry?.replace(/-/g, ' ') || 'business')
+            .replace('{{description}}', description || 'A professional business')
+            .replace('{{language}}', language === 'es' ? 'Spanish' : 'English')
+            .replace('{{generatedContent}}', generatedContentStr)
+            .replace('{{imagesToGenerate}}', imagesNeededStr);
+        
+        try {
+            if (isDev) console.log('🎨 Generating image prompts with LLM...');
+            if (isDev) console.log('   Images needed:', imagesToGenerate.length);
+            
+            const response = await generateContentViaProxy(
+                'onboarding-image-prompts',  // projectId (must start with 'onboarding-')
+                prompt,                       // prompt text
+                promptConfig.model,           // model from prompt config
+                { temperature: 0.7, maxOutputTokens: 4000 },
+                user?.uid                     // userId (optional)
+            );
+            
+            const text = extractTextFromResponse(response);
+            const llmPrompts = safeJsonParse(text, null);
+            
+            if (!llmPrompts || typeof llmPrompts !== 'object') {
+                console.warn('⚠️ LLM returned invalid response, falling back to static generation');
+                return generateImagePrompts(templateData, businessName, industry, enabledComponents, aiContent, description);
+            }
+            
+            // Convert LLM response to our format with aspect ratios
+            const result: Record<string, { prompt: string; aspectRatio: string; style: string }> = {};
+            
+            for (const img of imagesToGenerate) {
+                const llmPrompt = llmPrompts[img.key];
+                if (llmPrompt && typeof llmPrompt === 'string') {
+                    result[img.key] = {
+                        prompt: llmPrompt,
+                        aspectRatio: img.aspectRatio,
+                        style: 'Photorealistic'
+                    };
+                } else {
+                    // Fallback for missing prompts
+                    result[img.key] = {
+                        prompt: `${industry?.replace(/-/g, ' ')} ${img.description}, professional photography, high quality, no text, no watermarks`,
+                        aspectRatio: img.aspectRatio,
+                        style: 'Photorealistic'
+                    };
+                }
+            }
+            
+            if (isDev) console.log('✅ LLM generated', Object.keys(result).length, 'image prompts');
+            return result;
+            
+        } catch (error) {
+            console.error('❌ LLM image prompt generation failed:', error);
+            console.warn('⚠️ Falling back to static generation');
+            return generateImagePrompts(templateData, businessName, industry, enabledComponents, aiContent, description);
+        }
+    }, [user, getPrompt, generateImagePrompts]);
+
+    const generateWebsiteContent = useCallback(async (
+        aiContent: Record<string, any> = {}
+    ): Promise<{
         content: Record<string, any>;
         imagePrompts: Record<string, { prompt: string; aspectRatio: string; style: string }>;
     }> => {
@@ -915,12 +1180,16 @@ TEMPLATE #${t.index}: "${t.name}"
         
         if (isDev) console.log('📋 Enabled components for generation:', enabledComponents);
 
-        // Generate image prompts only for enabled components
-        const imagePrompts = generateImagePrompts(
+        // Generate image prompts using LLM for better context understanding
+        // The LLM understands the full business context and generates specific, relevant prompts
+        const imagePrompts = await generateImagePromptsWithLLM(
             selectedTemplate.data,
             progress.businessName,
             progress.industry,
-            enabledComponents
+            progress.description || '',
+            enabledComponents,
+            aiContent,
+            progress.language
         );
         
         if (isDev) console.log('📸 Image prompts to generate:', Object.keys(imagePrompts).length);
@@ -929,7 +1198,7 @@ TEMPLATE #${t.index}: "${t.name}"
             content: {},
             imagePrompts,
         };
-    }, [progress, templates, generateImagePrompts]);
+    }, [progress, templates, generateImagePromptsWithLLM]);
 
     // Generate content for components that need AI-generated data
     const generateComponentContent = useCallback(async (
@@ -944,7 +1213,7 @@ TEMPLATE #${t.index}: "${t.name}"
         const ind = industry?.replace(/-/g, ' ') || 'business';
         
         // Only generate for enabled components that need content
-        const needsGeneration = ['testimonials', 'team', 'portfolio', 'pricing', 'howItWorks', 'menu'];
+        const needsGeneration = ['testimonials', 'team', 'portfolio', 'pricing', 'howItWorks', 'menu', 'faq', 'slideshow', 'features'];
         const toGenerate = needsGeneration.filter(c => enabledComponents.includes(c));
         
         if (toGenerate.length === 0) {
@@ -970,10 +1239,11 @@ TEMPLATE #${t.index}: "${t.name}"
 
         try {
             const response = await generateContentViaProxy(
-                user?.uid || 'onboarding-gen',
-                'onboarding-gen',
-                prompt,
-                { temperature: 0.7, maxTokens: 2000 }
+                'onboarding-content-gen',    // projectId (must start with 'onboarding-')
+                prompt,                       // prompt text
+                promptConfig.model,           // model from prompt config
+                { temperature: 0.7, maxOutputTokens: 2000 },
+                user?.uid                     // userId (optional)
             );
             
             const text = extractTextFromResponse(response);
@@ -1052,12 +1322,22 @@ TEMPLATE #${t.index}: "${t.name}"
             }));
         }
         
-        // ============ FEATURES (default: classic) ============
+        // ============ FEATURES (default: classic) - AI Generated ============
         if (data.features && isOn('features')) {
             data.features.featuresVariant = 'classic'; // Default style: Classic
             data.features.title = t('Características', 'Features');
             data.features.description = t('Por qué elegirnos', 'Why choose us');
-            if (data.features.items && services.length > 0) {
+            // Prefer AI-generated features, fallback to services from onboarding
+            if (aiContent.features && aiContent.features.length > 0) {
+                const maxItems = Math.min(aiContent.features.length, data.features.items?.length || 6);
+                data.features.items = aiContent.features.slice(0, maxItems).map((item: any, i: number) => ({
+                    ...data.features.items?.[i],
+                    title: item.title || '',
+                    description: item.description || '',
+                    imageUrl: generatedImages[`features.items[${i}].imageUrl`] || data.features.items?.[i]?.imageUrl || '',
+                }));
+            } else if (data.features.items && services.length > 0) {
+                // Fallback to services from onboarding Step 3
                 const max = Math.min(services.length, data.features.items.length);
                 data.features.items = services.slice(0, max).map((svc, i) => ({
                     title: svc.name,
@@ -1166,10 +1446,20 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // ============ FAQ (default: classic) ============
+        // ============ FAQ (default: classic) - AI Generated ============
         if (data.faq && isOn('faq')) {
             data.faq.faqVariant = 'classic'; // Default style: Classic
-            // Keep template FAQ content as-is, user can edit later
+            data.faq.title = t('Preguntas Frecuentes', 'FAQ');
+            data.faq.description = t('Respuestas a tus dudas', 'Answers to your questions');
+            // Apply AI-generated FAQ items
+            if (aiContent.faq && aiContent.faq.length > 0) {
+                const maxItems = Math.min(aiContent.faq.length, data.faq.items?.length || 6);
+                data.faq.items = aiContent.faq.slice(0, maxItems).map((item: any, i: number) => ({
+                    ...data.faq.items?.[i],
+                    question: item.question || '',
+                    answer: item.answer || '',
+                }));
+            }
         }
         
         // ============ CTA ============
@@ -1213,9 +1503,9 @@ TEMPLATE #${t.index}: "${t.name}"
             data.menu.menuVariant = 'classic'; // Default style: Classic
             data.menu.title = t('Menú', 'Menu');
             data.menu.description = t('Nuestros platos', 'Our dishes');
-            // Apply AI-generated menu items with generated images
+            // Apply AI-generated menu items with generated images (6 dishes)
             if (aiContent.menu && aiContent.menu.length > 0) {
-                const maxItems = Math.min(aiContent.menu.length, data.menu.items?.length || 8);
+                const maxItems = Math.min(aiContent.menu.length, data.menu.items?.length || 6, 6);
                 data.menu.items = aiContent.menu.slice(0, maxItems).map((item: any, i: number) => ({
                     ...data.menu.items?.[i],
                     name: item.name || '',
@@ -1233,13 +1523,34 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // ============ SLIDESHOW ============
-        if (data.slideshow && data.slideshow.slides) {
-            data.slideshow.slides.forEach((slide: any, idx: number) => {
-                if (generatedImages[`slideshow.slides[${idx}].imageUrl`]) {
-                    slide.imageUrl = generatedImages[`slideshow.slides[${idx}].imageUrl`];
-                }
-            });
+        // ============ SLIDESHOW/GALLERY - AI Generated ============
+        if (data.slideshow && isOn('slideshow')) {
+            // Use items (correct property name) or slides as fallback
+            const existingItems = data.slideshow.items || data.slideshow.slides || [];
+            
+            // Apply AI-generated slideshow content with images
+            if (aiContent.slideshow && aiContent.slideshow.length > 0) {
+                const maxSlides = Math.min(aiContent.slideshow.length, existingItems.length || 5, 5);
+                data.slideshow.items = aiContent.slideshow.slice(0, maxSlides).map((slide: any, idx: number) => ({
+                    ...existingItems[idx],
+                    title: slide.title || '',
+                    subtitle: slide.subtitle || '',
+                    altText: slide.title || `Gallery image ${idx + 1}`,
+                    caption: slide.subtitle || '',
+                    ctaText: slide.ctaText || t('Ver Más', 'Learn More'),
+                    imageUrl: generatedImages[`slideshow.items[${idx}].imageUrl`] || existingItems[idx]?.imageUrl || '',
+                }));
+            } else if (existingItems.length > 0) {
+                // Just apply images if no AI content
+                data.slideshow.items = existingItems.map((item: any, idx: number) => ({
+                    ...item,
+                    imageUrl: generatedImages[`slideshow.items[${idx}].imageUrl`] || item.imageUrl || '',
+                }));
+            }
+            // Remove slides if it exists (use items instead)
+            if (data.slideshow.slides) {
+                delete data.slideshow.slides;
+            }
         }
         
         // ============ FOOTER (keep template colors) ============
@@ -1312,11 +1623,34 @@ TEMPLATE #${t.index}: "${t.name}"
         updateProgress({ generationProgress });
 
         try {
-            // Phase 1: Generate prompts
+            // Get enabled components
+            const enabledComponents = progress.enabledComponents || 
+                Object.keys(selectedTemplate.sectionVisibility || {}).filter(
+                    k => selectedTemplate.sectionVisibility?.[k as keyof typeof selectedTemplate.sectionVisibility]
+                );
+
+            // Phase 1: Generate AI content FIRST (menu items, team members, portfolio projects, etc.)
+            // This content will be used to create contextual image prompts
+            if (isDev) console.log('📝 Phase 1: Generating AI content for components...');
+            generationProgress.contentProgress = 25;
+            updateProgress({ generationProgress: { ...generationProgress } });
+
+            const aiContent = await generateComponentContent(
+                enabledComponents,
+                progress.businessName,
+                progress.industry,
+                progress.description || '',
+                progress.language
+            );
+            if (isDev) console.log('📝 AI content generated for:', Object.keys(aiContent));
+
             generationProgress.contentProgress = 50;
             updateProgress({ generationProgress: { ...generationProgress } });
 
-            const { imagePrompts } = await generateWebsiteContent();
+            // Phase 2: Generate image prompts using AI content for context
+            // Now prompts will include specific dish names, project titles, team roles, etc.
+            if (isDev) console.log('🖼️ Phase 2: Generating contextual image prompts...');
+            const { imagePrompts } = await generateWebsiteContent(aiContent);
             
             if (isDev) console.log('🖼️ Image prompts:', Object.keys(imagePrompts).length);
             
@@ -1433,29 +1767,26 @@ TEMPLATE #${t.index}: "${t.name}"
                 console.log(`   ${key}: ${url.substring(0, 60)}...`);
             });
 
-            // Phase 3: Generate AI content for components
+            // Phase 3: Finalize - Apply all data to template
+            // AI content was already generated in Phase 1 and used for contextual image prompts
             generationProgress.phase = 'finalizing';
             updateProgress({ generationProgress: { ...generationProgress } });
 
-            // Get enabled components
-            const enabledComponents = progress.enabledComponents || 
-                Object.keys(selectedTemplate.sectionVisibility || {}).filter(
-                    k => selectedTemplate.sectionVisibility?.[k as keyof typeof selectedTemplate.sectionVisibility]
-                );
-
-            // Generate AI content for components that need it
-            console.log('📝 Generating AI content for components...');
-            const aiContent = await generateComponentContent(
-                enabledComponents,
-                progress.businessName,
-                progress.industry,
-                progress.description || '',
-                progress.language
-            );
-            console.log('📝 AI content generated for:', Object.keys(aiContent));
+            if (isDev) console.log('📝 Phase 3: Finalizing with AI content:', Object.keys(aiContent));
 
             // Apply all business data + AI content + images to template
             const mergedData = applyBusinessDataToTemplate(selectedTemplate.data, progress, generatedImages, aiContent);
+            
+            // Geocode the map address if map is enabled and has an address
+            if (mergedData.map && mergedData.map.address) {
+                if (isDev) console.log('📍 Geocoding map address:', mergedData.map.address);
+                const coords = await geocodeAddress(mergedData.map.address);
+                if (coords) {
+                    mergedData.map.lat = coords.lat;
+                    mergedData.map.lng = coords.lng;
+                    if (isDev) console.log('📍 Map coordinates set:', coords.lat, coords.lng);
+                }
+            }
             
             console.log('✅ All data applied. Images:', Object.keys(generatedImages).length, 'AI sections:', Object.keys(aiContent).length);
 
@@ -1509,7 +1840,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
             // Clear onboarding progress and load the new project
             await clearProgress();
-            await loadProject(newProject.id, false, false);
+            await loadProject(newProject.id, false, true);  // navigateToEditor = true to open the project
             setIsOnboardingOpen(false);
             
             // Unlock generation

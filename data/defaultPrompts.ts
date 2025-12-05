@@ -513,7 +513,7 @@ Generate the services:`,
   {
     name: 'onboarding-generate-component-content',
     area: 'Onboarding',
-    description: 'Generates AI content for website components (testimonials, team, portfolio, pricing, etc.) during final generation.',
+    description: 'Generates AI content for website components (testimonials, team, portfolio, pricing, faq, slideshow, features, etc.) during final generation.',
     template: `Generate realistic content for a {{industry}} business called "{{businessName}}".
 Business description: {{description}}
 Language: {{language}}
@@ -548,14 +548,87 @@ Return JSON with this exact structure (only include sections that were requested
     { "title": "Step 3", "description": "Brief description" }
   ],
   "menu": [
-    { "name": "Item 1", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 2", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 3", "description": "Description", "price": "$X.XX", "category": "Category" },
-    { "name": "Item 4", "description": "Description", "price": "$X.XX", "category": "Category" }
+    { "name": "Dish 1", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
+    { "name": "Dish 2", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
+    { "name": "Dish 3", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
+    { "name": "Dish 4", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
+    { "name": "Dish 5", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
+    { "name": "Dish 6", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" }
+  ],
+  "faq": [
+    { "question": "Common question 1?", "answer": "Brief helpful answer" },
+    { "question": "Common question 2?", "answer": "Brief helpful answer" },
+    { "question": "Common question 3?", "answer": "Brief helpful answer" },
+    { "question": "Common question 4?", "answer": "Brief helpful answer" }
+  ],
+  "slideshow": [
+    { "title": "Slide 1 headline", "subtitle": "Brief description", "ctaText": "Call to action" },
+    { "title": "Slide 2 headline", "subtitle": "Brief description", "ctaText": "Call to action" },
+    { "title": "Slide 3 headline", "subtitle": "Brief description", "ctaText": "Call to action" }
+  ],
+  "features": [
+    { "title": "Feature 1", "description": "Brief benefit description" },
+    { "title": "Feature 2", "description": "Brief benefit description" },
+    { "title": "Feature 3", "description": "Brief benefit description" },
+    { "title": "Feature 4", "description": "Brief benefit description" }
   ]
 }
 
 Keep all text SHORT and CONCISE. Return ONLY valid JSON.`,
+    model: 'gemini-2.5-flash',
+    version: 3,
+  },
+
+  // Onboarding - Generate Image Prompts (Step 6) - LLM generates ALL image prompts at once
+  {
+    name: 'onboarding-generate-image-prompts',
+    area: 'Onboarding',
+    description: 'Generates contextual image prompts for all website images based on business context, ensuring visual consistency and relevance.',
+    template: `You are an expert AI image prompt engineer. Generate detailed, contextual prompts for ALL images needed for this website.
+
+**BUSINESS CONTEXT:**
+- Name: "{{businessName}}"
+- Industry: {{industry}}
+- Description: {{description}}
+- Language: {{language}}
+
+**GENERATED CONTENT (use this for specific details):**
+{{generatedContent}}
+
+**IMAGES NEEDED:**
+{{imagesToGenerate}}
+
+**PROMPT REQUIREMENTS:**
+1. Each prompt must be SPECIFIC to the business and its content
+2. For MENU items: Include the exact dish name, ingredients, and presentation style
+3. For TEAM members: Include their role and professional appearance appropriate for {{industry}}
+4. For PORTFOLIO: Include the project title and what it showcases
+5. For SLIDESHOW: Include the slide theme and what it should convey
+6. For HERO/BANNER: Capture the essence of the business atmosphere
+7. All prompts must maintain VISUAL CONSISTENCY (same style, lighting, color palette)
+8. Include: "professional photography, high quality, no text, no watermarks"
+9. Adapt style to {{industry}}: casual/formal, warm/cool colors, modern/traditional
+
+**STYLE GUIDELINES for {{industry}}:**
+- Restaurant/Cafe: Warm lighting, appetizing, cozy atmosphere, food photography style
+- Technology: Modern, clean, futuristic, blue/purple tones
+- Healthcare: Clean, trustworthy, calming, white/blue tones
+- Beauty/Spa: Elegant, relaxing, soft lighting, pastel tones
+- Fitness: Energetic, dynamic, motivational, vibrant colors
+- Legal/Finance: Professional, authoritative, formal, neutral tones
+- Real Estate: Aspirational, spacious, well-lit, inviting
+- Photography: Artistic, creative, dramatic lighting
+
+**OUTPUT FORMAT:**
+Return ONLY valid JSON with this structure:
+{
+  "hero.imageUrl": "detailed prompt for hero image...",
+  "menu.items[0].imageUrl": "detailed prompt for first menu item...",
+  "team.items[0].imageUrl": "detailed prompt for first team member...",
+  ...
+}
+
+Generate prompts ONLY for the images listed in "IMAGES NEEDED". Be specific and descriptive.`,
     model: 'gemini-2.5-flash',
     version: 1,
   },
