@@ -14,7 +14,7 @@ interface Step2DescriptionProps {
     businessName: string;
     industry: string;
     onUpdate: (description: string, tagline?: string) => void;
-    onGenerateAI: () => Promise<string>;
+    onGenerateAI: () => Promise<{ description: string; tagline: string }>;
 }
 
 const Step2Description: React.FC<Step2DescriptionProps> = ({
@@ -33,8 +33,8 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
         setIsGenerating(true);
         setError(null);
         try {
-            const generatedDescription = await onGenerateAI();
-            onUpdate(generatedDescription, tagline);
+            const { description: generatedDescription, tagline: generatedTagline } = await onGenerateAI();
+            onUpdate(generatedDescription, generatedTagline || tagline);
         } catch (err: any) {
             console.error('Failed to generate description:', err);
             setError(t('onboarding.errorGeneratingDescription', 'Failed to generate description. Please try again.'));

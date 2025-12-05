@@ -338,7 +338,7 @@ export const useOnboarding = () => {
     // AI ASSISTANCE
     // =============================================================================
 
-    const generateDescription = useCallback(async (): Promise<string> => {
+    const generateDescription = useCallback(async (): Promise<{ description: string; tagline: string }> => {
         if (!progress?.businessName || !progress?.industry) {
             throw new Error('Business name and industry are required');
         }
@@ -363,7 +363,12 @@ export const useOnboarding = () => {
                 user?.uid
             );
             const text = extractTextFromResponse(response);
-            return text.trim();
+            const parsed = safeJsonParse(text, { description: '', tagline: '' });
+            
+            return {
+                description: parsed.description || text.trim(), // Fallback to raw text if parsing fails
+                tagline: parsed.tagline || '',
+            };
         } catch (err) {
             console.error('Failed to generate description:', err);
             throw err;

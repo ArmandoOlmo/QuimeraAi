@@ -546,23 +546,32 @@ Return ONLY valid JSON. No markdown.
   {
     name: 'onboarding-generate-description',
     area: 'Onboarding',
-    description: 'Generates a compelling business description during onboarding Step 2. Used by AI assist button.',
-    template: `You are a professional copywriter. Generate a compelling business description for:
+    description: 'Generates a compelling business description AND tagline during onboarding Step 2. Used by AI assist button.',
+    template: `You are a professional copywriter. Generate a compelling business description AND a catchy tagline for:
 
 Business Name: {{businessName}}
 Industry: {{industry}}
 Language: {{language}}
 
-Requirements:
+Requirements for DESCRIPTION:
 - Write 2-3 paragraphs
 - Be professional but engaging
 - Highlight unique value propositions
 - Include a call to action
-- Output ONLY the description text, no JSON or markdown
 
-Generate the description:`,
+Requirements for TAGLINE:
+- Maximum 10 words
+- Catchy and memorable
+- Captures the essence of the business
+- Can include the business name or not
+
+Return ONLY valid JSON in this exact format:
+{
+  "description": "The full business description here...",
+  "tagline": "Short catchy tagline here"
+}`,
     model: 'gemini-2.5-flash',
-    version: 1,
+    version: 2,
   },
 
   // Onboarding - Generate Services (Step 3)
