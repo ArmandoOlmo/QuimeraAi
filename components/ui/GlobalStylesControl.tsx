@@ -174,6 +174,10 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             borderColor: colors.border,
             text: colors.text,
             heading: colors.heading,
+            description: colors.text,
+            cardBackground: colors.primary,
+            cardHeading: '#ffffff',
+            cardText: 'rgba(255, 255, 255, 0.9)',
         },
         team: {
             background: colors.background,
