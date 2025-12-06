@@ -157,8 +157,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        // Only colors, typography and footer are fixed positions - hero can be moved
-        const isFixed = ['footer', 'typography', 'colors'].includes(section);
+        // Header, colors, typography and footer are fixed positions - hero can be moved
+        const isFixed = ['header', 'footer', 'typography', 'colors'].includes(section);
 
         return (
             <div
