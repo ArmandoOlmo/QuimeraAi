@@ -243,7 +243,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
             let responseText: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
+                // High maxOutputTokens for thinking models
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.uid);
                 responseText = extractTextFromResponse(proxyResponse);
             } else {
                 responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
@@ -431,20 +432,39 @@ Return ONLY the JSON array, no other text.`;
 
             let responseText: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
+                // Pass high maxOutputTokens - gemini-2.5-flash uses tokens for "thinking" internally
+                // so we need 8192+ to leave room for both thinking AND the actual response
+                const proxyResponse = await generateContentViaProxy(
+                    proxyProjectId, 
+                    promptText, 
+                    modelToUse, 
+                    { maxOutputTokens: 8192 }, // High limit to accommodate thinking + output
+                    user?.uid
+                );
                 
                 // Debug: Log the actual response structure
                 console.log('🔍 Industry suggestion proxy response:', JSON.stringify(proxyResponse, null, 2).slice(0, 1000));
                 
-                // Check for API errors in the response
-                if (proxyResponse?.error) {
-                    throw new Error(proxyResponse.error.message || proxyResponse.error);
+                // Check for API errors in the response (cast to any for error field)
+                const proxyResponseAny = proxyResponse as any;
+                if (proxyResponseAny?.error) {
+                    throw new Error(proxyResponseAny.error.message || proxyResponseAny.error);
+                }
+                
+                // Check if response was truncated due to MAX_TOKENS
+                const finishReason = proxyResponse?.response?.candidates?.[0]?.finishReason;
+                if (finishReason === 'MAX_TOKENS') {
+                    console.warn('⚠️ Response was truncated due to MAX_TOKENS');
                 }
                 
                 responseText = extractTextFromResponse(proxyResponse);
                 
                 if (!responseText) {
                     console.error('❌ Empty response text. Full response:', proxyResponse);
+                    // More specific error message based on finishReason
+                    if (finishReason === 'MAX_TOKENS') {
+                        throw new Error('La respuesta fue truncada. Intenta de nuevo.');
+                    }
                     throw new Error('La API no devolvió una respuesta válida. Intenta con otro template.');
                 }
             } else {
@@ -691,7 +711,8 @@ Name:`;
 
             let text: string;
             if (useProxy) {
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
+                // High maxOutputTokens for thinking models
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.uid);
                 text = extractTextFromResponse(proxyResponse);
             } else {
                 text = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);

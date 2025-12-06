@@ -289,7 +289,9 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
                     temperature: config.temperature || 0.7,
                     topK: config.topK || 40,
                     topP: config.topP || 0.95,
-                    maxOutputTokens: config.maxOutputTokens || 2048,
+                    // Higher default for thinking models like gemini-2.5-flash
+                    // which use tokens for internal reasoning
+                    maxOutputTokens: config.maxOutputTokens || 8192,
                 },
                 safetySettings: config.safetySettings || [
                     { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },

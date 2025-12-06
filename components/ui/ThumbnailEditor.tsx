@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw, Grid, Globe, Search, Check } from 'lucide-react';
 import { useEditor } from '../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Project } from '../../types';
+import { searchFiles } from '../../utils/fileHelpers';
 
 interface ThumbnailEditorProps {
     project: Project;
@@ -22,20 +23,26 @@ const THUMBNAIL_STYLES = [
 
 const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onUpdate }) => {
     const { t } = useTranslation();
-    const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError, activeProject, user } = useEditor();
+    const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError, activeProject, user, files, globalFiles } = useEditor();
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl || '');
     const [dragActive, setDragActive] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
+    // Tab state - now includes 'library'
+    const [activeTab, setActiveTab] = useState<'upload' | 'generate' | 'library'>('library');
+    
     // AI Generation state
-    const [activeTab, setActiveTab] = useState<'upload' | 'generate'>('upload');
     const [thumbnailPrompt, setThumbnailPrompt] = useState('');
     const [thumbnailStyle, setThumbnailStyle] = useState('Minimalist');
     const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
     const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
     const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
+    
+    // Library state
+    const [librarySource, setLibrarySource] = useState<'user' | 'global'>('global');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Reset image loaded state when preview URL changes
     useEffect(() => {
@@ -80,6 +87,39 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
         
         return [];
     }, [project.theme?.globalColors, project.data?.hero?.colors, project.data?.header?.colors]);
+
+    // Filter and search image files for library
+    const sourceFiles = librarySource === 'user' ? files : globalFiles;
+    const imageFiles = useMemo(() => {
+        let result = sourceFiles.filter(f => f.type.startsWith('image/'));
+        
+        if (searchQuery) {
+            result = searchFiles(result, searchQuery);
+        }
+        
+        return result;
+    }, [sourceFiles, searchQuery]);
+
+    // Handle image selection from library
+    const handleSelectFromLibrary = async (imageUrl: string) => {
+        setIsUploading(true);
+        try {
+            // Fetch the image and convert to file
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: blob.type || 'image/png' });
+            
+            await updateProjectThumbnail(project.id, file);
+            setPreviewUrl(imageUrl);
+            onUpdate?.();
+            onClose();
+        } catch (error) {
+            console.error('Error applying thumbnail from library:', error);
+            alert('Failed to apply thumbnail');
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     // Analyze color palette for AI prompt generation
     const analyzeColorPalette = (colors: { name: string; color: string }[]): string => {
@@ -319,6 +359,17 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 {/* Tabs */}
                 <div className="flex border-b border-border">
                     <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                            activeTab === 'library'
+                                ? 'text-blue-500 border-b-2 border-blue-500 bg-blue-500/5'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <Grid className="w-4 h-4" />
+                        {t('editor.library', { defaultValue: 'Library' })}
+                    </button>
+                    <button
                         onClick={() => setActiveTab('upload')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                             activeTab === 'upload'
@@ -407,6 +458,106 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     <span>{item.name}</span>
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {/* Library Tab */}
+                    {activeTab === 'library' && (
+                        <div className="space-y-4">
+                            {/* Source Toggle & Search */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className="flex space-x-2 bg-secondary p-1 rounded-lg">
+                                    <button 
+                                        onClick={() => setLibrarySource('global')}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <Globe size={12} /> {t('editor.globalLibrary', { defaultValue: 'Global Library' })}
+                                    </button>
+                                    <button 
+                                        onClick={() => setLibrarySource('user')}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t('editor.myUploads', { defaultValue: 'My Uploads' })}
+                                    </button>
+                                </div>
+                                
+                                {/* Search */}
+                                <div className="relative w-full sm:w-48">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={t('common.search', { defaultValue: 'Search...' })}
+                                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-secondary border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                    />
+                                    <Search size={14} className="absolute left-2.5 top-2 text-muted-foreground" />
+                                </div>
+                            </div>
+                            
+                            {/* Images Grid */}
+                            <div className="max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                                {imageFiles.length > 0 ? (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                        {imageFiles.map(file => (
+                                            <div 
+                                                key={file.id} 
+                                                onClick={() => handleSelectFromLibrary(file.downloadURL)}
+                                                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all hover:scale-105 ${
+                                                    previewUrl === file.downloadURL 
+                                                        ? 'border-primary ring-2 ring-primary/50' 
+                                                        : 'border-transparent hover:border-primary/50'
+                                                }`}
+                                            >
+                                                <img 
+                                                    src={file.downloadURL} 
+                                                    alt={file.name} 
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                                                />
+                                                {previewUrl === file.downloadURL ? (
+                                                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                                        <div className="bg-primary text-primary-foreground rounded-full p-1.5">
+                                                            <Check size={16} />
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-white text-xs font-bold">{t('common.select', { defaultValue: 'Select' })}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : searchQuery ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                        <Search size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">{t('common.noResults', { defaultValue: 'No images found' })}</p>
+                                        <button 
+                                            onClick={() => setSearchQuery('')}
+                                            className="text-primary hover:underline text-xs mt-2"
+                                        >
+                                            {t('common.clearSearch', { defaultValue: 'Clear search' })}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                                        <ImageIcon size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">
+                                            {librarySource === 'user' 
+                                                ? t('editor.noUserImages', { defaultValue: 'No images in your library' })
+                                                : t('editor.noGlobalImages', { defaultValue: 'No global images available' })
+                                            }
+                                        </p>
+                                        {librarySource === 'user' && (
+                                            <button 
+                                                onClick={() => setActiveTab('upload')}
+                                                className="text-primary hover:underline text-xs mt-2"
+                                            >
+                                                {t('editor.uploadOne', { defaultValue: 'Upload one now' })}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 

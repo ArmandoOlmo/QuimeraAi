@@ -317,6 +317,11 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
             return '';
         }
         
+        // Handle MAX_TOKENS - response was truncated, try to extract partial text anyway
+        if (candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+            console.warn('⚠️ Response truncated due to MAX_TOKENS, attempting to extract partial text');
+        }
+        
         // Standard proxy response format: { response: { candidates: [...] }, metadata: {...} }
         if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
             const text = response.response.candidates[0].content.parts[0].text;
