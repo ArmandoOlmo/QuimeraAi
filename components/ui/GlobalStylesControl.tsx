@@ -145,7 +145,10 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             borderColor: colors.border,
             text: colors.text,
             heading: colors.heading,
+            description: colors.text,
             cardBackground: colors.primary,
+            cardHeading: '#ffffff',
+            cardText: 'rgba(255, 255, 255, 0.9)',
         },
         testimonials: {
             background: colors.surface,
@@ -271,9 +274,9 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             heading: colors.heading,
         },
         header: {
-            background: '#ffffff',
-            text: colors.background,
-            accent: colors.primary,
+            background: colors.primary,
+            text: '#ffffff',
+            accent: '#ffffff',
             border: 'transparent',
         },
         menu: {
@@ -283,6 +286,8 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             text: colors.text,
             heading: colors.heading,
             cardBackground: colors.primary,
+            cardTitleColor: '#ffffff',
+            cardText: 'rgba(255, 255, 255, 0.9)',
             priceColor: colors.secondary,
         },
         chatbot: {
