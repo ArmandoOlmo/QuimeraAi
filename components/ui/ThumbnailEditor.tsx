@@ -566,7 +566,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     >
                         {t('common.cancel', { defaultValue: 'Cancel' })}
                     </button>
-                    {generatedThumbnail && activeTab === 'generate' ? (
+                    {generatedThumbnail ? (
                         <button 
                             onClick={applyGeneratedThumbnail}
                             disabled={isUploading}
@@ -577,14 +577,14 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                             ) : (
                                 <Zap className="w-4 h-4" />
                             )}
-                            {t('superadmin.useThumbnail', { defaultValue: 'Use This Thumbnail' })}
+                            {t('common.save', { defaultValue: 'Save' })}
                         </button>
                     ) : (
                         <button 
                             onClick={onClose}
                             className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                         >
-                            {t('common.save', { defaultValue: 'Done' })}
+                            {t('common.save', { defaultValue: 'Save' })}
                         </button>
                     )}
                 </div>

@@ -443,17 +443,36 @@ Return ONLY the JSON array, no other text.`;
                 // Clean up the response - remove markdown code blocks if present
                 let cleanedText = responseText.trim();
                 cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-                suggestedIds = JSON.parse(cleanedText);
+                
+                // Try to find JSON array in the response
+                const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
+                if (jsonMatch) {
+                    cleanedText = jsonMatch[0];
+                }
+                
+                const parsedArray = JSON.parse(cleanedText);
+                
+                // Ensure it's an array
+                if (Array.isArray(parsedArray)) {
+                    suggestedIds = parsedArray;
+                }
 
                 // Validate that all IDs exist in our list
-                suggestedIds = suggestedIds.filter(id => INDUSTRY_IDS.includes(id));
+                const validIds = suggestedIds.filter(id => INDUSTRY_IDS.includes(id));
+                const invalidIds = suggestedIds.filter(id => !INDUSTRY_IDS.includes(id));
+                
+                if (invalidIds.length > 0) {
+                    console.warn('AI suggested invalid industry IDs:', invalidIds);
+                }
+                
+                suggestedIds = validIds;
             } catch (parseError) {
-                console.error('Failed to parse AI response:', responseText);
+                console.error('Failed to parse AI response:', responseText, parseError);
                 // Try to extract IDs from text if JSON parsing failed
-                const matches = responseText.match(/"([a-z-]+)"/g);
+                const matches = responseText.match(/"([a-z0-9-]+)"/gi);
                 if (matches) {
                     suggestedIds = matches
-                        .map(m => m.replace(/"/g, ''))
+                        .map(m => m.replace(/"/g, '').toLowerCase())
                         .filter(id => INDUSTRY_IDS.includes(id));
                 }
             }
@@ -462,10 +481,15 @@ Return ONLY the JSON array, no other text.`;
             if (suggestedIds.length > 0) {
                 const merged = [...new Set([...formData.industries, ...suggestedIds])];
                 setFormData(prev => ({ ...prev, industries: merged }));
+                setAiSuggestions(suggestedIds);
+            } else {
+                // Show error if no valid industries found
+                setError('No se pudieron sugerir industrias. Intenta de nuevo.');
+                console.warn('No valid industries found in AI response:', responseText);
             }
-            setAiSuggestions(suggestedIds);
         } catch (error) {
             console.error('AI suggestion error:', error);
+            setError('Error al sugerir industrias. Verifica tu conexión.');
             handleApiError(error);
         } finally {
             setIsAiSuggesting(false);
@@ -496,6 +520,10 @@ Return ONLY the JSON array, no other text.`;
         setError('');
 
         try {
+            // Auto-apply generated thumbnail if there's one pending
+            const finalThumbnailUrl = generatedThumbnail || formData.thumbnailUrl;
+            const finalHeroImageUrl = generatedThumbnail || formData.heroImageUrl;
+
             // Build update object with current formData values
             const updates: Partial<Project> = {
                 name: formData.name,
@@ -503,7 +531,7 @@ Return ONLY the JSON array, no other text.`;
                 category: formData.category,
                 tags: formData.tags || [],
                 industries: formData.industries || [],
-                thumbnailUrl: formData.thumbnailUrl,
+                thumbnailUrl: finalThumbnailUrl,
             };
 
             // Include globalColors if a palette was imported
@@ -517,13 +545,13 @@ Return ONLY the JSON array, no other text.`;
             }
 
             // Update hero image if a new one was generated
-            if (formData.heroImageUrl) {
+            if (finalHeroImageUrl) {
                 updates.data = {
                     ...template.data,
                     hero: {
                         ...template.data?.hero,
-                        imageUrl: formData.heroImageUrl,
-                        backgroundImage: formData.heroImageUrl,
+                        imageUrl: finalHeroImageUrl,
+                        backgroundImage: finalHeroImageUrl,
                     }
                 };
             }
