@@ -128,6 +128,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
     // Update template in Firestore
     const updateTemplate = async (templateId: string, updates: Partial<Project>) => {
+        console.log('🔄 updateTemplate called with:', { templateId, updates });
+        
         const template = templates.find(t => t.id === templateId);
         if (!template) throw new Error('Template not found');
 
@@ -139,8 +141,16 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
         const { id, ...dataToSave } = updatedData;
 
+        console.log('📤 Saving to Firestore:', { 
+            templateId, 
+            thumbnailUrl: dataToSave.thumbnailUrl?.substring(0, 50), 
+            industries: dataToSave.industries 
+        });
+
         const templateDocRef = doc(db, 'templates', templateId);
         await setDoc(templateDocRef, dataToSave);
+
+        console.log('✅ Firestore save complete');
 
         // Update local state immediately so changes are visible
         updateTemplateInState(templateId, updatedData);

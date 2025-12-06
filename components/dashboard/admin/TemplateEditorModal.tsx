@@ -538,6 +538,15 @@ Return ONLY the JSON array, no other text.`;
             const finalThumbnailUrl = generatedThumbnail || formData.thumbnailUrl;
             const finalHeroImageUrl = generatedThumbnail || formData.heroImageUrl;
 
+            // Debug: Log what we're saving
+            console.log('💾 Saving template with:', {
+                templateId: template.id,
+                generatedThumbnail: generatedThumbnail ? 'HAS_VALUE' : 'EMPTY',
+                formDataThumbnailUrl: formData.thumbnailUrl ? 'HAS_VALUE' : 'EMPTY',
+                finalThumbnailUrl: finalThumbnailUrl ? finalThumbnailUrl.substring(0, 50) + '...' : 'EMPTY',
+                industries: formData.industries
+            });
+
             // Build update object with current formData values
             const updates: Partial<Project> = {
                 name: formData.name,
@@ -570,7 +579,10 @@ Return ONLY the JSON array, no other text.`;
                 };
             }
 
+            console.log('📝 Full updates object:', updates);
+
             await onSave(template.id, updates);
+            console.log('✅ Template saved successfully');
             onClose();
         } catch (err) {
             console.error('Failed to update template:', err);
