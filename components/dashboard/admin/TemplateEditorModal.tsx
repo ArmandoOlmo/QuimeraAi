@@ -432,7 +432,21 @@ Return ONLY the JSON array, no other text.`;
             let responseText: string;
             if (useProxy) {
                 const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, {}, user?.uid);
+                
+                // Debug: Log the actual response structure
+                console.log('🔍 Industry suggestion proxy response:', JSON.stringify(proxyResponse, null, 2).slice(0, 1000));
+                
+                // Check for API errors in the response
+                if (proxyResponse?.error) {
+                    throw new Error(proxyResponse.error.message || proxyResponse.error);
+                }
+                
                 responseText = extractTextFromResponse(proxyResponse);
+                
+                if (!responseText) {
+                    console.error('❌ Empty response text. Full response:', proxyResponse);
+                    throw new Error('La API no devolvió una respuesta válida. Intenta con otro template.');
+                }
             } else {
                 responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }

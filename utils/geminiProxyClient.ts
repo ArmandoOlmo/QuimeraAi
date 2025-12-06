@@ -286,9 +286,40 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
         // Handle various response structures
         if (!response) return '';
         
-        // Standard proxy response format
+        // Already a string
+        if (typeof response === 'string') {
+            return response;
+        }
+        
+        // Check for errors in response
+        if (response.error) {
+            console.error('API returned error:', response.error);
+            return '';
+        }
+        
+        // Check for blocked content (safety filters)
+        const candidates = response.response?.candidates || response.candidates;
+        if (candidates?.[0]?.finishReason === 'SAFETY') {
+            console.warn('Content blocked by safety filters');
+            return '';
+        }
+        
+        // Standard proxy response format: { response: { candidates: [...] }, metadata: {...} }
         if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
             return response.response.candidates[0].content.parts[0].text;
+        }
+        
+        // Try to find text in any part of response.response.candidates
+        if (response.response?.candidates) {
+            for (const candidate of response.response.candidates) {
+                if (candidate?.content?.parts) {
+                    for (const part of candidate.content.parts) {
+                        if (typeof part?.text === 'string') {
+                            return part.text;
+                        }
+                    }
+                }
+            }
         }
         
         // Direct candidates format (fallback)
@@ -296,17 +327,38 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
             return response.candidates[0].content.parts[0].text;
         }
         
+        // Try to find text in any part of direct candidates
+        if (response.candidates) {
+            for (const candidate of response.candidates) {
+                if (candidate?.content?.parts) {
+                    for (const part of candidate.content.parts) {
+                        if (typeof part?.text === 'string') {
+                            return part.text;
+                        }
+                    }
+                }
+            }
+        }
+        
         // Text directly in response
         if (typeof response.text === 'string') {
             return response.text;
         }
         
-        // Already a string
-        if (typeof response === 'string') {
-            return response;
+        // Text in response.response directly
+        if (typeof response.response?.text === 'string') {
+            return response.response.text;
         }
         
-        console.warn('Could not extract text from response, structure:', Object.keys(response || {}));
+        // Log detailed structure for debugging
+        console.warn('Could not extract text from response. Structure:', {
+            keys: Object.keys(response || {}),
+            responseKeys: response.response ? Object.keys(response.response) : 'no response',
+            hasCandidates: !!response.response?.candidates,
+            candidatesLength: response.response?.candidates?.length,
+            firstCandidate: response.response?.candidates?.[0] ? Object.keys(response.response.candidates[0]) : 'no candidate',
+            finishReason: response.response?.candidates?.[0]?.finishReason || 'unknown'
+        });
         return '';
     } catch (error) {
         console.error('Error extracting text from response:', error);
