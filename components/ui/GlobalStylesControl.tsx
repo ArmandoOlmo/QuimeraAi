@@ -176,6 +176,7 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             heading: colors.heading,
             accent: colors.primary,
             cardBackground: colors.surface,
+            photoBorderColor: colors.primary,
         },
         slideshow: {
             background: colors.surface,
