@@ -55,7 +55,7 @@ export const componentStyles: ComponentStyles = {
     featuresVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     gridColumns: 3,
     imageHeight: 200,
@@ -77,7 +77,7 @@ export const componentStyles: ComponentStyles = {
     testimonialsVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
     cardShadow: 'lg',
@@ -96,7 +96,7 @@ export const componentStyles: ComponentStyles = {
   cta: {
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
         gradientStart: '#4f46e5',
@@ -112,7 +112,7 @@ export const componentStyles: ComponentStyles = {
     servicesVariant: 'cards',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#1e293b',
@@ -127,7 +127,7 @@ export const componentStyles: ComponentStyles = {
     teamVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#0f172a',
@@ -144,7 +144,7 @@ export const componentStyles: ComponentStyles = {
     fullWidth: false,
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     borderRadius: 'xl',
     autoPlaySpeed: 5000,
     transitionEffect: 'slide',
@@ -172,7 +172,7 @@ export const componentStyles: ComponentStyles = {
     pricingVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#0f172a',
@@ -191,7 +191,7 @@ export const componentStyles: ComponentStyles = {
     faqVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
     colors: {
@@ -209,7 +209,7 @@ export const componentStyles: ComponentStyles = {
   portfolio: {
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#0f172a',
@@ -224,7 +224,7 @@ export const componentStyles: ComponentStyles = {
     leadsVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     cardBorderRadius: 'xl',
     buttonBorderRadius: 'md',
@@ -248,7 +248,7 @@ export const componentStyles: ComponentStyles = {
   newsletter: {
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#1e293b',
@@ -268,7 +268,7 @@ export const componentStyles: ComponentStyles = {
   video: {
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
       background: '#1e293b',
@@ -280,7 +280,7 @@ export const componentStyles: ComponentStyles = {
   howItWorks: {
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {
         background: '#0f172a',
@@ -331,7 +331,7 @@ export const componentStyles: ComponentStyles = {
     menuVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
     showCategories: true,
@@ -352,7 +352,7 @@ export const componentStyles: ComponentStyles = {
     mapVariant: 'modern',
     paddingY: 'lg',
     paddingX: 'md',
-    titleFontSize: 'md',
+    titleFontSize: 'lg',
     descriptionFontSize: 'md',
     height: 400,
     zoom: 15,
