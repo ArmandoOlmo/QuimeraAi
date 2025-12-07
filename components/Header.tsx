@@ -170,8 +170,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const primaryColor = getColor('primary.main', '#4f46e5');
   
   // For transparent style, background should default to transparent, not primary color
-  const isTransparentStyle = style === 'sticky-transparent';
-  const defaultBackground = isTransparentStyle ? 'transparent' : primaryColor;
+  const isAnyTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
+  const defaultBackground = isAnyTransparentStyle ? 'transparent' : primaryColor;
   
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
@@ -181,7 +181,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   };
 
   useEffect(() => {
-    if (style === 'floating') {
+    // Para estilos flotantes, siempre mostrar como "scrolled"
+    if (style.startsWith('floating')) {
         setIsScrolled(true);
         return;
     }
@@ -205,7 +206,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   }, [style, isSticky, previewRef]);
 
   // Visual State Calculations
-  const isTransparent = style === 'sticky-transparent' && !isScrolled && !isMenuOpen;
+  const isTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
+  const isTransparent = isTransparentStyle && !isScrolled && !isMenuOpen;
   const bgColor = isTransparent ? 'transparent' : actualColors.background;
   
   // Ensure contrast on transparent backgrounds by falling back to white if text is the default dark
@@ -215,11 +217,102 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const glassClasses = (glassEffect && !isTransparent) ? 'backdrop-blur-md bg-opacity-80 border-b border-white/10' : '';
   const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
 
-  // Floating Bar Style Override
-  // In preview mode, use absolute instead of fixed to stay within preview container
-  const containerClasses = style === 'floating' 
-    ? `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`
-    : 'w-full border-b border-transparent';
+  // ============================================
+  // ESTILOS DE CONTENEDOR SEGÚN VARIANTE
+  // ============================================
+  const getContainerClasses = (): string => {
+    switch (style) {
+      // --- EDGE-TO-EDGE (Lisos de lado a lado, sin curvas) ---
+      case 'edge-solid':
+        return 'w-full rounded-none';
+      case 'edge-minimal':
+        return 'w-full rounded-none border-b border-transparent';
+      case 'edge-bordered':
+        return 'w-full rounded-none border-b-2';
+        
+      // --- FLOTANTES ---
+      case 'floating':
+        return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`;
+      case 'floating-pill':
+        return `${isPreviewMode ? 'absolute' : 'fixed'} top-4 left-1/2 -translate-x-1/2 rounded-full border border-white/15 shadow-lg`;
+      case 'floating-glass':
+        return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
+      case 'floating-shadow':
+        return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-8 right-8 rounded-none shadow-2xl shadow-black/30 max-w-6xl mx-auto`;
+        
+      // --- TRANSPARENTES ---
+      case 'sticky-transparent':
+        return 'w-full border-b border-transparent';
+      case 'transparent-blur':
+        return 'w-full rounded-none';
+      case 'transparent-bordered':
+        return 'w-full rounded-none border-b';
+      case 'transparent-gradient':
+        return 'w-full rounded-none';
+        
+      default:
+        return 'w-full border-b border-transparent';
+    }
+  };
+
+  // ============================================
+  // ESTILOS DE BACKGROUND SEGÚN VARIANTE
+  // ============================================
+  const getBackgroundStyle = (): React.CSSProperties => {
+    switch (style) {
+      // --- EDGE-TO-EDGE ---
+      case 'edge-solid':
+        return { backgroundColor: actualColors.background };
+      case 'edge-minimal':
+        return { backgroundColor: actualColors.background };
+      case 'edge-bordered':
+        return { 
+          backgroundColor: actualColors.background,
+          borderColor: colors.accent 
+        };
+        
+      // --- FLOTANTES ---
+      case 'floating':
+        return { backgroundColor: actualColors.background };
+      case 'floating-pill':
+        return { 
+          backgroundColor: `${actualColors.background}f0`,
+          backdropFilter: 'blur(8px)'
+        };
+      case 'floating-glass':
+        return { 
+          backgroundColor: `${actualColors.background}40`,
+          backdropFilter: 'blur(20px) saturate(180%)'
+        };
+      case 'floating-shadow':
+        return { backgroundColor: actualColors.background };
+        
+      // --- TRANSPARENTES ---
+      case 'sticky-transparent':
+        return { backgroundColor: isTransparent ? 'transparent' : actualColors.background };
+      case 'transparent-blur':
+        return { 
+          backgroundColor: isScrolled ? `${actualColors.background}cc` : 'transparent',
+          backdropFilter: isScrolled ? 'blur(12px)' : 'none'
+        };
+      case 'transparent-bordered':
+        return { 
+          backgroundColor: isScrolled ? `${actualColors.background}e0` : 'transparent',
+          borderColor: isScrolled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'
+        };
+      case 'transparent-gradient':
+        return { 
+          background: isScrolled 
+            ? actualColors.background 
+            : `linear-gradient(180deg, ${actualColors.background}80 0%, transparent 100%)`
+        };
+        
+      default:
+        return { backgroundColor: actualColors.background };
+    }
+  };
+
+  const containerClasses = getContainerClasses();
 
   const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
     <a href="#cta" className={`
@@ -308,16 +401,25 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const computedHeight = layout === 'stack' ? 'auto' : `${height}px`;
   const computedMinHeight = layout === 'stack' ? `${height + 40}px` : `${height}px`;
 
-  // For transparent style, use absolute positioning so navbar overlays the content below (e.g., Hero)
-  // This allows the Hero to start from the top and be visible behind the transparent navbar
+  // ============================================
+  // POSICIÓN SEGÚN ESTILO
+  // ============================================
   const getPositionClass = () => {
-    if (style === 'sticky-transparent') {
-      // Absolute positioning so it overlays content, but sticky when scrolled for better UX
-      return isScrolled ? 'sticky' : 'absolute';
+    // Edge styles - siempre sticky o relative
+    if (style.startsWith('edge-')) {
+      return isSticky ? 'sticky' : 'relative';
     }
-    if (style === 'floating') {
+    
+    // Floating styles - absolute o fixed
+    if (style.startsWith('floating')) {
       return isPreviewMode ? 'absolute' : 'fixed';
     }
+    
+    // Transparent styles - comportamiento especial
+    if (style.startsWith('transparent') || style === 'sticky-transparent') {
+      return isScrolled ? 'sticky' : 'absolute';
+    }
+    
     if (isSticky) {
       return isPreviewMode ? 'relative' : 'sticky';
     }
@@ -325,13 +427,17 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   };
   
   const positionClass = getPositionClass();
+  const backgroundStyle = getBackgroundStyle();
 
-  // For transparent style, header should not take up space in the document flow
-  const shouldNotTakeSpace = style === 'floating' || (style === 'sticky-transparent' && !isScrolled);
+  // Determinar si toma espacio en el flujo del documento
+  const shouldNotTakeSpace = style.startsWith('floating') || 
+    ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled);
 
   return (
     <header 
-        className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''}`}
+        className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${
+          style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
+        }`}
         style={{ height: shouldNotTakeSpace ? 0 : 'auto' }} 
     >
       {/* === SCROLL PROGRESS BAR === */}
@@ -344,15 +450,21 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
       />
       
       <div 
-        className={`transition-all duration-500 ease-out ${containerClasses} ${glassClasses} ${shadowClasses}`}
+        className={`transition-all duration-500 ease-out ${containerClasses} ${
+          glassEffect && !style.includes('transparent') && !style.includes('glass') ? glassClasses : ''
+        } ${!style.startsWith('floating') && !style.includes('transparent') ? shadowClasses : ''}`}
         style={{ 
-            backgroundColor: bgColor,
-            height: (style === 'floating') ? 'auto' : computedHeight, 
-            minHeight: (style === 'floating') ? 'auto' : computedMinHeight,
-            padding: style === 'floating' ? '12px 24px' : `0 ${isScrolled ? '1.5rem' : '2rem'}`
+            ...backgroundStyle,
+            height: style.startsWith('floating') ? 'auto' : computedHeight, 
+            minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
+            padding: style.startsWith('floating') 
+              ? (style === 'floating-pill' ? '8px 32px' : '12px 24px') 
+              : `0 ${isScrolled ? '1.5rem' : '2rem'}`
         }} 
       >
-        <div className={`container mx-auto h-full flex items-center justify-between ${style === 'floating' ? '' : 'px-0'}`}>
+        <div className={`container mx-auto h-full flex items-center justify-between ${
+          style.startsWith('floating') ? '' : 'px-0'
+        }`}>
           
           {/* Desktop Layouts */}
           {renderLayout()}

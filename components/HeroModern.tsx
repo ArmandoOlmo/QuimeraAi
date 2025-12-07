@@ -95,7 +95,7 @@ const HeroModern: React.FC<HeroProps> = ({
   );
 
   return (
-    <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section className="relative w-full flex items-center justify-center overflow-hidden">
       {/* === ANIMATED MESH GRADIENT BACKGROUND === */}
       <div className="absolute inset-0 z-0">
         {/* Radial gradient overlay */}

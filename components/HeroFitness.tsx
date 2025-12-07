@@ -93,7 +93,7 @@ const HeroFitness: React.FC<HeroProps> = ({
 
     return (
         <section 
-            className="relative w-full min-h-screen overflow-hidden"
+            className="relative w-full overflow-hidden"
             style={{ background: actualColors.background }}
         >
             {/* Dynamic Background with Image */}
@@ -140,8 +140,8 @@ const HeroFitness: React.FC<HeroProps> = ({
                 ></div>
             </div>
 
-            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} min-h-screen flex items-center`}>
-                <div className={`w-full ${paddingYClasses[paddingY]}`}>
+            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} flex items-center`}>
+                <div className={`w-full`}>
                     
                     {/* Main Content - Centered with Max Width */}
                     <div className="max-w-5xl">

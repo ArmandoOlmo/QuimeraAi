@@ -305,6 +305,13 @@ export const deriveColorsFromPalette = (
                 ? lightenColor(bgColor, 20)
                 : darkenColor(bgColor, 20);
         }
+        if (!colors.inputPlaceholder) {
+            // Placeholder should be a muted version of input text
+            const inputBg = derived.inputBackground || colors.inputBackground || bgColor;
+            derived.inputPlaceholder = isDarkColor(inputBg) 
+                ? 'rgba(255, 255, 255, 0.5)'
+                : 'rgba(0, 0, 0, 0.4)';
+        }
     }
     
     // Derive border color if not set
@@ -321,6 +328,19 @@ export const deriveColorsFromPalette = (
         }
         if (!colors.gradientEnd) {
             derived.gradientEnd = colors.secondary || accentColor;
+        }
+    }
+    
+    // Derive card colors for pricing
+    if (componentType === 'pricing') {
+        if (!colors.cardHeading) {
+            derived.cardHeading = headingColor;
+        }
+        if (!colors.cardText) {
+            derived.cardText = textColor;
+        }
+        if (!colors.priceColor) {
+            derived.priceColor = colors.cardHeading || headingColor;
         }
     }
     

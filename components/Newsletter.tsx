@@ -44,14 +44,23 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
   // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
   const headingColor = colors.heading || colors.cardHeading || '#ffffff';
   const textColor = colors.text || colors.cardText || '#ffffff';
+  const placeholderColor = colors.inputPlaceholder || '#6b7280';
   
   return (
-    <section id="newsletter" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
-      <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
+    <section id="newsletter" className="w-full" style={{ backgroundColor: colors.background }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        #newsletter-email-input::placeholder {
+          color: ${placeholderColor};
+          opacity: 1;
+        }
+      `}} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
         <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
         <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: textColor }}>{description}</p>
         <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">
           <input
+            id="newsletter-email-input"
             type="email"
             placeholder={placeholderText}
             required
@@ -71,6 +80,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
             {buttonText}
           </button>
         </form>
+        </div>
       </div>
     </section>
   );

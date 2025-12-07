@@ -311,7 +311,8 @@ const Services: React.FC<ServicesProps> = ({
   const sectionBackground = colors.background || hexToRgba(tokenColors.primary, 0.75);
   
   return (
-    <section id="services" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: sectionBackground }}>
+    <section id="services" className="w-full" style={{ backgroundColor: sectionBackground }}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
             {servicesVariant === 'grid' && (
                 <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}>
@@ -348,6 +349,7 @@ const Services: React.FC<ServicesProps> = ({
                 />
             ))}
         </div>
+      </div>
     </section>
   );
 };

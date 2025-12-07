@@ -58,8 +58,8 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   };
   
   return (
-    <section id="cta" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-      <div>
+    <section id="cta" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div 
             className={`p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]}`}
             style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}

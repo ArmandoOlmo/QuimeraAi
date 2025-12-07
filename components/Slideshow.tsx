@@ -495,23 +495,25 @@ const Slideshow: React.FC<SlideshowProps> = ({
 
     return (
         <section 
-            className={`${fullWidth ? 'w-full' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]}`} 
+            className="w-full" 
             style={{ backgroundColor: colors.background }}
         >
-            {showTitle && title && (
-                <div className={`text-center max-w-3xl mx-auto mb-16 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
-                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading || primaryColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-                </div>
-            )}
-            {hasItems ? (
-                <div className={`relative w-full ${fullWidth ? '' : 'max-w-5xl mx-auto'}`}>
-                    {renderVariant()}
-                </div>
-            ) : (
-                <div className={`text-center text-editor-text-secondary p-8 bg-editor-panel-bg rounded-lg ${fullWidth ? 'mx-4' : ''}`}>
-                    No slides to display. Add some in the editor!
-                </div>
-            )}
+            <div className={`${fullWidth ? '' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]}`}>
+                {showTitle && title && (
+                    <div className={`text-center max-w-3xl mx-auto mb-16 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
+                        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading || primaryColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                    </div>
+                )}
+                {hasItems ? (
+                    <div className={`relative w-full ${fullWidth ? '' : 'max-w-5xl mx-auto'}`}>
+                        {renderVariant()}
+                    </div>
+                ) : (
+                    <div className={`text-center text-editor-text-secondary p-8 bg-editor-panel-bg rounded-lg ${fullWidth ? 'mx-4' : ''}`}>
+                        No slides to display. Add some in the editor!
+                    </div>
+                )}
+            </div>
         </section>
     );
 };

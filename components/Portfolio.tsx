@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PortfolioData, PaddingSize, BorderRadiusSize, FontSize, AnimationType } from '../types';
+import { PortfolioData, PortfolioItem, PaddingSize, BorderRadiusSize, FontSize, AnimationType, TextAlignment, ObjectFit } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
@@ -54,6 +54,93 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   md: 'rounded-md',
   xl: 'rounded-xl',
   full: 'rounded-3xl',
+};
+
+// Text alignment classes for overlay variant
+const textAlignmentClasses: Record<TextAlignment, string> = {
+  left: 'text-left items-start',
+  center: 'text-center items-center',
+  right: 'text-right items-end',
+};
+
+// --- Portfolio Overlay Card Component ---
+interface PortfolioOverlayCardProps {
+    item: PortfolioItem;
+    index: number;
+    colors: {
+        accent: string;
+    };
+    imageHeight: number;
+    textAlignment: TextAlignment;
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+}
+
+const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({ 
+    item, 
+    index, 
+    colors, 
+    imageHeight,
+    textAlignment,
+    animationType = 'fade-in-up',
+    enableAnimation = true
+}) => {
+    const animationClass = getAnimationClass(animationType, enableAnimation);
+    const delay = getAnimationDelay(index);
+    
+    return (
+        <div 
+            className={`group relative overflow-hidden ${animationClass}`}
+            style={{ 
+                animationDelay: delay,
+                height: `${imageHeight}px`
+            }}
+        >
+            {/* Image as full background - 100% width */}
+            {isPendingImage(item.imageUrl) ? (
+                <ImagePlaceholder 
+                    aspectRatio="auto"
+                    showGenerateButton={false}
+                    className="absolute inset-0 w-full h-full"
+                />
+            ) : (
+                <img 
+                    src={item.imageUrl} 
+                    alt={item.title} 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+            )}
+            
+            {/* Gradient overlay for text readability */}
+            <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+            />
+            
+            {/* Text overlay - position based on alignment */}
+            <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`}>
+                <h3 
+                    className="text-xl md:text-2xl font-bold mb-2 font-header text-white drop-shadow-lg"
+                    style={{ 
+                        textTransform: 'var(--headings-transform, none)' as any, 
+                        letterSpacing: 'var(--headings-spacing, normal)' 
+                    }}
+                >
+                    {item.title}
+                </h3>
+                <p 
+                    className="text-sm md:text-base font-body text-white/80 max-w-md drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2"
+                >
+                    {item.description}
+                </p>
+            </div>
+            
+            {/* Optional accent indicator */}
+            <div 
+                className="absolute top-4 right-4 w-2 h-2 rounded-full"
+                style={{ backgroundColor: colors.accent }}
+            />
+        </div>
+    );
 };
 
 const PortfolioCard: React.FC<PortfolioCardProps> = ({ 
@@ -119,6 +206,12 @@ interface PortfolioProps extends PortfolioData {
     borderRadius: BorderRadiusSize;
 }
 
+const gridColsClasses: Record<number, string> = {
+    2: 'lg:grid-cols-2',
+    3: 'lg:grid-cols-3',
+    4: 'lg:grid-cols-4',
+};
+
 const Portfolio: React.FC<PortfolioProps> = ({ 
   title, 
   description, 
@@ -130,18 +223,82 @@ const Portfolio: React.FC<PortfolioProps> = ({
   titleFontSize = 'md', 
   descriptionFontSize = 'md',
   animationType = 'fade-in-up',
-  enableCardAnimation = true
+  enableCardAnimation = true,
+  portfolioVariant = 'classic',
+  gridColumns = 3,
+  imageHeight = 300,
+  overlayTextAlignment = 'left',
+  showSectionHeader = true
 }) => {
+  // --- RENDERIZADO IMAGE OVERLAY ---
+  if (portfolioVariant === 'image-overlay') {
+      return (
+          <section 
+              id="portfolio" 
+              className="w-full"
+              style={{ backgroundColor: colors.background }}
+          >
+              {/* Optional Section Header */}
+              {showSectionHeader && (title || description) && (
+                  <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
+                      {title && (
+                          <h2 
+                              className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} 
+                              style={{ 
+                                  color: colors.heading, 
+                                  textTransform: 'var(--headings-transform, none)' as any, 
+                                  letterSpacing: 'var(--headings-spacing, normal)' 
+                              }}
+                          >
+                              {title}
+                          </h2>
+                      )}
+                      {description && (
+                          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>
+                              {description}
+                          </p>
+                      )}
+                  </div>
+              )}
+
+              {/* Full-width Image Grid - NO GAPS, 100% width */}
+              <div 
+                  className="grid w-full"
+                  style={{
+                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                      gap: '0px'
+                  }}
+              >
+                  {items.map((item, index) => (
+                      <PortfolioOverlayCard
+                          key={index}
+                          item={item}
+                          index={index}
+                          colors={{
+                              accent: colors.accent
+                          }}
+                          imageHeight={imageHeight}
+                          textAlignment={overlayTextAlignment}
+                          animationType={animationType}
+                          enableAnimation={enableCardAnimation}
+                      />
+                  ))}
+              </div>
+          </section>
+      );
+  }
+
+  // --- RENDERIZADO CLASSIC ---
   return (
-    <section id="portfolio" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
-      <div>
+    <section id="portfolio" className="w-full" style={{ backgroundColor: colors.background }}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
             {description}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
           {items.map((item, index) => (
             <PortfolioCard 
                 key={index} 

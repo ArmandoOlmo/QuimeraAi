@@ -85,6 +85,7 @@ const Leads: React.FC<LeadsProps> = ({
     inputBackground: colors.inputBackground || '#0f172a',
     inputText: colors.inputText || '#F9FAFB',
     inputBorder: colors.inputBorder || '#334155',
+    inputPlaceholder: colors.inputPlaceholder || '#6b7280',
     buttonBackground: colors.buttonBackground || colors.accent || '#4f46e5',
     buttonText: colors.buttonText || '#ffffff',
     gradientStart: colors.gradientStart || colors.accent || '#4f46e5',
@@ -173,8 +174,15 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Classic Variant
   const renderClassic = () => (
-    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: leadsColors.background }}>
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 md:gap-16 items-center">
+    <section id="leads" className="w-full" style={{ backgroundColor: leadsColors.background }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        #leads input::placeholder, #leads textarea::placeholder {
+          color: ${leadsColors.inputPlaceholder};
+          opacity: 1;
+        }
+      `}} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 md:gap-16 items-center">
         <div className="text-center md:text-left mb-12 md:mb-0">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: leadsColors.description }}>
@@ -288,15 +296,23 @@ const Leads: React.FC<LeadsProps> = ({
             </button>
           </form>
         </div>
+        </div>
       </div>
     </section>
   );
 
   // Render Split Gradient Variant
   const renderSplitGradient = () => (
-    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} 
+    <section id="leads" className="w-full relative overflow-hidden" 
              style={{ backgroundColor: leadsColors.background }}>
-      <div className="max-w-7xl mx-auto">
+      <style dangerouslySetInnerHTML={{ __html: `
+        #leads input::placeholder, #leads textarea::placeholder {
+          color: ${leadsColors.inputPlaceholder};
+          opacity: 1;
+        }
+      `}} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-0 items-stretch">
           {/* Left Side - Gradient Info */}
           <div className="relative p-12 md:p-16 flex flex-col justify-center text-white"
@@ -480,15 +496,23 @@ const Leads: React.FC<LeadsProps> = ({
             </form>
           </div>
         </div>
+        </div>
       </div>
     </section>
   );
 
   // Render Floating Glass Variant
   const renderFloatingGlass = () => (
-    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative`} 
+    <section id="leads" className="w-full relative" 
              style={{ backgroundColor: leadsColors.background }}>
-      {/* Background Decorative Elements */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        #leads input::placeholder, #leads textarea::placeholder {
+          color: ${leadsColors.inputPlaceholder};
+          opacity: 1;
+        }
+      `}} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        {/* Background Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 rounded-full opacity-20 blur-3xl"
              style={{ backgroundColor: leadsColors.gradientStart }}></div>
@@ -508,7 +532,8 @@ const Leads: React.FC<LeadsProps> = ({
         </div>
         
         {/* Floating Glass Form */}
-        <div className={`backdrop-blur-xl bg-white/10 border border-white/20 p-8 md:p-12 shadow-2xl relative ${borderRadiusClasses[cardBorderRadius]}`}>
+        <div className={`backdrop-blur-xl border p-8 md:p-12 shadow-2xl relative ${borderRadiusClasses[cardBorderRadius]}`}
+             style={{ backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
           {/* Success Overlay */}
           {submitStatus === 'success' && (
             <div className={`absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in ${borderRadiusClasses[cardBorderRadius]}`}>
@@ -532,7 +557,7 @@ const Leads: React.FC<LeadsProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.text }} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
                 <input 
                   type="text" 
                   name="name"
@@ -541,8 +566,10 @@ const Leads: React.FC<LeadsProps> = ({
                   onChange={handleChange}
                   required 
                   disabled={isSubmitting}
-                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
+                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
+                    backgroundColor: leadsColors.inputBackground,
+                    borderColor: leadsColors.inputBorder,
                     color: leadsColors.inputText,
                     '--tw-ring-color': leadsColors.accent
                   } as React.CSSProperties} 
@@ -550,7 +577,7 @@ const Leads: React.FC<LeadsProps> = ({
               </div>
               
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.text }} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
                 <input 
                   type="email" 
                   name="email"
@@ -559,8 +586,10 @@ const Leads: React.FC<LeadsProps> = ({
                   onChange={handleChange}
                   required 
                   disabled={isSubmitting}
-                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
+                  className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
                   style={{
+                    backgroundColor: leadsColors.inputBackground,
+                    borderColor: leadsColors.inputBorder,
                     color: leadsColors.inputText,
                     '--tw-ring-color': leadsColors.accent
                   } as React.CSSProperties} 
@@ -575,8 +604,10 @@ const Leads: React.FC<LeadsProps> = ({
               value={formData.company}
               onChange={handleChange}
               disabled={isSubmitting}
-              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
+              className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
+                backgroundColor: leadsColors.inputBackground,
+                borderColor: leadsColors.inputBorder,
                 color: leadsColors.inputText,
                 '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties} 
@@ -589,8 +620,10 @@ const Leads: React.FC<LeadsProps> = ({
               value={formData.message}
               onChange={handleChange}
               disabled={isSubmitting}
-              className={`${inputBaseClasses} backdrop-blur-sm bg-white/10 border-white/20 disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
+              className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`} 
               style={{
+                backgroundColor: leadsColors.inputBackground,
+                borderColor: leadsColors.inputBorder,
                 color: leadsColors.inputText,
                 '--tw-ring-color': leadsColors.accent
               } as React.CSSProperties}
@@ -622,14 +655,22 @@ const Leads: React.FC<LeadsProps> = ({
           </form>
         </div>
       </div>
+      </div>
     </section>
   );
 
   // Render Minimal Border Variant
   const renderMinimalBorder = () => (
-    <section id="leads" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
+    <section id="leads" className="w-full" 
              style={{ backgroundColor: leadsColors.background }}>
-      <div className="max-w-5xl mx-auto">
+      <style dangerouslySetInnerHTML={{ __html: `
+        #leads input::placeholder, #leads textarea::placeholder {
+          color: ${leadsColors.inputPlaceholder};
+          opacity: 1;
+        }
+      `}} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
@@ -797,6 +838,7 @@ const Leads: React.FC<LeadsProps> = ({
               </div>
             </form>
           </div>
+        </div>
         </div>
       </div>
     </section>

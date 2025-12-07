@@ -23,6 +23,15 @@ export const componentStyles: ComponentStyles = {
     // Secondary button styles
     secondaryButtonStyle: 'outline',
     secondaryButtonOpacity: 100,
+    // Section border
+    sectionBorderSize: 'none',
+    sectionBorderColor: '#334155',
+    // Badge
+    showBadge: true,
+    badgeText: '',
+    badgeIcon: 'sparkles',
+    badgeColor: '#4f46e5',
+    badgeBackgroundColor: 'rgba(79, 70, 229, 0.15)',
     colors: {
       primary: '#4f46e5',
       secondary: '#10b981',
@@ -63,6 +72,9 @@ export const componentStyles: ComponentStyles = {
     animationType: 'fade-in-up',
     enableCardAnimation: true,
     borderRadius: 'xl',
+    // Properties for image-overlay variant
+    overlayTextAlignment: 'left',
+    showSectionHeader: true,
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -183,6 +195,11 @@ export const componentStyles: ComponentStyles = {
       description: '#94a3b8',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
+      cardBackground: '#1e293b',
+      cardHeading: '#ffffff',
+      cardText: '#94a3b8',
+      priceColor: '#ffffff',
+      checkmarkColor: '#10b981',
       gradientStart: '#4f46e5',
       gradientEnd: '#10b981',
     }
@@ -207,10 +224,15 @@ export const componentStyles: ComponentStyles = {
     }
   },
   portfolio: {
+    portfolioVariant: 'classic',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    gridColumns: 3,
+    imageHeight: 300,
+    overlayTextAlignment: 'left',
+    showSectionHeader: true,
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -241,6 +263,7 @@ export const componentStyles: ComponentStyles = {
       inputBackground: '#0f172a',
       inputText: '#F9FAFB',
       inputBorder: '#334155',
+      inputPlaceholder: '#6b7280',
       gradientStart: '#4f46e5',
       gradientEnd: '#10b981',
     },
@@ -263,6 +286,7 @@ export const componentStyles: ComponentStyles = {
       inputBackground: '#111827',
       inputText: '#ffffff',
       inputBorder: '#374151',
+      inputPlaceholder: '#6b7280',
     },
   },
   video: {

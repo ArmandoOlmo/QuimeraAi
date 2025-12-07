@@ -11,13 +11,32 @@ import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, Justif
 export type NavbarLayout = 'classic' | 'minimal' | 'center' | 'stack';
 export type NavLinkHoverStyle = 'simple' | 'underline' | 'bracket' | 'highlight' | 'glow';
 
+// Estilos de navegación con las 9 nuevas variantes
+export type NavbarStyle = 
+  // Originales
+  | 'sticky-solid' 
+  | 'sticky-transparent' 
+  | 'floating'
+  // NUEVOS: Edge-to-edge (lisos de lado a lado, sin curvas)
+  | 'edge-solid'           // Sólido completo de borde a borde
+  | 'edge-minimal'         // Minimalista de borde a borde  
+  | 'edge-bordered'        // Con línea inferior de borde a borde
+  // NUEVOS: Flotantes
+  | 'floating-pill'        // Flotante con bordes redondeados tipo píldora
+  | 'floating-glass'       // Flotante con efecto cristal/blur
+  | 'floating-shadow'      // Flotante con sombra pronunciada
+  // NUEVOS: Transparentes
+  | 'transparent-blur'     // Transparente con blur backdrop
+  | 'transparent-bordered' // Transparente con borde sutil
+  | 'transparent-gradient'; // Transparente con gradiente inferior
+
 export interface NavLink {
     text: string;
     href: string;
 }
 
 export interface HeaderData {
-    style: 'sticky-solid' | 'sticky-transparent' | 'floating';
+    style: NavbarStyle;
     layout: NavbarLayout;
     isSticky: boolean;
     glassEffect: boolean;
@@ -133,7 +152,7 @@ export interface FeatureItem {
 }
 
 export interface FeaturesData {
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay';
     title: string;
     description: string;
     items: FeatureItem[];
@@ -148,6 +167,9 @@ export interface FeaturesData {
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
     borderRadius?: BorderRadiusSize;
+    // Properties for image-overlay variant
+    overlayTextAlignment?: TextAlignment;
+    showSectionHeader?: boolean;
 }
 
 // =============================================================================
@@ -261,6 +283,9 @@ export interface PricingData {
         buttonText?: string;
         checkmarkColor?: string;
         cardBackground?: string;
+        cardHeading?: string;
+        cardText?: string;
+        priceColor?: string;
         gradientStart?: string;
         gradientEnd?: string;
     };
@@ -332,6 +357,7 @@ export interface LeadsData {
         inputBackground?: string;
         inputText?: string;
         inputBorder?: string;
+        inputPlaceholder?: string;
         gradientStart?: string;
         gradientEnd?: string;
     };
@@ -364,6 +390,7 @@ export interface NewsletterData {
         inputBackground?: string;
         inputText?: string;
         inputBorder?: string;
+        inputPlaceholder?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -402,6 +429,7 @@ export interface PortfolioItem {
 }
 
 export interface PortfolioData {
+    portfolioVariant?: 'classic' | 'image-overlay';
     title: string;
     description: string;
     items: PortfolioItem[];
@@ -425,6 +453,11 @@ export interface PortfolioData {
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // Properties for image-overlay variant
+    gridColumns?: number;
+    imageHeight?: number;
+    overlayTextAlignment?: TextAlignment;
+    showSectionHeader?: boolean;
 }
 
 // =============================================================================

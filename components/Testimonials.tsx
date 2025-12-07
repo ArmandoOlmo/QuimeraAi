@@ -184,7 +184,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 
   return (
     <div 
-      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${variant === 'classic' ? shadowClasses[cardShadow || 'lg'] : ''} ${variant === 'classic' ? getBorderClass() : getVariantClasses()}`} 
+      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${shadowClasses[cardShadow || 'lg']} ${variant === 'classic' ? getBorderClass() : getVariantClasses()}`} 
       style={getCardStyle()}
     >
       {variant === 'gradient-shift' && (
@@ -272,8 +272,8 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   }, [actualColors]);
   
   return (
-    <section id="testimonials" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-      <div>
+    <section id="testimonials" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>

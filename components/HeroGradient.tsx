@@ -92,7 +92,7 @@ const HeroGradient: React.FC<HeroProps> = ({
 
     return (
         <section 
-            className="relative w-full min-h-screen overflow-hidden"
+            className="relative w-full overflow-hidden"
             style={{ background: actualColors.background }}
         >
             {/* Animated Gradient Background */}
@@ -130,8 +130,8 @@ const HeroGradient: React.FC<HeroProps> = ({
                 }}
             ></div>
 
-            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} min-h-screen flex items-center`}>
-                <div className={`grid md:grid-cols-2 gap-12 items-center w-full ${paddingYClasses[paddingY]}`}>
+            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} flex items-center`}>
+                <div className={`grid md:grid-cols-2 gap-12 items-center w-full`}>
                     
                     {/* Left Column - Content */}
                     <div className="space-y-8 animate-fade-in-up">

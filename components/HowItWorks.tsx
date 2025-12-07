@@ -47,8 +47,9 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
 
     return (
-        <section id="how-it-works" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
-            <div className="text-center max-w-3xl mx-auto mb-16">
+        <section id="how-it-works" className="w-full" style={{ backgroundColor: colors.background }}>
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+                <div className="text-center max-w-3xl mx-auto mb-16">
                 <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
                 <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>
                     {description}
@@ -82,6 +83,7 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
                         <p className="font-body" style={{ color: colors.text }}>{item.description}</p>
                     </div>
                 ))}
+            </div>
             </div>
         </section>
     );

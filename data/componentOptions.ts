@@ -44,7 +44,7 @@ export const COMPONENT_OPTIONS = {
             imagePosition: ['left', 'right'],
             secondaryButtonStyle: ['solid', 'outline', 'ghost'],
         },
-        colorFields: ['primary', 'secondary', 'background', 'text', 'heading', 'buttonBackground', 'buttonText'],
+        colorFields: ['primary', 'secondary', 'background', 'text', 'heading', 'buttonBackground', 'buttonText', 'secondaryButtonBackground', 'secondaryButtonText', 'badgeColor', 'badgeBackgroundColor', 'imageBorderColor', 'sectionBorderColor'],
         badgeIcons: ['sparkles', 'zap', 'star', 'award', 'trophy', 'rocket', 'lightbulb', 'heart', 'check-circle', 'shield', 'target', 'trending-up'],
     },
     
@@ -61,8 +61,9 @@ export const COMPONENT_OPTIONS = {
         name: 'Features Section',
         category: 'content',
         options: {
-            featuresVariant: ['classic', 'modern', 'bento-premium'],
+            featuresVariant: ['classic', 'modern', 'bento-premium', 'image-overlay'],
             gridColumns: [2, 3, 4],
+            overlayTextAlignment: ['left', 'center', 'right'],
         },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText'],
     },
@@ -95,7 +96,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             pricingVariant: ['classic', 'gradient', 'glassmorphism', 'minimalist'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'gradientStart', 'gradientEnd'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'cardHeading', 'cardText', 'priceColor', 'gradientStart', 'gradientEnd'],
     },
     
     faq: {
@@ -113,14 +114,14 @@ export const COMPONENT_OPTIONS = {
         options: {
             leadsVariant: ['classic', 'split-gradient', 'floating-glass', 'minimal-border'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'inputBackground', 'inputText', 'inputBorder', 'gradientStart', 'gradientEnd'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder', 'gradientStart', 'gradientEnd'],
     },
     
     newsletter: {
         name: 'Newsletter Section',
         category: 'form',
         options: {},
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'cardHeading', 'cardText', 'inputBackground', 'inputText', 'inputBorder'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'cardHeading', 'cardText', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder'],
     },
     
     cta: {
@@ -133,7 +134,11 @@ export const COMPONENT_OPTIONS = {
     portfolio: {
         name: 'Portfolio Section',
         category: 'media',
-        options: {},
+        options: {
+            portfolioVariant: ['classic', 'image-overlay'],
+            gridColumns: [2, 3, 4],
+            overlayTextAlignment: ['left', 'center', 'right'],
+        },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardTitleColor', 'cardTextColor', 'cardOverlayStart', 'cardOverlayEnd'],
     },
     

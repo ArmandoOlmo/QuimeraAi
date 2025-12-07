@@ -466,15 +466,17 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         
         // Asegurarse de que featuresVariant tenga un valor
         const currentVariant = (s as any).featuresVariant || 'classic';
+        const currentTextAlignment = (s as any).overlayTextAlignment || 'left';
+        const showHeader = (s as any).showSectionHeader !== false;
 
         return (
             <div className="space-y-4">
-                 {/* --- NUEVO CONTROL DE VARIANTE --- */}
+                 {/* --- CONTROL DE VARIANTE --- */}
                  <div>
                      <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
                          Features Style
                      </label>
-                     <div className="grid grid-cols-3 gap-2 mb-2">
+                     <div className="grid grid-cols-4 gap-2 mb-2">
                          <button
                              onClick={() => handleStyleChange('featuresVariant', 'classic')}
                              className={`px-3 py-2 rounded-md border transition-all text-sm ${
@@ -505,15 +507,74 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                          >
                              Premium
                          </button>
+                         <button
+                             onClick={() => handleStyleChange('featuresVariant', 'image-overlay')}
+                             className={`px-3 py-2 rounded-md border transition-all text-sm ${
+                                 currentVariant === 'image-overlay'
+                                     ? 'bg-editor-accent text-editor-bg border-editor-accent' 
+                                     : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                             }`}
+                         >
+                             Overlay
+                         </button>
                      </div>
                      <p className="text-xs text-editor-text-secondary mt-1">
                          {currentVariant === 'classic' 
                              ? '📦 Traditional uniform grid layout'
                              : currentVariant === 'modern' 
                                  ? '✨ Modern asymmetrical bento grid layout' 
-                                 : '🎯 Premium bento with featured first card'}
+                                 : currentVariant === 'bento-premium'
+                                     ? '🎯 Premium bento with featured first card'
+                                     : '🖼️ Full-width images with text overlay'}
                      </p>
                  </div>
+
+                 {/* --- CONTROLES ESPECÍFICOS PARA IMAGE-OVERLAY --- */}
+                 {currentVariant === 'image-overlay' && (
+                     <>
+                         <hr className="border-editor-border/50" />
+                         <div className="flex items-center space-x-2">
+                             <Image size={16} className="text-editor-accent" />
+                             <h4 className="font-semibold text-editor-text-primary">Overlay Settings</h4>
+                         </div>
+                         
+                         {/* Text Alignment */}
+                         <div>
+                             <Label>Text Alignment</Label>
+                             <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+                                 {(['left', 'center', 'right'] as const).map(align => (
+                                     <button 
+                                         key={align} 
+                                         onClick={() => handleStyleChange('overlayTextAlignment', align)} 
+                                         className={`flex-1 text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors capitalize ${
+                                             currentTextAlignment === align 
+                                                 ? 'bg-editor-accent text-editor-bg' 
+                                                 : 'text-editor-text-secondary hover:bg-editor-border'
+                                         }`}
+                                     >
+                                         {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
+                                     </button>
+                                 ))}
+                             </div>
+                         </div>
+
+                         {/* Show Section Header Toggle */}
+                         <div className="flex items-center justify-between">
+                             <Label>Show Section Header</Label>
+                             <button
+                                 onClick={() => handleStyleChange('showSectionHeader', !showHeader)}
+                                 className={`relative w-12 h-6 rounded-full transition-colors ${
+                                     showHeader ? 'bg-editor-accent' : 'bg-editor-border'
+                                 }`}
+                             >
+                                 <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                     showHeader ? 'left-7' : 'left-1'
+                                 }`} />
+                             </button>
+                         </div>
+                     </>
+                 )}
+
                  <hr className="border-editor-border/50" />
 
                  <h4 className="font-semibold text-editor-text-primary">Grid Layout</h4>
@@ -921,6 +982,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Input Text" value={s.colors?.inputText || '#ffffff'} onChange={v => handleColorChange('inputText', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Placeholder" value={s.colors?.inputPlaceholder || '#6b7280'} onChange={v => handleColorChange('inputPlaceholder', v)} />
                     <ColorControl label="Input Border" value={s.colors?.inputBorder || '#374151'} onChange={v => handleColorChange('inputBorder', v)} />
                 </div>
 

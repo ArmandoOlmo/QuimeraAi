@@ -103,15 +103,17 @@ const Video: React.FC<VideoProps> = ({
     }
 
     return (
-        <section id="video" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: colors.background }}>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-                <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
-                    {description}
-                </p>
-            </div>
-            <div className={`relative aspect-video w-full max-w-4xl mx-auto ${borderRadiusClasses[borderRadius]}`}>
-                {videoPlayer}
+        <section id="video" className="w-full" style={{ backgroundColor: colors.background }}>
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+                        {description}
+                    </p>
+                </div>
+                <div className={`relative aspect-video w-full max-w-4xl mx-auto ${borderRadiusClasses[borderRadius]}`}>
+                    {videoPlayer}
+                </div>
             </div>
         </section>
     );

@@ -79,6 +79,9 @@ const Pricing: React.FC<PricingProps> = ({
     heading: colors.heading,
     description: colors.description || colors.text,
     cardBackground: colors.cardBackground || '#1f2937',
+    cardHeading: colors.cardHeading,
+    cardText: colors.cardText,
+    priceColor: colors.priceColor,
     buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
     buttonText: colors.buttonText || '#ffffff',
     checkmarkColor: colors.checkmarkColor || getColor('success.main', '#10b981'),
@@ -93,9 +96,11 @@ const Pricing: React.FC<PricingProps> = ({
       heading: actualColors.heading || '#ffffff',
       text: actualColors.text || '#94a3b8',
       description: actualColors.description || actualColors.text || '#94a3b8',
-      // Card-level colors
-      cardHeading: actualColors.heading || '#ffffff',
-      cardText: actualColors.text || '#94a3b8',
+      // Card-level colors (use specific card colors if set, otherwise fallback to section colors)
+      cardHeading: actualColors.cardHeading || actualColors.heading || '#ffffff',
+      cardText: actualColors.cardText || actualColors.text || '#94a3b8',
+      // Price color (use specific price color if set, otherwise fallback to card heading)
+      priceColor: actualColors.priceColor || actualColors.cardHeading || actualColors.heading || '#ffffff',
     };
   }, [actualColors]);
 
@@ -151,7 +156,7 @@ const Pricing: React.FC<PricingProps> = ({
                       )}
                       
                       <div className="text-center mb-8">
-                          <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.cardHeading }}>
+                          <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.priceColor }}>
                               {tier.price}
                           </span>
                           <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
@@ -402,7 +407,7 @@ const Pricing: React.FC<PricingProps> = ({
                       )}
                       
                       <div className="text-center mb-8">
-                          <span className="text-6xl font-black font-header" style={{ color: safeColors.cardHeading }}>
+                          <span className="text-6xl font-black font-header" style={{ color: safeColors.priceColor }}>
                               {tier.price}
                           </span>
                           <span className="text-lg font-header ml-1 block mt-1" style={{ color: safeColors.cardText }}>
@@ -511,7 +516,7 @@ const Pricing: React.FC<PricingProps> = ({
                       
                       <div className="mb-10 pb-8 border-b" style={{ borderColor: actualColors.borderColor }}>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-5xl font-light font-header" style={{ color: safeColors.cardHeading }}>
+                            <span className="text-5xl font-light font-header" style={{ color: safeColors.priceColor }}>
                                 {tier.price}
                             </span>
                             <span className="text-sm font-header" style={{ color: safeColors.cardText, opacity: 0.6 }}>

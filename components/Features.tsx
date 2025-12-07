@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit, AnimationType } from '../types';
+import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit, AnimationType, TextAlignment, FeatureItem } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
@@ -62,6 +62,13 @@ const objectFitClasses: Record<ObjectFit, string> = {
   fill: 'object-fill',
   none: 'object-none',
   'scale-down': 'object-scale-down',
+};
+
+// Text alignment classes for overlay variant
+const textAlignmentClasses: Record<TextAlignment, string> = {
+  left: 'text-left items-start',
+  center: 'text-center items-center',
+  right: 'text-right items-end',
 };
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ 
@@ -146,6 +153,88 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: 
     );
 };
 
+// --- NUEVO: Componente para Image Overlay Style ---
+interface ImageOverlayCardProps {
+    feature: FeatureItem;
+    index: number;
+    colors: {
+        accent: string;
+    };
+    imageHeight: number;
+    imageObjectFit: ObjectFit;
+    textAlignment: TextAlignment;
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+}
+
+const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({ 
+    feature, 
+    index, 
+    colors, 
+    imageHeight,
+    imageObjectFit,
+    textAlignment,
+    animationType = 'fade-in-up',
+    enableAnimation = true
+}) => {
+    const animationClass = getAnimationClass(animationType, enableAnimation);
+    const delay = getAnimationDelay(index);
+    
+    return (
+        <div 
+            className={`group relative overflow-hidden ${animationClass}`}
+            style={{ 
+                animationDelay: delay,
+                height: `${imageHeight}px`
+            }}
+        >
+            {/* Image as full background - 100% width */}
+            {isPendingImage(feature.imageUrl) ? (
+                <ImagePlaceholder 
+                    aspectRatio="auto"
+                    showGenerateButton={false}
+                    className="absolute inset-0 w-full h-full"
+                />
+            ) : (
+                <img 
+                    src={feature.imageUrl} 
+                    alt={feature.title} 
+                    className={`absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit]}`}
+                />
+            )}
+            
+            {/* Gradient overlay for text readability */}
+            <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+            />
+            
+            {/* Text overlay - position based on alignment */}
+            <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`}>
+                <h3 
+                    className="text-xl md:text-2xl font-bold mb-2 font-header text-white drop-shadow-lg"
+                    style={{ 
+                        textTransform: 'var(--headings-transform, none)' as any, 
+                        letterSpacing: 'var(--headings-spacing, normal)' 
+                    }}
+                >
+                    {feature.title}
+                </h3>
+                <p 
+                    className="text-sm md:text-base font-body text-white/80 max-w-md drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2"
+                >
+                    {feature.description}
+                </p>
+            </div>
+            
+            {/* Optional accent indicator */}
+            <div 
+                className="absolute top-4 right-4 w-2 h-2 rounded-full"
+                style={{ backgroundColor: colors.accent }}
+            />
+        </div>
+    );
+};
+
 interface FeaturesProps extends FeaturesData {
     borderRadius: BorderRadiusSize;
 }
@@ -165,7 +254,9 @@ const Features: React.FC<FeaturesProps> = ({
     imageObjectFit = 'cover',
     featuresVariant = 'classic',
     animationType = 'fade-in-up',
-    enableCardAnimation = true
+    enableCardAnimation = true,
+    overlayTextAlignment = 'left',
+    showSectionHeader = true
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -207,30 +298,91 @@ const Features: React.FC<FeaturesProps> = ({
       4: 'lg:grid-cols-4',
   };
 
+  // --- RENDERIZADO IMAGE OVERLAY ---
+  if (featuresVariant === 'image-overlay') {
+      return (
+          <section 
+              id="features" 
+              className="w-full"
+              style={{ backgroundColor: actualColors.background }}
+          >
+              {/* Optional Section Header */}
+              {showSectionHeader && (title || description) && (
+                  <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
+                      {title && (
+                          <h2 
+                              className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} 
+                              style={{ 
+                                  color: safeColors.heading, 
+                                  textTransform: 'var(--headings-transform, none)' as any, 
+                                  letterSpacing: 'var(--headings-spacing, normal)' 
+                              }}
+                          >
+                              {title}
+                          </h2>
+                      )}
+                      {description && (
+                          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+                              {description}
+                          </p>
+                      )}
+                  </div>
+              )}
+
+              {/* Full-width Image Grid - NO GAPS, 100% width */}
+              <div 
+                  className="grid w-full"
+                  style={{
+                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                      gap: '0px'
+                  }}
+              >
+                  {items.map((feature, index) => (
+                      <ImageOverlayCard
+                          key={index}
+                          feature={feature}
+                          index={index}
+                          colors={{
+                              accent: actualColors.accent
+                          }}
+                          imageHeight={imageHeight}
+                          imageObjectFit={imageObjectFit}
+                          textAlignment={overlayTextAlignment}
+                          animationType={animationType}
+                          enableAnimation={enableCardAnimation}
+                      />
+                  ))}
+              </div>
+          </section>
+      );
+  }
+
   // --- RENDERIZADO MODERNO ---
   if (featuresVariant === 'modern') {
       return (
-        <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-            <div className="relative z-10">
-                <div className="mb-20 max-w-3xl">
-                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: safeColors.heading }}>
-                        {title}
-                    </h2>
-                    <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: safeColors.description, borderColor: actualColors.accent }}>
-                        {description}
-                    </p>
-                </div>
+        <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+                <div className="relative z-10">
+                    <div className="mb-20 max-w-3xl">
+                        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: safeColors.heading }}>
+                            {title}
+                        </h2>
+                        <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: safeColors.description, borderColor: actualColors.accent }}>
+                            {description}
+                        </p>
+                    </div>
 
-                <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-6`}>
-                    {items.map((feature, index) => (
-                        <ModernFeatureCard 
-                            key={index} 
-                            feature={feature} 
-                            index={index}
-                            colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
-                            borderRadius={borderRadiusClasses[borderRadius]}
-                        />
-                    ))}
+                    <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-6`}>
+                        {items.map((feature, index) => (
+                            <ModernFeatureCard 
+                                key={index} 
+                                feature={feature} 
+                                index={index}
+                                colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
+                                borderRadius={borderRadiusClasses[borderRadius]}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>
@@ -240,8 +392,9 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO BENTO PREMIUM ---
   if (featuresVariant === 'bento-premium') {
       return (
-        <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-          <div className="relative">
+        <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+          <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+            <div className="relative">
             {/* Section Header con línea decorativa */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
               <div className="max-w-2xl">
@@ -351,14 +504,15 @@ const Features: React.FC<FeaturesProps> = ({
                 );
               })}
             </div>
+            </div>
           </div>
         </section>
       );
   }
 
   return (
-    <section id="features" className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-      <div>
+    <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
