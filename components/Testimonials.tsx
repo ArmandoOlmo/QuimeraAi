@@ -68,6 +68,12 @@ const shadowClasses: Record<string, string> = {
   xl: 'shadow-xl shadow-purple-500/10',
 };
 
+// Helper to get safe shadow class
+const getShadowClass = (shadow?: string): string => {
+  if (!shadow || shadow === '') return shadowClasses['lg'];
+  return shadowClasses[shadow] || shadowClasses['lg'];
+};
+
 const TestimonialCard: React.FC<TestimonialCardProps> = ({ 
   quote, 
   name, 
@@ -182,9 +188,12 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 
   const needsZIndex = variant === 'gradient-glow' || variant === 'gradient-shift';
 
+  // Get border classes - apply user borderStyle for classic, variant styles for others
+  const finalBorderClass = variant === 'classic' ? getBorderClass() : getVariantClasses();
+  
   return (
     <div 
-      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${shadowClasses[cardShadow || 'lg']} ${variant === 'classic' ? getBorderClass() : getVariantClasses()}`} 
+      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${getShadowClass(cardShadow)} ${finalBorderClass}`} 
       style={getCardStyle()}
     >
       {variant === 'gradient-shift' && (
