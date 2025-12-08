@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { VideoData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
+import { VideoData, PaddingSize, BorderRadiusSize, FontSize, CornerGradientConfig } from '../types';
+import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -37,11 +38,12 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 
 interface VideoProps extends VideoData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Video: React.FC<VideoProps> = ({ 
     title, description, source, videoId, videoUrl, autoplay, loop, showControls,
-    paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md'
+    paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient
 }) => {
 
     let videoPlayer: React.ReactNode;
@@ -103,8 +105,9 @@ const Video: React.FC<VideoProps> = ({
     }
 
     return (
-        <section id="video" className="w-full" style={{ backgroundColor: colors.background }}>
-            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <section id="video" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+            <CornerGradient config={cornerGradient} />
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
                     <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>

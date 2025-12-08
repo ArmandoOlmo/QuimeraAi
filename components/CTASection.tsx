@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { CtaData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
+import { CtaData, PaddingSize, BorderRadiusSize, FontSize, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -39,9 +40,10 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 interface CTASectionProps extends CtaData {
     cardBorderRadius: BorderRadiusSize;
     buttonBorderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
-const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
   
@@ -58,10 +60,11 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   };
   
   return (
-    <section id="cta" className="w-full" style={{ backgroundColor: actualColors.background }}>
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+    <section id="cta" className="w-full relative overflow-hidden" style={{ backgroundColor: actualColors.background }}>
+      <CornerGradient config={cornerGradient} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div 
-            className={`p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]}`}
+            className={`p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]} relative overflow-hidden`}
             style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
         >
             <div>
@@ -87,7 +90,9 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                 {/* CTA Button Group */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <a 
-                      href="#" 
+                      href={buttonUrl || '#'} 
+                      target={buttonUrl?.startsWith('http') ? '_blank' : undefined}
+                      rel={buttonUrl?.startsWith('http') ? 'noopener noreferrer' : undefined}
                       className={`group inline-flex items-center gap-3 font-bold py-4 px-10 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
                       style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
                   >

@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { SlideshowData, PaddingSize, BorderRadiusSize, FontSize, SlideshowVariant, ArrowStyle, DotStyle } from '../types';
+import { SlideshowData, PaddingSize, BorderRadiusSize, FontSize, SlideshowVariant, ArrowStyle, DotStyle, CornerGradientConfig } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import CornerGradient from './ui/CornerGradient';
 
 // Helper component to render slideshow image or placeholder
 const SlideImage: React.FC<{ imageUrl: string; altText: string; className?: string }> = ({ imageUrl, altText, className = '' }) => {
@@ -42,6 +43,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 
 interface SlideshowProps extends SlideshowData {
     borderRadius?: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Slideshow: React.FC<SlideshowProps> = ({ 
@@ -65,7 +67,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
     kenBurnsIntensity = 'medium',
     thumbnailSize = 80,
     showCaptions = false,
-    slideHeight = 600
+    slideHeight = 600,
+    cornerGradient
 }) => {
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
@@ -495,10 +498,11 @@ const Slideshow: React.FC<SlideshowProps> = ({
 
     return (
         <section 
-            className="w-full" 
+            className="w-full relative overflow-hidden" 
             style={{ backgroundColor: colors.background }}
         >
-            <div className={`${fullWidth ? '' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]}`}>
+            <CornerGradient config={cornerGradient} />
+            <div className={`${fullWidth ? '' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]} relative z-10`}>
                 {showTitle && title && (
                     <div className={`text-center max-w-3xl mx-auto mb-16 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
                         <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading || primaryColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

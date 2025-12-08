@@ -7,6 +7,7 @@ import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles } from 'lucide-react';
 import { CMSPost } from '../../types';
+import { sanitizeHtml } from '../../utils/sanitize';
 
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -805,7 +806,7 @@ const CMSDashboard: React.FC = () => {
                                         )}
                                         <div 
                                             className="prose prose-sm dark:prose-invert max-w-none"
-                                            dangerouslySetInnerHTML={{ __html: previewPost.content }} 
+                                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewPost.content) }} 
                                         />
                                     </div>
                                 </div>

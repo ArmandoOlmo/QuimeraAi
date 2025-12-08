@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { PortfolioData, PortfolioItem, PaddingSize, BorderRadiusSize, FontSize, AnimationType, TextAlignment, ObjectFit } from '../types';
+import { PortfolioData, PortfolioItem, PaddingSize, BorderRadiusSize, FontSize, AnimationType, TextAlignment, ObjectFit, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import CornerGradient from './ui/CornerGradient';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -204,6 +205,7 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
 
 interface PortfolioProps extends PortfolioData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const gridColsClasses: Record<number, string> = {
@@ -228,16 +230,18 @@ const Portfolio: React.FC<PortfolioProps> = ({
   gridColumns = 3,
   imageHeight = 300,
   overlayTextAlignment = 'left',
-  showSectionHeader = true
+  showSectionHeader = true,
+  cornerGradient
 }) => {
   // --- RENDERIZADO IMAGE OVERLAY ---
   if (portfolioVariant === 'image-overlay') {
       return (
           <section 
               id="portfolio" 
-              className="w-full"
+              className="w-full relative overflow-hidden"
               style={{ backgroundColor: colors.background }}
           >
+              <CornerGradient config={cornerGradient} />
               {/* Optional Section Header */}
               {showSectionHeader && (title || description) && (
                   <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
@@ -290,8 +294,9 @@ const Portfolio: React.FC<PortfolioProps> = ({
 
   // --- RENDERIZADO CLASSIC ---
   return (
-    <section id="portfolio" className="w-full" style={{ backgroundColor: colors.background }}>
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+    <section id="portfolio" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+      <CornerGradient config={cornerGradient} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>

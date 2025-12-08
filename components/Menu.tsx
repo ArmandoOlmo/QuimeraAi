@@ -1,9 +1,10 @@
 import React from 'react';
-import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, AnimationType } from '../types';
+import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, AnimationType, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { isLightColor, hexToRgba } from '../utils/colorUtils';
+import CornerGradient from './ui/CornerGradient';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { 
     Star, Award, ChefHat,
@@ -372,6 +373,109 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
 // =============================================================================
 // VARIANT 3: ELEGANT LIST (Horizontal layout, magazine-style)
 // =============================================================================
+
+// =============================================================================
+// VARIANT 4: FULL IMAGE (Full photo with text overlay at bottom)
+// =============================================================================
+const FullImageMenuCard: React.FC<{ 
+    item: any; 
+    colors: any; 
+    borderRadius: string; 
+    index: number;
+    textAlignment?: 'left' | 'center' | 'right';
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+}> = ({ item, colors, borderRadius, index, textAlignment = 'center', animationType = 'fade-in-up', enableAnimation = true }) => {
+    const animationClass = getAnimationClass(animationType, enableAnimation);
+    
+    // Use specific colors - respect user's choices
+    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
+    const titleColor = colors.cardTitleColor || '#ffffff';
+    const textColor = colors.cardText || colors.text || '#ffffff';
+    
+    // Text alignment classes
+    const alignmentClasses: Record<string, string> = {
+        left: 'text-left items-start',
+        center: 'text-center items-center',
+        right: 'text-right items-end',
+    };
+    
+    return (
+        <div 
+            className={`group relative overflow-hidden transform hover:-translate-y-2 transition-all duration-500 ${animationClass} ${borderRadius}`}
+            style={{ 
+                animationDelay: getAnimationDelay(index, 0.1),
+                height: '420px',
+            }}
+        >
+            {/* Full Background Image */}
+            <div className="absolute inset-0">
+                {isPendingImage(item.imageUrl) ? (
+                    <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="w-full h-full" />
+                ) : (
+                    <img 
+                        src={item.imageUrl} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                )}
+            </div>
+            
+            {/* Gradient Overlay */}
+            <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"
+            />
+            
+            {/* Special Badge */}
+            {item.isSpecial && (
+                <div 
+                    className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10"
+                    style={{ backgroundColor: colors.accent, color: '#fff' }}
+                >
+                    <Star size={12} fill="currentColor" />
+                    Especial
+                </div>
+            )}
+            
+            {/* Category Tag */}
+            {item.category && (
+                <div 
+                    className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider z-10"
+                    style={{ backgroundColor: hexToRgba(colors.accent, 0.2), color: colors.accent, backdropFilter: 'blur(8px)' }}
+                >
+                    {item.category}
+                </div>
+            )}
+            
+            {/* Content at Bottom */}
+            <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${alignmentClasses[textAlignment]} z-10`}>
+                {/* Price */}
+                <span 
+                    className="text-3xl font-black mb-2 font-header drop-shadow-lg" 
+                    style={{ color: priceColor }}
+                >
+                    {item.price}
+                </span>
+                
+                {/* Title */}
+                <h3 
+                    className="text-2xl font-bold mb-2 font-header drop-shadow-md" 
+                    style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
+                >
+                    {item.name}
+                </h3>
+                
+                {/* Description */}
+                <p 
+                    className="text-sm leading-relaxed font-body opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 max-w-xs drop-shadow-sm" 
+                    style={{ color: textColor }}
+                >
+                    {item.description}
+                </p>
+            </div>
+        </div>
+    );
+};
 const ElegantListCard: React.FC<{ 
     item: any; 
     colors: any; 
@@ -471,6 +575,7 @@ const ElegantListCard: React.FC<{
 // =============================================================================
 interface MenuProps extends MenuData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Menu: React.FC<MenuProps> = ({ 
@@ -487,7 +592,9 @@ const Menu: React.FC<MenuProps> = ({
     showIcon = true,
     icon = 'utensils-crossed',
     animationType = 'fade-in-up',
-    enableCardAnimation = true
+    enableCardAnimation = true,
+    textAlignment = 'center',
+    cornerGradient
 }) => {
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
@@ -511,9 +618,11 @@ const Menu: React.FC<MenuProps> = ({
     return (
         <section 
             id="menu" 
-            className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
+            className="w-full relative overflow-hidden" 
             style={{ backgroundColor: colors.background }}
         >
+            <CornerGradient config={cornerGradient} />
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
             {/* Header */}
             <div className="text-center max-w-3xl mx-auto mb-16">
                 {showIcon && (
@@ -590,6 +699,25 @@ const Menu: React.FC<MenuProps> = ({
                     ))}
                 </div>
             )}
+
+            {/* Menu Items - Full Image Variant */}
+            {menuVariant === 'full-image' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {items.map((item, index) => (
+                        <FullImageMenuCard 
+                            key={index} 
+                            item={item} 
+                            colors={menuColors} 
+                            borderRadius={borderRadiusClasses[borderRadius]}
+                            index={index}
+                            textAlignment={textAlignment}
+                            animationType={animationType}
+                            enableAnimation={enableCardAnimation}
+                        />
+                    ))}
+                </div>
+            )}
+            </div>
         </section>
     );
 };

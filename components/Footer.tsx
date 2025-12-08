@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { FooterData, SocialPlatform, FontSize } from '../types';
-import { Twitter, Github, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import BusinessHours from './BusinessHours';
 
 const socialIconComponents: Record<SocialPlatform, React.ReactNode> = {
   twitter: <Twitter className="w-6 h-6" />,
@@ -28,7 +29,7 @@ const descriptionSizeClasses: Record<FontSize, string> = {
 
 const Footer: React.FC<FooterData> = ({ 
   title, description, linkColumns, socialLinks, copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
-  logoType = 'text', logoImageUrl
+  logoType = 'text', logoImageUrl, contactInfo
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -67,6 +68,51 @@ const Footer: React.FC<FooterData> = ({
             <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-xs`} style={{ color: actualColors.text }}>
               {description}
             </p>
+
+            {/* Contact Information */}
+            {contactInfo && (contactInfo.address || contactInfo.phone || contactInfo.email) && (
+              <div className="mt-6 space-y-3">
+                {/* Address */}
+                {contactInfo.address && (
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="mt-0.5 flex-shrink-0" style={{ color: actualColors.linkHover }} />
+                    <div className="text-sm font-body" style={{ color: actualColors.text }}>
+                      <p>{contactInfo.address}</p>
+                      {(contactInfo.city || contactInfo.state || contactInfo.zipCode) && (
+                        <p>
+                          {[contactInfo.city, contactInfo.state, contactInfo.zipCode].filter(Boolean).join(', ')}
+                        </p>
+                      )}
+                      {contactInfo.country && <p>{contactInfo.country}</p>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phone */}
+                {contactInfo.phone && (
+                  <a 
+                    href={`tel:${contactInfo.phone}`}
+                    className="flex items-center gap-2 text-sm font-body hover:opacity-80 transition-opacity"
+                    style={{ color: actualColors.text }}
+                  >
+                    <Phone size={16} style={{ color: actualColors.linkHover }} />
+                    {contactInfo.phone}
+                  </a>
+                )}
+
+                {/* Email */}
+                {contactInfo.email && (
+                  <a 
+                    href={`mailto:${contactInfo.email}`}
+                    className="flex items-center gap-2 text-sm font-body hover:opacity-80 transition-opacity"
+                    style={{ color: actualColors.text }}
+                  >
+                    <Mail size={16} style={{ color: actualColors.linkHover }} />
+                    {contactInfo.email}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {linkColumns.map((column, index) => (
@@ -87,6 +133,22 @@ const Footer: React.FC<FooterData> = ({
               </ul>
             </div>
           ))}
+
+          {/* Business Hours */}
+          {contactInfo?.businessHours && (
+            <div className="lg:col-span-2">
+              <BusinessHours 
+                businessHours={contactInfo.businessHours}
+                colors={{
+                  text: actualColors.text,
+                  heading: actualColors.heading,
+                  accent: actualColors.linkHover,
+                }}
+                variant="compact"
+                title="Hours"
+              />
+            </div>
+          )}
         </div>
         
         <div className="mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center" style={{ borderTopColor: actualColors.border }}>

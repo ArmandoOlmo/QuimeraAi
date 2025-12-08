@@ -91,10 +91,11 @@ export const useDesignTokens = (): UseDesignTokensReturn => {
   };
 
   // Quick access to common colors with fallbacks
+  // Using Quimera's Cadmium Yellow as primary color
   const colors = {
-    primary: getColor('primary.main', '#4f46e5'),
-    primaryLight: getColor('primary.light', '#6366f1'),
-    primaryDark: getColor('primary.dark', '#4338ca'),
+    primary: getColor('primary.main', '#FBB92B'),
+    primaryLight: getColor('primary.light', '#FDD766'),
+    primaryDark: getColor('primary.dark', '#D99B1C'),
     secondary: getColor('secondary.main', '#10b981'),
     secondaryLight: getColor('secondary.light', '#34d399'),
     secondaryDark: getColor('secondary.dark', '#059669'),
@@ -182,10 +183,11 @@ export const useSafeDesignTokens = (): UseDesignTokensReturn => {
     return designTokens.shadows[key] || fallback;
   };
 
+  // Using Quimera's Cadmium Yellow as primary color
   const colors = {
-    primary: getColor('primary.main', '#4f46e5'),
-    primaryLight: getColor('primary.light', '#6366f1'),
-    primaryDark: getColor('primary.dark', '#4338ca'),
+    primary: getColor('primary.main', '#FBB92B'),
+    primaryLight: getColor('primary.light', '#FDD766'),
+    primaryDark: getColor('primary.dark', '#D99B1C'),
     secondary: getColor('secondary.main', '#10b981'),
     secondaryLight: getColor('secondary.light', '#34d399'),
     secondaryDark: getColor('secondary.dark', '#059669'),

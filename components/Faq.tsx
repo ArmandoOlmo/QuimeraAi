@@ -330,16 +330,16 @@ const Faq: React.FC<FaqProps> = ({
   return (
     <section id="faq" className="w-full" style={{ backgroundColor: colors.background || primaryColor }}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-      <div className="text-center max-w-3xl mx-auto mb-16">
-        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-        <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-          {description}
-        </p>
-      </div>
-      
-      <div className={`${faqVariant === 'minimal' ? 'max-w-4xl' : 'max-w-3xl'} mx-auto`}>
-        {items.map((item, index) => renderFaqItem(item, index))}
-      </div>
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+            {description}
+          </p>
+        </div>
+        
+        <div className={`${faqVariant === 'minimal' ? 'max-w-4xl' : 'max-w-3xl'} mx-auto`}>
+          {items.map((item, index) => renderFaqItem(item, index))}
+        </div>
       </div>
     </section>
   );

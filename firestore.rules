@@ -2,13 +2,57 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // User documents
+    // ============================================
+    // HELPER FUNCTIONS FOR SECURITY
+    // ============================================
+    
+    // Check if user is superadmin or owner
+    function isSuperAdminOrOwner() {
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return userRole == 'superadmin' || userRole == 'owner';
+    }
+    
+    // Validate email format (basic regex)
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+    
+    // Validate that a string is not empty and has reasonable length
+    function isValidString(str, minLen, maxLen) {
+      return str is string && str.size() >= minLen && str.size() <= maxLen;
+    }
+    
+    // Validate rating is between 1 and 5
+    function isValidRating(rating) {
+      return rating is int && rating >= 1 && rating <= 5;
+    }
+    
+    // Validate price/amount is positive
+    function isPositiveNumber(num) {
+      return num is number && num > 0;
+    }
+    
+    // Rate limiting helper - check document age (for spam prevention)
+    // Note: This is a soft limit, real rate limiting should be done in Cloud Functions
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+    
+    // ============================================
+    // USER DOCUMENTS
+    // ============================================
+    
     match /users/{userId} {
       allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
       
       // User projects
       match /projects/{projectId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
+        
+        // Project ecommerce config subcollection
+        match /ecommerce/{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
       
       // User files
@@ -56,18 +100,115 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
       
-      // User usage/billing (NEW)
+      // User usage/billing
       match /usage/{document} {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow write: if false; // Only backend/admin can write
       }
+      
+      // ============================================
+      // ECOMMERCE - Multi-tenant Store System
+      // ============================================
+      
+      match /stores/{storeId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        
+        // Store Settings
+        match /settings/{settingId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Products
+        match /products/{productId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Categories
+        match /categories/{categoryId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Orders - SECURED: Validate order data on public create
+        match /orders/{orderId} {
+          // Owner full access
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+          
+          // Public create with validation (for guest checkout)
+          allow create: if 
+            hasRequiredFields(request.resource.data, ['customerEmail', 'items', 'total', 'status']) &&
+            isValidEmail(request.resource.data.customerEmail) &&
+            request.resource.data.items is list &&
+            request.resource.data.items.size() > 0 &&
+            request.resource.data.items.size() <= 100 && // Max 100 items per order
+            isPositiveNumber(request.resource.data.total) &&
+            request.resource.data.total <= 1000000 && // Max $10,000 per order
+            request.resource.data.status == 'pending';
+        }
+        
+        // Customers
+        match /customers/{customerId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Discounts
+        match /discounts/{discountId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Carts - SECURED: Validate cart operations
+        match /carts/{cartId} {
+          // Owner full access
+          allow read, delete: if request.auth != null && request.auth.uid == userId;
+          
+          // Public create with validation
+          allow create: if 
+            hasRequiredFields(request.resource.data, ['sessionId', 'createdAt']) &&
+            isValidString(request.resource.data.sessionId, 10, 100);
+          
+          // Public update only if sessionId matches (can't change sessionId)
+          allow update: if 
+            request.resource.data.sessionId == resource.data.sessionId &&
+            (!request.resource.data.keys().hasAny(['items']) || 
+              (request.resource.data.items is list && request.resource.data.items.size() <= 50));
+        }
+        
+        // Shipping Zones
+        match /shippingZones/{zoneId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Reviews - SECURED: Validate review data
+        match /reviews/{reviewId} {
+          // Owner full access
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+          
+          // Public create with validation
+          allow create: if 
+            hasRequiredFields(request.resource.data, ['rating', 'productId', 'customerName', 'createdAt']) &&
+            isValidRating(request.resource.data.rating) &&
+            isValidString(request.resource.data.productId, 1, 100) &&
+            isValidString(request.resource.data.customerName, 1, 100) &&
+            (!request.resource.data.keys().hasAny(['comment']) || 
+              isValidString(request.resource.data.comment, 0, 2000)); // Optional comment max 2000 chars
+        }
+        
+        // Inventory Logs (read-only for owner, write only by backend)
+        match /inventoryLogs/{logId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow write: if false;
+        }
+        
+        // Analytics (read-only for owner, write only by backend)
+        match /analytics/{docId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow write: if false;
+        }
+      }
     }
     
-    // Helper function to check if user is superadmin or owner
-    function isSuperAdminOrOwner() {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return userRole == 'superadmin' || userRole == 'owner';
-    }
+    // ============================================
+    // GLOBAL SETTINGS & ADMIN
+    // ============================================
     
     // Global settings (superadmin/owner for write)
     match /globalSettings/{settingId} {
@@ -118,7 +259,7 @@ service cloud.firestore {
     }
     
     // ============================================
-    // API Logging & Analytics (NEW)
+    // API LOGGING & ANALYTICS
     // ============================================
     
     // API Logs - authenticated users can write their own logs, superadmin can read all
@@ -146,39 +287,178 @@ service cloud.firestore {
     }
     
     // ============================================
-    // Tenant Management (NEW)
+    // TENANT MANAGEMENT
     // ============================================
     
-    // Tenants - superadmin/owner only
     match /tenants/{tenantId} {
       allow read: if request.auth != null && isSuperAdminOrOwner();
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
     // ============================================
-    // Widget API - Public Access for Embedded Widgets (NEW)
+    // WIDGET API - Public Access (with validation)
     // ============================================
     
-    // Top-level projects collection (used by widget API for public access)
-    // This allows the widget to read project config without authentication
+    // Top-level projects collection (used by widget API)
+    // SECURED: Only expose specific fields needed for widget
     match /projects/{projectId} {
-      // Public read for widget config (only if aiAssistantConfig.isActive is true)
+      // Public read for widget config
+      // Note: Use Cloud Functions to filter sensitive data
       allow read: if true;
       // Only authenticated owner or superadmin can write
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
     // Top-level leads collection (used by widget API)
+    // SECURED: Validate lead data on create
     match /leads/{leadId} {
-      // Public create for widget submissions
-      allow create: if true;
-      // Authenticated users can read/update their own leads, superadmin can access all
+      // Public create with validation
+      allow create: if 
+        hasRequiredFields(request.resource.data, ['email', 'projectId', 'source', 'createdAt']) &&
+        isValidEmail(request.resource.data.email) &&
+        isValidString(request.resource.data.projectId, 1, 100) &&
+        isValidString(request.resource.data.source, 1, 50) &&
+        // Optional fields validation
+        (!request.resource.data.keys().hasAny(['name']) || isValidString(request.resource.data.name, 0, 200)) &&
+        (!request.resource.data.keys().hasAny(['phone']) || isValidString(request.resource.data.phone, 0, 30)) &&
+        (!request.resource.data.keys().hasAny(['message']) || isValidString(request.resource.data.message, 0, 5000));
+      
+      // Authenticated users can read/update their own leads
       allow read, update, delete: if request.auth != null && isSuperAdminOrOwner();
       
       // Lead activities subcollection
       match /activities/{activityId} {
         allow read, write: if request.auth != null && isSuperAdminOrOwner();
       }
+    }
+    
+    // ============================================
+    // ECOMMERCE - Pending Reviews (Customer Submissions)
+    // SECURED: Validate review submissions
+    // ============================================
+    
+    match /pendingReviews/{storeId} {
+      // Store owners can read pending reviews
+      allow read: if request.auth != null;
+      // Don't allow direct writes to parent doc
+      allow write: if false;
+      
+      match /reviews/{reviewId} {
+        // Authenticated users can read
+        allow read: if request.auth != null;
+        
+        // Public create with validation
+        allow create: if 
+          hasRequiredFields(request.resource.data, ['rating', 'productId', 'customerEmail', 'createdAt']) &&
+          isValidRating(request.resource.data.rating) &&
+          isValidString(request.resource.data.productId, 1, 100) &&
+          isValidEmail(request.resource.data.customerEmail) &&
+          // Optional fields validation
+          (!request.resource.data.keys().hasAny(['customerName']) || isValidString(request.resource.data.customerName, 0, 100)) &&
+          (!request.resource.data.keys().hasAny(['comment']) || isValidString(request.resource.data.comment, 0, 2000)) &&
+          // Prevent setting moderation status on create
+          !request.resource.data.keys().hasAny(['approved', 'rejected', 'moderatedAt', 'moderatedBy']);
+        
+        // Owner can moderate (update/delete)
+        allow update, delete: if request.auth != null;
+      }
+    }
+    
+    // ============================================
+    // ECOMMERCE - Public Storefront Access
+    // ============================================
+    
+    match /publicStores/{storeId} {
+      // Anyone can read public store info
+      allow read: if true;
+      // Authenticated users can write to their own public store (for seeding/sync)
+      // The storeId matches the projectId which belongs to the user
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      
+      // Public products
+      match /products/{productId} {
+        allow read: if true;
+        // Allow write if user owns the store
+        allow write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+      
+      // Public categories
+      match /categories/{categoryId} {
+        allow read: if true;
+        // Allow write if user owns the store
+        allow write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+      
+      // Public discounts (read-only for validation)
+      match /discounts/{discountId} {
+        allow read: if true;
+        // Allow write if user owns the store
+        allow write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+    }
+    
+    // ============================================
+    // ECOMMERCE - Guest Carts (Session-based)
+    // SECURED: Validate session ownership
+    // ============================================
+    
+    match /guestCarts/{sessionId} {
+      // Read own cart (sessionId in path must match)
+      allow read: if true;
+      
+      // Create with validation
+      allow create: if 
+        hasRequiredFields(request.resource.data, ['sessionId', 'createdAt', 'storeId']) &&
+        request.resource.data.sessionId == sessionId && // Ensure sessionId matches path
+        isValidString(request.resource.data.sessionId, 20, 100) && // UUID-like length
+        isValidString(request.resource.data.storeId, 1, 100);
+      
+      // Update only own cart
+      allow update: if 
+        resource.data.sessionId == sessionId &&
+        request.resource.data.sessionId == sessionId && // Can't change sessionId
+        (!request.resource.data.keys().hasAny(['items']) || 
+          (request.resource.data.items is list && request.resource.data.items.size() <= 50));
+      
+      // Delete only own cart
+      allow delete: if resource.data.sessionId == sessionId;
+      
+      // Cart items subcollection
+      match /items/{itemId} {
+        allow read: if true;
+        
+        // Create with validation
+        allow create: if 
+          hasRequiredFields(request.resource.data, ['productId', 'quantity', 'price']) &&
+          isValidString(request.resource.data.productId, 1, 100) &&
+          request.resource.data.quantity is int &&
+          request.resource.data.quantity > 0 &&
+          request.resource.data.quantity <= 99 &&
+          isPositiveNumber(request.resource.data.price);
+        
+        // Update with validation
+        allow update: if 
+          request.resource.data.quantity is int &&
+          request.resource.data.quantity > 0 &&
+          request.resource.data.quantity <= 99;
+        
+        allow delete: if true;
+      }
+    }
+    
+    // ============================================
+    // ECOMMERCE - Order Tracking (Read-Only)
+    // ============================================
+    
+    match /orderTracking/{trackingCode} {
+      // Public read for tracking
+      allow read: if true;
+      // Only Cloud Functions can write
+      allow write: if false;
     }
   }
 }

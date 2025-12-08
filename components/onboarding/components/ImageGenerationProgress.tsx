@@ -135,3 +135,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
 
 export default ImageGenerationProgress;
 
+
+
+
+

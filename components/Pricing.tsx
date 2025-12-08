@@ -1,10 +1,11 @@
 
 import React, { useMemo } from 'react';
-import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType } from '../types';
+import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType, CornerGradientConfig } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import CornerGradient from './ui/CornerGradient';
 
 // Use primary color for section background
 
@@ -47,6 +48,7 @@ interface PricingProps extends PricingData {
     buttonBorderRadius: BorderRadiusSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Pricing: React.FC<PricingProps> = ({ 
@@ -62,7 +64,8 @@ const Pricing: React.FC<PricingProps> = ({
     titleFontSize = 'md', 
     descriptionFontSize = 'md',
     animationType = 'fade-in-up',
-    enableCardAnimation = true
+    enableCardAnimation = true,
+    cornerGradient
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -107,8 +110,9 @@ const Pricing: React.FC<PricingProps> = ({
   // Classic Variant (Original Design)
   if (pricingVariant === 'classic') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-        <div className="container mx-auto">
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+        <CornerGradient config={cornerGradient} />
+        <div className="container mx-auto relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
               <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
@@ -208,6 +212,7 @@ const Pricing: React.FC<PricingProps> = ({
   if (pricingVariant === 'gradient') {
     return (
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+        <CornerGradient config={cornerGradient} />
         {/* Background gradient effects */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: actualColors.gradientStart }} />
@@ -347,6 +352,7 @@ const Pricing: React.FC<PricingProps> = ({
   if (pricingVariant === 'glassmorphism') {
     return (
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+        <CornerGradient config={cornerGradient} />
         {/* Animated background blobs */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl opacity-20 animate-pulse" style={{ background: actualColors.accent }} />
@@ -465,8 +471,9 @@ const Pricing: React.FC<PricingProps> = ({
   // Minimalist Variant - Clean and simple
   if (pricingVariant === 'minimalist') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={{ backgroundColor: actualColors.background }}>
-        <div className="container mx-auto">
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+        <CornerGradient config={cornerGradient} />
+        <div className="container mx-auto relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-20">
               <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                 {title}

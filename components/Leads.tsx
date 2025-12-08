@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant } from '../types';
+import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant, CornerGradientConfig } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { CheckCircle2, Mail, Phone, User } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -43,6 +44,7 @@ interface LeadsProps extends LeadsData {
     cardBorderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     inputBorderRadius?: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Leads: React.FC<LeadsProps> = ({ 
@@ -61,7 +63,8 @@ const Leads: React.FC<LeadsProps> = ({
     buttonBorderRadius = 'md',
     inputBorderRadius = 'md',
     titleFontSize = 'md', 
-    descriptionFontSize = 'md'
+    descriptionFontSize = 'md',
+    cornerGradient
 }) => {
   // Use safe versions for public preview compatibility
   const editorContext = useSafeEditor();
@@ -174,14 +177,15 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Classic Variant
   const renderClassic = () => (
-    <section id="leads" className="w-full" style={{ backgroundColor: leadsColors.background }}>
+    <section id="leads" className="w-full relative overflow-hidden" style={{ backgroundColor: leadsColors.background }}>
+      <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{ __html: `
         #leads input::placeholder, #leads textarea::placeholder {
           color: ${leadsColors.inputPlaceholder};
           opacity: 1;
         }
       `}} />
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 md:gap-16 items-center">
         <div className="text-center md:text-left mb-12 md:mb-0">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: leadsColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
@@ -305,13 +309,14 @@ const Leads: React.FC<LeadsProps> = ({
   const renderSplitGradient = () => (
     <section id="leads" className="w-full relative overflow-hidden" 
              style={{ backgroundColor: leadsColors.background }}>
+      <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{ __html: `
         #leads input::placeholder, #leads textarea::placeholder {
           color: ${leadsColors.inputPlaceholder};
           opacity: 1;
         }
       `}} />
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-0 items-stretch">
           {/* Left Side - Gradient Info */}
@@ -503,15 +508,16 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Floating Glass Variant
   const renderFloatingGlass = () => (
-    <section id="leads" className="w-full relative" 
+    <section id="leads" className="w-full relative overflow-hidden" 
              style={{ backgroundColor: leadsColors.background }}>
+      <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{ __html: `
         #leads input::placeholder, #leads textarea::placeholder {
           color: ${leadsColors.inputPlaceholder};
           opacity: 1;
         }
       `}} />
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         {/* Background Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 rounded-full opacity-20 blur-3xl"
@@ -661,15 +667,16 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Minimal Border Variant
   const renderMinimalBorder = () => (
-    <section id="leads" className="w-full" 
+    <section id="leads" className="w-full relative overflow-hidden" 
              style={{ backgroundColor: leadsColors.background }}>
+      <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{ __html: `
         #leads input::placeholder, #leads textarea::placeholder {
           color: ${leadsColors.inputPlaceholder};
           opacity: 1;
         }
       `}} />
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 max-w-3xl mx-auto">

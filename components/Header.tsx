@@ -109,7 +109,11 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
     );
 };
 
-const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElement> }> = ({ 
+const Header: React.FC<HeaderData & { 
+    containerRef?: React.RefObject<HTMLDivElement>;
+    /** When true, forces the header to use solid background regardless of style setting */
+    forceSolid?: boolean;
+}> = ({ 
     style, layout, isSticky, glassEffect, height,
     logoType, logoText, logoImageUrl, logoWidth,
     links, hoverStyle,
@@ -118,7 +122,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
     colors,
     isPreviewMode = false,
     containerRef,
-    linkFontSize = 14
+    linkFontSize = 14,
+    forceSolid = false,
 }) => {
   // Use safe versions of hooks that work outside EditorProvider (for public preview)
   const editorContext = useSafeEditor();
@@ -126,6 +131,9 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
+
+  // Use links directly - store links are now added manually via Navigation Dashboard
+  const allLinks = links;
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -207,7 +215,8 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
 
   // Visual State Calculations
   const isTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
-  const isTransparent = isTransparentStyle && !isScrolled && !isMenuOpen;
+  // When forceSolid is true, never use transparent background (useful for ecommerce pages without hero)
+  const isTransparent = !forceSolid && isTransparentStyle && !isScrolled && !isMenuOpen;
   const bgColor = isTransparent ? 'transparent' : actualColors.background;
   
   // Ensure contrast on transparent backgrounds by falling back to white if text is the default dark
@@ -343,7 +352,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
             <>
                 <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-center">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                 </div>
                 <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center">
                     {showLogin && <LoginButton />}
@@ -355,7 +364,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
         return (
              <>
                  <div className="hidden md:flex flex-1 justify-start items-center">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                  </div>
                  <div className="flex-shrink-0 mx-auto">
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
@@ -373,7 +382,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
                  </div>
                  <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="ml-8 flex items-center">
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
@@ -386,7 +395,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
             <>
                 <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-end items-center gap-8">
-                    <NavLinks links={links} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="flex items-center ml-4">
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
@@ -405,6 +414,11 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   // POSICIÓN SEGÚN ESTILO
   // ============================================
   const getPositionClass = () => {
+    // When forceSolid is true, always behave like a normal sticky/relative header
+    if (forceSolid) {
+      return isSticky ? 'sticky' : 'relative';
+    }
+    
     // Edge styles - siempre sticky o relative
     if (style.startsWith('edge-')) {
       return isSticky ? 'sticky' : 'relative';
@@ -430,8 +444,11 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
   const backgroundStyle = getBackgroundStyle();
 
   // Determinar si toma espacio en el flujo del documento
-  const shouldNotTakeSpace = style.startsWith('floating') || 
-    ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled);
+  // When forceSolid is true, always take space (the header is solid and visible)
+  const shouldNotTakeSpace = !forceSolid && (
+    style.startsWith('floating') ||
+    ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled)
+  );
 
   return (
     <header 
@@ -517,7 +534,7 @@ const Header: React.FC<HeaderData & { containerRef?: React.RefObject<HTMLDivElem
           {/* Navigation Links */}
           <nav className="flex-1">
             <ul className="space-y-1">
-              {links.map((link) => (
+              {allLinks.map((link) => (
                 <li key={link.text}>
                   <a 
                     href={link.href} 

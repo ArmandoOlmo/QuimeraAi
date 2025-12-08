@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Sparkles, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
 import { useEditor } from '../../contexts/EditorContext';
+import { sanitizeHtml } from '../../utils/sanitize';
 
 interface ContentCreatorAssistantProps {
     onClose: () => void;
@@ -275,7 +276,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                     <span className="text-xs font-bold text-muted-foreground uppercase">Vista previa del contenido</span>
                                     <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-6 bg-secondary/20 p-4 rounded-lg border border-border/50 overflow-hidden">
                                         {generatedPost.content ? (
-                                            <div dangerouslySetInnerHTML={{ __html: generatedPost.content }} />
+                                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedPost.content) }} />
                                         ) : (
                                             <p className="text-muted-foreground italic">Sin contenido generado</p>
                                         )}

@@ -1,6 +1,6 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './src/styles/main.css'; // Tailwind v4 + Theme (OKLCH from tweakcn)
 import App from './App';
 import './i18n'; // Inicializar i18next
 

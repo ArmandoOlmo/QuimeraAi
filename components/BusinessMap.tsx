@@ -1,14 +1,16 @@
 import React, { useMemo, useCallback } from 'react';
 import { GoogleMap, Marker, useJsApiLoader, Libraries } from '@react-google-maps/api';
-import { MapData, BorderRadiusSize } from '../types';
+import { MapData, BorderRadiusSize, CornerGradientConfig } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import CornerGradient from './ui/CornerGradient';
 
 // Define libraries outside component to prevent re-renders
 const libraries: Libraries = ['places', 'geocoding'];
 
 interface BusinessMapProps extends MapData {
     borderRadius?: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const containerStyle = {
@@ -69,6 +71,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     descriptionFontSize = 'md',
     height = 400,
     borderRadius = 'none',
+    cornerGradient,
 }) => {
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
@@ -340,10 +343,11 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
 
     return (
         <section 
-            className={`w-full ${getPadding(paddingY)}`}
+            className={`w-full ${getPadding(paddingY)} relative overflow-hidden`}
             style={{ backgroundColor: colors.background }}
         >
-            <div className={`max-w-7xl mx-auto ${paddingX === 'lg' ? 'px-0' : 'px-4'}`}>
+            <CornerGradient config={cornerGradient} />
+            <div className={`max-w-7xl mx-auto ${paddingX === 'lg' ? 'px-0' : 'px-4'} relative z-10`}>
                 {/* Header solo para estilos que no tienen título incorporado */}
                 {!['modern', 'dark-tech'].includes(mapVariant) && (
                     <div className="text-center mb-12">

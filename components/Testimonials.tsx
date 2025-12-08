@@ -1,9 +1,10 @@
 
 import React, { useMemo } from 'react';
-import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant, AnimationType } from '../types';
+import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant, AnimationType, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import CornerGradient from './ui/CornerGradient';
 
 interface TestimonialCardProps {
   quote: string;
@@ -227,6 +228,7 @@ interface TestimonialsProps extends TestimonialsData {
     cardPadding?: number;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Testimonials: React.FC<TestimonialsProps> = ({ 
@@ -244,7 +246,8 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   descriptionFontSize = 'md',
   testimonialsVariant = 'classic',
   animationType = 'fade-in-up',
-  enableCardAnimation = true
+  enableCardAnimation = true,
+  cornerGradient
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -281,8 +284,9 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   }, [actualColors]);
   
   return (
-    <section id="testimonials" className="w-full" style={{ backgroundColor: actualColors.background }}>
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+    <section id="testimonials" className="w-full relative overflow-hidden" style={{ backgroundColor: actualColors.background }}>
+      <CornerGradient config={cornerGradient} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>

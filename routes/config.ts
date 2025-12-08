@@ -43,6 +43,11 @@ export const ROUTES = {
   // Preview Routes
   PREVIEW: '/preview/:projectId',
   
+  // Storefront Routes (Public ecommerce)
+  STORE: '/store/:storeId',
+  STORE_PRODUCT: '/store/:storeId/product/:slug',
+  STORE_CATEGORY: '/store/:storeId/category/:categorySlug',
+  
   // Dashboard Routes
   DASHBOARD: '/dashboard',
   WEBSITES: '/websites',
@@ -61,6 +66,8 @@ export const ROUTES = {
   DOMAINS: '/domains',
   SEO: '/seo',
   FINANCE: '/finance',
+  ECOMMERCE: '/ecommerce',
+  EMAIL: '/email',
   
   // Admin Routes
   SUPERADMIN: '/admin',
@@ -120,6 +127,28 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.PREVIEW,
     type: 'preview',
     title: 'Preview',
+    requiresAuth: false,
+  },
+  
+  // =========================================================================
+  // STOREFRONT ROUTES (Public ecommerce pages)
+  // =========================================================================
+  {
+    path: ROUTES.STORE,
+    type: 'preview',
+    title: 'Store',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.STORE_PRODUCT,
+    type: 'preview',
+    title: 'Product',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.STORE_CATEGORY,
+    type: 'preview',
+    title: 'Category',
     requiresAuth: false,
   },
   
@@ -261,6 +290,26 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     showInNav: true,
     icon: 'DollarSign',
+  },
+  {
+    path: ROUTES.ECOMMERCE,
+    view: 'ecommerce',
+    type: 'private',
+    title: 'Ecommerce',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'ShoppingBag',
+  },
+  {
+    path: ROUTES.EMAIL,
+    view: 'email',
+    type: 'private',
+    title: 'Email Marketing',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Mail',
   },
   
   // =========================================================================

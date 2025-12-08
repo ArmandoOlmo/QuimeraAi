@@ -8,6 +8,13 @@ import { ComponentPermissions, CustomComponent } from '../types';
 export type PermissionLevel = 'none' | 'view' | 'edit' | 'admin';
 
 /**
+ * Check if user role has admin/owner privileges
+ */
+function hasAdminPrivileges(userRole: string): boolean {
+    return userRole === 'owner' || userRole === 'superadmin';
+}
+
+/**
  * Check if user has permission to view a component
  */
 export function canViewComponent(
@@ -15,8 +22,8 @@ export function canViewComponent(
     userId: string,
     userRole: string
 ): boolean {
-    // Super admins can always view
-    if (userRole === 'superadmin') return true;
+    // Owner and Super admins can always view
+    if (hasAdminPrivileges(userRole)) return true;
     
     // Public components can be viewed by anyone
     if (component.isPublic || component.permissions?.isPublic) return true;
@@ -41,8 +48,8 @@ export function canEditComponent(
     userId: string,
     userRole: string
 ): boolean {
-    // Super admins can always edit
-    if (userRole === 'superadmin') return true;
+    // Owner and Super admins can always edit
+    if (hasAdminPrivileges(userRole)) return true;
     
     // Component creator can edit
     if (component.createdBy === userId) return true;
@@ -61,8 +68,8 @@ export function canDeleteComponent(
     userId: string,
     userRole: string
 ): boolean {
-    // Only super admins and creators can delete
-    if (userRole === 'superadmin') return true;
+    // Owner, super admins and creators can delete
+    if (hasAdminPrivileges(userRole)) return true;
     if (component.createdBy === userId) return true;
     
     return false;
@@ -76,8 +83,8 @@ export function canManagePermissions(
     userId: string,
     userRole: string
 ): boolean {
-    // Only super admins and creators can manage permissions
-    if (userRole === 'superadmin') return true;
+    // Owner, super admins and creators can manage permissions
+    if (hasAdminPrivileges(userRole)) return true;
     if (component.createdBy === userId) return true;
     
     return false;
@@ -91,7 +98,7 @@ export function getPermissionLevel(
     userId: string,
     userRole: string
 ): PermissionLevel {
-    if (userRole === 'superadmin' || component.createdBy === userId) {
+    if (hasAdminPrivileges(userRole) || component.createdBy === userId) {
         return 'admin';
     }
     
@@ -247,8 +254,8 @@ export function validatePermissionsUpdate(
     userId: string,
     userRole: string
 ): { isValid: boolean; error?: string } {
-    // Super admin can do anything
-    if (userRole === 'superadmin') {
+    // Owner and Super admin can do anything
+    if (hasAdminPrivileges(userRole)) {
         return { isValid: true };
     }
     

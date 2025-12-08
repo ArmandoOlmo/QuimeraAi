@@ -1,8 +1,9 @@
 import React from 'react';
-import { HeroSplitData, BorderRadiusSize, FontSize } from '../types';
+import { HeroSplitData, BorderRadiusSize, FontSize, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import CornerGradient from './ui/CornerGradient';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-2xl md:text-3xl',
@@ -27,6 +28,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 
 interface HeroSplitProps extends HeroSplitData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const HeroSplit: React.FC<HeroSplitProps> = ({
@@ -43,6 +45,7 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
     headlineFontSize = 'lg',
     subheadlineFontSize = 'md',
     buttonBorderRadius = 'xl',
+    cornerGradient,
 }) => {
     const { getColor } = useDesignTokens();
 
@@ -120,8 +123,10 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                         zIndex: 1,
                     }}
                 >
+                    {/* Corner Gradient overlay on text side */}
+                    <CornerGradient config={cornerGradient} />
                     <div 
-                        className={`w-full md:w-1/2 px-8 md:px-16 py-12 ${imagePosition === 'right' ? 'pr-24 md:pr-32' : 'pl-24 md:pl-32'}`}
+                        className={`relative z-10 w-full md:w-1/2 px-8 md:px-16 py-12 ${imagePosition === 'right' ? 'pr-24 md:pr-32' : 'pl-24 md:pl-32'}`}
                     >
                         <h1 
                             className={`${headlineSizeClasses[headlineFontSize]} font-extrabold leading-tight mb-4 font-header`}

@@ -5,7 +5,7 @@ import { useEditor } from '../../contexts/EditorContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -40,6 +40,7 @@ interface NavItemData {
   route: string;
   disabled?: boolean;
   isFixed?: boolean;
+  subView?: string; // Para sub-vistas dentro de un módulo (ej: ecommerce)
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
@@ -54,8 +55,26 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // State for collapsible sections
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     websites: false,
+    ecommerce: false,
     tools: false,
   });
+
+  // Estado para trackear la sub-vista activa de ecommerce
+  const [activeEcommerceSubView, setActiveEcommerceSubView] = useState<string>(() => {
+    return localStorage.getItem('ecommerceActiveView') || 'overview';
+  });
+
+  // Escuchar cambios de la sub-vista de ecommerce
+  useEffect(() => {
+    const handleEcommerceViewChange = (event: CustomEvent<string>) => {
+      setActiveEcommerceSubView(event.detail);
+    };
+
+    window.addEventListener('ecommerceViewChange', handleEcommerceViewChange as EventListener);
+    return () => {
+      window.removeEventListener('ecommerceViewChange', handleEcommerceViewChange as EventListener);
+    };
+  }, []);
 
   const toggleSection = (sectionId: string) => {
     setCollapsedSections(prev => ({
@@ -120,17 +139,30 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo', route: ROUTES.SEO },
   ];
 
+  // Ecommerce section items (sección independiente con árbol de componentes)
+  const ecommerceItems: NavItemData[] = [
+    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview' },
+    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products' },
+    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories' },
+    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders' },
+    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers' },
+    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts' },
+    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics' },
+    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings' },
+  ];
+
   // Tools section items
   const toolsItems: NavItemData[] = [
     { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT },
     { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS },
+    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL },
     { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS },
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS },
   ];
 
   // All items combined for backwards compatibility with drag-and-drop
-  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...toolsItems];
+  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems];
 
   // Helper function to reorder items based on saved order
   const getOrderedItems = (orderIds: string[]): NavItemData[] => {
@@ -239,12 +271,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       animationDelay: isMobileOpen ? `${index * 30}ms` : '0ms',
     };
 
-    const isActive = isRouteActive(item.route);
+    // Para items de ecommerce, verificar también el subView
+    const isActive = item.subView 
+      ? isRouteActive(item.route) && activeEcommerceSubView === item.subView
+      : isRouteActive(item.route);
     const Icon = item.icon;
 
     const handleNavClick = () => {
       if (item.view === 'superadmin') {
         setAdminView('main');
+      }
+      // Si tiene subView (ej: ecommerce), guardarlo en localStorage y actualizar estado local
+      if (item.subView) {
+        localStorage.setItem('ecommerceActiveView', item.subView);
+        setActiveEcommerceSubView(item.subView);
+        // Disparar un evento para notificar al dashboard
+        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: item.subView }));
       }
       // Navigate using router
       navigate(item.route);
@@ -434,7 +476,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {/* Separator */}
                     <div className="my-2 border-t border-border mx-2" />
                     {/* Show all items directly with drag and drop */}
-                    {[...websiteItems, ...toolsItems].map((item, index) => (
+                    {[...websiteItems, ...ecommerceItems, ...toolsItems].map((item, index) => (
                       <SortableNavItem key={item.id} item={item} index={index + 1} />
                     ))}
                   </>
@@ -468,6 +510,34 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </div>
                     </div>
 
+                    {/* Ecommerce Section - Collapsible Drawer */}
+                    <div className="mt-3">
+                      <button
+                        onClick={() => toggleSection('ecommerce')}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                        aria-expanded={!collapsedSections.ecommerce}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag size={18} className="flex-shrink-0" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Ecommerce</span>
+                        </div>
+                        <ChevronDown
+                          size={16}
+                          className={`transition-transform duration-200 ${collapsedSections.ecommerce ? '-rotate-90' : 'rotate-0'}`}
+                        />
+                      </button>
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+                          }`}
+                      >
+                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                          {ecommerceItems.map((item, index) => (
+                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Tools Section - Collapsible Drawer */}
                     <div className="mt-3">
                       <button
@@ -490,7 +560,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       >
                         <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
                           {toolsItems.map((item, index) => (
-                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
+                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
                           ))}
                         </div>
                       </div>

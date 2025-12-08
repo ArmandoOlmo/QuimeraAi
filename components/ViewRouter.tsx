@@ -20,6 +20,8 @@ import AppointmentsDashboard from './dashboard/appointments/AppointmentsDashboar
 import DomainsDashboard from './dashboard/domains/DomainsDashboard';
 import SEODashboard from './dashboard/SEODashboard';
 import FinanceDashboard from './dashboard/finance/FinanceDashboard';
+import EcommerceDashboard from './dashboard/ecommerce/EcommerceDashboard';
+import EmailDashboard from './dashboard/email/EmailDashboard';
 import UserTemplates from './dashboard/UserTemplates';
 
 interface ViewRouterProps {
@@ -52,6 +54,8 @@ const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
     'domains': DomainsDashboard,
     'seo': SEODashboard,
     'finance': FinanceDashboard,
+    'ecommerce': EcommerceDashboard,
+    'email': EmailDashboard,
     'templates': UserTemplates,
 };
 

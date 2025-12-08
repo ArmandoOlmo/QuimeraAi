@@ -318,3 +318,7 @@ export const getIndustryComponentDefaults = (industry: string) => {
     return INDUSTRY_COMPONENT_DEFAULTS[industry] || INDUSTRY_COMPONENT_DEFAULTS['default'];
 };
 
+
+
+
+

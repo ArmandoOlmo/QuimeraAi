@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Header from './Header';
 import Hero from './Hero';
 import HeroModern from './HeroModern';
@@ -25,9 +25,31 @@ import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
+import Products from './Products';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
+import { usePublicProducts } from '../hooks/usePublicProducts';
+import { ProductSearchPage, ProductDetailPage } from './ecommerce';
+import {
+    FeaturedProducts,
+    CategoryGrid,
+    ProductHero,
+    SaleCountdown,
+    TrustBadges,
+    RecentlyViewed,
+    ProductReviews,
+    CollectionBanner,
+    ProductBundle,
+    AnnouncementBar,
+} from './ecommerce/sections';
+
+// Store view types for hash routing
+type StoreView = 
+  | { type: 'none' }
+  | { type: 'store' }
+  | { type: 'category'; slug: string }
+  | { type: 'product'; slug: string };
 
 const fontStacks: Record<FontFamily, string> = {
     roboto: "'Roboto', sans-serif",
@@ -83,9 +105,15 @@ const fontStacks: Record<FontFamily, string> = {
 };
 
 const LandingPage: React.FC = () => {
-  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents, componentStyles } = useEditor();
+  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents, componentStyles, activeProjectId, user } = useEditor();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
+  
+  // Store view state for ecommerce hash routing
+  const [storeView, setStoreView] = useState<StoreView>({ type: 'none' });
+
+  // Load products from public store (storeId = projectId)
+  const { products: storefrontProducts, isLoading: isLoadingProducts } = usePublicProducts(activeProjectId);
 
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
@@ -107,12 +135,18 @@ const LandingPage: React.FC = () => {
     root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
   }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
 
-  // Handle Hash Routing for Articles
+  // Handle Hash Routing for Articles and Store
   useEffect(() => {
       const handleHashChange = () => {
           const hash = window.location.hash;
           const decodedHash = decodeURIComponent(hash); // Handle %20 spaces
 
+          // Reset all views first
+          setActivePost(null);
+          setStoreView({ type: 'none' });
+          setIsRouting(false);
+
+          // Article routing: #article:slug
           if (decodedHash.startsWith('#article:')) {
               setIsRouting(true);
               const slug = decodedHash.replace('#article:', '');
@@ -130,21 +164,40 @@ const LandingPage: React.FC = () => {
                        setIsRouting(false);
                    }
               }
-          } else {
-              setActivePost(null);
-              setIsRouting(false);
-              
-              // Handle scrolling for section links (e.g. #features)
-              if (hash.length > 1 && !hash.startsWith('#article:')) {
-                  // Allow render cycle to complete before scrolling
-                  setTimeout(() => {
-                      const id = hash.substring(1);
-                      const element = document.getElementById(id);
-                      if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                  }, 100);
-              }
+              return;
+          }
+          
+          // Store routing: #store, #store/category/slug, #store/product/slug
+          if (decodedHash === '#store') {
+              setStoreView({ type: 'store' });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          if (decodedHash.startsWith('#store/category/')) {
+              const slug = decodedHash.replace('#store/category/', '');
+              setStoreView({ type: 'category', slug });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          if (decodedHash.startsWith('#store/product/')) {
+              const slug = decodedHash.replace('#store/product/', '');
+              setStoreView({ type: 'product', slug });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          // Handle scrolling for section links (e.g. #features)
+          if (hash.length > 1) {
+              // Allow render cycle to complete before scrolling
+              setTimeout(() => {
+                  const id = hash.substring(1);
+                  const element = document.getElementById(id);
+                  if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+              }, 100);
           }
       };
 
@@ -158,8 +211,24 @@ const LandingPage: React.FC = () => {
 
   const handleBackToHome = () => {
       window.location.hash = ''; 
-      // This triggers hashchange, which sets activePost(null)
+      // This triggers hashchange, which sets activePost(null) and storeView to none
   };
+
+  // Store navigation handlers
+  const handleNavigateToStore = useCallback(() => {
+      window.location.hash = 'store';
+  }, []);
+
+  const handleNavigateToCategory = useCallback((categorySlug: string) => {
+      window.location.hash = `store/category/${categorySlug}`;
+  }, []);
+
+  const handleNavigateToProduct = useCallback((productSlug: string) => {
+      window.location.hash = `store/product/${productSlug}`;
+  }, []);
+
+  // Check if we're showing a store view
+  const isStoreViewActive = storeView.type !== 'none';
   
   // Helper function to render custom components
   const renderCustomComponent = (customComponentId: string) => {
@@ -264,10 +333,17 @@ const LandingPage: React.FC = () => {
     // Derive any missing colors from the template palette
     const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
     
+    // Merge cornerGradient if it exists in styles (defaults first, then user changes)
+    const mergedCornerGradient = (styles as any).cornerGradient ? {
+      ...(styles as any).cornerGradient,    // default cornerGradient values
+      ...(componentData as any).cornerGradient  // user cornerGradient changes override
+    } : (componentData as any).cornerGradient;
+    
     return {
       ...styles,           // defaults first
       ...componentData,    // user changes override defaults
-      colors: derivedColors
+      colors: derivedColors,
+      ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient })
     };
   };
 
@@ -290,6 +366,29 @@ const LandingPage: React.FC = () => {
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
   const mergedHeroSplitData = mergeComponentData('heroSplit');
+  const mergedProductsData = mergeComponentData('products');
+
+  // Ecommerce section components
+  const mergedFeaturedProductsData = mergeComponentData('featuredProducts');
+  const mergedCategoryGridData = mergeComponentData('categoryGrid');
+  const mergedProductHeroData = mergeComponentData('productHero');
+  const mergedSaleCountdownData = mergeComponentData('saleCountdown');
+  const mergedTrustBadgesData = mergeComponentData('trustBadges');
+  const mergedRecentlyViewedData = mergeComponentData('recentlyViewed');
+  const mergedProductReviewsData = mergeComponentData('productReviews');
+  const mergedCollectionBannerData = mergeComponentData('collectionBanner');
+  const mergedProductBundleData = mergeComponentData('productBundle');
+  const mergedAnnouncementBarData = mergeComponentData('announcementBar');
+
+  // Merge storefront products with component data
+  const productsWithData = useMemo(() => {
+    const baseData = mergedProductsData || data.products || {};
+    return {
+      ...baseData,
+      // Override products array with data loaded from publicStores
+      products: storefrontProducts,
+    };
+  }, [mergedProductsData, data.products, storefrontProducts]);
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
@@ -318,11 +417,76 @@ const LandingPage: React.FC = () => {
     map: <BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} />,
     menu: <Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} />,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
+    products: (
+      <Products
+        {...productsWithData}
+        primaryColor={productsWithData.colors?.accent || theme.globalColors?.primary || '#4f46e5'}
+        storeUrl="#store"
+      />
+    ),
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
     footer: <Footer {...mergedFooterData} />,
     header: null,
     typography: null,
     colors: null, // Global colors are managed via theme settings
+    // Ecommerce section components
+    featuredProducts: mergedFeaturedProductsData ? (
+      <FeaturedProducts 
+        data={mergedFeaturedProductsData} 
+        storeId={activeProjectId || undefined}
+        onProductClick={handleNavigateToProduct}
+      />
+    ) : null,
+    categoryGrid: mergedCategoryGridData ? (
+      <CategoryGrid 
+        data={mergedCategoryGridData}
+        storeId={activeProjectId || undefined}
+        onCategoryClick={handleNavigateToCategory}
+      />
+    ) : null,
+    productHero: mergedProductHeroData ? (
+      <ProductHero 
+        data={mergedProductHeroData}
+        storeId={activeProjectId || undefined}
+        onProductClick={handleNavigateToProduct}
+      />
+    ) : null,
+    saleCountdown: mergedSaleCountdownData ? (
+      <SaleCountdown 
+        data={mergedSaleCountdownData}
+        storeId={activeProjectId || undefined}
+        onProductClick={handleNavigateToProduct}
+      />
+    ) : null,
+    trustBadges: mergedTrustBadgesData ? (
+      <TrustBadges data={mergedTrustBadgesData} />
+    ) : null,
+    recentlyViewed: mergedRecentlyViewedData ? (
+      <RecentlyViewed 
+        data={mergedRecentlyViewedData}
+        storeId={activeProjectId || undefined}
+        onProductClick={handleNavigateToProduct}
+      />
+    ) : null,
+    productReviews: mergedProductReviewsData ? (
+      <ProductReviews data={mergedProductReviewsData} />
+    ) : null,
+    collectionBanner: mergedCollectionBannerData ? (
+      <CollectionBanner 
+        data={mergedCollectionBannerData}
+        onCollectionClick={handleNavigateToCategory}
+      />
+    ) : null,
+    productBundle: mergedProductBundleData ? (
+      <ProductBundle 
+        data={mergedProductBundleData}
+        storeId={activeProjectId || undefined}
+        onProductClick={handleNavigateToProduct}
+      />
+    ) : null,
+    announcementBar: mergedAnnouncementBarData ? (
+      <AnnouncementBar data={mergedAnnouncementBarData} />
+    ) : null,
   };
   
   // Font variables are now injected directly into :root via useEffect above
@@ -374,8 +538,8 @@ const LandingPage: React.FC = () => {
             body, .bg-site-base { background-color: ${pageBackgroundColor}; }
         `}</style>
 
-      {/* Header is always visible */}
-      <Header {...mergedHeaderData} links={headerLinks} />
+      {/* Header is always visible - forceSolid when in store view (no hero behind) */}
+      <Header {...mergedHeaderData} links={headerLinks} forceSolid={isStoreViewActive} />
       
       <main className="min-h-screen bg-site-base relative">
         {/* 1. Loading State */}
@@ -412,8 +576,168 @@ const LandingPage: React.FC = () => {
             </div>
         )}
 
-        {/* 4. Home View (Sections) */}
-        {!isArticleHash && !activePost && (
+        {/* 4. Store View - All Products */}
+        {storeView.type === 'store' && activeProjectId && (
+            <>
+                {/* Ecommerce Section Components (above products) */}
+                {componentOrder
+                    .filter(key => {
+                        const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
+                        return ecommerceSections.includes(key as PageSection) && 
+                               componentStatus[key as PageSection] && 
+                               sectionVisibility[key as PageSection];
+                    })
+                    .map(key => (
+                        <div 
+                            id={key} 
+                            key={key} 
+                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSectionSelect(key as PageSection);
+                            }}
+                        >
+                            {componentsMap[key as PageSection]}
+                        </div>
+                    ))
+                }
+
+                {/* Main Product Search */}
+                <ProductSearchPage
+                    storeId={activeProjectId}
+                    onProductClick={handleNavigateToProduct}
+                    primaryColor={theme.globalColors?.primary || '#6366f1'}
+                    embedded={true}
+                    title="Tienda"
+                    themeColors={{
+                        background: 'transparent',
+                        text: theme.globalColors?.text || '#94a3b8',
+                        heading: theme.globalColors?.heading || '#ffffff',
+                        cardBackground: theme.globalColors?.surface || '#1e293b',
+                        border: theme.globalColors?.border || '#334155',
+                    }}
+                />
+
+                {/* Ecommerce Section Components (below products) */}
+                {componentOrder
+                    .filter(key => {
+                        const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
+                        return ecommerceSectionsBelow.includes(key as PageSection) && 
+                               componentStatus[key as PageSection] && 
+                               sectionVisibility[key as PageSection];
+                    })
+                    .map(key => (
+                        <div 
+                            id={key} 
+                            key={key} 
+                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSectionSelect(key as PageSection);
+                            }}
+                        >
+                            {componentsMap[key as PageSection]}
+                        </div>
+                    ))
+                }
+            </>
+        )}
+
+        {/* 5. Store View - Category */}
+        {storeView.type === 'category' && activeProjectId && (
+            <>
+                {/* Announcement Bar for category view */}
+                {componentStatus['announcementBar' as PageSection] && sectionVisibility['announcementBar' as PageSection] && (
+                    <div 
+                        id="announcementBar" 
+                        className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSectionSelect('announcementBar' as PageSection);
+                        }}
+                    >
+                        {componentsMap['announcementBar' as PageSection]}
+                    </div>
+                )}
+
+                <ProductSearchPage
+                    storeId={activeProjectId}
+                    onProductClick={handleNavigateToProduct}
+                    initialCategory={storeView.slug}
+                    primaryColor={theme.globalColors?.primary || '#6366f1'}
+                    embedded={true}
+                    themeColors={{
+                        background: 'transparent',
+                        text: theme.globalColors?.text || '#94a3b8',
+                        heading: theme.globalColors?.heading || '#ffffff',
+                        cardBackground: theme.globalColors?.surface || '#1e293b',
+                        border: theme.globalColors?.border || '#334155',
+                    }}
+                />
+
+                {/* Trust badges and recently viewed for category view */}
+                {componentOrder
+                    .filter(key => {
+                        const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
+                        return ecommerceSectionsBelow.includes(key as PageSection) && 
+                               componentStatus[key as PageSection] && 
+                               sectionVisibility[key as PageSection];
+                    })
+                    .map(key => (
+                        <div 
+                            id={key} 
+                            key={key} 
+                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSectionSelect(key as PageSection);
+                            }}
+                        >
+                            {componentsMap[key as PageSection]}
+                        </div>
+                    ))
+                }
+            </>
+        )}
+
+        {/* 6. Store View - Product Detail */}
+        {storeView.type === 'product' && activeProjectId && (
+            <>
+                <ProductDetailPage
+                    storeId={activeProjectId}
+                    productSlug={storeView.slug}
+                    onNavigateToStore={handleNavigateToStore}
+                    onNavigateToCategory={handleNavigateToCategory}
+                    onNavigateToProduct={handleNavigateToProduct}
+                />
+
+                {/* Ecommerce components for product detail view */}
+                {componentOrder
+                    .filter(key => {
+                        const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
+                        return productDetailSections.includes(key as PageSection) && 
+                               componentStatus[key as PageSection] && 
+                               sectionVisibility[key as PageSection];
+                    })
+                    .map(key => (
+                        <div 
+                            id={key} 
+                            key={key} 
+                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSectionSelect(key as PageSection);
+                            }}
+                        >
+                            {componentsMap[key as PageSection]}
+                        </div>
+                    ))
+                }
+            </>
+        )}
+
+        {/* 7. Home View (Sections) - Only show when not in article or store view */}
+        {!isArticleHash && !activePost && !isStoreViewActive && (
             <>
                 {componentOrder
                 .filter(key => componentStatus[key as PageSection] && sectionVisibility[key as PageSection] && key !== 'footer' && key !== 'chatbot')

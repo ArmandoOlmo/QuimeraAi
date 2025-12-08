@@ -328,6 +328,14 @@ html.palette-rose-coral .theme-btn-active {
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Editor-specific colors (for admin/dashboard) */
+  --color-editor-bg: var(--editor-bg);
+  --color-editor-panel-bg: var(--editor-panel-bg);
+  --color-editor-border: var(--editor-border);
+  --color-editor-accent: var(--editor-accent);
+  --color-editor-text-primary: var(--editor-text-primary);
+  --color-editor-text-secondary: var(--editor-text-secondary);
+
   /* Blue Violet Palette */
   --color-blue-violet-50: var(--color-blue-violet-50);
   --color-blue-violet-100: var(--color-blue-violet-100);

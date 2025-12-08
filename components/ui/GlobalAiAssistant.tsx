@@ -1306,16 +1306,17 @@ const GlobalAiAssistant: React.FC = () => {
         // 3. Build scope and permissions text
         const permissions = config.permissions || {};
         const allowedScopes = Object.keys(permissions).filter(key => permissions[key]?.[mode] === true);
-        const isSuperAdmin = userDocumentRef.current?.role === 'superadmin';
+        const userRole = userDocumentRef.current?.role;
+        const hasFullAccess = userRole === 'owner' || userRole === 'superadmin';
         
         let scopeText = "";
-        if (isSuperAdmin) {
-            scopeText = `ACCESS: SUPER ADMIN.`;
+        if (hasFullAccess) {
+            scopeText = userRole === 'owner' ? `ACCESS: OWNER (FULL CONTROL).` : `ACCESS: SUPER ADMIN.`;
         } else {
              if (Object.keys(permissions).length > 0) {
                  if (allowedScopes.length > 0) scopeText = `ACCESS: RESTRICTED. Allowed: ${allowedScopes.join(', ')}.`;
                  else scopeText = `ACCESS: READ ONLY.`;
-             } else scopeText = "ACCESS: OWNER.";
+             } else scopeText = "ACCESS: STANDARD USER.";
         }
 
         // 4. Inject contextual data (fast, truncated for speed)
@@ -1862,7 +1863,7 @@ Now provide a brief response to the user about what was done.`;
                     </div>
                      <div className="mt-2 flex justify-between items-center px-2">
                          <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>
-                         <div className="flex items-center gap-2">{userDocument?.role === 'superadmin' && <Shield size={10} className="text-yellow-500" />}<p className="text-[10px] text-muted-foreground">{userDocument?.role === 'superadmin' ? 'Admin Access' : 'User Access'}</p></div>
+                         <div className="flex items-center gap-2">{(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}<p className="text-[10px] text-muted-foreground">{userDocument?.role === 'owner' ? 'Owner Access' : userDocument?.role === 'superadmin' ? 'Admin Access' : 'User Access'}</p></div>
                      </div>
                 </div>
             </div>

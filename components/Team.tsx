@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant, AnimationType } from '../types';
+import { TeamData, PaddingSize, BorderRadiusSize, FontSize, TeamVariant, AnimationType, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
 
 interface TeamMemberCardProps {
@@ -213,6 +214,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 
 interface TeamProps extends TeamData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Team: React.FC<TeamProps> = ({ 
@@ -226,7 +228,8 @@ const Team: React.FC<TeamProps> = ({
   descriptionFontSize = 'md',
   teamVariant = 'classic',
   animationType = 'fade-in-up',
-  enableCardAnimation = true
+  enableCardAnimation = true,
+  cornerGradient
 }) => {
   // Get design tokens for secondary color (for photo border fallback)
   const { colors: tokenColors } = useDesignTokens();
@@ -245,10 +248,11 @@ const Team: React.FC<TeamProps> = ({
   return (
     <section 
       id="team" 
-      className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} 
+      className={`w-full relative overflow-hidden`} 
       style={{ backgroundColor: colors.background || secondaryColor }}
     >
-      <div>
+      <CornerGradient config={cornerGradient} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 
             className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} 

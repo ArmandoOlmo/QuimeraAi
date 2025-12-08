@@ -13,7 +13,12 @@
 # Copy this to your .env file:
 # -------------------------------------------
 
+# Gemini AI API Key (for AI content generation)
 GEMINI_API_KEY=your-gemini-api-key-here
+
+# Stripe Payment Processing (for ecommerce)
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key-here
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-signing-secret-here
 
 # -------------------------------------------
 
@@ -25,4 +30,5 @@ GEMINI_API_KEY=your-gemini-api-key-here
 # - The .env file is ignored by git (see .gitignore)
 # - Use different keys for development and production
 # ===========================================
+
 

@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CMSPost, ThemeData } from '../types';
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react';
+import { sanitizeHtml } from '../utils/sanitize';
 
 interface BlogPostProps {
     post: CMSPost;
@@ -13,6 +14,8 @@ interface BlogPostProps {
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, backgroundColor, accentColor }) => {
+    // SECURITY: Sanitize HTML content to prevent XSS attacks
+    const sanitizedContent = useMemo(() => sanitizeHtml(post.content || ''), [post.content]);
     
     return (
         <div className="min-h-screen pb-20 animate-fade-in-up" style={{ backgroundColor: backgroundColor, color: textColor }}>
@@ -61,7 +64,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                         '--tw-prose-pre-bg': 'rgba(0,0,0,0.2)',
                         '--tw-prose-hr': 'rgba(255,255,255,0.1)',
                     } as any}
-                    dangerouslySetInnerHTML={{ __html: post.content }}
+                    dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                 />
                 
                 <div className="mt-12 pt-8 border-t border-white/10 flex justify-between items-center">

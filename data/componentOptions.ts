@@ -216,7 +216,8 @@ export const COMPONENT_OPTIONS = {
         name: 'Restaurant Menu',
         category: 'content',
         options: {
-            menuVariant: ['classic', 'modern-grid', 'elegant-list'],
+            menuVariant: ['classic', 'modern-grid', 'elegant-list', 'full-image'],
+            textAlignment: ['left', 'center', 'right'],
         },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'priceColor', 'cardTitleColor', 'cardText'],
     },
@@ -248,6 +249,129 @@ export const COMPONENT_OPTIONS = {
             position: ['bottom-left', 'bottom-right'],
         },
         colorFields: ['primary', 'text', 'background'],
+    },
+    
+    products: {
+        name: 'Products Grid (Ecommerce)',
+        category: 'ecommerce',
+        options: {
+            style: ['minimal', 'modern', 'elegant', 'dark'],
+            layout: ['grid', 'list'],
+            cardStyle: ['minimal', 'modern', 'elegant'],
+            columns: [2, 3, 4, 5, 6],
+        },
+        colorFields: ['background', 'text', 'heading', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText'],
+    },
+    
+    // ==========================================================================
+    // ECOMMERCE COMPONENTS
+    // ==========================================================================
+    featuredProducts: {
+        name: 'Featured Products',
+        category: 'ecommerce',
+        options: {
+            variant: ['carousel', 'grid', 'showcase'],
+            sourceType: ['manual', 'category', 'bestsellers', 'newest', 'on-sale'],
+            cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
+            columns: [2, 3, 4, 5],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+    },
+    
+    categoryGrid: {
+        name: 'Category Grid',
+        category: 'ecommerce',
+        options: {
+            variant: ['cards', 'overlay', 'minimal', 'banner'],
+            columns: [2, 3, 4, 5, 6],
+            imageAspectRatio: ['auto', '1:1', '4:3', '3:4', '16:9'],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'overlayStart', 'overlayEnd'],
+    },
+    
+    productHero: {
+        name: 'Product Hero Banner',
+        category: 'ecommerce',
+        options: {
+            variant: ['featured', 'collection', 'sale', 'new-arrivals'],
+            layout: ['single', 'split', 'carousel'],
+            overlayStyle: ['gradient', 'solid', 'none'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+        },
+        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+    },
+    
+    saleCountdown: {
+        name: 'Sale Countdown',
+        category: 'ecommerce',
+        options: {
+            variant: ['banner', 'floating', 'inline', 'fullwidth'],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'countdownBackground', 'countdownText', 'badgeBackground', 'badgeText', 'buttonBackground', 'buttonText'],
+    },
+    
+    trustBadges: {
+        name: 'Trust Badges',
+        category: 'ecommerce',
+        options: {
+            variant: ['horizontal', 'grid', 'minimal', 'detailed'],
+            iconSize: ['sm', 'md', 'lg'],
+        },
+        colorFields: ['background', 'heading', 'text', 'iconColor', 'borderColor'],
+        icons: ['truck', 'shield', 'credit-card', 'refresh-cw', 'clock', 'award', 'lock', 'headphones', 'package', 'check-circle', 'star', 'heart'],
+    },
+    
+    recentlyViewed: {
+        name: 'Recently Viewed Products',
+        category: 'ecommerce',
+        options: {
+            variant: ['carousel', 'grid', 'compact'],
+            cardStyle: ['minimal', 'modern', 'elegant'],
+            columns: [2, 3, 4, 5, 6],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText'],
+    },
+    
+    productReviews: {
+        name: 'Product Reviews',
+        category: 'ecommerce',
+        options: {
+            variant: ['list', 'cards', 'masonry', 'featured'],
+            sortBy: ['newest', 'highest', 'lowest', 'helpful'],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'starColor', 'verifiedBadgeColor'],
+    },
+    
+    collectionBanner: {
+        name: 'Collection Banner',
+        category: 'ecommerce',
+        options: {
+            variant: ['hero', 'split', 'minimal', 'overlay'],
+            overlayStyle: ['gradient', 'solid', 'none'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+        },
+        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText'],
+    },
+    
+    productBundle: {
+        name: 'Product Bundle',
+        category: 'ecommerce',
+        options: {
+            variant: ['horizontal', 'vertical', 'compact'],
+        },
+        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'priceColor', 'savingsColor', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+    },
+    
+    announcementBar: {
+        name: 'Announcement Bar',
+        category: 'ecommerce',
+        options: {
+            variant: ['static', 'scrolling', 'rotating'],
+        },
+        colorFields: ['background', 'text', 'linkColor', 'iconColor', 'borderColor'],
+        icons: ['megaphone', 'tag', 'gift', 'truck', 'percent', 'sparkles', 'bell', 'info'],
     },
 };
 
@@ -329,6 +453,7 @@ export const COMPONENT_CATEGORIES = {
     cta: ['pricing', 'cta'],
     form: ['leads', 'newsletter'],
     navigation: ['header', 'footer'],
+    ecommerce: ['products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar'],
     other: ['map', 'chatbot'],
 };
 

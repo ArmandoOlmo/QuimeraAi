@@ -14,6 +14,8 @@ import PublicWebsitePreview from '../components/PublicWebsitePreview';
 import ModernAuth from '../components/ModernAuth';
 import VerificationScreen from '../components/VerificationScreen';
 import LoadingScreen from './LoadingScreen';
+import ProductDetailPage from '../components/ecommerce/ProductDetailPage';
+import { ProductSearchPage, StorefrontLayout } from '../components/ecommerce';
 
 // =============================================================================
 // TYPES
@@ -140,6 +142,69 @@ const Router: React.FC<RouterProps> = ({
   }
 
   // =========================================================================
+  // STOREFRONT ROUTES (Public ecommerce pages)
+  // =========================================================================
+  
+  const isStoreRoute = path.startsWith('/store/');
+  
+  if (isStoreRoute) {
+    const pathParts = path.split('/');
+    const storeId = pathParts[2];
+    
+    // /store/:storeId/product/:slug - Product detail page
+    if (path.includes('/product/')) {
+      const productSlug = pathParts[4];
+      return (
+        <StorefrontLayout 
+          storeId={storeId}
+          onNavigateHome={() => navigate(`/preview/${storeId}`)}
+        >
+          <ProductDetailPage
+            storeId={storeId}
+            productSlug={productSlug}
+            onNavigateToStore={() => navigate(`/store/${storeId}`)}
+            onNavigateToCategory={(categorySlug) => navigate(`/store/${storeId}/category/${categorySlug}`)}
+            onNavigateToProduct={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+          />
+        </StorefrontLayout>
+      );
+    }
+    
+    // /store/:storeId/category/:categorySlug - Category page
+    if (path.includes('/category/')) {
+      const categorySlug = pathParts[4];
+      return (
+        <StorefrontLayout 
+          storeId={storeId}
+          onNavigateHome={() => navigate(`/preview/${storeId}`)}
+        >
+          <ProductSearchPage
+            storeId={storeId}
+            onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+            onBack={() => navigate(`/store/${storeId}`)}
+            initialCategory={categorySlug}
+          />
+        </StorefrontLayout>
+      );
+    }
+    
+    // /store/:storeId - Main store page (product listing)
+    if (pathParts.length === 3 || (pathParts.length === 4 && pathParts[3] === '')) {
+      return (
+        <StorefrontLayout 
+          storeId={storeId}
+          onNavigateHome={() => navigate(`/preview/${storeId}`)}
+        >
+          <ProductSearchPage
+            storeId={storeId}
+            onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+          />
+        </StorefrontLayout>
+      );
+    }
+  }
+
+  // =========================================================================
   // PREVIEW ROUTE (No auth required)
   // =========================================================================
   
@@ -235,6 +300,10 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
+
+
+
+
 
 
 

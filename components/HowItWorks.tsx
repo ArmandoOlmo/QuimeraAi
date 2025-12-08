@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { HowItWorksData, PaddingSize, BorderRadiusSize, HowItWorksIcon, FontSize } from '../types';
+import { HowItWorksData, PaddingSize, BorderRadiusSize, HowItWorksIcon, FontSize, CornerGradientConfig } from '../types';
 import { Upload, Cog, Sparkles, Download, Share2, Search } from 'lucide-react';
+import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -40,15 +41,17 @@ const howItWorksIcons: Record<HowItWorksIcon, React.ReactNode> = {
 
 interface HowItWorksProps extends HowItWorksData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
-const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
     const visibleItems = items.slice(0, steps);
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
 
     return (
-        <section id="how-it-works" className="w-full" style={{ backgroundColor: colors.background }}>
-            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <section id="how-it-works" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+            <CornerGradient config={cornerGradient} />
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">
                 <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
                 <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>

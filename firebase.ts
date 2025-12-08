@@ -44,6 +44,7 @@ import {
   startAfter,
   enableMultiTabIndexedDbPersistence
 } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
 // Firebase configuration from environment variables
 // Fallback values are provided for development only - use .env.local in production
@@ -68,6 +69,7 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const db = getFirestore(app);
+export const functions = getFunctions(app);
 
 // Enable Offline Persistence
 try {

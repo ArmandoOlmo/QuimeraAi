@@ -1,8 +1,9 @@
 import React from 'react';
-import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize, AnimationType } from '../types';
+import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize, AnimationType, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba, toHex } from '../utils/colorUtils';
+import CornerGradient from './ui/CornerGradient';
 import { 
     // Base icons
     Code, Paintbrush2, Megaphone, BarChart, Scissors, Camera, ArrowRight,
@@ -290,6 +291,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
 interface ServicesProps extends ServicesData {
     borderRadius: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
 }
 
 const Services: React.FC<ServicesProps> = ({ 
@@ -304,15 +306,17 @@ const Services: React.FC<ServicesProps> = ({
     descriptionFontSize = 'md',
     servicesVariant = 'cards', // Default
     animationType = 'fade-in-up',
-    enableCardAnimation = true
+    enableCardAnimation = true,
+    cornerGradient
 }) => {
   // Get design tokens for primary color - use as fallback with 75% opacity
   const { colors: tokenColors } = useDesignTokens();
   const sectionBackground = colors.background || hexToRgba(tokenColors.primary, 0.75);
   
   return (
-    <section id="services" className="w-full" style={{ backgroundColor: sectionBackground }}>
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+    <section id="services" className="w-full relative overflow-hidden" style={{ backgroundColor: sectionBackground }}>
+      <CornerGradient config={cornerGradient} />
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
             {servicesVariant === 'grid' && (
                 <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}>

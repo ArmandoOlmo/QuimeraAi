@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../contexts/EditorContext';
 import { SEOConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
-import { Globe, Search, Share2, Code, CheckCircle, ArrowLeft, Menu, Clock, LayoutGrid } from 'lucide-react';
+import ProjectSelectorPage from './seo/ProjectSelectorPage';
+import { Globe, Search, Share2, Code, CheckCircle, ArrowLeft, Menu, Clock, LayoutGrid, Store, ChevronDown, Check, Layers } from 'lucide-react';
 
 type SeoTab = 'basic' | 'social' | 'advanced' | 'ai';
 
@@ -26,9 +27,14 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   const [activeTab, setActiveTab] = useState<SeoTab>(initialTab);
   const [localConfig, setLocalConfig] = useState<SEOConfig | null>(seoConfig);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(activeProjectId ?? '');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(activeProjectId);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const selectableProjects = projects;
+  const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+  const selectableProjects = projects.filter(p => p.status !== 'Template');
+  
+  // Determinar qué proyecto usar
+  const effectiveProjectId = selectedProjectId || activeProjectId;
+  const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -39,7 +45,9 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   }, [seoConfig]);
 
   useEffect(() => {
-    setSelectedProjectId(activeProjectId ?? '');
+    if (activeProjectId && !selectedProjectId) {
+      setSelectedProjectId(activeProjectId);
+    }
   }, [activeProjectId]);
 
   const handleUpdate = async () => {
@@ -55,75 +63,20 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   };
 
   const handleProjectSelect = async (projectId: string) => {
-    if (!projectId || projectId === activeProjectId) return;
     setSelectedProjectId(projectId);
     await loadProject(projectId, false, false);
   };
 
+  // Mostrar página de selección de proyecto si no hay proyecto seleccionado
+  if (!effectiveProjectId || selectableProjects.length === 0) {
+    return (
+      <ProjectSelectorPage
+        onProjectSelect={handleProjectSelect}
+      />
+    );
+  }
+
   const renderMainContent = () => {
-    if (!activeProject) {
-      return (
-        <div className="flex-1 overflow-y-auto p-8 bg-secondary/10">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">{t('seo.title')}</h2>
-              <p className="text-muted-foreground max-w-lg mx-auto text-lg">
-                {t('seo.selectProject')}
-              </p>
-            </div>
-
-            {selectableProjects.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {selectableProjects.map(project => (
-                  <button 
-                    key={project.id}
-                    onClick={() => handleProjectSelect(project.id)}
-                    className="group relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex flex-col text-left h-[400px]"
-                  >
-                    {/* Full Background Image */}
-                    <img 
-                      src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'} 
-                      alt={project.name} 
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                    />
-                    
-                    {/* Dark Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-                    
-                    {/* Hover Effect */}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
-                    
-                    {/* Content at Bottom */}
-                    <div className="absolute bottom-0 left-0 w-full p-6 z-20">
-                      <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{project.name}</h3>
-                      <div className="flex items-center text-white/90">
-                        <Clock size={16} className="mr-2" />
-                        <span className="text-sm font-medium">
-                          {t('seo.updated')} {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 bg-card rounded-2xl border border-dashed border-border">
-                <LayoutGrid className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
-                <h3 className="text-lg font-bold mb-2">{t('seo.noProjectsAvailable')}</h3>
-                <p className="text-sm text-muted-foreground mb-6">{t('seo.createProjectToConfigureSEO')}</p>
-                <button
-                  onClick={() => setView('websites')}
-                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-colors font-bold"
-                >
-                  {t('seo.createProject')}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
     if (!seoConfig || !localConfig) {
       return (
         <div className="flex-1 flex items-center justify-center p-6">
@@ -599,14 +552,14 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+        <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
+              className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
               title={t('common.openMenu', { defaultValue: 'Open menu' })}
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
               <Search className="text-primary w-5 h-5" />
@@ -614,38 +567,82 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 {t('seo.title')}
               </h1>
             </div>
+            {/* Project Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Store size={14} />
+                <span className="max-w-[200px] truncate">
+                  {effectiveProject?.name || t('seo.selectProject', 'Seleccionar proyecto')}
+                </span>
+                <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown */}
+              {isProjectSelectorOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsProjectSelectorOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
+                    <div className="px-4 py-2 border-b border-border/50 mb-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {t('seo.quickSwitch', 'Cambio rápido')}
+                      </p>
+                    </div>
+                    
+                    {selectableProjects.slice(0, 5).map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => {
+                          handleProjectSelect(project.id);
+                          setIsProjectSelectorOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
+                          project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                        }`}
+                      >
+                        {project.thumbnailUrl ? (
+                          <img 
+                            src={project.thumbnailUrl} 
+                            alt={project.name}
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                            <Layers size={16} className="text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 text-left min-w-0">
+                          <span className="text-sm font-medium text-foreground truncate block">
+                            {project.name}
+                          </span>
+                          <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
+                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                          </span>
+                        </div>
+                        {project.id === effectiveProjectId && (
+                          <Check size={16} className="text-primary flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {activeProject && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:inline">
-                {t('seo.projectLabel', { defaultValue: 'Proyecto' })}
-              </span>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => handleProjectSelect(e.target.value)}
-                disabled={selectableProjects.length === 0}
-                className="h-9 rounded-md bg-secondary/30 border border-border text-sm px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                {!selectedProjectId && (
-                  <option value="" disabled>
-                    {t('seo.selectProject', { defaultValue: 'Elige un proyecto' })}
-                  </option>
-                )}
-                {selectableProjects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleUpdate}
-                disabled={isSaving || !activeProject || !localConfig}
-                className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-md hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
-              >
-                {isSaving ? t('seo.saving') : t('seo.saveChanges')}
-              </button>
-            </div>
+          {activeProject && localConfig && (
+            <button
+              onClick={handleUpdate}
+              disabled={isSaving}
+              className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isSaving ? t('seo.saving') : t('seo.saveChanges')}
+            </button>
           )}
         </header>
 

@@ -1569,6 +1569,20 @@ TEMPLATE #${t.index}: "${t.name}"
                 if (contact.linkedin) socialLinks.push({ platform: 'linkedin', href: contact.linkedin });
                 if (socialLinks.length > 0) data.footer.socialLinks = socialLinks;
             }
+            
+            // Contact information (address, phone, email, business hours)
+            if (contact) {
+                data.footer.contactInfo = {
+                    address: contact.address,
+                    city: contact.city,
+                    state: contact.state,
+                    zipCode: contact.zipCode,
+                    country: contact.country,
+                    phone: contact.phone,
+                    email: contact.email,
+                    businessHours: contact.businessHours,
+                };
+            }
         }
         
         return data;

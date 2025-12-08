@@ -5,8 +5,9 @@
  * Features:
  * - API key stored securely in backend
  * - Rate limiting per project
- * - Domain validation
+ * - Domain validation (CORS)
  * - Usage tracking
+ * - Input validation
  */
 
 import * as functions from 'firebase-functions';
@@ -19,6 +20,95 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+
+// ============================================
+// SECURITY: Allowed Origins for CORS
+// ============================================
+const ALLOWED_ORIGINS = [
+    'https://quimera.app',
+    'https://www.quimera.app',
+    'https://quimeraai.web.app',
+    'https://quimeraai.firebaseapp.com',
+    // Development origins
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+];
+
+// Pattern for dynamic subdomains
+const ALLOWED_ORIGIN_PATTERNS = [
+    /^https:\/\/[a-z0-9-]+\.quimera\.app$/,
+    /^https:\/\/[a-z0-9-]+--quimeraai\.web\.app$/,
+];
+
+/**
+ * SECURITY: Validate and set CORS headers
+ */
+function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
+    const origin = req.headers.origin || '';
+    
+    // Check if origin is in allowed list
+    const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
+        ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
+    
+    if (isAllowed) {
+        res.set('Access-Control-Allow-Origin', origin);
+    } else {
+        // For non-matching origins, don't set CORS headers (browser will block)
+        // In production, you might want to log this for monitoring
+        console.warn(`CORS: Blocked request from origin: ${origin}`);
+    }
+    
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Max-Age', '3600');
+    res.set('Vary', 'Origin');
+    
+    return isAllowed;
+}
+
+/**
+ * SECURITY: Validate input strings to prevent injection
+ */
+function sanitizeString(str: unknown, maxLength: number = 10000): string {
+    if (typeof str !== 'string') return '';
+    // Trim and limit length
+    return str.trim().slice(0, maxLength);
+}
+
+/**
+ * SECURITY: Validate projectId format
+ */
+function isValidProjectId(projectId: string): boolean {
+    // Allow alphanumeric, hyphens, and underscores, 1-100 chars
+    return /^[a-zA-Z0-9_-]{1,100}$/.test(projectId);
+}
+
+/**
+ * SECURITY: Validate userId format
+ */
+function isValidUserId(userId: string): boolean {
+    // Firebase UIDs are typically 28 chars, but allow some flexibility
+    return /^[a-zA-Z0-9_-]{1,128}$/.test(userId);
+}
+
+/**
+ * SECURITY: Validate model name
+ */
+const ALLOWED_MODELS = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-3-pro-image-preview',
+    'imagen-3.0-generate-002',
+    'imagen-3.0-fast-generate-001',
+];
+
+function isValidModel(model: string): boolean {
+    return ALLOWED_MODELS.includes(model);
+}
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -34,9 +124,6 @@ interface RateLimitCheck {
     message?: string;
 }
 
-/**
- * Check rate limit for a project
- */
 /**
  * Check rate limit for a project
  */
@@ -106,7 +193,6 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
     } catch (error) {
         console.error('Rate limit check error:', error);
         // SECURITY: Fail closed - deny request if rate limit check fails
-        // This prevents abuse if the rate limiting system is down
         return { 
             allowed: false, 
             message: 'Rate limit service unavailable. Please try again later.' 
@@ -131,7 +217,6 @@ async function getProjectData(projectId: string, userId?: string) {
     }
 
     // 2. Handle Global Assistant and special system contexts
-    // These don't require a real project in Firestore
     if (projectId === 'anonymous' || 
         projectId.startsWith('assistant-') || 
         projectId.startsWith('global-') ||
@@ -144,7 +229,7 @@ async function getProjectData(projectId: string, userId?: string) {
         projectId.startsWith('content-') ||
         projectId.startsWith('enhance-') ||
         projectId.startsWith('ai-') ||
-        (userId && projectId === userId)) { // Allow userId as projectId
+        (userId && projectId === userId)) {
         return {
             exists: true,
             data: {
@@ -194,21 +279,10 @@ async function trackUsage(projectId: string, userId: string, tokensUsed: number,
  * Gemini API Proxy - Generate Content
  * 
  * POST /api/gemini/generate
- * 
- * Body:
- * {
- *   projectId: string,
- *   prompt: string,
- *   model?: string,
- *   config?: object
- * }
  */
 export const generateContent = functions.https.onRequest(async (req, res) => {
-    // Enable CORS for all origins
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.set('Access-Control-Max-Age', '3600');
+    // SECURITY: Set CORS headers
+    const isOriginAllowed = setCorsHeaders(req, res);
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -221,8 +295,19 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    // SECURITY: Check origin for non-OPTIONS requests
+    if (!isOriginAllowed && process.env.NODE_ENV === 'production') {
+        res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+
     try {
-        const { projectId, prompt, userId, model = 'gemini-2.5-flash', config = {} } = req.body;
+        // SECURITY: Sanitize and validate inputs
+        const projectId = sanitizeString(req.body.projectId, 100);
+        const prompt = sanitizeString(req.body.prompt, 50000); // Max 50k chars
+        const userId = sanitizeString(req.body.userId, 128);
+        const model = sanitizeString(req.body.model, 50) || 'gemini-2.5-flash';
+        const config = req.body.config || {};
 
         // Validate required fields
         if (!projectId || !prompt) {
@@ -230,6 +315,18 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
                 error: 'Missing required fields',
                 required: ['projectId', 'prompt']
             });
+            return;
+        }
+
+        // SECURITY: Validate projectId format
+        if (!isValidProjectId(projectId)) {
+            res.status(400).json({ error: 'Invalid projectId format' });
+            return;
+        }
+
+        // SECURITY: Validate model
+        if (!isValidModel(model)) {
+            res.status(400).json({ error: 'Invalid model specified' });
             return;
         }
 
@@ -251,7 +348,6 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         }
 
         // Rate limiting
-        // Rate limiting
         const rateLimitCheck = await checkRateLimit(projectId, finalUserId, planType);
         if (!rateLimitCheck.allowed) {
             res.status(429).json({
@@ -261,17 +357,16 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Get API key from environment variable (.env file in functions directory)
+        // Get API key from environment variable
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
+            console.error('GEMINI_API_KEY not configured');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
 
         // Make request to Gemini API
-        // Using fetch instead of the SDK to avoid adding extra dependencies
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
         const geminiResponse = await fetch(geminiUrl, {
@@ -286,14 +381,12 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
                     }]
                 }],
                 generationConfig: {
-                    temperature: config.temperature || 0.7,
-                    topK: config.topK || 40,
-                    topP: config.topP || 0.95,
-                    // Higher default for thinking models like gemini-2.5-flash
-                    // which use tokens for internal reasoning
-                    maxOutputTokens: config.maxOutputTokens || 8192,
+                    temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                    topK: Math.min(Math.max(config.topK || 40, 1), 100),
+                    topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
+                    maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
                 },
-                safetySettings: config.safetySettings || [
+                safetySettings: [
                     { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
                     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
                     { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
@@ -317,7 +410,6 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         // Extract token usage for tracking
         const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
 
-        // Track usage asynchronously
         // Track usage asynchronously
         trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
 
@@ -343,16 +435,10 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
 /**
  * Gemini API Proxy - Stream Generate Content
- * 
- * POST /api/gemini/stream
- * 
- * Returns a server-sent events stream
  */
 export const streamContent = functions.https.onRequest(async (req, res) => {
-    // Enable CORS
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // SECURITY: Set CORS headers
+    const isOriginAllowed = setCorsHeaders(req, res);
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -365,11 +451,27 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    // SECURITY: Check origin for non-OPTIONS requests
+    if (!isOriginAllowed && process.env.NODE_ENV === 'production') {
+        res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+
     try {
-        const { projectId, prompt, userId, model = 'gemini-1.5-flash', config = {} } = req.body;
+        // SECURITY: Sanitize inputs
+        const projectId = sanitizeString(req.body.projectId, 100);
+        const prompt = sanitizeString(req.body.prompt, 50000);
+        const userId = sanitizeString(req.body.userId, 128);
+        const model = sanitizeString(req.body.model, 50) || 'gemini-1.5-flash';
+        const config = req.body.config || {};
 
         if (!projectId || !prompt) {
             res.status(400).json({ error: 'Missing required fields' });
+            return;
+        }
+
+        if (!isValidProjectId(projectId) || !isValidModel(model)) {
+            res.status(400).json({ error: 'Invalid input format' });
             return;
         }
 
@@ -395,11 +497,10 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Get API key from environment variable (.env file in functions directory)
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
+            console.error('GEMINI_API_KEY not configured');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
@@ -421,8 +522,8 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
                     parts: [{ text: prompt }]
                 }],
                 generationConfig: {
-                    temperature: config.temperature || 0.7,
-                    maxOutputTokens: config.maxOutputTokens || 2048,
+                    temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                    maxOutputTokens: Math.min(config.maxOutputTokens || 2048, 32000),
                 }
             })
         });
@@ -444,8 +545,6 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-
-            // Forward the chunk to client
             res.write(value);
         }
 
@@ -463,26 +562,10 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
 
 /**
  * Gemini API Proxy - Generate Image
- * 
- * POST /api/gemini/image
- * 
- * Body:
- * {
- *   userId: string,
- *   prompt: string,
- *   model?: string,
- *   aspectRatio?: string,
- *   style?: string,
- *   resolution?: string,
- *   config?: object
- * }
  */
 export const generateImage = functions.https.onRequest(async (req, res) => {
-    // Enable CORS for all origins
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.set('Access-Control-Max-Age', '3600');
+    // SECURITY: Set CORS headers
+    const isOriginAllowed = setCorsHeaders(req, res);
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -495,23 +578,28 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    // SECURITY: Check origin
+    if (!isOriginAllowed && process.env.NODE_ENV === 'production') {
+        res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+
     try {
-        const { 
-            userId, 
-            prompt, 
-            model = 'gemini-3-pro-image-preview', // Default to Quimera Vision Pro
-            aspectRatio = '1:1',
-            style,
-            resolution = '1K',
-            // Quimera AI specific options
-            thinkingLevel = 'high',
-            personGeneration = 'allow_adult',
-            temperature = 1.0,
-            negativePrompt,
-            // Reference images for style transfer (base64 data URLs)
-            referenceImages = [],
-            config = {}
-        } = req.body;
+        // SECURITY: Sanitize inputs
+        const userId = sanitizeString(req.body.userId, 128);
+        const prompt = sanitizeString(req.body.prompt, 10000);
+        const model = sanitizeString(req.body.model, 50) || 'gemini-3-pro-image-preview';
+        const aspectRatio = sanitizeString(req.body.aspectRatio, 10) || '1:1';
+        const style = sanitizeString(req.body.style, 50);
+        const resolution = sanitizeString(req.body.resolution, 10) || '1K';
+        const thinkingLevel = sanitizeString(req.body.thinkingLevel, 20) || 'high';
+        const personGeneration = sanitizeString(req.body.personGeneration, 20) || 'allow_adult';
+        const temperature = typeof req.body.temperature === 'number' ? 
+            Math.min(Math.max(req.body.temperature, 0), 2) : 1.0;
+        const negativePrompt = sanitizeString(req.body.negativePrompt, 2000);
+        const referenceImages = Array.isArray(req.body.referenceImages) ? 
+            req.body.referenceImages.slice(0, 14) : []; // Max 14 images
+        const config = req.body.config || {};
 
         // Validate required fields
         if (!userId || !prompt) {
@@ -522,7 +610,13 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Rate limiting - use userId as projectId for image generation
+        // SECURITY: Validate userId
+        if (!isValidUserId(userId)) {
+            res.status(400).json({ error: 'Invalid userId format' });
+            return;
+        }
+
+        // Rate limiting
         const rateLimitCheck = await checkRateLimit(`image-gen-${userId}`, userId, 'PRO');
         if (!rateLimitCheck.allowed) {
             res.status(429).json({
@@ -532,63 +626,52 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Get API key from environment variable (.env file in functions directory)
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured. Create a .env file in the functions directory.');
+            console.error('GEMINI_API_KEY not configured');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
 
-        // Build enhanced prompt with style and visual controls
+        // Build enhanced prompt
         let enhancedPrompt = prompt;
         if (style && style !== 'None') {
             enhancedPrompt = `${prompt}, ${style} style`;
         }
         
-        // Add aspect ratio hint to prompt
         if (aspectRatio && aspectRatio !== '1:1') {
             enhancedPrompt = `${enhancedPrompt}, aspect ratio ${aspectRatio}`;
         }
 
         // Add visual controls from config
-        if (config.lighting) enhancedPrompt = `${enhancedPrompt}, ${config.lighting}`;
-        if (config.cameraAngle) enhancedPrompt = `${enhancedPrompt}, ${config.cameraAngle}`;
-        if (config.colorGrading) enhancedPrompt = `${enhancedPrompt}, ${config.colorGrading}`;
-        if (config.themeColors) enhancedPrompt = `${enhancedPrompt}, ${config.themeColors}`;
-        if (config.depthOfField) enhancedPrompt = `${enhancedPrompt}, ${config.depthOfField}`;
+        if (config.lighting) enhancedPrompt = `${enhancedPrompt}, ${sanitizeString(config.lighting, 100)}`;
+        if (config.cameraAngle) enhancedPrompt = `${enhancedPrompt}, ${sanitizeString(config.cameraAngle, 100)}`;
+        if (config.colorGrading) enhancedPrompt = `${enhancedPrompt}, ${sanitizeString(config.colorGrading, 100)}`;
+        if (config.themeColors) enhancedPrompt = `${enhancedPrompt}, ${sanitizeString(config.themeColors, 100)}`;
+        if (config.depthOfField) enhancedPrompt = `${enhancedPrompt}, ${sanitizeString(config.depthOfField, 100)}`;
 
-        // Add quality hints
         enhancedPrompt = `${enhancedPrompt}, high quality, professional, detailed`;
 
-        // Add negative prompt if provided
         if (negativePrompt) {
             enhancedPrompt = `${enhancedPrompt}. Avoid: ${negativePrompt}`;
         }
 
-        // Use the model directly - gemini-3-pro-image-preview passes as-is to the API
         const actualModel = model;
-
-        // Image generation request logged for debugging if needed
-
-        // Use the Google Generative AI SDK for image generation
         const genAI = new GoogleGenAI({ apiKey });
 
         try {
             let imageBase64: string | null = null;
 
             if (actualModel.includes('imagen')) {
-                // Use generateImages API for Imagen models
                 const imageConfig: any = {
                     numberOfImages: 1,
                     aspectRatio: aspectRatio as any,
                     personGeneration: personGeneration,
                 };
 
-                // Add image size based on resolution
                 if (resolution === '4K' || resolution === '2K') {
-                    imageConfig.imageSize = '2K'; // Imagen max is 2K
+                    imageConfig.imageSize = '2K';
                 } else {
                     imageConfig.imageSize = '1K';
                 }
@@ -601,31 +684,32 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 
                 imageBase64 = response.generatedImages?.[0]?.image?.imageBytes || null;
             } else {
-                // Use generateContent with responseModalities for Gemini models (Quimera Vision Pro)
                 const generationConfig: any = {
                     responseModalities: ['IMAGE', 'TEXT'],
                     temperature: temperature,
                 };
 
-                // Add thinking level for better text rendering (Quimera Vision Pro feature)
                 if (thinkingLevel && thinkingLevel !== 'none') {
                     generationConfig.thinkingLevel = thinkingLevel;
                 }
 
-                // Build content parts (text + optional reference images)
                 const contentParts: any[] = [];
 
-                // Add reference images if provided (Quimera Vision Pro supports up to 14 images)
+                // SECURITY: Validate reference images
                 if (referenceImages && referenceImages.length > 0) {
-                    // Process reference images for style transfer
                     for (const imgDataUrl of referenceImages) {
+                        if (typeof imgDataUrl !== 'string') continue;
                         try {
-                            // Extract base64 data and mime type from data URL
-                            // Format: data:image/png;base64,iVBORw0KGgo...
-                            const matches = imgDataUrl.match(/^data:([^;]+);base64,(.+)$/);
-                            if (matches && matches.length === 3) {
+                            const matches = imgDataUrl.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
+                            if (matches && matches.length === 4) {
                                 const mimeType = matches[1];
-                                const base64Data = matches[2];
+                                const base64Data = matches[3];
+                                
+                                // SECURITY: Limit image size (max 10MB base64)
+                                if (base64Data.length > 10 * 1024 * 1024) {
+                                    console.warn('Reference image too large, skipping');
+                                    continue;
+                                }
                                 
                                 contentParts.push({
                                     inlineData: {
@@ -633,20 +717,16 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                                         data: base64Data
                                     }
                                 });
-                            } else {
-                                console.warn('⚠️ Invalid image data URL format, skipping');
                             }
                         } catch (err) {
-                            console.warn('⚠️ Error processing reference image:', err);
+                            console.warn('Error processing reference image:', err);
                         }
                     }
 
-                    // Add prompt with reference instruction
                     contentParts.push({
                         text: `Using the provided reference images as style guide, generate an image: ${enhancedPrompt}`
                     });
                 } else {
-                    // No reference images, just text prompt
                     contentParts.push({
                         text: `Generate an image: ${enhancedPrompt}`
                     });
@@ -658,7 +738,6 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                     config: generationConfig
                 });
 
-                // Extract image from response parts
                 if (response.candidates?.[0]?.content?.parts) {
                     for (const part of response.candidates[0].content.parts) {
                         if ((part as any).inlineData?.data) {
@@ -699,7 +778,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             });
 
         } catch (sdkError: any) {
-            console.error('✨ Quimera Vision Pro SDK error:', sdkError);
+            console.error('Image generation SDK error:', sdkError);
             res.status(500).json({
                 error: 'Image generation failed',
                 message: sdkError?.message || 'Unknown SDK error'
@@ -717,13 +796,12 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 
 /**
  * Get usage statistics for a project
- * 
- * GET /api/gemini/usage/:projectId
  */
 export const getUsageStats = functions.https.onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
+    // SECURITY: Set CORS headers
+    const isOriginAllowed = setCorsHeaders(req, res);
+    
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
@@ -735,11 +813,17 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    try {
-        const projectId = req.path.split('/').pop();
+    // SECURITY: Check origin
+    if (!isOriginAllowed && process.env.NODE_ENV === 'production') {
+        res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
 
-        if (!projectId) {
-            res.status(400).json({ error: 'Project ID required' });
+    try {
+        const projectId = sanitizeString(req.path.split('/').pop(), 100);
+
+        if (!projectId || !isValidProjectId(projectId)) {
+            res.status(400).json({ error: 'Valid Project ID required' });
             return;
         }
 
@@ -766,7 +850,7 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
             totalRequests,
             totalTokens,
             averageTokensPerRequest: totalRequests > 0 ? Math.round(totalTokens / totalRequests) : 0,
-            usage: usage.slice(0, 100) // Return last 100 requests
+            usage: usage.slice(0, 100)
         });
 
     } catch (error) {
@@ -774,15 +858,3 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-

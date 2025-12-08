@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { PageSection } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { 
     Layout, Image, List, Star, Users, DollarSign, 
     Briefcase, Mail, Send, MessageCircle, PlaySquare, 
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
-    HelpCircle, ChevronRight, ChevronDown, Eye, EyeOff,
-    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns
+    HelpCircle, ChevronDown, Eye, EyeOff,
+    GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
+    ShoppingBag, Tag, Clock, Shield, Package, Megaphone, TrendingUp
 } from 'lucide-react';
 
 interface ComponentTreeProps {
@@ -45,7 +46,19 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     footer: Type,
     header: AlignJustify,
     typography: Type,
-    colors: Palette
+    colors: Palette,
+    // Ecommerce
+    products: ShoppingBag,
+    featuredProducts: ShoppingBag,
+    categoryGrid: Grid,
+    productHero: Image,
+    saleCountdown: Clock,
+    trustBadges: Shield,
+    recentlyViewed: Clock,
+    productReviews: Star,
+    collectionBanner: Image,
+    productBundle: Package,
+    announcementBar: Megaphone,
 };
 
 const ComponentTree: React.FC<ComponentTreeProps> = ({
@@ -62,13 +75,19 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
-    const [draggedItem, setDraggedItem] = useState<PageSection | null>(null);
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState({
         structure: true,
         content: true,
+        ecommerce: true,
         integrations: true
     });
+    
+    // Drag state
+    const draggedRef = useRef<PageSection | null>(null);
+    const [draggedItem, setDraggedItem] = useState<PageSection | null>(null);
+    const [dropTarget, setDropTarget] = useState<PageSection | null>(null);
+    const [dropPosition, setDropPosition] = useState<'before' | 'after'>('after');
 
     const sectionLabels: Record<PageSection, string> = {
         hero: t('editor.heroSection'),
@@ -93,53 +112,112 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         footer: t('editor.footerSection'),
         header: t('editor.navigationSection'),
         typography: t('editor.typographySection'),
-        colors: t('editor.colorsSection')
+        colors: t('editor.colorsSection'),
+        // Ecommerce sections
+        products: 'Products Grid',
+        featuredProducts: 'Featured Products',
+        categoryGrid: 'Category Grid',
+        productHero: 'Product Hero',
+        saleCountdown: 'Sale Countdown',
+        trustBadges: 'Trust Badges',
+        recentlyViewed: 'Recently Viewed',
+        productReviews: 'Product Reviews',
+        collectionBanner: 'Collection Banner',
+        productBundle: 'Product Bundle',
+        announcementBar: 'Announcement Bar',
     };
 
     const handleDragStart = (e: React.DragEvent, section: PageSection) => {
+        draggedRef.current = section;
         setDraggedItem(section);
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', section);
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
+    const handleDragOver = (e: React.DragEvent, targetSection: PageSection) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+        
+        const dragged = draggedRef.current;
+        if (!dragged || dragged === targetSection) {
+            setDropTarget(null);
+            return;
+        }
+
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const position = e.clientY < midY ? 'before' : 'after';
+        
+        setDropTarget(targetSection);
+        setDropPosition(position);
     };
 
     const handleDrop = (e: React.DragEvent, targetSection: PageSection) => {
         e.preventDefault();
-        if (!draggedItem || draggedItem === targetSection) return;
+        
+        const dragged = draggedRef.current;
+        if (!dragged || dragged === targetSection) {
+            resetDrag();
+            return;
+        }
 
         const newOrder = [...componentOrder];
-        const draggedIndex = newOrder.indexOf(draggedItem);
-        const targetIndex = newOrder.indexOf(targetSection);
+        const fromIndex = newOrder.indexOf(dragged);
+        const toIndex = newOrder.indexOf(targetSection);
 
-        newOrder.splice(draggedIndex, 1);
-        // Adjust target index after removal
-        const finalTargetIndex = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
+        if (fromIndex === -1 || toIndex === -1) {
+            resetDrag();
+            return;
+        }
+
+        newOrder.splice(fromIndex, 1);
         
-        newOrder.splice(finalTargetIndex, 0, draggedItem);
-
+        let insertIndex = newOrder.indexOf(targetSection);
+        if (insertIndex === -1) {
+            resetDrag();
+            return;
+        }
+        
+        if (dropPosition === 'after') {
+            insertIndex++;
+        }
+        
+        newOrder.splice(insertIndex, 0, dragged);
         onReorder(newOrder);
-        setDraggedItem(null);
+        resetDrag();
     };
 
     const handleDragEnd = () => {
-        setDraggedItem(null);
+        resetDrag();
     };
 
-    // Group sections by category - hero is now in content so it can be dragged
-    // Fixed order: Colors → Typography → Navigation (header) → Footer
-    // Colors and Typography are ALWAYS visible (global config sections)
-    // Header and Footer depend on componentOrder
+    const resetDrag = () => {
+        draggedRef.current = null;
+        setDraggedItem(null);
+        setDropTarget(null);
+    };
+
+    // Ecommerce section identifiers
+    const ecommerceSectionIds: PageSection[] = [
+        'products', 'featuredProducts', 'categoryGrid', 'productHero', 
+        'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 
+        'collectionBanner', 'productBundle', 'announcementBar'
+    ];
+
+    // Group sections by category
     const structureSections = [
-        'colors' as PageSection,      // Always visible - global colors
-        'typography' as PageSection,  // Always visible - global fonts
+        'colors' as PageSection,
+        'typography' as PageSection,
         ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[])
     ];
     
     const contentSections = componentOrder.filter(s => 
-        !['header', 'footer', 'typography', 'colors', 'chatbot', 'leads', 'newsletter'].includes(s) &&
+        !['header', 'footer', 'typography', 'colors', 'chatbot', 'leads', 'newsletter', 'map', ...ecommerceSectionIds].includes(s) &&
+        componentStatus[s]
+    );
+
+    const ecommerceSections = componentOrder.filter(s => 
+        ecommerceSectionIds.includes(s) &&
         componentStatus[s]
     );
     
@@ -157,66 +235,80 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        // Header, colors, typography and footer are fixed positions - hero can be moved
         const isFixed = ['header', 'footer', 'typography', 'colors'].includes(section);
+        const isDragging = draggedItem === section;
+        const isDropTargetItem = dropTarget === section && !isDragging;
+        const canDrag = isDraggable && !isFixed;
 
         return (
             <div
                 key={section}
-                draggable={isDraggable && !isFixed}
-                onDragStart={(e) => isDraggable && !isFixed && handleDragStart(e, section)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, section)}
-                onDragEnd={handleDragEnd}
-                className={`
-                    group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all
-                    ${isActive ? 'text-editor-accent' : 'text-editor-text-primary hover:text-editor-accent'}
-                    ${draggedItem === section ? 'opacity-40' : ''}
-                    ${!isVisible ? 'opacity-50' : ''}
-                `}
-                onClick={() => onSectionSelect(section)}
+                className="relative"
             >
-                {/* Drag handle - only show for draggable items */}
-                {isDraggable && !isFixed && (
-                    <GripVertical 
-                        size={14} 
-                        className="flex-shrink-0 text-editor-text-secondary cursor-grab active:cursor-grabbing"
-                    />
+                {/* Drop indicator - before */}
+                {isDropTargetItem && dropPosition === 'before' && (
+                    <div className="absolute left-2 right-2 -top-px h-0.5 bg-editor-accent rounded-full z-20" />
                 )}
-                <Icon 
-                    size={16} 
-                    className="flex-shrink-0"
-                />
                 
-                <span className="flex-1 text-sm font-medium truncate">
-                    {sectionLabels[section]}
-                </span>
+                <div
+                    draggable={canDrag}
+                    onDragStart={canDrag ? (e) => handleDragStart(e, section) : undefined}
+                    onDragOver={!isFixed ? (e) => handleDragOver(e, section) : undefined}
+                    onDrop={!isFixed ? (e) => handleDrop(e, section) : undefined}
+                    onDragEnd={handleDragEnd}
+                    className={`
+                        group relative flex items-center gap-2 px-3 py-2 cursor-pointer transition-all hover:z-10
+                        ${isActive ? 'text-editor-accent' : 'text-editor-text-primary hover:text-editor-accent'}
+                        ${isDragging ? 'opacity-40' : ''}
+                        ${!isVisible ? 'opacity-50' : ''}
+                    `}
+                    onClick={() => onSectionSelect(section)}
+                >
+                    {/* Drag handle */}
+                    {canDrag && (
+                        <GripVertical 
+                            size={14} 
+                            className="flex-shrink-0 text-editor-text-secondary cursor-grab active:cursor-grabbing"
+                        />
+                    )}
+                    <Icon size={16} className="flex-shrink-0" />
+                    
+                    <span className="flex-1 text-sm font-medium truncate">
+                        {sectionLabels[section]}
+                    </span>
 
-                {!isFixed && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleVisibility(section);
-                            }}
-                            className="flex-shrink-0 p-1 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                            title={isVisible ? t('editor.hideSection') : t('editor.showSection')}
-                        >
-                            {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(t('editor.deleteSectionConfirm', { section: sectionLabels[section] }))) {
-                                    onRemoveComponent(section);
-                                }
-                            }}
-                            className="flex-shrink-0 p-1 text-editor-text-secondary hover:text-red-500 transition-colors"
-                            title={t('editor.deleteSection')}
-                        >
-                            <Trash2 size={14} />
-                        </button>
-                    </div>
+                    {/* Action buttons */}
+                    {!isFixed && (
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleVisibility(section);
+                                }}
+                                className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/50 transition-colors"
+                                title={isVisible ? t('editor.hideSection') : t('editor.showSection')}
+                            >
+                                {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm(t('editor.deleteSectionConfirm', { section: sectionLabels[section] }))) {
+                                        onRemoveComponent(section);
+                                    }
+                                }}
+                                className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                title={t('editor.deleteSection')}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+                
+                {/* Drop indicator - after */}
+                {isDropTargetItem && dropPosition === 'after' && (
+                    <div className="absolute left-2 right-2 -bottom-px h-0.5 bg-editor-accent rounded-full z-20" />
                 )}
             </div>
         );
@@ -336,15 +428,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             {/* Component Tree */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {searchTerm ? (
-                    // Flat list when searching
                     <div className="space-y-1">
                         {filteredSections.map(section => renderSection(section, false))}
                     </div>
                 ) : (
-                    // Grouped view
                     <>
                         {renderGroup(t('editor.structure'), structureSections, 'structure', false)}
                         {renderGroup(t('editor.content'), contentSections, 'content', true)}
+                        {renderGroup('Ecommerce', ecommerceSections, 'ecommerce', true)}
                         {renderGroup(t('editor.integrations'), integrationSections, 'integrations', true)}
                     </>
                 )}
@@ -354,4 +445,3 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 };
 
 export default ComponentTree;
-

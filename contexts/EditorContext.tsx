@@ -709,9 +709,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 setDesignTokens(tokensDoc.data() as DesignTokens);
             } else {
                 // Initialize with default tokens if none exist
+                // Using Quimera's Cadmium Yellow as primary color
                 const defaultTokens: DesignTokens = {
                     colors: {
-                        primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
+                        primary: { main: '#FBB92B', light: '#FDD766', dark: '#D99B1C' },
                         secondary: { main: '#10b981', light: '#34d399', dark: '#059669' },
                         success: { main: '#10b981', light: '#34d399', dark: '#059669' },
                         warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
@@ -1363,12 +1364,23 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             clearTimeout(autoSaveTimerRef.current);
         }
 
+        // Capture the projectId at the time of scheduling (for closure safety)
+        const scheduledProjectId = activeProjectId;
+
         // Set debounced auto-save (2 seconds after last change)
         autoSaveTimerRef.current = setTimeout(async () => {
             try {
-                // Get fresh references from ref to avoid stale closure
-                const projectToSave = projectsRef.current.find(p => p.id === activeProjectId);
-                if (!projectToSave || !user) return;
+                // CRITICAL: Double-check project still exists in local state before saving
+                // This prevents recreating deleted projects due to race conditions
+                const projectToSave = projectsRef.current.find(p => p.id === scheduledProjectId);
+                if (!projectToSave) {
+                    console.log('🛑 [Auto-save] Aborted: Project no longer exists in local state (was likely deleted)');
+                    return;
+                }
+                if (!user) {
+                    console.log('🛑 [Auto-save] Aborted: No authenticated user');
+                    return;
+                }
 
                 // Check permissions for templates
                 if (projectToSave.status === 'Template') {
@@ -1400,20 +1412,38 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const { id, ...dataToSave } = updatedProject;
 
                 // Save to appropriate collection based on project type
+                // Use updateDoc instead of setDoc to prevent recreating deleted documents
                 if (projectToSave.status === 'Template') {
                     // Save template to global templates collection
-                    const templateDocRef = doc(db, 'templates', activeProjectId);
-                    await setDoc(templateDocRef, dataToSave);
+                    const templateDocRef = doc(db, 'templates', scheduledProjectId);
+                    // First verify document still exists to prevent recreation
+                    const docSnap = await getDoc(templateDocRef);
+                    if (!docSnap.exists() || docSnap.data()?.isDeleted) {
+                        console.log('🛑 [Auto-save] Aborted: Template was deleted from Firestore');
+                        return;
+                    }
+                    await updateDoc(templateDocRef, dataToSave);
                 } else {
                     // Save regular project to user's projects collection
-                    const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                    await setDoc(projectDocRef, dataToSave);
+                    const projectDocRef = doc(db, 'users', user.uid, 'projects', scheduledProjectId);
+                    // First verify document still exists to prevent recreation
+                    const docSnap = await getDoc(projectDocRef);
+                    if (!docSnap.exists()) {
+                        console.log('🛑 [Auto-save] Aborted: Project was deleted from Firestore');
+                        return;
+                    }
+                    await updateDoc(projectDocRef, dataToSave);
                 }
 
                 // Update projects ref without triggering re-render (Firestore is the source of truth)
-                projectsRef.current = projectsRef.current.map(p => p.id === activeProjectId ? updatedProject : p);
-            } catch (error) {
-                console.error('❌ Auto-save error:', error);
+                projectsRef.current = projectsRef.current.map(p => p.id === scheduledProjectId ? updatedProject : p);
+            } catch (error: any) {
+                // Don't log errors for "document not found" - this is expected for deleted projects
+                if (error?.code === 'not-found' || error?.message?.includes('No document to update')) {
+                    console.log('🛑 [Auto-save] Document not found (likely deleted), skipping save');
+                } else {
+                    console.error('❌ Auto-save error:', error);
+                }
             }
         }, 2000);
 
@@ -1439,10 +1469,28 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (section) {
             setIsSidebarOpen(true);
         }
-        const element = document.getElementById(section);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        
+        // Scroll to section in preview - use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            const element = document.getElementById(section);
+            if (element && previewRef.current) {
+                // Calculate position relative to preview container
+                const container = previewRef.current;
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // Calculate scroll position to center the element
+                const scrollTop = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
+                
+                container.scrollTo({
+                    top: Math.max(0, scrollTop),
+                    behavior: 'smooth'
+                });
+            } else if (element) {
+                // Fallback for when previewRef is not available
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const openProfileModal = () => setIsProfileModalOpen(true);
@@ -2333,6 +2381,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         const projectToDelete = projects.find(p => p.id === projectId);
         const isTemplate = projectToDelete ? projectToDelete.status === 'Template' : false;
 
+        // CRITICAL: Cancel any pending auto-save timer BEFORE deleting
+        // This prevents race conditions where auto-save could recreate the deleted project
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+            console.log('🛑 [Delete] Auto-save timer cancelled to prevent recreation');
+        }
+
         // 1. Handle Templates - Delete from Firestore (only superadmin/owner)
         if (isTemplate) {
             const userRole = userDocument?.role || '';
@@ -2341,8 +2397,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 throw new Error("Solo el owner y super admin pueden borrar templates");
             }
 
-            // Optimistic Update
-            setProjects(prev => prev.filter(p => p.id !== projectId));
+            // Optimistic Update - also update projectsRef immediately to prevent race conditions
+            setProjects(prev => {
+                const filtered = prev.filter(p => p.id !== projectId);
+                projectsRef.current = filtered; // Sync ref immediately
+                return filtered;
+            });
             if (activeProjectId === projectId) {
                 setActiveProjectId(null);
                 setData(null);
@@ -2371,7 +2431,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 console.error("Error marking template as deleted:", error);
                 // Revert state on failure
                 if (projectToDelete) {
-                    setProjects(prev => [...prev, projectToDelete]);
+                    setProjects(prev => {
+                        const reverted = [...prev, projectToDelete];
+                        projectsRef.current = reverted; // Sync ref on revert
+                        return reverted;
+                    });
                 }
             }
             return;
@@ -2382,8 +2446,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             throw new Error("User not authenticated");
         }
 
-        // Optimistic Update
-        setProjects(prev => prev.filter(p => p.id !== projectId));
+        // Optimistic Update - also update projectsRef immediately to prevent race conditions
+        setProjects(prev => {
+            const filtered = prev.filter(p => p.id !== projectId);
+            projectsRef.current = filtered; // Sync ref immediately
+            return filtered;
+        });
         if (activeProjectId === projectId) {
             setActiveProjectId(null);
             setData(null);
@@ -2393,11 +2461,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         try {
             const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
             await deleteDoc(projectDocRef);
+            console.log('✅ Project deleted from Firestore:', projectId);
         } catch (error: any) {
             console.error("Error deleting project:", error);
             // Revert state on failure
             if (projectToDelete) {
-                setProjects(prev => [...prev, projectToDelete]);
+                setProjects(prev => {
+                    const reverted = [...prev, projectToDelete];
+                    projectsRef.current = reverted; // Sync ref on revert
+                    return reverted;
+                });
             }
             throw error;
         }

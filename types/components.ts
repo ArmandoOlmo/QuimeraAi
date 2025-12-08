@@ -6,6 +6,19 @@
 import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType } from './ui';
 
 // =============================================================================
+// CORNER GRADIENT (Diagonal gradient overlay)
+// =============================================================================
+export type CornerGradientPosition = 'none' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+export interface CornerGradientConfig {
+    enabled: boolean;
+    position: CornerGradientPosition;
+    color: string;
+    opacity: number; // 0-100
+    size: number; // percentage of section width/height (0-100)
+}
+
+// =============================================================================
 // HEADER
 // =============================================================================
 export type NavbarLayout = 'classic' | 'minimal' | 'center' | 'stack';
@@ -140,6 +153,8 @@ export interface HeroSplitData {
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
     buttonBorderRadius?: BorderRadiusSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -199,6 +214,8 @@ export interface TestimonialsData {
     cardPadding?: number;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -246,6 +263,8 @@ export interface SlideshowData {
     showCaptions?: boolean;
     borderRadius?: BorderRadiusSize;
     slideHeight?: number;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -293,6 +312,8 @@ export interface PricingData {
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -363,6 +384,8 @@ export interface LeadsData {
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -403,6 +426,7 @@ export interface CtaData {
     title: string;
     description: string;
     buttonText: string;
+    buttonUrl?: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     colors: { 
@@ -417,6 +441,8 @@ export interface CtaData {
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -458,6 +484,8 @@ export interface PortfolioData {
     imageHeight?: number;
     overlayTextAlignment?: TextAlignment;
     showSectionHeader?: boolean;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -507,6 +535,8 @@ export interface ServicesData {
     descriptionFontSize?: FontSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -532,6 +562,8 @@ export interface TeamData {
     teamVariant?: TeamVariant;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -551,6 +583,8 @@ export interface VideoData {
     colors: { background: string; text: string; heading: string; description?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -574,6 +608,8 @@ export interface HowItWorksData {
     colors: { background: string; accent: string; text: string; heading: string; description?: string; stepTitle?: string; iconColor?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -614,6 +650,34 @@ export interface SocialLink {
     href: string;
 }
 
+// Business Hours for Footer
+export interface FooterDayHours {
+    isOpen: boolean;
+    openTime?: string;  // "09:00"
+    closeTime?: string; // "18:00"
+}
+
+export interface FooterBusinessHours {
+    monday?: FooterDayHours;
+    tuesday?: FooterDayHours;
+    wednesday?: FooterDayHours;
+    thursday?: FooterDayHours;
+    friday?: FooterDayHours;
+    saturday?: FooterDayHours;
+    sunday?: FooterDayHours;
+}
+
+export interface FooterContactInfo {
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+    phone?: string;
+    email?: string;
+    businessHours?: FooterBusinessHours;
+}
+
 export interface FooterData {
     title: string;
     description: string;
@@ -626,6 +690,8 @@ export interface FooterData {
     // Logo settings
     logoType?: 'text' | 'image';
     logoImageUrl?: string;
+    // Contact Information
+    contactInfo?: FooterContactInfo;
 }
 
 // =============================================================================
@@ -656,12 +722,14 @@ export interface MapData {
     descriptionFontSize?: FontSize;
     height: number;
     borderRadius?: BorderRadiusSize;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
 // MENU (RESTAURANT)
 // =============================================================================
-export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list';
+export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list' | 'full-image';
 
 export interface MenuItem {
     name: string;
@@ -699,6 +767,10 @@ export interface MenuData {
     icon?: ServiceIcon;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
+    // For full-image variant
+    textAlignment?: TextAlignment;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
@@ -735,6 +807,522 @@ export interface BannerData {
 }
 
 // =============================================================================
+// PRODUCTS (ECOMMERCE STOREFRONT)
+// =============================================================================
+export type StyleType = 'minimal' | 'modern' | 'elegant' | 'dark';
+
+export interface StorefrontProductItem {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    compareAtPrice?: number;
+    image?: string;
+    category?: string;
+    inStock?: boolean;
+    rating?: number;
+    reviewCount?: number;
+    slug?: string;
+    updatedAt?: any; // Firestore Timestamp
+}
+
+export interface ProductsProps {
+    title?: string;
+    subtitle?: string;
+    products: StorefrontProductItem[];
+    columns?: 2 | 3 | 4 | 5 | 6;
+    showFilters?: boolean;
+    showSearch?: boolean;
+    showPagination?: boolean;
+    productsPerPage?: number;
+    layout?: 'grid' | 'list';
+    cardStyle?: 'minimal' | 'modern' | 'elegant';
+    showAddToCart?: boolean;
+    showQuickView?: boolean;
+    showWishlist?: boolean;
+    onAddToCart?: (productId: string) => void;
+    onQuickView?: (productId: string) => void;
+    onWishlist?: (productId: string) => void;
+    style?: StyleType;
+    primaryColor?: string;
+    storeUrl?: string; // URL to view all products in the store
+}
+
+export interface ProductsData {
+    title: string;
+    subtitle: string;
+    products: StorefrontProductItem[];
+    columns: 2 | 3 | 4 | 5 | 6;
+    showFilters: boolean;
+    showSearch: boolean;
+    showPagination: boolean;
+    productsPerPage: number;
+    layout: 'grid' | 'list';
+    cardStyle: 'minimal' | 'modern' | 'elegant';
+    showAddToCart: boolean;
+    showQuickView: boolean;
+    showWishlist: boolean;
+    style: StyleType;
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: {
+        background: string;
+        text: string;
+        heading: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+}
+
+// =============================================================================
+// ECOMMERCE - FEATURED PRODUCTS
+// =============================================================================
+export type FeaturedProductsVariant = 'carousel' | 'grid' | 'showcase';
+export type ProductSourceType = 'manual' | 'category' | 'bestsellers' | 'newest' | 'on-sale';
+
+export interface FeaturedProductsData {
+    variant: FeaturedProductsVariant;
+    title: string;
+    description: string;
+    sourceType: ProductSourceType;
+    categoryId?: string;
+    productIds?: string[];
+    columns: 2 | 3 | 4 | 5;
+    productsToShow: number;
+    // Carousel settings
+    autoScroll?: boolean;
+    scrollSpeed?: number;
+    showArrows?: boolean;
+    showDots?: boolean;
+    // Display options
+    showBadge?: boolean;
+    showPrice?: boolean;
+    showRating?: boolean;
+    showAddToCart?: boolean;
+    showViewAll?: boolean;
+    viewAllUrl?: string;
+    // Card style
+    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - CATEGORY GRID
+// =============================================================================
+export type CategoryGridVariant = 'cards' | 'overlay' | 'minimal' | 'banner';
+
+export interface CategoryItem {
+    id: string;
+    name: string;
+    description?: string;
+    imageUrl: string;
+    productCount?: number;
+    slug?: string;
+}
+
+export interface CategoryGridData {
+    variant: CategoryGridVariant;
+    title: string;
+    description: string;
+    categories: CategoryItem[];
+    columns: 2 | 3 | 4 | 5 | 6;
+    showProductCount?: boolean;
+    imageAspectRatio: AspectRatio;
+    imageObjectFit: ObjectFit;
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - PRODUCT HERO
+// =============================================================================
+export type ProductHeroVariant = 'featured' | 'collection' | 'sale' | 'new-arrivals';
+export type ProductHeroLayout = 'single' | 'split' | 'carousel';
+
+export interface ProductHeroData {
+    variant: ProductHeroVariant;
+    layout: ProductHeroLayout;
+    headline: string;
+    subheadline: string;
+    buttonText: string;
+    buttonUrl?: string;
+    backgroundImageUrl: string;
+    // Product/Collection reference
+    productId?: string;
+    collectionId?: string;
+    // Badge
+    showBadge?: boolean;
+    badgeText?: string;
+    // Overlay
+    overlayStyle: 'gradient' | 'solid' | 'none';
+    overlayOpacity: number;
+    // Layout
+    height: number;
+    textAlignment: TextAlignment;
+    contentPosition: 'left' | 'center' | 'right';
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        overlayColor: string;
+        heading: string;
+        text: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - SALE COUNTDOWN
+// =============================================================================
+export type SaleCountdownVariant = 'banner' | 'floating' | 'inline' | 'fullwidth';
+
+export interface SaleCountdownData {
+    variant: SaleCountdownVariant;
+    title: string;
+    description: string;
+    // Countdown settings
+    endDate: string; // ISO date string
+    showDays?: boolean;
+    showHours?: boolean;
+    showMinutes?: boolean;
+    showSeconds?: boolean;
+    // Display options
+    showProducts?: boolean;
+    productIds?: string[];
+    productsToShow?: number;
+    // Badge/Label
+    badgeText?: string;
+    discountText?: string;
+    // Styling
+    height?: number;
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        countdownBackground?: string;
+        countdownText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - TRUST BADGES
+// =============================================================================
+export type TrustBadgesVariant = 'horizontal' | 'grid' | 'minimal' | 'detailed';
+export type TrustBadgeIcon = 'truck' | 'shield' | 'credit-card' | 'refresh-cw' | 'clock' | 'award' | 'lock' | 'headphones' | 'package' | 'check-circle' | 'star' | 'heart';
+
+export interface TrustBadgeItem {
+    icon: TrustBadgeIcon;
+    title: string;
+    description?: string;
+}
+
+export interface TrustBadgesData {
+    variant: TrustBadgesVariant;
+    title?: string;
+    badges: TrustBadgeItem[];
+    showLabels: boolean;
+    iconSize: 'sm' | 'md' | 'lg';
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    // Colors
+    colors: {
+        background: string;
+        heading?: string;
+        text: string;
+        iconColor: string;
+        borderColor?: string;
+    };
+}
+
+// =============================================================================
+// ECOMMERCE - RECENTLY VIEWED
+// =============================================================================
+export type RecentlyViewedVariant = 'carousel' | 'grid' | 'compact';
+
+export interface RecentlyViewedData {
+    variant: RecentlyViewedVariant;
+    title: string;
+    description?: string;
+    maxProducts: number;
+    columns: 2 | 3 | 4 | 5 | 6;
+    // Carousel settings
+    autoScroll?: boolean;
+    scrollSpeed?: number;
+    showArrows?: boolean;
+    // Display options
+    showPrice?: boolean;
+    showRating?: boolean;
+    cardStyle: 'minimal' | 'modern' | 'elegant';
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - PRODUCT REVIEWS
+// =============================================================================
+export type ProductReviewsVariant = 'list' | 'cards' | 'masonry' | 'featured';
+
+export interface ProductReviewItem {
+    id: string;
+    authorName: string;
+    authorImage?: string;
+    rating: number;
+    title?: string;
+    content: string;
+    date: string;
+    productName?: string;
+    productImage?: string;
+    verified?: boolean;
+    helpful?: number;
+}
+
+export interface ProductReviewsData {
+    variant: ProductReviewsVariant;
+    title: string;
+    description?: string;
+    reviews: ProductReviewItem[];
+    // Display options
+    showRatingDistribution?: boolean;
+    showPhotos?: boolean;
+    showVerifiedBadge?: boolean;
+    showProductInfo?: boolean;
+    sortBy?: 'newest' | 'highest' | 'lowest' | 'helpful';
+    maxReviews?: number;
+    // Summary
+    averageRating?: number;
+    totalReviews?: number;
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+        starColor?: string;
+        verifiedBadgeColor?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - COLLECTION BANNER
+// =============================================================================
+export type CollectionBannerVariant = 'hero' | 'split' | 'minimal' | 'overlay';
+
+export interface CollectionBannerData {
+    variant: CollectionBannerVariant;
+    title: string;
+    description: string;
+    backgroundImageUrl: string;
+    // Collection reference
+    collectionId?: string;
+    // Button
+    buttonText?: string;
+    buttonUrl?: string;
+    showButton?: boolean;
+    // Overlay
+    overlayStyle: 'gradient' | 'solid' | 'none';
+    overlayOpacity: number;
+    // Layout
+    height: number;
+    textAlignment: TextAlignment;
+    contentPosition: 'left' | 'center' | 'right';
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    headlineFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        overlayColor: string;
+        heading: string;
+        text: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - PRODUCT BUNDLE
+// =============================================================================
+export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact';
+
+export interface ProductBundleData {
+    variant: ProductBundleVariant;
+    title: string;
+    description: string;
+    // Bundle products (IDs to fetch from store)
+    productIds: string[];
+    // Pricing
+    bundlePrice: number;
+    originalPrice: number;
+    showSavings: boolean;
+    savingsText?: string;
+    // Display
+    showIndividualPrices: boolean;
+    buttonText: string;
+    buttonUrl?: string;
+    // Badge
+    showBadge?: boolean;
+    badgeText?: string;
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        cardText?: string;
+        priceColor?: string;
+        savingsColor?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+    };
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - ANNOUNCEMENT BAR
+// =============================================================================
+export type AnnouncementBarVariant = 'static' | 'scrolling' | 'rotating';
+
+export interface AnnouncementMessage {
+    text: string;
+    link?: string;
+    linkText?: string;
+}
+
+export interface AnnouncementBarData {
+    variant: AnnouncementBarVariant;
+    messages: AnnouncementMessage[];
+    // Display
+    showIcon?: boolean;
+    icon?: ServiceIcon;
+    dismissible?: boolean;
+    // Scrolling/Rotating settings
+    speed?: number;
+    pauseOnHover?: boolean;
+    // Styling
+    height?: number;
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    fontSize?: FontSize;
+    // Colors
+    colors: {
+        background: string;
+        text: string;
+        linkColor?: string;
+        iconColor?: string;
+        borderColor?: string;
+    };
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 export interface PageData {
@@ -759,5 +1347,17 @@ export interface PageData {
     map: MapData;
     menu: MenuData;
     banner: BannerData;
+    products?: ProductsData;
+    // Ecommerce components
+    featuredProducts?: FeaturedProductsData;
+    categoryGrid?: CategoryGridData;
+    productHero?: ProductHeroData;
+    saleCountdown?: SaleCountdownData;
+    trustBadges?: TrustBadgesData;
+    recentlyViewed?: RecentlyViewedData;
+    productReviews?: ProductReviewsData;
+    collectionBanner?: CollectionBannerData;
+    productBundle?: ProductBundleData;
+    announcementBar?: AnnouncementBarData;
 }
 

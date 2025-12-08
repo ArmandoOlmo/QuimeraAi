@@ -3,18 +3,26 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
-import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info } from 'lucide-react';
+import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers } from 'lucide-react';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
+import ProjectSelectorPage from './ProjectSelectorPage';
 
 const NavigationDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { menus, deleteMenu, saveMenu, activeProject, projects, loadProject, data, setView } = useEditor();
+    const { menus, deleteMenu, saveMenu, activeProject, activeProjectId, projects, loadProject, data, setView } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterUsage, setFilterUsage] = useState<'all' | 'used' | 'unused' | 'empty'>('all');
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+    const [showProjectSelector, setShowProjectSelector] = useState(false);
+
+    // Determinar qué proyecto usar
+    const effectiveProjectId = selectedProjectId || activeProjectId;
+    const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
 
     // Filtrar menús
     const filteredMenus = useMemo(() => {
@@ -87,10 +95,21 @@ const NavigationDashboard: React.FC = () => {
         }
     };
 
-    const handleActivateProject = (projectId: string) => {
+    const handleProjectSelect = (projectId: string) => {
+        setSelectedProjectId(projectId);
+        setShowProjectSelector(false);
         // Load the project but DO NOT switch view to editor
         loadProject(projectId, false, false);
     };
+
+    // Mostrar página de selección de proyecto si no hay proyecto o si el usuario quiere ver todos
+    if (showProjectSelector || !effectiveProjectId || projects.filter(p => p.status !== 'Template').length === 0) {
+        return (
+            <ProjectSelectorPage
+                onProjectSelect={handleProjectSelect}
+            />
+        );
+    }
 
     if (editingMenu) {
         return (
@@ -98,11 +117,11 @@ const NavigationDashboard: React.FC = () => {
                 menu={editingMenu}
                 onClose={() => setEditingMenu(null)}
                 isNew={isCreating}
+                projectId={effectiveProjectId}
             />
         );
     }
 
-    const userProjects = projects.filter(p => p.status !== 'Template');
     const hasUnassignedMenus = menus.some(m => {
         const usedInHeader = data?.header?.menuId === m.id;
         const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === m.id);
@@ -115,23 +134,110 @@ const NavigationDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground lg:hidden hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
-                            <MenuIcon className="w-4 h-4" />
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <MenuIcon className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">{t('navigationDashboard.title')}</h1>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {activeProject && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                                <span className="mr-1.5">{t('dashboard.projects')}:</span>
-                                <span className="font-semibold text-foreground">{activeProject.name}</span>
+                <header className="bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-40">
+                    <div className="px-4 sm:px-6 lg:px-8 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(true)}
+                                    className="lg:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                >
+                                    <MenuIcon size={20} />
+                                </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-primary/20">
+                                        <MenuIcon className="text-primary" size={24} />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl font-bold text-foreground">
+                                            {t('navigationDashboard.title')}
+                                        </h1>
+                                        {/* Project Selector */}
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
+                                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                <Store size={14} />
+                                                <span className="max-w-[200px] truncate">
+                                                    {effectiveProject?.name || t('navigationDashboard.selectProject', 'Seleccionar proyecto')}
+                                                </span>
+                                                <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+
+                                            {/* Dropdown */}
+                                            {isProjectSelectorOpen && (
+                                                <>
+                                                    <div 
+                                                        className="fixed inset-0 z-40"
+                                                        onClick={() => setIsProjectSelectorOpen(false)}
+                                                    />
+                                                    <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
+                                                        {/* Header */}
+                                                        <div className="px-4 py-2 border-b border-border/50 mb-2">
+                                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                                {t('navigationDashboard.quickSwitch', 'Cambio rápido')}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        {/* Recent Projects */}
+                                                        {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
+                                                            <button
+                                                                key={project.id}
+                                                                onClick={() => {
+                                                                    handleProjectSelect(project.id);
+                                                                    setIsProjectSelectorOpen(false);
+                                                                }}
+                                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
+                                                                    project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                                }`}
+                                                            >
+                                                                {project.thumbnailUrl ? (
+                                                                    <img 
+                                                                        src={project.thumbnailUrl} 
+                                                                        alt={project.name}
+                                                                        className="w-10 h-10 rounded-lg object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                                                                        <Layers size={16} className="text-muted-foreground" />
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex-1 text-left min-w-0">
+                                                                    <span className="text-sm font-medium text-foreground truncate block">
+                                                                        {project.name}
+                                                                    </span>
+                                                                    <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
+                                                                        {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                                                                    </span>
+                                                                </div>
+                                                                {project.id === effectiveProjectId && (
+                                                                    <Check size={16} className="text-primary flex-shrink-0" />
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                        
+                                                        {/* View All Button */}
+                                                        <div className="border-t border-border/50 mt-2 pt-2 px-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setShowProjectSelector(true);
+                                                                    setIsProjectSelectorOpen(false);
+                                                                }}
+                                                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                            >
+                                                                <Store size={16} />
+                                                                {t('navigationDashboard.viewAllProjects', 'Ver todos los proyectos')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </header>
 
@@ -139,7 +245,7 @@ const NavigationDashboard: React.FC = () => {
                     <div className="max-w-5xl mx-auto">
 
                         {/* Info Banner */}
-                        {activeProject && hasUnassignedMenus && (
+                        {effectiveProject && hasUnassignedMenus && (
                             <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-start gap-3">
                                 <Info className="text-blue-500 flex-shrink-0" size={20} />
                                 <div className="flex-1">
@@ -170,7 +276,7 @@ const NavigationDashboard: React.FC = () => {
                                 )}
                             </div>
 
-                            {activeProject && menus.length > 0 && (
+                                {effectiveProject && menus.length > 0 && (
                                 <div className="flex items-center gap-3">
                                     {/* Búsqueda */}
                                     <div className="relative">
@@ -198,7 +304,7 @@ const NavigationDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            {activeProject && (
+                            {effectiveProject && (
                                 <button
                                     onClick={handleCreateNew}
                                     className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
@@ -208,44 +314,7 @@ const NavigationDashboard: React.FC = () => {
                             )}
                         </div>
 
-                        {!activeProject ? (
-                            <div className="p-8 bg-card border border-border rounded-xl shadow-sm">
-                                <div className="text-center mb-8">
-                                    <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <LayoutGrid className="text-muted-foreground opacity-50" />
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-2">{t('navigationDashboard.selectProject')}</h3>
-                                    <p className="text-muted-foreground">{t('navigationDashboard.selectProjectDesc')}</p>
-                                </div>
-
-                                {userProjects.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                        {userProjects.map(project => (
-                                            <button
-                                                key={project.id}
-                                                onClick={() => handleActivateProject(project.id)}
-                                                className="flex items-center p-4 bg-secondary/20 border border-border rounded-lg hover:border-primary/50 hover:bg-secondary/40 transition-all text-left group"
-                                            >
-                                                <div className="w-10 h-10 rounded bg-secondary mr-3 overflow-hidden shrink-0">
-                                                    <img src={project.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <p className="font-bold text-sm truncate group-hover:text-primary transition-colors">{project.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{new Date(project.lastUpdated).toLocaleDateString()}</p>
-                                                </div>
-                                                <ChevronRight size={16} className="ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center">
-                                        <p className="text-sm text-muted-foreground">{t('navigationDashboard.noProjects')}</p>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <>
-                                {/* Empty Menu Warning */}
+                        {/* Empty Menu Warning */}
                                 {menus.some(m => m.items.length === 0) && (
                                     <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                                         <div className="flex items-start gap-3">
@@ -379,16 +448,14 @@ const NavigationDashboard: React.FC = () => {
                                         </table>
                                     </div>
                                 </div>
-                            </>
-                        )}
 
-                        {activeProject && (
+                        {effectiveProject && (
                             <div className="mt-6 flex justify-between items-center">
                                 <div className="text-sm text-muted-foreground">
                                     <p>{t('navigationDashboard.menusHelp')}</p>
                                 </div>
                                 <button
-                                    onClick={() => loadProject(activeProject.id, false, false)}
+                                    onClick={() => loadProject(effectiveProject.id, false, false)}
                                     className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
                                 >
                                     {t('navigationDashboard.refreshData')}

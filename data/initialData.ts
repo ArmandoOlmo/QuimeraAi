@@ -679,6 +679,36 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  products: {
+    title: 'Nuestros Productos',
+    subtitle: 'Descubre nuestra selección de productos de alta calidad',
+    products: [], // Se cargan dinámicamente desde el ecommerce
+    columns: 4,
+    showFilters: true,
+    showSearch: true,
+    showPagination: true,
+    productsPerPage: 12,
+    layout: 'grid',
+    cardStyle: 'modern',
+    showAddToCart: true,
+    showQuickView: false,
+    showWishlist: false,
+    style: 'modern',
+    paddingY: 'lg',
+    paddingX: 'md',
+    titleFontSize: 'lg',
+    descriptionFontSize: 'md',
+    colors: {
+      background: '#0f172a',
+      text: '#94a3b8',
+      heading: '#F9FAFB',
+      accent: '#4f46e5',
+      cardBackground: '#1e293b',
+      cardText: '#94a3b8',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+  },
 };
 
 const theme: ThemeData = {
@@ -715,7 +745,20 @@ const brandIdentity: BrandIdentity = {
     language: 'English',
 };
 
-const componentOrder: PageSection[] = ['colors', 'typography', 'header', 'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow', 'pricing', 'faq', 'portfolio', 'leads', 'newsletter', 'cta', 'services', 'team', 'video', 'howItWorks', 'map', 'menu', 'chatbot', 'footer'];
+const componentOrder: PageSection[] = [
+    // Structure
+    'colors', 'typography', 'header',
+    // Content
+    'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow', 
+    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
+    // Ecommerce
+    'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 
+    'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
+    // Integrations
+    'leads', 'newsletter', 'map', 'chatbot',
+    // Footer
+    'footer'
+];
 
 const sectionVisibility = componentOrder.reduce((acc, section) => {
     (acc as any)[section] = true;

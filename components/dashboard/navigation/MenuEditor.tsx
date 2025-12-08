@@ -2,18 +2,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavigationMenu, NavigationMenuItem } from '../../../types';
 import { useEditor } from '../../../contexts/EditorContext';
-import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper } from 'lucide-react';
+import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper, ShoppingBag, Tag, Package } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
+import { usePublicProducts } from '../../../hooks/usePublicProducts';
 
 interface MenuEditorProps {
     menu: NavigationMenu;
     onClose: () => void;
     isNew: boolean;
+    projectId?: string | null;
 }
 
-type LinkCategory = 'root' | 'sections' | 'policies' | 'articles';
+type LinkCategory = 'root' | 'sections' | 'policies' | 'articles' | 'store' | 'store-categories' | 'store-products';
 
 const SECTION_LINKS = [
     { label: 'Home (Hero)', value: '#hero' },
@@ -33,13 +35,20 @@ const SECTION_LINKS = [
     { label: 'Logo Cloud', value: '#logoCloud' },
 ];
 
-const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
-    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, data } = useEditor();
+const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
+    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, data, activeProjectId } = useEditor();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
     const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // Use projectId prop if provided, otherwise fall back to activeProjectId
+    const effectiveProjectId = projectId ?? activeProjectId;
+    
+    // Ecommerce data for link picker
+    const { products: storeProducts, categories: storeCategories } = usePublicProducts(effectiveProjectId);
+    const [productSearch, setProductSearch] = useState('');
     
     // Check where this menu is being used
     const usedInHeader = data?.header?.menuId === menu.id;
@@ -68,6 +77,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
         setLinkPickerOpenId(null);
         setPickerCategory('root');
         setArticleSearch('');
+        setProductSearch('');
     });
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,6 +228,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                         <ChevronRight size={16} className="text-muted-foreground" />
                     </button>
                     <button 
+                        onClick={() => setPickerCategory('store')} 
+                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
+                    >
+                        <div className="flex items-center">
+                            <ShoppingBag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                            Store / Ecommerce
+                        </div>
+                        <ChevronRight size={16} className="text-muted-foreground" />
+                    </button>
+                    <button 
                         onClick={() => setPickerCategory('articles')} 
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                     >
@@ -323,6 +343,141 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew }) => {
                 </div>
             );
         }
+
+        // Store / Ecommerce options
+        if (pickerCategory === 'store') {
+            const hasEcommerceData = storeProducts.length > 0 || storeCategories.length > 0;
+            return (
+                <div>
+                    <div className="px-2 py-2 border-b border-border flex items-center">
+                        <button onClick={() => setPickerCategory('root')} className="p-1 hover:bg-secondary rounded mr-2 text-muted-foreground hover:text-foreground">
+                            <ArrowLeft size={16} />
+                        </button>
+                        <span className="text-sm font-semibold">Store / Ecommerce</span>
+                    </div>
+                    {!effectiveProjectId && (
+                        <div className="px-4 py-3 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border-b border-border">
+                            No project selected. Please select a project first.
+                        </div>
+                    )}
+                    {effectiveProjectId && !hasEcommerceData && (
+                        <div className="px-4 py-3 text-xs text-muted-foreground bg-secondary/30 border-b border-border">
+                            No ecommerce data found. Add products in the Ecommerce Dashboard to see them here.
+                        </div>
+                    )}
+                    <div className="py-1">
+                        <button 
+                            onClick={() => handleLinkSelect(item, '#store')} 
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
+                        >
+                            <ShoppingBag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                            All Products (Store)
+                        </button>
+                        <button 
+                            onClick={() => setPickerCategory('store-categories')} 
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
+                        >
+                            <div className="flex items-center">
+                                <Tag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                                Categories
+                                {storeCategories.length > 0 && (
+                                    <span className="ml-2 text-xs text-muted-foreground">({storeCategories.length})</span>
+                                )}
+                            </div>
+                            <ChevronRight size={16} className="text-muted-foreground" />
+                        </button>
+                        <button 
+                            onClick={() => setPickerCategory('store-products')} 
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
+                        >
+                            <div className="flex items-center">
+                                <Package size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                                Products
+                                {storeProducts.length > 0 && (
+                                    <span className="ml-2 text-xs text-muted-foreground">({storeProducts.length})</span>
+                                )}
+                            </div>
+                            <ChevronRight size={16} className="text-muted-foreground" />
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (pickerCategory === 'store-categories') {
+            return (
+                <div>
+                    <div className="px-2 py-2 border-b border-border flex items-center">
+                        <button onClick={() => setPickerCategory('store')} className="p-1 hover:bg-secondary rounded mr-2 text-muted-foreground hover:text-foreground">
+                            <ArrowLeft size={16} />
+                        </button>
+                        <span className="text-sm font-semibold">Categories</span>
+                    </div>
+                    <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                        {storeCategories.length === 0 ? (
+                            <div className="px-4 py-2 text-xs text-muted-foreground">No categories found. Add categories in the Ecommerce Dashboard.</div>
+                        ) : (
+                            storeCategories.map((category) => (
+                                <button 
+                                    key={category.id}
+                                    onClick={() => handleLinkSelect(item, `#store/category/${category.slug}`)}
+                                    className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
+                                    title={category.name}
+                                >
+                                    {category.name}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        if (pickerCategory === 'store-products') {
+            const filteredProducts = storeProducts.filter(p => 
+                p.name.toLowerCase().includes(productSearch.toLowerCase())
+            );
+            return (
+                <div>
+                    <div className="px-2 py-2 border-b border-border flex items-center">
+                        <button onClick={() => setPickerCategory('store')} className="p-1 hover:bg-secondary rounded mr-2 text-muted-foreground hover:text-foreground">
+                            <ArrowLeft size={16} />
+                        </button>
+                        <span className="text-sm font-semibold">Products</span>
+                    </div>
+                    <div className="p-2 border-b border-border">
+                        <div className="relative">
+                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"/>
+                             <input 
+                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary" 
+                                placeholder="Search products..." 
+                                value={productSearch}
+                                onChange={(e) => setProductSearch(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="py-1 max-h-80 overflow-y-auto custom-scrollbar">
+                        {filteredProducts.length === 0 ? (
+                            <div className="px-4 py-2 text-xs text-muted-foreground">No products found. Add products in the Ecommerce Dashboard.</div>
+                        ) : (
+                            filteredProducts.map((product) => (
+                                <button 
+                                    key={product.id}
+                                    onClick={() => handleLinkSelect(item, `#store/product/${product.slug}`)}
+                                    className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
+                                    title={product.name}
+                                >
+                                    {product.name}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Fallback - should not reach here
+        return null;
     };
 
 
