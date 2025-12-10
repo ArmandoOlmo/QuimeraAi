@@ -24,15 +24,19 @@ export interface TrustedByData {
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
+  none: 'py-0',
   sm: 'py-8 md:py-12',
   md: 'py-12 md:py-16',
   lg: 'py-16 md:py-20',
+  xl: 'py-24 md:py-32',
 };
 
 const paddingXClasses: Record<PaddingSize, string> = {
+  none: 'px-0',
   sm: 'px-4',
   md: 'px-6',
   lg: 'px-8',
+  xl: 'px-12',
 };
 
 const animationDuration: Record<string, string> = {

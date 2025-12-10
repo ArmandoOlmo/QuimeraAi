@@ -649,7 +649,25 @@ export interface ChatbotData {
     placeholderText: string;
     knowledgeBase: string;
     position: 'bottom-left' | 'bottom-right';
-    colors: { primary: string; text: string; background: string; };
+    colors: {
+        primary: string;
+        text: string;
+        background: string;
+        // Extended colors for widget
+        primaryColor?: string;
+        secondaryColor?: string;
+        accentColor?: string;
+        userBubbleColor?: string;
+        userTextColor?: string;
+        botBubbleColor?: string;
+        botTextColor?: string;
+        backgroundColor?: string;
+        inputBackground?: string;
+        inputBorder?: string;
+        inputText?: string;
+        headerBackground?: string;
+        headerText?: string;
+    };
     isActive?: boolean;
 }
 
@@ -1194,6 +1212,9 @@ export interface RecentlyViewedData {
         accent: string;
         cardBackground?: string;
         cardText?: string;
+        starColor?: string;
+        borderColor?: string;
+        buttonText?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1251,6 +1272,8 @@ export interface ProductReviewsData {
         cardText?: string;
         starColor?: string;
         verifiedBadgeColor?: string;
+        borderColor?: string;
+        buttonText?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1346,6 +1369,7 @@ export interface ProductBundleData {
         buttonText?: string;
         badgeBackground?: string;
         badgeText?: string;
+        borderColor?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1403,63 +1427,63 @@ export interface StoreSettingsData {
     
     // === Display Options ===
     /** Show/hide the filter sidebar in product search. Default: true */
-    showFilterSidebar: boolean;
+    showFilterSidebar?: boolean;
     /** Show/hide the search bar in product search page. Default: true */
-    showSearchBar: boolean;
+    showSearchBar?: boolean;
     /** Show/hide the sort dropdown. Default: true */
-    showSortOptions: boolean;
+    showSortOptions?: boolean;
     /** Show/hide view mode toggle (grid/list). Default: true */
-    showViewModeToggle: boolean;
+    showViewModeToggle?: boolean;
     /** Show product ratings. Default: true */
-    showRatings: boolean;
+    showRatings?: boolean;
     /** Show product badges (sale, new). Default: true */
-    showBadges: boolean;
+    showBadges?: boolean;
     /** Show quick view button. Default: false */
-    showQuickView: boolean;
+    showQuickView?: boolean;
     /** Show add to cart button on cards. Default: true */
-    showAddToCart: boolean;
+    showAddToCart?: boolean;
     /** Show wishlist button. Default: false */
-    showWishlist: boolean;
+    showWishlist?: boolean;
     /** Show compare button. Default: false */
-    showCompare: boolean;
+    showCompare?: boolean;
     
     // === Layout Options ===
     /** Default view mode. Default: 'grid' */
-    defaultViewMode: StoreSettingsVariant;
+    defaultViewMode?: StoreSettingsVariant;
     /** Products per page. Default: 12 */
-    productsPerPage: number;
+    productsPerPage?: number;
     /** Grid columns on desktop. Default: 4 */
-    gridColumns: 2 | 3 | 4 | 5;
+    gridColumns?: 2 | 3 | 4 | 5;
     /** Product card style. Default: 'modern' */
-    cardStyle: StoreSettingsCardStyle;
+    cardStyle?: StoreSettingsCardStyle;
     /** Border radius for cards. Default: 'xl' */
-    borderRadius: BorderRadiusSize;
+    borderRadius?: BorderRadiusSize;
     /** Show pagination. Default: true */
-    showPagination: boolean;
+    showPagination?: boolean;
     /** Infinite scroll instead of pagination. Default: false */
-    infiniteScroll: boolean;
+    infiniteScroll?: boolean;
     
     // === Spacing ===
-    paddingY: PaddingSize;
-    paddingX: PaddingSize;
-    cardGap: 'sm' | 'md' | 'lg';
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg';
     
     // === Colors (inherit from global or override) ===
-    colors: {
-        background: string;
-        heading: string;
-        text: string;
-        accent: string;
-        cardBackground: string;
-        cardText: string;
-        buttonBackground: string;
-        buttonText: string;
-        badgeBackground: string;
-        badgeText: string;
-        priceColor: string;
-        salePriceColor: string;
-        borderColor: string;
-        starColor: string;
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+        priceColor?: string;
+        salePriceColor?: string;
+        borderColor?: string;
+        starColor?: string;
     };
     
     // === Cart Drawer Colors ===

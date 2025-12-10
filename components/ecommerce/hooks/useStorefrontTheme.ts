@@ -146,14 +146,67 @@ export const useDesignTokensAsStorefront = (): StorefrontTheme => {
     const { colors } = useSafeDesignTokens();
 
     return {
+        // Core Colors
         primaryColor: colors.primary,
         secondaryColor: colors.secondary,
-        accentColor: colors.warning,
+        accentColor: colors.warning || '#f59e0b',
+        
+        // Background Colors
         backgroundColor: '#ffffff',
+        cardBackground: '#f8fafc',
+        headerBackground: '#ffffff',
+        footerBackground: '#1f2937',
+        
+        // Text Colors
         textColor: '#374151',
         headingColor: '#111827',
-        currencySymbol: '$',
+        mutedTextColor: '#6b7280',
+        linkColor: colors.primary,
+        
+        // Button Colors
+        buttonBackground: colors.primary,
+        buttonText: '#ffffff',
+        buttonSecondaryBackground: '#f3f4f6',
+        buttonSecondaryText: '#374151',
+        buttonHoverBackground: colors.primary,
+        
+        // Badge Colors
+        badgeBackground: colors.primary,
+        badgeText: '#ffffff',
+        saleBadgeBackground: '#ef4444',
+        saleBadgeText: '#ffffff',
+        
+        // Price Colors
+        priceColor: '#111827',
+        salePriceColor: '#ef4444',
+        originalPriceColor: '#9ca3af',
+        
+        // Overlay Colors
+        overlayStart: 'transparent',
+        overlayEnd: 'rgba(0, 0, 0, 0.7)',
+        
+        // Border Colors
+        borderColor: '#e5e7eb',
+        dividerColor: '#f3f4f6',
+        inputBorderColor: '#d1d5db',
+        
+        // State Colors
+        successColor: '#10b981',
+        warningColor: '#f59e0b',
+        errorColor: '#ef4444',
+        infoColor: '#3b82f6',
+        
+        // Cart & Checkout
+        cartBadgeBackground: '#ef4444',
+        cartBadgeText: '#ffffff',
+        checkoutAccent: colors.primary,
+        
+        // Typography
         fontFamily: 'Inter, system-ui, sans-serif',
+        headingFontFamily: 'Inter, system-ui, sans-serif',
+        
+        // Currency
+        currencySymbol: '$',
     };
 };
 

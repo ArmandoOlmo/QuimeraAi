@@ -5,15 +5,19 @@ import { Upload, Cog, Sparkles, Download, Share2, Search } from 'lucide-react';
 import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
+  none: 'py-0',
   sm: 'py-10 md:py-16',
   md: 'py-16 md:py-24',
   lg: 'py-20 md:py-32',
+  xl: 'py-24 md:py-40',
 };
 
 const paddingXClasses: Record<PaddingSize, string> = {
+  none: 'px-0',
   sm: 'px-4',
   md: 'px-6',
   lg: 'px-8',
+  xl: 'px-12',
 };
 
 const titleSizeClasses: Record<FontSize, string> = {

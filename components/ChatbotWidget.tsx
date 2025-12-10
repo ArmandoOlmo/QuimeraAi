@@ -35,7 +35,21 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     
     // Merge colors from Web Editor (data.chatbot.colors) with appearance colors
     // Web Editor colors take priority over AI Assistant Dashboard colors
-    const chatbotColors = data?.chatbot?.colors || {};
+    const chatbotColors = (data?.chatbot?.colors || {}) as Partial<{
+        primaryColor: string;
+        secondaryColor: string;
+        accentColor: string;
+        userBubbleColor: string;
+        userTextColor: string;
+        botBubbleColor: string;
+        botTextColor: string;
+        backgroundColor: string;
+        inputBackground: string;
+        inputBorder: string;
+        inputText: string;
+        headerBackground: string;
+        headerText: string;
+    }>;
     const appearance = {
         ...baseAppearance,
         colors: {

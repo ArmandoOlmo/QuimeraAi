@@ -8,15 +8,19 @@ import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
+  none: 'py-0',
   sm: 'py-10 md:py-16',
   md: 'py-16 md:py-24',
   lg: 'py-20 md:py-32',
+  xl: 'py-24 md:py-40',
 };
 
 const paddingXClasses: Record<PaddingSize, string> = {
+  none: 'px-0',
   sm: 'px-4',
   md: 'px-6',
   lg: 'px-8',
+  xl: 'px-12',
 };
 
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -44,8 +48,11 @@ const imageStyleClasses: Record<ImageStyle, string> = {
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
+  sm: 'rounded-sm',
   md: 'rounded-md',
+  lg: 'rounded-lg',
   xl: 'rounded-xl',
+  '2xl': 'rounded-2xl',
   full: 'rounded-3xl',
 };
 

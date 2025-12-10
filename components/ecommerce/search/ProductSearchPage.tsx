@@ -708,10 +708,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         <WishlistButton
                             product={product}
                             isInWishlist={isInWishlist}
-                            onToggle={async (e) => {
-                                e?.stopPropagation();
-                                onToggleWishlist();
-                            }}
+                            onToggle={async () => onToggleWishlist()}
                             size="sm"
                         />
                     </div>

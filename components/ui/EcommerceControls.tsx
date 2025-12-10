@@ -61,31 +61,45 @@ const FontSizeSelector = ({ label, value, onChange }: { label: string, value: st
     </div>
 );
 
-const PaddingSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-    <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-            {['sm', 'md', 'lg'].map((size) => (
-                <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
-                    {size.toUpperCase()}
-                </button>
-            ))}
+const PaddingSelector = ({ label, value, onChange, showNone, showXl }: { label: string, value: string, onChange: (val: string) => void, showNone?: boolean, showXl?: boolean }) => {
+    const sizes = [
+        ...(showNone ? ['none'] : []),
+        'sm', 
+        'md', 
+        'lg',
+        ...(showXl ? ['xl'] : []),
+    ];
+    return (
+        <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                {sizes.map((size) => (
+                    <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
+                        {size.toUpperCase()}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
-const BorderRadiusSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-    <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-            {[{v: 'none', l: 'None'}, {v: 'md', l: 'Med'}, {v: 'xl', l: 'Lg'}, {v: 'full', l: 'Full'}].map((opt) => (
-                <button key={opt.v} onClick={() => onChange(opt.v)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
-                    {opt.l}
-                </button>
-            ))}
+const BorderRadiusSelector = ({ label, value, onChange, extended }: { label: string, value: string, onChange: (val: string) => void, extended?: boolean }) => {
+    const options = extended 
+        ? [{v: 'none', l: 'None'}, {v: 'sm', l: 'Sm'}, {v: 'md', l: 'Med'}, {v: 'lg', l: 'Lg'}, {v: 'xl', l: 'XL'}, {v: '2xl', l: '2XL'}, {v: 'full', l: 'Full'}]
+        : [{v: 'none', l: 'None'}, {v: 'md', l: 'Med'}, {v: 'xl', l: 'Lg'}, {v: 'full', l: 'Full'}];
+    return (
+        <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                {options.map((opt) => (
+                    <button key={opt.v} onClick={() => onChange(opt.v)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
+                        {opt.l}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const SelectControl = ({ label, value, options, onChange }: { label: string, value: string, options: { value: string, label: string }[], onChange: (val: string) => void }) => (
     <div className="mb-3">
