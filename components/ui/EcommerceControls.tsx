@@ -10,7 +10,7 @@ import ColorControl from './ColorControl';
 import TabbedControls from './TabbedControls';
 import ImagePicker from './ImagePicker';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
-import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, LayoutGrid, Maximize2, Palette, Info, Grid, List } from 'lucide-react';
+import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List } from 'lucide-react';
 
 // Helper Components (same as in Controls.tsx)
 const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
@@ -289,6 +289,363 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
                                         <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ============================================================================
+// SINGLE PRODUCT SELECTOR - For selecting one product (e.g., for ProductHero)
+// ============================================================================
+interface SingleProductSelectorProps {
+    selectedId: string | undefined;
+    onChange: (id: string | undefined) => void;
+    storeId: string;
+    label?: string;
+}
+
+const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ 
+    selectedId, 
+    onChange, 
+    storeId,
+    label = 'Producto Destacado'
+}) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const { products, isLoading } = usePublicProducts(storeId, { limitCount: 100 });
+
+    const filteredProducts = products.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedProduct = products.find(p => p.id === selectedId);
+
+    const selectProduct = (productId: string | undefined) => {
+        onChange(productId);
+        setIsExpanded(false);
+    };
+
+    return (
+        <div className="mb-4">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                <Package size={14} />
+                {label}
+                {isLoading && <Loader2 size={12} className="animate-spin text-editor-accent" />}
+            </label>
+            
+            {/* Selected Product Display */}
+            {selectedProduct && (
+                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                    {selectedProduct.image ? (
+                        <img 
+                            src={selectedProduct.image} 
+                            alt={selectedProduct.name}
+                            className="w-10 h-10 rounded object-cover flex-shrink-0"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                            <Package size={16} className="text-editor-text-secondary" />
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedProduct.name}</p>
+                        <p className="text-xs text-editor-text-secondary">${selectedProduct.price.toFixed(2)}</p>
+                    </div>
+                    <button 
+                        onClick={() => selectProduct(undefined)}
+                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        title="Quitar producto"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Expand/Collapse Button */}
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+            >
+                <span className="flex items-center gap-2">
+                    <ShoppingBag size={14} />
+                    {isExpanded ? 'Ocultar productos' : selectedProduct ? 'Cambiar producto' : 'Seleccionar producto'}
+                </span>
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {/* Product List */}
+            {isExpanded && (
+                <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
+                    {/* Search */}
+                    <div className="p-2 border-b border-editor-border">
+                        <div className="relative">
+                            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                            <input
+                                type="text"
+                                placeholder="Buscar producto..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-editor-bg border border-editor-border rounded-md pl-7 pr-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* None Option */}
+                    <button
+                        onClick={() => selectProduct(undefined)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors border-b border-editor-border ${
+                            !selectedId ? 'bg-editor-accent/10' : ''
+                        }`}
+                    >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                            !selectedId 
+                                ? 'bg-editor-accent border-editor-accent' 
+                                : 'border-editor-border'
+                        }`}>
+                            {!selectedId && <Check size={10} className="text-white" />}
+                        </div>
+                        <span className="text-sm text-editor-text-secondary italic">Ninguno (sin producto)</span>
+                    </button>
+                    
+                    {/* Products List */}
+                    <div className="max-h-[250px] overflow-y-auto">
+                        {isLoading ? (
+                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                                <Loader2 size={20} className="animate-spin mx-auto mb-2" />
+                                Cargando productos...
+                            </div>
+                        ) : filteredProducts.length === 0 ? (
+                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                                {products.length === 0 ? 'No hay productos en la tienda' : 'No se encontraron productos'}
+                            </div>
+                        ) : (
+                            filteredProducts.map(product => (
+                                <button
+                                    key={product.id}
+                                    onClick={() => selectProduct(product.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${
+                                        selectedId === product.id ? 'bg-editor-accent/10' : ''
+                                    }`}
+                                >
+                                    {/* Radio */}
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                                        selectedId === product.id 
+                                            ? 'bg-editor-accent border-editor-accent' 
+                                            : 'border-editor-border'
+                                    }`}>
+                                        {selectedId === product.id && <Check size={10} className="text-white" />}
+                                    </div>
+                                    
+                                    {/* Product Image */}
+                                    {product.image ? (
+                                        <img 
+                                            src={product.image} 
+                                            alt={product.name}
+                                            className="w-8 h-8 rounded object-cover flex-shrink-0"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                                            <Package size={14} className="text-editor-text-secondary" />
+                                        </div>
+                                    )}
+                                    
+                                    {/* Product Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
+                                        <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ============================================================================
+// SINGLE COLLECTION SELECTOR - For selecting one collection (e.g., for ProductHero)
+// ============================================================================
+interface SingleCollectionSelectorProps {
+    storeId: string;
+    gridCategories: CategoryItem[];
+    selectedCollectionId: string | undefined;
+    onSelect: (collectionId: string | undefined) => void;
+    label?: string;
+}
+
+const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> = ({
+    storeId,
+    gridCategories,
+    selectedCollectionId,
+    onSelect,
+    label = 'Colección'
+}) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const { categories: storeCategories, isLoading } = usePublicProducts(storeId, { limitCount: 1 });
+    
+    // Combinar categorías de la tienda con las del categoryGrid
+    const availableCollections: CategoryItem[] = React.useMemo(() => {
+        const storeCats: CategoryItem[] = storeCategories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            description: '',
+            imageUrl: '',
+            productCount: 0,
+            slug: cat.slug,
+        }));
+        
+        const combined = new Map<string, CategoryItem>();
+        storeCats.forEach(cat => combined.set(cat.id, cat));
+        gridCategories.forEach(cat => {
+            const existing = combined.get(cat.id);
+            if (existing) {
+                combined.set(cat.id, {
+                    ...existing,
+                    ...cat,
+                    imageUrl: cat.imageUrl || existing.imageUrl,
+                    description: cat.description || existing.description,
+                });
+            } else {
+                combined.set(cat.id, cat);
+            }
+        });
+        
+        return Array.from(combined.values());
+    }, [storeCategories, gridCategories]);
+
+    const selectedCollection = availableCollections.find(c => c.id === selectedCollectionId);
+
+    const selectCollection = (collectionId: string | undefined) => {
+        onSelect(collectionId);
+        setIsExpanded(false);
+    };
+
+    return (
+        <div className="mb-4">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                <FolderOpen size={14} />
+                {label}
+                {isLoading && <Loader2 size={12} className="animate-spin text-editor-accent" />}
+            </label>
+            
+            {/* Selected Collection Display */}
+            {selectedCollection && (
+                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                    {selectedCollection.imageUrl ? (
+                        <img 
+                            src={selectedCollection.imageUrl} 
+                            alt={selectedCollection.name}
+                            className="w-10 h-10 rounded object-cover flex-shrink-0"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                            <FolderOpen size={16} className="text-editor-text-secondary" />
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedCollection.name}</p>
+                        <p className="text-xs text-editor-text-secondary truncate">
+                            {selectedCollection.description || `${selectedCollection.productCount || 0} productos`}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => selectCollection(undefined)}
+                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        title="Quitar colección"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Expand/Collapse Button */}
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+            >
+                <span className="flex items-center gap-2">
+                    <FolderOpen size={14} />
+                    {isExpanded ? 'Ocultar colecciones' : selectedCollection ? 'Cambiar colección' : 'Seleccionar colección'}
+                </span>
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {/* Collection List */}
+            {isExpanded && (
+                <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
+                    {/* None Option */}
+                    <button
+                        onClick={() => selectCollection(undefined)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors border-b border-editor-border ${
+                            !selectedCollectionId ? 'bg-editor-accent/10' : ''
+                        }`}
+                    >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                            !selectedCollectionId 
+                                ? 'bg-editor-accent border-editor-accent' 
+                                : 'border-editor-border'
+                        }`}>
+                            {!selectedCollectionId && <Check size={10} className="text-white" />}
+                        </div>
+                        <span className="text-sm text-editor-text-secondary italic">Ninguna (sin colección)</span>
+                    </button>
+
+                    {/* Collections List */}
+                    <div className="max-h-[250px] overflow-y-auto">
+                        {isLoading ? (
+                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                                <Loader2 size={20} className="animate-spin mx-auto mb-2" />
+                                Cargando colecciones...
+                            </div>
+                        ) : availableCollections.length === 0 ? (
+                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                                No hay colecciones disponibles
+                            </div>
+                        ) : (
+                            availableCollections.map(collection => (
+                                <button
+                                    key={collection.id}
+                                    onClick={() => selectCollection(collection.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${
+                                        selectedCollectionId === collection.id ? 'bg-editor-accent/10' : ''
+                                    }`}
+                                >
+                                    {/* Radio */}
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                                        selectedCollectionId === collection.id 
+                                            ? 'bg-editor-accent border-editor-accent' 
+                                            : 'border-editor-border'
+                                    }`}>
+                                        {selectedCollectionId === collection.id && <Check size={10} className="text-white" />}
+                                    </div>
+                                    
+                                    {/* Collection Image */}
+                                    {collection.imageUrl ? (
+                                        <img 
+                                            src={collection.imageUrl} 
+                                            alt={collection.name}
+                                            className="w-8 h-8 rounded object-cover flex-shrink-0"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                                            <FolderOpen size={14} className="text-editor-text-secondary" />
+                                        </div>
+                                    )}
+                                    
+                                    {/* Collection Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-editor-text-primary truncate">{collection.name}</p>
+                                        <p className="text-xs text-editor-text-secondary truncate">
+                                            {collection.description || `${collection.productCount || 0} productos`}
+                                        </p>
                                     </div>
                                 </button>
                             ))
@@ -616,10 +973,11 @@ export const useCategoryGridControls = ({ data, setNestedData }: EcommerceContro
     return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
 };
 
-export const useProductHeroControls = ({ data, setNestedData }: EcommerceControlsProps) => {
+export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: EcommerceControlsProps) => {
     if (!data?.productHero) return null;
 
     const d = data.productHero;
+    const gridCategories = data.categoryGrid?.categories || [];
 
     const contentTab = (
         <div className="space-y-4">
@@ -633,8 +991,103 @@ export const useProductHeroControls = ({ data, setNestedData }: EcommerceControl
             
             <hr className="border-editor-border/50" />
 
-            <Input label="Button Text" value={d.buttonText || ''} onChange={(e) => setNestedData('productHero.buttonText', e.target.value)} />
-            <Input label="Button URL" value={d.buttonUrl || ''} onChange={(e) => setNestedData('productHero.buttonUrl', e.target.value)} placeholder="#store or URL" />
+            {/* Imagen de Fondo con ImagePicker */}
+            <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                    <ImageIcon size={14} />
+                    Imagen de Fondo
+                </label>
+                <ImagePicker
+                    label=""
+                    value={d.backgroundImageUrl || ''}
+                    onChange={(url) => setNestedData('productHero.backgroundImageUrl', url)}
+                />
+            </div>
+
+            <hr className="border-editor-border/50" />
+
+            {/* Sección del Botón con Acciones */}
+            <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider">
+                    Configuración del Botón
+                </label>
+                
+                <Input label="Texto del Botón" value={d.buttonText || ''} onChange={(e) => setNestedData('productHero.buttonText', e.target.value)} />
+                
+                {/* Tipo de acción del botón */}
+                <SelectControl
+                    label="Acción del Botón"
+                    value={d.buttonUrl?.startsWith('#store/product/') ? 'product' : 
+                           d.buttonUrl?.startsWith('#store/category/') ? 'collection' : 'custom'}
+                    options={[
+                        { value: 'custom', label: 'URL Personalizada' },
+                        { value: 'product', label: 'Ir a Producto' },
+                        { value: 'collection', label: 'Ir a Colección' },
+                    ]}
+                    onChange={(v) => {
+                        if (v === 'custom') {
+                            setNestedData('productHero.buttonUrl', '');
+                            setNestedData('productHero.productId', '');
+                            setNestedData('productHero.collectionId', '');
+                        } else if (v === 'product') {
+                            setNestedData('productHero.buttonUrl', '#store/product/');
+                            setNestedData('productHero.collectionId', '');
+                        } else if (v === 'collection') {
+                            setNestedData('productHero.buttonUrl', '#store/category/');
+                            setNestedData('productHero.productId', '');
+                        }
+                    }}
+                />
+                
+                {/* URL Personalizada */}
+                {!d.buttonUrl?.startsWith('#store/product/') && !d.buttonUrl?.startsWith('#store/category/') && (
+                    <Input 
+                        label="URL del Botón" 
+                        value={d.buttonUrl || ''} 
+                        onChange={(e) => setNestedData('productHero.buttonUrl', e.target.value)} 
+                        placeholder="#store o cualquier URL" 
+                    />
+                )}
+
+                {/* Selector de Producto */}
+                {d.buttonUrl?.startsWith('#store/product/') && storeId && (
+                    <SingleProductSelector
+                        selectedId={d.productId}
+                        onChange={(id) => {
+                            setNestedData('productHero.productId', id || '');
+                            if (id) {
+                                setNestedData('productHero.buttonUrl', `#store/product/${id}`);
+                            }
+                        }}
+                        storeId={storeId}
+                        label="Producto Destino"
+                    />
+                )}
+
+                {/* Selector de Colección */}
+                {d.buttonUrl?.startsWith('#store/category/') && storeId && (
+                    <SingleCollectionSelector
+                        storeId={storeId}
+                        gridCategories={gridCategories}
+                        selectedCollectionId={d.collectionId}
+                        onSelect={(id) => {
+                            setNestedData('productHero.collectionId', id || '');
+                            if (id) {
+                                setNestedData('productHero.buttonUrl', `#store/category/${id}`);
+                            }
+                        }}
+                        label="Colección Destino"
+                    />
+                )}
+
+                {!storeId && (d.buttonUrl?.startsWith('#store/product/') || d.buttonUrl?.startsWith('#store/category/')) && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
+                        <p className="text-amber-200 text-xs">
+                            Guarda el proyecto para poder seleccionar productos y colecciones.
+                        </p>
+                    </div>
+                )}
+            </div>
 
             <hr className="border-editor-border/50" />
 
@@ -645,7 +1098,20 @@ export const useProductHeroControls = ({ data, setNestedData }: EcommerceControl
 
             <hr className="border-editor-border/50" />
 
-            <Input label="Background Image URL" value={d.backgroundImageUrl || ''} onChange={(e) => setNestedData('productHero.backgroundImageUrl', e.target.value)} />
+            {/* Producto Destacado (para mostrar en el hero) */}
+            {storeId && (
+                <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                    <SingleProductSelector
+                        selectedId={d.productId}
+                        onChange={(id) => setNestedData('productHero.productId', id || '')}
+                        storeId={storeId}
+                        label="Producto Destacado (Carrusel)"
+                    />
+                    <p className="text-[10px] text-editor-text-secondary mt-1">
+                        Se muestra en el layout "Carrusel" con su imagen y precio
+                    </p>
+                </div>
+            )}
         </div>
     );
 
@@ -2171,6 +2637,20 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
     const pdStarColor = productDetail?.colors?.starColor || '#fbbf24';
     const pdLinkColor = productDetail?.colors?.linkColor || '#4f46e5';
     
+    // Colors for Cart Drawer (dark theme defaults)
+    const cartDrawer = settings?.cartDrawerColors;
+    const cdBackground = cartDrawer?.background || '#0f172a';
+    const cdHeading = cartDrawer?.heading || '#ffffff';
+    const cdText = cartDrawer?.text || '#94a3b8';
+    const cdAccent = cartDrawer?.accent || '#4f46e5';
+    const cdCardBackground = cartDrawer?.cardBackground || '#1e293b';
+    const cdCardText = cartDrawer?.cardText || '#e2e8f0';
+    const cdButtonBackground = cartDrawer?.buttonBackground || '#4f46e5';
+    const cdButtonText = cartDrawer?.buttonText || '#ffffff';
+    const cdPriceColor = cartDrawer?.priceColor || '#4f46e5';
+    const cdBorderColor = cartDrawer?.borderColor || '#334155';
+    
+    
     const contentTab = (
         <div className="space-y-4">
             {/* Display Options */}
@@ -2423,6 +2903,26 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                     <ColorControl label="Border" value={pdBorderColor} onChange={(v) => setNestedData('productDetailPage.colors.borderColor', v)} />
                     <ColorControl label="Star" value={pdStarColor} onChange={(v) => setNestedData('productDetailPage.colors.starColor', v)} />
                     <ColorControl label="Link" value={pdLinkColor} onChange={(v) => setNestedData('productDetailPage.colors.linkColor', v)} />
+                </div>
+            </div>
+
+            {/* Colors - Cart Drawer */}
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                    <ShoppingCart size={14} />
+                    Cart Drawer Colors
+                </label>
+                <div className="space-y-2">
+                    <ColorControl label="Background" value={cdBackground} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.background', v)} />
+                    <ColorControl label="Heading" value={cdHeading} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.heading', v)} />
+                    <ColorControl label="Text" value={cdText} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.text', v)} />
+                    <ColorControl label="Accent" value={cdAccent} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.accent', v)} />
+                    <ColorControl label="Card Background" value={cdCardBackground} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.cardBackground', v)} />
+                    <ColorControl label="Card Text" value={cdCardText} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.cardText', v)} />
+                    <ColorControl label="Button Background" value={cdButtonBackground} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.buttonBackground', v)} />
+                    <ColorControl label="Button Text" value={cdButtonText} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.buttonText', v)} />
+                    <ColorControl label="Price Color" value={cdPriceColor} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.priceColor', v)} />
+                    <ColorControl label="Border Color" value={cdBorderColor} onChange={(v) => setNestedData('storeSettings.cartDrawerColors.borderColor', v)} />
                 </div>
             </div>
         </div>

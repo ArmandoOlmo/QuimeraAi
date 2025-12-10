@@ -45,7 +45,9 @@ import {
     CollectionBanner,
     ProductBundle,
     AnnouncementBar,
+    CartDrawer,
 } from './ecommerce';
+import { StorefrontCartProvider, useSafeStorefrontCart } from './ecommerce/context';
 
 // Store view types for hash routing
 type StoreView = 
@@ -107,7 +109,8 @@ const fontStacks: Record<FontFamily, string> = {
     'amatic-sc': "'Amatic SC', cursive",
 };
 
-const LandingPage: React.FC = () => {
+// Inner component that uses the cart context
+const LandingPageContent: React.FC = () => {
   const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents, componentStyles, activeProjectId, user } = useEditor();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
@@ -117,6 +120,10 @@ const LandingPage: React.FC = () => {
 
   // Load products from public store (storeId = projectId)
   const { products: storefrontProducts, isLoading: isLoadingProducts } = usePublicProducts(activeProjectId);
+  
+  // Cart context - available when wrapped in StorefrontCartProvider
+  // Uses safe version that returns defaults when not in provider
+  const cart = useSafeStorefrontCart();
 
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
@@ -588,7 +595,49 @@ const LandingPage: React.FC = () => {
         `}</style>
 
       {/* Header is always visible - forceSolid when in store view (no hero behind) */}
-      <Header {...mergedHeaderData} links={headerLinks} forceSolid={isStoreViewActive} />
+      <Header 
+        {...mergedHeaderData} 
+        links={headerLinks} 
+        forceSolid={isStoreViewActive}
+        showCart={storefrontProducts.length > 0}
+        cartItemCount={cart.itemCount}
+        onCartClick={cart.toggleCart}
+      />
+      
+      {/* Cart Drawer - only when store has products */}
+      {storefrontProducts.length > 0 && (
+        <CartDrawer
+          isOpen={cart.isCartOpen}
+          onClose={cart.closeCart}
+          items={cart.items}
+          subtotal={cart.subtotal}
+          discountCode={cart.discountCode || undefined}
+          discountAmount={cart.discountAmount}
+          onUpdateQuantity={cart.updateQuantity}
+          onRemoveItem={cart.removeItem}
+          onApplyDiscount={cart.applyDiscount}
+          onRemoveDiscount={cart.removeDiscount}
+          onCheckout={() => {
+            cart.closeCart();
+            window.location.hash = '#checkout';
+          }}
+          storeId={activeProjectId || ''}
+          primaryColor={theme.globalColors?.primary || '#6366f1'}
+          freeShippingThreshold={500}
+          colors={{
+            background: data.storeSettings?.cartDrawerColors?.background || theme.globalColors?.background || theme.globalColors?.surface,
+            heading: data.storeSettings?.cartDrawerColors?.heading || theme.globalColors?.heading,
+            text: data.storeSettings?.cartDrawerColors?.text || theme.globalColors?.textMuted || theme.globalColors?.text,
+            accent: data.storeSettings?.cartDrawerColors?.accent || theme.globalColors?.primary,
+            cardBackground: data.storeSettings?.cartDrawerColors?.cardBackground || theme.globalColors?.surface,
+            cardText: data.storeSettings?.cartDrawerColors?.cardText || theme.globalColors?.text,
+            buttonBackground: data.storeSettings?.cartDrawerColors?.buttonBackground || theme.globalColors?.primary,
+            buttonText: data.storeSettings?.cartDrawerColors?.buttonText,
+            priceColor: data.storeSettings?.cartDrawerColors?.priceColor || theme.globalColors?.primary,
+            borderColor: data.storeSettings?.cartDrawerColors?.borderColor || theme.globalColors?.border,
+          }}
+        />
+      )}
       
       <main className="min-h-screen bg-site-base relative">
         {/* 1. Loading State */}
@@ -884,6 +933,24 @@ const LandingPage: React.FC = () => {
       <ChatbotWidget />
     </div>
   );
+};
+
+// Main LandingPage component that wraps content in StorefrontCartProvider
+const LandingPage: React.FC = () => {
+  const { activeProjectId } = useEditor();
+  
+  // Always wrap in StorefrontCartProvider when we have a project
+  // The cart will just be empty if no products exist
+  if (activeProjectId) {
+    return (
+      <StorefrontCartProvider storeId={activeProjectId}>
+        <LandingPageContent />
+      </StorefrontCartProvider>
+    );
+  }
+  
+  // Fallback when no project (shouldn't happen but safe)
+  return <LandingPageContent />;
 };
 
 export default LandingPage;

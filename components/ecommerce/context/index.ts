@@ -2,4 +2,4 @@
  * Ecommerce Storefront Contexts
  */
 
-export { StorefrontCartProvider, useStorefrontCart } from './StorefrontCartContext';
+export { StorefrontCartProvider, useStorefrontCart, useSafeStorefrontCart } from './StorefrontCartContext';

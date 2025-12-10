@@ -7721,7 +7721,7 @@ const Controls: React.FC = () => {
       case 'categoryGrid':
         return useCategoryGridControls({ data, setNestedData });
       case 'productHero':
-        return useProductHeroControls({ data, setNestedData });
+        return useProductHeroControls({ data, setNestedData, storeId: activeProject?.id || '' });
       case 'trustBadges':
         return useTrustBadgesControls({ data, setNestedData });
       case 'saleCountdown':

@@ -72,6 +72,10 @@ export interface HeaderData {
     // Search
     showSearch?: boolean;
     searchPlaceholder?: string;
+    // Cart/Checkout (when store is enabled)
+    showCart?: boolean;
+    cartItemCount?: number;
+    onCartClick?: () => void;
     colors: { background: string; text: string; accent: string; border?: string };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
@@ -1456,6 +1460,20 @@ export interface StoreSettingsData {
         salePriceColor: string;
         borderColor: string;
         starColor: string;
+    };
+    
+    // === Cart Drawer Colors ===
+    cartDrawerColors?: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground: string;
+        cardText: string;
+        buttonBackground: string;
+        buttonText: string;
+        priceColor: string;
+        borderColor: string;
     };
     
     // Animation

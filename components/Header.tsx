@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, ShoppingCart } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { GlobalSearch } from './ecommerce/search';
 
@@ -124,6 +124,9 @@ const Header: React.FC<HeaderData & {
     showLogin, loginText, loginUrl,
     showSearch = false,
     searchPlaceholder,
+    showCart = false,
+    cartItemCount = 0,
+    onCartClick,
     colors,
     isPreviewMode = false,
     containerRef,
@@ -351,6 +354,25 @@ const Header: React.FC<HeaderData & {
     </a>
   );
 
+  const CartButton = () => (
+    <button
+      onClick={onCartClick}
+      className="relative p-2 rounded-full transition-colors hover:bg-white/10"
+      style={{ color: finalTextColor }}
+      aria-label={`Carrito (${cartItemCount} productos)`}
+    >
+      <ShoppingCart size={22} />
+      {cartItemCount > 0 && (
+        <span
+          className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold"
+          style={{ backgroundColor: colors.accent }}
+        >
+          {cartItemCount > 99 ? '99+' : cartItemCount}
+        </span>
+      )}
+    </button>
+  );
+
   // Get storeId and data for global search
   const storeId = editorContext?.activeProjectId || undefined;
   const pageData = editorContext?.data;
@@ -491,6 +513,7 @@ const Header: React.FC<HeaderData & {
                             sections={searchableSections}
                         />
                     )}
+                    {showCart && <CartButton />}
                     {showLogin && <LoginButton />}
                     {showCta && <CtaButton />}
                 </div>
@@ -517,6 +540,7 @@ const Header: React.FC<HeaderData & {
                              sections={searchableSections}
                          />
                      )}
+                     {showCart && <CartButton />}
                      {showLogin && <LoginButton />}
                      {showCta && <CtaButton />}
                  </div>
@@ -542,6 +566,7 @@ const Header: React.FC<HeaderData & {
                                 sections={searchableSections}
                             />
                         )}
+                        {showCart && <CartButton />}
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
                     </div>
@@ -566,6 +591,7 @@ const Header: React.FC<HeaderData & {
                                 sections={searchableSections}
                             />
                         )}
+                        {showCart && <CartButton />}
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
                     </div>
@@ -655,15 +681,37 @@ const Header: React.FC<HeaderData & {
           {/* Desktop Layouts */}
           {renderLayout()}
 
-          {/* Mobile Menu Button - Only visible on mobile */}
-          <button 
-            onClick={() => setIsMenuOpen(true)} 
-            className="md:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation ml-auto"
-            style={{ color: finalTextColor }}
-            aria-label="Abrir menú"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {/* Mobile Actions - Only visible on mobile */}
+          <div className="md:hidden flex items-center gap-2 ml-auto">
+            {/* Cart Button (mobile) */}
+            {showCart && (
+              <button
+                onClick={onCartClick}
+                className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                style={{ color: finalTextColor }}
+                aria-label={`Carrito (${cartItemCount} productos)`}
+              >
+                <ShoppingCart size={22} />
+                {cartItemCount > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold"
+                    style={{ backgroundColor: colors.accent }}
+                  >
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
+              </button>
+            )}
+            {/* Menu Button */}
+            <button 
+              onClick={() => setIsMenuOpen(true)} 
+              className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+              style={{ color: finalTextColor }}
+              aria-label="Abrir menú"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
 
         </div>
       </div>

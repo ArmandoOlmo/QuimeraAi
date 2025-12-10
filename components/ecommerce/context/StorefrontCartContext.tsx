@@ -253,4 +253,30 @@ export const useStorefrontCart = (): CartContextValue => {
     return context;
 };
 
+// Safe version that returns default values when not in provider
+const defaultCartValue: CartContextValue = {
+    items: [],
+    subtotal: 0,
+    itemCount: 0,
+    discountCode: null,
+    discountAmount: 0,
+    isCartOpen: false,
+    addItem: () => {},
+    removeItem: () => {},
+    updateQuantity: () => {},
+    clearCart: () => {},
+    applyDiscount: async () => ({ valid: false, error: 'No cart provider' }),
+    removeDiscount: () => {},
+    openCart: () => {},
+    closeCart: () => {},
+    toggleCart: () => {},
+    isInCart: () => false,
+    getItemQuantity: () => 0,
+};
+
+export const useSafeStorefrontCart = (): CartContextValue => {
+    const context = useContext(CartContext);
+    return context || defaultCartValue;
+};
+
 export default CartContext;
