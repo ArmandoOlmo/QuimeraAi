@@ -22,9 +22,6 @@ import {
     Package,
     Send,
     Palette,
-    Link,
-    ToggleLeft,
-    ToggleRight,
     ExternalLink,
     CheckCircle2,
     AlertCircle,
@@ -47,7 +44,14 @@ const SettingsView: React.FC = () => {
     const { user } = useEditor();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
-    const { settings, isLoading, isSaving, updateSettings, addShippingZone, updatePaymentSettings } = useStoreSettings(user?.uid || '', storeId);
+    const { 
+        settings, 
+        isLoading, 
+        isSaving, 
+        updateSettings, 
+        addShippingZone, 
+        updatePaymentSettings,
+    } = useStoreSettings(user?.uid || '', storeId);
 
     const [activeTab, setActiveTab] = useState<SettingsTab>('general');
     const [localSettings, setLocalSettings] = useState<Partial<StoreSettings>>({});

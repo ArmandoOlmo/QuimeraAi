@@ -12,7 +12,45 @@ import {
     serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../../../../firebase';
-import { StoreSettings, ShippingZone, ShippingRate } from '../../../../types/ecommerce';
+import { StoreSettings, ShippingZone, ShippingRate, StorefrontThemeSettings, DEFAULT_STOREFRONT_THEME } from '../../../../types/ecommerce';
+
+// Helper functions for color manipulation
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+    } : null;
+};
+
+const rgbToHex = (r: number, g: number, b: number): string => {
+    return '#' + [r, g, b].map(x => {
+        const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+};
+
+const adjustColorBrightness = (color: string, percent: number): string => {
+    const rgb = hexToRgb(color);
+    if (!rgb) return color;
+    
+    const factor = percent / 100;
+    return rgbToHex(
+        rgb.r + (255 - rgb.r) * factor,
+        rgb.g + (255 - rgb.g) * factor,
+        rgb.b + (255 - rgb.b) * factor
+    );
+};
+
+const getContrastColor = (hexcolor: string): string => {
+    const rgb = hexToRgb(hexcolor);
+    if (!rgb) return '#ffffff';
+    
+    // Using W3C algorithm for contrast
+    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+};
 
 const DEFAULT_SETTINGS: Omit<StoreSettings, 'createdAt' | 'updatedAt'> = {
     storeName: '',
@@ -131,6 +169,26 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
                         updatedAt: serverTimestamp(),
                     });
                 }
+
+                // DIRECT SYNC TO PUBLIC STORE (fallback in case Cloud Function is not deployed)
+                // This ensures theme colors are immediately available on the storefront
+                if (updates.storefrontTheme && effectiveStoreId) {
+                    const publicStoreRef = doc(db, 'publicStores', effectiveStoreId);
+                    await setDoc(publicStoreRef, {
+                        storefrontTheme: updates.storefrontTheme,
+                        theme: {
+                            primaryColor: updates.storefrontTheme.primaryColor,
+                            secondaryColor: updates.storefrontTheme.secondaryColor,
+                            accentColor: updates.storefrontTheme.accentColor,
+                            backgroundColor: updates.storefrontTheme.backgroundColor,
+                            textColor: updates.storefrontTheme.textColor,
+                            headingColor: updates.storefrontTheme.headingColor,
+                            fontFamily: updates.storefrontTheme.fontFamily,
+                        },
+                        updatedAt: serverTimestamp(),
+                    }, { merge: true });
+                    console.log('[useStoreSettings] Theme synced directly to publicStores');
+                }
             } catch (err: any) {
                 setError(err.message);
                 throw err;
@@ -138,7 +196,7 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
                 setIsSaving(false);
             }
         },
-        [settingsPath, settings]
+        [settingsPath, settings, effectiveStoreId]
     );
 
     // Update store info
@@ -286,6 +344,78 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
         [updateSettings]
     );
 
+    // Update storefront theme settings
+    const updateStorefrontTheme = useCallback(
+        async (themeUpdates: Partial<StorefrontThemeSettings>) => {
+            const currentTheme = settings?.storefrontTheme || DEFAULT_STOREFRONT_THEME;
+            await updateSettings({
+                storefrontTheme: {
+                    ...currentTheme,
+                    ...themeUpdates,
+                },
+            });
+        },
+        [settings, updateSettings]
+    );
+
+    // Replace entire storefront theme (e.g., from Coolors palette)
+    const replaceStorefrontTheme = useCallback(
+        async (newTheme: StorefrontThemeSettings) => {
+            await updateSettings({
+                storefrontTheme: newTheme,
+            });
+        },
+        [updateSettings]
+    );
+
+    // Reset storefront theme to defaults
+    const resetStorefrontTheme = useCallback(
+        async () => {
+            await updateSettings({
+                storefrontTheme: DEFAULT_STOREFRONT_THEME,
+            });
+        },
+        [updateSettings]
+    );
+
+    // Apply Coolors palette to theme
+    const applyCooolrsPalette = useCallback(
+        async (colors: string[], paletteUrl?: string) => {
+            if (colors.length < 5) return;
+            
+            // Map Coolors colors to theme properties intelligently
+            const themeFromPalette: Partial<StorefrontThemeSettings> = {
+                primaryColor: colors[0],
+                secondaryColor: colors[1],
+                accentColor: colors[2],
+                backgroundColor: colors[4], // Lightest color usually
+                headingColor: colors[3],
+                textColor: adjustColorBrightness(colors[3], 20),
+                buttonBackground: colors[0],
+                buttonText: getContrastColor(colors[0]),
+                buttonHoverBackground: adjustColorBrightness(colors[0], -15),
+                badgeBackground: colors[2],
+                badgeText: getContrastColor(colors[2]),
+                linkColor: colors[0],
+                cardBackground: adjustColorBrightness(colors[4], -5),
+                borderColor: adjustColorBrightness(colors[4], -15),
+                coolorsUrl: paletteUrl,
+                coolorsColors: colors,
+            };
+            
+            await updateStorefrontTheme(themeFromPalette);
+        },
+        [updateStorefrontTheme]
+    );
+
+    // Get storefront theme with defaults
+    const getStorefrontTheme = useCallback((): StorefrontThemeSettings => {
+        return {
+            ...DEFAULT_STOREFRONT_THEME,
+            ...(settings?.storefrontTheme || {}),
+        };
+    }, [settings]);
+
     // Get shipping rate for address
     const getShippingRateForAddress = useCallback(
         (country: string, orderTotal: number): ShippingRate[] => {
@@ -343,6 +473,15 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
         getShippingRateForAddress,
         calculateTax,
         formatPrice,
+        // Storefront Theme
+        updateStorefrontTheme,
+        replaceStorefrontTheme,
+        resetStorefrontTheme,
+        applyCooolrsPalette,
+        getStorefrontTheme,
     };
 };
+
+// Export helper functions for use in components
+export { adjustColorBrightness, getContrastColor, hexToRgb, rgbToHex };
 

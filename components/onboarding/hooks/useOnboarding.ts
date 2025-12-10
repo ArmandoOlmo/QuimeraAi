@@ -134,7 +134,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
 };
 import {
     OnboardingProgress,
-    OnboardingStep,
+    OnboardingWizardStep,
     OnboardingService,
     OnboardingContactInfo,
     TemplateRecommendation,
@@ -143,6 +143,9 @@ import {
     getIndustryComponentDefaults,
     ONBOARDING_STEPS,
 } from '../../../types/onboarding';
+
+// Alias for backward compatibility
+type OnboardingStep = OnboardingWizardStep;
 import { PageSection, Project } from '../../../types';
 
 // =============================================================================
@@ -485,7 +488,7 @@ export const useOnboarding = () => {
 
         // Helper to extract main colors from theme
         const getTemplateColors = (t: Project): string => {
-            const theme = t.theme || {};
+            const theme = t.theme as any || {};
             const colors: string[] = [];
             if (theme.primaryColor) colors.push(`primary: ${theme.primaryColor}`);
             if (theme.secondaryColor) colors.push(`secondary: ${theme.secondaryColor}`);

@@ -234,6 +234,7 @@ const AppointmentsDashboard: React.FC = () => {
             createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
             createdBy: user?.uid || '',
             aiGenerated: false,
+            isPrivate: false,
         };
         
         const currentNotes = selectedAppointment.notes || [];
@@ -517,9 +518,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 }
                             `}
                         >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19.5 4H18V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H4.5C3.12 4 2 5.12 2 6.5v13C2 20.88 3.12 22 4.5 22h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 5.12 20.88 4 19.5 4z"/>
-                            </svg>
+                            <Calendar className="w-4 h-4" />
                             <span className="hidden lg:inline">
                                 {isGoogleConnected ? 'Sincronizado' : 'Google'}
                             </span>

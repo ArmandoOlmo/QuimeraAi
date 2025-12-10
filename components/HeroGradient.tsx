@@ -68,6 +68,8 @@ const HeroGradient: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
+    primaryCtaLink = '#cta',
+    secondaryCtaLink = '#features',
 }) => {
     const { getColor } = useDesignTokens();
     
@@ -179,7 +181,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                         {/* CTAs */}
                         <div className="flex flex-wrap gap-4">
                             <a 
-                                href="#cta" 
+                                href={primaryCtaLink || '#cta'} 
                                 style={{ 
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText,
@@ -193,7 +195,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                             </a>
                             
                             <a 
-                                href="#features" 
+                                href={secondaryCtaLink || '#features'} 
                                 className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
                                     secondaryButtonStyle === 'outline' 
                                         ? 'border-2 bg-transparent' 

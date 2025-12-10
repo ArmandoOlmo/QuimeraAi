@@ -91,9 +91,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         id: 'google-map-script',
         googleMapsApiKey: hasValidApiKey ? apiKey : '',
         libraries: libraries,
-        // Prevent loading if no API key
-        preventLoad: !hasValidApiKey,
-    });
+    } as any);
     
     // Log load error for debugging
     if (loadError) {

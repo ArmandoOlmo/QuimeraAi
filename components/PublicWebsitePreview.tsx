@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
+import { AlertTriangle } from 'lucide-react';
 
 // Import all website components
 import Header from './Header';
@@ -34,6 +35,21 @@ import BusinessMap from './BusinessMap';
 import MenuComponent from './Menu';
 import Banner from './Banner';
 import BlogPost from './BlogPost';
+import Products from './Products';
+
+// Ecommerce components (usables en Landing y Ecommerce)
+import {
+    FeaturedProducts,
+    CategoryGrid,
+    ProductHero,
+    SaleCountdown,
+    TrustBadges,
+    RecentlyViewed,
+    ProductReviews,
+    CollectionBanner,
+    ProductBundle,
+    AnnouncementBar,
+} from './ecommerce';
 
 // Font stacks for CSS injection
 const fontStacks: Record<FontFamily, string> = {
@@ -252,9 +268,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-500/10 flex items-center justify-center">
-            <svg className="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <AlertTriangle className="w-10 h-10 text-red-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-4">Preview Not Available</h1>
           <p className="text-slate-400 mb-6">{error || 'The requested project could not be loaded.'}</p>
@@ -317,6 +331,47 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     menu: mergeComponentData('menu'),
     footer: mergeComponentData('footer'),
     header: mergeComponentData('header'),
+    products: mergeComponentData('products'),
+    // Ecommerce section components
+    featuredProducts: mergeComponentData('featuredProducts'),
+    categoryGrid: mergeComponentData('categoryGrid'),
+    productHero: mergeComponentData('productHero'),
+    saleCountdown: mergeComponentData('saleCountdown'),
+    trustBadges: mergeComponentData('trustBadges'),
+    recentlyViewed: mergeComponentData('recentlyViewed'),
+    productReviews: mergeComponentData('productReviews'),
+    collectionBanner: mergeComponentData('collectionBanner'),
+    productBundle: mergeComponentData('productBundle'),
+    announcementBar: mergeComponentData('announcementBar'),
+  };
+
+  // Get projectId for store components
+  const { projectId: storeProjectId } = getIdsFromURL();
+
+  /**
+   * Verifica si un componente de ecommerce debe mostrarse en el landing page público
+   * PublicWebsitePreview siempre muestra en contexto 'landing'
+   */
+  const isEcommerceComponentVisibleInLanding = (componentKey: PageSection): boolean => {
+    const ecommerceDataMap: Record<string, { visibleIn?: 'landing' | 'store' | 'both' } | undefined> = {
+      featuredProducts: mergedData.featuredProducts,
+      categoryGrid: mergedData.categoryGrid,
+      productHero: mergedData.productHero,
+      saleCountdown: mergedData.saleCountdown,
+      trustBadges: mergedData.trustBadges,
+      recentlyViewed: mergedData.recentlyViewed,
+      productReviews: mergedData.productReviews,
+      collectionBanner: mergedData.collectionBanner,
+      productBundle: mergedData.productBundle,
+      announcementBar: mergedData.announcementBar,
+    };
+
+    const componentData = ecommerceDataMap[componentKey];
+    if (!componentData) return true; // Si no es un componente de ecommerce, mostrar siempre
+    
+    const visibleIn = componentData.visibleIn || 'both'; // Por defecto 'both'
+    
+    return visibleIn === 'both' || visibleIn === 'landing';
   };
 
   // Resolve header links from menus
@@ -387,6 +442,59 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return <MenuComponent {...compData} borderRadius={borderRadius} />;
       case 'banner':
         return <Banner {...compData} buttonBorderRadius={buttonBorderRadius} />;
+      case 'products':
+        return <Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />;
+      // Ecommerce section components
+      case 'featuredProducts':
+        return compData ? (
+          <FeaturedProducts 
+            data={compData} 
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'categoryGrid':
+        return compData ? (
+          <CategoryGrid 
+            data={compData}
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'productHero':
+        return compData ? (
+          <ProductHero 
+            data={compData}
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'saleCountdown':
+        return compData ? (
+          <SaleCountdown 
+            data={compData}
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'trustBadges':
+        return compData ? <TrustBadges data={compData} /> : null;
+      case 'recentlyViewed':
+        return compData ? (
+          <RecentlyViewed 
+            data={compData}
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'productReviews':
+        return compData ? <ProductReviews data={compData} /> : null;
+      case 'collectionBanner':
+        return compData ? <CollectionBanner data={compData} /> : null;
+      case 'productBundle':
+        return compData ? (
+          <ProductBundle 
+            data={compData}
+            storeId={storeProjectId || undefined}
+          />
+        ) : null;
+      case 'announcementBar':
+        return compData ? <AnnouncementBar data={compData} /> : null;
       default:
         return null;
     }
@@ -432,13 +540,28 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           /* Home View - Sections */
           <>
             {componentOrder
-              ?.filter(key => 
-                componentStatus?.[key as PageSection] !== false && 
-                sectionVisibility?.[key as PageSection] !== false && 
-                key !== 'footer' && 
-                key !== 'chatbot' &&
-                key !== 'header'
-              )
+              ?.filter(key => {
+                // Lista de componentes de ecommerce que deben verificar visibilidad
+                const ecommerceComponents: PageSection[] = [
+                  'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
+                  'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
+                  'productBundle', 'announcementBar'
+                ];
+                
+                const isEcommerce = ecommerceComponents.includes(key as PageSection);
+                const baseVisibility = componentStatus?.[key as PageSection] !== false && 
+                                       sectionVisibility?.[key as PageSection] !== false && 
+                                       key !== 'footer' && 
+                                       key !== 'chatbot' &&
+                                       key !== 'header';
+                
+                // Para componentes de ecommerce, verificar también visibleIn
+                if (isEcommerce) {
+                  return baseVisibility && isEcommerceComponentVisibleInLanding(key as PageSection);
+                }
+                
+                return baseVisibility;
+              })
               .map(key => (
                 <div id={key} key={key} className="w-full">
                   {renderComponent(key as PageSection)}

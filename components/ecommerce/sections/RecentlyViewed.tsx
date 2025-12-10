@@ -111,8 +111,64 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             minimal: 'bg-transparent',
             modern: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1`,
             elegant: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
+            overlay: `${getBorderRadius()} overflow-hidden`,
         };
 
+        // Overlay style - full image with text on top
+        if (data.cardStyle === 'overlay') {
+            return (
+                <div
+                    className={`group cursor-pointer relative ${cardStyles.overlay}`}
+                    onClick={() => product.slug && onProductClick?.(product.slug)}
+                >
+                    <div className="relative aspect-square overflow-hidden">
+                        {product.image ? (
+                            <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                        ) : (
+                            <div
+                                className="w-full h-full flex items-center justify-center"
+                                style={{ backgroundColor: data.colors.accent + '20' }}
+                            >
+                                <span style={{ color: data.colors.cardText }}>Sin imagen</span>
+                            </div>
+                        )}
+                        
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        
+                        {/* Content on Image */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <h4 className="font-semibold text-sm text-white line-clamp-2">
+                                {product.name}
+                            </h4>
+                            {data.showRating && product.rating !== undefined && (
+                                <div className="flex items-center gap-1 mt-1">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            size={12}
+                                            className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-white/40'}
+                                            fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                            {data.showPrice && (
+                                <p className="font-bold text-white mt-1">
+                                    ${product.price.toFixed(2)}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Default styles (minimal, modern, elegant)
         return (
             <div
                 className={`group cursor-pointer ${cardStyles[data.cardStyle]}`}
@@ -148,7 +204,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                                 <Star
                                     key={i}
                                     size={12}
-                                    className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-gray-300'}
+                                    style={{ color: i < Math.round(product.rating!) ? data.colors.starColor : (data.colors.borderColor || '#d1d5db') }}
                                     fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
                                 />
                             ))}
@@ -198,7 +254,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         onClick={handlePrev}
                         disabled={currentIndex === 0}
                         className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors.accent, color: '#fff' }}
+                        style={{ backgroundColor: data.colors.accent, color: data.colors.buttonText || '#ffffff' }}
                     >
                         <ChevronLeft size={20} />
                     </button>
@@ -206,7 +262,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         onClick={handleNext}
                         disabled={currentIndex >= maxIndex}
                         className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors.accent, color: '#fff' }}
+                        style={{ backgroundColor: data.colors.accent, color: data.colors.buttonText || '#ffffff' }}
                     >
                         <ChevronRight size={20} />
                     </button>
@@ -270,10 +326,10 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: data.colors.background }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 bg-gray-700 rounded w-1/4 mb-6" />
+                        <div className="h-8 rounded w-1/4 mb-6" style={{ backgroundColor: data.colors.borderColor }} />
                         <div className={`grid grid-cols-2 ${getGridCols()} gap-4`}>
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="aspect-square bg-gray-700 rounded-xl" />
+                                <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: data.colors.borderColor }} />
                             ))}
                         </div>
                     </div>

@@ -5,6 +5,7 @@ import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba } from '../utils/colorUtils';
+import { ArrowRight } from 'lucide-react';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -487,9 +488,7 @@ const Features: React.FC<FeaturesProps> = ({
                         style={{ color: actualColors.accent }}
                       >
                         <span className="text-sm font-semibold">Learn more</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
+                        <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>
 

@@ -30,8 +30,11 @@ import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useEditor } from '../contexts/EditorContext';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { usePublicProducts } from '../hooks/usePublicProducts';
-import { ProductSearchPage, ProductDetailPage } from './ecommerce';
+// Importación centralizada de componentes de ecommerce
+// Estos componentes funcionan tanto en Landing Page como en Ecommerce
 import {
+    ProductSearchPage,
+    ProductDetailPage,
     FeaturedProducts,
     CategoryGrid,
     ProductHero,
@@ -42,7 +45,7 @@ import {
     CollectionBanner,
     ProductBundle,
     AnnouncementBar,
-} from './ecommerce/sections';
+} from './ecommerce';
 
 // Store view types for hash routing
 type StoreView = 
@@ -322,7 +325,12 @@ const LandingPage: React.FC = () => {
   const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
     const componentData = data[componentKey];
     const styles = componentStyles[componentKey];
-    if (!componentData || !styles) return componentData;
+    // If neither exists, return undefined
+    if (!componentData && !styles) return undefined;
+    // If only styles exist (no user data), use styles as base
+    if (!componentData && styles) return styles;
+    // If only data exists (no default styles), return data
+    if (!styles) return componentData;
     
     // First merge the colors: defaults, then user/template colors
     const mergedColors = {
@@ -389,6 +397,45 @@ const LandingPage: React.FC = () => {
       products: storefrontProducts,
     };
   }, [mergedProductsData, data.products, storefrontProducts]);
+
+  /**
+   * Verifica si un componente de ecommerce debe mostrarse en el contexto actual
+   * @param componentKey - Clave del componente (ej: 'featuredProducts')
+   * @param context - Contexto actual: 'landing' (home) o 'store' (tienda/categoría/producto)
+   * @returns true si el componente debe mostrarse
+   */
+  const isEcommerceComponentVisibleIn = useCallback((componentKey: PageSection, context: 'landing' | 'store'): boolean => {
+    const ecommerceDataMap: Record<string, { visibleIn?: 'landing' | 'store' | 'both' }> = {
+      featuredProducts: mergedFeaturedProductsData,
+      categoryGrid: mergedCategoryGridData,
+      productHero: mergedProductHeroData,
+      saleCountdown: mergedSaleCountdownData,
+      trustBadges: mergedTrustBadgesData,
+      recentlyViewed: mergedRecentlyViewedData,
+      productReviews: mergedProductReviewsData,
+      collectionBanner: mergedCollectionBannerData,
+      productBundle: mergedProductBundleData,
+      announcementBar: mergedAnnouncementBarData,
+    };
+
+    const componentData = ecommerceDataMap[componentKey];
+    if (!componentData) return true; // Si no es un componente de ecommerce, mostrar siempre
+    
+    const visibleIn = componentData.visibleIn || 'both'; // Por defecto 'both'
+    
+    return visibleIn === 'both' || visibleIn === context;
+  }, [
+    mergedFeaturedProductsData,
+    mergedCategoryGridData,
+    mergedProductHeroData,
+    mergedSaleCountdownData,
+    mergedTrustBadgesData,
+    mergedRecentlyViewedData,
+    mergedProductReviewsData,
+    mergedCollectionBannerData,
+    mergedProductBundleData,
+    mergedAnnouncementBarData,
+  ]);
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
@@ -487,6 +534,8 @@ const LandingPage: React.FC = () => {
     announcementBar: mergedAnnouncementBarData ? (
       <AnnouncementBar data={mergedAnnouncementBarData} />
     ) : null,
+    // Store settings is a config section, not a visual component
+    storeSettings: null,
   };
   
   // Font variables are now injected directly into :root via useEffect above
@@ -585,7 +634,8 @@ const LandingPage: React.FC = () => {
                         const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
                         return ecommerceSections.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection];
+                               sectionVisibility[key as PageSection] &&
+                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
                         <div 
@@ -609,12 +659,28 @@ const LandingPage: React.FC = () => {
                     primaryColor={theme.globalColors?.primary || '#6366f1'}
                     embedded={true}
                     title="Tienda"
+                    showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
+                    showSearchBar={data.storeSettings?.showSearchBar !== false}
+                    showSortOptions={data.storeSettings?.showSortOptions !== false}
+                    showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
+                    defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
+                    productsPerPage={data.storeSettings?.productsPerPage || 12}
+                    gridColumns={data.storeSettings?.gridColumns || 4}
+                    cardStyle={data.storeSettings?.cardStyle || 'modern'}
+                    borderRadius={data.storeSettings?.borderRadius || 'xl'}
+                    cardGap={data.storeSettings?.cardGap || 'md'}
+                    paddingY={data.storeSettings?.paddingY || 'md'}
+                    paddingX={data.storeSettings?.paddingX || 'md'}
                     themeColors={{
                         background: 'transparent',
-                        text: theme.globalColors?.text || '#94a3b8',
-                        heading: theme.globalColors?.heading || '#ffffff',
-                        cardBackground: theme.globalColors?.surface || '#1e293b',
-                        border: theme.globalColors?.border || '#334155',
+                        text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
+                        heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
+                        cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
+                        cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
+                        border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
+                        priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
+                        salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
+                        mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
                     }}
                 />
 
@@ -624,7 +690,8 @@ const LandingPage: React.FC = () => {
                         const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
                         return ecommerceSectionsBelow.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection];
+                               sectionVisibility[key as PageSection] &&
+                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
                         <div 
@@ -647,7 +714,7 @@ const LandingPage: React.FC = () => {
         {storeView.type === 'category' && activeProjectId && (
             <>
                 {/* Announcement Bar for category view */}
-                {componentStatus['announcementBar' as PageSection] && sectionVisibility['announcementBar' as PageSection] && (
+                {componentStatus['announcementBar' as PageSection] && sectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
                     <div 
                         id="announcementBar" 
                         className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -666,12 +733,28 @@ const LandingPage: React.FC = () => {
                     initialCategory={storeView.slug}
                     primaryColor={theme.globalColors?.primary || '#6366f1'}
                     embedded={true}
+                    showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
+                    showSearchBar={data.storeSettings?.showSearchBar !== false}
+                    showSortOptions={data.storeSettings?.showSortOptions !== false}
+                    showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
+                    defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
+                    productsPerPage={data.storeSettings?.productsPerPage || 12}
+                    gridColumns={data.storeSettings?.gridColumns || 4}
+                    cardStyle={data.storeSettings?.cardStyle || 'modern'}
+                    borderRadius={data.storeSettings?.borderRadius || 'xl'}
+                    cardGap={data.storeSettings?.cardGap || 'md'}
+                    paddingY={data.storeSettings?.paddingY || 'md'}
+                    paddingX={data.storeSettings?.paddingX || 'md'}
                     themeColors={{
                         background: 'transparent',
-                        text: theme.globalColors?.text || '#94a3b8',
-                        heading: theme.globalColors?.heading || '#ffffff',
-                        cardBackground: theme.globalColors?.surface || '#1e293b',
-                        border: theme.globalColors?.border || '#334155',
+                        text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
+                        heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
+                        cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
+                        cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
+                        border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
+                        priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
+                        salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
+                        mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
                     }}
                 />
 
@@ -681,7 +764,8 @@ const LandingPage: React.FC = () => {
                         const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
                         return ecommerceSectionsBelow.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection];
+                               sectionVisibility[key as PageSection] &&
+                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
                         <div 
@@ -709,6 +793,7 @@ const LandingPage: React.FC = () => {
                     onNavigateToStore={handleNavigateToStore}
                     onNavigateToCategory={handleNavigateToCategory}
                     onNavigateToProduct={handleNavigateToProduct}
+                    colors={data?.productDetailPage?.colors}
                 />
 
                 {/* Ecommerce components for product detail view */}
@@ -717,7 +802,8 @@ const LandingPage: React.FC = () => {
                         const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
                         return productDetailSections.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection];
+                               sectionVisibility[key as PageSection] &&
+                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
                         <div 
@@ -740,7 +826,27 @@ const LandingPage: React.FC = () => {
         {!isArticleHash && !activePost && !isStoreViewActive && (
             <>
                 {componentOrder
-                .filter(key => componentStatus[key as PageSection] && sectionVisibility[key as PageSection] && key !== 'footer' && key !== 'chatbot')
+                .filter(key => {
+                    // Lista de componentes de ecommerce que deben verificar visibilidad
+                    const ecommerceComponents: PageSection[] = [
+                        'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
+                        'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
+                        'productBundle', 'announcementBar'
+                    ];
+                    
+                    const isEcommerce = ecommerceComponents.includes(key as PageSection);
+                    const baseVisibility = componentStatus[key as PageSection] && 
+                                           sectionVisibility[key as PageSection] && 
+                                           key !== 'footer' && 
+                                           key !== 'chatbot';
+                    
+                    // Para componentes de ecommerce, verificar también visibleIn
+                    if (isEcommerce) {
+                        return baseVisibility && isEcommerceComponentVisibleIn(key as PageSection, 'landing');
+                    }
+                    
+                    return baseVisibility;
+                })
                 .map(key => {
                     return (
                         <div 

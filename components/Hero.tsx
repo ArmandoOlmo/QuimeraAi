@@ -140,6 +140,8 @@ const Hero: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
+    primaryCtaLink = '#cta',
+    secondaryCtaLink = '#features',
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -275,7 +277,7 @@ const Hero: React.FC<HeroProps> = ({
         </p>
         <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a 
-            href="#cta" 
+            href={primaryCtaLink || '#cta'} 
             style={{ 
               backgroundColor: actualColors.buttonBackground || actualColors.primary, 
               color: actualColors.buttonText || '#ffffff',
@@ -288,7 +290,7 @@ const Hero: React.FC<HeroProps> = ({
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
           <a 
-            href="#features" 
+            href={secondaryCtaLink || '#features'} 
             className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
               secondaryButtonStyle === 'outline' 
                   ? 'border-2 bg-transparent' 

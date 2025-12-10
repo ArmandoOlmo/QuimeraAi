@@ -6,10 +6,10 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { OnboardingStep } from '../../../types/onboarding';
+import { OnboardingWizardStep } from '../../../types/onboarding';
 
 interface StepIndicatorProps {
-    currentStep: OnboardingStep;
+    currentStep: OnboardingWizardStep;
     totalSteps?: number;
 }
 

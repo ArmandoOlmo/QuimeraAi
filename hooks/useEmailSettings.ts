@@ -414,7 +414,7 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
                 const logsData = snapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
-                }));
+                })) as Array<{ id: string; status?: string; opened?: boolean; clicked?: boolean; [key: string]: any }>;
                 setLogs(logsData);
 
                 // Calculate stats from logs

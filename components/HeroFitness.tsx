@@ -69,6 +69,8 @@ const HeroFitness: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
+    primaryCtaLink = '#cta',
+    secondaryCtaLink = '#features',
 }) => {
     const { getColor } = useDesignTokens();
     
@@ -193,7 +195,7 @@ const HeroFitness: React.FC<HeroProps> = ({
                             style={{ animationDelay: '0.2s' }}
                         >
                             <a 
-                                href="#cta" 
+                                href={primaryCtaLink || '#cta'} 
                                 style={{ 
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText 
@@ -211,7 +213,7 @@ const HeroFitness: React.FC<HeroProps> = ({
                             </a>
                             
                             <a 
-                                href="#features" 
+                                href={secondaryCtaLink || '#features'} 
                                 className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
                                     secondaryButtonStyle === 'outline' 
                                         ? 'border-4 bg-transparent' 

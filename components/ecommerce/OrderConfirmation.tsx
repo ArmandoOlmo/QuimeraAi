@@ -3,7 +3,7 @@
  * Página de confirmación de pedido
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     CheckCircle,
     Package,
@@ -14,10 +14,15 @@ import {
     ArrowRight,
     Printer,
     Share2,
+    Loader2,
+    AlertCircle,
 } from 'lucide-react';
-import { Order } from '../../types/ecommerce';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { Order, StoreSettings } from '../../types/ecommerce';
 
-interface OrderConfirmationProps {
+// Props for direct order display
+interface OrderConfirmationDirectProps {
     order: Order;
     onContinueShopping: () => void;
     onViewOrders?: () => void;
@@ -26,7 +31,30 @@ interface OrderConfirmationProps {
     storeName?: string;
 }
 
-const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
+// Props for fetching order by ID
+interface OrderConfirmationFetchProps {
+    storeId: string;
+    orderId: string;
+    onContinueShopping: () => void;
+    onViewOrders?: () => void;
+}
+
+type OrderConfirmationProps = OrderConfirmationDirectProps | OrderConfirmationFetchProps;
+
+// Type guard
+function isDirectProps(props: OrderConfirmationProps): props is OrderConfirmationDirectProps {
+    return 'order' in props;
+}
+
+// Inner component for displaying order
+const OrderConfirmationDisplay: React.FC<{
+    order: Order;
+    onContinueShopping: () => void;
+    onViewOrders?: () => void;
+    currencySymbol?: string;
+    primaryColor?: string;
+    storeName?: string;
+}> = ({
     order,
     onContinueShopping,
     onViewOrders,
@@ -293,7 +321,104 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
     );
 };
 
+// Main component that handles both direct order and fetch by ID
+const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
+    const [order, setOrder] = useState<Order | null>(isDirectProps(props) ? props.order : null);
+    const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+    const [isLoading, setIsLoading] = useState(!isDirectProps(props));
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isDirectProps(props)) {
+            return;
+        }
+
+        const fetchOrder = async () => {
+            try {
+                const { storeId, orderId } = props;
+
+                // Get store owner ID from publicStores
+                const publicStoreRef = doc(db, 'publicStores', storeId);
+                const publicStoreDoc = await getDoc(publicStoreRef);
+
+                if (!publicStoreDoc.exists()) {
+                    setError('Tienda no encontrada');
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Get store settings from public collection
+                const settingsRef = doc(db, `publicStores/${storeId}/settings/store`);
+                const settingsDoc = await getDoc(settingsRef);
+                if (settingsDoc.exists()) {
+                    setStoreSettings(settingsDoc.data() as StoreSettings);
+                }
+
+                // Get order from public collection
+                const orderRef = doc(db, `publicStores/${storeId}/customerOrders`, orderId);
+                const orderDoc = await getDoc(orderRef);
+
+                if (!orderDoc.exists()) {
+                    setError('Pedido no encontrado');
+                    setIsLoading(false);
+                    return;
+                }
+
+                setOrder({ id: orderDoc.id, ...orderDoc.data() } as Order);
+                setIsLoading(false);
+            } catch (err: any) {
+                console.error('Error fetching order:', err);
+                setError(err.message || 'Error al cargar el pedido');
+                setIsLoading(false);
+            }
+        };
+
+        fetchOrder();
+    }, [props]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400">Cargando pedido...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !order) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+                <div className="text-center max-w-md">
+                    <AlertCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        {error || 'Pedido no encontrado'}
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        No pudimos encontrar la informacion de tu pedido
+                    </p>
+                    <button
+                        onClick={props.onContinueShopping}
+                        className="px-6 py-3 rounded-xl text-white font-bold bg-indigo-500 hover:bg-indigo-600 transition-colors"
+                    >
+                        Volver a la tienda
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const directProps = isDirectProps(props) ? props : {
+        order,
+        onContinueShopping: props.onContinueShopping,
+        onViewOrders: props.onViewOrders,
+        currencySymbol: storeSettings?.currencySymbol || '$',
+        primaryColor: storeSettings?.storefrontTheme?.primaryColor || '#6366f1',
+        storeName: storeSettings?.storeName || 'Tu Tienda',
+    };
+
+    return <OrderConfirmationDisplay {...directProps} />;
+};
+
 export default OrderConfirmation;
-
-
-

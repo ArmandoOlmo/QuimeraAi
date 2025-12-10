@@ -1,6 +1,8 @@
 /**
  * TrustBadges Component
  * Displays trust indicators like shipping, security, returns, etc.
+ * 
+ * Uses unified storefront colors system
  */
 
 import React from 'react';
@@ -9,9 +11,12 @@ import {
     Lock, Headphones, Package, CheckCircle, Star, Heart
 } from 'lucide-react';
 import { TrustBadgesData, TrustBadgeIcon, TrustBadgeItem } from '../../../types/components';
+import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface TrustBadgesProps {
     data: TrustBadgesData;
+    storeId?: string;
 }
 
 const iconMap: Record<TrustBadgeIcon, React.FC<{ size?: number; className?: string }>> = {
@@ -29,7 +34,12 @@ const iconMap: Record<TrustBadgeIcon, React.FC<{ size?: number; className?: stri
     'heart': Heart,
 };
 
-const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
+const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
+    const editorContext = useSafeEditor();
+    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    
+    // Unified colors system
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
     // Default badges if none provided
     const badges: TrustBadgeItem[] = data.badges?.length > 0 ? data.badges : [
         { icon: 'truck', title: 'Envío Gratis', description: 'En pedidos mayores a $50' },
@@ -67,20 +77,20 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
             <div className="flex items-center gap-3">
                 <div
                     className={`flex-shrink-0 p-3 ${getBorderRadius()}`}
-                    style={{ backgroundColor: `${data.colors.iconColor}15` }}
+                    style={{ backgroundColor: `${colors.accent}15` }}
                 >
-                    <IconComponent size={getIconSize()} style={{ color: data.colors.iconColor }} />
+                    <IconComponent size={getIconSize()} style={{ color: colors.accent }} />
                 </div>
                 {data.showLabels && (
                     <div>
                         <h4
                             className="font-semibold text-sm"
-                            style={{ color: data.colors.heading || data.colors.text }}
+                            style={{ color: colors.heading || colors.text }}
                         >
                             {badge.title}
                         </h4>
                         {badge.description && (
-                            <p className="text-xs" style={{ color: data.colors.text }}>
+                            <p className="text-xs" style={{ color: colors.text }}>
                                 {badge.description}
                             </p>
                         )}
@@ -109,26 +119,26 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
                         key={index}
                         className={`text-center p-6 ${getBorderRadius()}`}
                         style={{
-                            backgroundColor: data.colors.borderColor ? `${data.colors.borderColor}10` : 'transparent',
-                            border: data.colors.borderColor ? `1px solid ${data.colors.borderColor}30` : 'none',
+                            backgroundColor: colors.border ? `${colors.border}10` : 'transparent',
+                            border: colors.border ? `1px solid ${colors.border}30` : 'none',
                         }}
                     >
                         <div
                             className={`inline-flex p-4 ${getBorderRadius()} mb-3`}
-                            style={{ backgroundColor: `${data.colors.iconColor}15` }}
+                            style={{ backgroundColor: `${colors.accent}15` }}
                         >
-                            <IconComponent size={getIconSize()} style={{ color: data.colors.iconColor }} />
+                            <IconComponent size={getIconSize()} style={{ color: colors.accent }} />
                         </div>
                         {data.showLabels && (
                             <>
                                 <h4
                                     className="font-semibold mb-1"
-                                    style={{ color: data.colors.heading || data.colors.text }}
+                                    style={{ color: colors.heading || colors.text }}
                                 >
                                     {badge.title}
                                 </h4>
                                 {badge.description && (
-                                    <p className="text-sm" style={{ color: data.colors.text }}>
+                                    <p className="text-sm" style={{ color: colors.text }}>
                                         {badge.description}
                                     </p>
                                 )}
@@ -147,9 +157,9 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
                 return (
                     <div key={index} className="flex items-center gap-2">
-                        <IconComponent size={getIconSize()} style={{ color: data.colors.iconColor }} />
+                        <IconComponent size={getIconSize()} style={{ color: colors.accent }} />
                         {data.showLabels && (
-                            <span className="font-medium text-sm" style={{ color: data.colors.text }}>
+                            <span className="font-medium text-sm" style={{ color: colors.text }}>
                                 {badge.title}
                             </span>
                         )}
@@ -169,24 +179,24 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
                         key={index}
                         className={`p-6 ${getBorderRadius()} transition-all hover:scale-105`}
                         style={{
-                            backgroundColor: data.colors.borderColor ? `${data.colors.borderColor}10` : 'transparent',
-                            border: data.colors.borderColor ? `1px solid ${data.colors.borderColor}30` : 'none',
+                            backgroundColor: colors.border ? `${colors.border}10` : 'transparent',
+                            border: colors.border ? `1px solid ${colors.border}30` : 'none',
                         }}
                     >
                         <div
                             className={`inline-flex p-3 ${getBorderRadius()} mb-4`}
-                            style={{ backgroundColor: `${data.colors.iconColor}15` }}
+                            style={{ backgroundColor: `${colors.accent}15` }}
                         >
-                            <IconComponent size={getIconSize()} style={{ color: data.colors.iconColor }} />
+                            <IconComponent size={getIconSize()} style={{ color: colors.accent }} />
                         </div>
                         <h4
                             className="font-bold text-lg mb-2"
-                            style={{ color: data.colors.heading || data.colors.text }}
+                            style={{ color: colors.heading || colors.text }}
                         >
                             {badge.title}
                         </h4>
                         {badge.description && (
-                            <p className="text-sm leading-relaxed" style={{ color: data.colors.text }}>
+                            <p className="text-sm leading-relaxed" style={{ color: colors.text }}>
                                 {badge.description}
                             </p>
                         )}
@@ -200,9 +210,9 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
             style={{
-                backgroundColor: data.colors.background,
-                borderTop: data.colors.borderColor ? `1px solid ${data.colors.borderColor}30` : 'none',
-                borderBottom: data.colors.borderColor ? `1px solid ${data.colors.borderColor}30` : 'none',
+                backgroundColor: colors.background,
+                borderTop: colors.border ? `1px solid ${colors.border}30` : 'none',
+                borderBottom: colors.border ? `1px solid ${colors.border}30` : 'none',
             }}
         >
             <div className="max-w-7xl mx-auto">
@@ -210,7 +220,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data }) => {
                 {data.title && (
                     <h3
                         className="text-center font-semibold mb-6"
-                        style={{ color: data.colors.heading }}
+                        style={{ color: colors.heading }}
                     >
                         {data.title}
                     </h3>

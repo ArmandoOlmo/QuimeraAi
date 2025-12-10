@@ -1,6 +1,8 @@
 /**
  * Ecommerce Storefront Components
  * Componentes públicos para el storefront de ecommerce
+ * 
+ * Estos componentes pueden ser usados tanto en el Landing Page como en el Ecommerce
  */
 
 // Cart
@@ -9,7 +11,14 @@ export { default as CartButton } from './CartButton';
 
 // Checkout
 export { default as CheckoutPage } from './CheckoutPage';
+export { default as CheckoutPageEnhanced } from './CheckoutPageEnhanced';
 export type { CheckoutOrderData } from './CheckoutPage';
+
+// Product Detail with Cart
+export { default as ProductDetailPageWithCart } from './ProductDetailPageWithCart';
+
+// Cart Context
+export { StorefrontCartProvider, useStorefrontCart } from './context';
 
 // Order
 export { default as OrderConfirmation } from './OrderConfirmation';
@@ -26,6 +35,23 @@ export { default as StockNotificationButton } from './StockNotificationButton';
 
 // Layout
 export { default as StorefrontLayout } from './StorefrontLayout';
+
+// =============================================================================
+// SECTION COMPONENTS (Usables en Landing Page y Ecommerce)
+// =============================================================================
+export {
+    FeaturedProducts,
+    CategoryGrid,
+    ProductHero,
+    SaleCountdown,
+    TrustBadges,
+    RecentlyViewed,
+    addToRecentlyViewed,
+    ProductReviews,
+    CollectionBanner,
+    ProductBundle,
+    AnnouncementBar,
+} from './sections';
 
 // Reviews
 export { 
@@ -53,6 +79,17 @@ export {
 // Hooks - Theme
 export { useStorefrontTheme, useDesignTokensAsStorefront } from './hooks/useStorefrontTheme';
 export type { StorefrontTheme } from './hooks/useStorefrontTheme';
+
+// Hooks - Unified Colors (Sistema unificado de colores)
+export { 
+    useUnifiedStorefrontColors, 
+    useGlobalStorefrontColors,
+    getColorsCSSVariables,
+} from './hooks/useUnifiedStorefrontColors';
+export type { 
+    ComponentColors, 
+    UnifiedColors,
+} from './hooks/useUnifiedStorefrontColors';
 
 // Hooks - Products
 export { 

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { X, Send, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import RatingStars from './RatingStars';
+import { ReviewColors } from './ReviewSummary';
 
 interface ReviewFormProps {
     productName: string;
@@ -19,15 +20,36 @@ interface ReviewFormProps {
         customerEmail: string;
     }) => Promise<{ success: boolean; error?: string }>;
     primaryColor?: string;
+    colors?: ReviewColors;
 }
+
+const defaultColors: ReviewColors = {
+    primary: '#6366f1',
+    heading: '#1f2937',
+    text: '#6b7280',
+    mutedText: '#9ca3af',
+    cardBackground: '#ffffff',
+    border: '#e5e7eb',
+    buttonBackground: '#6366f1',
+    buttonText: '#ffffff',
+    starColor: '#facc15',
+};
 
 const ReviewForm: React.FC<ReviewFormProps> = ({
     productName,
     isOpen,
     onClose,
     onSubmit,
-    primaryColor = '#6366f1',
+    primaryColor,
+    colors: propColors,
 }) => {
+    // Merge colors
+    const colors = {
+        ...defaultColors,
+        ...propColors,
+        primary: propColors?.primary || primaryColor || defaultColors.primary,
+        buttonBackground: propColors?.buttonBackground || primaryColor || defaultColors.buttonBackground,
+    };
     const [rating, setRating] = useState(0);
     const [title, setTitle] = useState('');
     const [comment, setComment] = useState('');
@@ -116,20 +138,30 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             />
 
             {/* Modal */}
-            <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
+            <div 
+                className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[90vh] rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
+                style={{ backgroundColor: colors.cardBackground }}
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div 
+                    className="flex items-center justify-between p-6 border-b"
+                    style={{ borderColor: colors.border }}
+                >
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        <h2 
+                            className="text-xl font-bold"
+                            style={{ color: colors.heading }}
+                        >
                             Escribir una reseña
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-sm mt-1" style={{ color: colors.mutedText }}>
                             {productName}
                         </p>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 rounded-full transition-colors hover:opacity-80"
+                        style={{ color: colors.mutedText }}
                     >
                         <X size={24} />
                     </button>
@@ -141,14 +173,17 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                         <div className="text-center py-8">
                             <div
                                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                                style={{ backgroundColor: `${primaryColor}20` }}
+                                style={{ backgroundColor: `${colors.primary}20` }}
                             >
-                                <CheckCircle size={32} style={{ color: primaryColor }} />
+                                <CheckCircle size={32} style={{ color: colors.primary }} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                            <h3 
+                                className="text-xl font-bold mb-2"
+                                style={{ color: colors.heading }}
+                            >
                                 ¡Gracias por tu reseña!
                             </h3>
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <p style={{ color: colors.mutedText }}>
                                 Tu reseña será revisada y publicada pronto.
                             </p>
                         </div>
@@ -156,15 +191,18 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Error Message */}
                             {error && (
-                                <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg flex items-center gap-3">
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
                                     <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-                                    <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                                    <p className="text-red-700 text-sm">{error}</p>
                                 </div>
                             )}
 
                             {/* Rating */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                <label 
+                                    className="block text-sm font-medium mb-3"
+                                    style={{ color: colors.text }}
+                                >
                                     Calificación *
                                 </label>
                                 <RatingStars
@@ -172,9 +210,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                     size="lg"
                                     interactive
                                     onChange={setRating}
+                                    color={colors.starColor}
                                 />
                                 {rating > 0 && (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                    <p className="text-sm mt-2" style={{ color: colors.mutedText }}>
                                         {rating === 5 && '¡Excelente!'}
                                         {rating === 4 && 'Muy bueno'}
                                         {rating === 3 && 'Regular'}
@@ -186,7 +225,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
                             {/* Title */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label 
+                                    className="block text-sm font-medium mb-2"
+                                    style={{ color: colors.text }}
+                                >
                                     Título de tu reseña *
                                 </label>
                                 <input
@@ -195,14 +237,22 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Resume tu experiencia en pocas palabras"
                                     maxLength={100}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2"
-                                    style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                                    style={{ 
+                                        borderColor: colors.border, 
+                                        backgroundColor: colors.cardBackground,
+                                        color: colors.heading,
+                                        '--tw-ring-color': colors.primary 
+                                    } as React.CSSProperties}
                                 />
                             </div>
 
                             {/* Comment */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label 
+                                    className="block text-sm font-medium mb-2"
+                                    style={{ color: colors.text }}
+                                >
                                     Tu opinión *
                                 </label>
                                 <textarea
@@ -211,17 +261,25 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                     placeholder="Cuéntanos qué te pareció el producto..."
                                     rows={4}
                                     maxLength={1000}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 resize-none"
-                                    style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 resize-none"
+                                    style={{ 
+                                        borderColor: colors.border, 
+                                        backgroundColor: colors.cardBackground,
+                                        color: colors.heading,
+                                        '--tw-ring-color': colors.primary 
+                                    } as React.CSSProperties}
                                 />
-                                <p className="text-xs text-gray-400 mt-1 text-right">
+                                <p className="text-xs mt-1 text-right" style={{ color: colors.mutedText }}>
                                     {comment.length}/1000
                                 </p>
                             </div>
 
                             {/* Customer Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label 
+                                    className="block text-sm font-medium mb-2"
+                                    style={{ color: colors.text }}
+                                >
                                     Tu nombre *
                                 </label>
                                 <input
@@ -230,14 +288,22 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                     onChange={(e) => setCustomerName(e.target.value)}
                                     placeholder="¿Cómo te llamas?"
                                     maxLength={50}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2"
-                                    style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                                    style={{ 
+                                        borderColor: colors.border, 
+                                        backgroundColor: colors.cardBackground,
+                                        color: colors.heading,
+                                        '--tw-ring-color': colors.primary 
+                                    } as React.CSSProperties}
                                 />
                             </div>
 
                             {/* Customer Email */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label 
+                                    className="block text-sm font-medium mb-2"
+                                    style={{ color: colors.text }}
+                                >
                                     Tu email *
                                 </label>
                                 <input
@@ -245,10 +311,15 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                     value={customerEmail}
                                     onChange={(e) => setCustomerEmail(e.target.value)}
                                     placeholder="tu@email.com"
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2"
-                                    style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                                    style={{ 
+                                        borderColor: colors.border, 
+                                        backgroundColor: colors.cardBackground,
+                                        color: colors.heading,
+                                        '--tw-ring-color': colors.primary 
+                                    } as React.CSSProperties}
                                 />
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs mt-1" style={{ color: colors.mutedText }}>
                                     No se mostrará públicamente
                                 </p>
                             </div>
@@ -257,8 +328,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                                style={{ backgroundColor: primaryColor }}
+                                className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors hover:opacity-90"
+                                style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                             >
                                 {isSubmitting ? (
                                     <>

@@ -8,6 +8,7 @@ import { Loader2, MessageSquare, ChevronDown } from 'lucide-react';
 import { Review } from '../../../types/ecommerce';
 import ReviewCard from './ReviewCard';
 import { ReviewSortBy } from '../hooks/useProductReviews';
+import { ReviewColors } from './ReviewSummary';
 
 interface ReviewListProps {
     reviews: Review[];
@@ -20,7 +21,20 @@ interface ReviewListProps {
     onMarkHelpful?: (reviewId: string) => Promise<boolean>;
     hasVoted?: (reviewId: string) => boolean;
     primaryColor?: string;
+    colors?: ReviewColors;
 }
+
+const defaultColors: ReviewColors = {
+    primary: '#6366f1',
+    heading: '#1f2937',
+    text: '#6b7280',
+    mutedText: '#9ca3af',
+    cardBackground: '#ffffff',
+    border: '#e5e7eb',
+    buttonBackground: '#6366f1',
+    buttonText: '#ffffff',
+    starColor: '#facc15',
+};
 
 const ReviewList: React.FC<ReviewListProps> = ({
     reviews,
@@ -32,8 +46,16 @@ const ReviewList: React.FC<ReviewListProps> = ({
     onLoadMore,
     onMarkHelpful,
     hasVoted,
-    primaryColor = '#6366f1',
+    primaryColor,
+    colors: propColors,
 }) => {
+    // Merge colors
+    const colors = {
+        ...defaultColors,
+        ...propColors,
+        primary: propColors?.primary || primaryColor || defaultColors.primary,
+    };
+
     const sortOptions: { value: ReviewSortBy; label: string }[] = [
         { value: 'newest', label: 'Más recientes' },
         { value: 'oldest', label: 'Más antiguas' },
@@ -49,7 +71,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 <Loader2 
                     className="animate-spin" 
                     size={32} 
-                    style={{ color: primaryColor }} 
+                    style={{ color: colors.primary }} 
                 />
             </div>
         );
@@ -59,11 +81,18 @@ const ReviewList: React.FC<ReviewListProps> = ({
     if (reviews.length === 0) {
         return (
             <div className="text-center py-12">
-                <MessageSquare className="mx-auto text-gray-300 dark:text-gray-600 mb-4" size={48} />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <MessageSquare 
+                    className="mx-auto mb-4" 
+                    size={48} 
+                    style={{ color: colors.border }}
+                />
+                <h3 
+                    className="text-lg font-medium mb-2"
+                    style={{ color: colors.heading }}
+                >
                     Sin reseñas aún
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400">
+                <p style={{ color: colors.mutedText }}>
                     Sé el primero en compartir tu opinión sobre este producto
                 </p>
             </div>
@@ -74,7 +103,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
         <div className="space-y-6">
             {/* Sort Controls */}
             <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm" style={{ color: colors.mutedText }}>
                     {reviews.length} reseña{reviews.length !== 1 ? 's' : ''}
                 </p>
 
@@ -82,8 +111,13 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     <select
                         value={sortBy}
                         onChange={(e) => onSortChange(e.target.value as ReviewSortBy)}
-                        className="appearance-none px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                        className="appearance-none px-4 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                        style={{ 
+                            borderColor: colors.border, 
+                            backgroundColor: colors.cardBackground,
+                            color: colors.heading,
+                            '--tw-ring-color': colors.primary 
+                        } as React.CSSProperties}
                     >
                         {sortOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -92,8 +126,9 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         ))}
                     </select>
                     <ChevronDown
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                         size={16}
+                        style={{ color: colors.mutedText }}
                     />
                 </div>
             </div>
@@ -106,7 +141,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         review={review}
                         onMarkHelpful={onMarkHelpful}
                         hasVoted={hasVoted ? hasVoted(review.id) : false}
-                        primaryColor={primaryColor}
+                        colors={colors}
                     />
                 ))}
             </div>
@@ -117,7 +152,8 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     <button
                         onClick={onLoadMore}
                         disabled={isLoadingMore}
-                        className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto"
+                        className="px-6 py-2 border rounded-lg font-medium disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto hover:opacity-80"
+                        style={{ borderColor: colors.border, color: colors.text }}
                     >
                         {isLoadingMore ? (
                             <>

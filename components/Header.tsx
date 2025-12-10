@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import { GlobalSearch } from './ecommerce/search';
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
@@ -113,17 +114,22 @@ const Header: React.FC<HeaderData & {
     containerRef?: React.RefObject<HTMLDivElement>;
     /** When true, forces the header to use solid background regardless of style setting */
     forceSolid?: boolean;
+    /** Callback when search is performed */
+    onSearch?: (term: string) => void;
 }> = ({ 
     style, layout, isSticky, glassEffect, height,
     logoType, logoText, logoImageUrl, logoWidth,
     links, hoverStyle,
     ctaText, showCta, buttonBorderRadius, 
     showLogin, loginText, loginUrl,
+    showSearch = false,
+    searchPlaceholder,
     colors,
     isPreviewMode = false,
     containerRef,
     linkFontSize = 14,
     forceSolid = false,
+    onSearch,
 }) => {
   // Use safe versions of hooks that work outside EditorProvider (for public preview)
   const editorContext = useSafeEditor();
@@ -345,6 +351,125 @@ const Header: React.FC<HeaderData & {
     </a>
   );
 
+  // Get storeId and data for global search
+  const storeId = editorContext?.activeProjectId || undefined;
+  const pageData = editorContext?.data;
+
+  // Build searchable sections from page content
+  const searchableSections = useMemo(() => {
+    const sections: Array<{ id: string; title: string; href: string; description?: string }> = [];
+    
+    if (pageData) {
+      // Add hero section
+      if (pageData.hero?.headline) {
+        sections.push({
+          id: 'hero',
+          title: pageData.hero.headline,
+          description: pageData.hero.subheadline,
+          href: '#hero'
+        });
+      }
+      
+      // Add features section
+      if (pageData.features?.title) {
+        sections.push({
+          id: 'features',
+          title: pageData.features.title,
+          description: pageData.features.subtitle,
+          href: '#features'
+        });
+      }
+      
+      // Add services section
+      if (pageData.services?.title) {
+        sections.push({
+          id: 'services',
+          title: pageData.services.title,
+          description: pageData.services.subtitle,
+          href: '#services'
+        });
+      }
+      
+      // Add testimonials section
+      if (pageData.testimonials?.title) {
+        sections.push({
+          id: 'testimonials',
+          title: pageData.testimonials.title,
+          description: pageData.testimonials.subtitle,
+          href: '#testimonials'
+        });
+      }
+      
+      // Add pricing section
+      if (pageData.pricing?.title) {
+        sections.push({
+          id: 'pricing',
+          title: pageData.pricing.title,
+          description: pageData.pricing.subtitle,
+          href: '#pricing'
+        });
+      }
+      
+      // Add FAQ section
+      if (pageData.faq?.title) {
+        sections.push({
+          id: 'faq',
+          title: pageData.faq.title,
+          description: pageData.faq.subtitle,
+          href: '#faq'
+        });
+      }
+      
+      // Add portfolio section
+      if (pageData.portfolio?.title) {
+        sections.push({
+          id: 'portfolio',
+          title: pageData.portfolio.title,
+          description: pageData.portfolio.subtitle,
+          href: '#portfolio'
+        });
+      }
+      
+      // Add team section
+      if (pageData.team?.title) {
+        sections.push({
+          id: 'team',
+          title: pageData.team.title,
+          description: pageData.team.subtitle,
+          href: '#team'
+        });
+      }
+      
+      // Add CTA section
+      if (pageData.cta?.headline) {
+        sections.push({
+          id: 'cta',
+          title: pageData.cta.headline,
+          description: pageData.cta.subheadline,
+          href: '#cta'
+        });
+      }
+      
+      // Add store link
+      sections.push({
+        id: 'store',
+        title: 'Tienda',
+        description: 'Ver todos los productos',
+        href: '#store'
+      });
+    }
+    
+    return sections;
+  }, [pageData]);
+
+  const handleProductClick = (productId: string) => {
+    window.location.hash = `#product/${productId}`;
+  };
+
+  const handleContentClick = (href: string) => {
+    window.location.hash = href;
+  };
+
   const renderLayout = () => {
     switch (layout) {
       case 'minimal':
@@ -354,7 +479,18 @@ const Header: React.FC<HeaderData & {
                 <div className="hidden md:flex flex-1 justify-center">
                     <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                 </div>
-                <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center">
+                <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
+                    {showSearch && (
+                        <GlobalSearch
+                            storeId={storeId}
+                            onProductClick={handleProductClick}
+                            onContentClick={handleContentClick}
+                            placeholder={searchPlaceholder}
+                            primaryColor={colors.accent}
+                            textColor={finalTextColor}
+                            sections={searchableSections}
+                        />
+                    )}
                     {showLogin && <LoginButton />}
                     {showCta && <CtaButton />}
                 </div>
@@ -369,7 +505,18 @@ const Header: React.FC<HeaderData & {
                  <div className="flex-shrink-0 mx-auto">
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
                  </div>
-                 <div className="hidden md:flex flex-1 justify-end items-center">
+                 <div className="hidden md:flex flex-1 justify-end items-center gap-4">
+                     {showSearch && (
+                         <GlobalSearch
+                             storeId={storeId}
+                             onProductClick={handleProductClick}
+                             onContentClick={handleContentClick}
+                             placeholder={searchPlaceholder}
+                             primaryColor={colors.accent}
+                             textColor={finalTextColor}
+                             sections={searchableSections}
+                         />
+                     )}
                      {showLogin && <LoginButton />}
                      {showCta && <CtaButton />}
                  </div>
@@ -383,7 +530,18 @@ const Header: React.FC<HeaderData & {
                  </div>
                  <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
                     <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
-                    <div className="ml-8 flex items-center">
+                    <div className="ml-8 flex items-center gap-4">
+                        {showSearch && (
+                            <GlobalSearch
+                                storeId={storeId}
+                                onProductClick={handleProductClick}
+                                onContentClick={handleContentClick}
+                                placeholder={searchPlaceholder}
+                                primaryColor={colors.accent}
+                                textColor={finalTextColor}
+                                sections={searchableSections}
+                            />
+                        )}
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
                     </div>
@@ -396,7 +554,18 @@ const Header: React.FC<HeaderData & {
                 <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-end items-center gap-8">
                     <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
-                    <div className="flex items-center ml-4">
+                    <div className="flex items-center ml-4 gap-4">
+                        {showSearch && (
+                            <GlobalSearch
+                                storeId={storeId}
+                                onProductClick={handleProductClick}
+                                onContentClick={handleContentClick}
+                                placeholder={searchPlaceholder}
+                                primaryColor={colors.accent}
+                                textColor={finalTextColor}
+                                sections={searchableSections}
+                            />
+                        )}
                         {showLogin && <LoginButton />}
                         {showCta && <CtaButton />}
                     </div>
@@ -530,6 +699,27 @@ const Header: React.FC<HeaderData & {
               <X size={24} />
             </button>
           </div>
+
+          {/* Mobile Search */}
+          {showSearch && (
+            <div className="mb-6">
+              <GlobalSearch
+                storeId={storeId}
+                onProductClick={(productId) => {
+                  handleProductClick(productId);
+                  setIsMenuOpen(false);
+                }}
+                onContentClick={(href) => {
+                  handleContentClick(href);
+                  setIsMenuOpen(false);
+                }}
+                placeholder={searchPlaceholder}
+                primaryColor={colors.accent}
+                textColor={colors.text}
+                sections={searchableSections}
+              />
+            </div>
+          )}
           
           {/* Navigation Links */}
           <nav className="flex-1">

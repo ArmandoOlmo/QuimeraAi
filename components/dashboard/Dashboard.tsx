@@ -27,7 +27,8 @@ const Dashboard: React.FC = () => {
         projects,
         isLoadingProjects,
         view,
-        setIsOnboardingOpen
+        setIsOnboardingOpen,
+        addNewProject
     } = useEditor();
     const { navigate } = useRouter();
 

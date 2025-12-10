@@ -131,12 +131,12 @@ export function applyTokensToProject(
     Object.keys(projectData).forEach((componentId) => {
         const componentData = projectData[componentId as keyof PageData];
         if (componentData && typeof componentData === 'object') {
-            newData[componentId as keyof PageData] = applyTokensToComponent(
+            (newData as any)[componentId] = applyTokensToComponent(
                 componentData,
                 tokens
-            ) as any;
+            );
         } else {
-            newData[componentId as keyof PageData] = componentData;
+            (newData as any)[componentId] = componentData;
         }
     });
 

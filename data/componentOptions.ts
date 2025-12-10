@@ -298,8 +298,9 @@ export const COMPONENT_OPTIONS = {
             overlayStyle: ['gradient', 'solid', 'none'],
             textAlignment: ['left', 'center', 'right'],
             contentPosition: ['left', 'center', 'right'],
+            showAddToCartButton: [true, false],
         },
-        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'addToCartBackground', 'addToCartText'],
     },
     
     saleCountdown: {

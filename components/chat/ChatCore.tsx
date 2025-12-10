@@ -764,7 +764,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 <div
                     className="p-4 flex justify-between items-center transition-colors duration-500"
                     style={{
-                        backgroundColor: isLiveActive ? '#ef4444' : appearance.colors.headerBackground,
+                        backgroundColor: isLiveActive ? (appearance.colors.accentColor || '#ef4444') : appearance.colors.headerBackground,
                         color: appearance.colors.headerText
                     }}
                 >
@@ -1048,12 +1048,24 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     <div className="p-2 text-center border-t text-[10px] opacity-50 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors.inputBorder, color: appearance.colors.inputText }}>
                         <Sparkles size={10} /> {t('chatbotWidget.poweredBy')}
                     </div>
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-2" style={{ backgroundColor: appearance.colors.inputBackground }}>
+                    <div 
+                        className="p-3 border-t flex items-center gap-2" 
+                        style={{ 
+                            backgroundColor: appearance.colors.inputBackground,
+                            borderColor: appearance.colors.inputBorder 
+                        }}
+                    >
                         {config.enableLiveVoice && (
                             <button
                                 onClick={startLiveSession}
                                 disabled={isConnecting}
-                                className={`p-2.5 rounded-full transition-all shadow-sm ${isConnecting ? 'bg-gray-100 text-gray-400' : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-200'}`}
+                                className="p-2.5 rounded-full transition-all shadow-sm border"
+                                style={{
+                                    backgroundColor: isConnecting ? appearance.colors.inputBackground : (appearance.colors.accentColor + '15'),
+                                    color: isConnecting ? appearance.colors.inputText : appearance.colors.accentColor,
+                                    borderColor: isConnecting ? appearance.colors.inputBorder : (appearance.colors.accentColor + '40'),
+                                    opacity: isConnecting ? 0.5 : 1
+                                }}
                                 title="Start Real-time Voice"
                             >
                                 {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
@@ -1065,8 +1077,11 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={t('chatbotWidget.inputPlaceholder')}
-                            className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border border-gray-200 dark:border-gray-700"
+                            className="flex-1 px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border"
                             style={{
+                                backgroundColor: appearance.colors.inputBackground,
+                                color: appearance.colors.inputText,
+                                borderColor: appearance.colors.inputBorder,
                                 '--tw-ring-color': appearance.colors.primaryColor + '40'
                             } as React.CSSProperties}
                             disabled={isLoading}

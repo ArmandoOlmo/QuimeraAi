@@ -136,31 +136,51 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
     // Add product
     const addProduct = useCallback(
         async (
-            productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'slug'>,
+            productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'slug'> & { libraryImageUrls?: string[] },
             imageFiles?: File[]
         ): Promise<string> => {
             const productsRef = collection(db, productsPath);
             
-            const slug = generateSlug(productData.name);
+            // Extract library image URLs from productData
+            const { libraryImageUrls, ...cleanProductData } = productData;
+            
+            const slug = generateSlug(cleanProductData.name);
             
             const docRef = await addDoc(productsRef, {
-                ...productData,
+                ...cleanProductData,
                 slug,
                 images: [],
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
 
-            // Upload images if provided
-            if (imageFiles && imageFiles.length > 0) {
-                const uploadedImages: ProductImage[] = [];
-                for (let i = 0; i < imageFiles.length; i++) {
-                    const image = await uploadImage(imageFiles[i], docRef.id);
-                    image.position = i;
-                    uploadedImages.push(image);
-                }
+            const allImages: ProductImage[] = [];
+            let position = 0;
 
-                await updateDoc(docRef, { images: uploadedImages });
+            // Add library images (URLs from project/global library)
+            if (libraryImageUrls && libraryImageUrls.length > 0) {
+                for (const url of libraryImageUrls) {
+                    allImages.push({
+                        id: `library-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        url,
+                        altText: cleanProductData.name,
+                        position: position++,
+                    });
+                }
+            }
+
+            // Upload new image files
+            if (imageFiles && imageFiles.length > 0) {
+                for (const file of imageFiles) {
+                    const image = await uploadImage(file, docRef.id);
+                    image.position = position++;
+                    allImages.push(image);
+                }
+            }
+
+            // Update product with all images
+            if (allImages.length > 0) {
+                await updateDoc(docRef, { images: allImages });
             }
 
             return docRef.id;
@@ -172,34 +192,57 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
     const updateProduct = useCallback(
         async (
             productId: string,
-            updates: Partial<Product>,
+            updates: Partial<Product> & { libraryImageUrls?: string[] },
             newImageFiles?: File[]
         ) => {
             const productRef = doc(db, productsPath, productId);
             
+            // Extract library image URLs from updates
+            const { libraryImageUrls, ...cleanUpdates } = updates;
+            
             const updateData: any = {
-                ...updates,
+                ...cleanUpdates,
                 updatedAt: serverTimestamp(),
             };
 
             // Update slug if name changed
-            if (updates.name) {
-                updateData.slug = generateSlug(updates.name);
+            if (cleanUpdates.name) {
+                updateData.slug = generateSlug(cleanUpdates.name);
             }
 
-            // Handle new images
-            if (newImageFiles && newImageFiles.length > 0) {
-                const currentProduct = products.find((p) => p.id === productId);
-                const existingImages = currentProduct?.images || [];
-                
-                const uploadedImages: ProductImage[] = [];
-                for (let i = 0; i < newImageFiles.length; i++) {
-                    const image = await uploadImage(newImageFiles[i], productId);
-                    image.position = existingImages.length + i;
-                    uploadedImages.push(image);
-                }
+            const currentProduct = products.find((p) => p.id === productId);
+            const existingImages = currentProduct?.images || [];
+            let position = existingImages.length;
+            const newImages: ProductImage[] = [];
 
-                updateData.images = [...existingImages, ...uploadedImages];
+            // Add library images (URLs from project/global library)
+            if (libraryImageUrls && libraryImageUrls.length > 0) {
+                for (const url of libraryImageUrls) {
+                    // Check if this URL is already in existing images
+                    const alreadyExists = existingImages.some(img => img.url === url);
+                    if (!alreadyExists) {
+                        newImages.push({
+                            id: `library-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            url,
+                            altText: cleanUpdates.name || currentProduct?.name || '',
+                            position: position++,
+                        });
+                    }
+                }
+            }
+
+            // Upload new image files
+            if (newImageFiles && newImageFiles.length > 0) {
+                for (const file of newImageFiles) {
+                    const image = await uploadImage(file, productId);
+                    image.position = position++;
+                    newImages.push(image);
+                }
+            }
+
+            // Combine existing and new images
+            if (newImages.length > 0) {
+                updateData.images = [...existingImages, ...newImages];
             }
 
             await updateDoc(productRef, updateData);

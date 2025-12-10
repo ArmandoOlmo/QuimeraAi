@@ -6,31 +6,21 @@
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../firebase';
+import { StorefrontThemeSettings, DEFAULT_STOREFRONT_THEME } from '../../../types/ecommerce';
 
-export interface StorefrontTheme {
-    primaryColor: string;
-    secondaryColor: string;
-    accentColor: string;
-    backgroundColor: string;
-    textColor: string;
-    headingColor: string;
+// Extended theme interface with all storefront properties
+export interface StorefrontTheme extends StorefrontThemeSettings {
     currencySymbol: string;
-    fontFamily: string;
 }
 
 const defaultTheme: StorefrontTheme = {
-    primaryColor: '#6366f1',
-    secondaryColor: '#10b981',
-    accentColor: '#f59e0b',
-    backgroundColor: '#ffffff',
-    textColor: '#374151',
-    headingColor: '#111827',
+    ...DEFAULT_STOREFRONT_THEME,
     currencySymbol: '$',
-    fontFamily: 'Inter, system-ui, sans-serif',
 };
 
 /**
  * Hook para obtener el tema del storefront desde la configuración pública de la tienda
+ * Ahora incluye TODOS los colores del StorefrontThemeSettings
  */
 export const useStorefrontTheme = (storeId: string): {
     theme: StorefrontTheme;
@@ -41,30 +31,101 @@ export const useStorefrontTheme = (storeId: string): {
 
     useEffect(() => {
         if (!storeId) {
+            console.log('[useStorefrontTheme] No storeId provided, using defaults');
             setIsLoading(false);
             return;
         }
 
+        console.log(`[useStorefrontTheme] Loading theme for store: ${storeId}`);
+
         const unsubscribe = onSnapshot(
             doc(db, 'publicStores', storeId),
-            (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    setTheme({
-                        primaryColor: data.theme?.primaryColor || defaultTheme.primaryColor,
-                        secondaryColor: data.theme?.secondaryColor || defaultTheme.secondaryColor,
-                        accentColor: data.theme?.accentColor || defaultTheme.accentColor,
-                        backgroundColor: data.theme?.backgroundColor || defaultTheme.backgroundColor,
-                        textColor: data.theme?.textColor || defaultTheme.textColor,
-                        headingColor: data.theme?.headingColor || defaultTheme.headingColor,
-                        currencySymbol: data.currencySymbol || defaultTheme.currencySymbol,
-                        fontFamily: data.theme?.fontFamily || defaultTheme.fontFamily,
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const storefrontTheme = data.storefrontTheme || {};
+                    
+                    console.log(`[useStorefrontTheme] Theme loaded for ${storeId}:`, {
+                        hasStorefrontTheme: !!data.storefrontTheme,
+                        primaryColor: storefrontTheme.primaryColor,
+                        hasThemeObject: !!data.theme,
                     });
+                    
+                    // Merge all theme properties from storefrontTheme with defaults
+                    setTheme({
+                        // Core Colors
+                        primaryColor: storefrontTheme.primaryColor || data.theme?.primaryColor || defaultTheme.primaryColor,
+                        secondaryColor: storefrontTheme.secondaryColor || data.theme?.secondaryColor || defaultTheme.secondaryColor,
+                        accentColor: storefrontTheme.accentColor || data.theme?.accentColor || defaultTheme.accentColor,
+                        
+                        // Background Colors
+                        backgroundColor: storefrontTheme.backgroundColor || data.theme?.backgroundColor || defaultTheme.backgroundColor,
+                        cardBackground: storefrontTheme.cardBackground || defaultTheme.cardBackground,
+                        headerBackground: storefrontTheme.headerBackground || defaultTheme.headerBackground,
+                        footerBackground: storefrontTheme.footerBackground || defaultTheme.footerBackground,
+                        
+                        // Text Colors
+                        textColor: storefrontTheme.textColor || data.theme?.textColor || defaultTheme.textColor,
+                        headingColor: storefrontTheme.headingColor || data.theme?.headingColor || defaultTheme.headingColor,
+                        mutedTextColor: storefrontTheme.mutedTextColor || defaultTheme.mutedTextColor,
+                        linkColor: storefrontTheme.linkColor || defaultTheme.linkColor,
+                        
+                        // Button Colors
+                        buttonBackground: storefrontTheme.buttonBackground || defaultTheme.buttonBackground,
+                        buttonText: storefrontTheme.buttonText || defaultTheme.buttonText,
+                        buttonSecondaryBackground: storefrontTheme.buttonSecondaryBackground || defaultTheme.buttonSecondaryBackground,
+                        buttonSecondaryText: storefrontTheme.buttonSecondaryText || defaultTheme.buttonSecondaryText,
+                        buttonHoverBackground: storefrontTheme.buttonHoverBackground || defaultTheme.buttonHoverBackground,
+                        
+                        // Badge Colors
+                        badgeBackground: storefrontTheme.badgeBackground || defaultTheme.badgeBackground,
+                        badgeText: storefrontTheme.badgeText || defaultTheme.badgeText,
+                        saleBadgeBackground: storefrontTheme.saleBadgeBackground || defaultTheme.saleBadgeBackground,
+                        saleBadgeText: storefrontTheme.saleBadgeText || defaultTheme.saleBadgeText,
+                        
+                        // Price Colors
+                        priceColor: storefrontTheme.priceColor || defaultTheme.priceColor,
+                        salePriceColor: storefrontTheme.salePriceColor || defaultTheme.salePriceColor,
+                        originalPriceColor: storefrontTheme.originalPriceColor || defaultTheme.originalPriceColor,
+                        
+                        // Overlay Colors
+                        overlayStart: storefrontTheme.overlayStart || defaultTheme.overlayStart,
+                        overlayEnd: storefrontTheme.overlayEnd || defaultTheme.overlayEnd,
+                        
+                        // Border Colors
+                        borderColor: storefrontTheme.borderColor || defaultTheme.borderColor,
+                        dividerColor: storefrontTheme.dividerColor || defaultTheme.dividerColor,
+                        inputBorderColor: storefrontTheme.inputBorderColor || defaultTheme.inputBorderColor,
+                        
+                        // State Colors
+                        successColor: storefrontTheme.successColor || defaultTheme.successColor,
+                        warningColor: storefrontTheme.warningColor || defaultTheme.warningColor,
+                        errorColor: storefrontTheme.errorColor || defaultTheme.errorColor,
+                        infoColor: storefrontTheme.infoColor || defaultTheme.infoColor,
+                        
+                        // Cart & Checkout
+                        cartBadgeBackground: storefrontTheme.cartBadgeBackground || defaultTheme.cartBadgeBackground,
+                        cartBadgeText: storefrontTheme.cartBadgeText || defaultTheme.cartBadgeText,
+                        checkoutAccent: storefrontTheme.checkoutAccent || defaultTheme.checkoutAccent,
+                        
+                        // Typography
+                        fontFamily: storefrontTheme.fontFamily || data.theme?.fontFamily || defaultTheme.fontFamily,
+                        headingFontFamily: storefrontTheme.headingFontFamily || defaultTheme.headingFontFamily,
+                        
+                        // Coolors
+                        coolorsUrl: storefrontTheme.coolorsUrl,
+                        coolorsColors: storefrontTheme.coolorsColors,
+                        
+                        // Currency
+                        currencySymbol: data.currencySymbol || defaultTheme.currencySymbol,
+                    });
+                } else {
+                    console.log(`[useStorefrontTheme] No document found for store ${storeId}, using defaults`);
                 }
                 setIsLoading(false);
             },
             (error) => {
-                console.error('Error loading storefront theme:', error);
+                console.error('[useStorefrontTheme] Error loading storefront theme:', error);
                 setIsLoading(false);
             }
         );

@@ -113,10 +113,10 @@ const getDefaultFormData = (initialDate?: Date, initialHour?: number, editingApp
     if (editingAppointment) {
         const startDate = editingAppointment.startDate instanceof Date 
             ? editingAppointment.startDate 
-            : editingAppointment.startDate?.toDate?.() || new Date();
+            : (editingAppointment.startDate as any)?.toDate?.() || new Date();
         const endDate = editingAppointment.endDate instanceof Date 
             ? editingAppointment.endDate 
-            : editingAppointment.endDate?.toDate?.() || new Date();
+            : (editingAppointment.endDate as any)?.toDate?.() || new Date();
         
         const formatDate = (d: Date) => d.toISOString().split('T')[0];
         const formatTime = (d: Date) => d.toTimeString().slice(0, 5);

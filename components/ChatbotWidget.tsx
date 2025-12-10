@@ -31,7 +31,31 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const view = editorContext?.view || 'preview';
 
     // Get appearance config with defaults
-    const appearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
+    const baseAppearance = aiAssistantConfig.appearance || getDefaultAppearanceConfig();
+    
+    // Merge colors from Web Editor (data.chatbot.colors) with appearance colors
+    // Web Editor colors take priority over AI Assistant Dashboard colors
+    const chatbotColors = data?.chatbot?.colors || {};
+    const appearance = {
+        ...baseAppearance,
+        colors: {
+            ...baseAppearance.colors,
+            // Override with Web Editor colors if available
+            primaryColor: chatbotColors.primaryColor || baseAppearance.colors.primaryColor,
+            secondaryColor: chatbotColors.secondaryColor || baseAppearance.colors.secondaryColor,
+            accentColor: chatbotColors.accentColor || baseAppearance.colors.accentColor,
+            userBubbleColor: chatbotColors.userBubbleColor || baseAppearance.colors.userBubbleColor,
+            userTextColor: chatbotColors.userTextColor || baseAppearance.colors.userTextColor,
+            botBubbleColor: chatbotColors.botBubbleColor || baseAppearance.colors.botBubbleColor,
+            botTextColor: chatbotColors.botTextColor || baseAppearance.colors.botTextColor,
+            backgroundColor: chatbotColors.backgroundColor || baseAppearance.colors.backgroundColor,
+            inputBackground: chatbotColors.inputBackground || baseAppearance.colors.inputBackground,
+            inputBorder: chatbotColors.inputBorder || baseAppearance.colors.inputBorder,
+            inputText: chatbotColors.inputText || baseAppearance.colors.inputText,
+            headerBackground: chatbotColors.headerBackground || baseAppearance.colors.headerBackground,
+            headerText: chatbotColors.headerText || baseAppearance.colors.headerText,
+        }
+    };
 
     // Widget State
     const [isOpen, setIsOpen] = useState(false);

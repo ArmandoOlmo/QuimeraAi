@@ -64,14 +64,17 @@ export interface TypographyTokens {
         bold: number;
     };
     lineHeights: {
+        none?: number;
         tight: number;
         normal: number;
         relaxed: number;
+        loose?: number;
     };
 }
 
 export interface ShadowTokens {
     sm: string;
+    base?: string;  // Default shadow
     md: string;
     lg: string;
     xl: string;
@@ -132,6 +135,13 @@ export interface ResponsiveValue<T> {
 }
 
 export interface ResponsiveStyles {
+    base?: Record<string, any>;
+    sm?: Record<string, any>;
+    md?: Record<string, any>;
+    lg?: Record<string, any>;
+    xl?: Record<string, any>;
+    '2xl'?: Record<string, any>;
+    // Legacy properties for backwards compatibility
     spacing?: ResponsiveValue<string>;
     fontSize?: ResponsiveValue<string>;
     display?: ResponsiveValue<'block' | 'flex' | 'grid' | 'none'>;
@@ -260,7 +270,7 @@ export interface ABTestConfig {
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar';
+export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar';
 export type ComponentStyles = Record<EditableComponentID, any>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 

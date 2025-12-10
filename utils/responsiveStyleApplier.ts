@@ -235,12 +235,12 @@ export function applyResponsiveStylesToProject(
         const componentResponsiveStyles = project.responsiveStyles?.[componentId];
 
         if (componentResponsiveStyles) {
-            updatedData[componentId as keyof PageData] = applyResponsiveStylesToComponent(
+            (updatedData as any)[componentId] = applyResponsiveStylesToComponent(
                 componentData,
                 componentResponsiveStyles
-            ) as any;
+            );
         } else {
-            updatedData[componentId as keyof PageData] = componentData;
+            (updatedData as any)[componentId] = componentData;
         }
     });
 

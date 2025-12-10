@@ -295,9 +295,165 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
             priceColor: colors.secondary,
         },
         chatbot: {
-            primary: colors.primary,
-            text: '#ffffff',
+            // Core colors
+            primaryColor: colors.primary,
+            secondaryColor: colors.secondary,
+            accentColor: colors.accent,
+            // Chat bubbles
+            userBubbleColor: colors.primary,
+            userTextColor: '#ffffff',
+            botBubbleColor: colors.surface,
+            botTextColor: colors.text,
+            // Background and inputs
+            backgroundColor: colors.background,
+            inputBackground: colors.surface,
+            inputBorder: colors.border,
+            inputText: colors.text,
+            // Header
+            headerBackground: colors.primary,
+            headerText: '#ffffff',
+        },
+        // Ecommerce components
+        featuredProducts: {
             background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+            badgeBackground: colors.primary,
+            badgeText: '#ffffff',
+            priceColor: colors.heading,
+            salePriceColor: colors.error,
+            overlayStart: 'transparent',
+            overlayEnd: 'rgba(0,0,0,0.7)',
+            borderColor: colors.border,
+        },
+        categoryGrid: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            overlayStart: 'transparent',
+            overlayEnd: 'rgba(0,0,0,0.7)',
+            borderColor: colors.border,
+        },
+        productHero: {
+            background: colors.background,
+            overlayColor: '#000000',
+            heading: '#ffffff',
+            text: '#ffffff',
+            accent: colors.primary,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+            badgeBackground: colors.error,
+            badgeText: '#ffffff',
+        },
+        trustBadges: {
+            background: colors.surface,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            borderColor: colors.border,
+        },
+        saleCountdown: {
+            background: colors.surface,
+            heading: '#ffffff',
+            text: colors.textMuted,
+            accent: colors.error,
+            countdownBackground: colors.background,
+            countdownText: '#ffffff',
+            buttonBackground: colors.error,
+            buttonText: '#ffffff',
+            badgeBackground: colors.error,
+            badgeText: '#ffffff',
+        },
+        announcementBar: {
+            background: colors.primary,
+            text: '#ffffff',
+            linkColor: '#ffffff',
+            iconColor: '#ffffff',
+            borderColor: colors.border,
+        },
+        collectionBanner: {
+            background: colors.background,
+            overlayColor: '#000000',
+            heading: '#ffffff',
+            text: '#ffffff',
+            accent: colors.primary,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+        },
+        recentlyViewed: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+        },
+        productReviews: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            starColor: '#fbbf24',
+            verifiedBadgeColor: colors.success,
+        },
+        productBundle: {
+            background: colors.surface,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.background,
+            cardText: colors.heading,
+            priceColor: colors.heading,
+            savingsColor: colors.success,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+            badgeBackground: colors.primary,
+            badgeText: '#ffffff',
+        },
+        storeSettings: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+            badgeBackground: colors.error,
+            badgeText: '#ffffff',
+            priceColor: colors.heading,
+            salePriceColor: colors.error,
+            borderColor: colors.border,
+            starColor: '#fbbf24',
+        },
+        productDetailPage: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+            badgeBackground: colors.error,
+            badgeText: '#ffffff',
+            priceColor: colors.heading,
+            salePriceColor: colors.error,
+            borderColor: colors.border,
+            starColor: '#fbbf24',
+            linkColor: colors.primary,
+            secondaryButtonBackground: colors.surface,
+            secondaryButtonText: colors.text,
         },
     };
 };
@@ -355,6 +511,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                 // Actualizar colores de cada componente en data
                 for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
                     const key = componentId as keyof PageData;
+                    // Si el componente existe y es un objeto, actualizar sus colores
                     if (newData[key] && typeof newData[key] === 'object') {
                         (newData[key] as any) = {
                             ...(newData[key] as any),
@@ -362,6 +519,12 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 ...((newData[key] as any).colors || {}),
                                 ...componentColors
                             }
+                        };
+                    } else if (key === 'productDetailPage' || key === 'storeSettings') {
+                        // Para componentes que pueden no existir pero necesitan colores,
+                        // crearlos con solo los colores
+                        (newData as any)[key] = {
+                            colors: componentColors
                         };
                     }
                 }
@@ -453,9 +616,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
+                    <ChevronDown className="h-4 w-4" />
                 </div>
             </div>
         </div>

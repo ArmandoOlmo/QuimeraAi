@@ -53,6 +53,18 @@ const COMPONENT_LABELS: Record<PageSection, string> = {
     chatbot: 'Chatbot',
     typography: 'Typography',
     colors: 'Colors',
+    products: 'Products Grid',
+    storeSettings: 'Store Settings',
+    featuredProducts: 'Featured Products',
+    categoryGrid: 'Category Grid',
+    productHero: 'Product Hero',
+    saleCountdown: 'Sale Countdown',
+    trustBadges: 'Trust Badges',
+    recentlyViewed: 'Recently Viewed',
+    productReviews: 'Product Reviews',
+    collectionBanner: 'Collection Banner',
+    productBundle: 'Product Bundle',
+    announcementBar: 'Announcement Bar',
 };
 
 const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({

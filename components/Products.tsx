@@ -334,7 +334,7 @@ const Products: React.FC<ProductsProps> = ({
 // Product Card Component
 interface ProductCardProps {
     product: StorefrontProductItem;
-    cardStyle: 'minimal' | 'modern' | 'elegant';
+    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
     showAddToCart: boolean;
     showQuickView: boolean;
     showWishlist: boolean;
@@ -364,6 +364,138 @@ const ProductCard: React.FC<ProductCardProps> = ({
         ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
         : 0;
 
+    // Overlay style - full image with text on top
+    if (cardStyle === 'overlay') {
+        return (
+            <div className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer">
+                {/* Full Image */}
+                <div className="relative aspect-square overflow-hidden">
+                    {product.image ? (
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-400">Sin imagen</span>
+                        </div>
+                    )}
+
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                    {/* Discount Badge */}
+                    {hasDiscount && (
+                        <div
+                            className="absolute top-3 left-3 px-2 py-1 rounded-full text-white text-xs font-bold"
+                            style={{ backgroundColor: '#ef4444' }}
+                        >
+                            -{discountPercentage}%
+                        </div>
+                    )}
+
+                    {/* Out of Stock Badge */}
+                    {product.inStock === false && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="bg-white text-gray-900 px-4 py-2 rounded-full font-medium">
+                                Agotado
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Quick Actions */}
+                    <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {showWishlist && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onWishlistToggle(product.id);
+                                }}
+                                className={`p-2 rounded-full bg-white/90 shadow-md transition-colors ${
+                                    isWishlisted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
+                                }`}
+                            >
+                                <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} />
+                            </button>
+                        )}
+                        {showQuickView && onQuickView && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onQuickView(product.id);
+                                }}
+                                className="p-2 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <Eye size={18} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Content Overlay - Text on Image */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                        {product.category && (
+                            <p className="text-xs uppercase tracking-wide mb-1 text-white/70">
+                                {product.category}
+                            </p>
+                        )}
+
+                        <h3 className="font-semibold text-white mb-2 line-clamp-2">
+                            {product.name}
+                        </h3>
+
+                        {/* Rating */}
+                        {product.rating !== undefined && (
+                            <div className="flex items-center gap-1 mb-2">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        size={14}
+                                        className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-white/40'}
+                                        fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                    />
+                                ))}
+                                {product.reviewCount !== undefined && (
+                                    <span className="text-xs ml-1 text-white/70">
+                                        ({product.reviewCount})
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Price */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-white">
+                                ${product.price.toFixed(2)}
+                            </span>
+                            {hasDiscount && (
+                                <span className="text-sm line-through text-white/60">
+                                    ${product.compareAtPrice!.toFixed(2)}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        {showAddToCart && product.inStock !== false && onAddToCart && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddToCart(product.id);
+                                }}
+                                className="w-full mt-3 py-2.5 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 hover:brightness-110"
+                                style={{ backgroundColor: primaryColor }}
+                            >
+                                <ShoppingCart size={18} />
+                                Agregar al carrito
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Default styles (minimal, modern, elegant)
     return (
         <div
             className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${styles.card} ${styles.cardHover}`}

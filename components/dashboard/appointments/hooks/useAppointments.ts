@@ -351,7 +351,12 @@ export const useAppointments = (): UseAppointmentsReturn => {
             averageDealsPerAppointment: 0,
             byType: byType as any,
             byStatus: byStatus as any,
-            byOutcome: {},
+            byOutcome: {
+                successful: 0,
+                partially_successful: 0,
+                unsuccessful: 0,
+                needs_follow_up: 0,
+            },
             byPriority: byPriority as any,
             trendsLastMonth: [],
             vsLastMonth: {

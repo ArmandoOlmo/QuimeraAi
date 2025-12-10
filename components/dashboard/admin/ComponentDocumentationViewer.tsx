@@ -32,9 +32,9 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
             toc.push({ id: 'changelog', title: 'Changelog', level: 1 });
             
             // Extract headings from changelog
-            const headings = documentation.changelog.match(/^#{2,6}\s+.+$/gm) || [];
-            headings.forEach((heading, index) => {
-                const level = heading.match(/^#+/)?.[0].length || 2;
+            const headings = documentation.changelog.match(/^#{2,6}\s+.+$/gm) || [] as string[];
+            headings.forEach((heading: string, index: number) => {
+                const level = heading.match(/^#+/)?.[0]?.length || 2;
                 const title = heading.replace(/^#+\s+/, '');
                 toc.push({
                     id: `changelog-${index}`,

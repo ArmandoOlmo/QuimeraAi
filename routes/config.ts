@@ -47,6 +47,8 @@ export const ROUTES = {
   STORE: '/store/:storeId',
   STORE_PRODUCT: '/store/:storeId/product/:slug',
   STORE_CATEGORY: '/store/:storeId/category/:categorySlug',
+  STORE_CHECKOUT: '/store/:storeId/checkout',
+  STORE_ORDER_CONFIRMATION: '/store/:storeId/order/:orderId',
   
   // Dashboard Routes
   DASHBOARD: '/dashboard',
@@ -149,6 +151,18 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.STORE_CATEGORY,
     type: 'preview',
     title: 'Category',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.STORE_CHECKOUT,
+    type: 'preview',
+    title: 'Checkout',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.STORE_ORDER_CONFIRMATION,
+    type: 'preview',
+    title: 'Order Confirmation',
     requiresAuth: false,
   },
   

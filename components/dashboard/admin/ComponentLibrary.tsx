@@ -55,6 +55,18 @@ const componentNames: Record<PageSection, string> = {
     header: 'Header / Navigation',
     typography: 'Global Typography',
     colors: 'Global Colors',
+    products: 'Products Grid',
+    storeSettings: 'Store Settings',
+    featuredProducts: 'Featured Products',
+    categoryGrid: 'Category Grid',
+    productHero: 'Product Hero',
+    saleCountdown: 'Sale Countdown',
+    trustBadges: 'Trust Badges',
+    recentlyViewed: 'Recently Viewed',
+    productReviews: 'Product Reviews',
+    collectionBanner: 'Collection Banner',
+    productBundle: 'Product Bundle',
+    announcementBar: 'Announcement Bar',
 };
 
 const componentCategories: Record<PageSection, string> = {
@@ -81,6 +93,18 @@ const componentCategories: Record<PageSection, string> = {
     header: 'navigation',
     typography: 'other',
     colors: 'other',
+    products: 'other',
+    storeSettings: 'other',
+    featuredProducts: 'other',
+    categoryGrid: 'other',
+    productHero: 'hero',
+    saleCountdown: 'cta',
+    trustBadges: 'other',
+    recentlyViewed: 'other',
+    productReviews: 'content',
+    collectionBanner: 'hero',
+    productBundle: 'other',
+    announcementBar: 'other',
 };
 
 const ComponentLibrary: React.FC = () => {

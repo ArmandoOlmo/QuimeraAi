@@ -3,7 +3,7 @@
  * Helpers for detecting pending images and determining aspect ratios
  */
 
-export type ImageAspectRatio = '1:1' | '16:9' | '4:3' | '3:4';
+export type ImageAspectRatio = 'auto' | '1:1' | '16:9' | '4:3' | '3:4';
 
 /**
  * Checks if an image URL is pending (empty or undefined)

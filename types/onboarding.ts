@@ -9,15 +9,15 @@ import { PageSection } from './ui';
 // STEP TYPES
 // =============================================================================
 
-export type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type OnboardingWizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const ONBOARDING_STEPS = {
-    BUSINESS_INFO: 1 as OnboardingStep,
-    DESCRIPTION: 2 as OnboardingStep,
-    SERVICES: 3 as OnboardingStep,
-    TEMPLATE_SELECT: 4 as OnboardingStep,
-    CONTACT_INFO: 5 as OnboardingStep,
-    GENERATION: 6 as OnboardingStep,
+    BUSINESS_INFO: 1 as OnboardingWizardStep,
+    DESCRIPTION: 2 as OnboardingWizardStep,
+    SERVICES: 3 as OnboardingWizardStep,
+    TEMPLATE_SELECT: 4 as OnboardingWizardStep,
+    CONTACT_INFO: 5 as OnboardingWizardStep,
+    GENERATION: 6 as OnboardingWizardStep,
 };
 
 // =============================================================================
@@ -118,7 +118,7 @@ export interface GenerationProgress {
 
 export interface OnboardingProgress {
     // Current step
-    step: OnboardingStep;
+    step: OnboardingWizardStep;
     
     // Step 1: Business Info
     businessName: string;
@@ -174,7 +174,7 @@ export interface OnboardingContextType {
     resetOnboarding: () => Promise<void>;
     
     // Navigation
-    goToStep: (step: OnboardingStep) => void;
+    goToStep: (step: OnboardingWizardStep) => void;
     nextStep: () => void;
     previousStep: () => void;
     canGoNext: () => boolean;

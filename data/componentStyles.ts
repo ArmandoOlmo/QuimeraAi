@@ -420,6 +420,8 @@ export const componentStyles: ComponentStyles = {
     showLogin: true,
     loginText: 'Login',
     loginUrl: '#',
+    showSearch: false,
+    searchPlaceholder: 'Buscar productos...',
     linkFontSize: 14,
     colors: {
       background: '#ffffff',
@@ -546,10 +548,24 @@ export const componentStyles: ComponentStyles = {
   },
   
   // ==========================================================================
+  // STORE SETTINGS
+  // ==========================================================================
+  storeSettings: {
+    showFilterSidebar: true,
+    showSearchBar: true,
+    showSortOptions: true,
+    showViewModeToggle: true,
+    defaultViewMode: 'grid',
+    productsPerPage: 12,
+  },
+
+  // ==========================================================================
   // ECOMMERCE COMPONENTS
   // ==========================================================================
   featuredProducts: {
     variant: 'carousel',
+    title: 'Productos Destacados',
+    description: 'Descubre nuestra selección de productos más populares',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -593,6 +609,9 @@ export const componentStyles: ComponentStyles = {
   
   categoryGrid: {
     variant: 'cards',
+    title: 'Categorías',
+    description: 'Explora nuestras colecciones',
+    categories: [],
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -626,6 +645,10 @@ export const componentStyles: ComponentStyles = {
   productHero: {
     variant: 'featured',
     layout: 'single',
+    headline: 'Descubre nuestra colección',
+    subheadline: 'Productos de alta calidad para ti',
+    buttonText: 'Ver productos',
+    backgroundImageUrl: '',
     paddingY: 'lg',
     paddingX: 'md',
     height: 500,
@@ -639,6 +662,8 @@ export const componentStyles: ComponentStyles = {
     badgeText: 'Destacado',
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
+    showAddToCartButton: false,
+    addToCartButtonText: 'Añadir al carrito',
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -655,11 +680,16 @@ export const componentStyles: ComponentStyles = {
       buttonText: '#ffffff',
       badgeBackground: '#ef4444',
       badgeText: '#ffffff',
+      addToCartBackground: '#10B981',
+      addToCartText: '#ffffff',
     },
   },
   
   saleCountdown: {
     variant: 'banner',
+    title: '¡Oferta especial!',
+    description: 'No te pierdas nuestras ofertas exclusivas',
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 días desde ahora
     paddingY: 'md',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -698,6 +728,13 @@ export const componentStyles: ComponentStyles = {
   
   trustBadges: {
     variant: 'horizontal',
+    title: 'Por qué elegirnos',
+    badges: [
+      { id: '1', icon: 'truck', label: 'Envío gratis', description: 'En pedidos +50€' },
+      { id: '2', icon: 'shield', label: 'Pago seguro', description: 'Transacciones protegidas' },
+      { id: '3', icon: 'refresh-cw', label: 'Devoluciones', description: '30 días de garantía' },
+      { id: '4', icon: 'headphones', label: 'Soporte 24/7', description: 'Atención al cliente' },
+    ],
     paddingY: 'md',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -715,6 +752,8 @@ export const componentStyles: ComponentStyles = {
   
   recentlyViewed: {
     variant: 'carousel',
+    title: 'Vistos recientemente',
+    description: 'Productos que has visto',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -747,6 +786,9 @@ export const componentStyles: ComponentStyles = {
   
   productReviews: {
     variant: 'cards',
+    title: 'Opiniones de clientes',
+    description: 'Lo que dicen nuestros clientes',
+    reviews: [],
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -780,6 +822,10 @@ export const componentStyles: ComponentStyles = {
   
   collectionBanner: {
     variant: 'hero',
+    title: 'Nueva colección',
+    description: 'Descubre lo último en tendencias',
+    backgroundImageUrl: '',
+    buttonText: 'Ver colección',
     paddingY: 'lg',
     paddingX: 'md',
     height: 400,
@@ -811,6 +857,10 @@ export const componentStyles: ComponentStyles = {
   
   productBundle: {
     variant: 'horizontal',
+    title: 'Pack especial',
+    description: 'Ahorra comprando en pack',
+    productIds: [],
+    buttonText: 'Añadir pack al carrito',
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -849,6 +899,9 @@ export const componentStyles: ComponentStyles = {
   
   announcementBar: {
     variant: 'static',
+    messages: [
+      { id: '1', text: '¡Envío gratis en pedidos superiores a 50€!', linkText: 'Ver productos', linkUrl: '#store' },
+    ],
     paddingY: 'sm',
     paddingX: 'md',
     fontSize: 'sm',

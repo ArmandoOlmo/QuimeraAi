@@ -2,6 +2,9 @@
  * FeaturedProducts Component
  * Displays featured products in carousel, grid, or showcase layout
  * Connected to publicStores data via usePublicProducts hook
+ * 
+ * Uses unified storefront colors system - colors from Store Settings
+ * with optional override from component data.colors
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -9,6 +12,7 @@ import { ChevronLeft, ChevronRight, ShoppingCart, Eye, Star, ArrowRight } from '
 import { FeaturedProductsData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
@@ -25,6 +29,9 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 }) => {
     const editorContext = useSafeEditor();
     const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    
+    // Unified colors system - merges global theme with component-specific colors
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
     
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId, {
         limitCount: data.productsToShow || 8,
@@ -49,8 +56,27 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const carouselRef = useRef<HTMLDivElement>(null);
     const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
+    
+    // Responsive items per view - 1 on mobile, configured columns on larger screens
+    const [isMobile, setIsMobile] = useState(false);
+    
+    useEffect(() => {
+        const checkMobile = () => {
+            const wasMobile = isMobile;
+            const nowMobile = window.innerWidth < 768;
+            setIsMobile(nowMobile);
+            // Reset index when viewport changes to avoid invalid states
+            if (wasMobile !== nowMobile) {
+                setCurrentIndex(0);
+            }
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, [isMobile]);
 
-    const itemsPerView = data.columns || 4;
+    const itemsPerView = isMobile ? 1 : (data.columns || 4);
     const maxIndex = Math.max(0, products.length - itemsPerView);
 
     // Auto scroll for carousel
@@ -77,15 +103,27 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         setCurrentIndex(index);
     };
 
-    // Style helpers
+    // Style helpers - matching ProductSearchPage layout options
     const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
+        const map: Record<string, string> = { 
+            none: 'py-0', 
+            sm: 'py-4', 
+            md: 'py-6 md:py-8', 
+            lg: 'py-8 md:py-12', 
+            xl: 'py-12 md:py-16' 
+        };
+        return map[data.paddingY] || 'py-6 md:py-8';
     };
 
     const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
+        const map: Record<string, string> = { 
+            none: 'px-0', 
+            sm: 'px-2 sm:px-4', 
+            md: 'px-4 sm:px-6 lg:px-8', 
+            lg: 'px-6 sm:px-8 lg:px-12', 
+            xl: 'px-8 sm:px-12 lg:px-16' 
+        };
+        return map[data.paddingX] || 'px-4 sm:px-6 lg:px-8';
     };
 
     const getTitleSize = () => {
@@ -98,13 +136,30 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         switch (cols) {
             case 2: return 'sm:grid-cols-2';
             case 3: return 'sm:grid-cols-2 lg:grid-cols-3';
-            case 5: return 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
-            default: return 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+            case 5: return 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5';
+            default: return 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
         }
     };
 
+    const getCardGap = () => {
+        const map: Record<string, string> = {
+            sm: 'gap-3',
+            md: 'gap-4 md:gap-6',
+            lg: 'gap-6 md:gap-8',
+        };
+        return map[data.cardGap || 'md'] || 'gap-4 md:gap-6';
+    };
+
     const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
+        const map: Record<string, string> = { 
+            none: 'rounded-none', 
+            sm: 'rounded-sm', 
+            md: 'rounded-md', 
+            lg: 'rounded-lg', 
+            xl: 'rounded-xl', 
+            '2xl': 'rounded-2xl', 
+            full: 'rounded-full' 
+        };
         return map[data.borderRadius || 'xl'] || 'rounded-xl';
     };
 
@@ -125,7 +180,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         return (
             <div
                 className={`relative ${cardStyles[data.cardStyle]} cursor-pointer`}
-                style={{ backgroundColor: data.colors.cardBackground }}
+                style={{ backgroundColor: colors.cardBackground }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
                 {/* Image */}
@@ -139,9 +194,9 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     ) : (
                         <div 
                             className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: data.colors.accent + '20' }}
+                            style={{ backgroundColor: colors.accent + '20' }}
                         >
-                            <span style={{ color: data.colors.cardText }}>Sin imagen</span>
+                            <span style={{ color: colors.cardText }}>Sin imagen</span>
                         </div>
                     )}
 
@@ -150,8 +205,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         <div
                             className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
                             style={{
-                                backgroundColor: data.colors.badgeBackground || '#ef4444',
-                                color: data.colors.badgeText || '#ffffff',
+                                backgroundColor: colors.saleBadgeBackground,
+                                color: colors.saleBadgeText,
                             }}
                         >
                             -{discountPercent}%
@@ -166,8 +221,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                     e.stopPropagation();
                                     onAddToCart(product.id);
                                 }}
-                                className="p-2 rounded-full bg-white shadow-md hover:scale-110 transition-transform"
-                                style={{ color: data.colors.accent }}
+                                className="p-2 rounded-full shadow-md hover:scale-110 transition-transform"
+                                style={{ backgroundColor: colors.cardBackground, color: colors.accent }}
                             >
                                 <ShoppingCart size={18} />
                             </button>
@@ -176,13 +231,18 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
                     {/* Overlay variant - text on image */}
                     {data.cardStyle === 'overlay' && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-4">
-                            <h3 className="font-semibold text-white line-clamp-2">{product.name}</h3>
+                        <div 
+                            className="absolute inset-0 flex flex-col justify-end p-4"
+                            style={{ 
+                                background: `linear-gradient(to top, ${colors.overlayEnd}, ${colors.overlayStart})`
+                            }}
+                        >
+                            <h3 className="font-semibold line-clamp-2" style={{ color: colors.buttonText }}>{product.name}</h3>
                             {data.showPrice && (
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-white font-bold">${product.price.toFixed(2)}</span>
+                                    <span className="font-bold" style={{ color: colors.buttonText }}>${product.price.toFixed(2)}</span>
                                     {hasDiscount && (
-                                        <span className="text-gray-300 text-sm line-through">
+                                        <span className="text-sm line-through" style={{ color: colors.buttonText, opacity: 0.7 }}>
                                             ${product.compareAtPrice!.toFixed(2)}
                                         </span>
                                     )}
@@ -197,7 +257,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     <div className="p-4">
                         <h3
                             className="font-semibold line-clamp-2 mb-1"
-                            style={{ color: data.colors.cardText || data.colors.heading }}
+                            style={{ color: colors.cardText || colors.heading }}
                         >
                             {product.name}
                         </h3>
@@ -209,12 +269,12 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                     <Star
                                         key={i}
                                         size={14}
-                                        className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-gray-300'}
+                                        style={{ color: i < Math.round(product.rating!) ? colors.warning : colors.border }}
                                         fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
                                     />
                                 ))}
                                 {product.reviewCount !== undefined && (
-                                    <span className="text-xs ml-1" style={{ color: data.colors.text }}>
+                                    <span className="text-xs ml-1" style={{ color: colors.text }}>
                                         ({product.reviewCount})
                                     </span>
                                 )}
@@ -224,11 +284,11 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         {/* Price */}
                         {data.showPrice && (
                             <div className="flex items-center gap-2">
-                                <span className="font-bold" style={{ color: data.colors.accent }}>
+                                <span className="font-bold" style={{ color: colors.salePrice }}>
                                     ${product.price.toFixed(2)}
                                 </span>
                                 {hasDiscount && (
-                                    <span className="text-sm line-through" style={{ color: data.colors.text }}>
+                                    <span className="text-sm line-through" style={{ color: colors.originalPrice }}>
                                         ${product.compareAtPrice!.toFixed(2)}
                                     </span>
                                 )}
@@ -270,7 +330,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         onClick={handlePrev}
                         disabled={currentIndex === 0}
                         className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors.buttonBackground, color: data.colors.buttonText }}
+                        style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                     >
                         <ChevronLeft size={24} />
                     </button>
@@ -278,7 +338,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         onClick={handleNext}
                         disabled={currentIndex >= maxIndex}
                         className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors.buttonBackground, color: data.colors.buttonText }}
+                        style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                     >
                         <ChevronRight size={24} />
                     </button>
@@ -295,7 +355,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                             className={`w-2 h-2 rounded-full transition-all ${
                                 i === currentIndex ? 'w-6' : 'opacity-50'
                             }`}
-                            style={{ backgroundColor: data.colors.accent }}
+                            style={{ backgroundColor: colors.accent }}
                         />
                     ))}
                 </div>
@@ -304,7 +364,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     );
 
     const renderGrid = () => (
-        <div className={`grid grid-cols-1 ${getGridCols()} gap-6`}>
+        <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
             {products.slice(0, data.productsToShow).map((product) => (
                 <ProductCard key={product.id} product={product} />
             ))}
@@ -318,7 +378,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         if (!mainProduct) return renderGrid();
 
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 lg:grid-cols-2 ${getCardGap()}`}>
                 {/* Main featured product */}
                 <div className="lg:row-span-2">
                     <div
@@ -334,32 +394,37 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         ) : (
                             <div
                                 className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: data.colors.cardBackground }}
+                                style={{ backgroundColor: colors.cardBackground }}
                             />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div 
+                            className="absolute inset-0"
+                            style={{ 
+                                background: `linear-gradient(to top, ${colors.overlayEnd}, ${colors.overlayStart})`
+                            }} 
+                        />
                         <div className="absolute bottom-0 left-0 right-0 p-6">
                             {data.showBadge && (
                                 <span
                                     className="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-3"
                                     style={{
-                                        backgroundColor: data.colors.badgeBackground,
-                                        color: data.colors.badgeText,
+                                        backgroundColor: colors.badgeBackground,
+                                        color: colors.badgeText,
                                     }}
                                 >
                                     Destacado
                                 </span>
                             )}
-                            <h3 className="text-2xl font-bold text-white mb-2">{mainProduct.name}</h3>
+                            <h3 className="text-2xl font-bold mb-2" style={{ color: colors.buttonText }}>{mainProduct.name}</h3>
                             {data.showPrice && (
-                                <p className="text-xl font-bold text-white">${mainProduct.price.toFixed(2)}</p>
+                                <p className="text-xl font-bold" style={{ color: colors.buttonText }}>${mainProduct.price.toFixed(2)}</p>
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Side products grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid grid-cols-2 ${getCardGap()}`}>
                     {sideProducts.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
@@ -370,14 +435,14 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: data.colors.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors.background }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 bg-gray-700 rounded w-1/3 mb-4" />
-                        <div className="h-4 bg-gray-700 rounded w-1/2 mb-8" />
-                        <div className={`grid grid-cols-1 ${getGridCols()} gap-6`}>
+                        <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors.border }} />
+                        <div className="h-4 rounded w-1/2 mb-8" style={{ backgroundColor: colors.border }} />
+                        <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="aspect-square bg-gray-700 rounded-xl" />
+                                <div key={i} className={`aspect-square ${getBorderRadius()}`} style={{ backgroundColor: colors.border }} />
                             ))}
                         </div>
                     </div>
@@ -389,7 +454,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: colors.background, fontFamily: colors.fontFamily }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
@@ -398,13 +463,13 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         {data.title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-2`}
-                                style={{ color: data.colors.heading }}
+                                style={{ color: colors.heading, fontFamily: colors.headingFontFamily }}
                             >
                                 {data.title}
                             </h2>
                         )}
                         {data.description && (
-                            <p className="text-lg" style={{ color: data.colors.text }}>
+                            <p className="text-lg" style={{ color: colors.text }}>
                                 {data.description}
                             </p>
                         )}
@@ -413,7 +478,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
                 {/* Products */}
                 {products.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: data.colors.text }}>
+                    <div className="text-center py-12" style={{ color: colors.text }}>
                         No hay productos disponibles
                     </div>
                 ) : (
@@ -431,8 +496,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                             href={data.viewAllUrl || '#store'}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
+                                backgroundColor: colors.buttonBackground,
+                                color: colors.buttonText,
                             }}
                         >
                             Ver todos los productos
@@ -446,3 +511,4 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 };
 
 export default FeaturedProducts;
+

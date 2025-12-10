@@ -732,6 +732,52 @@ export const onStoreSettingsWrite = functions.firestore
     });
 
 // ============================================
+// Store Settings (Main) Sync - Sync storefront theme
+// ============================================
+
+export const onStoreMainSettingsWrite = functions.firestore
+    .document('users/{userId}/stores/{storeId}/settings/store')
+    .onWrite(async (change, context) => {
+        const { storeId, userId } = context.params;
+        const publicStoreRef = db.doc(`publicStores/${storeId}`);
+
+        if (!change.after.exists) {
+            return;
+        }
+
+        const settings = change.after.data();
+
+        // Sync storefront theme and public store info
+        const publicStoreData: Record<string, any> = {
+            id: storeId,
+            userId,
+            name: settings?.storeName,
+            currency: settings?.currency,
+            currencySymbol: settings?.currencySymbol,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Sync storefront theme if present
+        if (settings?.storefrontTheme) {
+            publicStoreData.storefrontTheme = settings.storefrontTheme;
+            
+            // Also sync as flat theme object for backwards compatibility
+            publicStoreData.theme = {
+                primaryColor: settings.storefrontTheme.primaryColor,
+                secondaryColor: settings.storefrontTheme.secondaryColor,
+                accentColor: settings.storefrontTheme.accentColor,
+                backgroundColor: settings.storefrontTheme.backgroundColor,
+                textColor: settings.storefrontTheme.textColor,
+                headingColor: settings.storefrontTheme.headingColor,
+                fontFamily: settings.storefrontTheme.fontFamily,
+            };
+        }
+
+        await publicStoreRef.set(publicStoreData, { merge: true });
+        console.log(`Store settings and theme synced for store ${storeId}`);
+    });
+
+// ============================================
 // Validate Discount Code (Callable)
 // ============================================
 

@@ -1,19 +1,23 @@
 /**
  * ProductHero Component
  * Hero banner for featuring products, collections, or sales
+ * 
+ * Uses unified storefront colors system
  */
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface ProductHeroProps {
     data: ProductHeroData;
     storeId?: string;
     onProductClick?: (productSlug: string) => void;
     onCollectionClick?: (collectionSlug: string) => void;
+    onAddToCart?: (productId: string) => void;
 }
 
 const ProductHero: React.FC<ProductHeroProps> = ({
@@ -21,9 +25,13 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     storeId,
     onProductClick,
     onCollectionClick,
+    onAddToCart,
 }) => {
     const editorContext = useSafeEditor();
     const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    
+    // Unified colors system
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
     
     const { products, isLoading } = usePublicProducts(effectiveStoreId, {
         limitCount: 1,
@@ -75,11 +83,11 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const getOverlayStyle = () => {
         if (data.overlayStyle === 'none') return 'transparent';
         if (data.overlayStyle === 'solid') {
-            return `${data.colors.overlayColor}${Math.round((data.overlayOpacity / 100) * 255).toString(16).padStart(2, '0')}`;
+            return `${colors.overlayEnd}${Math.round((data.overlayOpacity / 100) * 255).toString(16).padStart(2, '0')}`;
         }
         // Gradient
         const opacity = data.overlayOpacity / 100;
-        return `linear-gradient(to right, ${data.colors.overlayColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}, transparent)`;
+        return `linear-gradient(to right, ${colors.overlayEnd}${Math.round(opacity * 255).toString(16).padStart(2, '0')}, transparent)`;
     };
 
     const handleButtonClick = () => {
@@ -92,13 +100,20 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         }
     };
 
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (featuredProduct?.id) {
+            onAddToCart?.(featuredProduct.id);
+        }
+    };
+
     // Render single layout
     const renderSingle = () => (
         <div
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 500}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: colors.background,
             }}
         >
             {/* Background Image */}
@@ -128,8 +143,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                         <span
                             className={`inline-block px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
                             style={{
-                                backgroundColor: data.colors.badgeBackground,
-                                color: data.colors.badgeText,
+                                backgroundColor: colors.badgeBackground,
+                                color: colors.badgeText,
                             }}
                         >
                             {data.badgeText}
@@ -139,7 +154,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                     {/* Headline */}
                     <h1
                         className={`${getHeadlineSize()} font-bold mb-4 max-w-3xl`}
-                        style={{ color: data.colors.heading }}
+                        style={{ color: colors.heading }}
                     >
                         {data.headline}
                     </h1>
@@ -148,26 +163,43 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                     {data.subheadline && (
                         <p
                             className={`${getSubheadlineSize()} mb-6 max-w-2xl`}
-                            style={{ color: data.colors.text }}
+                            style={{ color: colors.text }}
                         >
                             {data.subheadline}
                         </p>
                     )}
 
-                    {/* Button */}
-                    {data.buttonText && (
-                        <button
-                            onClick={handleButtonClick}
-                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                            style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
-                            }}
-                        >
-                            {data.buttonText}
-                            <ArrowRight size={20} />
-                        </button>
-                    )}
+                    {/* Buttons */}
+                    <div className="flex flex-wrap gap-3">
+                        {data.buttonText && (
+                            <button
+                                onClick={handleButtonClick}
+                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                style={{
+                                    backgroundColor: colors.buttonBackground,
+                                    color: colors.buttonText,
+                                }}
+                            >
+                                {data.buttonText}
+                                <ArrowRight size={20} />
+                            </button>
+                        )}
+
+                        {/* Add to Cart Button */}
+                        {data.showAddToCartButton && featuredProduct && (
+                            <button
+                                onClick={handleAddToCart}
+                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                                style={{
+                                    backgroundColor: colors.success,
+                                    color: colors.buttonText,
+                                }}
+                            >
+                                <ShoppingCart size={20} />
+                                {data.addToCartButtonText || 'Añadir al carrito'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -179,7 +211,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 500}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: colors.background,
             }}
         >
             <div className="h-full grid grid-cols-1 lg:grid-cols-2">
@@ -190,8 +222,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                         <span
                             className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
                             style={{
-                                backgroundColor: data.colors.badgeBackground,
-                                color: data.colors.badgeText,
+                                backgroundColor: colors.badgeBackground,
+                                color: colors.badgeText,
                             }}
                         >
                             {data.badgeText}
@@ -200,7 +232,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                     <h1
                         className={`${getHeadlineSize()} font-bold mb-4`}
-                        style={{ color: data.colors.heading }}
+                        style={{ color: colors.heading }}
                     >
                         {data.headline}
                     </h1>
@@ -208,25 +240,43 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                     {data.subheadline && (
                         <p
                             className={`${getSubheadlineSize()} mb-6`}
-                            style={{ color: data.colors.text }}
+                            style={{ color: colors.text }}
                         >
                             {data.subheadline}
                         </p>
                     )}
 
-                    {data.buttonText && (
-                        <button
-                            onClick={handleButtonClick}
-                            className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                            style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
-                            }}
-                        >
-                            {data.buttonText}
-                            <ArrowRight size={20} />
-                        </button>
-                    )}
+                    {/* Buttons */}
+                    <div className="flex flex-wrap gap-3">
+                        {data.buttonText && (
+                            <button
+                                onClick={handleButtonClick}
+                                className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                style={{
+                                    backgroundColor: colors.buttonBackground,
+                                    color: colors.buttonText,
+                                }}
+                            >
+                                {data.buttonText}
+                                <ArrowRight size={20} />
+                            </button>
+                        )}
+
+                        {/* Add to Cart Button */}
+                        {data.showAddToCartButton && featuredProduct && (
+                            <button
+                                onClick={handleAddToCart}
+                                className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                                style={{
+                                    backgroundColor: colors.success,
+                                    color: colors.buttonText,
+                                }}
+                            >
+                                <ShoppingCart size={20} />
+                                {data.addToCartButtonText || 'Añadir al carrito'}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Image Side */}
@@ -249,7 +299,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 500}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: colors.background,
             }}
         >
             {/* Background Image */}
@@ -280,8 +330,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             <span
                                 className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
                                 style={{
-                                    backgroundColor: data.colors.badgeBackground,
-                                    color: data.colors.badgeText,
+                                    backgroundColor: colors.badgeBackground,
+                                    color: colors.badgeText,
                                 }}
                             >
                                 {data.badgeText}
@@ -290,7 +340,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                         <h1
                             className={`${getHeadlineSize()} font-bold mb-4`}
-                            style={{ color: data.colors.heading }}
+                            style={{ color: colors.heading }}
                         >
                             {data.headline}
                         </h1>
@@ -298,31 +348,50 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                         {data.subheadline && (
                             <p
                                 className={`${getSubheadlineSize()} mb-6`}
-                                style={{ color: data.colors.text }}
+                                style={{ color: colors.text }}
                             >
                                 {data.subheadline}
                             </p>
                         )}
 
-                        {data.buttonText && (
-                            <button
-                                onClick={handleButtonClick}
-                                className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                                style={{
-                                    backgroundColor: data.colors.buttonBackground,
-                                    color: data.colors.buttonText,
-                                }}
-                            >
-                                {data.buttonText}
-                                <ArrowRight size={20} />
-                            </button>
-                        )}
+                        {/* Buttons */}
+                        <div className="flex flex-wrap gap-3">
+                            {data.buttonText && (
+                                <button
+                                    onClick={handleButtonClick}
+                                    className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                    style={{
+                                        backgroundColor: colors.buttonBackground,
+                                        color: colors.buttonText,
+                                    }}
+                                >
+                                    {data.buttonText}
+                                    <ArrowRight size={20} />
+                                </button>
+                            )}
+
+                            {/* Add to Cart Button */}
+                            {data.showAddToCartButton && featuredProduct && (
+                                <button
+                                    onClick={handleAddToCart}
+                                    className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                                    style={{
+                                        backgroundColor: colors.success || '#10B981',
+                                        color: colors.buttonText || '#FFFFFF',
+                                    }}
+                                >
+                                    <ShoppingCart size={20} />
+                                    {data.addToCartButtonText || 'Añadir al carrito'}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Featured Product Card */}
                     {featuredProduct && (
                         <div
-                            className="hidden lg:block bg-white/10 backdrop-blur-sm rounded-2xl p-6 cursor-pointer hover:bg-white/20 transition-colors"
+                            className="hidden lg:block backdrop-blur-sm rounded-2xl p-6 cursor-pointer transition-colors"
+                            style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                             onClick={() => featuredProduct.slug && onProductClick?.(featuredProduct.slug)}
                         >
                             {featuredProduct.image && (
@@ -332,8 +401,20 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                                     className="w-full aspect-square object-cover rounded-xl mb-4"
                                 />
                             )}
-                            <h3 className="text-xl font-semibold text-white mb-2">{featuredProduct.name}</h3>
-                            <p className="text-2xl font-bold text-white">${featuredProduct.price.toFixed(2)}</p>
+                            <h3 className="text-xl font-semibold mb-2" style={{ color: colors.buttonText }}>{featuredProduct.name}</h3>
+                            <div className="flex items-center justify-between">
+                                <p className="text-2xl font-bold" style={{ color: colors.buttonText }}>${featuredProduct.price.toFixed(2)}</p>
+                                {data.showAddToCartButton && (
+                                    <button
+                                        onClick={handleAddToCart}
+                                        className="p-3 rounded-full transition-colors"
+                                        style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: colors.buttonText }}
+                                        title={data.addToCartButtonText || 'Añadir al carrito'}
+                                    >
+                                        <ShoppingCart size={20} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -347,14 +428,14 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 className="animate-pulse"
                 style={{
                     height: `${data.height || 500}px`,
-                    backgroundColor: data.colors.background,
+                    backgroundColor: colors.background,
                 }}
             >
                 <div className="h-full flex flex-col justify-center items-center">
-                    <div className="h-8 w-32 bg-gray-700 rounded mb-4" />
-                    <div className="h-12 w-96 bg-gray-700 rounded mb-4" />
-                    <div className="h-6 w-64 bg-gray-700 rounded mb-6" />
-                    <div className="h-12 w-40 bg-gray-700 rounded" />
+                    <div className="h-8 w-32 rounded mb-4" style={{ backgroundColor: colors.border }} />
+                    <div className="h-12 w-96 rounded mb-4" style={{ backgroundColor: colors.border }} />
+                    <div className="h-6 w-64 rounded mb-6" style={{ backgroundColor: colors.border }} />
+                    <div className="h-12 w-40 rounded" style={{ backgroundColor: colors.border }} />
                 </div>
             </div>
         );

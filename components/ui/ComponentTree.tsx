@@ -7,7 +7,7 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Tag, Clock, Shield, Package, Megaphone, TrendingUp
+    ShoppingBag, Tag, Clock, Shield, Package, Megaphone, TrendingUp, Store
 } from 'lucide-react';
 
 interface ComponentTreeProps {
@@ -48,6 +48,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     typography: Type,
     colors: Palette,
     // Ecommerce
+    storeSettings: Store,
     products: ShoppingBag,
     featuredProducts: ShoppingBag,
     categoryGrid: Grid,
@@ -114,6 +115,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         typography: t('editor.typographySection'),
         colors: t('editor.colorsSection'),
         // Ecommerce sections
+        storeSettings: 'Store Settings',
         products: 'Products Grid',
         featuredProducts: 'Featured Products',
         categoryGrid: 'Category Grid',
@@ -199,7 +201,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     // Ecommerce section identifiers
     const ecommerceSectionIds: PageSection[] = [
-        'products', 'featuredProducts', 'categoryGrid', 'productHero', 
+        'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 
         'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 
         'collectionBanner', 'productBundle', 'announcementBar'
     ];
@@ -208,16 +210,18 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     const structureSections = [
         'colors' as PageSection,
         'typography' as PageSection,
-        ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[])
+        ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[]),
+        ...(componentOrder.includes('storeSettings') ? ['storeSettings' as PageSection] : [])
     ];
     
     const contentSections = componentOrder.filter(s => 
-        !['header', 'footer', 'typography', 'colors', 'chatbot', 'leads', 'newsletter', 'map', ...ecommerceSectionIds].includes(s) &&
+        !['header', 'footer', 'typography', 'colors', 'storeSettings', 'chatbot', 'leads', 'newsletter', 'map', ...ecommerceSectionIds].includes(s) &&
         componentStatus[s]
     );
 
     const ecommerceSections = componentOrder.filter(s => 
         ecommerceSectionIds.includes(s) &&
+        s !== 'storeSettings' && // storeSettings is now in structure section
         componentStatus[s]
     );
     
@@ -235,7 +239,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         const Icon = sectionIcons[section] || Layout;
         const isActive = activeSection === section;
         const isVisible = sectionVisibility[section] ?? true;
-        const isFixed = ['header', 'footer', 'typography', 'colors'].includes(section);
+        const isFixed = ['header', 'footer', 'typography', 'colors', 'storeSettings'].includes(section);
         const isDragging = draggedItem === section;
         const isDropTargetItem = dropTarget === section && !isDragging;
         const canDrag = isDraggable && !isFixed;

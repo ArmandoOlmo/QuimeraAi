@@ -23,7 +23,13 @@ export { useOrders } from './hooks/useOrders';
 export { useCustomers } from './hooks/useCustomers';
 export { useDiscounts } from './hooks/useDiscounts';
 export { useReviews } from './hooks/useReviews';
-export { useStoreSettings } from './hooks/useStoreSettings';
+export { 
+    useStoreSettings,
+    adjustColorBrightness,
+    getContrastColor,
+    hexToRgb,
+    rgbToHex,
+} from './hooks/useStoreSettings';
 export { useEcommerceAnalytics } from './hooks/useEcommerceAnalytics';
 export { useStripe } from './hooks/useStripe';
 export { useCart } from './hooks/useCart';

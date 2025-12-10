@@ -17,6 +17,7 @@ import { SEOConfig } from './seo';
 export interface Project {
     id: string;
     name: string;
+    userId?: string;                // Owner user ID
     thumbnailUrl: string;
     faviconUrl?: string;  // Favicon URL for the website
     status: 'Published' | 'Draft' | 'Template';
@@ -34,6 +35,9 @@ export interface Project {
     responsiveStyles?: Record<string, ResponsiveStyles>;
     conditionalRules?: ConditionalRule[];
     seoConfig?: SEOConfig;
+    
+    // Design Tokens
+    designTokens?: import('./features').DesignTokens;
     
     // A/B Testing
     abTests?: ABTestConfig[];

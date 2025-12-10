@@ -3,6 +3,7 @@ import React from 'react';
 import { useEditor } from '../../contexts/EditorContext';
 import { FontFamily } from '../../types';
 import ColorControl from './ColorControl';
+import { ChevronDown, Image } from 'lucide-react';
 
 const fontOptions: FontFamily[] = [
   'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
@@ -47,7 +48,7 @@ const FontManager: React.FC = () => {
                     ))}
                 </select>
                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    <ChevronDown className="h-4 w-4" />
                 </div>
             </div>
         </div>
@@ -58,11 +59,7 @@ const FontManager: React.FC = () => {
             {/* Page Background - Most prominent control */}
             <div className="bg-editor-panel-bg/50 p-4 rounded-lg border-2 border-editor-accent/50 shadow-lg">
                 <label className="block text-sm font-bold text-editor-accent mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
+                    <Image size={16} />
                     Fondo General del Sitio Web
                 </label>
                 <ColorControl 

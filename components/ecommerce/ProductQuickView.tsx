@@ -89,11 +89,16 @@ const ProductQuickView: React.FC<ProductQuickViewProps> = ({
         const options: Record<string, Set<string>> = {};
         product.variants.forEach((variant) => {
             if (variant.options) {
-                variant.options.forEach((opt) => {
-                    if (!options[opt.name]) {
-                        options[opt.name] = new Set();
+                // Handle both array and object formats
+                const optEntries = Array.isArray(variant.options)
+                    ? variant.options.map((opt: { name: string; value: string }) => [opt.name, opt.value] as const)
+                    : Object.entries(variant.options);
+                
+                optEntries.forEach(([name, value]) => {
+                    if (!options[name]) {
+                        options[name] = new Set();
                     }
-                    options[opt.name].add(opt.value);
+                    options[name].add(value);
                 });
             }
         });
@@ -272,15 +277,22 @@ const ProductQuickView: React.FC<ProductQuickViewProps> = ({
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {values.map((value) => {
-                                        const isSelected = selectedVariant?.options?.some(
-                                            (o) => o.name === optionName && o.value === value
-                                        );
+                                        // Check if this option is selected (works with both array and object formats)
+                                        const isSelected = selectedVariant?.options 
+                                            ? (Array.isArray(selectedVariant.options)
+                                                ? selectedVariant.options.some((o: { name: string; value: string }) => o.name === optionName && o.value === value)
+                                                : selectedVariant.options[optionName] === value)
+                                            : false;
                                         return (
                                             <button
                                                 key={value}
                                                 onClick={() => {
                                                     const variant = product.variants?.find((v) =>
-                                                        v.options?.some((o) => o.name === optionName && o.value === value)
+                                                        v.options 
+                                                            ? (Array.isArray(v.options)
+                                                                ? v.options.some((o: { name: string; value: string }) => o.name === optionName && o.value === value)
+                                                                : v.options[optionName] === value)
+                                                            : false
                                                     );
                                                     if (variant) setSelectedVariant(variant);
                                                 }}

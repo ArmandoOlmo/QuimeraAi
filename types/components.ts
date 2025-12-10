@@ -5,6 +5,9 @@
 
 import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType } from './ui';
 
+// Re-export Project from types/project for backward compatibility
+export type { Project } from './project';
+
 // =============================================================================
 // CORNER GRADIENT (Diagonal gradient overlay)
 // =============================================================================
@@ -66,6 +69,9 @@ export interface HeaderData {
     showLogin: boolean;
     loginText: string;
     loginUrl?: string;
+    // Search
+    showSearch?: boolean;
+    searchPlaceholder?: string;
     colors: { background: string; text: string; accent: string; border?: string };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
@@ -126,6 +132,11 @@ export interface HeroData {
     animationType?: AnimationType;
     // Gradient overlay opacity for Modern variant (0-100)
     gradientOpacity?: number;
+    // CTA Button Links
+    primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section';
+    secondaryCtaLink?: string;
+    secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section';
 }
 
 // =============================================================================
@@ -169,6 +180,7 @@ export interface FeatureItem {
 export interface FeaturesData {
     featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay';
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: FeatureItem[];
     paddingY: PaddingSize;
@@ -201,6 +213,7 @@ export interface TestimonialItem {
 export interface TestimonialsData {
     testimonialsVariant?: TestimonialsVariant;
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: TestimonialItem[];
     paddingY: PaddingSize;
@@ -286,6 +299,7 @@ export interface PricingTier {
 export interface PricingData {
     pricingVariant?: PricingVariant;
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     tiers: PricingTier[];
     paddingY: PaddingSize;
@@ -326,6 +340,7 @@ export interface FaqItem {
 
 export interface FaqData {
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: FaqItem[];
     paddingY: PaddingSize;
@@ -424,7 +439,9 @@ export interface NewsletterData {
 // =============================================================================
 export interface CtaData {
     title: string;
+    headline?: string;              // Alias for title
     description: string;
+    subheadline?: string;           // Alias for description
     buttonText: string;
     buttonUrl?: string;
     paddingY: PaddingSize;
@@ -457,6 +474,7 @@ export interface PortfolioItem {
 export interface PortfolioData {
     portfolioVariant?: 'classic' | 'image-overlay';
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: PortfolioItem[];
     paddingY: PaddingSize;
@@ -526,6 +544,7 @@ export interface ServiceItem {
 export interface ServicesData {
     servicesVariant?: 'cards' | 'grid' | 'minimal';
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: ServiceItem[];
     paddingY: PaddingSize;
@@ -552,6 +571,7 @@ export interface TeamMember {
 
 export interface TeamData {
     title: string;
+    subtitle?: string;              // Alias for description
     description: string;
     items: TeamMember[];
     paddingY: PaddingSize;
@@ -836,7 +856,7 @@ export interface ProductsProps {
     showPagination?: boolean;
     productsPerPage?: number;
     layout?: 'grid' | 'list';
-    cardStyle?: 'minimal' | 'modern' | 'elegant';
+    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
     showAddToCart?: boolean;
     showQuickView?: boolean;
     showWishlist?: boolean;
@@ -858,7 +878,7 @@ export interface ProductsData {
     showPagination: boolean;
     productsPerPage: number;
     layout: 'grid' | 'list';
-    cardStyle: 'minimal' | 'modern' | 'elegant';
+    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
     showAddToCart: boolean;
     showQuickView: boolean;
     showWishlist: boolean;
@@ -880,6 +900,17 @@ export interface ProductsData {
 }
 
 // =============================================================================
+// ECOMMERCE - COMPONENT VISIBILITY CONTEXT
+// =============================================================================
+/**
+ * Define dónde se muestra un componente de ecommerce:
+ * - 'landing': Solo en el landing page (home)
+ * - 'store': Solo en las vistas de tienda (store, categoría, producto)
+ * - 'both': En ambos contextos (por defecto)
+ */
+export type ComponentVisibilityContext = 'landing' | 'store' | 'both';
+
+// =============================================================================
 // ECOMMERCE - FEATURED PRODUCTS
 // =============================================================================
 export type FeaturedProductsVariant = 'carousel' | 'grid' | 'showcase';
@@ -890,6 +921,8 @@ export interface FeaturedProductsData {
     title: string;
     description: string;
     sourceType: ProductSourceType;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     categoryId?: string;
     productIds?: string[];
     columns: 2 | 3 | 4 | 5;
@@ -911,6 +944,7 @@ export interface FeaturedProductsData {
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
@@ -951,6 +985,8 @@ export interface CategoryGridData {
     title: string;
     description: string;
     categories: CategoryItem[];
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     columns: 2 | 3 | 4 | 5 | 6;
     showProductCount?: boolean;
     imageAspectRatio: AspectRatio;
@@ -989,6 +1025,8 @@ export interface ProductHeroData {
     headline: string;
     subheadline: string;
     buttonText: string;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     buttonUrl?: string;
     backgroundImageUrl: string;
     // Product/Collection reference
@@ -1011,6 +1049,9 @@ export interface ProductHeroData {
     subheadlineFontSize?: FontSize;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
+    // Add to Cart
+    showAddToCartButton?: boolean;
+    addToCartButtonText?: string;
     // Colors
     colors: {
         background: string;
@@ -1021,6 +1062,8 @@ export interface ProductHeroData {
         buttonText?: string;
         badgeBackground?: string;
         badgeText?: string;
+        addToCartBackground?: string;
+        addToCartText?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1034,6 +1077,8 @@ export interface SaleCountdownData {
     variant: SaleCountdownVariant;
     title: string;
     description: string;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     // Countdown settings
     endDate: string; // ISO date string
     showDays?: boolean;
@@ -1055,6 +1100,8 @@ export interface SaleCountdownData {
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
+    // Card style for products
+    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
     // Colors
     colors: {
         background: string;
@@ -1067,6 +1114,8 @@ export interface SaleCountdownData {
         badgeText?: string;
         buttonBackground?: string;
         buttonText?: string;
+        cardBackground?: string;
+        cardText?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1088,6 +1137,8 @@ export interface TrustBadgesData {
     title?: string;
     badges: TrustBadgeItem[];
     showLabels: boolean;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     iconSize: 'sm' | 'md' | 'lg';
     // Styling
     paddingY: PaddingSize;
@@ -1114,6 +1165,8 @@ export interface RecentlyViewedData {
     title: string;
     description?: string;
     maxProducts: number;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     columns: 2 | 3 | 4 | 5 | 6;
     // Carousel settings
     autoScroll?: boolean;
@@ -1122,7 +1175,7 @@ export interface RecentlyViewedData {
     // Display options
     showPrice?: boolean;
     showRating?: boolean;
-    cardStyle: 'minimal' | 'modern' | 'elegant';
+    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -1165,6 +1218,8 @@ export interface ProductReviewsData {
     title: string;
     description?: string;
     reviews: ProductReviewItem[];
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     // Display options
     showRatingDistribution?: boolean;
     showPhotos?: boolean;
@@ -1206,6 +1261,8 @@ export interface CollectionBannerData {
     title: string;
     description: string;
     backgroundImageUrl: string;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     // Collection reference
     collectionId?: string;
     // Button
@@ -1247,11 +1304,14 @@ export interface ProductBundleData {
     variant: ProductBundleVariant;
     title: string;
     description: string;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     // Bundle products (IDs to fetch from store)
     productIds: string[];
-    // Pricing
-    bundlePrice: number;
-    originalPrice: number;
+    // Pricing - now with automatic discount calculation
+    discountPercent: number; // 0-90, percentage discount
+    bundlePrice: number; // Can be auto-calculated
+    originalPrice: number; // Can be auto-calculated
     showSavings: boolean;
     savingsText?: string;
     // Display
@@ -1290,16 +1350,20 @@ export interface ProductBundleData {
 // ECOMMERCE - ANNOUNCEMENT BAR
 // =============================================================================
 export type AnnouncementBarVariant = 'static' | 'scrolling' | 'rotating';
+export type AnnouncementLinkType = 'manual' | 'product' | 'collection';
 
 export interface AnnouncementMessage {
     text: string;
     link?: string;
     linkText?: string;
+    linkType?: AnnouncementLinkType;
 }
 
 export interface AnnouncementBarData {
     variant: AnnouncementBarVariant;
     messages: AnnouncementMessage[];
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
     // Display
     showIcon?: boolean;
     icon?: ServiceIcon;
@@ -1323,8 +1387,112 @@ export interface AnnouncementBarData {
 }
 
 // =============================================================================
+// ECOMMERCE - STORE SETTINGS (Web Editor StoreFront Configuration)
+// =============================================================================
+export type StoreSettingsVariant = 'grid' | 'list';
+export type StoreSettingsCardStyle = 'minimal' | 'modern' | 'elegant' | 'overlay';
+
+export interface StoreSettingsData {
+    variant?: StoreSettingsVariant;
+    /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
+    visibleIn?: ComponentVisibilityContext;
+    
+    // === Display Options ===
+    /** Show/hide the filter sidebar in product search. Default: true */
+    showFilterSidebar: boolean;
+    /** Show/hide the search bar in product search page. Default: true */
+    showSearchBar: boolean;
+    /** Show/hide the sort dropdown. Default: true */
+    showSortOptions: boolean;
+    /** Show/hide view mode toggle (grid/list). Default: true */
+    showViewModeToggle: boolean;
+    /** Show product ratings. Default: true */
+    showRatings: boolean;
+    /** Show product badges (sale, new). Default: true */
+    showBadges: boolean;
+    /** Show quick view button. Default: false */
+    showQuickView: boolean;
+    /** Show add to cart button on cards. Default: true */
+    showAddToCart: boolean;
+    /** Show wishlist button. Default: false */
+    showWishlist: boolean;
+    /** Show compare button. Default: false */
+    showCompare: boolean;
+    
+    // === Layout Options ===
+    /** Default view mode. Default: 'grid' */
+    defaultViewMode: StoreSettingsVariant;
+    /** Products per page. Default: 12 */
+    productsPerPage: number;
+    /** Grid columns on desktop. Default: 4 */
+    gridColumns: 2 | 3 | 4 | 5;
+    /** Product card style. Default: 'modern' */
+    cardStyle: StoreSettingsCardStyle;
+    /** Border radius for cards. Default: 'xl' */
+    borderRadius: BorderRadiusSize;
+    /** Show pagination. Default: true */
+    showPagination: boolean;
+    /** Infinite scroll instead of pagination. Default: false */
+    infiniteScroll: boolean;
+    
+    // === Spacing ===
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    cardGap: 'sm' | 'md' | 'lg';
+    
+    // === Colors (inherit from global or override) ===
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground: string;
+        cardText: string;
+        buttonBackground: string;
+        buttonText: string;
+        badgeBackground: string;
+        badgeText: string;
+        priceColor: string;
+        salePriceColor: string;
+        borderColor: string;
+        starColor: string;
+    };
+    
+    // Animation
+    animationType?: AnimationType;
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// ECOMMERCE - PRODUCT DETAIL PAGE (Colors for product detail view)
+// =============================================================================
+export interface ProductDetailPageData {
+    /** Colors for the product detail page - inherits from global palette */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+        priceColor?: string;
+        salePriceColor?: string;
+        borderColor?: string;
+        starColor?: string;
+        linkColor?: string;
+        secondaryButtonBackground?: string;
+        secondaryButtonText?: string;
+    };
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
+
 export interface PageData {
     header: HeaderData;
     hero: HeroData;
@@ -1348,6 +1516,8 @@ export interface PageData {
     menu: MenuData;
     banner: BannerData;
     products?: ProductsData;
+    // Ecommerce components - Store settings
+    storeSettings?: StoreSettingsData;
     // Ecommerce components
     featuredProducts?: FeaturedProductsData;
     categoryGrid?: CategoryGridData;
@@ -1359,5 +1529,7 @@ export interface PageData {
     collectionBanner?: CollectionBannerData;
     productBundle?: ProductBundleData;
     announcementBar?: AnnouncementBarData;
+    // Product Detail Page - colors for the product detail view
+    productDetailPage?: ProductDetailPageData;
 }
 

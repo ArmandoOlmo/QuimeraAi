@@ -11,11 +11,12 @@ import ImagePicker from './ui/ImagePicker';
 import IconSelector from './ui/IconSelector';
 import { useClickOutside } from '../hooks/useClickOutside';
 import {
-    Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, HelpCircle,
+    Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
     Layout, Image, List, Star, PlaySquare, Users, DollarSign,
     Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info
+    Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2
 } from 'lucide-react';
+import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
 import ComponentTree from './ui/ComponentTree';
@@ -32,6 +33,7 @@ import {
     useRecentlyViewedControls,
     useProductReviewsControls,
     useProductBundleControls,
+    useStoreSettingsControls,
 } from './ui/EcommerceControls';
 
 // --- Helper Components ---
@@ -94,39 +96,51 @@ const FontSizeSelector = ({ label, value, onChange }: { label: string, value: st
     </div>
 );
 
-const PaddingSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-    <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-            {['sm', 'md', 'lg'].map((size) => (
-                <button
-                    key={size}
-                    onClick={() => onChange(size)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
-                >
-                    {size.toUpperCase()}
-                </button>
-            ))}
+const PaddingSelector = ({ label, value, onChange, showNone = false, showXl = false }: { label: string, value: string, onChange: (val: string) => void, showNone?: boolean, showXl?: boolean }) => {
+    const options = [
+        ...(showNone ? ['none'] : []),
+        'sm', 'md', 'lg',
+        ...(showXl ? ['xl'] : []),
+    ];
+    return (
+        <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                {options.map((size) => (
+                    <button
+                        key={size}
+                        onClick={() => onChange(size)}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                    >
+                        {size === 'none' ? '0' : size.toUpperCase()}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
-const BorderRadiusSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-    <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-            {[{v: 'none', l: 'None'}, {v: 'md', l: 'Med'}, {v: 'xl', l: 'Lg'}, {v: 'full', l: 'Full'}].map((opt) => (
-                <button
-                    key={opt.v}
-                    onClick={() => onChange(opt.v)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
-                >
-                    {opt.l}
-                </button>
-            ))}
+const BorderRadiusSelector = ({ label, value, onChange, extended = false }: { label: string, value: string, onChange: (val: string) => void, extended?: boolean }) => {
+    const options = extended
+        ? [{v: 'none', l: '0'}, {v: 'sm', l: 'SM'}, {v: 'md', l: 'MD'}, {v: 'lg', l: 'LG'}, {v: 'xl', l: 'XL'}, {v: '2xl', l: '2XL'}, {v: 'full', l: 'Full'}]
+        : [{v: 'none', l: 'None'}, {v: 'md', l: 'Med'}, {v: 'xl', l: 'Lg'}, {v: 'full', l: 'Full'}];
+    return (
+        <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                {options.map((opt) => (
+                    <button
+                        key={opt.v}
+                        onClick={() => onChange(opt.v)}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                    >
+                        {opt.l}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Corner Gradient Control - Diagonal gradient overlay from corners
 interface CornerGradientControlProps {
@@ -424,6 +438,18 @@ const Controls: React.FC = () => {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
+  // State for Hero CTA link pickers
+  const [heroPrimaryLinkType, setHeroPrimaryLinkType] = useState<'manual' | 'product' | 'collection' | 'section'>('section');
+  const [heroSecondaryLinkType, setHeroSecondaryLinkType] = useState<'manual' | 'product' | 'collection' | 'section'>('section');
+  const [showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker] = useState(false);
+  const [showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker] = useState(false);
+  const [showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker] = useState(false);
+  const [showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker] = useState(false);
+  const [heroProductSearch, setHeroProductSearch] = useState('');
+
+  // Load products for Hero CTA pickers
+  const { products: heroProducts, categories: heroCategories, isLoading: isLoadingHeroProducts } = usePublicProducts(activeProject?.id || null, { limitCount: 100 });
+
   // Auto-hide tree on mobile when a section is selected, show when closed
   React.useEffect(() => {
     if (activeSection) {
@@ -490,6 +516,39 @@ const Controls: React.FC = () => {
       } else {
           onSectionSelect(section as any);
       }
+  };
+
+  // Helper to get merged ecommerce data (componentStyles + user data)
+  const getMergedEcommerceData = (componentKey: string) => {
+    const styles = componentStyles[componentKey as keyof typeof componentStyles];
+    const userData = data[componentKey as keyof typeof data];
+    if (!styles && !userData) return undefined;
+    if (!userData) return styles;
+    if (!styles) return userData;
+    // Merge styles with user data, user data takes priority
+    return {
+      ...styles,
+      ...userData,
+      colors: {
+        ...(styles as any)?.colors,
+        ...(userData as any)?.colors,
+      },
+    };
+  };
+
+  // Create merged data object for ecommerce controls
+  const mergedEcommerceData = {
+    ...data,
+    featuredProducts: getMergedEcommerceData('featuredProducts'),
+    categoryGrid: getMergedEcommerceData('categoryGrid'),
+    productHero: getMergedEcommerceData('productHero'),
+    trustBadges: getMergedEcommerceData('trustBadges'),
+    saleCountdown: getMergedEcommerceData('saleCountdown'),
+    announcementBar: getMergedEcommerceData('announcementBar'),
+    collectionBanner: getMergedEcommerceData('collectionBanner'),
+    recentlyViewed: getMergedEcommerceData('recentlyViewed'),
+    productReviews: getMergedEcommerceData('productReviews'),
+    productBundle: getMergedEcommerceData('productBundle'),
   };
   
   // Drag and Drop Handlers
@@ -748,11 +807,24 @@ const Controls: React.FC = () => {
               {/* New Login Area Controls */}
               <div className="space-y-3">
                   <ToggleControl label="Show Login Button" checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
-                  
+
                   {data.header.showLogin !== false && (
                       <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
                           <Input label="Text" value={data.header.loginText || 'Login'} onChange={(e) => setNestedData('header.loginText', e.target.value)} className="mb-0" />
                           <Input label="URL" value={data.header.loginUrl || '#'} onChange={(e) => setNestedData('header.loginUrl', e.target.value)} className="mb-0" />
+                      </div>
+                  )}
+              </div>
+
+              <hr className="border-editor-border/50" />
+
+              {/* Search Controls */}
+              <div className="space-y-3">
+                  <ToggleControl label="Show Search" checked={data.header.showSearch === true} onChange={(v) => setNestedData('header.showSearch', v)} />
+
+                  {data.header.showSearch === true && (
+                      <div className="animate-fade-in-up">
+                          <Input label="Placeholder" value={data.header.searchPlaceholder || 'Buscar productos...'} onChange={(e) => setNestedData('header.searchPlaceholder', e.target.value)} className="mb-0" />
                       </div>
                   )}
               </div>
@@ -2539,6 +2611,7 @@ const Controls: React.FC = () => {
       colors: 'Global Colors',
       banner: 'Banner',
       products: 'Products Grid',
+      storeSettings: 'Store Settings',
       // Ecommerce sections
       featuredProducts: 'Featured Products',
       categoryGrid: 'Category Grid',
@@ -4223,6 +4296,8 @@ const Controls: React.FC = () => {
               </div>
           </div>
       ) },
+      // Store Settings - controls for the product search page (uses hook from EcommerceControls)
+      storeSettings: { label: 'Store Settings', icon: Store, renderer: () => null },
       // Ecommerce section components - use separate controls file
       featuredProducts: { label: 'Featured Products', icon: ShoppingBag, renderer: () => null },
       categoryGrid: { label: 'Category Grid', icon: Grid, renderer: () => null },
@@ -4337,6 +4412,424 @@ const Controls: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
           <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+        </div>
+
+        {/* Primary CTA Link */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Link size={14} />
+            Enlace Botón Principal
+          </label>
+          
+          {/* Link Type Selector */}
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+            {[
+              { value: 'section', label: 'Sección' },
+              { value: 'product', label: 'Producto' },
+              { value: 'collection', label: 'Colección' },
+              { value: 'manual', label: 'URL' },
+            ].map(type => (
+              <button 
+                key={type.value}
+                onClick={() => {
+                  setHeroPrimaryLinkType(type.value as any);
+                  setNestedData('hero.primaryCtaLinkType', type.value);
+                  if (type.value === 'section') {
+                    setNestedData('hero.primaryCtaLink', '#cta');
+                  } else if (type.value !== 'manual') {
+                    setNestedData('hero.primaryCtaLink', '');
+                  }
+                }}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${
+                  (data.hero.primaryCtaLinkType || 'section') === type.value 
+                    ? 'bg-editor-accent text-editor-bg' 
+                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Section Selector */}
+          {(data.hero.primaryCtaLinkType || 'section') === 'section' && (
+            <div>
+              <select
+                value={data.hero.primaryCtaLink || '#cta'}
+                onChange={(e) => setNestedData('hero.primaryCtaLink', e.target.value)}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+              >
+                <option value="#hero">Hero</option>
+                <option value="#features">Features</option>
+                <option value="#services">Services</option>
+                <option value="#pricing">Pricing</option>
+                <option value="#testimonials">Testimonials</option>
+                <option value="#team">Team</option>
+                <option value="#faq">FAQ</option>
+                <option value="#contact">Contact</option>
+                <option value="#cta">CTA</option>
+                <option value="#store">Tienda</option>
+              </select>
+            </div>
+          )}
+
+          {/* Manual URL Input */}
+          {data.hero.primaryCtaLinkType === 'manual' && (
+            <Input 
+              label="" 
+              value={data.hero.primaryCtaLink || ''} 
+              onChange={(e) => setNestedData('hero.primaryCtaLink', e.target.value)} 
+              placeholder="https://... o /pagina"
+              className="mb-0"
+            />
+          )}
+
+          {/* Product Picker */}
+          {data.hero.primaryCtaLinkType === 'product' && (
+            <div className="space-y-2">
+              {/* Selected Product Display */}
+              {data.hero.primaryCtaLink && data.hero.primaryCtaLink.includes('#store/product/') && (
+                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
+                  <Check size={14} />
+                  <span className="flex-1 truncate">
+                    {heroProducts.find(p => data.hero.primaryCtaLink?.includes(p.slug || p.id))?.name || 'Producto seleccionado'}
+                  </span>
+                  <button 
+                    onClick={() => setNestedData('hero.primaryCtaLink', '')}
+                    className="hover:bg-editor-accent/30 rounded p-1"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowHeroPrimaryProductPicker(!showHeroPrimaryProductPicker)}
+                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
+              >
+                <span>{showHeroPrimaryProductPicker ? 'Ocultar productos' : 'Buscar producto'}</span>
+                {showHeroPrimaryProductPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              {showHeroPrimaryProductPicker && (
+                <div className="border border-editor-border rounded-md overflow-hidden">
+                  <div className="p-2 border-b border-editor-border">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                      <input
+                        type="text"
+                        placeholder="Buscar productos..."
+                        value={heroProductSearch}
+                        onChange={(e) => setHeroProductSearch(e.target.value)}
+                        className="w-full bg-editor-bg border border-editor-border rounded-md pl-7 pr-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {isLoadingHeroProducts ? (
+                      <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando productos...</div>
+                    ) : heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).length === 0 ? (
+                      <div className="p-4 text-center text-editor-text-secondary text-sm">
+                        {heroProducts.length === 0 ? 'No hay productos en la tienda' : 'No se encontraron productos'}
+                      </div>
+                    ) : (
+                      heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).map(product => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            const link = product.slug ? `#store/product/${product.slug}` : `#store/product/${product.id}`;
+                            setNestedData('hero.primaryCtaLink', link);
+                            setShowHeroPrimaryProductPicker(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
+                        >
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                              <ShoppingBag size={12} className="text-editor-text-secondary" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
+                            <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Collection Picker */}
+          {data.hero.primaryCtaLinkType === 'collection' && (
+            <div className="space-y-2">
+              {/* Selected Collection Display */}
+              {data.hero.primaryCtaLink && data.hero.primaryCtaLink.includes('#store/category/') && (
+                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
+                  <FolderOpen size={14} />
+                  <span className="flex-1 truncate">
+                    {heroCategories.find(c => data.hero.primaryCtaLink?.includes(c.slug || c.id))?.name || 'Colección seleccionada'}
+                  </span>
+                  <button 
+                    onClick={() => setNestedData('hero.primaryCtaLink', '')}
+                    className="hover:bg-editor-accent/30 rounded p-1"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowHeroPrimaryCollectionPicker(!showHeroPrimaryCollectionPicker)}
+                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
+              >
+                <span>{showHeroPrimaryCollectionPicker ? 'Ocultar colecciones' : 'Seleccionar colección'}</span>
+                {showHeroPrimaryCollectionPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              {showHeroPrimaryCollectionPicker && (
+                <div className="border border-editor-border rounded-md overflow-hidden max-h-[200px] overflow-y-auto">
+                  {isLoadingHeroProducts ? (
+                    <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando colecciones...</div>
+                  ) : heroCategories.length === 0 ? (
+                    <div className="p-4 text-center text-editor-text-secondary text-sm">No hay colecciones. Crea categorías en tu tienda primero.</div>
+                  ) : (
+                    heroCategories.map(category => (
+                      <button
+                        key={category.id}
+                        onClick={() => {
+                          const link = category.slug ? `#store/category/${category.slug}` : `#store/category/${category.id}`;
+                          setNestedData('hero.primaryCtaLink', link);
+                          setShowHeroPrimaryCollectionPicker(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
+                          <FolderOpen size={14} className="text-editor-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-editor-text-primary truncate">{category.name}</p>
+                          <p className="text-xs text-editor-text-secondary">/{category.slug}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Secondary CTA Link */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Link size={14} />
+            Enlace Botón Secundario
+          </label>
+          
+          {/* Link Type Selector */}
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+            {[
+              { value: 'section', label: 'Sección' },
+              { value: 'product', label: 'Producto' },
+              { value: 'collection', label: 'Colección' },
+              { value: 'manual', label: 'URL' },
+            ].map(type => (
+              <button 
+                key={type.value}
+                onClick={() => {
+                  setHeroSecondaryLinkType(type.value as any);
+                  setNestedData('hero.secondaryCtaLinkType', type.value);
+                  if (type.value === 'section') {
+                    setNestedData('hero.secondaryCtaLink', '#features');
+                  } else if (type.value !== 'manual') {
+                    setNestedData('hero.secondaryCtaLink', '');
+                  }
+                }}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${
+                  (data.hero.secondaryCtaLinkType || 'section') === type.value 
+                    ? 'bg-editor-accent text-editor-bg' 
+                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Section Selector */}
+          {(data.hero.secondaryCtaLinkType || 'section') === 'section' && (
+            <div>
+              <select
+                value={data.hero.secondaryCtaLink || '#features'}
+                onChange={(e) => setNestedData('hero.secondaryCtaLink', e.target.value)}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+              >
+                <option value="#hero">Hero</option>
+                <option value="#features">Features</option>
+                <option value="#services">Services</option>
+                <option value="#pricing">Pricing</option>
+                <option value="#testimonials">Testimonials</option>
+                <option value="#team">Team</option>
+                <option value="#faq">FAQ</option>
+                <option value="#contact">Contact</option>
+                <option value="#cta">CTA</option>
+                <option value="#store">Tienda</option>
+              </select>
+            </div>
+          )}
+
+          {/* Manual URL Input */}
+          {data.hero.secondaryCtaLinkType === 'manual' && (
+            <Input 
+              label="" 
+              value={data.hero.secondaryCtaLink || ''} 
+              onChange={(e) => setNestedData('hero.secondaryCtaLink', e.target.value)} 
+              placeholder="https://... o /pagina"
+              className="mb-0"
+            />
+          )}
+
+          {/* Product Picker */}
+          {data.hero.secondaryCtaLinkType === 'product' && (
+            <div className="space-y-2">
+              {/* Selected Product Display */}
+              {data.hero.secondaryCtaLink && data.hero.secondaryCtaLink.includes('#store/product/') && (
+                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
+                  <Check size={14} />
+                  <span className="flex-1 truncate">
+                    {heroProducts.find(p => data.hero.secondaryCtaLink?.includes(p.slug || p.id))?.name || 'Producto seleccionado'}
+                  </span>
+                  <button 
+                    onClick={() => setNestedData('hero.secondaryCtaLink', '')}
+                    className="hover:bg-editor-accent/30 rounded p-1"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowHeroSecondaryProductPicker(!showHeroSecondaryProductPicker)}
+                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
+              >
+                <span>{showHeroSecondaryProductPicker ? 'Ocultar productos' : 'Buscar producto'}</span>
+                {showHeroSecondaryProductPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              {showHeroSecondaryProductPicker && (
+                <div className="border border-editor-border rounded-md overflow-hidden">
+                  <div className="p-2 border-b border-editor-border">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                      <input
+                        type="text"
+                        placeholder="Buscar productos..."
+                        value={heroProductSearch}
+                        onChange={(e) => setHeroProductSearch(e.target.value)}
+                        className="w-full bg-editor-bg border border-editor-border rounded-md pl-7 pr-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {isLoadingHeroProducts ? (
+                      <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando productos...</div>
+                    ) : heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).length === 0 ? (
+                      <div className="p-4 text-center text-editor-text-secondary text-sm">
+                        {heroProducts.length === 0 ? 'No hay productos en la tienda' : 'No se encontraron productos'}
+                      </div>
+                    ) : (
+                      heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).map(product => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            const link = product.slug ? `#store/product/${product.slug}` : `#store/product/${product.id}`;
+                            setNestedData('hero.secondaryCtaLink', link);
+                            setShowHeroSecondaryProductPicker(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
+                        >
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
+                              <ShoppingBag size={12} className="text-editor-text-secondary" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
+                            <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Collection Picker */}
+          {data.hero.secondaryCtaLinkType === 'collection' && (
+            <div className="space-y-2">
+              {/* Selected Collection Display */}
+              {data.hero.secondaryCtaLink && data.hero.secondaryCtaLink.includes('#store/category/') && (
+                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
+                  <FolderOpen size={14} />
+                  <span className="flex-1 truncate">
+                    {heroCategories.find(c => data.hero.secondaryCtaLink?.includes(c.slug || c.id))?.name || 'Colección seleccionada'}
+                  </span>
+                  <button 
+                    onClick={() => setNestedData('hero.secondaryCtaLink', '')}
+                    className="hover:bg-editor-accent/30 rounded p-1"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowHeroSecondaryCollectionPicker(!showHeroSecondaryCollectionPicker)}
+                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
+              >
+                <span>{showHeroSecondaryCollectionPicker ? 'Ocultar colecciones' : 'Seleccionar colección'}</span>
+                {showHeroSecondaryCollectionPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              {showHeroSecondaryCollectionPicker && (
+                <div className="border border-editor-border rounded-md overflow-hidden max-h-[200px] overflow-y-auto">
+                  {isLoadingHeroProducts ? (
+                    <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando colecciones...</div>
+                  ) : heroCategories.length === 0 ? (
+                    <div className="p-4 text-center text-editor-text-secondary text-sm">No hay colecciones. Crea categorías en tu tienda primero.</div>
+                  ) : (
+                    heroCategories.map(category => (
+                      <button
+                        key={category.id}
+                        onClick={() => {
+                          const link = category.slug ? `#store/category/${category.slug}` : `#store/category/${category.id}`;
+                          setNestedData('hero.secondaryCtaLink', link);
+                          setShowHeroSecondaryCollectionPicker(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
+                          <FolderOpen size={14} className="text-editor-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-editor-text-primary truncate">{category.name}</p>
+                          <p className="text-xs text-editor-text-secondary">/{category.slug}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Badge */}
@@ -7224,7 +7717,7 @@ const Controls: React.FC = () => {
         return renderVideoControlsWithTabs();
       // Ecommerce components
       case 'featuredProducts':
-        return useFeaturedProductsControls({ data, setNestedData });
+        return useFeaturedProductsControls({ data, setNestedData, storeId: activeProject?.id || '' });
       case 'categoryGrid':
         return useCategoryGridControls({ data, setNestedData });
       case 'productHero':
@@ -7234,15 +7727,17 @@ const Controls: React.FC = () => {
       case 'saleCountdown':
         return useSaleCountdownControls({ data, setNestedData });
       case 'announcementBar':
-        return useAnnouncementBarControls({ data, setNestedData });
+        return useAnnouncementBarControls({ data, setNestedData, storeId: activeProject?.id || '' });
       case 'collectionBanner':
-        return useCollectionBannerControls({ data, setNestedData });
+        return useCollectionBannerControls({ data, setNestedData, storeId: activeProject?.id || '' });
       case 'recentlyViewed':
         return useRecentlyViewedControls({ data, setNestedData });
       case 'productReviews':
         return useProductReviewsControls({ data, setNestedData });
       case 'productBundle':
-        return useProductBundleControls({ data, setNestedData });
+        return useProductBundleControls({ data, setNestedData, storeId: activeProject?.id || '' });
+      case 'storeSettings':
+        return useStoreSettingsControls({ data, setNestedData });
       default:
         // For sections without tabbed controls (header, footer, colors, typography, etc.)
         const controls = config.renderer();

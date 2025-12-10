@@ -2,6 +2,7 @@ import React from 'react';
 import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
@@ -70,6 +71,8 @@ const HeroModern: React.FC<HeroProps> = ({
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
     gradientOpacity = 70,
+    primaryCtaLink = '#cta',
+    secondaryCtaLink = '#features',
 }) => {
   const { getColor } = useDesignTokens();
   
@@ -170,7 +173,7 @@ const HeroModern: React.FC<HeroProps> = ({
          {/* Botones de Acción Premium */}
          <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
              <a 
-                href="#cta"
+                href={primaryCtaLink || '#cta'}
                 className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                 style={{ 
                   backgroundColor: actualColors.buttonBackground, 
@@ -181,15 +184,13 @@ const HeroModern: React.FC<HeroProps> = ({
              >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {primaryCta}
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
                 {/* Shine effect overlay */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
              </a>
              <a 
-                href="#features"
+                href={secondaryCtaLink || '#features'}
                 className={`group py-4 px-10 font-bold text-lg backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${
                   secondaryButtonStyle === 'outline' 
                     ? 'border-2 bg-transparent hover:bg-white/10' 
@@ -209,9 +210,7 @@ const HeroModern: React.FC<HeroProps> = ({
              >
                 <span className="flex items-center justify-center gap-2">
                   {secondaryCta}
-                  <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <ChevronDown className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
                 </span>
              </a>
          </div>

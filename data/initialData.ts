@@ -76,6 +76,10 @@ const pageData: PageData = {
     badgeBackgroundColor: '#4f46e515',
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
+    primaryCtaLink: '#cta',
+    primaryCtaLinkType: 'section',
+    secondaryCtaLink: '#features',
+    secondaryCtaLinkType: 'section',
   },
   heroSplit: {
     headline: "Transform Your Vision",
@@ -709,6 +713,49 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  storeSettings: {
+    showFilterSidebar: true,
+    showSearchBar: true,
+    showSortOptions: true,
+    showViewModeToggle: true,
+    defaultViewMode: 'grid' as const,
+    productsPerPage: 12,
+  },
+  productBundle: {
+    variant: 'horizontal',
+    title: '🎁 Pack Especial',
+    description: 'Compra estos productos juntos y ahorra',
+    productIds: [], // Se seleccionan desde el editor
+    discountPercent: 15,
+    bundlePrice: 0, // Se calcula automáticamente
+    originalPrice: 0, // Se calcula automáticamente
+    showSavings: true,
+    savingsText: 'Ahorra',
+    showIndividualPrices: true,
+    buttonText: 'Agregar Bundle al Carrito',
+    buttonUrl: '',
+    showBadge: true,
+    badgeText: 'Mejor Precio',
+    paddingY: 'lg',
+    paddingX: 'md',
+    titleFontSize: 'lg',
+    descriptionFontSize: 'md',
+    borderRadius: 'xl',
+    colors: {
+      background: '#1e293b',
+      heading: '#F9FAFB',
+      text: '#94a3b8',
+      accent: '#4f46e5',
+      cardBackground: '#0f172a',
+      cardText: '#e2e8f0',
+      priceColor: '#ffffff',
+      savingsColor: '#10b981',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+      badgeBackground: '#10b981',
+      badgeText: '#ffffff',
+    },
+  },
 };
 
 const theme: ThemeData = {
@@ -749,10 +796,10 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow', 
+    'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
-    'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 
+    'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
     'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
     // Integrations
     'leads', 'newsletter', 'map', 'chatbot',

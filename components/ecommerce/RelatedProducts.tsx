@@ -6,6 +6,23 @@
 import React from 'react';
 import { ShoppingCart, Eye, Heart, Star } from 'lucide-react';
 import { PublicProduct } from './hooks/usePublicProduct';
+import { UnifiedColors } from './hooks/useUnifiedStorefrontColors';
+
+interface RelatedProductsColors {
+    primary?: string;
+    heading?: string;
+    text?: string;
+    mutedText?: string;
+    cardBackground?: string;
+    border?: string;
+    badgeBackground?: string;
+    badgeText?: string;
+    buttonBackground?: string;
+    buttonText?: string;
+    salePrice?: string;
+    originalPrice?: string;
+    warning?: string;
+}
 
 interface RelatedProductsProps {
     products: PublicProduct[];
@@ -15,7 +32,24 @@ interface RelatedProductsProps {
     onQuickView?: (product: PublicProduct) => void;
     currencySymbol?: string;
     primaryColor?: string;
+    colors?: RelatedProductsColors;
 }
+
+const defaultColors: RelatedProductsColors = {
+    primary: '#6366f1',
+    heading: '#1f2937',
+    text: '#6b7280',
+    mutedText: '#9ca3af',
+    cardBackground: '#ffffff',
+    border: '#e5e7eb',
+    badgeBackground: '#ef4444',
+    badgeText: '#ffffff',
+    buttonBackground: '#6366f1',
+    buttonText: '#ffffff',
+    salePrice: '#ef4444',
+    originalPrice: '#9ca3af',
+    warning: '#f97316',
+};
 
 const RelatedProducts: React.FC<RelatedProductsProps> = ({
     products,
@@ -24,15 +58,30 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
     onAddToCart,
     onQuickView,
     currencySymbol = '$',
-    primaryColor = '#6366f1',
+    primaryColor,
+    colors: propColors,
 }) => {
+    // Merge colors with defaults
+    const colors = {
+        ...defaultColors,
+        ...propColors,
+        primary: propColors?.primary || primaryColor || defaultColors.primary,
+        buttonBackground: propColors?.buttonBackground || primaryColor || defaultColors.buttonBackground,
+    };
+
     if (products.length === 0) {
         return null;
     }
 
     return (
-        <section className="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+        <section 
+            className="mt-16 pt-12 border-t"
+            style={{ borderColor: colors.border }}
+        >
+            <h2 
+                className="text-2xl font-bold mb-8"
+                style={{ color: colors.heading }}
+            >
                 {title}
             </h2>
 
@@ -45,7 +94,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                         onAddToCart={onAddToCart ? () => onAddToCart(product) : undefined}
                         onQuickView={onQuickView ? () => onQuickView(product) : undefined}
                         currencySymbol={currencySymbol}
-                        primaryColor={primaryColor}
+                        colors={colors}
                     />
                 ))}
             </div>
@@ -60,7 +109,7 @@ interface RelatedProductCardProps {
     onAddToCart?: () => void;
     onQuickView?: () => void;
     currencySymbol: string;
-    primaryColor: string;
+    colors: RelatedProductsColors;
 }
 
 const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
@@ -69,7 +118,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
     onAddToCart,
     onQuickView,
     currencySymbol,
-    primaryColor,
+    colors,
 }) => {
     const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
     const discountPercentage = hasDiscount
@@ -79,7 +128,10 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
     const mainImage = product.images?.[0]?.url;
 
     return (
-        <div className="group relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <div 
+            className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+            style={{ backgroundColor: colors.cardBackground }}
+        >
             {/* Image Container */}
             <div 
                 className="relative aspect-square overflow-hidden cursor-pointer"
@@ -92,16 +144,19 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span className="text-gray-400 dark:text-gray-500">Sin imagen</span>
+                    <div 
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ backgroundColor: colors.border }}
+                    >
+                        <span style={{ color: colors.mutedText }}>Sin imagen</span>
                     </div>
                 )}
 
                 {/* Discount Badge */}
                 {hasDiscount && (
                     <div
-                        className="absolute top-3 left-3 px-2 py-1 rounded-full text-white text-xs font-bold"
-                        style={{ backgroundColor: '#ef4444' }}
+                        className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
+                        style={{ backgroundColor: colors.badgeBackground, color: colors.badgeText }}
                     >
                         -{discountPercentage}%
                     </div>
@@ -110,7 +165,10 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 {/* Out of Stock Overlay */}
                 {!product.inStock && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-white text-gray-900 px-4 py-2 rounded-full font-medium text-sm">
+                        <span 
+                            className="px-4 py-2 rounded-full font-medium text-sm"
+                            style={{ backgroundColor: colors.cardBackground, color: colors.heading }}
+                        >
                             Agotado
                         </span>
                     </div>
@@ -118,7 +176,10 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
 
                 {/* Low Stock Warning */}
                 {product.inStock && product.lowStock && (
-                    <div className="absolute top-3 right-3 px-2 py-1 bg-orange-500 rounded-full text-white text-xs font-bold">
+                    <div 
+                        className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold"
+                        style={{ backgroundColor: colors.warning, color: '#ffffff' }}
+                    >
                         Últimas unidades
                     </div>
                 )}
@@ -131,7 +192,8 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                                 e.stopPropagation();
                                 onQuickView();
                             }}
-                            className="flex-1 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg text-gray-900 dark:text-white font-medium text-sm flex items-center justify-center gap-1 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                            className="flex-1 py-2 backdrop-blur-sm rounded-lg font-medium text-sm flex items-center justify-center gap-1 transition-colors hover:opacity-90"
+                            style={{ backgroundColor: `${colors.cardBackground}e6`, color: colors.heading }}
                         >
                             <Eye size={16} />
                             Vista rápida
@@ -143,8 +205,8 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                                 e.stopPropagation();
                                 onAddToCart();
                             }}
-                            className="p-2 rounded-lg text-white transition-colors"
-                            style={{ backgroundColor: primaryColor }}
+                            className="p-2 rounded-lg transition-colors hover:opacity-90"
+                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                         >
                             <ShoppingCart size={18} />
                         </button>
@@ -155,8 +217,9 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
             {/* Content */}
             <div className="p-4">
                 <h3 
-                    className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 cursor-pointer hover:underline"
+                    className="font-medium mb-2 line-clamp-2 cursor-pointer hover:underline"
                     onClick={onClick}
+                    style={{ color: colors.heading }}
                 >
                     {product.name}
                 </h3>
@@ -165,12 +228,15 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 <div className="flex items-center gap-2">
                     <span 
                         className="text-lg font-bold"
-                        style={{ color: primaryColor }}
+                        style={{ color: colors.primary }}
                     >
                         {currencySymbol}{product.price.toFixed(2)}
                     </span>
                     {hasDiscount && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span 
+                            className="text-sm line-through"
+                            style={{ color: colors.originalPrice }}
+                        >
                             {currencySymbol}{product.compareAtPrice!.toFixed(2)}
                         </span>
                     )}

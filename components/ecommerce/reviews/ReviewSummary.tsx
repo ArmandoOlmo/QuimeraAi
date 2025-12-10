@@ -8,17 +8,57 @@ import { Star } from 'lucide-react';
 import { ReviewStats } from '../../../types/ecommerce';
 import RatingStars from './RatingStars';
 
+export interface ReviewColors {
+    primary?: string;
+    heading?: string;
+    text?: string;
+    mutedText?: string;
+    cardBackground?: string;
+    border?: string;
+    buttonBackground?: string;
+    buttonText?: string;
+    starColor?: string;
+    starEmptyColor?: string;
+    progressBackground?: string;
+    verifiedColor?: string;
+}
+
 interface ReviewSummaryProps {
     stats: ReviewStats | null;
     onWriteReview?: () => void;
     primaryColor?: string;
+    colors?: ReviewColors;
 }
+
+const defaultReviewColors: ReviewColors = {
+    primary: '#6366f1',
+    heading: '#1f2937',
+    text: '#6b7280',
+    mutedText: '#9ca3af',
+    cardBackground: '#ffffff',
+    border: '#e5e7eb',
+    buttonBackground: '#6366f1',
+    buttonText: '#ffffff',
+    starColor: '#facc15',
+    starEmptyColor: '#d1d5db',
+    progressBackground: '#e5e7eb',
+    verifiedColor: '#16a34a',
+};
 
 const ReviewSummary: React.FC<ReviewSummaryProps> = ({
     stats,
     onWriteReview,
-    primaryColor = '#6366f1',
+    primaryColor,
+    colors: propColors,
 }) => {
+    // Merge colors
+    const colors = {
+        ...defaultReviewColors,
+        ...propColors,
+        primary: propColors?.primary || primaryColor || defaultReviewColors.primary,
+        buttonBackground: propColors?.buttonBackground || primaryColor || defaultReviewColors.buttonBackground,
+    };
+
     const defaultStats: ReviewStats = {
         averageRating: 0,
         totalReviews: 0,
@@ -35,23 +75,34 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <div 
+            className="rounded-xl p-6 border"
+            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Left: Average Rating */}
                 <div className="flex flex-col items-center md:w-1/3">
-                    <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
+                    <div 
+                        className="text-5xl font-bold mb-2"
+                        style={{ color: colors.heading }}
+                    >
                         {averageRating.toFixed(1)}
                     </div>
-                    <RatingStars rating={averageRating} size="md" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    <RatingStars 
+                        rating={averageRating} 
+                        size="md" 
+                        color={colors.starColor}
+                        emptyColor={colors.starEmptyColor}
+                    />
+                    <p className="text-sm mt-2" style={{ color: colors.mutedText }}>
                         {totalReviews} reseña{totalReviews !== 1 ? 's' : ''}
                     </p>
 
                     {onWriteReview && (
                         <button
                             onClick={onWriteReview}
-                            className="mt-4 px-6 py-2 rounded-lg text-white font-medium transition-colors hover:opacity-90"
-                            style={{ backgroundColor: primaryColor }}
+                            className="mt-4 px-6 py-2 rounded-lg font-medium transition-colors hover:opacity-90"
+                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                         >
                             Escribir reseña
                         </button>
@@ -67,28 +118,34 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
                         return (
                             <div key={stars} className="flex items-center gap-3">
                                 <div className="flex items-center gap-1 w-12 justify-end">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    <span className="text-sm" style={{ color: colors.text }}>
                                         {stars}
                                     </span>
                                     <Star
                                         size={14}
-                                        className="text-yellow-400"
+                                        style={{ color: colors.starColor }}
                                         fill="currentColor"
                                     />
                                 </div>
 
                                 {/* Progress Bar */}
-                                <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div 
+                                    className="flex-1 h-3 rounded-full overflow-hidden"
+                                    style={{ backgroundColor: colors.progressBackground }}
+                                >
                                     <div
                                         className="h-full rounded-full transition-all duration-500"
                                         style={{
                                             width: `${percentage}%`,
-                                            backgroundColor: primaryColor,
+                                            backgroundColor: colors.primary,
                                         }}
                                     />
                                 </div>
 
-                                <span className="text-sm text-gray-500 dark:text-gray-400 w-10 text-right">
+                                <span 
+                                    className="text-sm w-10 text-right"
+                                    style={{ color: colors.mutedText }}
+                                >
                                     {count}
                                 </span>
                             </div>

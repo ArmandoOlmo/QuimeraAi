@@ -1,6 +1,8 @@
 /**
  * CartDrawer
  * Panel lateral del carrito de compras para el storefront
+ * 
+ * Uses unified storefront colors system when storeId is provided
  */
 
 import React from 'react';
@@ -15,6 +17,7 @@ import {
     ArrowRight,
 } from 'lucide-react';
 import { CartItem } from '../../types/ecommerce';
+import { useGlobalStorefrontColors } from './hooks/useUnifiedStorefrontColors';
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -29,8 +32,11 @@ interface CartDrawerProps {
     onRemoveDiscount: () => void;
     onCheckout: () => void;
     currencySymbol?: string;
+    /** @deprecated Use storeId instead for unified colors */
     primaryColor?: string;
     freeShippingThreshold?: number;
+    /** Store ID for unified colors system */
+    storeId?: string;
 }
 
 const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -46,9 +52,13 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
     onRemoveDiscount,
     onCheckout,
     currencySymbol = '$',
-    primaryColor = '#6366f1',
+    primaryColor,
     freeShippingThreshold = 0,
+    storeId = '',
 }) => {
+    // Use unified colors system - primaryColor prop serves as fallback
+    const globalColors = useGlobalStorefrontColors(storeId);
+    const effectivePrimaryColor = primaryColor || globalColors.primary;
     const [discountInput, setDiscountInput] = React.useState('');
     const [discountError, setDiscountError] = React.useState('');
     const [isApplyingDiscount, setIsApplyingDiscount] = React.useState(false);
@@ -92,7 +102,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-3">
-                        <ShoppingCart size={24} style={{ color: primaryColor }} />
+                        <ShoppingCart size={24} style={{ color: effectivePrimaryColor }} />
                         <div>
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Tu Carrito
@@ -114,14 +124,14 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 {freeShippingThreshold > 0 && remainingForFreeShipping > 0 && items.length > 0 && (
                     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                            ¡Te faltan <span className="font-bold" style={{ color: primaryColor }}>{currencySymbol}{remainingForFreeShipping.toFixed(2)}</span> para envío gratis!
+                            ¡Te faltan <span className="font-bold" style={{ color: effectivePrimaryColor }}>{currencySymbol}{remainingForFreeShipping.toFixed(2)}</span> para envío gratis!
                         </p>
                         <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
                                     width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%`,
-                                    backgroundColor: primaryColor,
+                                    backgroundColor: effectivePrimaryColor,
                                 }}
                             />
                         </div>
@@ -142,7 +152,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                             <button
                                 onClick={onClose}
                                 className="px-6 py-2 rounded-lg text-white font-medium transition-colors"
-                                style={{ backgroundColor: primaryColor }}
+                                style={{ backgroundColor: effectivePrimaryColor }}
                             >
                                 Seguir comprando
                             </button>
@@ -177,7 +187,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                                 {item.variantName}
                                             </p>
                                         )}
-                                        <p className="font-bold mt-1" style={{ color: primaryColor }}>
+                                        <p className="font-bold mt-1" style={{ color: effectivePrimaryColor }}>
                                             {currencySymbol}{item.price.toFixed(2)}
                                         </p>
 
@@ -230,14 +240,14 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                             onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
                                             placeholder="Código de descuento"
                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
-                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                            style={{ '--tw-ring-color': effectivePrimaryColor } as React.CSSProperties}
                                         />
                                     </div>
                                     <button
                                         onClick={handleApplyDiscount}
                                         disabled={isApplyingDiscount || !discountInput.trim()}
                                         className="px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 transition-colors"
-                                        style={{ backgroundColor: primaryColor }}
+                                        style={{ backgroundColor: effectivePrimaryColor }}
                                     >
                                         {isApplyingDiscount ? '...' : 'Aplicar'}
                                     </button>
@@ -294,7 +304,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                         <button
                             onClick={onCheckout}
                             className="w-full py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                            style={{ backgroundColor: primaryColor }}
+                            style={{ backgroundColor: effectivePrimaryColor }}
                         >
                             Ir al Checkout
                             <ArrowRight size={20} />

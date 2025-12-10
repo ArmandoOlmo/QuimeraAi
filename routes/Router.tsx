@@ -14,8 +14,9 @@ import PublicWebsitePreview from '../components/PublicWebsitePreview';
 import ModernAuth from '../components/ModernAuth';
 import VerificationScreen from '../components/VerificationScreen';
 import LoadingScreen from './LoadingScreen';
-import ProductDetailPage from '../components/ecommerce/ProductDetailPage';
-import { ProductSearchPage, StorefrontLayout } from '../components/ecommerce';
+import ProductDetailPageWithCart from '../components/ecommerce/ProductDetailPageWithCart';
+import { ProductSearchPage, StorefrontLayout, OrderConfirmation } from '../components/ecommerce';
+import CheckoutPageEnhanced from '../components/ecommerce/CheckoutPageEnhanced';
 
 // =============================================================================
 // TYPES
@@ -151,6 +152,43 @@ const Router: React.FC<RouterProps> = ({
     const pathParts = path.split('/');
     const storeId = pathParts[2];
     
+    // /store/:storeId/checkout - Checkout page
+    if (path.includes('/checkout')) {
+      return (
+        <StorefrontLayout 
+          storeId={storeId}
+          onNavigateHome={() => navigate(`/preview/${storeId}`)}
+          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+        >
+          <CheckoutPageEnhanced
+            storeId={storeId}
+            onSuccess={(orderId) => navigate(`/store/${storeId}/order/${orderId}`)}
+            onBack={() => navigate(`/store/${storeId}`)}
+            onNavigateToStore={() => navigate(`/store/${storeId}`)}
+          />
+        </StorefrontLayout>
+      );
+    }
+    
+    // /store/:storeId/order/:orderId - Order confirmation page
+    if (path.includes('/order/')) {
+      const orderId = pathParts[4];
+      return (
+        <StorefrontLayout 
+          storeId={storeId}
+          onNavigateHome={() => navigate(`/preview/${storeId}`)}
+          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+        >
+          <OrderConfirmation
+            storeId={storeId}
+            orderId={orderId}
+            onContinueShopping={() => navigate(`/store/${storeId}`)}
+            onViewOrders={() => navigate(`/store/${storeId}`)}
+          />
+        </StorefrontLayout>
+      );
+    }
+    
     // /store/:storeId/product/:slug - Product detail page
     if (path.includes('/product/')) {
       const productSlug = pathParts[4];
@@ -158,8 +196,9 @@ const Router: React.FC<RouterProps> = ({
         <StorefrontLayout 
           storeId={storeId}
           onNavigateHome={() => navigate(`/preview/${storeId}`)}
+          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
         >
-          <ProductDetailPage
+          <ProductDetailPageWithCart
             storeId={storeId}
             productSlug={productSlug}
             onNavigateToStore={() => navigate(`/store/${storeId}`)}
@@ -177,6 +216,7 @@ const Router: React.FC<RouterProps> = ({
         <StorefrontLayout 
           storeId={storeId}
           onNavigateHome={() => navigate(`/preview/${storeId}`)}
+          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
         >
           <ProductSearchPage
             storeId={storeId}
@@ -194,6 +234,7 @@ const Router: React.FC<RouterProps> = ({
         <StorefrontLayout 
           storeId={storeId}
           onNavigateHome={() => navigate(`/preview/${storeId}`)}
+          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
         >
           <ProductSearchPage
             storeId={storeId}

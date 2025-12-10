@@ -33,6 +33,18 @@ export interface PublicProductVariant {
     inStock: boolean;
 }
 
+export interface ReviewStats {
+    averageRating: number;
+    totalReviews: number;
+    ratingDistribution?: {
+        1: number;
+        2: number;
+        3: number;
+        4: number;
+        5: number;
+    };
+}
+
 export interface PublicProduct {
     id: string;
     name: string;
@@ -43,15 +55,21 @@ export interface PublicProduct {
     compareAtPrice?: number;
     images: PublicProductImage[];
     categoryId?: string;
+    categoryName?: string;          // Populated category name
     tags?: string[];
     variants?: PublicProductVariant[];
     trackInventory: boolean;
     inStock: boolean;
     lowStock: boolean;
+    isFeatured?: boolean;           // Is this a featured product
     seoTitle?: string;
     seoDescription?: string;
     storeId: string;
     userId: string;
+    reviewStats?: ReviewStats;      // Review statistics
+    averageRating?: number;
+    reviewCount?: number;
+    createdAt?: any;
     updatedAt: any;
 }
 

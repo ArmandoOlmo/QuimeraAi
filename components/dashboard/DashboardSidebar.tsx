@@ -277,6 +277,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       : isRouteActive(item.route);
     const Icon = item.icon;
 
+    // En móvil siempre mostrar expandido cuando el sidebar está abierto
+    const showExpanded = !isCollapsed || isMobileOpen;
+
     const handleNavClick = () => {
       if (item.view === 'superadmin') {
         setAdminView('main');
@@ -313,18 +316,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             min-h-[48px] lg:min-h-[44px]
             p-3 lg:p-3 mb-1 lg:mb-2
             active:scale-[0.98] lg:active:scale-100
-            ${isCollapsed
-              ? 'justify-center w-12 mx-auto rounded-lg'
-              : 'w-full rounded-xl'
+            ${showExpanded
+              ? 'w-full rounded-xl'
+              : 'justify-center w-12 mx-auto rounded-lg'
             }
             ${isActive
-              ? (isCollapsed
-                ? 'text-primary dark:text-primary'
-                : 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]'
+              ? (showExpanded
+                ? 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]'
+                : 'text-primary dark:text-primary'
               )
-              : (isCollapsed
-                ? 'text-muted-foreground hover:text-foreground'
-                : 'text-muted-foreground hover:bg-secondary/80 lg:hover:bg-secondary hover:text-foreground active:bg-secondary'
+              : (showExpanded
+                ? 'text-muted-foreground hover:bg-secondary/80 lg:hover:bg-secondary hover:text-foreground active:bg-secondary'
+                : 'text-muted-foreground hover:text-foreground'
               )
             }
             ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -332,10 +335,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           `}
           aria-label={item.label}
           aria-current={isActive ? 'page' : undefined}
-          title={isCollapsed ? item.label : undefined}
+          title={!showExpanded ? item.label : undefined}
         >
           {/* Drag handle - Hidden on mobile for cleaner experience */}
-          {!isCollapsed && !item.isFixed && (
+          {showExpanded && !item.isFixed && (
             <div
               {...attributes}
               {...listeners}
@@ -349,20 +352,20 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             size={22}
             strokeWidth={isActive ? 2.5 : 2}
             className={`
-              ${isCollapsed ? '' : (item.isFixed ? 'mr-3' : 'lg:ml-5 mr-3')} 
+              ${showExpanded ? (item.isFixed ? 'mr-3' : 'lg:ml-5 mr-3') : ''} 
               flex-shrink-0 transition-all
             `}
             aria-hidden="true"
           />
 
-          {!isCollapsed && (
+          {showExpanded && (
             <span className="text-[15px] lg:text-sm font-medium whitespace-nowrap overflow-hidden transition-all">
               {item.label}
             </span>
           )}
 
           {/* Active indicator for mobile */}
-          {isActive && !isCollapsed && (
+          {isActive && showExpanded && (
             <div className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/80" />
           )}
         </button>
@@ -470,8 +473,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 {/* Dashboard - Fixed at top */}
                 <SortableNavItem item={dashboardItem} index={0} />
 
-                {/* When sidebar is collapsed, show all items as flat list like before */}
-                {isCollapsed ? (
+                {/* When sidebar is collapsed (and not mobile open), show all items as flat list like before */}
+                {isCollapsed && !isMobileOpen ? (
                   <>
                     {/* Separator */}
                     <div className="my-2 border-t border-border mx-2" />
@@ -570,7 +573,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                 {/* Panel de administración disponible para todos los usuarios */}
                 <>
-                  <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed ? 'mx-2' : 'mx-0'}`} />
+                  <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                   <SortableNavItem
                     item={{
                       id: 'superadmin',
@@ -590,7 +593,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           <div className="p-3 pb-6 lg:p-4 lg:pb-4 border-t border-border bg-card/50 backdrop-blur-sm safe-area-inset-bottom">
 
             {/* Theme Selector Section - Hidden on mobile, only visible on desktop */}
-            <div className={`${isCollapsed ? 'hidden' : 'hidden lg:block mb-4'}`}>
+            <div className={`${isCollapsed && !isMobileOpen ? 'hidden' : 'hidden lg:block mb-4'}`}>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('common.themeColor')}</p>
               <div className="flex gap-2 bg-muted p-1 rounded-lg">
                 <button
@@ -632,8 +635,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               </div>
             </div>
 
-            {/* REFINED PRO PLAN WIDGET - Hidden when collapsed */}
-            <div className={`px-1 ${isCollapsed ? 'hidden' : 'block mb-4 lg:mb-6'}`}>
+            {/* REFINED PRO PLAN WIDGET - Hidden when collapsed on desktop */}
+            <div className={`px-1 ${isCollapsed && !isMobileOpen ? 'hidden' : 'block mb-4 lg:mb-6'}`}>
               <div className="flex justify-between items-end mb-2 px-1">
                 <div className="flex items-center gap-1.5">
                   <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
@@ -662,7 +665,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             </div>
 
             {/* User Profile Section - Touch optimized */}
-            <div className={`flex items-center ${isCollapsed ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
+            <div className={`flex items-center ${isCollapsed && !isMobileOpen ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
               <div
                 className="relative group cursor-pointer touch-manipulation"
                 onClick={() => setIsProfileModalOpen(true)}
@@ -677,15 +680,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 <div className="absolute bottom-0 right-0 w-3.5 h-3.5 lg:w-3 lg:h-3 bg-green-500 border-2 border-background rounded-full"></div>
               </div>
 
-              {!isCollapsed && (
+              {(!isCollapsed || isMobileOpen) && (
                 <div className="flex-1 overflow-hidden min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{userDocument?.name || t('common.creator')}</p>
                   <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
               )}
 
-              <div className={`${isCollapsed ? '' : 'flex flex-col gap-1'}`}>
-                {!isCollapsed && (
+              <div className={`${isCollapsed && !isMobileOpen ? '' : 'flex flex-col gap-1'}`}>
+                {(!isCollapsed || isMobileOpen) && (
                   <button
                     onClick={handleSignOut}
                     className="p-2.5 lg:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"

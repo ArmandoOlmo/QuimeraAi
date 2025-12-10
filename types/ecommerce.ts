@@ -49,7 +49,8 @@ export interface Product {
     price: number;
     compareAtPrice?: number;        // Precio tachado (descuento)
     costPrice?: number;             // Costo (para calcular margen)
-    currency: string;
+    cost?: number;                  // Alias for costPrice
+    currency?: string;              // Defaults to store currency
     
     // Inventory
     sku?: string;
@@ -59,14 +60,14 @@ export interface Product {
     lowStockThreshold?: number;
     
     // Media
-    images: ProductImage[];
+    images?: ProductImage[];        // Can start empty
     
     // Categorization
     categoryId?: string;
     tags?: string[];
     
     // Variants (tallas, colores, etc.)
-    hasVariants: boolean;
+    hasVariants?: boolean;          // Defaults to false
     variants?: ProductVariant[];
     options?: ProductOption[];
     
@@ -76,8 +77,8 @@ export interface Product {
     
     // Status
     status: ProductStatus;
-    isDigital: boolean;
-    isFeatured: boolean;
+    isDigital?: boolean;            // Defaults to false
+    isFeatured?: boolean;           // Defaults to false
     
     // Shipping
     weight?: number;
@@ -143,9 +144,12 @@ export interface OrderItem {
     productId: string;
     variantId?: string;
     name: string;
+    productName?: string;  // Alias for name
     variantName?: string;
     sku?: string;
     imageUrl?: string;
+    image?: string;  // Alias for imageUrl
+    price?: number;  // Alias for unitPrice
     quantity: number;
     unitPrice: number;
     totalPrice: number;
@@ -168,6 +172,7 @@ export interface Order {
     subtotal: number;
     discount: number;
     discountCode?: string;
+    discountAmount?: number;        // Calculated discount amount
     shippingCost: number;
     taxAmount: number;
     total: number;
@@ -191,10 +196,12 @@ export interface Order {
     shippingMethod?: string;
     trackingNumber?: string;
     trackingUrl?: string;
+    carrier?: string;               // Shipping carrier name
     shippedAt?: FirebaseTimestamp;
     deliveredAt?: FirebaseTimestamp;
     
     // Notes
+    notes?: string;                 // General notes (alias for internalNotes)
     customerNotes?: string;
     internalNotes?: string;
     
@@ -212,24 +219,28 @@ export interface Order {
 export interface CartItem {
     productId: string;
     variantId?: string;
-    name: string;
+    name?: string;          // Product name (legacy)
+    productName?: string;   // Alias for name, used in some components
     variantName?: string;
     imageUrl?: string;
+    image?: string;         // Alias for imageUrl, used in some components
     quantity: number;
     price: number;
 }
 
 export interface Cart {
     id: string;
+    userId?: string;                // User ID if logged in
+    storeId?: string;               // Store ID for multi-tenant
     customerId?: string;
-    sessionId: string;
+    sessionId?: string;
     items: CartItem[];
     subtotal: number;
     discountCode?: string;
     discountAmount?: number;
     createdAt: FirebaseTimestamp;
     updatedAt: FirebaseTimestamp;
-    expiresAt: FirebaseTimestamp;
+    expiresAt?: FirebaseTimestamp;
 }
 
 // =============================================================================
@@ -375,6 +386,7 @@ export interface ShippingRate {
     name: string;                   // "Envío estándar"
     price: number;
     minOrderAmount?: number;        // Envío gratis desde X
+    minOrder?: number;              // Alias for minOrderAmount
     estimatedDays?: string;         // "3-5 días"
 }
 
@@ -384,6 +396,143 @@ export interface ShippingZone {
     countries: string[];
     rates: ShippingRate[];
 }
+
+// =============================================================================
+// STOREFRONT THEME
+// =============================================================================
+
+/**
+ * Complete storefront theme configuration
+ * All colors and visual properties that can be customized
+ */
+export interface StorefrontThemeSettings {
+    // Core Colors
+    primaryColor: string;           // Main brand color (buttons, links, accents)
+    secondaryColor: string;         // Secondary brand color
+    accentColor: string;            // Highlight/accent color (badges, sale tags)
+    
+    // Background Colors
+    backgroundColor: string;        // Page background
+    cardBackground: string;         // Product cards, category cards
+    headerBackground: string;       // Header/navbar background
+    footerBackground: string;       // Footer background
+    
+    // Text Colors
+    textColor: string;              // Primary text (descriptions, content)
+    headingColor: string;           // Headings, titles
+    mutedTextColor: string;         // Secondary/muted text
+    linkColor: string;              // Link color
+    
+    // Button Colors
+    buttonBackground: string;       // Primary button background
+    buttonText: string;             // Primary button text
+    buttonSecondaryBackground: string;  // Secondary button background
+    buttonSecondaryText: string;    // Secondary button text
+    buttonHoverBackground: string;  // Button hover state
+    
+    // Badge & Tag Colors
+    badgeBackground: string;        // Badge backgrounds (sale, new, etc)
+    badgeText: string;              // Badge text
+    saleBadgeBackground: string;    // Sale/discount badge
+    saleBadgeText: string;          // Sale badge text
+    
+    // Price Colors
+    priceColor: string;             // Regular price color
+    salePriceColor: string;         // Sale/discounted price
+    originalPriceColor: string;     // Original price (strikethrough)
+    
+    // Overlay Colors (for image overlays)
+    overlayStart: string;           // Gradient start
+    overlayEnd: string;             // Gradient end
+    
+    // Border Colors
+    borderColor: string;            // General borders
+    dividerColor: string;           // Section dividers
+    inputBorderColor: string;       // Form input borders
+    
+    // State Colors
+    successColor: string;           // Success states (in stock, confirmed)
+    warningColor: string;           // Warning states (low stock)
+    errorColor: string;             // Error states (out of stock, errors)
+    infoColor: string;              // Info states
+    
+    // Cart & Checkout
+    cartBadgeBackground: string;    // Cart item count badge
+    cartBadgeText: string;          // Cart badge text
+    checkoutAccent: string;         // Checkout step accents
+    
+    // Typography
+    fontFamily: string;             // Primary font family
+    headingFontFamily: string;      // Heading font family (optional)
+    
+    // Coolors.co Integration
+    coolorsUrl?: string;            // Saved Coolors palette URL
+    coolorsColors?: string[];       // Array of colors from Coolors
+}
+
+/**
+ * Default storefront theme values
+ */
+export const DEFAULT_STOREFRONT_THEME: StorefrontThemeSettings = {
+    // Core Colors
+    primaryColor: '#6366f1',
+    secondaryColor: '#10b981',
+    accentColor: '#f59e0b',
+    
+    // Background Colors
+    backgroundColor: '#ffffff',
+    cardBackground: '#f8fafc',
+    headerBackground: '#ffffff',
+    footerBackground: '#1f2937',
+    
+    // Text Colors
+    textColor: '#374151',
+    headingColor: '#111827',
+    mutedTextColor: '#6b7280',
+    linkColor: '#6366f1',
+    
+    // Button Colors
+    buttonBackground: '#6366f1',
+    buttonText: '#ffffff',
+    buttonSecondaryBackground: '#f3f4f6',
+    buttonSecondaryText: '#374151',
+    buttonHoverBackground: '#4f46e5',
+    
+    // Badge Colors
+    badgeBackground: '#6366f1',
+    badgeText: '#ffffff',
+    saleBadgeBackground: '#ef4444',
+    saleBadgeText: '#ffffff',
+    
+    // Price Colors
+    priceColor: '#111827',
+    salePriceColor: '#ef4444',
+    originalPriceColor: '#9ca3af',
+    
+    // Overlay Colors
+    overlayStart: 'transparent',
+    overlayEnd: 'rgba(0, 0, 0, 0.7)',
+    
+    // Border Colors
+    borderColor: '#e5e7eb',
+    dividerColor: '#f3f4f6',
+    inputBorderColor: '#d1d5db',
+    
+    // State Colors
+    successColor: '#10b981',
+    warningColor: '#f59e0b',
+    errorColor: '#ef4444',
+    infoColor: '#3b82f6',
+    
+    // Cart & Checkout
+    cartBadgeBackground: '#ef4444',
+    cartBadgeText: '#ffffff',
+    checkoutAccent: '#6366f1',
+    
+    // Typography
+    fontFamily: 'Inter, system-ui, sans-serif',
+    headingFontFamily: 'Inter, system-ui, sans-serif',
+};
 
 // =============================================================================
 // STORE SETTINGS
@@ -397,6 +546,9 @@ export interface StoreSettings {
     storeLogo?: string;
     currency: string;
     currencySymbol: string;
+    
+    // Storefront Theme
+    storefrontTheme?: StorefrontThemeSettings;
     
     // Taxes
     taxEnabled: boolean;
@@ -532,5 +684,37 @@ export interface EcommerceContextData {
     storeId: string;
     projectId: string | null;
     projectName: string;
+}
+
+// =============================================================================
+// PUBLIC PRODUCT (for storefront display)
+// =============================================================================
+
+/**
+ * Public product data for storefront display
+ * Simplified version of Product for public access
+ */
+export interface PublicProduct {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    shortDescription?: string;
+    price: number;
+    compareAtPrice?: number;
+    images?: ProductImage[];
+    imageUrl?: string;
+    categoryId?: string;
+    categoryName?: string;          // Populated category name
+    tags?: string[];
+    status: ProductStatus;
+    inStock?: boolean;
+    quantity?: number;
+    isFeatured?: boolean;
+    averageRating?: number;
+    reviewCount?: number;
+    reviewStats?: ReviewStats;      // Review statistics
+    createdAt?: FirebaseTimestamp;
+    updatedAt?: FirebaseTimestamp;
 }
 

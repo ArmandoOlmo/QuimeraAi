@@ -92,7 +92,15 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     };
 
     const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
+        const map: Record<string, string> = { 
+            none: 'rounded-none', 
+            sm: 'rounded-sm', 
+            md: 'rounded-md', 
+            lg: 'rounded-lg', 
+            xl: 'rounded-xl', 
+            '2xl': 'rounded-2xl', 
+            full: 'rounded-full' 
+        };
         return map[data.borderRadius || 'xl'] || 'rounded-xl';
     };
 
@@ -120,12 +128,83 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
             : 0;
 
+        const cardStyle = data.cardStyle || 'modern';
+        
+        // Card style classes
+        const cardStyles = {
+            minimal: 'bg-transparent',
+            modern: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1`,
+            elegant: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
+            overlay: `${getBorderRadius()} overflow-hidden hover:shadow-xl transition-all duration-300`,
+        };
+
+        // Overlay style - full image with text on top
+        if (cardStyle === 'overlay') {
+            return (
+                <div
+                    className={`group cursor-pointer relative ${cardStyles.overlay}`}
+                    onClick={() => product.slug && onProductClick?.(product.slug)}
+                >
+                    <div className="relative aspect-square overflow-hidden">
+                        {product.image ? (
+                            <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                        ) : (
+                            <div 
+                                className="w-full h-full flex items-center justify-center"
+                                style={{ backgroundColor: data.colors.background }}
+                            >
+                                <span style={{ color: data.colors.text, opacity: 0.5 }}>Sin imagen</span>
+                            </div>
+                        )}
+                        
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        
+                        {/* Discount Badge */}
+                        {discount > 0 && (
+                            <span
+                                className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold"
+                                style={{
+                                    backgroundColor: data.colors.badgeBackground,
+                                    color: data.colors.badgeText,
+                                }}
+                            >
+                                -{discount}%
+                            </span>
+                        )}
+                        
+                        {/* Content on Image */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <h4 className="font-semibold text-sm text-white line-clamp-1">{product.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="font-bold text-white">${product.price.toFixed(2)}</span>
+                                {product.compareAtPrice && (
+                                    <span className="text-sm line-through text-white/60">
+                                        ${product.compareAtPrice.toFixed(2)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Default styles (minimal, modern, elegant)
         return (
             <div
-                className={`group cursor-pointer ${getBorderRadius()} overflow-hidden bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all`}
+                className={`group cursor-pointer ${cardStyles[cardStyle]} overflow-hidden backdrop-blur-sm`}
+                style={{ 
+                    backgroundColor: data.colors.cardBackground || 'rgba(255,255,255,0.1)',
+                    borderColor: cardStyle === 'elegant' ? data.colors.text + '20' : undefined,
+                }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
-                <div className="relative aspect-square">
+                <div className="relative aspect-square overflow-hidden">
                     {product.image ? (
                         <img
                             src={product.image}
@@ -133,8 +212,11 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                            <span className="text-gray-500">Sin imagen</span>
+                        <div 
+                            className="w-full h-full flex items-center justify-center"
+                            style={{ backgroundColor: data.colors.background }}
+                        >
+                            <span style={{ color: data.colors.text, opacity: 0.5 }}>Sin imagen</span>
                         </div>
                     )}
                     {discount > 0 && (
@@ -150,11 +232,18 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     )}
                 </div>
                 <div className="p-3">
-                    <h4 className="font-medium text-sm text-white line-clamp-1">{product.name}</h4>
+                    <h4 
+                        className="font-medium text-sm line-clamp-1" 
+                        style={{ color: data.colors.cardText || data.colors.heading }}
+                    >
+                        {product.name}
+                    </h4>
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold text-white">${product.price.toFixed(2)}</span>
+                        <span className="font-bold" style={{ color: data.colors.cardText || data.colors.heading }}>
+                            ${product.price.toFixed(2)}
+                        </span>
                         {product.compareAtPrice && (
-                            <span className="text-sm line-through text-gray-400">
+                            <span className="text-sm line-through" style={{ color: data.colors.text, opacity: 0.6 }}>
                                 ${product.compareAtPrice.toFixed(2)}
                             </span>
                         )}

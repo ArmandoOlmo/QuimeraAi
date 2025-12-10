@@ -14,6 +14,8 @@ interface RatingStarsProps {
     onChange?: (rating: number) => void;
     showValue?: boolean;
     color?: string;
+    emptyColor?: string;
+    textColor?: string;
 }
 
 const RatingStars: React.FC<RatingStarsProps> = ({
@@ -24,6 +26,8 @@ const RatingStars: React.FC<RatingStarsProps> = ({
     onChange,
     showValue = false,
     color = '#facc15', // Yellow-400
+    emptyColor = '#d1d5db', // Gray-300
+    textColor = '#6b7280', // Gray-500
 }) => {
     const [hoverRating, setHoverRating] = useState(0);
 
@@ -79,15 +83,11 @@ const RatingStars: React.FC<RatingStarsProps> = ({
                         >
                             <Star
                                 size={iconSize}
-                                className={`transition-colors ${
-                                    isFilled || isHalfFilled
-                                        ? ''
-                                        : 'text-gray-300 dark:text-gray-600'
-                                }`}
+                                className="transition-colors"
                                 style={
                                     isFilled || isHalfFilled
                                         ? { color, fill: color }
-                                        : {}
+                                        : { color: emptyColor }
                                 }
                                 fill={isFilled ? 'currentColor' : 'none'}
                             />
@@ -96,7 +96,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({
                 })}
             </div>
             {showValue && (
-                <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
+                <span className="ml-1 text-sm" style={{ color: textColor }}>
                     {rating.toFixed(1)}
                 </span>
             )}

@@ -260,7 +260,7 @@ export class TemplateMatchingService {
     }
     
     return templates.map(t => {
-      const globalColors = t.theme?.globalColors || {};
+      const globalColors = (t.theme?.globalColors || {}) as Partial<{ primary: string; secondary: string; background: string; accent: string; text: string }>;
       const colorProfile = analyzeTemplateColors(globalColors);
       const industry = getTemplateIndustry(t);
       const tone = getTemplateTone(t);

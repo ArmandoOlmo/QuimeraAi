@@ -123,7 +123,7 @@ interface EditorContextType {
     saveProject: () => Promise<void>;
     createProjectFromTemplate: (templateId: string, newName?: string) => Promise<void>;
     deleteProject: (projectId: string) => Promise<void>;
-    addNewProject: (project: Project) => Promise<void>;
+    addNewProject: (project: Project) => Promise<string | void>;
     themeMode: ThemeMode;
     setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
     files: FileRecord[];
@@ -1607,6 +1607,18 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 }
             }
 
+            // Initialize storeSettings with defaults if not present
+            if (!mergedData.storeSettings) {
+                mergedData.storeSettings = {
+                    showFilterSidebar: true,
+                    showSearchBar: true,
+                    showSortOptions: true,
+                    showViewModeToggle: true,
+                    defaultViewMode: 'grid',
+                    productsPerPage: 12
+                };
+            }
+
             setData(mergedData);
             setTheme(projectToLoad.theme);
             setBrandIdentity(projectToLoad.brandIdentity || initialData.brandIdentity);
@@ -1689,15 +1701,37 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 order = ['typography' as PageSection, ...order];
             }
 
+            // Ensure 'storeSettings' is in componentOrder for legacy projects
+            if (!order.includes('storeSettings' as PageSection)) {
+                // Insert before 'products' or at the ecommerce section start
+                const productsIndex = order.indexOf('products' as PageSection);
+                if (productsIndex !== -1) {
+                    const newOrder = [...order];
+                    newOrder.splice(productsIndex, 0, 'storeSettings' as PageSection);
+                    order = newOrder;
+                } else {
+                    // Insert before footer if no products section
+                    const footerIndex = order.indexOf('footer');
+                    if (footerIndex !== -1) {
+                        const newOrder = [...order];
+                        newOrder.splice(footerIndex, 0, 'storeSettings' as PageSection);
+                        order = newOrder;
+                    } else {
+                        order = [...order, 'storeSettings' as PageSection];
+                    }
+                }
+            }
+
             setComponentOrder(order);
 
-            // Ensure sectionVisibility includes header, typography, map and menu
+            // Ensure sectionVisibility includes header, typography, map, menu and storeSettings
             const visibility = {
                 ...projectToLoad.sectionVisibility,
                 header: projectToLoad.sectionVisibility.header ?? true,
                 typography: projectToLoad.sectionVisibility.typography ?? true,
                 map: projectToLoad.sectionVisibility.map ?? true,
-                menu: projectToLoad.sectionVisibility.menu ?? false  // Default to false for legacy projects
+                menu: projectToLoad.sectionVisibility.menu ?? false,  // Default to false for legacy projects
+                storeSettings: projectToLoad.sectionVisibility.storeSettings ?? true  // Default to true for ecommerce config
             };
             setSectionVisibility(visibility);
             setMenus(Array.isArray(projectToLoad.menus) ? projectToLoad.menus : [{ id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }]);
@@ -3143,8 +3177,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     const response = await ai.models.generateContent({
                         model: modelName,
                         contents: [{ role: 'user', parts: contentParts }],
-                        generationConfig,
-                    });
+                        config: generationConfig,
+                    } as any);
 
                     // Log API call success
                     if (user) {

@@ -3,6 +3,7 @@ import React from 'react';
 import { CtaData, PaddingSize, BorderRadiusSize, FontSize, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import CornerGradient from './ui/CornerGradient';
+import { ArrowRight } from 'lucide-react';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   sm: 'py-10 md:py-16',
@@ -97,9 +98,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                       style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
                   >
                       <span>{buttonText}</span>
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </a>
                   
                   {/* Secondary text */}

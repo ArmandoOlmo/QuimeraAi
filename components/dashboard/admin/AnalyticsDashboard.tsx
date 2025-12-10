@@ -20,6 +20,7 @@ const AnalyticsDashboard: React.FC = () => {
 
   const componentNames: Record<PageSection, string> = {
     hero: 'Hero Section',
+    heroSplit: 'Hero Split',
     features: 'Features Section',
     testimonials: 'Testimonials Section',
     slideshow: 'Slideshow Section',
@@ -35,11 +36,24 @@ const AnalyticsDashboard: React.FC = () => {
     howItWorks: 'How It Works',
     map: 'Location Map',
     menu: 'Restaurant Menu',
+    banner: 'Banner',
     chatbot: 'AI Chatbot',
     footer: 'Footer',
     header: 'Header',
     typography: 'Typography',
     colors: 'Global Colors',
+    products: 'Products Grid',
+    storeSettings: 'Store Settings',
+    featuredProducts: 'Featured Products',
+    categoryGrid: 'Category Grid',
+    productHero: 'Product Hero',
+    saleCountdown: 'Sale Countdown',
+    trustBadges: 'Trust Badges',
+    recentlyViewed: 'Recently Viewed',
+    productReviews: 'Product Reviews',
+    collectionBanner: 'Collection Banner',
+    productBundle: 'Product Bundle',
+    announcementBar: 'Announcement Bar',
   };
 
   // Calculate analytics

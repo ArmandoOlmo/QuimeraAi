@@ -1,14 +1,19 @@
 /**
  * AnnouncementBar Component
  * Top bar for announcements, promotions, shipping info, etc.
+ * 
+ * Uses unified storefront colors system
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
+import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
+    storeId?: string;
 }
 
 const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> = {
@@ -22,7 +27,12 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
     'info': Info,
 };
 
-const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
+const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
+    const editorContext = useSafeEditor();
+    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    
+    // Unified colors system
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
     const [isVisible, setIsVisible] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -63,6 +73,13 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
 
     if (!isVisible) return null;
 
+    // Get effective colors from data.colors (Web Editor) with fallbacks
+    const bgColor = data.colors.background || colors.primary;
+    const textColor = data.colors.text || colors.buttonText;
+    const linkColor = data.colors.linkColor || textColor;
+    const iconColor = data.colors.iconColor || textColor;
+    const borderColor = data.colors.borderColor;
+
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (
         <span key={index} className="inline-flex items-center gap-2">
@@ -71,7 +88,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
                 <a
                     href={message.link}
                     className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
-                    style={{ color: data.colors.linkColor || data.colors.text }}
+                    style={{ color: linkColor }}
                 >
                     {message.linkText}
                 </a>
@@ -84,15 +101,15 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
             style={{
-                backgroundColor: data.colors.background,
-                color: data.colors.text,
-                borderBottom: data.colors.borderColor ? `1px solid ${data.colors.borderColor}` : 'none',
+                backgroundColor: bgColor,
+                color: textColor,
+                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
                 height: data.height ? `${data.height}px` : 'auto',
             }}
         >
             <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
                 {data.showIcon && (
-                    <IconComponent size={16} style={{ color: data.colors.iconColor || data.colors.text }} />
+                    <IconComponent size={16} style={{ color: iconColor }} />
                 )}
                 <div className="flex items-center gap-4">
                     {messages.map((msg, i) => (
@@ -120,9 +137,9 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
         <div
             className={`${getPaddingY()} ${getFontSize()} overflow-hidden`}
             style={{
-                backgroundColor: data.colors.background,
-                color: data.colors.text,
-                borderBottom: data.colors.borderColor ? `1px solid ${data.colors.borderColor}` : 'none',
+                backgroundColor: bgColor,
+                color: textColor,
+                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
                 height: data.height ? `${data.height}px` : 'auto',
             }}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
@@ -130,8 +147,8 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
         >
             <div className="relative flex items-center">
                 {data.showIcon && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: data.colors.background }}>
-                        <IconComponent size={16} style={{ color: data.colors.iconColor || data.colors.text }} />
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
+                        <IconComponent size={16} style={{ color: iconColor }} />
                     </div>
                 )}
                 <div
@@ -153,7 +170,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
                                     <a
                                         href={msg.link}
                                         className="font-semibold underline underline-offset-2 hover:no-underline"
-                                        style={{ color: data.colors.linkColor || data.colors.text }}
+                                        style={{ color: linkColor }}
                                     >
                                         {msg.linkText}
                                     </a>
@@ -163,7 +180,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
                     </div>
                 </div>
                 {data.dismissible && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: data.colors.background }}>
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
                         <button
                             onClick={() => setIsVisible(false)}
                             className="p-1 rounded hover:bg-white/10 transition-colors"
@@ -191,9 +208,9 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
             style={{
-                backgroundColor: data.colors.background,
-                color: data.colors.text,
-                borderBottom: data.colors.borderColor ? `1px solid ${data.colors.borderColor}` : 'none',
+                backgroundColor: bgColor,
+                color: textColor,
+                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
                 height: data.height ? `${data.height}px` : 'auto',
             }}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
@@ -211,7 +228,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
                 )}
 
                 {data.showIcon && (
-                    <IconComponent size={16} style={{ color: data.colors.iconColor || data.colors.text }} />
+                    <IconComponent size={16} style={{ color: iconColor }} />
                 )}
 
                 <div className="relative overflow-hidden" style={{ minWidth: '200px' }}>
@@ -252,7 +269,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data }) => {
                                     className={`w-1.5 h-1.5 rounded-full transition-all ${
                                         i === currentIndex ? 'w-3 opacity-100' : 'opacity-50'
                                     }`}
-                                    style={{ backgroundColor: data.colors.text }}
+                                    style={{ backgroundColor: textColor }}
                                     aria-label={`Ir a mensaje ${i + 1}`}
                                 />
                             ))}

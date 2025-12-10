@@ -4,9 +4,9 @@
  */
 
 // Size Types
-export type PaddingSize = 'sm' | 'md' | 'lg';
+export type PaddingSize = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 export type FontSize = 'sm' | 'md' | 'lg' | 'xl';
-export type BorderRadiusSize = 'none' | 'md' | 'xl' | 'full';
+export type BorderRadiusSize = 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 export type BorderSize = 'none' | 'sm' | 'md' | 'lg';
 
 // Layout Types
@@ -47,6 +47,8 @@ export type PageSection =
     | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' 
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map' 
     | 'menu' | 'banner' | 'products'
+    // Store settings
+    | 'storeSettings'
     // Ecommerce sections
     | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' 
     | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' 
@@ -76,6 +78,7 @@ export interface ThemeData {
     fontFamilyHeader: FontFamily;
     fontFamilyBody: FontFamily;
     fontFamilyButton: FontFamily;
+    fontFamily?: string;         // Legacy: general font family
     // All Caps options (uppercase transform)
     headingsAllCaps?: boolean;   // Apply to section titles/headings
     buttonsAllCaps?: boolean;    // Apply to buttons
@@ -83,6 +86,12 @@ export interface ThemeData {
     // Global Colors
     pageBackground: string;
     globalColors: GlobalColors;
+    // Legacy color properties (for backward compatibility with deploymentService)
+    primaryColor?: string;
+    secondaryColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    headingColor?: string;
     // Palette Colors - colores importados de Coolors.co u otras paletas
     // Se muestran en el selector de colores para acceso rápido
     paletteColors?: string[];

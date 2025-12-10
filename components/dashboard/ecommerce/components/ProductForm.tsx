@@ -14,6 +14,7 @@ import {
     Image as ImageIcon,
     GripVertical,
     Sparkles,
+    FolderOpen,
 } from 'lucide-react';
 import { useEditor } from '../../../../contexts/EditorContext';
 import { useProducts } from '../hooks/useProducts';
@@ -23,6 +24,7 @@ import { Product, ProductStatus, ProductImage } from '../../../../types/ecommerc
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
 import AIAssistButton from '../../../onboarding/components/AIAssistButton';
+import EcommerceImagePicker from './EcommerceImagePicker';
 
 interface ProductFormProps {
     product?: Product | null;
@@ -72,7 +74,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
     });
     const [images, setImages] = useState<ProductImage[]>([]);
     const [newImages, setNewImages] = useState<File[]>([]);
+    const [libraryImages, setLibraryImages] = useState<string[]>([]); // URLs de imágenes seleccionadas de la biblioteca
     const [tagInput, setTagInput] = useState('');
+    const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
 
     useEffect(() => {
         if (product) {
@@ -103,10 +107,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
         setIsSaving(true);
 
         try {
+            // Incluir URLs de imágenes de la biblioteca en el formData
+            const formDataWithLibraryImages = {
+                ...formData,
+                libraryImageUrls: libraryImages, // URLs de imágenes seleccionadas de la biblioteca
+            };
+            
             if (product) {
-                await updateProduct(product.id, formData, newImages);
+                await updateProduct(product.id, formDataWithLibraryImages, newImages);
             } else {
-                await addProduct(formData, newImages);
+                await addProduct(formDataWithLibraryImages, newImages);
             }
             onSuccess();
         } catch (error) {
@@ -125,6 +135,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
     const handleRemoveNewImage = (index: number) => {
         setNewImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleRemoveLibraryImage = (url: string) => {
+        setLibraryImages((prev) => prev.filter((u) => u !== url));
+    };
+
+    const handleSelectFromLibrary = (url: string) => {
+        // Evitar duplicados
+        if (!libraryImages.includes(url)) {
+            setLibraryImages((prev) => [...prev, url]);
+        }
     };
 
     const handleRemoveExistingImage = async (imageId: string) => {
@@ -322,9 +343,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
                         {/* Images */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-medium text-foreground">
-                                {t('ecommerce.images', 'Imágenes')}
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-medium text-foreground">
+                                    {t('ecommerce.images', 'Imágenes')}
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsImagePickerOpen(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+                                >
+                                    <FolderOpen size={16} />
+                                    {t('ecommerce.selectFromLibrary', 'Seleccionar de Biblioteca')}
+                                </button>
+                            </div>
 
                             <div className="grid grid-cols-4 gap-4">
                                 {/* Existing Images */}
@@ -338,6 +369,27 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveExistingImage(image.id)}
+                                            className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {/* Library Images (selected from project library) */}
+                                {libraryImages.map((url, index) => (
+                                    <div key={`library-${index}`} className="relative aspect-square group">
+                                        <img
+                                            src={url}
+                                            alt=""
+                                            className="w-full h-full object-cover rounded-lg ring-2 ring-primary/50"
+                                        />
+                                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded">
+                                            {t('ecommerce.fromLibrary', 'Biblioteca')}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveLibraryImage(url)}
                                             className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <Trash2 size={14} />
@@ -366,7 +418,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                 {/* Upload Button */}
                                 <label className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-primary">
                                     <Upload className="text-muted-foreground mb-2" size={24} />
-                                    <span className="text-muted-foreground text-sm">Subir</span>
+                                    <span className="text-muted-foreground text-sm">{t('ecommerce.upload', 'Subir')}</span>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -377,6 +429,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                 </label>
                             </div>
                         </div>
+
+                        {/* Image Picker Modal */}
+                        <EcommerceImagePicker
+                            isOpen={isImagePickerOpen}
+                            onClose={() => setIsImagePickerOpen(false)}
+                            onSelect={handleSelectFromLibrary}
+                            currentImages={[...images.map(img => img.url), ...libraryImages]}
+                            multiple={true}
+                        />
 
                         {/* Pricing */}
                         <div className="space-y-4">

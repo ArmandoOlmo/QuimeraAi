@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ServiceIcon } from '../../types';
 import * as LucideIcons from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 // Icon categories for services
 const serviceIconCategories = {
@@ -164,9 +165,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                     {CurrentIcon}
                     <span>{value}</span>
                 </div>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDown className="w-4 h-4" />
             </button>
             
             {isOpen && (
