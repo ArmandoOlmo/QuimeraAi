@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/core/AuthContext';
-import { useUI } from '../../contexts/core/UIContext';
-import { useAdmin } from '../../contexts/admin';
+import { useEditor } from '../../contexts/EditorContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
@@ -47,12 +45,7 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  
-  // Using modular contexts
-  const { user, userDocument } = useAuth();
-  const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
-  const { usage, isLoadingUsage } = useAdmin();
-  
+  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage, sidebarOrder, setSidebarOrder } = useEditor();
   const { navigate, path } = useRouter();
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true

@@ -1,8 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { AppProviders } from './contexts/AppProviders';
-import { useAuth } from './contexts/core/AuthContext';
-import { useUI } from './contexts/core/UIContext';
-import { useProject } from './contexts/project';
+import { useEditor } from './contexts/EditorContext';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
@@ -37,7 +35,7 @@ const isPreviewRoute = () => {
 };
 
 // =============================================================================
-// APP CONTENT - Authenticated User Content (using modular contexts)
+// APP CONTENT - Authenticated User Content
 // =============================================================================
 
 interface AppContentProps {
@@ -51,21 +49,21 @@ const AppContent: React.FC<AppContentProps> = ({
   routeAdminView,
   routeProjectId
 }) => {
-  // Using modular contexts
-  const { userDocument } = useAuth();
-  const { 
-    view, 
-    setView, 
-    setAdminView, 
-    isSidebarOpen, 
-    setIsSidebarOpen, 
-    previewRef 
-  } = useUI();
-  const { activeProjectId, loadProject, data } = useProject();
-  
+  const {
+    isSidebarOpen,
+    setIsSidebarOpen,
+    view,
+    setView,
+    previewRef,
+    activeProjectId,
+    loadProject,
+    data,
+    userDocument,
+    setAdminView,
+  } = useEditor();
   const seoConfig = useSEO();
 
-  // Sync route state with contexts
+  // Sync route state with EditorContext
   useEffect(() => {
     // Sync view from route
     if (routeView && routeView !== view) {
@@ -74,6 +72,7 @@ const AppContent: React.FC<AppContentProps> = ({
 
     // Sync adminView from route - always sync when on superadmin view
     if (routeView === 'superadmin') {
+      // Use routeAdminView or default to 'main' for /admin root
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
@@ -109,7 +108,7 @@ const AppContent: React.FC<AppContentProps> = ({
 };
 
 // =============================================================================
-// AUTH GATE - Manages Authentication Flow with Router (using modular contexts)
+// AUTH GATE - Manages Authentication Flow with Router
 // =============================================================================
 
 const AuthGate: React.FC = () => {
@@ -121,7 +120,7 @@ const AuthGate: React.FC = () => {
     isProfileModalOpen,
     closeProfileModal,
     userDocument
-  } = useAuth();
+  } = useEditor();
 
   const { navigate } = useRouter();
 
@@ -202,7 +201,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Render preview route without authentication or providers
+  // Render preview route without authentication or EditorProvider
   if (isPreview) {
     return (
       <ErrorBoundary>
@@ -213,7 +212,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Normal app with authentication and routing using modular contexts
+  // Normal app with authentication and routing
   return (
     <ErrorBoundary>
       <AppProviders>
