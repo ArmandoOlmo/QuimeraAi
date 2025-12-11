@@ -1,21 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { EditorProvider, useEditor } from './contexts/EditorContext';
-import { ToastProvider } from './contexts/ToastContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
+import { AppProviders } from './contexts/AppProviders';
+import { useAuth } from './contexts/core/AuthContext';
+import { useUI } from './contexts/core/UIContext';
+import { useProject } from './contexts/project';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
-import ProfileModal from './components/dashboard/ProfileModal';
-import GlobalAiAssistant from './components/ui/GlobalAiAssistant';
-import OnboardingModal from './components/onboarding/OnboardingModal';
 import GlobalSEO from './components/GlobalSEO';
 import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
-import ViewRouter from './components/ViewRouter';
-import PublicWebsitePreview from './components/PublicWebsitePreview';
 import { auth, signOut } from './firebase';
 import { View, AdminView } from './types/ui';
+
+// Lazy-loaded components for code-splitting
+const ProfileModal = lazy(() => import('./components/dashboard/ProfileModal'));
+const GlobalAiAssistant = lazy(() => import('./components/ui/GlobalAiAssistant'));
+const OnboardingModal = lazy(() => import('./components/onboarding/OnboardingModal'));
+const ViewRouter = lazy(() => import('./components/ViewRouter'));
+const PublicWebsitePreview = lazy(() => import('./components/PublicWebsitePreview'));
+
+// Minimal loading fallback for lazy components
+const MinimalLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>
+);
 
 // =============================================================================
 // PREVIEW ROUTE CHECK (Clean URLs - no hash)
@@ -27,7 +37,7 @@ const isPreviewRoute = () => {
 };
 
 // =============================================================================
-// APP CONTENT - Authenticated User Content
+// APP CONTENT - Authenticated User Content (using modular contexts)
 // =============================================================================
 
 interface AppContentProps {
@@ -41,21 +51,21 @@ const AppContent: React.FC<AppContentProps> = ({
   routeAdminView,
   routeProjectId
 }) => {
-  const {
-    isSidebarOpen,
-    setIsSidebarOpen,
-    view,
-    setView,
-    previewRef,
-    activeProjectId,
-    loadProject,
-    data,
-    userDocument,
-    setAdminView,
-  } = useEditor();
+  // Using modular contexts
+  const { userDocument } = useAuth();
+  const { 
+    view, 
+    setView, 
+    setAdminView, 
+    isSidebarOpen, 
+    setIsSidebarOpen, 
+    previewRef 
+  } = useUI();
+  const { activeProjectId, loadProject, data } = useProject();
+  
   const seoConfig = useSEO();
 
-  // Sync route state with EditorContext
+  // Sync route state with contexts
   useEffect(() => {
     // Sync view from route
     if (routeView && routeView !== view) {
@@ -64,7 +74,6 @@ const AppContent: React.FC<AppContentProps> = ({
 
     // Sync adminView from route - always sync when on superadmin view
     if (routeView === 'superadmin') {
-      // Use routeAdminView or default to 'main' for /admin root
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
@@ -78,23 +87,29 @@ const AppContent: React.FC<AppContentProps> = ({
   return (
     <>
       <GlobalSEO config={seoConfig} />
-      <ViewRouter
-        view={view}
-        userDocument={userDocument}
-        activeProjectId={activeProjectId}
-        data={data}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        previewRef={previewRef}
-      />
-      <GlobalAiAssistant />
-      <OnboardingModal />
+      <Suspense fallback={<MinimalLoader />}>
+        <ViewRouter
+          view={view}
+          userDocument={userDocument}
+          activeProjectId={activeProjectId}
+          data={data}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          previewRef={previewRef}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GlobalAiAssistant />
+      </Suspense>
+      <Suspense fallback={null}>
+        <OnboardingModal />
+      </Suspense>
     </>
   );
 };
 
 // =============================================================================
-// AUTH GATE - Manages Authentication Flow with Router
+// AUTH GATE - Manages Authentication Flow with Router (using modular contexts)
 // =============================================================================
 
 const AuthGate: React.FC = () => {
@@ -106,7 +121,7 @@ const AuthGate: React.FC = () => {
     isProfileModalOpen,
     closeProfileModal,
     userDocument
-  } = useEditor();
+  } = useAuth();
 
   const { navigate } = useRouter();
 
@@ -151,7 +166,9 @@ const AuthGate: React.FC = () => {
             routeProjectId={projectId}
           />
           {isProfileModalOpen && (
-            <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
+            <Suspense fallback={null}>
+              <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
+            </Suspense>
           )}
         </>
       )}
@@ -185,25 +202,23 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Render preview route without authentication or EditorProvider
+  // Render preview route without authentication or providers
   if (isPreview) {
     return (
       <ErrorBoundary>
-        <PublicWebsitePreview />
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicWebsitePreview />
+        </Suspense>
       </ErrorBoundary>
     );
   }
 
-  // Normal app with authentication and routing
+  // Normal app with authentication and routing using modular contexts
   return (
     <ErrorBoundary>
-      <EditorProvider>
-        <ToastProvider>
-          <LanguageProvider>
-            <AuthGate />
-          </LanguageProvider>
-        </ToastProvider>
-      </EditorProvider>
+      <AppProviders>
+        <AuthGate />
+      </AppProviders>
     </ErrorBoundary>
   );
 };

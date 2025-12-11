@@ -4,9 +4,9 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, onAuthStateChanged, auth, db, doc, getDoc } from '../../firebase';
+import { User, onAuthStateChanged, auth, db, doc, getDoc, setDoc } from '../../firebase';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
-import { getPermissions, isOwner, determineRole } from '../../constants/roles';
+import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../../constants/roles';
 
 interface AuthContextType {
     // User State
@@ -19,9 +19,15 @@ interface AuthContextType {
     verificationEmail: string | null;
     setVerificationEmail: React.Dispatch<React.SetStateAction<string | null>>;
     
+    // Profile Modal
+    isProfileModalOpen: boolean;
+    openProfileModal: () => void;
+    closeProfileModal: () => void;
+    
     // Permissions
     userPermissions: RolePermissions;
     canPerform: (permission: keyof RolePermissions) => boolean;
+    isUserOwner: boolean;
     
     // Tenant
     currentTenant: string | null;
@@ -39,6 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
     const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     
     // Auth State Observer
     useEffect(() => {
@@ -50,33 +57,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     const userSnap = await getDoc(userDocRef);
                     
+                    let finalUserDoc: Omit<UserDocument, 'id'>;
+                    
                     if (userSnap.exists()) {
-                        const userData = userSnap.data() as UserDocument;
-                        
-                        // Determine role
-                        const role = determineRole(firebaseUser.email || '') as UserRole;
-                        const finalUserData: UserDocument = {
-                            ...userData,
-                            role: userData.role || role
-                        };
-                        
-                        setUserDocument(finalUserData);
-                        setUserPermissions(getPermissions(finalUserData.role || 'user'));
+                        finalUserDoc = userSnap.data() as Omit<UserDocument, 'id'>;
                     } else {
                         // Create user document if doesn't exist
-                        const role = determineRole(firebaseUser.email || '') as UserRole;
-                        const newUserDoc: UserDocument = {
-                            id: firebaseUser.uid,
-                            name: firebaseUser.displayName || 'User',
-                            email: firebaseUser.email || '',
+                        const newUserDocData = {
+                            name: firebaseUser.displayName || 'Unnamed User',
+                            email: firebaseUser.email!,
                             photoURL: firebaseUser.photoURL || '',
-                            role: role,
                         };
-                        setUserDocument(newUserDoc);
-                        setUserPermissions(getPermissions(role));
+                        await setDoc(userDocRef, newUserDocData);
+                        finalUserDoc = newUserDocData;
                     }
+                    
+                    // Auto-promote owner
+                    if (isOwner(firebaseUser.email!) && finalUserDoc.role !== 'owner') {
+                        try {
+                            finalUserDoc.role = 'owner';
+                            await setDoc(userDocRef, { role: 'owner' }, { merge: true });
+                        } catch (e) {
+                            console.warn("Failed to auto-promote owner:", e);
+                        }
+                    }
+                    
+                    setUserDocument({ ...finalUserDoc, id: firebaseUser.uid });
+                    setUserPermissions(getPermissions(finalUserDoc.role || 'user'));
                 } catch (error) {
                     console.error('Error fetching user document:', error);
+                    // Fallback user document
+                    const fallbackDoc: UserDocument = {
+                        id: firebaseUser.uid,
+                        name: firebaseUser.displayName || 'User',
+                        email: firebaseUser.email || '',
+                        photoURL: firebaseUser.photoURL || '',
+                    };
+                    setUserDocument(fallbackDoc);
+                    setUserPermissions(getPermissions('user'));
                 }
             } else {
                 setUserDocument(null);
@@ -94,9 +112,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return userPermissions[permission] || false;
     };
     
+    const openProfileModal = () => setIsProfileModalOpen(true);
+    const closeProfileModal = () => setIsProfileModalOpen(false);
+    
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
     const canAccessSuperAdmin = ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
+    const isUserOwner = isOwner(user?.email || '');
     
     const value: AuthContextType = {
         user,
@@ -105,8 +127,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUserDocument,
         verificationEmail,
         setVerificationEmail,
+        isProfileModalOpen,
+        openProfileModal,
+        closeProfileModal,
         userPermissions,
         canPerform,
+        isUserOwner,
         currentTenant,
         currentTenantRole,
         canAccessSuperAdmin,
@@ -121,6 +147,10 @@ export const useAuth = (): AuthContextType => {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
+};
+
+export const useSafeAuth = (): AuthContextType | null => {
+    return useContext(AuthContext) || null;
 };
 
 

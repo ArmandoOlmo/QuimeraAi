@@ -8,13 +8,15 @@
  * Orden de dependencias:
  * 1. AuthProvider - No depende de nada
  * 2. UIProvider - No depende de nada  
- * 3. ProjectProvider - Depende de Auth
- * 4. FilesProvider - Depende de Auth
- * 5. CRMProvider - Depende de Auth
- * 6. CMSProvider - Depende de Auth
- * 7. AdminProvider - Depende de Auth
- * 8. DomainsProvider - Depende de Auth
- * 9. AIProvider - Depende de Auth
+ * 3. ToastProvider - No depende de nada
+ * 4. LanguageProvider - No depende de nada
+ * 5. ProjectProvider - Depende de Auth
+ * 6. FilesProvider - Depende de Auth
+ * 7. CRMProvider - Depende de Auth
+ * 8. CMSProvider - Depende de Auth
+ * 9. AdminProvider - Depende de Auth
+ * 10. DomainsProvider - Depende de Auth
+ * 11. AIProvider - Depende de Auth
  */
 
 import React, { ReactNode } from 'react';
@@ -22,6 +24,8 @@ import React, { ReactNode } from 'react';
 // Core Contexts
 import { AuthProvider } from './core/AuthContext';
 import { UIProvider } from './core/UIContext';
+import { ToastProvider } from './ToastContext';
+import { LanguageProvider } from './LanguageContext';
 
 // Feature Contexts
 import { ProjectProvider } from './project';
@@ -50,35 +54,43 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
     return (
         <AuthProvider>
             <UIProvider>
-                <ProjectProvider>
-                    <FilesProvider>
-                        <CRMProvider>
-                            <CMSProvider>
-                                <AdminProvider>
-                                    <DomainsProvider>
-                                        <AIProvider>
-                                            {children}
-                                        </AIProvider>
-                                    </DomainsProvider>
-                                </AdminProvider>
-                            </CMSProvider>
-                        </CRMProvider>
-                    </FilesProvider>
-                </ProjectProvider>
+                <ToastProvider>
+                    <LanguageProvider>
+                        <ProjectProvider>
+                            <FilesProvider>
+                                <CRMProvider>
+                                    <CMSProvider>
+                                        <AdminProvider>
+                                            <DomainsProvider>
+                                                <AIProvider>
+                                                    {children}
+                                                </AIProvider>
+                                            </DomainsProvider>
+                                        </AdminProvider>
+                                    </CMSProvider>
+                                </CRMProvider>
+                            </FilesProvider>
+                        </ProjectProvider>
+                    </LanguageProvider>
+                </ToastProvider>
             </UIProvider>
         </AuthProvider>
     );
 };
 
 /**
- * LightProviders - Versión ligera solo con Auth y UI
+ * LightProviders - Versión ligera solo con Auth, UI, Toast y Language
  * Útil para rutas públicas o componentes que no necesitan todos los contextos
  */
 export const LightProviders: React.FC<AppProvidersProps> = ({ children }) => {
     return (
         <AuthProvider>
             <UIProvider>
-                {children}
+                <ToastProvider>
+                    <LanguageProvider>
+                        {children}
+                    </LanguageProvider>
+                </ToastProvider>
             </UIProvider>
         </AuthProvider>
     );

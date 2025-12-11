@@ -2,37 +2,35 @@
  * Contexts Index
  * Punto de entrada principal para todos los contextos de la aplicación
  * 
- * IMPORTANTE: La app actualmente usa EditorProvider (legacy).
- * Los nuevos hooks modulares (useAuth, useProject, etc.) solo funcionan
- * cuando la app esté envuelta en AppProviders.
+ * La app ahora usa AppProviders con contextos modulares.
+ * Cada hook (useAuth, useProject, useCRM, etc.) maneja una responsabilidad específica.
  * 
- * Para migrar la app:
- * 1. Reemplazar <EditorProvider> con <AppProviders> en App.tsx
- * 2. Migrar componentes uno por uno a los nuevos hooks
+ * Ejemplo de uso:
+ * ```tsx
+ * import { useAuth, useProject, useCRM } from '@/contexts';
  * 
- * Mientras tanto, usa useEditor() que sigue funcionando.
+ * const { user, userDocument } = useAuth();
+ * const { projects, loadProject } = useProject();
+ * const { leads, addLead } = useCRM();
+ * ```
  */
 
 // =============================================================================
-// LEGACY EXPORTS (Usar mientras la app use EditorProvider)
+// APP PROVIDERS (Main wrapper)
 // =============================================================================
-export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
+export { AppProviders, LightProviders } from './AppProviders';
+
+// =============================================================================
+// CORE CONTEXTS (Always available)
+// =============================================================================
+export { AuthProvider, useAuth, useSafeAuth } from './core/AuthContext';
+export { UIProvider, useUI } from './core/UIContext';
 export { ToastProvider, useToast } from './ToastContext';
 export { LanguageProvider, useLanguage } from './LanguageContext';
 
 // =============================================================================
-// NEW MODULAR CONTEXTS (Solo funcionan con AppProviders)
+// FEATURE CONTEXTS
 // =============================================================================
-// NOTA: No usar estos hooks hasta migrar App.tsx a AppProviders
-
-// App Providers (Composition) - Para futura migración
-export { AppProviders, LightProviders } from './AppProviders';
-
-// Core Contexts
-export { AuthProvider, useAuth } from './core/AuthContext';
-export { UIProvider, useUI } from './core/UIContext';
-
-// Feature Contexts
 export { ProjectProvider, useProject, useSafeProject } from './project';
 export { FilesProvider, useFiles } from './files';
 export { CRMProvider, useCRM } from './crm';
@@ -41,5 +39,11 @@ export { AdminProvider, useAdmin } from './admin';
 export { DomainsProvider, useDomains } from './domains';
 export { AIProvider, useAI } from './ai';
 
-// Compatibility layer (para cuando se use AppProviders)
+// =============================================================================
+// LEGACY EXPORTS (For backwards compatibility)
+// =============================================================================
+// The old EditorContext is still available for components not yet migrated
+export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
+
+// Compatibility layer that maps new contexts to old useEditor interface
 export { useEditorCompat } from './compatibility';
