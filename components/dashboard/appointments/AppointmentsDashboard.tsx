@@ -32,9 +32,12 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useCRM } from '../../../contexts/crm/CRMContext';
+import { useAI } from '../../../contexts/ai/AIContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { 
-    Appointment, 
+import {
+    Appointment,
     AppointmentStatus,
     AppointmentFilters,
     APPOINTMENT_TYPE_CONFIGS,
@@ -85,7 +88,7 @@ const AppointmentsDashboard: React.FC = () => {
     const { user } = useAuth();
     const { leads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    
+
     // Use appointments hook
     const {
         appointments,
@@ -105,7 +108,7 @@ const AppointmentsDashboard: React.FC = () => {
         analytics,
         refresh,
     } = useAppointments();
-    
+
     // Local state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -120,17 +123,17 @@ const AppointmentsDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isGoogleConnected, setIsGoogleConnected] = useState(false);
     const [isGeneratingAiPrep, setIsGeneratingAiPrep] = useState(false);
-    
+
     // Handlers
     const navigateDate = useCallback((direction: 'prev' | 'next' | 'today') => {
         if (direction === 'today') {
             setCurrentDate(new Date());
             return;
         }
-        
+
         const newDate = new Date(currentDate);
         const delta = direction === 'next' ? 1 : -1;
-        
+
         switch (viewMode) {
             case 'day':
                 newDate.setDate(newDate.getDate() + delta);
@@ -142,24 +145,24 @@ const AppointmentsDashboard: React.FC = () => {
                 newDate.setMonth(newDate.getMonth() + delta);
                 break;
         }
-        
+
         setCurrentDate(newDate);
     }, [currentDate, viewMode]);
-    
+
     const handleAppointmentClick = useCallback((appointment: Appointment) => {
         setSelectedAppointment(appointment);
         setIsDetailDrawerOpen(true);
     }, [setSelectedAppointment]);
-    
+
     const handleSlotClick = useCallback((date: Date, hour: number) => {
         setCreateModalInitialDate(date);
         setCreateModalInitialHour(hour);
         setIsCreateModalOpen(true);
     }, []);
-    
+
     const handleCreateAppointment = useCallback(async (data: Partial<Appointment>) => {
         let createdAppointment: Appointment | null = null;
-        
+
         if (editingAppointment) {
             // Update existing appointment
             await updateAppointment(editingAppointment.id, data);
@@ -168,14 +171,14 @@ const AppointmentsDashboard: React.FC = () => {
             // Create new appointment - returns the full Appointment object with id
             createdAppointment = await createAppointment(data);
         }
-        
+
         // Auto-sync to Google Calendar if connected
         if (isGoogleConnected && createdAppointment) {
             try {
                 console.log('🔄 Auto-syncing to Google Calendar...');
-                
+
                 const syncResult = await syncAppointmentToGoogle(createdAppointment, 'primary', true);
-                
+
                 if (syncResult.syncStatus === 'synced') {
                     await updateAppointment(createdAppointment.id, { googleSync: syncResult });
                     console.log('✅ Auto-synced to Google Calendar!');
@@ -187,13 +190,13 @@ const AppointmentsDashboard: React.FC = () => {
                 // Don't fail the creation, just log the sync error
             }
         }
-        
+
         setIsCreateModalOpen(false);
         setCreateModalInitialDate(undefined);
         setCreateModalInitialHour(undefined);
         setEditingAppointment(null);
     }, [createAppointment, updateAppointment, editingAppointment, isGoogleConnected]);
-    
+
     const handleEditAppointment = useCallback(() => {
         if (selectedAppointment) {
             setEditingAppointment(selectedAppointment);
@@ -201,13 +204,13 @@ const AppointmentsDashboard: React.FC = () => {
             setIsCreateModalOpen(true);
         }
     }, [selectedAppointment]);
-    
+
     const handleStatusChange = useCallback(async (status: AppointmentStatus) => {
         if (selectedAppointment) {
             await updateStatus(selectedAppointment.id, status);
         }
     }, [selectedAppointment, updateStatus]);
-    
+
     const handleDeleteAppointment = useCallback(async () => {
         if (selectedAppointment && confirm('¿Estás seguro de que deseas eliminar esta cita?')) {
             await deleteAppointment(selectedAppointment.id);
@@ -215,7 +218,7 @@ const AppointmentsDashboard: React.FC = () => {
             setSelectedAppointment(null);
         }
     }, [selectedAppointment, deleteAppointment, setSelectedAppointment]);
-    
+
     const handleGenerateAiPrep = useCallback(async () => {
         if (!selectedAppointment) return;
         if (hasApiKey === false) {
@@ -226,10 +229,10 @@ const AppointmentsDashboard: React.FC = () => {
         // The actual generation will be handled by the AIPreparationPanel component
         // This just triggers the state for the drawer to know we're generating
     }, [selectedAppointment, hasApiKey, promptForKeySelection]);
-    
+
     const handleAddNote = useCallback(async (content: string) => {
         if (!selectedAppointment) return;
-        
+
         const newNote = {
             id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             content,
@@ -238,37 +241,37 @@ const AppointmentsDashboard: React.FC = () => {
             aiGenerated: false,
             isPrivate: false,
         };
-        
+
         const currentNotes = selectedAppointment.notes || [];
         await updateAppointment(selectedAppointment.id, {
             notes: [...currentNotes, newNote]
         });
-        
+
         // Note: Don't update local state manually - Firebase onSnapshot will handle it
     }, [selectedAppointment, updateAppointment, user]);
-    
+
     const handleUpdateAiInsights = useCallback(async (insights: any) => {
         if (!selectedAppointment) return;
-        
+
         await updateAppointment(selectedAppointment.id, {
             aiInsights: insights
         });
-        
+
         setIsGeneratingAiPrep(false);
         // Note: Don't update local state manually - Firebase onSnapshot will handle it
     }, [selectedAppointment, updateAppointment]);
-    
+
     // Google Calendar state
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [googleError, setGoogleError] = useState<string | null>(null);
-    
+
     // Check if Google Client ID is configured
     const hasGoogleCredentials = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    
+
     // Initialize Google API on mount
     useEffect(() => {
         if (!hasGoogleCredentials) return;
-        
+
         const initGoogle = async () => {
             try {
                 console.log('🔄 Initializing Google Calendar API...');
@@ -286,34 +289,34 @@ const AppointmentsDashboard: React.FC = () => {
                         setIsGoogleConnected(false);
                     }
                 );
-                
+
                 // Check if already authenticated or was previously connected
                 const wasConnected = getSavedConnectionState();
                 if (isAuthenticated() || wasConnected) {
                     console.log('📌 Restoring previous connection state');
                     setIsGoogleConnected(true);
                 }
-                
+
                 console.log('✅ Google Calendar API initialized');
             } catch (error: any) {
                 console.error('❌ Error initializing Google API:', error);
                 setGoogleError('Error al inicializar Google API');
             }
         };
-        
+
         initGoogle();
     }, [hasGoogleCredentials]);
-    
+
     // Google Calendar handlers
     const handleGoogleConnect = useCallback(async () => {
         if (!hasGoogleCredentials) {
             setGoogleError('Google Calendar no está configurado. Agrega VITE_GOOGLE_CLIENT_ID a tu archivo .env.local');
             return;
         }
-        
+
         setIsGoogleLoading(true);
         setGoogleError(null);
-        
+
         try {
             console.log('🔗 Connecting to Google Calendar...');
             const token = await requestAuthorization();
@@ -333,7 +336,7 @@ const AppointmentsDashboard: React.FC = () => {
             setIsGoogleLoading(false);
         }
     }, [hasGoogleCredentials]);
-    
+
     const handleGoogleDisconnect = useCallback(async () => {
         setIsGoogleLoading(true);
         try {
@@ -346,28 +349,28 @@ const AppointmentsDashboard: React.FC = () => {
             setIsGoogleLoading(false);
         }
     }, []);
-    
+
     const handleGoogleSync = useCallback(async () => {
         if (!isGoogleConnected) {
             setGoogleError('Primero conecta con Google Calendar');
             return;
         }
-        
+
         setIsGoogleLoading(true);
         setGoogleError(null);
-        
+
         try {
             console.log('🔄 Syncing appointments to Google Calendar...');
-            
+
             // Sync each appointment to Google Calendar
             let syncedCount = 0;
             let errorCount = 0;
-            
+
             for (const appointment of appointments) {
                 try {
                     console.log(`📅 Syncing: ${appointment.title}`);
                     const syncResult = await syncAppointmentToGoogle(appointment, 'primary', true);
-                    
+
                     if (syncResult.syncStatus === 'synced') {
                         // Update the appointment with Google sync info
                         await updateAppointment(appointment.id, {
@@ -384,9 +387,9 @@ const AppointmentsDashboard: React.FC = () => {
                     console.error(`❌ Error syncing appointment ${appointment.title}:`, err);
                 }
             }
-            
+
             await refresh();
-            
+
             if (errorCount > 0) {
                 setGoogleError(`Sincronización completada con ${errorCount} errores`);
             } else {
@@ -399,11 +402,11 @@ const AppointmentsDashboard: React.FC = () => {
             setIsGoogleLoading(false);
         }
     }, [isGoogleConnected, appointments, updateAppointment, refresh]);
-    
+
     // Search filter
     const displayedAppointments = useMemo(() => {
         if (!searchQuery) return filteredAppointments;
-        
+
         const query = searchQuery.toLowerCase();
         return filteredAppointments.filter(apt =>
             apt.title.toLowerCase().includes(query) ||
@@ -411,7 +414,7 @@ const AppointmentsDashboard: React.FC = () => {
             apt.participants.some(p => p.name.toLowerCase().includes(query))
         );
     }, [filteredAppointments, searchQuery]);
-    
+
     // Get date label for header
     const getDateLabel = () => {
         switch (viewMode) {
@@ -427,7 +430,7 @@ const AppointmentsDashboard: React.FC = () => {
                 weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekEnd.getDate() + 6);
-                
+
                 if (weekStart.getMonth() === weekEnd.getMonth()) {
                     return `${weekStart.getDate()} - ${weekEnd.getDate()} de ${weekStart.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
                 }
@@ -438,22 +441,22 @@ const AppointmentsDashboard: React.FC = () => {
                 return 'Todas las citas';
         }
     };
-    
+
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <button 
-                            onClick={() => setIsMobileMenuOpen(true)} 
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        
+
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg sm:rounded-xl">
                                 <Calendar className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
@@ -466,7 +469,7 @@ const AppointmentsDashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                         {/* Quick Stats */}
                         <div className="hidden lg:flex items-center gap-6 mr-4 pr-4 border-r border-border">
@@ -483,7 +486,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 <p className="text-lg font-bold text-foreground">{analytics.completionRate.toFixed(0)}%</p>
                             </div>
                         </div>
-                        
+
                         {/* View Mode Toggle */}
                         <div className="flex items-center bg-secondary/50 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
                             {[
@@ -498,8 +501,8 @@ const AppointmentsDashboard: React.FC = () => {
                                     title={label}
                                     className={`
                                         p-1.5 sm:p-2 rounded-md sm:rounded-lg transition-all duration-200
-                                        ${viewMode === id 
-                                            ? 'bg-background text-primary shadow-sm' 
+                                        ${viewMode === id
+                                            ? 'bg-background text-primary shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground'
                                         }
                                     `}
@@ -508,14 +511,14 @@ const AppointmentsDashboard: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                        
+
                         {/* Google Calendar */}
                         <button
                             onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
                             className={`
                                 hidden md:flex items-center gap-2 h-9 px-3 rounded-xl text-sm font-medium transition-colors
-                                ${isGoogleConnected 
-                                    ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' 
+                                ${isGoogleConnected
+                                    ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
                                     : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80'
                                 }
                             `}
@@ -525,7 +528,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 {isGoogleConnected ? 'Sincronizado' : 'Google'}
                             </span>
                         </button>
-                        
+
                         {/* Create Button */}
                         <button
                             onClick={() => {
@@ -540,7 +543,7 @@ const AppointmentsDashboard: React.FC = () => {
                         </button>
                     </div>
                 </header>
-                
+
                 {/* Secondary Header - Navigation & Filters */}
                 <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-border/50 flex items-center justify-between bg-background/80 backdrop-blur-sm">
                     {/* Date Navigation */}
@@ -551,26 +554,26 @@ const AppointmentsDashboard: React.FC = () => {
                         >
                             <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
                         </button>
-                        
+
                         <button
                             onClick={() => navigateDate('today')}
                             className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
                         >
                             Hoy
                         </button>
-                        
+
                         <button
                             onClick={() => navigateDate('next')}
                             className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ChevronRight size={18} className="sm:w-5 sm:h-5" />
                         </button>
-                        
+
                         <h2 className="ml-1 sm:ml-2 text-sm sm:text-lg font-bold text-foreground capitalize line-clamp-1 max-w-[120px] sm:max-w-none">
                             {getDateLabel()}
                         </h2>
                     </div>
-                    
+
                     {/* Search & Filters */}
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* Search */}
@@ -584,7 +587,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 className="h-8 sm:h-9 w-32 sm:w-48 lg:w-64 bg-secondary/50 border border-border/50 rounded-xl pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/70"
                             />
                         </div>
-                        
+
                         {/* Filter Button */}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
@@ -598,7 +601,7 @@ const AppointmentsDashboard: React.FC = () => {
                         >
                             <Filter size={16} />
                         </button>
-                        
+
                         {/* Refresh */}
                         <button
                             onClick={refresh}
@@ -613,7 +616,7 @@ const AppointmentsDashboard: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 {/* Filters Panel */}
                 {showFilters && (
                     <div className="px-6 py-4 border-b border-border bg-secondary/20 animate-slide-down">
@@ -633,15 +636,15 @@ const AppointmentsDashboard: React.FC = () => {
                                                     const current = filters.statuses || [];
                                                     setFilters({
                                                         ...filters,
-                                                        statuses: isActive 
+                                                        statuses: isActive
                                                             ? current.filter(s => s !== key)
                                                             : [...current, key as AppointmentStatus]
                                                     });
                                                 }}
                                                 className={`
                                                     px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
-                                                    ${isActive 
-                                                        ? `${config.bgColor} ${config.color}` 
+                                                    ${isActive
+                                                        ? `${config.bgColor} ${config.color}`
                                                         : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
                                                     }
                                                 `}
@@ -652,7 +655,7 @@ const AppointmentsDashboard: React.FC = () => {
                                     })}
                                 </div>
                             </div>
-                            
+
                             {/* Type filters */}
                             <div>
                                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -668,15 +671,15 @@ const AppointmentsDashboard: React.FC = () => {
                                                     const current = filters.types || [];
                                                     setFilters({
                                                         ...filters,
-                                                        types: isActive 
+                                                        types: isActive
                                                             ? current.filter(t => t !== key)
                                                             : [...current, key as any]
                                                     });
                                                 }}
                                                 className={`
                                                     px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
-                                                    ${isActive 
-                                                        ? 'bg-primary text-primary-foreground' 
+                                                    ${isActive
+                                                        ? 'bg-primary text-primary-foreground'
                                                         : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
                                                     }
                                                 `}
@@ -687,7 +690,7 @@ const AppointmentsDashboard: React.FC = () => {
                                     })}
                                 </div>
                             </div>
-                            
+
                             {/* Clear filters */}
                             <div className="flex items-end">
                                 <button
@@ -700,7 +703,7 @@ const AppointmentsDashboard: React.FC = () => {
                         </div>
                     </div>
                 )}
-                
+
                 {/* Main Content */}
                 <main className="flex-1 overflow-hidden flex">
                     {/* Calendar/List View */}
@@ -722,7 +725,7 @@ const AppointmentsDashboard: React.FC = () => {
                                         onSlotClick={handleSlotClick}
                                     />
                                 )}
-                                
+
                                 {viewMode === 'month' && (
                                     <CalendarMonthView
                                         appointments={displayedAppointments}
@@ -734,7 +737,7 @@ const AppointmentsDashboard: React.FC = () => {
                                         }}
                                     />
                                 )}
-                                
+
                                 {viewMode === 'day' && (
                                     <CalendarDayView
                                         appointments={displayedAppointments}
@@ -743,7 +746,7 @@ const AppointmentsDashboard: React.FC = () => {
                                         onSlotClick={handleSlotClick}
                                     />
                                 )}
-                                
+
                                 {viewMode === 'list' && (
                                     <AppointmentsListView
                                         appointments={displayedAppointments}
@@ -763,7 +766,7 @@ const AppointmentsDashboard: React.FC = () => {
                             </>
                         )}
                     </div>
-                    
+
                     {/* Google Calendar Sidebar */}
                     {showGoogleCalendar && (
                         <div className="w-80 border-l border-border p-4 overflow-y-auto bg-background animate-slide-in-right hidden lg:block">
@@ -777,7 +780,7 @@ const AppointmentsDashboard: React.FC = () => {
                     )}
                 </main>
             </div>
-            
+
             {/* Create/Edit Modal */}
             <CreateAppointmentModal
                 isOpen={isCreateModalOpen}
@@ -793,7 +796,7 @@ const AppointmentsDashboard: React.FC = () => {
                 initialHour={createModalInitialHour}
                 editingAppointment={editingAppointment}
             />
-            
+
             {/* Detail Drawer */}
             <AppointmentDetailDrawer
                 appointment={selectedAppointment}

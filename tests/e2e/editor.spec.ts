@@ -40,12 +40,12 @@ test.describe('Editor Interface', () => {
     const count = await toggles.count();
     if (count > 0) {
       const firstToggle = toggles.first();
-      const initialState = await firstToggle.isChecked().catch(() => await firstToggle.getAttribute('aria-checked') === 'true');
+      const initialState = await firstToggle.isChecked().catch(async () => (await firstToggle.getAttribute('aria-checked')) === 'true');
       
       await firstToggle.click();
       await page.waitForTimeout(300);
       
-      const newState = await firstToggle.isChecked().catch(() => await firstToggle.getAttribute('aria-checked') === 'true');
+      const newState = await firstToggle.isChecked().catch(async () => (await firstToggle.getAttribute('aria-checked')) === 'true');
       expect(newState).not.toBe(initialState);
     }
   });

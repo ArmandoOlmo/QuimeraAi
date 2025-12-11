@@ -315,3 +315,4 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
 };
 
 export default ProductComparePage;
+

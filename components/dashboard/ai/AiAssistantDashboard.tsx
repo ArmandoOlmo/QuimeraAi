@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAI } from '../../../contexts/ai/AIContext';
+import { useProject } from '../../../contexts/project/ProjectContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { 
-    Menu, Bot, MessageSquare, Settings, Sliders, FileText, 
+import {
+    Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
     Mic, Radio, BookOpen
 } from 'lucide-react';
@@ -84,24 +86,24 @@ const AiAssistantDashboard: React.FC = () => {
                             {userProjects.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {userProjects.map(project => (
-                                        <button 
+                                        <button
                                             key={project.id}
                                             onClick={() => handleSelectProject(project.id)}
                                             className="group relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex flex-col text-left h-[400px]"
                                         >
                                             {/* Full Background Image */}
-                                            <img 
-                                                src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'} 
-                                                alt={project.name} 
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                            <img
+                                                src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'}
+                                                alt={project.name}
+                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
-                                            
+
                                             {/* Dark Gradient Overlay */}
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-                                            
+
                                             {/* Hover Effect */}
                                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
-                                            
+
                                             {/* Content at Bottom */}
                                             <div className="absolute bottom-0 left-0 w-full p-6 z-20">
                                                 <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{project.name}</h3>
@@ -151,7 +153,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="bg-card border border-border rounded-xl p-6">
                             <h3 className="font-bold text-lg mb-4">Configuration Status</h3>
                             <div className="space-y-3">
@@ -175,7 +177,7 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Business Profile</label>
-                            <textarea 
+                            <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder="Describe your business mission, history, and value proposition..."
                                 value={formData.businessProfile}
@@ -184,7 +186,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Products & Services</label>
-                            <textarea 
+                            <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder="List your key products, prices, and features..."
                                 value={formData.productsServices}
@@ -193,7 +195,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Policies & Contact</label>
-                            <textarea 
+                            <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder="Return policy, opening hours, address, phone..."
                                 value={formData.policiesContact}
@@ -209,9 +211,9 @@ const AiAssistantDashboard: React.FC = () => {
                                     Frequently Asked Questions
                                 </h3>
                             </div>
-                            <FAQManager 
-                                faqs={formData.faqs} 
-                                onFAQsChange={(faqs) => updateForm('faqs', faqs)} 
+                            <FAQManager
+                                faqs={formData.faqs}
+                                onFAQsChange={(faqs) => updateForm('faqs', faqs)}
                             />
                         </div>
 
@@ -230,15 +232,15 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                     </div>
                 );
-            
+
             case 'personality':
-                 return (
+                return (
                     <div className="space-y-8 animate-fade-in-up">
                         <div className="grid grid-cols-1 gap-6">
                             <div>
                                 <label className="block text-sm font-bold text-foreground mb-2">Assistant Name</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={formData.agentName}
                                     onChange={(e) => updateForm('agentName', e.target.value)}
                                     className="w-full bg-card border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/50 outline-none"
@@ -248,8 +250,8 @@ const AiAssistantDashboard: React.FC = () => {
                                 <label className="block text-sm font-bold text-foreground mb-2">Languages</label>
                                 <div className="flex items-center bg-card border border-border rounded-xl px-3">
                                     <Globe size={18} className="text-muted-foreground mr-2" />
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.languages}
                                         onChange={(e) => updateForm('languages', e.target.value)}
                                         className="w-full bg-transparent py-3 focus:outline-none"
@@ -261,50 +263,50 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div>
-                             <label className="block text-sm font-bold text-foreground mb-4">Tone of Voice</label>
-                             <div className="grid grid-cols-2 gap-3">
-                                 {['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'].map(tone => (
-                                     <button
+                            <label className="block text-sm font-bold text-foreground mb-4">Tone of Voice</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                {['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'].map(tone => (
+                                    <button
                                         key={tone}
                                         onClick={() => updateForm('tone', tone)}
                                         className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.tone === tone ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
-                                     >
-                                         {tone}
-                                     </button>
-                                 ))}
-                             </div>
+                                    >
+                                        {tone}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-bold text-foreground mb-2">System Prompt (Instructions)</label>
-                            <textarea 
+                            <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-xs"
                                 value={formData.specialInstructions}
                                 onChange={(e) => updateForm('specialInstructions', e.target.value)}
                             />
                         </div>
                     </div>
-                 );
-            
+                );
+
             case 'voice':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
-                             <div>
-                                 <h3 className="font-bold text-lg flex items-center"><Mic className="mr-2 text-primary" /> Enable Live Voice</h3>
-                                 <p className="text-sm text-muted-foreground">Allow users to speak with your assistant in real-time.</p>
-                             </div>
-                             <button 
+                            <div>
+                                <h3 className="font-bold text-lg flex items-center"><Mic className="mr-2 text-primary" /> Enable Live Voice</h3>
+                                <p className="text-sm text-muted-foreground">Allow users to speak with your assistant in real-time.</p>
+                            </div>
+                            <button
                                 onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-primary' : 'bg-secondary'}`}
                             >
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
-                             </button>
-                         </div>
+                            </button>
+                        </div>
 
-                         <div className="bg-card border border-border p-6 rounded-xl">
-                             <label className="block text-sm font-bold text-foreground mb-4 flex items-center"><Radio className="mr-2 text-primary"/> Select Voice Personality</label>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-card border border-border p-6 rounded-xl">
+                            <label className="block text-sm font-bold text-foreground mb-4 flex items-center"><Radio className="mr-2 text-primary" /> Select Voice Personality</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {voices.map(v => (
                                     <button
                                         key={v.name}
@@ -320,8 +322,8 @@ const AiAssistantDashboard: React.FC = () => {
                                         </div>
                                     </button>
                                 ))}
-                             </div>
-                         </div>
+                            </div>
+                        </div>
                     </div>
                 );
 
@@ -341,42 +343,42 @@ const AiAssistantDashboard: React.FC = () => {
 
             case 'settings':
                 return (
-                     <div className="space-y-6 animate-fade-in-up">
-                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
-                             <div>
-                                 <h3 className="font-bold text-lg">Activate Assistant</h3>
-                                 <p className="text-sm text-muted-foreground">Enable the chat widget on your live site.</p>
-                             </div>
-                             <button 
+                    <div className="space-y-6 animate-fade-in-up">
+                        <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-lg">Activate Assistant</h3>
+                                <p className="text-sm text-muted-foreground">Enable the chat widget on your live site.</p>
+                            </div>
+                            <button
                                 onClick={() => updateForm('isActive', !formData.isActive)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-primary' : 'bg-secondary'}`}
                             >
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
-                             </button>
-                         </div>
+                            </button>
+                        </div>
 
-                         <div className="bg-card border border-border p-6 rounded-xl">
-                             <label className="block text-sm font-bold text-foreground mb-4">Widget Color</label>
-                             <div className="flex gap-4">
-                                 {['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#000000'].map(color => (
-                                     <button 
+                        <div className="bg-card border border-border p-6 rounded-xl">
+                            <label className="block text-sm font-bold text-foreground mb-4">Widget Color</label>
+                            <div className="flex gap-4">
+                                {['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#000000'].map(color => (
+                                    <button
                                         key={color}
                                         onClick={() => updateForm('widgetColor', color)}
                                         className={`w-12 h-12 rounded-full shadow-sm transition-transform hover:scale-110 ${formData.widgetColor === color ? 'ring-4 ring-primary ring-offset-2 ring-offset-card' : ''}`}
                                         style={{ backgroundColor: color }}
-                                     />
-                                 ))}
-                                 <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-border">
-                                     <input 
-                                        type="color" 
+                                    />
+                                ))}
+                                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-border">
+                                    <input
+                                        type="color"
                                         value={formData.widgetColor}
                                         onChange={(e) => updateForm('widgetColor', e.target.value)}
                                         className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer p-0 border-0"
-                                     />
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 );
 
             default: return null;
@@ -386,7 +388,7 @@ const AiAssistantDashboard: React.FC = () => {
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
                 <header className="h-14 px-8 border-b border-border flex items-center justify-between bg-card z-20 shrink-0">
@@ -400,7 +402,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
-                        <button 
+                        <button
                             onClick={handleSave}
                             disabled={isSaving}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
@@ -421,7 +423,7 @@ const AiAssistantDashboard: React.FC = () => {
                 </header>
 
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-                    
+
                     {/* LEFT: Configuration Area (Scrollable) */}
                     <div className="lg:col-span-7 xl:col-span-5 flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]">
                         {/* Tabs Header */}
@@ -456,15 +458,15 @@ const AiAssistantDashboard: React.FC = () => {
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) */}
                     <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-[#f4f4f5] dark:bg-[#09090b] relative items-center justify-center p-10">
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-overlay pointer-events-none"></div>
-                        
+
                         <div className="relative z-10 flex flex-col items-center">
                             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">Live Simulator</h3>
-                            
+
                             {/* Phone Mockup */}
                             <div className="w-[360px] h-[700px] bg-white dark:bg-black rounded-[40px] border-[12px] border-gray-800 shadow-2xl relative overflow-hidden flex flex-col">
                                 {/* Notch */}
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-800 rounded-b-2xl z-30"></div>
-                                
+
                                 {/* Simulated Website Header */}
                                 <div className="h-20 bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 flex items-end justify-center pb-3 z-10 relative">
                                     <span className="font-bold text-sm">{activeProject.name}</span>

@@ -300,3 +300,4 @@ Para cada componente:
 | Bundle size por componente | Todo el contexto | Solo lo necesario |
 | Tiempo de carga inicial | Alto | Reducido |
 | Facilidad de testing | Difícil | Fácil (mocks específicos) |
+

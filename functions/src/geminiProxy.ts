@@ -462,7 +462,7 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
         const projectId = sanitizeString(req.body.projectId, 100);
         const prompt = sanitizeString(req.body.prompt, 50000);
         const userId = sanitizeString(req.body.userId, 128);
-        const model = sanitizeString(req.body.model, 50) || 'gemini-1.5-flash';
+        const model = sanitizeString(req.body.model, 50) || 'gemini-2.5-flash';
         const config = req.body.config || {};
 
         if (!projectId || !prompt) {

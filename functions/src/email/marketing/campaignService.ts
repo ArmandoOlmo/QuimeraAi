@@ -489,3 +489,4 @@ export const sendTestEmail = functions.https.onCall(async (data: {
         throw new functions.https.HttpsError('internal', error.message);
     }
 });
+

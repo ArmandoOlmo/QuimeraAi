@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useProject } from '../../../contexts/project';
 import { EcommerceView } from '../../../types/ecommerce';
 
 // Import views
@@ -116,12 +118,12 @@ const EcommerceDashboard: React.FC = () => {
     } = useProjectEcommerce(userId || '', effectiveProjectId, effectiveProject?.name);
 
     // Inicializar store (usando projectId como storeId)
-    const { 
-        store, 
-        isLoading: storeLoading, 
-        isInitialized: storeInitialized, 
+    const {
+        store,
+        isLoading: storeLoading,
+        isInitialized: storeInitialized,
         error: storeError,
-        initializeStore 
+        initializeStore
     } = useEcommerceStore(userId || '', storeId);
 
     // Escuchar cambios de vista
@@ -134,7 +136,7 @@ const EcommerceDashboard: React.FC = () => {
         };
 
         window.addEventListener('ecommerceViewChange', handleViewChange as EventListener);
-        
+
         const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
         if (savedView && savedView !== activeView) {
             setActiveView(savedView);
@@ -310,7 +312,7 @@ const EcommerceDashboard: React.FC = () => {
                         <p className="text-muted-foreground mb-8">
                             {t('ecommerce.enableDescription', 'Activa la tienda de ecommerce para este proyecto. Podrás agregar productos, gestionar pedidos y más.')}
                         </p>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button
                                 onClick={handleEnableEcommerce}
@@ -385,10 +387,10 @@ const EcommerceDashboard: React.FC = () => {
     }
 
     return (
-        <EcommerceContext.Provider value={{ 
-            storeId, 
-            projectId: effectiveProjectId, 
-            projectName: effectiveProject?.name || '' 
+        <EcommerceContext.Provider value={{
+            storeId,
+            projectId: effectiveProjectId,
+            projectName: effectiveProject?.name || ''
         }}>
             <div className="min-h-screen bg-background flex">
                 {/* Sidebar */}
@@ -430,7 +432,7 @@ const EcommerceDashboard: React.FC = () => {
                                 {/* Dropdown */}
                                 {isProjectSelectorOpen && (
                                     <>
-                                        <div 
+                                        <div
                                             className="fixed inset-0 z-40"
                                             onClick={() => setIsProjectSelectorOpen(false)}
                                         />
@@ -440,18 +442,17 @@ const EcommerceDashboard: React.FC = () => {
                                                     {t('ecommerce.quickSwitch', 'Cambio rápido')}
                                                 </p>
                                             </div>
-                                            
+
                                             {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
                                                 <button
                                                     key={project.id}
                                                     onClick={() => handleProjectSelect(project.id)}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
-                                                        project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                    }`}
+                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                        }`}
                                                 >
                                                     {project.thumbnailUrl ? (
-                                                        <img 
-                                                            src={project.thumbnailUrl} 
+                                                        <img
+                                                            src={project.thumbnailUrl}
                                                             alt={project.name}
                                                             className="w-10 h-10 rounded-lg object-cover"
                                                         />
@@ -473,7 +474,7 @@ const EcommerceDashboard: React.FC = () => {
                                                     )}
                                                 </button>
                                             ))}
-                                            
+
                                             <div className="border-t border-border/50 mt-2 pt-2 px-2">
                                                 <button
                                                     onClick={() => {
@@ -528,19 +529,17 @@ const EcommerceDashboard: React.FC = () => {
                                     <button
                                         key={item.id}
                                         onClick={() => handleViewChange(item.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                            isActive
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive
                                                 ? 'bg-primary text-primary-foreground'
                                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                                        }`}
+                                            }`}
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>
                                         {item.badge && (
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${
-                                                    item.badgeColor || 'bg-primary'
-                                                }`}
+                                                className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${item.badgeColor || 'bg-primary'
+                                                    }`}
                                             >
                                                 {item.badge}
                                             </span>
@@ -666,9 +665,8 @@ const OverviewView: React.FC<OverviewProps> = ({
                         <div
                             key={index}
                             onClick={stat.onClick}
-                            className={`bg-card/50 rounded-xl p-6 border border-border ${
-                                stat.onClick ? 'cursor-pointer hover:bg-card/70 transition-colors' : ''
-                            }`}
+                            className={`bg-card/50 rounded-xl p-6 border border-border ${stat.onClick ? 'cursor-pointer hover:bg-card/70 transition-colors' : ''
+                                }`}
                         >
                             <div className="flex items-center gap-4">
                                 <div className={`p-3 rounded-lg ${stat.bgClass}`}>
@@ -754,7 +752,7 @@ const OverviewView: React.FC<OverviewProps> = ({
                     <h3 className="text-xl font-bold text-foreground mb-4">
                         {t('ecommerce.getStarted', '¡Comienza con tu tienda!')}
                     </h3>
-                    
+
                     {/* Demo Data Button - Destacado */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl border border-primary/30">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -780,11 +778,11 @@ const OverviewView: React.FC<OverviewProps> = ({
                             </button>
                         </div>
                     </div>
-                    
+
                     <p className="text-muted-foreground mb-4 text-center">
                         {t('ecommerce.orManualSetup', 'O configura manualmente tu tienda:')}
                     </p>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <button
                             onClick={() => onNavigate('settings')}

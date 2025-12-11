@@ -395,6 +395,8 @@ export interface CMSPost {
     seoDescription: string;
     createdAt: string;
     updatedAt: string;
+    projectId?: string;    // Link to project (for filtering posts by project)
+    isDemoPost?: boolean;  // Flag to identify demo posts created during onboarding
 }
 
 // =============================================================================

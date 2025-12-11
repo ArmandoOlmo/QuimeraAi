@@ -1,14 +1,29 @@
 // Analytics functionality - gracefully degrades if Firebase Analytics is not available
 let analytics: any = null;
+let analyticsInitialized = false;
 
-// Try to initialize analytics, but don't break if it fails
-try {
-  const { getAnalytics } = require('firebase/analytics');
-  const { app } = require('../firebase');
-  analytics = getAnalytics(app);
-} catch (error) {
-  console.warn('Firebase Analytics not available, tracking disabled:', error);
-  analytics = null;
+// Initialize analytics asynchronously
+const initAnalytics = async () => {
+  if (analyticsInitialized) return analytics;
+  analyticsInitialized = true;
+  
+  try {
+    // Only initialize in browser environment
+    if (typeof window !== 'undefined') {
+      const { getAnalytics } = await import('firebase/analytics');
+      const { app } = await import('../firebase');
+      analytics = getAnalytics(app);
+    }
+  } catch (error) {
+    console.warn('Firebase Analytics not available, tracking disabled:', error);
+    analytics = null;
+  }
+  return analytics;
+};
+
+// Auto-initialize on module load (in browser only)
+if (typeof window !== 'undefined') {
+  initAnalytics();
 }
 
 // Analytics Event Types
@@ -36,12 +51,14 @@ export type AnalyticsEvent =
   | 'settings_changed';
 
 // Log custom event
-export const logEvent = (eventName: AnalyticsEvent, params?: Record<string, any>) => {
-  if (!analytics) return;
+export const logEvent = async (eventName: AnalyticsEvent, params?: Record<string, any>) => {
+  const analyticsInstance = await initAnalytics();
+  if (!analyticsInstance) return;
   
   try {
-    const { logEvent: firebaseLogEvent } = require('firebase/analytics');
-    firebaseLogEvent(analytics, eventName, {
+    const { logEvent: firebaseLogEvent } = await import('firebase/analytics');
+    // Use 'as any' to allow custom event names that aren't in the standard Firebase Analytics types
+    firebaseLogEvent(analyticsInstance, eventName as any, {
       ...params,
       timestamp: new Date().toISOString(),
     });
@@ -51,12 +68,13 @@ export const logEvent = (eventName: AnalyticsEvent, params?: Record<string, any>
 };
 
 // Set user properties
-export const setAnalyticsUser = (userId: string, properties?: Record<string, any>) => {
-  if (!analytics) return;
+export const setAnalyticsUser = async (userId: string, properties?: Record<string, any>) => {
+  const analyticsInstance = await initAnalytics();
+  if (!analyticsInstance) return;
   
   try {
-    const { setUserProperties } = require('firebase/analytics');
-    setUserProperties(analytics, {
+    const { setUserProperties } = await import('firebase/analytics');
+    setUserProperties(analyticsInstance, {
       user_id: userId,
       ...properties,
     });

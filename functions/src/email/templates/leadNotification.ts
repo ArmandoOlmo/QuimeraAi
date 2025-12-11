@@ -247,3 +247,4 @@ export const getLeadNotificationTemplate = (params: LeadNotificationParams): str
         footerText: 'Este es un email automatico de notificacion de leads.',
     });
 };
+

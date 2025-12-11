@@ -424,7 +424,7 @@ const Dashboard: React.FC = () => {
                 </a>
 
                 <main id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth" role="main">
-                    <div className="max-w-7xl mx-auto space-y-10 h-full">
+                    <div className="max-w-7xl mx-auto space-y-10">
 
                         {/* Hero / Welcome Section - Only on Dashboard */}
                         {isDashboard && (

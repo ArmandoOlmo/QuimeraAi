@@ -1,22 +1,38 @@
 /**
  * Router Component
  * Componente principal de enrutamiento de la aplicación
+ * 
+ * Performance: Uses React.lazy for code-splitting of route components
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, lazy, Suspense } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
 
-// Components
-import PublicLandingPage from '../components/PublicLandingPage';
-import PublicWebsitePreview from '../components/PublicWebsitePreview';
-import ModernAuth from '../components/ModernAuth';
-import VerificationScreen from '../components/VerificationScreen';
+// LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
-import ProductDetailPageWithCart from '../components/ecommerce/ProductDetailPageWithCart';
-import { ProductSearchPage, StorefrontLayout, OrderConfirmation } from '../components/ecommerce';
-import CheckoutPageEnhanced from '../components/ecommerce/CheckoutPageEnhanced';
+
+// Lazy-loaded route components for code-splitting
+const PublicLandingPage = lazy(() => import('../components/PublicLandingPage'));
+const PublicWebsitePreview = lazy(() => import('../components/PublicWebsitePreview'));
+const ModernAuth = lazy(() => import('../components/ModernAuth'));
+const VerificationScreen = lazy(() => import('../components/VerificationScreen'));
+
+// Lazy-loaded ecommerce components
+const ProductDetailPageWithCart = lazy(() => import('../components/ecommerce/ProductDetailPageWithCart'));
+const CheckoutPageEnhanced = lazy(() => import('../components/ecommerce/CheckoutPageEnhanced'));
+
+// Named exports need to be handled differently with lazy
+const ProductSearchPage = lazy(() => 
+  import('../components/ecommerce').then(module => ({ default: module.ProductSearchPage }))
+);
+const StorefrontLayout = lazy(() => 
+  import('../components/ecommerce').then(module => ({ default: module.StorefrontLayout }))
+);
+const OrderConfirmation = lazy(() => 
+  import('../components/ecommerce').then(module => ({ default: module.OrderConfirmation }))
+);
 
 // =============================================================================
 // TYPES
@@ -155,18 +171,20 @@ const Router: React.FC<RouterProps> = ({
     // /store/:storeId/checkout - Checkout page
     if (path.includes('/checkout')) {
       return (
-        <StorefrontLayout 
-          storeId={storeId}
-          onNavigateHome={() => navigate(`/preview/${storeId}`)}
-          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-        >
-          <CheckoutPageEnhanced
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontLayout 
             storeId={storeId}
-            onSuccess={(orderId) => navigate(`/store/${storeId}/order/${orderId}`)}
-            onBack={() => navigate(`/store/${storeId}`)}
-            onNavigateToStore={() => navigate(`/store/${storeId}`)}
-          />
-        </StorefrontLayout>
+            onNavigateHome={() => navigate(`/preview/${storeId}`)}
+            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+          >
+            <CheckoutPageEnhanced
+              storeId={storeId}
+              onSuccess={(orderId) => navigate(`/store/${storeId}/order/${orderId}`)}
+              onBack={() => navigate(`/store/${storeId}`)}
+              onNavigateToStore={() => navigate(`/store/${storeId}`)}
+            />
+          </StorefrontLayout>
+        </Suspense>
       );
     }
     
@@ -174,18 +192,20 @@ const Router: React.FC<RouterProps> = ({
     if (path.includes('/order/')) {
       const orderId = pathParts[4];
       return (
-        <StorefrontLayout 
-          storeId={storeId}
-          onNavigateHome={() => navigate(`/preview/${storeId}`)}
-          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-        >
-          <OrderConfirmation
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontLayout 
             storeId={storeId}
-            orderId={orderId}
-            onContinueShopping={() => navigate(`/store/${storeId}`)}
-            onViewOrders={() => navigate(`/store/${storeId}`)}
-          />
-        </StorefrontLayout>
+            onNavigateHome={() => navigate(`/preview/${storeId}`)}
+            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+          >
+            <OrderConfirmation
+              storeId={storeId}
+              orderId={orderId}
+              onContinueShopping={() => navigate(`/store/${storeId}`)}
+              onViewOrders={() => navigate(`/store/${storeId}`)}
+            />
+          </StorefrontLayout>
+        </Suspense>
       );
     }
     
@@ -193,19 +213,21 @@ const Router: React.FC<RouterProps> = ({
     if (path.includes('/product/')) {
       const productSlug = pathParts[4];
       return (
-        <StorefrontLayout 
-          storeId={storeId}
-          onNavigateHome={() => navigate(`/preview/${storeId}`)}
-          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-        >
-          <ProductDetailPageWithCart
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontLayout 
             storeId={storeId}
-            productSlug={productSlug}
-            onNavigateToStore={() => navigate(`/store/${storeId}`)}
-            onNavigateToCategory={(categorySlug) => navigate(`/store/${storeId}/category/${categorySlug}`)}
-            onNavigateToProduct={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
-          />
-        </StorefrontLayout>
+            onNavigateHome={() => navigate(`/preview/${storeId}`)}
+            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+          >
+            <ProductDetailPageWithCart
+              storeId={storeId}
+              productSlug={productSlug}
+              onNavigateToStore={() => navigate(`/store/${storeId}`)}
+              onNavigateToCategory={(categorySlug) => navigate(`/store/${storeId}/category/${categorySlug}`)}
+              onNavigateToProduct={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+            />
+          </StorefrontLayout>
+        </Suspense>
       );
     }
     
@@ -213,34 +235,38 @@ const Router: React.FC<RouterProps> = ({
     if (path.includes('/category/')) {
       const categorySlug = pathParts[4];
       return (
-        <StorefrontLayout 
-          storeId={storeId}
-          onNavigateHome={() => navigate(`/preview/${storeId}`)}
-          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-        >
-          <ProductSearchPage
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontLayout 
             storeId={storeId}
-            onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
-            onBack={() => navigate(`/store/${storeId}`)}
-            initialCategory={categorySlug}
-          />
-        </StorefrontLayout>
+            onNavigateHome={() => navigate(`/preview/${storeId}`)}
+            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+          >
+            <ProductSearchPage
+              storeId={storeId}
+              onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+              onBack={() => navigate(`/store/${storeId}`)}
+              initialCategory={categorySlug}
+            />
+          </StorefrontLayout>
+        </Suspense>
       );
     }
     
     // /store/:storeId - Main store page (product listing)
     if (pathParts.length === 3 || (pathParts.length === 4 && pathParts[3] === '')) {
       return (
-        <StorefrontLayout 
-          storeId={storeId}
-          onNavigateHome={() => navigate(`/preview/${storeId}`)}
-          onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-        >
-          <ProductSearchPage
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontLayout 
             storeId={storeId}
-            onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
-          />
-        </StorefrontLayout>
+            onNavigateHome={() => navigate(`/preview/${storeId}`)}
+            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
+          >
+            <ProductSearchPage
+              storeId={storeId}
+              onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
+            />
+          </StorefrontLayout>
+        </Suspense>
       );
     }
   }
@@ -250,7 +276,11 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   
   if (isPreviewRoute) {
-    return <PublicWebsitePreview />;
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicWebsitePreview />
+      </Suspense>
+    );
   }
 
   // =========================================================================
@@ -260,32 +290,38 @@ const Router: React.FC<RouterProps> = ({
   // Landing page
   if (path === '/' && !isAuthenticated) {
     return (
-      <PublicLandingPage 
-        onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
-        onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
-      />
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicLandingPage 
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
     );
   }
 
   // Login page
   if (path === '/login' && !isAuthenticated) {
     return (
-      <ModernAuth 
-        onVerificationEmailSent={onVerificationEmailSent}
-        initialMode="login"
-        onNavigateToLanding={() => navigate(ROUTES.LANDING)}
-      />
+      <Suspense fallback={<LoadingScreen />}>
+        <ModernAuth 
+          onVerificationEmailSent={onVerificationEmailSent}
+          initialMode="login"
+          onNavigateToLanding={() => navigate(ROUTES.LANDING)}
+        />
+      </Suspense>
     );
   }
 
   // Register page
   if (path === '/register' && !isAuthenticated) {
     return (
-      <ModernAuth 
-        onVerificationEmailSent={onVerificationEmailSent}
-        initialMode="register"
-        onNavigateToLanding={() => navigate(ROUTES.LANDING)}
-      />
+      <Suspense fallback={<LoadingScreen />}>
+        <ModernAuth 
+          onVerificationEmailSent={onVerificationEmailSent}
+          initialMode="register"
+          onNavigateToLanding={() => navigate(ROUTES.LANDING)}
+        />
+      </Suspense>
     );
   }
 
@@ -299,19 +335,25 @@ const Router: React.FC<RouterProps> = ({
       onVerificationEmailSent(null);
       navigate(ROUTES.LOGIN);
     };
-    return <VerificationScreen email={user!.email!} onGoToLogin={handleGoToLogin} />;
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <VerificationScreen email={user!.email!} onGoToLogin={handleGoToLogin} />
+      </Suspense>
+    );
   }
 
   // Verification email sent (not logged in)
   if (!isAuthenticated && verificationEmail) {
     return (
-      <VerificationScreen 
-        email={verificationEmail} 
-        onGoToLogin={() => {
-          onVerificationEmailSent(null);
-          navigate(ROUTES.LOGIN);
-        }} 
-      />
+      <Suspense fallback={<LoadingScreen />}>
+        <VerificationScreen 
+          email={verificationEmail} 
+          onGoToLogin={() => {
+            onVerificationEmailSent(null);
+            navigate(ROUTES.LOGIN);
+          }} 
+        />
+      </Suspense>
     );
   }
 
@@ -333,10 +375,12 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   
   return (
-    <PublicLandingPage 
-      onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
-      onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
-    />
+    <Suspense fallback={<LoadingScreen />}>
+      <PublicLandingPage 
+        onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+        onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+      />
+    </Suspense>
   );
 };
 

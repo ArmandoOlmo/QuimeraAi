@@ -3590,16 +3590,44 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             });
     };
 
-    // Domain Logic
+    // Domain Logic - Enhanced with Cloud Functions for custom domains
     const addDomain = async (domainData: Domain) => {
         if (!user) return;
+        
         const newDomain = { ...domainData, createdAt: new Date().toISOString() };
-        setDomains(prev => [newDomain, ...prev]); // Optimistic
+        setDomains(prev => [newDomain, ...prev]); // Optimistic update
+        
         try {
+            // If this is an external domain being connected to a project,
+            // also register it in the global customDomains collection via Cloud Function
+            if (domainData.provider === 'External' && domainData.projectId) {
+                try {
+                    const { addCustomDomainToProject } = await import('../services/domainService');
+                    const result = await addCustomDomainToProject(domainData.name, domainData.projectId);
+                    
+                    if (result.success && result.dnsRecords) {
+                        // Update with DNS records from Cloud Function
+                        newDomain.dnsRecords = result.dnsRecords;
+                        newDomain.verificationToken = result.verificationToken;
+                        newDomain.status = 'pending';
+                    }
+                } catch (cfError) {
+                    console.warn('Cloud Function call failed, falling back to local storage:', cfError);
+                    // Continue with local storage even if Cloud Function fails
+                }
+            }
+            
+            // Always save to user's domains collection
             const domainsCol = collection(db, 'users', user.uid, 'domains');
             await setDoc(doc(domainsCol, domainData.id), newDomain);
+            
+            // Update state with final data
+            setDomains(prev => prev.map(d => d.id === domainData.id ? newDomain : d));
+            
         } catch (e) {
             console.error("Error adding domain", e);
+            // Revert optimistic update on error
+            setDomains(prev => prev.filter(d => d.id !== domainData.id));
         }
     };
 
@@ -3616,8 +3644,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deleteDomain = async (id: string) => {
         if (!user) return;
+        
+        const domain = domains.find(d => d.id === id);
         setDomains(prev => prev.filter(d => d.id !== id));
+        
         try {
+            // If it's an external domain, also remove from global collection
+            if (domain?.provider === 'External') {
+                try {
+                    const { removeCustomDomainFromProject } = await import('../services/domainService');
+                    await removeCustomDomainFromProject(domain.name);
+                } catch (cfError) {
+                    console.warn('Cloud Function call failed:', cfError);
+                }
+            }
+            
             const docRef = doc(db, 'users', user.uid, 'domains', id);
             await deleteDoc(docRef);
         } catch (e) {
@@ -3632,25 +3673,62 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (!domain) return false;
 
         try {
-            // Use deployment service for real DNS verification
-            const result = await deploymentService.verifyDNS(domain.name);
+            // Use Cloud Function for real DNS verification
+            const { verifyDomainDNS } = await import('../services/domainService');
+            const result = await verifyDomainDNS(domain.name);
 
             if (result.verified) {
                 await updateDomain(id, {
-                    status: 'active',
-                    dnsRecords: result.records
+                    status: 'ssl_pending', // Next step: SSL provisioning
+                    dnsRecords: result.records.map(r => ({
+                        type: r.type,
+                        host: r.type === 'A' ? '@' : (r.type === 'CNAME' ? 'www' : '_quimera-verify'),
+                        value: r.expected,
+                        verified: r.verified,
+                        lastChecked: result.checkedAt
+                    })),
+                    lastVerifiedAt: result.checkedAt
                 });
                 return true;
             } else {
                 await updateDomain(id, {
                     status: 'pending',
-                    dnsRecords: result.records
+                    dnsRecords: result.records.map(r => ({
+                        type: r.type,
+                        host: r.type === 'A' ? '@' : (r.type === 'CNAME' ? 'www' : '_quimera-verify'),
+                        value: r.expected,
+                        verified: r.verified,
+                        lastChecked: result.checkedAt
+                    }))
                 });
                 return false;
             }
         } catch (error) {
             console.error('Domain verification error:', error);
             await updateDomain(id, { status: 'error' });
+            return false;
+        }
+    };
+
+    // Check SSL status for a domain (called after DNS verification)
+    const checkDomainSSL = async (id: string): Promise<boolean> => {
+        if (!user) return false;
+
+        const domain = domains.find(d => d.id === id);
+        if (!domain) return false;
+
+        try {
+            const { checkDomainSSLStatus } = await import('../services/domainService');
+            const result = await checkDomainSSLStatus(domain.name);
+
+            await updateDomain(id, {
+                status: result.status as any,
+                sslStatus: result.sslStatus
+            });
+
+            return result.sslStatus === 'active';
+        } catch (error) {
+            console.error('SSL check error:', error);
             return false;
         }
     };

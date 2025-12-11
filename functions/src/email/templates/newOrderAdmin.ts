@@ -301,3 +301,4 @@ export const getNewOrderAdminTemplate = (params: NewOrderAdminParams): string =>
         footerText: 'Este es un email automatico para el administrador de la tienda.',
     });
 };
+

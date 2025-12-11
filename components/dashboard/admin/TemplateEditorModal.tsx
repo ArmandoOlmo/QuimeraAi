@@ -5,6 +5,10 @@ import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
 import Modal from '../../ui/Modal';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAI } from '../../../contexts/ai/AIContext';
+import { useFiles } from '../../../contexts/files/FilesContext';
+import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
@@ -438,30 +442,30 @@ Return ONLY the JSON array, no other text.`;
                 // Pass high maxOutputTokens - gemini-2.5-flash uses tokens for "thinking" internally
                 // so we need 8192+ to leave room for both thinking AND the actual response
                 const proxyResponse = await generateContentViaProxy(
-                    proxyProjectId, 
-                    promptText, 
-                    modelToUse, 
+                    proxyProjectId,
+                    promptText,
+                    modelToUse,
                     { maxOutputTokens: 8192 }, // High limit to accommodate thinking + output
                     user?.uid
                 );
-                
+
                 // Debug: Log the actual response structure
                 console.log('🔍 Industry suggestion proxy response:', JSON.stringify(proxyResponse, null, 2).slice(0, 1000));
-                
+
                 // Check for API errors in the response (cast to any for error field)
                 const proxyResponseAny = proxyResponse as any;
                 if (proxyResponseAny?.error) {
                     throw new Error(proxyResponseAny.error.message || proxyResponseAny.error);
                 }
-                
+
                 // Check if response was truncated due to MAX_TOKENS
                 const finishReason = proxyResponse?.response?.candidates?.[0]?.finishReason;
                 if (finishReason === 'MAX_TOKENS') {
                     console.warn('⚠️ Response was truncated due to MAX_TOKENS');
                 }
-                
+
                 responseText = extractTextFromResponse(proxyResponse);
-                
+
                 if (!responseText) {
                     console.error('❌ Empty response text. Full response:', proxyResponse);
                     // More specific error message based on finishReason
@@ -480,15 +484,15 @@ Return ONLY the JSON array, no other text.`;
                 // Clean up the response - remove markdown code blocks if present
                 let cleanedText = responseText.trim();
                 cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-                
+
                 // Try to find JSON array in the response
                 const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
                 if (jsonMatch) {
                     cleanedText = jsonMatch[0];
                 }
-                
+
                 const parsedArray = JSON.parse(cleanedText);
-                
+
                 // Ensure it's an array
                 if (Array.isArray(parsedArray)) {
                     suggestedIds = parsedArray;
@@ -497,11 +501,11 @@ Return ONLY the JSON array, no other text.`;
                 // Validate that all IDs exist in our list
                 const validIds = suggestedIds.filter(id => INDUSTRY_IDS.includes(id));
                 const invalidIds = suggestedIds.filter(id => !INDUSTRY_IDS.includes(id));
-                
+
                 if (invalidIds.length > 0) {
                     console.warn('AI suggested invalid industry IDs:', invalidIds);
                 }
-                
+
                 suggestedIds = validIds;
             } catch (parseError) {
                 console.error('Failed to parse AI response:', responseText, parseError);

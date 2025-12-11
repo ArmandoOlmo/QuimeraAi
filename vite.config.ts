@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -43,7 +44,92 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: true,
       },
-      plugins: [react()],
+      plugins: [
+        react(),
+        VitePWA({
+          registerType: 'autoUpdate',
+          includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+          manifest: {
+            name: 'Quimera AI',
+            short_name: 'Quimera',
+            description: 'AI-powered website builder',
+            theme_color: '#3b82f6',
+            background_color: '#ffffff',
+            display: 'standalone',
+            icons: [
+              {
+                src: 'pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              },
+              {
+                src: 'pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png'
+              }
+            ]
+          },
+          workbox: {
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+            // Increase limit for large JS chunks, or use navigateFallback instead
+            maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
+            runtimeCaching: [
+              {
+                // Cache Firebase Storage images
+                urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'firebase-images',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200]
+                  }
+                }
+              },
+              {
+                // Cache Google Storage assets
+                urlPattern: /^https:\/\/storage\.googleapis\.com\/.*/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'google-storage',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200]
+                  }
+                }
+              },
+              {
+                // Cache Google Fonts
+                urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'google-fonts-stylesheets'
+                }
+              },
+              {
+                urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'google-fonts-webfonts',
+                  expiration: {
+                    maxEntries: 30,
+                    maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200]
+                  }
+                }
+              }
+            ]
+          }
+        })
+      ],
       define: {
         // Inyectar null si no hay API key, para mejor detección en el código cliente
         'process.env.API_KEY': apiKey ? JSON.stringify(apiKey) : 'null',
@@ -56,6 +142,66 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+        }
+      },
+      // Build optimizations for performance
+      build: {
+        chunkSizeWarningLimit: 500,
+        minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: mode === 'production',
+            drop_debugger: true
+          }
+        },
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Firebase in its own chunk
+              firebase: [
+                'firebase/app',
+                'firebase/auth',
+                'firebase/firestore',
+                'firebase/storage',
+                'firebase/functions',
+                'firebase/analytics'
+              ],
+              // React ecosystem
+              react: ['react', 'react-dom'],
+              // Radix UI components
+              radix: [
+                '@radix-ui/react-dialog',
+                '@radix-ui/react-tooltip',
+                '@radix-ui/react-collapsible',
+                '@radix-ui/react-separator',
+                '@radix-ui/react-slot'
+              ],
+              // TipTap editor (large) - Note: @tiptap/pm excluded as it has non-standard exports
+              editor: [
+                '@tiptap/react',
+                '@tiptap/starter-kit',
+                '@tiptap/extension-link',
+                '@tiptap/extension-image',
+                '@tiptap/extension-color',
+                '@tiptap/extension-highlight',
+                '@tiptap/extension-placeholder',
+                '@tiptap/extension-text-align',
+                '@tiptap/extension-text-style',
+                '@tiptap/extension-underline',
+                '@tiptap/extension-table',
+                '@tiptap/extension-table-cell',
+                '@tiptap/extension-table-header',
+                '@tiptap/extension-table-row',
+                '@tiptap/extension-bubble-menu'
+              ],
+              // Charts library
+              charts: ['recharts'],
+              // Drag and drop
+              dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+              // i18n
+              i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector']
+            }
+          }
         }
       }
     };

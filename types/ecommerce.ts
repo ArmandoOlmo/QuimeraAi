@@ -651,6 +651,7 @@ export type EcommerceView =
     | 'categories'
     | 'orders'
     | 'customers'
+    | 'store-users'
     | 'discounts'
     | 'reviews'
     | 'stock_alerts'

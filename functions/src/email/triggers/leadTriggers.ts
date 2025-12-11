@@ -237,3 +237,4 @@ export const onLeadScoreUpdate = functions.firestore
             }
         }
     });
+

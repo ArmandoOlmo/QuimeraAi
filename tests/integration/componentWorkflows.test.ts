@@ -28,6 +28,18 @@ describe('Component Workflows', () => {
             versionHistory: [
                 {
                     version: 1,
+                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    author: 'user-123',
+                    changes: 'Initial version',
+                    snapshot: {
+                        colors: {
+                            background: '#ffffff',
+                            text: '#000000',
+                            primary: '#8B5CF6',
+                        },
+                        paddingY: 20,
+                        paddingX: 16,
+                    },
                     styles: {
                         colors: {
                             background: '#ffffff',
@@ -41,7 +53,7 @@ describe('Component Workflows', () => {
                     notes: 'Initial version',
                 },
             ],
-            category: 'marketing',
+            category: 'hero',
             tags: ['hero', 'custom', 'modern'],
             createdBy: 'user-123',
             createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
@@ -79,6 +91,16 @@ describe('Component Workflows', () => {
         it('should create new version on edit', () => {
             const newVersion: ComponentVersion = {
                 version: 2,
+                timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                author: 'user-123',
+                changes: 'Changed primary color',
+                snapshot: {
+                    ...mockComponent.styles,
+                    colors: {
+                        ...mockComponent.styles.colors,
+                        primary: '#EC4899',
+                    },
+                },
                 styles: {
                     ...mockComponent.styles,
                     colors: {
@@ -103,6 +125,13 @@ describe('Component Workflows', () => {
             // Add a second version
             const v2: ComponentVersion = {
                 version: 2,
+                timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                author: 'user-123',
+                changes: 'Increased padding',
+                snapshot: {
+                    ...mockComponent.styles,
+                    paddingY: 40,
+                },
                 styles: {
                     ...mockComponent.styles,
                     paddingY: 40,
@@ -130,6 +159,10 @@ describe('Component Workflows', () => {
             // Add version
             mockComponent.versionHistory?.push({
                 version: 2,
+                timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                author: 'user-123',
+                changes: 'Version 2 changes',
+                snapshot: { ...mockComponent.styles },
                 styles: { ...mockComponent.styles },
                 createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                 notes: 'Version 2',
@@ -332,6 +365,16 @@ describe('Component Workflows', () => {
                 version: 1,
                 versionHistory: [{
                     version: 1,
+                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    author: 'user-123',
+                    changes: 'Initial version',
+                    snapshot: {
+                        colors: {
+                            background: '#ffffff',
+                            text: '#000000',
+                            primary: '#8B5CF6',
+                        },
+                    },
                     styles: {
                         colors: {
                             background: '#ffffff',

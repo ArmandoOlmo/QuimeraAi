@@ -510,6 +510,33 @@ Generate the services:`,
     version: 1,
   },
 
+  // Onboarding - Generate Product Categories (for ecommerce stores)
+  {
+    name: 'onboarding-generate-categories',
+    area: 'Onboarding',
+    description: 'Generates suggested product categories for ecommerce stores based on industry and business type.',
+    template: `You are an e-commerce consultant. Generate product categories for an online store.
+
+Business Name: {{businessName}}
+Industry: {{industry}}
+Business Description: {{description}}
+Product Type: {{ecommerceType}} (physical products, digital products, or both)
+Language: {{language}}
+
+Requirements:
+- Generate 5-8 relevant product categories
+- Categories should be specific to the industry
+- Use clear, customer-friendly names
+- Make them suitable for navigation and filtering
+- For physical products: focus on tangible items
+- For digital products: focus on downloadable/virtual items
+- Output as JSON array with category names only: ["Category 1", "Category 2", "Category 3", ...]
+
+Generate the categories:`,
+    model: 'gemini-2.5-flash',
+    version: 1,
+  },
+
   // Onboarding - Generate Component Content (Step 6)
   {
     name: 'onboarding-generate-component-content',
@@ -585,53 +612,60 @@ Keep all text SHORT and CONCISE. Return ONLY valid JSON.`,
     name: 'onboarding-generate-image-prompts',
     area: 'Onboarding',
     description: 'Generates contextual image prompts for all website images based on business context, ensuring visual consistency and relevance.',
-    template: `You are an expert AI image prompt engineer. Generate detailed, contextual prompts for ALL images needed for this website.
+    template: `You are an expert AI image prompt engineer. Generate HIGHLY SPECIFIC and DETAILED prompts for ALL images needed for this website. The images must clearly represent THIS SPECIFIC BUSINESS, not generic stock photos.
 
-**BUSINESS CONTEXT:**
-- Name: "{{businessName}}"
+**BUSINESS IDENTITY:**
+- Business Name: "{{businessName}}"
+- Tagline/Slogan: "{{tagline}}"
 - Industry: {{industry}}
-- Description: {{description}}
-- Language: {{language}}
 
-**GENERATED CONTENT (use this for specific details):**
+**DETAILED BUSINESS DESCRIPTION:**
+{{description}}
+
+**SERVICES/PRODUCTS OFFERED:**
+{{services}}
+
+**PRODUCT CATEGORIES (for ecommerce):**
+{{storeCategories}}
+
+**GENERATED CONTENT (specific items to show):**
 {{generatedContent}}
 
 **IMAGES NEEDED:**
 {{imagesToGenerate}}
 
-**PROMPT REQUIREMENTS:**
-1. Each prompt must be SPECIFIC to the business and its content
-2. For MENU items: Include the exact dish name, ingredients, and presentation style
-3. For TEAM members: Include their role and professional appearance appropriate for {{industry}}
-4. For PORTFOLIO: Include the project title and what it showcases
-5. For SLIDESHOW: Include the slide theme and what it should convey
-6. For HERO/BANNER: Capture the essence of the business atmosphere
-7. All prompts must maintain VISUAL CONSISTENCY (same style, lighting, color palette)
-8. Include: "professional photography, high quality, no text, no watermarks"
-9. Adapt style to {{industry}}: casual/formal, warm/cool colors, modern/traditional
+**CRITICAL REQUIREMENTS - READ CAREFULLY:**
+1. HERO IMAGE: Must visually represent "{{businessName}}" - show their ACTUAL products/services, not generic {{industry}} imagery
+2. For ECOMMERCE stores: Show the SPECIFIC product categories listed above ({{storeCategories}})
+3. For SERVICE businesses: Show people actively receiving/providing the services listed
+4. Use the TAGLINE "{{tagline}}" as inspiration for the mood and message
+5. Each image must feel like it belongs to THIS business, not a competitor
+6. Include the business atmosphere described in: {{description}}
+
+**PROMPT STRUCTURE (follow this for each image):**
+"[Specific scene for {{businessName}}], [exact products/services shown], [mood from tagline], [industry-appropriate style], professional photography, high quality, no text, no watermarks, no logos"
 
 **STYLE GUIDELINES for {{industry}}:**
-- Restaurant/Cafe: Warm lighting, appetizing, cozy atmosphere, food photography style
-- Technology: Modern, clean, futuristic, blue/purple tones
-- Healthcare: Clean, trustworthy, calming, white/blue tones
-- Beauty/Spa: Elegant, relaxing, soft lighting, pastel tones
-- Fitness: Energetic, dynamic, motivational, vibrant colors
-- Legal/Finance: Professional, authoritative, formal, neutral tones
-- Real Estate: Aspirational, spacious, well-lit, inviting
-- Photography: Artistic, creative, dramatic lighting
+- Ecommerce/Retail: Product-focused, clean backgrounds, lifestyle shots showing products in use
+- Restaurant/Cafe: Warm lighting, appetizing dishes, cozy atmosphere, food photography
+- Technology: Modern, clean, futuristic, blue/purple tones, showing actual tech products
+- Healthcare: Clean, trustworthy, calming, white/blue tones, caring interactions
+- Beauty/Spa: Elegant, relaxing, soft lighting, pastel tones, treatments in action
+- Fitness: Energetic, dynamic, motivational, vibrant colors, people exercising
+- Fashion: Trendy, stylish, models wearing the clothing style described
+- Art/Design: Creative, artistic, showcasing actual artwork or designs
 
 **OUTPUT FORMAT:**
 Return ONLY valid JSON with this structure:
 {
-  "hero.imageUrl": "detailed prompt for hero image...",
-  "menu.items[0].imageUrl": "detailed prompt for first menu item...",
-  "team.items[0].imageUrl": "detailed prompt for first team member...",
+  "hero.imageUrl": "detailed prompt specific to {{businessName}}...",
+  "features.items[0].imageUrl": "prompt showing specific service/product...",
   ...
 }
 
-Generate prompts ONLY for the images listed in "IMAGES NEEDED". Be specific and descriptive.`,
+REMEMBER: Every image must clearly represent "{{businessName}}" and their specific offerings. Be DETAILED and SPECIFIC.`,
     model: 'gemini-2.5-flash',
-    version: 1,
+    version: 2,
   },
 
   // Onboarding - Template Recommendation (Step 4)

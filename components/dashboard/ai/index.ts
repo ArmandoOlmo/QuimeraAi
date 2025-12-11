@@ -8,3 +8,4 @@ export { default as ChatSimulator } from './ChatSimulator';
 export { default as FAQManager } from './FAQManager';
 export { default as KnowledgeDocumentUploader } from './KnowledgeDocumentUploader';
 export { default as LeadCaptureSettings } from './LeadCaptureSettings';
+

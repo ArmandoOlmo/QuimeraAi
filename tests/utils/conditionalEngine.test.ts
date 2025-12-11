@@ -19,6 +19,7 @@ describe('ConditionalEngine', () => {
   describe('evaluateCondition', () => {
     it('should evaluate equals operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-1',
         target: 'userRole',
         operator: 'equals',
         value: 'user',
@@ -29,6 +30,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate notEquals operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-2',
         target: 'userRole',
         operator: 'notEquals',
         value: 'admin',
@@ -39,6 +41,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate contains operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-3',
         target: 'location',
         operator: 'contains',
         value: 'U',
@@ -49,6 +52,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate greaterThan operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-4',
         target: 'screenSize',
         operator: 'greaterThan',
         value: 1024,
@@ -59,6 +63,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate lessThan operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-5',
         target: 'timeOfDay',
         operator: 'lessThan',
         value: 20,
@@ -69,6 +74,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate exists operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-6',
         target: 'userRole',
         operator: 'exists',
         value: null,
@@ -79,6 +85,7 @@ describe('ConditionalEngine', () => {
 
     it('should evaluate notExists operator correctly', () => {
       const condition: Condition = {
+        id: 'cond-7',
         target: 'customField',
         operator: 'notExists',
         value: null,
@@ -89,6 +96,7 @@ describe('ConditionalEngine', () => {
 
     it('should return false for unknown operator', () => {
       const condition: Condition = {
+        id: 'cond-8',
         target: 'userRole',
         operator: 'unknown' as any,
         value: 'user',
@@ -117,8 +125,8 @@ describe('ConditionalEngine', () => {
         name: 'All Conditions',
         matchType: 'all',
         conditions: [
-          { target: 'userRole', operator: 'equals', value: 'user' },
-          { target: 'deviceType', operator: 'equals', value: 'desktop' },
+          { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'user' },
+          { id: 'cond-2', target: 'deviceType', operator: 'equals', value: 'desktop' },
         ],
         actions: { show: true },
       };
@@ -132,8 +140,8 @@ describe('ConditionalEngine', () => {
         name: 'All Conditions',
         matchType: 'all',
         conditions: [
-          { target: 'userRole', operator: 'equals', value: 'user' },
-          { target: 'deviceType', operator: 'equals', value: 'mobile' },
+          { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'user' },
+          { id: 'cond-2', target: 'deviceType', operator: 'equals', value: 'mobile' },
         ],
         actions: { show: true },
       };
@@ -147,8 +155,8 @@ describe('ConditionalEngine', () => {
         name: 'Any Condition',
         matchType: 'any',
         conditions: [
-          { target: 'userRole', operator: 'equals', value: 'admin' },
-          { target: 'deviceType', operator: 'equals', value: 'desktop' },
+          { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'admin' },
+          { id: 'cond-2', target: 'deviceType', operator: 'equals', value: 'desktop' },
         ],
         actions: { show: true },
       };
@@ -170,7 +178,7 @@ describe('ConditionalEngine', () => {
           name: 'Hide Rule',
           matchType: 'all',
           conditions: [
-            { target: 'userRole', operator: 'equals', value: 'user' },
+            { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'user' },
           ],
           actions: { show: false },
         },
@@ -186,7 +194,7 @@ describe('ConditionalEngine', () => {
           name: 'Show Rule',
           matchType: 'all',
           conditions: [
-            { target: 'userRole', operator: 'equals', value: 'user' },
+            { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'user' },
           ],
           actions: { show: true },
         },
@@ -212,7 +220,7 @@ describe('ConditionalEngine', () => {
           name: 'Style Rule',
           matchType: 'all',
           conditions: [
-            { target: 'userRole', operator: 'equals', value: 'user' },
+            { id: 'cond-1', target: 'userRole', operator: 'equals', value: 'user' },
           ],
           actions: { 
             show: true,

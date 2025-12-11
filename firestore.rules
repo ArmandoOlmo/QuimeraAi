@@ -445,6 +445,67 @@ service cloud.firestore {
         allow update, delete: if request.auth != null && 
           exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
       }
+      
+      // Public customers (for linking with store users)
+      match /customers/{customerId} {
+        allow read: if true;
+        allow write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+    }
+    
+    // ============================================
+    // STORE USERS - Multi-tenant Customer Authentication
+    // ============================================
+    
+    match /storeUsers/{storeId} {
+      // Store owner has full access
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      
+      // Store users collection
+      match /users/{userId} {
+        // Store owner can read/write all users
+        allow read, write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        
+        // Authenticated store users can read their own profile
+        allow read: if request.auth != null && 
+          resource.data.metadata.firebaseUid == request.auth.uid;
+        
+        // Authenticated store users can update their own profile (limited fields)
+        allow update: if request.auth != null && 
+          resource.data.metadata.firebaseUid == request.auth.uid &&
+          // Can only update these specific fields
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'displayName', 'firstName', 'lastName', 'phone', 'photoURL', 
+            'acceptsMarketing', 'preferredLanguage', 'updatedAt'
+          ]);
+      }
+      
+      // User segments (store owner only)
+      match /segments/{segmentId} {
+        allow read, write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+      
+      // User activities (store owner read, Cloud Functions write)
+      match /activities/{activityId} {
+        allow read: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        // Authenticated users can read their own activities
+        allow read: if request.auth != null;
+        // Only Cloud Functions can write
+        allow write: if false;
+      }
+      
+      // Role configurations (store owner only)
+      match /roleConfigs/{roleId} {
+        allow read, write: if request.auth != null && 
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        // Store users can read role configs
+        allow read: if request.auth != null;
+      }
     }
     
     // ============================================
@@ -505,6 +566,28 @@ service cloud.firestore {
       allow read: if true;
       // Only Cloud Functions can write
       allow write: if false;
+    }
+    
+    // ============================================
+    // CUSTOM DOMAINS - Global Domain Mappings
+    // Used by SSR server to resolve custom domains to projects
+    // ============================================
+    
+    match /customDomains/{domainName} {
+      // Public read - SSR server needs to resolve domains without auth
+      allow read: if true;
+      
+      // Write only by Cloud Functions (via domain service)
+      // Users manage domains via Cloud Functions that validate ownership
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+      
+      // Note: All writes to this collection should go through Cloud Functions:
+      // - domains-add: Creates new domain mapping (validates user owns the project)
+      // - domains-remove: Removes domain mapping (validates user owns the domain)
+      // - domains-verifyDNS: Updates DNS verification status
+      // The Cloud Functions use Admin SDK which bypasses these rules.
     }
   }
 }

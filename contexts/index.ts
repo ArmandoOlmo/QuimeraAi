@@ -47,3 +47,4 @@ export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
 
 // Compatibility layer that maps new contexts to old useEditor interface
 export { useEditorCompat } from './compatibility';
+

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { Tenant, TenantStatus, TenantType, UserDocument } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import {

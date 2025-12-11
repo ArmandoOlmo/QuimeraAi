@@ -363,3 +363,4 @@ export const getAlertComponent = (
 </table>
 `;
 };
+

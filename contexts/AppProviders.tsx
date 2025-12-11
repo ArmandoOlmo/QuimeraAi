@@ -11,6 +11,8 @@ import { UIProvider } from './core/UIContext';
 import { ToastProvider } from './ToastContext';
 import { LanguageProvider } from './LanguageContext';
 
+import { EditorProvider } from './EditorContext';
+
 // Feature Contexts
 import { ProjectProvider } from './project';
 import { FilesProvider } from './files';
@@ -33,21 +35,23 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             <ToastProvider>
                 <LanguageProvider>
                     <UIProvider>
-                        <ProjectProvider>
-                            <FilesProvider>
-                                <CRMProvider>
-                                    <CMSProvider>
-                                        <AdminProvider>
-                                            <DomainsProvider>
-                                                <AIProvider>
-                                                    {children}
-                                                </AIProvider>
-                                            </DomainsProvider>
-                                        </AdminProvider>
-                                    </CMSProvider>
-                                </CRMProvider>
-                            </FilesProvider>
-                        </ProjectProvider>
+                        <EditorProvider>
+                            <ProjectProvider>
+                                <FilesProvider>
+                                    <CRMProvider>
+                                        <CMSProvider>
+                                            <AdminProvider>
+                                                <DomainsProvider>
+                                                    <AIProvider>
+                                                        {children}
+                                                    </AIProvider>
+                                                </DomainsProvider>
+                                            </AdminProvider>
+                                        </CMSProvider>
+                                    </CRMProvider>
+                                </FilesProvider>
+                            </ProjectProvider>
+                        </EditorProvider>
                     </UIProvider>
                 </LanguageProvider>
             </ToastProvider>

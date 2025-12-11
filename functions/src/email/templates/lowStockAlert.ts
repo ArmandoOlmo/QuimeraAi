@@ -165,3 +165,4 @@ export const getLowStockAlertTemplate = (params: LowStockAlertParams): string =>
         footerText: 'Este es un email automatico de alerta de inventario.',
     });
 };
+

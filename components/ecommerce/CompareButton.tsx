@@ -100,3 +100,4 @@ const CompareButton: React.FC<CompareButtonProps> = ({
 };
 
 export default CompareButton;
+

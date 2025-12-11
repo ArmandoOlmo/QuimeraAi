@@ -18,6 +18,7 @@ describe('Project Workflows', () => {
         mockProject = {
             id: 'test-project-1',
             name: 'Test Project',
+            thumbnailUrl: '',
             status: 'Draft',
             data: initialData.data,
             theme: initialData.theme,
@@ -287,10 +288,10 @@ describe('Project Workflows', () => {
         });
 
         it('should update component data', () => {
-            const newHeroTitle = 'New Hero Title';
-            mockProject.data.hero.title = newHeroTitle;
+            const newHeroHeadline = 'New Hero Headline';
+            mockProject.data.hero.headline = newHeroHeadline;
             
-            expect(mockProject.data.hero.title).toBe(newHeroTitle);
+            expect(mockProject.data.hero.headline).toBe(newHeroHeadline);
         });
 
         it('should track last updated timestamp', () => {
@@ -307,6 +308,7 @@ describe('Project Workflows', () => {
             const newProject: Project = {
                 id: 'new-project-1',
                 name: 'New Project',
+                thumbnailUrl: '',
                 status: 'Draft',
                 data: initialData.data,
                 theme: initialData.theme,

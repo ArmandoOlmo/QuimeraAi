@@ -51,6 +51,18 @@ import {
     checkVerifiedPurchase
 } from './reviewsSync';
 
+import {
+    createStoreUser,
+    updateStoreUserRole,
+    updateStoreUserStatus,
+    resetStoreUserPassword,
+    deleteStoreUser,
+    recordStoreUserLogin,
+    getStoreUser,
+    onStoreUserCreate,
+    onOrderCreateUpdateStoreUser
+} from './storeUsersAuth';
+
 // Email functions
 import {
     onLeadCreatedSendEmail,
@@ -63,6 +75,23 @@ import {
     processScheduledCampaigns,
     sendTestEmail
 } from './email/marketing/campaignService';
+
+// Domain management functions
+import {
+    addCustomDomain,
+    removeCustomDomain,
+    updateDomainStatus,
+    verifyDomainDNS,
+    checkDomainSSL,
+    onDomainCreate,
+    onDomainDelete,
+    scheduledDNSCheck,
+    // Name.com Reseller API
+    checkDomainAvailability,
+    searchDomainSuggestions,
+    purchaseDomain,
+    getDomainPricing
+} from './domains';
 
 // Export widget API functions
 export const widget = {
@@ -120,6 +149,19 @@ export const reviews = {
     checkVerifiedPurchase
 };
 
+// Export Store Users Auth functions (Multi-tenant customer auth)
+export const storeUsers = {
+    create: createStoreUser,
+    updateRole: updateStoreUserRole,
+    updateStatus: updateStoreUserStatus,
+    resetPassword: resetStoreUserPassword,
+    delete: deleteStoreUser,
+    recordLogin: recordStoreUserLogin,
+    get: getStoreUser,
+    onUserCreate: onStoreUserCreate,
+    onOrderCreate: onOrderCreateUpdateStoreUser
+};
+
 // Export Email functions
 export const email = {
     // Lead triggers
@@ -132,6 +174,24 @@ export const email = {
     sendTestEmail,
     // Stock alert (from ecommerceSync)
     onProductUpdateCheckStock
+};
+
+// Export Domain Management functions
+export const domains = {
+    add: addCustomDomain,
+    remove: removeCustomDomain,
+    updateStatus: updateDomainStatus,
+    verifyDNS: verifyDomainDNS,
+    checkSSL: checkDomainSSL,
+    // Triggers
+    onDomainCreate,
+    onDomainDelete,
+    scheduledDNSCheck,
+    // Name.com Reseller API
+    checkAvailability: checkDomainAvailability,
+    searchSuggestions: searchDomainSuggestions,
+    purchase: purchaseDomain,
+    getPricing: getDomainPricing
 };
 
 // Alternative flat exports for easier routing
@@ -179,6 +239,30 @@ export {
     sendCampaign,
     sendCampaignToSegment,
     processScheduledCampaigns,
-    sendTestEmail
+    sendTestEmail,
+    // Store Users Auth exports
+    createStoreUser,
+    updateStoreUserRole,
+    updateStoreUserStatus,
+    resetStoreUserPassword,
+    deleteStoreUser,
+    recordStoreUserLogin,
+    getStoreUser,
+    onStoreUserCreate,
+    onOrderCreateUpdateStoreUser,
+    // Domain management exports
+    addCustomDomain,
+    removeCustomDomain,
+    updateDomainStatus,
+    verifyDomainDNS,
+    checkDomainSSL,
+    onDomainCreate,
+    onDomainDelete,
+    scheduledDNSCheck,
+    // Name.com Reseller API exports
+    checkDomainAvailability,
+    searchDomainSuggestions,
+    purchaseDomain,
+    getDomainPricing
 };
 

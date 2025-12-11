@@ -9,7 +9,7 @@ import { PageSection } from './ui';
 // STEP TYPES
 // =============================================================================
 
-export type OnboardingWizardStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type OnboardingWizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export const ONBOARDING_STEPS = {
     BUSINESS_INFO: 1 as OnboardingWizardStep,
@@ -17,8 +17,42 @@ export const ONBOARDING_STEPS = {
     SERVICES: 3 as OnboardingWizardStep,
     TEMPLATE_SELECT: 4 as OnboardingWizardStep,
     CONTACT_INFO: 5 as OnboardingWizardStep,
-    GENERATION: 6 as OnboardingWizardStep,
+    STORE_SETUP: 6 as OnboardingWizardStep,
+    GENERATION: 7 as OnboardingWizardStep,
 };
+
+// =============================================================================
+// ECOMMERCE INDUSTRIES (auto-suggest ecommerce toggle)
+// =============================================================================
+
+export const ECOMMERCE_INDUSTRIES = [
+    'retail',
+    'fashion',
+    'jewelry',
+    'electronics',
+    'home-decor',
+    'sports-equipment',
+    'crafts',
+    'beauty-products',
+    'food-products',
+    'ecommerce',
+];
+
+// =============================================================================
+// STORE SETUP (for ecommerce onboarding)
+// =============================================================================
+
+export type EcommerceType = 'physical' | 'digital' | 'both';
+export type ShippingType = 'local' | 'national' | 'international' | 'digital_only';
+
+export interface OnboardingStoreSetup {
+    storeName: string;
+    currency: string;
+    currencySymbol: string;
+    shippingType: ShippingType;
+    suggestedCategories: string[];
+    selectedCategories: string[];
+}
 
 // =============================================================================
 // CONTACT INFO
@@ -125,6 +159,10 @@ export interface OnboardingProgress {
     industry: string;
     subIndustry?: string;
     
+    // Step 1: Ecommerce Option
+    hasEcommerce?: boolean;
+    ecommerceType?: EcommerceType;
+    
     // Step 2: Description
     description?: string;
     tagline?: string;
@@ -142,7 +180,10 @@ export interface OnboardingProgress {
     // Step 5: Contact Info
     contactInfo?: OnboardingContactInfo;
     
-    // Step 6: Generation
+    // Step 6: Store Setup (only if hasEcommerce = true)
+    storeSetup?: OnboardingStoreSetup;
+    
+    // Step 7: Generation
     generationProgress?: GenerationProgress;
     generatedProjectId?: string;
     
@@ -187,10 +228,15 @@ export interface OnboardingContextType {
     updateTemplateSelection: (templateId: string, templateName: string, enabledComponents: PageSection[], disabledComponents: PageSection[]) => void;
     updateContactInfo: (contactInfo: OnboardingContactInfo) => void;
     
+    // Ecommerce Updates
+    updateEcommerceSettings: (hasEcommerce: boolean, ecommerceType?: EcommerceType) => void;
+    updateStoreSetup: (storeSetup: OnboardingStoreSetup) => void;
+    
     // AI Assistance
     generateDescription: () => Promise<string>;
     generateServices: () => Promise<OnboardingService[]>;
     getTemplateRecommendation: () => Promise<TemplateRecommendation>;
+    generateSuggestedCategories: () => Promise<string[]>;
     
     // Final Generation
     startGeneration: () => Promise<void>;

@@ -374,3 +374,4 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         openDashboard,
     };
 };
+

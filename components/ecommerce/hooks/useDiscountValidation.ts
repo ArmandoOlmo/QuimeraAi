@@ -389,3 +389,4 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
 };
 
 export default useDiscountValidation;
+

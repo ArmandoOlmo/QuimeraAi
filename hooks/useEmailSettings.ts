@@ -72,44 +72,68 @@ export const useEmailSettings = (
     const [error, setError] = useState<string | null>(null);
 
     const { realtime = true } = options;
-    // Use project-based path for email settings
-    const settingsPath = `users/${userId}/projects/${projectId}/settings/email`;
 
     // Fetch or subscribe to settings
     useEffect(() => {
-        if (!userId || !projectId) {
+        // Only proceed if we have valid userId and projectId (not empty or 'default')
+        if (!userId || !projectId || projectId === 'default') {
+            console.log('⚠️ [useEmailSettings] Invalid userId/projectId, using defaults');
             setSettings(defaultEmailSettings);
             setIsLoading(false);
             return;
         }
 
+        console.log(`🔄 [useEmailSettings] Init for Project: ${projectId}`);
+        const settingsPath = `users/${userId}/projects/${projectId}/settings/email`;
         const settingsRef = doc(db, settingsPath);
+        let unsubscribe: (() => void) | undefined;
+        let isMounted = true;
+
+        // Safety timeout to prevent infinite loading
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted && isLoading) {
+                console.warn('⚠️ [useEmailSettings] Safety timeout triggered - forcing loading to completion');
+                setIsLoading(false);
+                // We keep the current settings (or null/default) but stop the spinner
+                if (!settings) setSettings(defaultEmailSettings);
+            }
+        }, 15000); // 15 seconds timeout
 
         if (realtime) {
             // Realtime subscription
-            const unsubscribe = onSnapshot(
+            unsubscribe = onSnapshot(
                 settingsRef,
                 (snapshot) => {
+                    if (!isMounted) return;
+                    console.log(`✅ [useEmailSettings] Snapshot received via realtime`);
+                    clearTimeout(safetyTimeout); // Clear timeout on success
+
                     if (snapshot.exists()) {
                         setSettings(snapshot.data() as EmailSettings);
                     } else {
+                        console.log('ℹ️ [useEmailSettings] No settings found, using defaults');
                         setSettings(defaultEmailSettings);
                     }
                     setIsLoading(false);
                     setError(null);
                 },
                 (err) => {
-                    console.error('Error fetching email settings:', err);
+                    if (!isMounted) return;
+                    console.error('❌ [useEmailSettings] Error fetching settings:', err);
+                    clearTimeout(safetyTimeout);
                     setError(err.message);
+                    setSettings(defaultEmailSettings);
                     setIsLoading(false);
                 }
             );
-
-            return () => unsubscribe();
         } else {
             // One-time fetch
             getDoc(settingsRef)
                 .then((snapshot) => {
+                    if (!isMounted) return;
+                    console.log(`✅ [useEmailSettings] Snapshot received via getDoc`);
+                    clearTimeout(safetyTimeout);
+
                     if (snapshot.exists()) {
                         setSettings(snapshot.data() as EmailSettings);
                     } else {
@@ -118,22 +142,34 @@ export const useEmailSettings = (
                     setIsLoading(false);
                 })
                 .catch((err) => {
-                    console.error('Error fetching email settings:', err);
+                    if (!isMounted) return;
+                    console.error('❌ [useEmailSettings] Error fetching settings:', err);
+                    clearTimeout(safetyTimeout);
                     setError(err.message);
+                    setSettings(defaultEmailSettings);
                     setIsLoading(false);
                 });
         }
-    }, [userId, projectId, settingsPath, realtime]);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(safetyTimeout);
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [userId, projectId, realtime]);
 
     // Update all settings
     const updateSettings = useCallback(
         async (updates: Partial<EmailSettings>) => {
-            if (!userId || !projectId) return;
+            if (!userId || !projectId || projectId === 'default') return;
 
             setIsSaving(true);
             setError(null);
 
             try {
+                const settingsPath = `users/${userId}/projects/${projectId}/settings/email`;
                 const settingsRef = doc(db, settingsPath);
                 const settingsDoc = await getDoc(settingsRef);
 
@@ -162,7 +198,7 @@ export const useEmailSettings = (
                 setIsSaving(false);
             }
         },
-        [userId, projectId, settingsPath, realtime]
+        [userId, projectId, realtime]
     );
 
     // Update sender info
@@ -267,37 +303,59 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-
     // Fetch campaigns
     useEffect(() => {
-        if (!userId || !projectId) {
+        // Only proceed if we have valid userId and projectId (not empty or 'default')
+        if (!userId || !projectId || projectId === 'default') {
             setCampaigns([]);
             setIsLoading(false);
             return;
         }
 
-        const campaignsRef = collection(db, campaignsPath);
-        const q = query(campaignsRef, orderBy('createdAt', 'desc'));
+        let unsubscribe: (() => void) | undefined;
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const campaignsData = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setCampaigns(campaignsData);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error fetching campaigns:', err);
+        const setupListener = async () => {
+            try {
+                const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
+                const campaignsRef = collection(db, campaignsPath);
+                const q = query(campaignsRef, orderBy('createdAt', 'desc'));
+
+                unsubscribe = onSnapshot(
+                    q,
+                    (snapshot) => {
+                        if (!isMounted) return;
+                        const campaignsData = snapshot.docs.map((doc) => ({
+                            id: doc.id,
+                            ...doc.data(),
+                        }));
+                        setCampaigns(campaignsData);
+                        setIsLoading(false);
+                    },
+                    (err) => {
+                        if (!isMounted) return;
+                        console.error('Error fetching campaigns:', err);
+                        setCampaigns([]);
+                        setIsLoading(false);
+                    }
+                );
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('Error setting up campaigns listener:', err);
+                setCampaigns([]);
                 setIsLoading(false);
             }
-        );
+        };
 
-        return () => unsubscribe();
-    }, [userId, projectId, campaignsPath]);
+        setupListener();
+
+        return () => {
+            isMounted = false;
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [userId, projectId]);
 
     // Create campaign
     const createCampaign = async (campaignData: {
@@ -307,10 +365,11 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         content?: string;
         audienceType?: string;
     }) => {
-        if (!userId || !projectId) return null;
+        if (!userId || !projectId || projectId === 'default') return null;
 
         setIsSaving(true);
         try {
+            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
             const campaignsRef = collection(db, campaignsPath);
             const newCampaign = {
                 ...campaignData,
@@ -343,10 +402,11 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
     // Update campaign
     const updateCampaign = async (campaignId: string, updates: any) => {
-        if (!userId || !projectId) return;
+        if (!userId || !projectId || projectId === 'default') return;
 
         setIsSaving(true);
         try {
+            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
             const campaignRef = doc(db, campaignsPath, campaignId);
             await updateDoc(campaignRef, {
                 ...updates,
@@ -362,9 +422,10 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
     // Delete campaign
     const deleteCampaign = async (campaignId: string) => {
-        if (!userId || !projectId) return;
+        if (!userId || !projectId || projectId === 'default') return;
 
         try {
+            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
             const campaignRef = doc(db, campaignsPath, campaignId);
             await deleteDoc(campaignRef);
         } catch (err) {
@@ -395,50 +456,91 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const logsPath = `users/${userId}/projects/${projectId}/emailLogs`;
-
     useEffect(() => {
-        if (!userId || !projectId) {
+        // Only proceed if we have valid userId and projectId (not empty or 'default')
+        if (!userId || !projectId || projectId === 'default') {
             setLogs([]);
+            setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
-        const logsRef = collection(db, logsPath);
-        const q = query(logsRef, orderBy('sentAt', 'desc'));
+        console.log(`🔄 [useEmailLogs] Init for Project: ${projectId}`);
+        let unsubscribe: (() => void) | undefined;
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const logsData = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Array<{ id: string; status?: string; opened?: boolean; clicked?: boolean; [key: string]: any }>;
-                setLogs(logsData);
-
-                // Calculate stats from logs
-                const calculatedStats = logsData.reduce(
-                    (acc, log) => ({
-                        totalSent: acc.totalSent + 1,
-                        delivered: acc.delivered + (log.status === 'delivered' ? 1 : 0),
-                        opened: acc.opened + (log.opened ? 1 : 0),
-                        clicked: acc.clicked + (log.clicked ? 1 : 0),
-                        bounced: acc.bounced + (log.status === 'bounced' ? 1 : 0),
-                    }),
-                    { totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 }
-                );
-                setStats(calculatedStats);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error fetching email logs:', err);
+        // Safety timeout
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted) { // Note: useEmailLogs doesn't have local isLoading state check here because we set it inside
+                console.warn('⚠️ [useEmailLogs] Safety timeout triggered - forcing loading to completion');
+                setLogs([]); // Return empty logs on timeout
                 setIsLoading(false);
             }
-        );
+        }, 15000);
 
-        return () => unsubscribe();
-    }, [userId, projectId, logsPath, options?.limit]);
+        const setupListener = async () => {
+            setIsLoading(true);
+            try {
+                const logsPath = `users/${userId}/projects/${projectId}/emailLogs`;
+                const logsRef = collection(db, logsPath);
+                const q = query(logsRef, orderBy('sentAt', 'desc'));
+
+                unsubscribe = onSnapshot(
+                    q,
+                    (snapshot) => {
+                        if (!isMounted) return;
+                        console.log(`✅ [useEmailLogs] Snapshot received, docs: ${snapshot.docs.length}`);
+                        clearTimeout(safetyTimeout);
+
+                        const logsData = snapshot.docs.map((doc) => ({
+                            id: doc.id,
+                            ...doc.data(),
+                        })) as Array<{ id: string; status?: string; opened?: boolean; clicked?: boolean;[key: string]: any }>;
+                        setLogs(logsData);
+
+                        // Calculate stats from logs
+                        const calculatedStats = logsData.reduce(
+                            (acc, log) => ({
+                                totalSent: acc.totalSent + 1,
+                                delivered: acc.delivered + (log.status === 'delivered' ? 1 : 0),
+                                opened: acc.opened + (log.opened ? 1 : 0),
+                                clicked: acc.clicked + (log.clicked ? 1 : 0),
+                                bounced: acc.bounced + (log.status === 'bounced' ? 1 : 0),
+                            }),
+                            { totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 }
+                        );
+                        setStats(calculatedStats);
+                        setIsLoading(false);
+                    },
+                    (err) => {
+                        if (!isMounted) return;
+                        console.error('❌ [useEmailLogs] Error fetching email logs:', err);
+                        clearTimeout(safetyTimeout);
+                        setLogs([]);
+                        setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
+                        setIsLoading(false);
+                    }
+                );
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('❌ [useEmailLogs] Error setting up logs listener:', err);
+                clearTimeout(safetyTimeout);
+                setLogs([]);
+                setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
+                setIsLoading(false);
+            }
+        };
+
+        setupListener();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(safetyTimeout);
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [userId, projectId, options?.limit]);
 
     return {
         logs,

@@ -452,3 +452,4 @@ export interface WelcomeEmailVariables {
     footerText?: string;
     socialLinks?: EmailSocialLinks;
 }
+

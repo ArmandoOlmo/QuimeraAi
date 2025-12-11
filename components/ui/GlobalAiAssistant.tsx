@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useEditor } from '../../contexts/EditorContext';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project';
@@ -7,7 +8,6 @@ import { useCRM } from '../../contexts/crm';
 import { useCMS } from '../../contexts/cms';
 import { useAI } from '../../contexts/ai';
 import { useDomains } from '../../contexts/domains';
-import { useAdmin } from '../../contexts/admin';
 import { FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
 import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, X, User as UserIcon, Shield } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -17,6 +17,7 @@ import { getGoogleGenAI } from '../../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
+// ... existing imports ...
 
 // --- Types ---
 interface Message {
@@ -184,22 +185,22 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                section: { 
-                    type: Type.STRING, 
+                section: {
+                    type: Type.STRING,
                     enum: ['features', 'testimonials', 'pricing', 'faq', 'portfolio', 'services', 'team', 'slideshow', 'howItWorks'],
                     description: 'Section containing items to manage'
                 },
-                action: { 
-                    type: Type.STRING, 
+                action: {
+                    type: Type.STRING,
                     enum: ['add', 'update', 'delete'],
                     description: 'Action to perform on items'
                 },
-                index: { 
-                    type: Type.NUMBER, 
-                    description: 'Item index (0-based, required for update/delete)' 
+                index: {
+                    type: Type.NUMBER,
+                    description: 'Item index (0-based, required for update/delete)'
                 },
-                itemData: { 
-                    type: Type.OBJECT, 
+                itemData: {
+                    type: Type.OBJECT,
                     description: 'Item data as JSON object (required for add/update). Structure depends on section type.'
                 }
             },
@@ -215,8 +216,8 @@ const TOOLS: FunctionDeclaration[] = [
                 name: { type: Type.STRING, description: 'Business/brand name' },
                 industry: { type: Type.STRING, description: 'Industry or business sector' },
                 targetAudience: { type: Type.STRING, description: 'Target audience description' },
-                toneOfVoice: { 
-                    type: Type.STRING, 
+                toneOfVoice: {
+                    type: Type.STRING,
                     enum: ['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'],
                     description: 'Brand tone of voice'
                 },
@@ -231,16 +232,16 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { 
-                    type: Type.STRING, 
+                action: {
+                    type: Type.STRING,
                     enum: ['show', 'hide', 'reorder'],
                     description: 'Action to perform'
                 },
-                section: { 
+                section: {
                     type: Type.STRING,
                     description: 'Section name (required for show/hide)'
                 },
-                newOrder: { 
+                newOrder: {
                     type: Type.ARRAY,
                     items: { type: Type.STRING },
                     description: 'New section order as array of section names (required for reorder)'
@@ -629,11 +630,14 @@ const normalizeText = (str: string) => {
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
 const GlobalAiAssistant: React.FC = () => {
-    const { 
+    const {
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig, onSectionSelect,
         theme, setTheme,
-        getPrompt, addNewProject, 
+        getPrompt, addNewProject,
+        componentStatus, customComponents
+    } = useEditor();
+
     const { user } = useAuth();
     const { view, setView } = useUI();
     const { projects, brandIdentity, setBrandIdentity, componentOrder, setComponentOrder, sectionVisibility, setSectionVisibility } = useProject();
@@ -641,7 +645,6 @@ const GlobalAiAssistant: React.FC = () => {
     const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
     const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
     const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
-    const { componentStatus, customComponents, globalAssistantConfig } = useAdmin();
 
     // State
     const [isOpen, setIsOpen] = useState(false);
@@ -650,7 +653,7 @@ const GlobalAiAssistant: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([{ role: 'model', text: globalAssistantConfig.greeting }]);
     const [isThinking, setIsThinking] = useState(false);
     const [isExecutingCommands, setIsExecutingCommands] = useState(false);
-    
+
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
@@ -666,9 +669,9 @@ const GlobalAiAssistant: React.FC = () => {
     const streamRef = useRef<MediaStream | null>(null);
     const nextStartTimeRef = useRef<number>(0);
     const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
-    const sessionRef = useRef<any>(null); 
+    const sessionRef = useRef<any>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
-    
+
     // Data Refs
     const dataRef = useRef(data);
     const themeRef = useRef(theme);
@@ -754,7 +757,7 @@ const GlobalAiAssistant: React.FC = () => {
 
     useEffect(() => {
         if (messages.length <= 1 && messages[0].role === 'model') {
-             setMessages([{ role: 'model', text: globalAssistantConfig.greeting }]);
+            setMessages([{ role: 'model', text: globalAssistantConfig.greeting }]);
         }
     }, [globalAssistantConfig.greeting]);
 
@@ -783,13 +786,13 @@ const GlobalAiAssistant: React.FC = () => {
 
         const designPrompt = getPrompt('onboarding-design-plan');
         if (!designPrompt) throw new Error("Design prompt not found");
-        
+
         try {
             const designContent = designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta");
-            
+
             const projectId = activeProject?.id || 'headless-generation';
             const designResponse = await generateContentViaProxy(projectId, designContent, designPrompt.model, {}, user?.uid);
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -799,16 +802,16 @@ const GlobalAiAssistant: React.FC = () => {
                     success: true
                 });
             }
-            
+
             const designPlan = JSON.parse(cleanJson(extractTextFromResponse(designResponse)));
 
             const websitePrompt = getPrompt('onboarding-website-json');
             if (!websitePrompt) throw new Error("Website generation prompt not found");
 
             const websiteContent = websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription);
-            
+
             const websiteResponse = await generateContentViaProxy(projectId, websiteContent, websitePrompt.model, {}, user?.uid);
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -897,7 +900,7 @@ const GlobalAiAssistant: React.FC = () => {
             console.warn("Cannot update data: No project loaded.");
             return false;
         }
-        
+
         const deepSet = (obj: any, p: string, v: any) => {
             const keys = p.split('.');
             let cur = obj;
@@ -916,16 +919,16 @@ const GlobalAiAssistant: React.FC = () => {
         try {
             const mutableClone = JSON.parse(JSON.stringify(dataRef.current));
             deepSet(mutableClone, path, value);
-            dataRef.current = mutableClone; 
-        } catch(e) { console.warn("Optimistic ref update failed", e); }
+            dataRef.current = mutableClone;
+        } catch (e) { console.warn("Optimistic ref update failed", e); }
 
         setData(prevData => {
             if (!prevData) return null;
             const newData = JSON.parse(JSON.stringify(prevData));
-            deepSet(newData, path, value); 
+            deepSet(newData, path, value);
             return newData;
         });
-        
+
         return true;
     };
 
@@ -1001,13 +1004,13 @@ const GlobalAiAssistant: React.FC = () => {
                     else if (lowerVal === 'false') val = false;
                     else if (!isNaN(Number(val)) && val.trim() !== '') val = Number(val);
                     else if ((val.startsWith('[') && val.endsWith(']')) || (val.startsWith('{') && val.endsWith('}'))) {
-                        try { val = JSON.parse(val); } catch(e) {}
+                        try { val = JSON.parse(val); } catch (e) { }
                     }
                 }
                 if (path.startsWith('theme.')) {
                     const themeKey = path.split('.')[1];
                     if (themeKey && themeRef.current) {
-                        setThemeRef.current(prev => ({...prev, [themeKey]: val}));
+                        setThemeRef.current(prev => ({ ...prev, [themeKey]: val }));
                         const result = { result: `Updated global theme ${themeKey}.` };
                         console.log(`[Tool Result] ${name}`, result);
                         return result;
@@ -1051,7 +1054,7 @@ const GlobalAiAssistant: React.FC = () => {
                 console.log(`[Tool Result] ${name}`, result);
                 return result;
             }
-            
+
             // --- CONTENT MANAGER TOOLS ---
             else if (name === 'manage_cms_post') {
                 const { action, id, title, content, status } = args;
@@ -1095,7 +1098,7 @@ const GlobalAiAssistant: React.FC = () => {
                 const { action, id, name: leadName, email, status, notes, value } = args;
                 if (action === 'create') {
                     await addLeadRef.current({
-                        name: leadName, email, company: '', value: value || 0, 
+                        name: leadName, email, company: '', value: value || 0,
                         status: status || 'new', source: 'manual', notes: notes || ''
                     });
                     return { result: `Created lead: ${leadName}` };
@@ -1161,7 +1164,7 @@ const GlobalAiAssistant: React.FC = () => {
                     return result;
                 }
                 const { section, action, index, itemData } = args;
-                
+
                 const sectionData = dataRef.current[section as keyof PageData] as any;
                 if (!sectionData || !sectionData.items) {
                     const result = { error: `Section '${section}' not found or has no items array.` };
@@ -1180,7 +1183,7 @@ const GlobalAiAssistant: React.FC = () => {
                     const result = { result: success ? `Added item to ${section}.` : `Failed to add item.` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
-                } 
+                }
                 else if (action === 'update') {
                     if (index === undefined || index === null) {
                         const result = { error: "index required for update action." };
@@ -1203,7 +1206,7 @@ const GlobalAiAssistant: React.FC = () => {
                     const result = { result: success ? `Updated item ${index} in ${section}.` : `Failed to update item.` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
-                } 
+                }
                 else if (action === 'delete') {
                     if (index === undefined || index === null) {
                         const result = { error: "index required for delete action." };
@@ -1232,7 +1235,7 @@ const GlobalAiAssistant: React.FC = () => {
                 const currentIdentity = brandIdentityRef.current;
                 const newIdentity = { ...currentIdentity, ...updates };
                 setBrandIdentityRef.current(newIdentity);
-                
+
                 const updatedFields = Object.keys(updates).join(', ');
                 const result = { result: `Brand identity updated: ${updatedFields}.` };
                 console.log(`[Tool Result] ${name}`, result);
@@ -1242,7 +1245,7 @@ const GlobalAiAssistant: React.FC = () => {
             // --- SECTION VISIBILITY & ORDER ---
             else if (name === 'manage_sections') {
                 const { action, section, newOrder } = args;
-                
+
                 if (action === 'show') {
                     if (!section) {
                         const result = { error: "section required for show action." };
@@ -1254,7 +1257,7 @@ const GlobalAiAssistant: React.FC = () => {
                     const result = { result: `Section '${section}' is now visible.` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
-                } 
+                }
                 else if (action === 'hide') {
                     if (!section) {
                         const result = { error: "section required for hide action." };
@@ -1266,7 +1269,7 @@ const GlobalAiAssistant: React.FC = () => {
                     const result = { result: `Section '${section}' is now hidden.` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
-                } 
+                }
                 else if (action === 'reorder') {
                     if (!newOrder || !Array.isArray(newOrder)) {
                         const result = { error: "newOrder array required for reorder action." };
@@ -1296,36 +1299,36 @@ const GlobalAiAssistant: React.FC = () => {
 
     const getEffectiveSystemInstruction = (mode: 'chat' | 'voice') => {
         const config = globalAssistantConfig;
-        
+
         // 1. Start with base system instruction (editable by user)
         const promptConfig = getPromptRef.current('global-assistant-main');
         const baseInstruction = promptConfig ? promptConfig.template : config.systemInstruction;
-        
+
         // 2. Get enabled templates (or use defaults if not set)
         const enabledTemplates = config.enabledTemplates || getDefaultEnabledTemplates();
         const templatesInstruction = compileTemplates(enabledTemplates, config.customInstructions);
-        
+
         // 3. Build scope and permissions text
         const permissions = config.permissions || {};
         const allowedScopes = Object.keys(permissions).filter(key => permissions[key]?.[mode] === true);
         const userRole = userDocumentRef.current?.role;
         const hasFullAccess = userRole === 'owner' || userRole === 'superadmin';
-        
+
         let scopeText = "";
         if (hasFullAccess) {
             scopeText = userRole === 'owner' ? `ACCESS: OWNER (FULL CONTROL).` : `ACCESS: SUPER ADMIN.`;
         } else {
-             if (Object.keys(permissions).length > 0) {
-                 if (allowedScopes.length > 0) scopeText = `ACCESS: RESTRICTED. Allowed: ${allowedScopes.join(', ')}.`;
-                 else scopeText = `ACCESS: READ ONLY.`;
-             } else scopeText = "ACCESS: STANDARD USER.";
+            if (Object.keys(permissions).length > 0) {
+                if (allowedScopes.length > 0) scopeText = `ACCESS: RESTRICTED. Allowed: ${allowedScopes.join(', ')}.`;
+                else scopeText = `ACCESS: READ ONLY.`;
+            } else scopeText = "ACCESS: STANDARD USER.";
         }
 
         // 4. Inject contextual data (fast, truncated for speed)
         const LIMIT = 20;
         const activeProject = activeProjectRef.current;
 
-        const cmsContext = cmsPostsRef.current.length > 0 
+        const cmsContext = cmsPostsRef.current.length > 0
             ? `Recent Posts: ${cmsPostsRef.current.slice(0, LIMIT).map(p => `"${p.title}" (ID:${p.id})`).join(', ')}.`
             : "CMS: Empty.";
 
@@ -1347,7 +1350,7 @@ const GlobalAiAssistant: React.FC = () => {
             .filter(([_, enabled]) => enabled)
             .map(([key, _]) => key)
             .join(', ');
-        const componentsContext = enabledComponents 
+        const componentsContext = enabledComponents
             ? `Available Components: ${enabledComponents}.`
             : "Components: All standard components available.";
 
@@ -1355,7 +1358,7 @@ const GlobalAiAssistant: React.FC = () => {
             .slice(0, 10)
             .map(c => `"${c.name}" (based on ${c.baseComponent})`)
             .join(', ');
-        const customContext = customComponentsList 
+        const customContext = customComponentsList
             ? `Custom Components: ${customComponentsList}.`
             : "";
 
@@ -1485,8 +1488,8 @@ ENGLISH RESPONSE PATTERNS:
 - "What [noun] would you like...?" / "Which...?"
 - "Done" / "Complete" / "Perfect"
 `;
-        
-        const conversationExamples = `
+
+    const conversationExamples = `
 *** EXAMPLE CONVERSATIONS (learn from these) ***
 
 Example 1: Spanish - Clear intent with typo
@@ -1596,7 +1599,7 @@ You: "✓ Made the hero button green and increased its size"
             audioContextRef.current = null;
         }
         if (sessionRef.current) {
-             sessionRef.current = null;
+            sessionRef.current = null;
         }
         setIsLiveActive(false);
         setIsConnecting(false);
@@ -1640,8 +1643,8 @@ You: "✓ Made the hero button green and increased its size"
                                 const pcm16 = floatTo16BitPCM(inputData);
                                 const base64Data = bytesToBase64(new Uint8Array(pcm16));
                                 sessionPromise.then(session => {
-                                     if (!isConnectedRef.current) return;
-                                     try { session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (err) {}
+                                    if (!isConnectedRef.current) return;
+                                    try { session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (err) { }
                                 });
                             };
                             source.connect(processor);
@@ -1651,7 +1654,7 @@ You: "✓ Made the hero button green and increased its size"
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.interrupted) {
                             console.log('[Voice Mode] Audio interrupted');
-                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
+                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
                             activeSourcesRef.current = [];
                             if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
                             return;
@@ -1690,10 +1693,10 @@ You: "✓ Made the hero button green and increased its size"
                 }
             });
             sessionRef.current = sessionPromise;
-        } catch (error) { 
+        } catch (error) {
             handleApiError(error);
-            setIsConnecting(false); 
-            alert("Failed to start voice session."); 
+            setIsConnecting(false);
+            alert("Failed to start voice session.");
         }
     };
 
@@ -1702,7 +1705,7 @@ You: "✓ Made the hero button green and increased its size"
         const userMsg = input;
         setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-        
+
         if (!isLiveActive) {
             setIsThinking(true);
             try {
@@ -1711,14 +1714,14 @@ You: "✓ Made the hero button green and increased its size"
                     .filter(m => !m.isToolOutput)
                     .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
                     .join('\n');
-                
+
                 // Build tools description for the prompt
-                const toolsDescription = TOOLS.map(tool => 
+                const toolsDescription = TOOLS.map(tool =>
                     `- ${tool.name}: ${tool.description}. Parameters: ${JSON.stringify(tool.parameters)}`
                 ).join('\n');
-                
+
                 const systemPrompt = getEffectiveSystemInstruction('chat');
-                
+
                 // Full prompt with system instruction, tools, history, and user message
                 const fullPrompt = `${systemPrompt}
 
@@ -1741,10 +1744,10 @@ User: ${userMsg}`;
                     temperature: 0.8,
                     maxOutputTokens: 2048
                 }, user?.uid);
-                
+
                 let responseText = extractTextFromResponse(response).trim();
                 console.log('[Global Assistant] Proxy Response:', responseText);
-                
+
                 // Check if the response is a tool call
                 let turnCount = 0;
                 while (turnCount < 5) {
@@ -1755,10 +1758,10 @@ User: ${userMsg}`;
                             turnCount++;
                             console.log(`[Global Assistant] Tool call detected (turn ${turnCount}):`, parsed.tool_call);
                             setIsExecutingCommands(true);
-                            
+
                             const { result, error } = await executeTool(parsed.tool_call.name, parsed.tool_call.args || {});
                             const feedback = result || error || "Done";
-                            
+
                             // Send the tool result back to get final response
                             const followUpPrompt = `${fullPrompt}
 
@@ -1766,12 +1769,12 @@ Assistant called tool: ${parsed.tool_call.name}
 Tool result: ${feedback}
 
 Now provide a brief response to the user about what was done.`;
-                            
+
                             const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, 'gemini-2.5-flash', {
                                 temperature: 0.7,
                                 maxOutputTokens: 1024
                             }, user?.uid);
-                            
+
                             responseText = extractTextFromResponse(followUpResponse).trim();
                             continue;
                         }
@@ -1780,22 +1783,22 @@ Now provide a brief response to the user about what was done.`;
                     }
                     break;
                 }
-                
+
                 setIsExecutingCommands(false);
-                
+
                 if (responseText) {
                     setMessages(prev => [...prev, { role: 'model', text: responseText }]);
                 } else {
                     setMessages(prev => [...prev, { role: 'model', text: "✓ Listo" }]);
                 }
 
-            } catch (e: any) { 
-                console.error(e); 
-                handleApiError(e); 
+            } catch (e: any) {
+                console.error(e);
+                handleApiError(e);
                 const errorMessage = typeof e?.message === 'string' ? e.message : "Error processing request.";
-                setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMessage}` }]); 
-            } finally { 
-                setIsThinking(false); 
+                setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMessage}` }]);
+            } finally {
+                setIsThinking(false);
                 setIsExecutingCommands(false);
             }
         }
@@ -1805,7 +1808,7 @@ Now provide a brief response to the user about what was done.`;
 
     if (!isOpen) return (
         <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 z-50 bg-primary text-primary-foreground p-3 rounded-full shadow-2xl hover:scale-110 transition-transform border-4 border-background animate-pulse-slow flex items-center justify-center group" title="Open Global Assistant">
-            <img src={LOGO_URL} alt="Quimera" className="w-10 h-10 object-contain group-hover:rotate-12 transition-transform"/>
+            <img src={LOGO_URL} alt="Quimera" className="w-10 h-10 object-contain group-hover:rotate-12 transition-transform" />
             <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
         </button>
     );
@@ -1826,7 +1829,7 @@ Now provide a brief response to the user about what was done.`;
                 {isLiveActive && (
                     <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-foreground animate-fade-in-up">
                         <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-8 relative"><div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-30"></div><img src={LOGO_URL} alt="Quimera Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" /></div>
-                        <div className="flex items-center gap-1.5 h-16 mb-8">{visualizerLevels.map((height, i) => <div key={i} className="w-2 bg-primary rounded-full transition-all duration-75" style={{ height: `${height}px`, opacity: 0.5 + (height/50) }} />)}</div>
+                        <div className="flex items-center gap-1.5 h-16 mb-8">{visualizerLevels.map((height, i) => <div key={i} className="w-2 bg-primary rounded-full transition-all duration-75" style={{ height: `${height}px`, opacity: 0.5 + (height / 50) }} />)}</div>
                         <p className="text-lg font-medium mb-2">Listening...</p>
                         <p className="text-xs text-muted-foreground text-center max-w-xs mb-8">Ask me to change colors, manage leads, update content, or create assets.</p>
                         <button onClick={stopLiveSession} className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full text-sm font-bold transition-colors flex items-center border border-red-500/50"><PhoneOff size={16} className="mr-2" /> End Voice Session</button>
@@ -1839,7 +1842,7 @@ Now provide a brief response to the user about what was done.`;
                             <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : msg.isToolOutput ? 'bg-secondary/50 text-muted-foreground text-xs font-mono border border-dashed border-border w-full' : 'bg-card text-foreground border border-border rounded-tl-sm'}`}>
                                 {msg.role === 'model' && !msg.isToolOutput ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
                             </div>
-                             {msg.role === 'user' && <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">{user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}</div>}
+                            {msg.role === 'user' && <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">{user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}</div>}
                         </div>
                     ))}
                     {isExecutingCommands && (
@@ -1858,15 +1861,15 @@ Now provide a brief response to the user about what was done.`;
                 </div>
                 <div className="p-4 bg-card border-t border-border shrink-0">
                     <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                         <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat"><Trash2 size={18} /></button>
+                        <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat"><Trash2 size={18} /></button>
                         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleTextSend()} placeholder="Type a message..." className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50" disabled={isLiveActive} />
                         {globalAssistantConfig.enableLiveVoice && <button onClick={startLiveSession} disabled={isConnecting || isLiveActive || hasApiKey === false} className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} title="Start Voice Mode (requires API key)">{isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}</button>}
                         <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
                     </div>
-                     <div className="mt-2 flex justify-between items-center px-2">
-                         <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>
-                         <div className="flex items-center gap-2">{(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}<p className="text-[10px] text-muted-foreground">{userDocument?.role === 'owner' ? 'Owner Access' : userDocument?.role === 'superadmin' ? 'Admin Access' : 'User Access'}</p></div>
-                     </div>
+                    <div className="mt-2 flex justify-between items-center px-2">
+                        <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>
+                        <div className="flex items-center gap-2">{(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}<p className="text-[10px] text-muted-foreground">{userDocument?.role === 'owner' ? 'Owner Access' : userDocument?.role === 'superadmin' ? 'Admin Access' : 'User Access'}</p></div>
+                    </div>
                 </div>
             </div>
         </div>

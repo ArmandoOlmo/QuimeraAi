@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { 
-  getCachedData, 
-  setCachedData, 
-  clearCache,
   debounce,
   throttle 
 } from '../../utils/performanceOptimizations';

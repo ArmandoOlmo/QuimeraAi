@@ -19,6 +19,7 @@ import {
     Loader2,
 } from 'lucide-react';
 import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useOrders } from '../hooks/useOrders';
 import { Order, OrderStatus } from '../../../../types/ecommerce';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
@@ -117,11 +118,10 @@ const OrdersView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <button
                     onClick={() => setSelectedStatus('pending')}
-                    className={`p-4 rounded-xl border transition-colors ${
-                        selectedStatus === 'pending'
+                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'pending'
                             ? 'bg-yellow-500/20 border-yellow-500/50'
                             : 'bg-card/50 border-border hover:bg-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-3">
                         <Clock className="text-yellow-400" size={24} />
@@ -134,11 +134,10 @@ const OrdersView: React.FC = () => {
 
                 <button
                     onClick={() => setSelectedStatus('paid')}
-                    className={`p-4 rounded-xl border transition-colors ${
-                        selectedStatus === 'paid'
+                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'paid'
                             ? 'bg-green-500/20 border-green-500/50'
                             : 'bg-card/50 border-border hover:bg-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-3">
                         <DollarSign className="text-green-400" size={24} />
@@ -151,11 +150,10 @@ const OrdersView: React.FC = () => {
 
                 <button
                     onClick={() => setSelectedStatus('shipped')}
-                    className={`p-4 rounded-xl border transition-colors ${
-                        selectedStatus === 'shipped'
+                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'shipped'
                             ? 'bg-purple-500/20 border-purple-500/50'
                             : 'bg-card/50 border-border hover:bg-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-3">
                         <Truck className="text-purple-400" size={24} />
@@ -168,11 +166,10 @@ const OrdersView: React.FC = () => {
 
                 <button
                     onClick={() => setSelectedStatus('delivered')}
-                    className={`p-4 rounded-xl border transition-colors ${
-                        selectedStatus === 'delivered'
+                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'delivered'
                             ? 'bg-green-500/20 border-green-500/50'
                             : 'bg-card/50 border-border hover:bg-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-3">
                         <CheckCircle className="text-green-400" size={24} />

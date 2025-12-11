@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAdmin } from '../../../contexts/admin';
 import { CustomComponent } from '../../../types';
 import { Search, Download, Star, Eye, Package, X, Check } from 'lucide-react';
 import ComponentRating from './ComponentRating';
@@ -43,7 +45,7 @@ const ComponentMarketplace: React.FC = () => {
             console.error('duplicateCustomComponent function not available');
             return;
         }
-        
+
         await duplicateCustomComponent(component.id);
         alert(`"${component.name}" added to your library!`);
         setShowDetailModal(false);
@@ -93,11 +95,10 @@ const ComponentMarketplace: React.FC = () => {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-2 font-medium whitespace-nowrap transition-colors ${
-                                selectedCategory === cat
+                            className={`px-4 py-2 font-medium whitespace-nowrap transition-colors ${selectedCategory === cat
                                     ? 'text-editor-accent'
                                     : 'text-editor-text-secondary hover:text-editor-text-primary'
-                            }`}
+                                }`}
                         >
                             {cat === 'all' ? 'All' : cat}
                         </button>
@@ -127,10 +128,10 @@ const ComponentMarketplace: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Dark Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-                        
+
                         {/* Hover Overlay */}
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
 
@@ -158,7 +159,7 @@ const ComponentMarketplace: React.FC = () => {
                         {/* Content at Bottom */}
                         <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
                             <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{component.name}</h3>
-                            
+
                             {component.description && (
                                 <p className="text-sm text-white/80 line-clamp-2 mb-3">{component.description}</p>
                             )}

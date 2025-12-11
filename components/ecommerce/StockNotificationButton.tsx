@@ -214,3 +214,4 @@ const StockNotificationButton: React.FC<StockNotificationButtonProps> = ({
 };
 
 export default StockNotificationButton;
+

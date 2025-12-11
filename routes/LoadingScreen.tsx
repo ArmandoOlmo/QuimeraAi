@@ -32,6 +32,11 @@ const LoadingScreen: React.FC = () => {
               alt="Quimera Logo" 
               className="w-14 h-14 object-contain animate-pulse"
               style={{ animationDuration: '1.5s' }}
+              width={56}
+              height={56}
+              loading="eager"
+              decoding="sync"
+              fetchPriority="high"
             />
           </div>
         </div>

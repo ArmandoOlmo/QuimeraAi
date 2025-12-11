@@ -306,3 +306,4 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
 };
 
 export default CollectionBanner;
+
