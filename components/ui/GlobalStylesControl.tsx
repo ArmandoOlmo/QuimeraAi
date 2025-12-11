@@ -101,8 +101,9 @@ interface GlobalStylesControlProps {
 
 /**
  * Genera el mapeo de colores de la paleta global a cada componente
+ * Exportado para uso en onboarding y otras partes de la aplicación
  */
-const generateComponentColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => {
+export const generateComponentColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => {
     return {
         hero: {
             primary: colors.primary,
@@ -460,7 +461,8 @@ const generateComponentColorMappings = (colors: GlobalColors): Record<string, Re
 
 const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both' }) => {
     const { t } = useTranslation();
-    const { theme, setTheme, updateComponentStyle, data, setData } = useEditor();
+    const { updateComponentStyle } = useAdmin();
+    const { theme, setTheme, data, setData } = useProject();
     const [activeTab, setActiveTab] = useState<Tab>('colors');
     const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
     const [isApplying, setIsApplying] = useState(false);

@@ -1,6 +1,8 @@
 
 import React, { useRef, useState } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useFiles } from '../../contexts/files';
+import { useAI } from '../../contexts/ai';
+import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { useAssetLibrary } from '../../hooks/useAssetLibrary';
 import { FileRecord } from '../../types';
@@ -54,7 +56,7 @@ const DEPTH_OF_FIELD = [
 ];
 
 const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({ file, onClose }) => {
-    const { deleteFile, updateFileNotes, generateFileSummary } = useEditor();
+    const { deleteFile, updateFileNotes, generateFileSummary } = useFiles();
     const { success, error: showError } = useToast();
     const [notes, setNotes] = useState(file.notes);
     const notesTimeoutRef = useRef<number | null>(null);
@@ -358,7 +360,9 @@ interface FileHistoryProps {
 }
 
 const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
-    const { files, isFilesLoading, uploadFile, deleteFile, projects, generateImage, enhancePrompt } = useEditor();
+    const { files, isFilesLoading, uploadFile, deleteFile } = useFiles();
+    const { projects } = useProject();
+    const { generateImage, enhancePrompt } = useAI();
     const { success, error: showError } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const referenceFileInputRef = useRef<HTMLInputElement>(null);

@@ -1,6 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useUI } from '../../contexts/core/UIContext';
+import { useProject } from '../../contexts/project';
+import { useCRM } from '../../contexts/crm';
+import { useCMS } from '../../contexts/cms';
+import { useAI } from '../../contexts/ai';
+import { useDomains } from '../../contexts/domains';
+import { useAdmin } from '../../contexts/admin';
 import { FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
 import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, X, User as UserIcon, Shield } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -627,19 +634,14 @@ const GlobalAiAssistant: React.FC = () => {
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig, onSectionSelect,
         theme, setTheme,
         getPrompt, addNewProject, 
-        // Added context items
-        leads, addLead, updateLead, updateLeadStatus, deleteLead,
-        cmsPosts, saveCMSPost, deleteCMSPost,
-        aiAssistantConfig, saveAiAssistantConfig,
-        domains, addDomain, deleteDomain, verifyDomain,
-        generateImage,
-        projects, setView, view, user,
-        brandIdentity, setBrandIdentity,
-        componentOrder, setComponentOrder,
-        sectionVisibility, setSectionVisibility,
-        // Component system
-        componentStatus, customComponents
-    } = useEditor();
+    const { user } = useAuth();
+    const { view, setView } = useUI();
+    const { projects, brandIdentity, setBrandIdentity, componentOrder, setComponentOrder, sectionVisibility, setSectionVisibility } = useProject();
+    const { leads, addLead, updateLead, updateLeadStatus, deleteLead } = useCRM();
+    const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
+    const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
+    const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
+    const { componentStatus, customComponents, globalAssistantConfig } = useAdmin();
 
     // State
     const [isOpen, setIsOpen] = useState(false);

@@ -17,7 +17,7 @@ const COMMON_EMOJIS = [
 ];
 
 const ChatCustomizationSettings: React.FC = () => {
-    const { aiAssistantConfig, saveAiAssistantConfig } = useEditor();
+    const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     
     const [config, setConfig] = useState<ChatAppearanceConfig>(
         aiAssistantConfig.appearance || getDefaultAppearanceConfig()

@@ -1,31 +1,56 @@
 /**
  * StepIndicator
  * Visual progress indicator for onboarding steps
+ * Supports dynamic step count based on ecommerce option
  */
 
-import React from 'react';
-import { Check } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Check, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { OnboardingWizardStep } from '../../../types/onboarding';
 
 interface StepIndicatorProps {
     currentStep: OnboardingWizardStep;
     totalSteps?: number;
+    hasEcommerce?: boolean;
 }
 
-const STEP_ICONS = ['Building2', 'FileText', 'Briefcase', 'Layout', 'Contact', 'Rocket'];
-
-const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps = 6 }) => {
+const StepIndicator: React.FC<StepIndicatorProps> = ({ 
+    currentStep, 
+    totalSteps = 6,
+    hasEcommerce = false 
+}) => {
     const { t } = useTranslation();
 
-    const steps = [
-        { id: 1, label: t('onboarding.step1Title', 'Your Business') },
-        { id: 2, label: t('onboarding.step2Title', 'Description') },
-        { id: 3, label: t('onboarding.step3Title', 'Services') },
-        { id: 4, label: t('onboarding.step4Title', 'Template') },
-        { id: 5, label: t('onboarding.step5Title', 'Contact') },
-        { id: 6, label: t('onboarding.step6Title', 'Generate') },
-    ];
+    // Build steps array based on whether ecommerce is enabled
+    const steps = useMemo(() => {
+        const baseSteps = [
+            { id: 1, label: t('onboarding.step1Title', 'Your Business') },
+            { id: 2, label: t('onboarding.step2Title', 'Description') },
+            { id: 3, label: t('onboarding.step3Title', 'Services') },
+            { id: 4, label: t('onboarding.step4Title', 'Template') },
+            { id: 5, label: t('onboarding.step5Title', 'Contact') },
+        ];
+
+        if (hasEcommerce) {
+            return [
+                ...baseSteps,
+                { id: 6, label: t('onboarding.step6StoreTitle', 'Store'), isStore: true },
+                { id: 7, label: t('onboarding.step7Title', 'Generate') },
+            ];
+        }
+
+        return [
+            ...baseSteps,
+            { id: 6, label: t('onboarding.step6Title', 'Generate') },
+        ];
+    }, [hasEcommerce, t]);
+
+    // Get current step label (handle step number correctly)
+    const getCurrentStepLabel = () => {
+        const step = steps.find(s => s.id === currentStep);
+        return step?.label || '';
+    };
 
     return (
         <div className="w-full px-4 py-6">
@@ -34,7 +59,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps =
                 {steps.map((step, index) => {
                     const isCompleted = currentStep > step.id;
                     const isCurrent = currentStep === step.id;
-                    const isUpcoming = currentStep < step.id;
+                    const isStore = 'isStore' in step && step.isStore;
 
                     return (
                         <React.Fragment key={step.id}>
@@ -54,6 +79,8 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps =
                                 >
                                     {isCompleted ? (
                                         <Check size={18} strokeWidth={3} />
+                                    ) : isStore ? (
+                                        <ShoppingBag size={18} />
                                     ) : (
                                         step.id
                                     )}
@@ -91,7 +118,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps =
             <div className="md:hidden">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-foreground">
-                        {steps[currentStep - 1]?.label}
+                        {getCurrentStepLabel()}
                     </span>
                     <span className="text-sm text-muted-foreground">
                         {currentStep} / {totalSteps}

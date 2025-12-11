@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useProject } from '../../contexts/project';
 import { FontFamily } from '../../types';
 import ColorControl from './ColorControl';
 import { ChevronDown, Image } from 'lucide-react';
@@ -22,7 +22,7 @@ const formatFontName = (font: string) => {
 };
 
 const FontManager: React.FC = () => {
-    const { theme, setTheme } = useEditor();
+    const { theme, setTheme } = useProject();
 
     const handleChange = (key: keyof typeof theme, value: FontFamily) => {
         setTheme(prev => ({ ...prev, [key]: value }));

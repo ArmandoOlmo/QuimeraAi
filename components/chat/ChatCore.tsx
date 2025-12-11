@@ -4,7 +4,9 @@ import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X } from 'lucide-react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useAI } from '../../contexts/ai';
+import { useProject } from '../../contexts/project';
 import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
@@ -154,7 +156,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     isEmbedded = false,
     currentPageContext
 }) => {
-    const { hasApiKey, promptForKeySelection, handleApiError, user, activeProject } = useEditor();
+    const { user } = useAuth();
+    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
+    const { activeProject } = useProject();
     const { t } = useTranslation();
 
     // Get lead capture config with defaults

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ComponentRating as ComponentRatingType, CustomComponent } from '../../../types';
 import { Star, ThumbsUp, User } from 'lucide-react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 
 interface ComponentRatingProps {
     component: CustomComponent;
@@ -9,7 +9,7 @@ interface ComponentRatingProps {
 }
 
 const ComponentRating: React.FC<ComponentRatingProps> = ({ component, onRatingAdded }) => {
-    const { userDocument } = useEditor();
+    const { userDocument } = useAuth();
     const [showAddReview, setShowAddReview] = useState(false);
     const [newRating, setNewRating] = useState(5);
     const [newComment, setNewComment] = useState('');

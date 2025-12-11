@@ -48,8 +48,8 @@ const CartButton: React.FC<CartButtonProps> = ({
             <ShoppingCart size={24} />
             {itemCount > 0 && (
                 <span
-                    className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold"
-                    style={{ backgroundColor: primaryColor }}
+                    className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold shadow-lg"
+                    style={{ backgroundColor: '#ef4444' }}
                 >
                     {itemCount > 99 ? '99+' : itemCount}
                 </span>

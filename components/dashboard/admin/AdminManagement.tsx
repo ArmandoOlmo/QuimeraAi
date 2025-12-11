@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAdmin } from '../../../contexts/admin';
 import { UserRole, UserDocument } from '../../../types';
 import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isOwner } from '../../../constants/roles';
 import AdminProfileView from './AdminProfileView';
@@ -14,16 +15,8 @@ interface AdminManagementProps {
 }
 
 const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
-    const {
-        allUsers,
-        fetchAllUsers,
-        updateUserRole,
-        deleteUserRecord,
-        createAdmin,
-        userPermissions,
-        isUserOwner,
-        userDocument
-    } = useEditor();
+    const { userPermissions, isUserOwner, userDocument } = useAuth();
+    const { allUsers, fetchAllUsers, updateUserRole, deleteUserRecord, createAdmin } = useAdmin();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);

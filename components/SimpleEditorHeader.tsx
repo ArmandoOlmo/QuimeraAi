@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../contexts/EditorContext';
+import { useUI } from '../contexts/core/UIContext';
+import { useProject } from '../contexts/project';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import ThemeToggle from './ui/ThemeToggle';
@@ -12,15 +13,8 @@ interface SimpleEditorHeaderProps {
 
 const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMenu }) => {
   const { t } = useTranslation();
-  const { 
-    activeProject, 
-    renameActiveProject, 
-    saveProject,
-    isEditingTemplate, 
-    exitTemplateEditor,
-    isSidebarOpen,
-    setIsSidebarOpen
-  } = useEditor();
+  const { isSidebarOpen, setIsSidebarOpen } = useUI();
+  const { activeProject, renameActiveProject, saveProject, isEditingTemplate, exitTemplateEditor } = useProject();
   const { navigate } = useRouter();
 
   const [isEditingName, setIsEditingName] = useState(false);

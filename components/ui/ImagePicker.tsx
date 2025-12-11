@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useFiles } from '../../contexts/files';
+import { useAI } from '../../contexts/ai';
+import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Filter, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket } from 'lucide-react';
 import Modal from './Modal';
@@ -43,7 +45,9 @@ const THINKING_LEVELS = [
 ];
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => {
-    const { files, globalFiles, uploadFile, generateImage, enhancePrompt, projects } = useEditor();
+    const { files, globalFiles, uploadFile } = useFiles();
+    const { generateImage, enhancePrompt } = useAI();
+    const { projects } = useProject();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'library' | 'generate'>('library');

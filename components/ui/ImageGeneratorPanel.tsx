@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAI } from '../../contexts/ai';
 import { useTranslation } from 'react-i18next';
 import { Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus, AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers, Rocket } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface ImageGeneratorPanelProps {
 }
 
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '' }) => {
-    const { generateImage, enhancePrompt } = useEditor();
+    const { generateImage, enhancePrompt } = useAI();
     const { t } = useTranslation();
 
     // Translation-dependent constants

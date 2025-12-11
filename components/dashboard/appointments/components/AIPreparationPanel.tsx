@@ -22,7 +22,9 @@ import {
     ChevronUp,
 } from 'lucide-react';
 import { Appointment, AppointmentAiInsights, Lead } from '../../../../types';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
+import { useAI } from '../../../../contexts/ai';
+import { useProject } from '../../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../../services/apiLoggingService';
 import { timestampToDate, formatDateOnly, formatTime } from '../utils/appointmentHelpers';
@@ -112,7 +114,9 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
     onInsightsGenerated,
     className = '',
 }) => {
-    const { user, hasApiKey, promptForKeySelection, handleApiError, activeProject } = useEditor();
+    const { user } = useAuth();
+    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
+    const { activeProject } = useProject();
     const [isGenerating, setIsGenerating] = useState(false);
     const [activeGeneration, setActiveGeneration] = useState<string | null>(null);
     

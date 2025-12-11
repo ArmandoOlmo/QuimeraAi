@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useCMS } from '../../../contexts/cms';
+import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import ModernCMSEditor from '../../cms/modern/ModernCMSEditor';
 import { Menu as MenuIcon, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, ArrowLeft, Grid, List, Eye, Copy, Filter, Download, Users } from 'lucide-react';
@@ -12,7 +13,8 @@ interface ContentManagementDashboardProps {
 
 const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost, projects } = useEditor();
+    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost } = useCMS();
+    const { projects } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<CMSPost | null>(null);

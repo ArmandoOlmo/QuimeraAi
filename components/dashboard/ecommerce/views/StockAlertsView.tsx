@@ -18,7 +18,7 @@ import {
     RefreshCw,
     Send,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import {
     collection,
@@ -45,7 +45,7 @@ interface StockNotificationSubscriber {
 
 const StockAlertsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { products } = useProducts(user?.uid || '', storeId);
     

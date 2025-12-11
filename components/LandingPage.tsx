@@ -27,7 +27,11 @@ import Menu from './Menu';
 import Banner from './Banner';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
-import { useEditor } from '../contexts/EditorContext';
+import { useAuth } from '../contexts/core/AuthContext';
+import { useUI } from '../contexts/core/UIContext';
+import { useProject } from '../contexts/project';
+import { useCMS } from '../contexts/cms';
+import { useAdmin } from '../contexts/admin';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 // Importación centralizada de componentes de ecommerce
@@ -111,7 +115,11 @@ const fontStacks: Record<FontFamily, string> = {
 
 // Inner component that uses the cart context
 const LandingPageContent: React.FC = () => {
-  const { data, theme, componentOrder, activeSection, onSectionSelect, sectionVisibility, componentStatus, cmsPosts, isLoadingCMS, menus, customComponents, componentStyles, activeProjectId, user } = useEditor();
+  const { user } = useAuth();
+  const { activeSection, onSectionSelect } = useUI();
+  const { data, theme, componentOrder, sectionVisibility, activeProjectId } = useProject();
+  const { cmsPosts, isLoadingCMS, menus } = useCMS();
+  const { componentStatus, customComponents, componentStyles } = useAdmin();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
   
@@ -937,7 +945,7 @@ const LandingPageContent: React.FC = () => {
 
 // Main LandingPage component that wraps content in StorefrontCartProvider
 const LandingPage: React.FC = () => {
-  const { activeProjectId } = useEditor();
+  const { activeProjectId } = useProject();
   
   // Always wrap in StorefrontCartProvider when we have a project
   // The cart will just be empty if no products exist

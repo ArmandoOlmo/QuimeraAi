@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useProject } from '../../contexts/project';
 import { GlobalColors } from '../../types';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Link2, Wand2, Loader2, AlertCircle, Check, Palette, Sparkles, Zap } from 'lucide-react';
@@ -135,7 +135,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
     generatePaletteName = false 
 }) => {
     const { t } = useTranslation();
-    const { activeProject } = useEditor();
+    const { activeProject } = useProject();
     
     // Use provided projectId, or fall back to active project, or use a default for AI calls
     const effectiveProjectId = propProjectId || activeProject?.id || 'template-editor';

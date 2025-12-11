@@ -82,7 +82,9 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const AppointmentsDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { leads, user, hasApiKey, promptForKeySelection, handleApiError } = useEditor();
+    const { user } = useAuth();
+    const { leads } = useCRM();
+    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     
     // Use appointments hook
     const {

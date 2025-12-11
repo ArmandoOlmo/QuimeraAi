@@ -120,7 +120,10 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     onSave
 }) => {
     const { t } = useTranslation();
-    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt, uploadFile, files, user, getPrompt } = useEditor();
+    const { user } = useAuth();
+    const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt } = useAI();
+    const { uploadFile, files } = useFiles();
+    const { getPrompt } = useAdmin();
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);

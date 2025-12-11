@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAdmin } from '../../../contexts/admin';
+import { useFiles } from '../../../contexts/files';
 import { UserDocument, UserRole } from '../../../types';
 import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isOwner } from '../../../constants/roles';
 import AdminViewLayout from './AdminViewLayout';
@@ -26,7 +28,9 @@ interface AdminProfileViewProps {
 }
 
 const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => {
-    const { updateUserRole, deleteUserRecord, updateUserDetails, uploadFile, userDocument: currentUser } = useEditor();
+    const { userDocument: currentUser } = useAuth();
+    const { updateUserRole, deleteUserRecord, updateUserDetails } = useAdmin();
+    const { uploadFile } = useFiles();
 
     const [name, setName] = useState(user.name);
     const [photoURL, setPhotoURL] = useState(user.photoURL || '');

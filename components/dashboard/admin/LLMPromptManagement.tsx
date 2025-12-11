@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
 import { LLMPrompt } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import PromptEditorModal from './PromptEditorModal';
@@ -10,7 +10,7 @@ interface LLMPromptManagementProps {
 }
 
 const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => {
-    const { prompts, fetchAllPrompts, deletePrompt, syncPrompts } = useEditor();
+    const { prompts, fetchAllPrompts, deletePrompt, syncPrompts } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [loading, setLoading] = useState(true);

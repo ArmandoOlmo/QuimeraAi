@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, ResponsiveStyles, AnimationConfig, ServiceIcon, AnimationType } from '../../../types';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
+import { useProject } from '../../../contexts/project';
 import { componentStyles } from '../../../data/componentStyles';
 import ColorControl from '../../ui/ColorControl';
 import IconSelector from '../../ui/IconSelector';
@@ -186,7 +187,8 @@ interface ComponentControlsProps {
 }
 
 const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponentId }) => {
-    const { componentStyles: contextStyles, customComponents, updateComponentStyle, activeProject, saveProject, theme } = useEditor();
+    const { componentStyles: contextStyles, customComponents, updateComponentStyle } = useAdmin();
+    const { activeProject, saveProject, theme } = useProject();
     const [activeTab, setActiveTab] = useState<'styles' | 'responsive' | 'animation'>('styles');
     const [localRefresh, setLocalRefresh] = useState(0);
 

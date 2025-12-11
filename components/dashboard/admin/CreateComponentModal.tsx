@@ -22,7 +22,7 @@ const componentOptions: { id: EditableComponentID, name: string }[] = [
 ];
 
 const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onClose, onComponentCreated }) => {
-    const { createNewCustomComponent } = useEditor();
+    const { createNewCustomComponent } = useAdmin();
     const [name, setName] = useState('');
     const [baseComponent, setBaseComponent] = useState<EditableComponentID>('hero');
     const [isLoading, setIsLoading] = useState(false);

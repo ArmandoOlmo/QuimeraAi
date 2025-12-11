@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAI } from '../../../contexts/ai';
 import { Shield, Save, Sparkles } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
 
 const LeadCaptureSettings: React.FC = () => {
-    const { aiAssistantConfig, saveAiAssistantConfig } = useEditor();
+    const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     
     const defaultConfig: LeadCaptureConfig = {
         enabled: true,

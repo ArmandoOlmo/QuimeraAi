@@ -2,7 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { X, Sparkles, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useCMS } from '../../contexts/cms';
+import { useProject } from '../../contexts/project';
+import { useAdmin } from '../../contexts/admin';
 import { sanitizeHtml } from '../../utils/sanitize';
 
 interface ContentCreatorAssistantProps {
@@ -13,7 +16,10 @@ interface ContentCreatorAssistantProps {
 type Step = 'topic' | 'details' | 'generating' | 'preview';
 
 const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClose, onPostCreated }) => {
-    const { user, saveCMSPost, activeProject, getPrompt } = useEditor();
+    const { user } = useAuth();
+    const { saveCMSPost } = useCMS();
+    const { activeProject } = useProject();
+    const { getPrompt } = useAdmin();
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
     const [audience, setAudience] = useState('');

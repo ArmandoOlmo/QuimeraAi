@@ -17,7 +17,7 @@ import {
     Image as ImageIcon,
     Loader2,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import { Product, ProductStatus } from '../../../../types/ecommerce';
@@ -29,7 +29,7 @@ type ViewMode = 'grid' | 'list';
 
 const ProductsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { products, isLoading, deleteProduct, updateProduct } = useProducts(user?.uid || '', storeId);
     const { categories } = useCategories(user?.uid || '', storeId);

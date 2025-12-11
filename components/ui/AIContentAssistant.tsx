@@ -27,7 +27,10 @@ type MagicAction = 'fix' | 'shorten' | 'expand' | 'tone' | 'translate';
 const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
   isOpen, onClose, onApply, initialText, contextPrompt,
 }) => {
-  const { getPrompt, hasApiKey, promptForKeySelection, handleApiError, brandIdentity, activeProject, user } = useEditor();
+  const { user } = useAuth();
+  const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
+  const { activeProject, brandIdentity } = useProject();
+  const { getPrompt } = useAdmin();
   const [customInstruction, setCustomInstruction] = useState('');
   const [generatedText, setGeneratedText] = useState('');
   const [isLoading, setIsLoading] = useState(false);

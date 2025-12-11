@@ -9,6 +9,8 @@ import { db } from '../../../firebase';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
+import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
+import { getDefaultGlobalColors } from '../../../data/colorPalettes';
 
 // Development mode check for conditional logging
 const isDev = import.meta.env.DEV;
@@ -137,6 +139,8 @@ import {
     OnboardingWizardStep,
     OnboardingService,
     OnboardingContactInfo,
+    OnboardingStoreSetup,
+    EcommerceType,
     TemplateRecommendation,
     GenerationProgress,
     ImageGenerationItem,
@@ -182,6 +186,10 @@ export const useOnboarding = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    
+    // Ecommerce state
+    const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
     // Templates from Firestore (loaded from EditorContext projects with status 'Template')
     const templates = projects.filter((p: Project) => p.status === 'Template');
@@ -290,18 +298,38 @@ export const useOnboarding = () => {
         saveProgress(newProgress);
     }, [progress, saveProgress]);
 
+    // Determine max step based on whether ecommerce is enabled
+    const getMaxStep = useCallback(() => {
+        return progress?.hasEcommerce ? 7 : 6;
+    }, [progress?.hasEcommerce]);
+
     const nextStep = useCallback(() => {
-        if (!progress || progress.step >= 6) return;
-        goToStep((progress.step + 1) as OnboardingStep);
-    }, [progress, goToStep]);
+        if (!progress) return;
+        const maxStep = getMaxStep();
+        if (progress.step >= maxStep) return;
+        
+        let nextStepNum = progress.step + 1;
+        
+        // Skip step 6 (Store Setup) if ecommerce is not enabled
+        // When hasEcommerce is false, step 5 goes directly to step 6 (which shows Generation)
+        // When hasEcommerce is true, step 5 goes to step 6 (Store Setup), then to step 7 (Generation)
+        
+        goToStep(nextStepNum as OnboardingStep);
+    }, [progress, goToStep, getMaxStep]);
 
     const previousStep = useCallback(() => {
         if (!progress || progress.step <= 1) return;
-        goToStep((progress.step - 1) as OnboardingStep);
+        
+        let prevStepNum = progress.step - 1;
+        
+        goToStep(prevStepNum as OnboardingStep);
     }, [progress, goToStep]);
 
     const canGoNext = useCallback(() => {
         if (!progress) return false;
+        const maxStep = getMaxStep();
+        const generationStep = maxStep; // 6 or 7
+        
         switch (progress.step) {
             case 1:
                 return !!(progress.businessName?.trim() && progress.industry);
@@ -314,11 +342,18 @@ export const useOnboarding = () => {
             case 5:
                 return true; // Contact info is optional
             case 6:
+                // Step 6 is either Store Setup (if hasEcommerce) or Generation (if no ecommerce)
+                if (progress.hasEcommerce) {
+                    // Store Setup: require at least one category selected
+                    return !!(progress.storeSetup?.selectedCategories && progress.storeSetup.selectedCategories.length > 0);
+                }
+                return false; // Generation step doesn't have next
+            case 7:
                 return false; // Generation step doesn't have next
             default:
                 return false;
         }
-    }, [progress]);
+    }, [progress, getMaxStep]);
 
     const canGoPrevious = useCallback(() => {
         if (!progress) return false;
@@ -366,6 +401,96 @@ export const useOnboarding = () => {
     const updateContactInfo = useCallback((contactInfo: OnboardingContactInfo) => {
         updateProgress({ contactInfo });
     }, [updateProgress]);
+
+    // =============================================================================
+    // ECOMMERCE UPDATES
+    // =============================================================================
+
+    const updateEcommerceSettings = useCallback((hasEcommerce: boolean, ecommerceType?: EcommerceType) => {
+        updateProgress({ hasEcommerce, ecommerceType });
+        // Clear suggested categories when disabling ecommerce
+        if (!hasEcommerce) {
+            setSuggestedCategories([]);
+        }
+    }, [updateProgress]);
+
+    const updateStoreSetup = useCallback((storeSetup: OnboardingStoreSetup) => {
+        updateProgress({ storeSetup });
+    }, [updateProgress]);
+
+    const generateSuggestedCategories = useCallback(async (): Promise<void> => {
+        if (!progress?.businessName || !progress?.industry) {
+            return;
+        }
+
+        setIsLoadingCategories(true);
+        setError(null);
+
+        try {
+            // Get prompt from centralized system
+            const promptConfig = getPrompt('onboarding-generate-categories');
+            if (!promptConfig) {
+                // Fallback categories based on industry
+                const fallbackCategories = getFallbackCategories(progress.industry);
+                setSuggestedCategories(fallbackCategories);
+                return;
+            }
+
+            const prompt = promptConfig.template
+                .replace(/\{\{businessName\}\}/g, progress.businessName)
+                .replace(/\{\{industry\}\}/g, progress.industry)
+                .replace(/\{\{description\}\}/g, progress.description || '')
+                .replace(/\{\{ecommerceType\}\}/g, progress.ecommerceType || 'physical')
+                .replace(/\{\{language\}\}/g, progress.language === 'es' ? 'Spanish' : 'English');
+
+            const response = await generateContentViaProxy(
+                'onboarding-categories',
+                prompt,
+                promptConfig.model,
+                { temperature: 0.7, maxOutputTokens: 500 },
+                user?.uid
+            );
+            
+            const text = extractTextFromResponse(response);
+            const parsed = safeJsonParse(text, []);
+            
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                // Extract category names if they are objects
+                const categories = parsed.map((item: any) => 
+                    typeof item === 'string' ? item : item.name || item.category || String(item)
+                );
+                setSuggestedCategories(categories);
+                if (isDev) console.log('🏷️ Generated categories:', categories);
+            } else {
+                // Fallback to industry defaults
+                const fallbackCategories = getFallbackCategories(progress.industry);
+                setSuggestedCategories(fallbackCategories);
+            }
+        } catch (err) {
+            console.error('Failed to generate categories:', err);
+            // Use fallback categories
+            const fallbackCategories = getFallbackCategories(progress.industry);
+            setSuggestedCategories(fallbackCategories);
+        } finally {
+            setIsLoadingCategories(false);
+        }
+    }, [progress, user, getPrompt]);
+
+    // Helper function for fallback categories
+    const getFallbackCategories = (industry: string): string[] => {
+        const categoryMap: Record<string, string[]> = {
+            'fashion': ['Ropa de Mujer', 'Ropa de Hombre', 'Accesorios', 'Calzado', 'Bolsos'],
+            'retail': ['Productos Destacados', 'Ofertas', 'Nuevos Productos', 'Categoría Principal'],
+            'jewelry': ['Anillos', 'Collares', 'Aretes', 'Pulseras', 'Relojes'],
+            'electronics': ['Smartphones', 'Laptops', 'Accesorios', 'Audio', 'Gaming'],
+            'home-decor': ['Sala', 'Dormitorio', 'Cocina', 'Baño', 'Decoración'],
+            'beauty-products': ['Skincare', 'Maquillaje', 'Cabello', 'Fragancias', 'Sets'],
+            'food-products': ['Alimentos', 'Bebidas', 'Snacks', 'Orgánicos', 'Gourmet'],
+            'crafts': ['Artesanías', 'Manualidades', 'Arte', 'Decorativo', 'Personalizado'],
+            'sports-equipment': ['Fitness', 'Deportes', 'Outdoor', 'Accesorios', 'Ropa Deportiva'],
+        };
+        return categoryMap[industry] || ['Categoría 1', 'Categoría 2', 'Categoría 3', 'Categoría 4'];
+    };
 
     // =============================================================================
     // AI ASSISTANCE
@@ -720,6 +845,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
     // Generate image prompts for ALL enabled components with consistent style
     // aiContent contains AI-generated data (menu items, team members, portfolio projects, etc.)
+    // This is the FALLBACK method - now more specific with full business context
     const generateImagePrompts = useCallback((
         templateData: any, 
         businessName: string, 
@@ -730,38 +856,45 @@ TEMPLATE #${t.index}: "${t.name}"
     ): Record<string, { prompt: string; aspectRatio: string; style: string }> => {
         const prompts: Record<string, { prompt: string; aspectRatio: string; style: string }> = {};
         const ind = industry?.replace(/-/g, ' ') || 'business';
-        const businessContext = businessDescription ? `, ${businessDescription.substring(0, 100)}` : '';
+        
+        // Use FULL description for more specific images (up to 300 chars)
+        const businessContext = businessDescription 
+            ? `, representing "${businessName}" - ${businessDescription.substring(0, 300)}`
+            : `, for "${businessName}"`;
         
         // Consistent style for ALL images in this project
         const visualStyle = getIndustryStyle(industry);
         const noText = 'no text, no words, no letters, no watermark, no logos';
         const consistency = `consistent style, ${visualStyle}, cohesive visual identity`;
         
+        // Specific business identifier for all prompts
+        const businessId = `"${businessName}" ${ind} business`;
+        
         // Helper to check if component is enabled
         const isEnabled = (comp: string) => enabledComponents.includes(comp);
         
-        // HERO - main image (16:9 wide)
+        // HERO - main image (16:9 wide) - SPECIFIC to business
         if (templateData.hero && isEnabled('hero')) {
             prompts['hero.imageUrl'] = {
-                prompt: `${ind} business hero scene${businessContext}, ${consistency}, professional photography, ${noText}`,
+                prompt: `${businessId} hero scene showing their main products or services${businessContext}, ${consistency}, professional photography, high quality, ${noText}`,
                 aspectRatio: IMAGE_CONFIG['hero'].aspectRatio,
                 style: 'Photorealistic'
             };
         }
         
-        // HERO SPLIT (3:4 vertical)
+        // HERO SPLIT (3:4 vertical) - SPECIFIC to business
         if (templateData.heroSplit && isEnabled('heroSplit')) {
             prompts['heroSplit.imageUrl'] = {
-                prompt: `${ind} vertical composition, ${consistency}, modern professional, ${noText}`,
+                prompt: `${businessId} vertical showcase${businessContext}, ${consistency}, modern professional, ${noText}`,
                 aspectRatio: IMAGE_CONFIG['heroSplit'].aspectRatio,
                 style: 'Photorealistic'
             };
         }
         
-        // BANNER (21:9 ultra-wide)
+        // BANNER (21:9 ultra-wide) - SPECIFIC to business
         if (templateData.banner && isEnabled('banner')) {
             prompts['banner.backgroundImageUrl'] = {
-                prompt: `${ind} panoramic scene, ${consistency}, elegant wide view, ${noText}`,
+                prompt: `${businessId} panoramic scene${businessContext}, ${consistency}, elegant wide view, ${noText}`,
                 aspectRatio: IMAGE_CONFIG['banner'].aspectRatio,
                 style: 'Photorealistic'
             };
@@ -770,7 +903,7 @@ TEMPLATE #${t.index}: "${t.name}"
         // CTA background (16:9)
         if (templateData.cta?.backgroundImage !== undefined && isEnabled('cta')) {
             prompts['cta.backgroundImage'] = {
-                prompt: `Abstract ${ind} background, ${consistency}, subtle elegant, ${noText}`,
+                prompt: `Abstract background representing ${businessId}, ${consistency}, subtle elegant, ${noText}`,
                 aspectRatio: IMAGE_CONFIG['cta'].aspectRatio,
                 style: 'Photorealistic'
             };
@@ -980,7 +1113,10 @@ TEMPLATE #${t.index}: "${t.name}"
         description: string,
         enabledComponents: string[],
         aiContent: Record<string, any>,
-        language: string
+        language: string,
+        tagline: string = '',
+        services: string[] = [],
+        storeCategories: string[] = []
     ): Promise<Record<string, { prompt: string; aspectRatio: string; style: string }>> => {
         
         // Helper to check if component is enabled
@@ -1100,11 +1236,24 @@ TEMPLATE #${t.index}: "${t.name}"
             `- ${img.key} (${img.aspectRatio}): ${img.description}`
         ).join('\n');
         
-        // Build the prompt
+        // Format services list
+        const servicesStr = services.length > 0 
+            ? services.map(s => typeof s === 'object' ? (s as any).name || JSON.stringify(s) : s).join(', ')
+            : 'Not specified';
+        
+        // Format store categories
+        const storeCategoriesStr = storeCategories.length > 0 
+            ? storeCategories.join(', ')
+            : 'Not applicable';
+        
+        // Build the prompt with all business context
         const prompt = promptConfig.template
-            .replace('{{businessName}}', businessName)
+            .replace(/\{\{businessName\}\}/g, businessName)
+            .replace(/\{\{tagline\}\}/g, tagline || 'Professional quality and service')
             .replace(/\{\{industry\}\}/g, industry?.replace(/-/g, ' ') || 'business')
-            .replace('{{description}}', description || 'A professional business')
+            .replace(/\{\{description\}\}/g, description || 'A professional business offering quality products and services')
+            .replace(/\{\{services\}\}/g, servicesStr)
+            .replace(/\{\{storeCategories\}\}/g, storeCategoriesStr)
             .replace('{{language}}', language === 'es' ? 'Spanish' : 'English')
             .replace('{{generatedContent}}', generatedContentStr)
             .replace('{{imagesToGenerate}}', imagesNeededStr);
@@ -1185,6 +1334,10 @@ TEMPLATE #${t.index}: "${t.name}"
 
         // Generate image prompts using LLM for better context understanding
         // The LLM understands the full business context and generates specific, relevant prompts
+        // Now includes tagline, services, and store categories for more specific images
+        const serviceNames = progress.services?.map(s => s.name) || [];
+        const storeCategories = progress.storeSetup?.selectedCategories || [];
+        
         const imagePrompts = await generateImagePromptsWithLLM(
             selectedTemplate.data,
             progress.businessName,
@@ -1192,7 +1345,10 @@ TEMPLATE #${t.index}: "${t.name}"
             progress.description || '',
             enabledComponents,
             aiContent,
-            progress.language
+            progress.language,
+            progress.tagline || '',
+            serviceNames,
+            storeCategories
         );
         
         if (isDev) console.log('📸 Image prompts to generate:', Object.keys(imagePrompts).length);
@@ -1291,6 +1447,14 @@ TEMPLATE #${t.index}: "${t.name}"
             if (data.header.logoText !== undefined) data.header.logoText = name;
             // Keep template colors and style - don't override
             // Logo not in onboarding - keep template logo
+            
+            // Build simple navigation links
+            data.header.links = [
+                { text: t('Inicio', 'Home'), href: '#hero' },
+                { text: t('Servicios', 'Services'), href: '#services' },
+                { text: t('Nosotros', 'About'), href: '#about' },
+                { text: t('Contacto', 'Contact'), href: '#contact' },
+            ];
         }
         
         // ============ HERO (default: modern) ============
@@ -1574,16 +1738,17 @@ TEMPLATE #${t.index}: "${t.name}"
             }
             
             // Contact information (address, phone, email, business hours)
+            // Use empty strings instead of undefined to avoid Firestore errors
             if (contact) {
                 data.footer.contactInfo = {
-                    address: contact.address,
-                    city: contact.city,
-                    state: contact.state,
-                    zipCode: contact.zipCode,
-                    country: contact.country,
-                    phone: contact.phone,
-                    email: contact.email,
-                    businessHours: contact.businessHours,
+                    address: contact.address || '',
+                    city: contact.city || '',
+                    state: contact.state || '',
+                    zipCode: contact.zipCode || '',
+                    country: contact.country || '',
+                    phone: contact.phone || '',
+                    email: contact.email || '',
+                    businessHours: contact.businessHours || '',
                 };
             }
         }
@@ -1794,6 +1959,34 @@ TEMPLATE #${t.index}: "${t.name}"
             // Apply all business data + AI content + images to template
             const mergedData = applyBusinessDataToTemplate(selectedTemplate.data, progress, generatedImages, aiContent);
             
+            // Apply global colors to ALL components (including ecommerce and chatbot)
+            // This ensures consistent styling across the entire project
+            const globalColors = selectedTemplate.theme?.globalColors || getDefaultGlobalColors();
+            const componentColorMappings = generateComponentColorMappings(globalColors);
+            
+            // Apply color mappings to each component in mergedData
+            for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
+                if (mergedData[componentId] && typeof mergedData[componentId] === 'object') {
+                    // Merge colors into existing component data
+                    mergedData[componentId] = {
+                        ...mergedData[componentId],
+                        colors: {
+                            ...(mergedData[componentId].colors || {}),
+                            ...componentColors
+                        }
+                    };
+                } else if (['chatbot', 'featuredProducts', 'categoryGrid', 'productHero', 'trustBadges', 
+                            'saleCountdown', 'announcementBar', 'collectionBanner', 'recentlyViewed', 
+                            'productReviews', 'productBundle', 'storeSettings', 'productDetailPage'].includes(componentId)) {
+                    // Create component with colors even if not in template (important for ecommerce and chatbot)
+                    mergedData[componentId] = {
+                        colors: componentColors
+                    };
+                }
+            }
+            
+            if (isDev) console.log('🎨 Applied global colors to all components including ecommerce and chatbot');
+            
             // Geocode the map address if map is enabled and has an address
             if (mergedData.map && mergedData.map.address) {
                 if (isDev) console.log('📍 Geocoding map address:', mergedData.map.address);
@@ -1822,6 +2015,21 @@ TEMPLATE #${t.index}: "${t.name}"
                 simpleImagePrompts[key] = config.prompt;
             });
 
+            // Build simple navigation menus
+            const isSpanish = progress.language === 'es';
+            const projectMenus = [
+                { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [
+                    { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '#hero', type: 'section' as const },
+                    { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '#services', type: 'section' as const },
+                    { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '#about', type: 'section' as const },
+                    { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '#contact', type: 'section' as const },
+                ]},
+                { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [
+                    { id: 'f-1', text: isSpanish ? 'Inicio' : 'Home', href: '#hero', type: 'section' as const },
+                    { id: 'f-2', text: isSpanish ? 'Contacto' : 'Contact', href: '#contact', type: 'section' as const },
+                ]}
+            ];
+
             // Create the new project
             const newProject = {
                 id: `proj_${Date.now()}`,
@@ -1843,9 +2051,173 @@ TEMPLATE #${t.index}: "${t.name}"
                 sectionVisibility,
                 sourceTemplateId: selectedTemplate.id,
                 imagePrompts: simpleImagePrompts,
+                menus: projectMenus,
             };
 
             await addNewProject(newProject);
+
+            // Setup ecommerce if enabled
+            if (progress.hasEcommerce && progress.storeSetup && user?.uid) {
+                if (isDev) console.log('🛒 Setting up ecommerce store...');
+                
+                try {
+                    // Enable ecommerce for the project (correct path: users/{userId}/projects/{projectId}/ecommerce/config)
+                    const ecommerceConfigRef = doc(db, 'users', user.uid, 'projects', newProject.id, 'ecommerce', 'config');
+                    await setDoc(ecommerceConfigRef, {
+                        projectId: newProject.id,
+                        projectName: newProject.name,
+                        ecommerceEnabled: true,
+                        storeId: newProject.id, // Use projectId as storeId
+                        storeName: progress.storeSetup.storeName || progress.businessName,
+                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    });
+                    
+                    // Create the main store document (required by useProjectEcommerce)
+                    const storeRef = doc(db, 'users', user.uid, 'stores', newProject.id);
+                    await setDoc(storeRef, {
+                        name: progress.storeSetup.storeName || `Tienda - ${progress.businessName}`,
+                        projectId: newProject.id,
+                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                        isActive: true,
+                        ownerId: user.uid,
+                    });
+                    if (isDev) console.log('🏪 Created main store document');
+                    
+                    // Build storefrontTheme from project's globalColors
+                    const storefrontTheme = {
+                        // Core Colors - from project's globalColors
+                        primaryColor: globalColors.primary,
+                        secondaryColor: globalColors.secondary,
+                        accentColor: globalColors.accent,
+                        // Background Colors
+                        backgroundColor: globalColors.background,
+                        cardBackground: globalColors.surface,
+                        headerBackground: globalColors.primary,
+                        footerBackground: globalColors.surface,
+                        // Text Colors
+                        textColor: globalColors.text,
+                        headingColor: globalColors.heading,
+                        mutedTextColor: globalColors.textMuted,
+                        linkColor: globalColors.primary,
+                        // Button Colors
+                        buttonBackground: globalColors.primary,
+                        buttonText: '#ffffff',
+                        buttonSecondaryBackground: globalColors.surface,
+                        buttonSecondaryText: globalColors.text,
+                        buttonHoverBackground: globalColors.secondary,
+                        // Badge Colors
+                        badgeBackground: globalColors.primary,
+                        badgeText: '#ffffff',
+                        saleBadgeBackground: globalColors.error,
+                        saleBadgeText: '#ffffff',
+                        // Price Colors
+                        priceColor: globalColors.heading,
+                        salePriceColor: globalColors.error,
+                        originalPriceColor: globalColors.textMuted,
+                        // Overlay Colors
+                        overlayStart: 'transparent',
+                        overlayEnd: 'rgba(0,0,0,0.7)',
+                        // Border Colors
+                        borderColor: globalColors.border,
+                        dividerColor: globalColors.border,
+                        inputBorderColor: globalColors.border,
+                        // State Colors
+                        successColor: globalColors.success,
+                        warningColor: globalColors.accent,
+                        errorColor: globalColors.error,
+                        infoColor: globalColors.primary,
+                        // Cart & Checkout
+                        cartBadgeBackground: globalColors.error,
+                        cartBadgeText: '#ffffff',
+                        checkoutAccent: globalColors.primary,
+                        // Typography - from template theme
+                        fontFamily: selectedTemplate.theme?.fontFamilyBody || 'Inter, system-ui, sans-serif',
+                        headingFontFamily: selectedTemplate.theme?.fontFamilyHeader || 'Inter, system-ui, sans-serif',
+                    };
+                    
+                    // Initialize store settings with storefrontTheme
+                    const storeSettingsRef = doc(db, 'users', user.uid, 'stores', newProject.id, 'settings', 'store');
+                    await setDoc(storeSettingsRef, {
+                        storeName: progress.storeSetup.storeName || progress.businessName,
+                        storeEmail: progress.contactInfo?.email || '',
+                        currency: progress.storeSetup.currency,
+                        currencySymbol: progress.storeSetup.currencySymbol,
+                        taxEnabled: false,
+                        taxRate: 0,
+                        taxName: 'IVA',
+                        taxIncluded: false,
+                        shippingZones: [],
+                        freeShippingThreshold: 0,
+                        stripeEnabled: false,
+                        paypalEnabled: false,
+                        cashOnDeliveryEnabled: true,
+                        lowStockNotifications: true,
+                        lowStockThreshold: 5,
+                        notifyOnNewOrder: true,
+                        notifyOnLowStock: true,
+                        sendOrderConfirmation: true,
+                        sendShippingNotification: true,
+                        requirePhone: false,
+                        requireShippingAddress: progress.storeSetup.shippingType !== 'digital_only',
+                        storefrontTheme, // Include the theme from project's globalColors
+                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    });
+                    
+                    // Create categories
+                    if (progress.storeSetup.selectedCategories && progress.storeSetup.selectedCategories.length > 0) {
+                        for (let i = 0; i < progress.storeSetup.selectedCategories.length; i++) {
+                            const categoryName = progress.storeSetup.selectedCategories[i];
+                            const categoryId = `cat-${Date.now()}-${i}`;
+                            const categoryRef = doc(db, 'users', user.uid, 'stores', newProject.id, 'categories', categoryId);
+                            await setDoc(categoryRef, {
+                                id: categoryId,
+                                name: categoryName,
+                                slug: categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                                description: '',
+                                imageUrl: '',
+                                order: i,
+                                isActive: true,
+                                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                                updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                            });
+                        }
+                        if (isDev) console.log(`🏷️ Created ${progress.storeSetup.selectedCategories.length} categories`);
+                    }
+                    
+                    // Create publicStores document with storefrontTheme from project's globalColors
+                    // This enables the storefront to use the same colors as the project
+                    const publicStoreRef = doc(db, 'publicStores', newProject.id);
+                    await setDoc(publicStoreRef, {
+                        storeId: newProject.id,
+                        storeName: progress.storeSetup.storeName || progress.businessName,
+                        ownerId: user.uid,
+                        isActive: true,
+                        storefrontTheme,
+                        theme: {
+                            primaryColor: globalColors.primary,
+                            secondaryColor: globalColors.secondary,
+                            accentColor: globalColors.accent,
+                            backgroundColor: globalColors.background,
+                            textColor: globalColors.text,
+                            headingColor: globalColors.heading,
+                            fontFamily: selectedTemplate.theme?.fontFamilyBody || 'Inter, system-ui, sans-serif',
+                        },
+                        currencySymbol: progress.storeSetup.currencySymbol,
+                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    });
+                    
+                    if (isDev) console.log('🎨 Created publicStores document with storefrontTheme from project globalColors');
+                    
+                    if (isDev) console.log('✅ Ecommerce store setup complete');
+                } catch (ecommerceErr) {
+                    console.error('❌ Failed to setup ecommerce:', ecommerceErr);
+                    // Don't fail the whole generation, just log the error
+                }
+            }
 
             // Complete
             generationProgress.phase = 'completed';
@@ -1886,6 +2258,10 @@ TEMPLATE #${t.index}: "${t.name}"
         isSaving,
         error,
         templates,
+        
+        // Ecommerce State
+        suggestedCategories,
+        isLoadingCategories,
 
         // Actions
         openOnboarding,
@@ -1904,11 +2280,16 @@ TEMPLATE #${t.index}: "${t.name}"
         updateServices,
         updateTemplateSelection,
         updateContactInfo,
+        
+        // Ecommerce Updates
+        updateEcommerceSettings,
+        updateStoreSetup,
 
         // AI Assistance
         generateDescription,
         generateServices,
         getTemplateRecommendation,
+        generateSuggestedCategories,
 
         // Final Generation
         startGeneration,

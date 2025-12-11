@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useProject } from '../../../contexts/project';
 import { ABTestConfig } from '../../../types';
 import { Play, Pause, TrendingUp, Users, Target, Plus, X, Eye, BarChart3 } from 'lucide-react';
 
 const ABTestingDashboard: React.FC = () => {
-    const { projects } = useEditor();
+    const { projects } = useProject();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedTest, setSelectedTest] = useState<ABTestConfig | null>(null);
     const [newTest, setNewTest] = useState<Partial<ABTestConfig>>({

@@ -25,7 +25,8 @@ const voices: { name: AiAssistantConfig['voiceName']; description: string; gende
 ];
 
 const AiAssistantDashboard: React.FC = () => {
-    const { activeProject, aiAssistantConfig, saveAiAssistantConfig, projects, loadProject } = useEditor();
+    const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
+    const { activeProject, projects, loadProject } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);

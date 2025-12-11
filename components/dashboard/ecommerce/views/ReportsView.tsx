@@ -36,7 +36,7 @@ interface ReportOption {
 
 const ReportsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { orders } = useOrders(user?.uid || '', storeId);
     const { products } = useProducts(user?.uid || '', storeId);

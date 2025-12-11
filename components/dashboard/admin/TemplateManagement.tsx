@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     ArrowLeft,
@@ -40,7 +41,8 @@ type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, userDocument } = useEditor();
+    const { userDocument } = useAuth();
+    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Search and Filter States

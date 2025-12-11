@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
 import Modal from '../../ui/Modal';
 import { LLMPrompt } from '../../../types';
 import { X } from 'lucide-react';
@@ -12,7 +12,7 @@ interface PromptEditorModalProps {
 }
 
 const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, promptToEdit }) => {
-    const { savePrompt } = useEditor();
+    const { savePrompt } = useAdmin();
     const [formData, setFormData] = useState({
         name: '',
         description: '',

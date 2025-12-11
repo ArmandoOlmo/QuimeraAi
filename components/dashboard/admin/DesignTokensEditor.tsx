@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
+import { useProject } from '../../../contexts/project';
 import { DesignTokens } from '../../../types';
 import { Palette, Type, Maximize2, Cloud, Sparkles, Monitor, Save, RotateCcw, Check, AlertCircle, Wand2 } from 'lucide-react';
 import { applyTokensToFullProject } from '../../../utils/designTokenApplier';
 
 const DesignTokensEditor: React.FC = () => {
-  const { designTokens, updateDesignTokens, projects, activeProject, saveProject } = useEditor();
+  const { designTokens, updateDesignTokens } = useAdmin();
+  const { projects, activeProject, saveProject } = useProject();
   // Alias for compatibility
   const updateProject = saveProject;
   

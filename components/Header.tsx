@@ -367,8 +367,8 @@ const Header: React.FC<HeaderData & {
       <ShoppingCart size={22} />
       {cartItemCount > 0 && (
         <span
-          className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold"
-          style={{ backgroundColor: colors.accent }}
+          className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold shadow-lg"
+          style={{ backgroundColor: '#ef4444' }}
         >
           {cartItemCount > 99 ? '99+' : cartItemCount}
         </span>
@@ -697,8 +697,8 @@ const Header: React.FC<HeaderData & {
                 <ShoppingCart size={22} />
                 {cartItemCount > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold"
-                    style={{ backgroundColor: colors.accent }}
+                    className="absolute -top-0.5 -right-0.5 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold shadow-lg"
+                    style={{ backgroundColor: '#ef4444' }}
                   >
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>

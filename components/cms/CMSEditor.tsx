@@ -1,7 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useCMS } from '../../contexts/cms';
+import { useAI } from '../../contexts/ai';
+import { useFiles } from '../../contexts/files';
+import { useProject } from '../../contexts/project';
+import { useAdmin } from '../../contexts/admin';
 import { CMSPost } from '../../types';
 import { 
     ArrowLeft, Save, Globe, Image as ImageIcon, Type, 
@@ -37,7 +42,12 @@ const ToolbarDivider = () => <div className="w-px h-6 bg-gray-300 mx-1 self-cent
 
 const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();
-    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, user, activeProject } = useEditor();
+    const { user } = useAuth();
+    const { saveCMSPost } = useCMS();
+    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
+    const { uploadImageAndGetURL } = useFiles();
+    const { activeProject } = useProject();
+    const { getPrompt } = useAdmin();
     
     // Form State
     const [title, setTitle] = useState(post?.title || '');

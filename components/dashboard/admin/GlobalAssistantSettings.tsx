@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
 import DashboardSidebar from '../DashboardSidebar';
 import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X, Menu } from 'lucide-react';
 import { GlobalAssistantConfig, ScopePermission } from '../../../types';
@@ -47,7 +47,7 @@ const ALL_SCOPES = [
 
 const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { globalAssistantConfig, saveGlobalAssistantConfig } = useEditor();
+    const { globalAssistantConfig, saveGlobalAssistantConfig } = useAdmin();
     const [formData, setFormData] = useState<GlobalAssistantConfig>(globalAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);

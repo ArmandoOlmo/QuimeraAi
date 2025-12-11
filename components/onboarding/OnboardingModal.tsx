@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useUI } from '../../contexts/core/UIContext';
 import { useOnboarding } from './hooks/useOnboarding';
 import StepIndicator from './components/StepIndicator';
 
@@ -16,13 +16,14 @@ import Step2Description from './steps/Step2Description';
 import Step3Services from './steps/Step3Services';
 import Step4TemplateSelect from './steps/Step4TemplateSelect';
 import Step5ContactInfo from './steps/Step5ContactInfo';
-import Step6Generation from './steps/Step6Generation';
+import Step6StoreSetup from './steps/Step6StoreSetup';
+import Step7Generation from './steps/Step7Generation';
 
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
 const OnboardingModal: React.FC = () => {
     const { t } = useTranslation();
-    const { isOnboardingOpen, setIsOnboardingOpen } = useEditor();
+    const { isOnboardingOpen, setIsOnboardingOpen } = useUI();
     const {
         progress,
         isLoading,
@@ -40,11 +41,16 @@ const OnboardingModal: React.FC = () => {
         updateServices,
         updateTemplateSelection,
         updateContactInfo,
+        updateEcommerceSettings,
+        updateStoreSetup,
         generateDescription,
         generateServices,
         getTemplateRecommendation,
+        generateSuggestedCategories,
         startGeneration,
         saveProgress,
+        suggestedCategories,
+        isLoadingCategories,
     } = useOnboarding();
 
     // Initialize progress when modal opens
@@ -73,16 +79,17 @@ const OnboardingModal: React.FC = () => {
         };
     }, [isOnboardingOpen]);
 
-    // Handle escape key
+    // Handle escape key (don't close during generation step)
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOnboardingOpen && progress?.step !== 6) {
+            const generationStep = progress?.hasEcommerce ? 7 : 6;
+            if (e.key === 'Escape' && isOnboardingOpen && progress?.step !== generationStep) {
                 closeOnboarding();
             }
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [isOnboardingOpen, progress?.step]);
+    }, [isOnboardingOpen, progress?.step, progress?.hasEcommerce]);
 
     if (!isOnboardingOpen) return null;
 
@@ -107,7 +114,10 @@ const OnboardingModal: React.FC = () => {
                         businessName={progress.businessName}
                         industry={progress.industry}
                         subIndustry={progress.subIndustry}
+                        hasEcommerce={progress.hasEcommerce}
+                        ecommerceType={progress.ecommerceType}
                         onUpdate={updateBusinessInfo}
+                        onEcommerceUpdate={updateEcommerceSettings}
                     />
                 );
             case 2:
@@ -152,8 +162,33 @@ const OnboardingModal: React.FC = () => {
                     />
                 );
             case 6:
+                // Step 6 is Store Setup (only if hasEcommerce) or Generation (if no ecommerce)
+                if (progress.hasEcommerce) {
+                    return (
+                        <Step6StoreSetup
+                            storeSetup={progress.storeSetup}
+                            businessName={progress.businessName}
+                            industry={progress.industry}
+                            ecommerceType={progress.ecommerceType}
+                            suggestedCategories={suggestedCategories}
+                            isLoadingCategories={isLoadingCategories}
+                            onUpdate={updateStoreSetup}
+                            onGenerateCategories={generateSuggestedCategories}
+                        />
+                    );
+                }
+                // If no ecommerce, step 6 is Generation
                 return (
-                    <Step6Generation
+                    <Step7Generation
+                        progress={progress}
+                        onStartGeneration={startGeneration}
+                        onReset={resetOnboarding}
+                    />
+                );
+            case 7:
+                // Step 7 is always Generation (when ecommerce is enabled)
+                return (
+                    <Step7Generation
                         progress={progress}
                         onStartGeneration={startGeneration}
                         onReset={resetOnboarding}
@@ -164,7 +199,10 @@ const OnboardingModal: React.FC = () => {
         }
     };
 
-    const isGenerating = progress.step === 6 && progress.generationProgress?.phase !== 'idle' && progress.generationProgress?.phase !== 'completed';
+    // Determine the generation step number based on hasEcommerce
+    const generationStep = progress.hasEcommerce ? 7 : 6;
+    const isGenerating = progress.step === generationStep && progress.generationProgress?.phase !== 'idle' && progress.generationProgress?.phase !== 'completed';
+    const totalSteps = progress.hasEcommerce ? 7 : 6;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -218,7 +256,11 @@ const OnboardingModal: React.FC = () => {
 
                 {/* Step Indicator */}
                 <div className="border-b border-border bg-card/50">
-                    <StepIndicator currentStep={progress.step} />
+                    <StepIndicator 
+                        currentStep={progress.step} 
+                        totalSteps={totalSteps}
+                        hasEcommerce={progress.hasEcommerce}
+                    />
                 </div>
 
                 {/* Content */}
@@ -232,7 +274,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Footer with Navigation */}
-                {progress.step !== 6 && (
+                {progress.step !== generationStep && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card rounded-b-2xl">
                         {/* Previous Button */}
                         <button
@@ -270,7 +312,7 @@ const OnboardingModal: React.FC = () => {
                             `}
                         >
                             <span>
-                                {progress.step === 5 
+                                {progress.step === (generationStep - 1)
                                     ? t('onboarding.generate', 'Generate Website')
                                     : t('onboarding.next', 'Next')
                                 }

@@ -408,20 +408,11 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 
 const Controls: React.FC = () => {
   const { t } = useTranslation();
-  const { 
-      data, setData, 
-      activeSection, onSectionSelect, 
-      sectionVisibility, setSectionVisibility, 
-      componentOrder, setComponentOrder,
-      componentStatus,
-      componentStyles, // Access global defaults
-      isSidebarOpen,
-      setIsSidebarOpen,
-      uploadImageAndGetURL,
-      menus,
-      activeProject,
-      updateProjectFavicon
-  } = useEditor();
+  const { activeSection, onSectionSelect, isSidebarOpen, setIsSidebarOpen } = useUI();
+  const { data, setData, sectionVisibility, setSectionVisibility, componentOrder, setComponentOrder, activeProject, updateProjectFavicon } = useProject();
+  const { uploadImageAndGetURL } = useFiles();
+  const { menus } = useCMS();
+  const { componentStatus, componentStyles } = useAdmin();
   const { navigate } = useRouter();
   
   const [aiAssistField, setAiAssistField] = useState<{path: string, value: string, context: string} | null>(null);

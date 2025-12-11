@@ -14,7 +14,8 @@ interface TenantManagementProps {
 }
 
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
-    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers, canPerform } = useEditor();
+    const { canPerform } = useAuth();
+    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'individual' | 'agency'>('all');
@@ -436,7 +437,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                             try {
                                 setLoading(true);
-                                const { createTenant, userDocument } = useEditor();
+                                const { userDocument } = useAuth();
+                                const { createTenant } = useAdmin();
                                 await createTenant(data);
                                 setShowCreateModal(false);
                                 // Refresh handled by createTenant internally calling fetchTenants

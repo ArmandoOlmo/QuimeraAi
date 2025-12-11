@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useCMS } from '../../contexts/cms';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
@@ -11,7 +11,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost } = useEditor();
+    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<CMSPost | null>(null);

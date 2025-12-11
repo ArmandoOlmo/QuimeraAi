@@ -1,6 +1,9 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw, Grid, Globe, Search, Check } from 'lucide-react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useAI } from '../../contexts/ai';
+import { useFiles } from '../../contexts/files';
+import { useProject } from '../../contexts/project';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Project } from '../../types';
@@ -23,7 +26,10 @@ const THUMBNAIL_STYLES = [
 
 const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onUpdate }) => {
     const { t } = useTranslation();
-    const { updateProjectThumbnail, generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError, activeProject, user, files, globalFiles } = useEditor();
+    const { user } = useAuth();
+    const { generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useAI();
+    const { files, globalFiles } = useFiles();
+    const { updateProjectThumbnail, activeProject } = useProject();
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl || '');
     const [dragActive, setDragActive] = useState(false);

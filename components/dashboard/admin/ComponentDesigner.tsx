@@ -8,7 +8,7 @@ import { VersionHistoryModal } from './VersionHistoryModal';
 import { VariantsManager } from './VariantsManager';
 import ComponentPermissionsEditor from './ComponentPermissionsEditor';
 import ComponentDocumentationEditor from './ComponentDocumentationEditor';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
 import { generateComponentThumbnail, createPlaceholderThumbnail } from '../../../utils/thumbnailGenerator';
 import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin } from 'lucide-react';
 
@@ -42,7 +42,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
 ];
 
 const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, previewOrientation }) => {
-    const { customComponents, saveComponent, revertToVersion, updateComponentStyle, updateComponentVariants, renameCustomComponent, componentStyles } = useEditor();
+    const { customComponents, saveComponent, revertToVersion, updateComponentStyle, updateComponentVariants, renameCustomComponent, componentStyles } = useAdmin();
     const [selectedComponentId, setSelectedComponentId] = useState<string>('header');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);

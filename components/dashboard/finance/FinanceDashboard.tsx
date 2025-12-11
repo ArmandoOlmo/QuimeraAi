@@ -13,7 +13,9 @@ import {
 import DashboardSidebar from '../DashboardSidebar';
 import { extractExpenseFromReceipt } from '../../../utils/expenseExtractor';
 import { ExpenseRecord } from '../../../types/finance';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useAI } from '../../../contexts/ai';
+import { useProject } from '../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
@@ -30,7 +32,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FinanceDashboard: React.FC = () => {
-    const { hasApiKey, handleApiError, activeProject, user } = useEditor();
+    const { user } = useAuth();
+    const { hasApiKey, handleApiError } = useAI();
+    const { activeProject } = useProject();
     // AI text generation helper - uses secure proxy
     const generateText = async (prompt: string, _options?: { systemPrompt?: string; temperature?: number }) => {
         const projectId = activeProject?.id || 'finance-dashboard';

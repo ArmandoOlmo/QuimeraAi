@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../contexts/EditorContext';
+import { useUI } from '../contexts/core/UIContext';
+import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
 import ThemeToggle from './ui/ThemeToggle';
 import LanguageSelector from './ui/LanguageSelector';
@@ -9,14 +10,8 @@ import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload,
 
 const EditorHeader: React.FC = () => {
   const { t } = useTranslation();
-  const { 
-    isSidebarOpen, setIsSidebarOpen, 
-    previewDevice, setPreviewDevice, 
-    previewOrientation, setPreviewOrientation,
-    setView, 
-    activeProject, renameActiveProject, saveProject,
-    isEditingTemplate, exitTemplateEditor 
-  } = useEditor();
+  const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice, previewOrientation, setPreviewOrientation, setView } = useUI();
+  const { activeProject, renameActiveProject, saveProject, isEditingTemplate, exitTemplateEditor } = useProject();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));

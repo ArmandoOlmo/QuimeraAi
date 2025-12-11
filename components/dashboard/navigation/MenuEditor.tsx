@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavigationMenu, NavigationMenuItem } from '../../../types';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useCMS } from '../../../contexts/cms';
+import { useProject } from '../../../contexts/project';
 import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper, ShoppingBag, Tag, Package } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
@@ -36,7 +37,8 @@ const SECTION_LINKS = [
 ];
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
-    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, data, activeProjectId } = useEditor();
+    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts } = useCMS();
+    const { data, activeProjectId } = useProject();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
     const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);

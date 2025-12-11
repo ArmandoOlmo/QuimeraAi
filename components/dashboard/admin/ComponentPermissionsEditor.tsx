@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { CustomComponent, ComponentPermissions } from '../../../types';
 import { Shield, Search, X, Check, User } from 'lucide-react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
 
 interface ComponentPermissionsEditorProps {
     component: CustomComponent;
@@ -14,7 +14,7 @@ const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({ component, onUpdate }) => {
-    const { allUsers, fetchAllUsers } = useEditor();
+    const { allUsers, fetchAllUsers } = useAdmin();
     const [searchQuery, setSearchQuery] = useState('');
     const [isPublic, setIsPublic] = useState(component.permissions?.isPublic || false);
     const [canView, setCanView] = useState<string[]>(component.permissions?.canView || []);

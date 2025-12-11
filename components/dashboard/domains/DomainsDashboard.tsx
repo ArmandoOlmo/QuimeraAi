@@ -1,14 +1,43 @@
 
 import React, { useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useDomains } from '../../../contexts/domains';
+import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
-import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
+
+// --- IMPORTS ---
+import { useTranslation } from 'react-i18next';
+import { CLOUD_RUN_DNS_CONFIG } from '../../../types/domains';
+
+// --- STEP INDICATOR COMPONENT ---
+const StepIndicator: React.FC<{
+    step: number;
+    label: string;
+    completed: boolean;
+    active: boolean;
+}> = ({ step, label, completed, active }) => (
+    <div className="flex flex-col items-center">
+        <div className={`
+            w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+            ${completed 
+                ? 'bg-green-500 text-white' 
+                : active 
+                    ? 'bg-primary text-primary-foreground animate-pulse' 
+                    : 'bg-secondary text-muted-foreground'
+            }
+        `}>
+            {completed ? <CheckCircle size={16} /> : step}
+        </div>
+        <span className={`text-xs mt-1 ${completed ? 'text-green-500' : active ? 'text-primary' : 'text-muted-foreground'}`}>
+            {label}
+        </span>
+    </div>
+);
 
 // --- DNS CONFIG COMPONENT ---
-import { useTranslation } from 'react-i18next';
 
 const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
     const { t } = useTranslation();
@@ -17,10 +46,10 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
         alert(`Copied: ${text}`);
     };
 
-    // Use DNS records from deployment or show defaults
+    // Use DNS records from domain or show Cloud Run defaults
     const dnsRecords = domain.dnsRecords || [
-        { type: 'A' as const, host: '@', value: '76.76.21.21', verified: false },
-        { type: 'CNAME' as const, host: 'www', value: 'cname.vercel-dns.com', verified: false }
+        { type: 'A' as const, host: '@', value: CLOUD_RUN_DNS_CONFIG.aRecords[0], verified: false },
+        { type: 'CNAME' as const, host: 'www', value: CLOUD_RUN_DNS_CONFIG.cnameTarget, verified: false }
     ];
 
     const getRecordColor = (type: string) => {
@@ -111,7 +140,8 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
 // --- DOMAIN CARD COMPONENT ---
 const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const { t } = useTranslation();
-    const { deleteDomain, verifyDomain, projects, updateDomain, deployDomain, getDomainDeploymentLogs } = useEditor();
+    const { deleteDomain, verifyDomain, updateDomain, deployDomain, getDomainDeploymentLogs } = useDomains();
+    const { projects } = useProject();
     const [isVerifying, setIsVerifying] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [isDeploying, setIsDeploying] = useState(false);
@@ -170,12 +200,22 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {domain.status === 'active' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.connected')}</span>}
                             {domain.status === 'pending' && <span className="text-xs font-bold text-yellow-500 flex items-center bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20"><Clock size={12} className="mr-1" /> {t('domainsDashboard.status.dnsPending')}</span>}
+                            {domain.status === 'verifying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> Verificando DNS...</span>}
+                            {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> Generando SSL...</span>}
                             {domain.status === 'deploying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.status.deploying')}</span>}
                             {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
                             {domain.status === 'error' && <span className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20"><AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')}</span>}
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
-                            {domain.deployment?.provider && (
-                                <span className="text-xs text-muted-foreground">• {domain.deployment.provider}</span>
+                            {/* SSL Status Badge */}
+                            {domain.sslStatus === 'active' && (
+                                <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
+                                    🔒 SSL
+                                </span>
+                            )}
+                            {domain.sslStatus === 'provisioning' && (
+                                <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                                    <Loader2 size={10} className="mr-1 animate-spin" /> SSL...
+                                </span>
                             )}
                         </div>
                         {domain.deployment?.deploymentUrl && (
@@ -231,51 +271,69 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                     </div>
                 </div>
 
-                {/* Deployment Section */}
+                {/* Domain Status Section */}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
                     <h4 className="text-sm font-bold text-foreground mb-3 flex items-center">
                         <Globe size={14} className="mr-2 text-primary" />
-                        {t('domainsDashboard.deploymentTitle')}
+                        Estado del Dominio
                     </h4>
-                    <div className="grid md:grid-cols-[1fr_auto] gap-3 items-end">
-                        <div>
-                            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                                {t('domainsDashboard.deploymentProvider')}
-                            </label>
-                            <select
-                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-                                value={deployProvider}
-                                onChange={(e) => setDeployProvider(e.target.value as any)}
-                                disabled={isDeploying || isDeploymentInProgress || !domain.projectId}
-                            >
-                                <option value="vercel">Vercel</option>
-                                <option value="cloudflare">Cloudflare Pages</option>
-                                <option value="netlify">Netlify</option>
-                            </select>
-                        </div>
-                        <button
-                            onClick={handleDeploy}
-                            disabled={isDeploying || isDeploymentInProgress || !domain.projectId}
-                            className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            {isDeploying ? (
-                                <>
-                                    <Loader2 size={16} className="animate-spin" />
-                                    {t('domainsDashboard.deploying')}
-                                </>
-                            ) : (
-                                <>
-                                    <Globe size={16} />
-                                    {t('domainsDashboard.deploy')}
-                                </>
-                            )}
-                        </button>
+                    
+                    {/* Status Steps */}
+                    <div className="flex items-center gap-2 mb-4">
+                        <StepIndicator 
+                            step={1} 
+                            label="Proyecto" 
+                            completed={!!domain.projectId}
+                            active={!domain.projectId}
+                        />
+                        <div className="flex-1 h-0.5 bg-border" />
+                        <StepIndicator 
+                            step={2} 
+                            label="DNS" 
+                            completed={domain.status === 'ssl_pending' || domain.status === 'active'}
+                            active={domain.status === 'pending' || domain.status === 'verifying'}
+                        />
+                        <div className="flex-1 h-0.5 bg-border" />
+                        <StepIndicator 
+                            step={3} 
+                            label="SSL" 
+                            completed={domain.sslStatus === 'active'}
+                            active={domain.status === 'ssl_pending'}
+                        />
+                        <div className="flex-1 h-0.5 bg-border" />
+                        <StepIndicator 
+                            step={4} 
+                            label="Activo" 
+                            completed={domain.status === 'active'}
+                            active={false}
+                        />
                     </div>
+
+                    {/* Status Messages */}
                     {!domain.projectId && (
-                        <p className="text-xs text-yellow-600 mt-2">⚠️ {t('domainsDashboard.connectProjectWarning')}</p>
+                        <p className="text-xs text-yellow-600 bg-yellow-500/10 p-2 rounded">
+                            ⚠️ Selecciona un proyecto para conectar a este dominio
+                        </p>
                     )}
-                    {domain.deployment?.error && (
-                        <p className="text-xs text-red-500 mt-2">❌ {domain.deployment.error}</p>
+                    {domain.projectId && domain.status === 'pending' && (
+                        <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded">
+                            📋 Configura los registros DNS en tu registrador y luego haz clic en "Verificar DNS"
+                        </p>
+                    )}
+                    {domain.status === 'ssl_pending' && (
+                        <p className="text-xs text-purple-600 bg-purple-500/10 p-2 rounded">
+                            🔐 DNS verificado. Generando certificado SSL... (puede tomar unos minutos)
+                        </p>
+                    )}
+                    {domain.status === 'active' && (
+                        <p className="text-xs text-green-600 bg-green-500/10 p-2 rounded">
+                            ✅ Tu dominio está activo. Visita <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
+                        </p>
+                    )}
+                    {domain.status === 'error' && (
+                        <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded">
+                            ❌ Error: {domain.deployment?.error || 'Hubo un problema con la configuración'}
+                        </p>
                     )}
                 </div>
 
@@ -341,75 +399,100 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 // --- DOMAIN SEARCH & BUY COMPONENT ---
 const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { t } = useTranslation();
-    const { addDomain, hasApiKey, promptForKeySelection, handleApiError, activeProject, user } = useEditor();
+    const { user } = useAuth();
+    const { addDomain } = useDomains();
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const [results, setResults] = useState<{ name: string, price: number, available: boolean }[]>([]);
+    const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
+    const [results, setResults] = useState<{ name: string; price: number | null; available: boolean; premium?: boolean; renewalPrice?: number | null }[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSearch = async () => {
         if (!query.trim()) return;
         setIsSearching(true);
+        setError(null);
+        setResults([]);
 
-        // Simulate AI Suggestion Logic
-        if (hasApiKey === false) {
-            await promptForKeySelection();
+        try {
+            // Use Name.com API via Cloud Functions
+            const { searchDomains } = await import('../../../services/nameComService');
+            const searchResults = await searchDomains(query.trim());
+            
+            // Combine available and unavailable results
+            const allResults = [
+                ...searchResults.available.map(d => ({
+                    name: d.name,
+                    price: d.price,
+                    available: true,
+                    premium: d.premium,
+                    renewalPrice: d.renewalPrice
+                })),
+                ...searchResults.unavailable.map(d => ({
+                    name: d.name,
+                    price: null,
+                    available: false,
+                    premium: false,
+                    renewalPrice: null
+                }))
+            ];
+
+            // Sort: available first, then by price
+            allResults.sort((a, b) => {
+                if (a.available !== b.available) return a.available ? -1 : 1;
+                return (a.price || 999) - (b.price || 999);
+            });
+
+            setResults(allResults);
+
+        } catch (e: any) {
+            console.error("Domain search failed:", e);
+            setError(e.message || 'Error al buscar dominios. Intenta de nuevo.');
+        } finally {
             setIsSearching(false);
+        }
+    };
+
+    const handleBuy = async (domainName: string, price: number) => {
+        if (!user) {
+            alert('Debes iniciar sesión para comprar dominios');
             return;
         }
 
-        if (hasApiKey) {
-            try {
-                const prompt = `Generate 5 creative available domain names for a business related to "${query}". Return ONLY a JSON array of strings. Example: ["mybusiness.com", "getmybusiness.io"]`;
-                const projectId = activeProject?.id || 'domain-search';
-                const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
-                const responseText = extractTextFromResponse(response);
-                const suggestions = JSON.parse(responseText) as string[];
+        const confirmPurchase = window.confirm(
+            `¿Comprar ${domainName} por $${price.toFixed(2)}/año?\n\nEsta compra se cargará a tu cuenta.`
+        );
+        
+        if (!confirmPurchase) return;
 
-                const mappedResults = suggestions.map(name => ({
-                    name,
-                    price: Math.floor(Math.random() * 20) + 12, // Random price 12-32
-                    available: true
-                }));
+        setIsPurchasing(domainName);
+        setError(null);
 
-                // Add exact match check simulation
-                const exactMatch = { name: query.includes('.') ? query : `${query}.com`, price: 15, available: Math.random() > 0.3 };
-                setResults([exactMatch, ...mappedResults]);
+        try {
+            const { purchaseDomain } = await import('../../../services/nameComService');
+            const result = await purchaseDomain(domainName, 1);
 
-            } catch (e) {
-                handleApiError(e);
-                console.error("AI Search failed, falling back", e);
-                // Fallback simulation
-                setResults([
-                    { name: `${query}.com`, price: 15, available: Math.random() > 0.5 },
-                    { name: `${query}.io`, price: 45, available: true },
-                    { name: `get${query}.com`, price: 12, available: true },
-                ]);
+            if (result.success) {
+                // Domain purchased successfully - add to user's domains
+                await addDomain({
+                    id: domainName,
+                    name: domainName,
+                    status: 'active',
+                    provider: 'Quimera',
+                    createdAt: new Date().toISOString(),
+                    expiryDate: result.expiryDate
+                });
+
+                alert(`¡Dominio ${domainName} comprado exitosamente!`);
+                onClose();
+            } else {
+                setError(result.error || 'Error al comprar el dominio');
             }
-        } else {
-            // No API key fallback
-            setResults([
-                { name: `${query}.com`, price: 15, available: Math.random() > 0.5 },
-                { name: `${query}.io`, price: 45, available: true },
-                { name: `try${query}.com`, price: 12, available: true },
-            ]);
-        }
 
-        setIsSearching(false);
-    };
-
-    const handleBuy = async (domainName: string) => {
-        // Simulate Purchase Process
-        const confirm = window.confirm(`Buy ${domainName} for 1 year? This will be charged to your account.`);
-        if (confirm) {
-            await addDomain({
-                id: `dom_${Date.now()}`,
-                name: domainName,
-                status: 'active', // Auto-active if bought through us (simulated)
-                provider: 'Quimera',
-                createdAt: new Date().toISOString(),
-                expiryDate: new Date(Date.now() + 31536000000).toISOString() // +1 year
-            });
-            onClose();
+        } catch (e: any) {
+            console.error("Domain purchase failed:", e);
+            setError(e.message || 'Error al procesar la compra. Intenta de nuevo.');
+        } finally {
+            setIsPurchasing(null);
         }
     };
 
@@ -423,7 +506,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <button onClick={onClose} className="p-1 rounded-full hover:bg-secondary text-muted-foreground"><X size={20} /></button>
             </div>
 
-            <div className="flex gap-2 mb-8">
+            <div className="flex gap-2 mb-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
@@ -431,7 +514,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         className="w-full bg-secondary/30 border border-border rounded-lg py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                        placeholder="e.g. myawesomebrand"
+                        placeholder="ej: miempresa, tutienda, etc."
                     />
                 </div>
                 <button
@@ -443,37 +526,89 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </button>
             </div>
 
+            {/* Error message */}
+            {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+                    ❌ {error}
+                </div>
+            )}
+
+            {/* Results */}
             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {results.map((res, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-4 bg-card border border-border rounded-lg hover:border-primary/30 transition-colors">
+                    <div 
+                        key={idx} 
+                        className={`flex justify-between items-center p-4 bg-card border rounded-lg transition-colors ${
+                            res.available 
+                                ? 'border-border hover:border-primary/30' 
+                                : 'border-border/50 opacity-60'
+                        }`}
+                    >
                         <div>
-                            <p className="font-bold text-lg text-foreground">{res.name}</p>
+                            <div className="flex items-center gap-2">
+                                <p className="font-bold text-lg text-foreground">{res.name}</p>
+                                {res.premium && (
+                                    <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full font-medium">
+                                        Premium
+                                    </span>
+                                )}
+                            </div>
                             {res.available ? (
-                                <span className="text-xs text-green-500 font-medium flex items-center"><CheckCircle size={10} className="mr-1" /> {t('domainsDashboard.available')}</span>
+                                <span className="text-xs text-green-500 font-medium flex items-center">
+                                    <CheckCircle size={10} className="mr-1" /> {t('domainsDashboard.available')}
+                                </span>
                             ) : (
-                                <span className="text-xs text-red-500 font-medium flex items-center"><X size={10} className="mr-1" /> {t('domainsDashboard.taken')}</span>
+                                <span className="text-xs text-red-500 font-medium flex items-center">
+                                    <X size={10} className="mr-1" /> {t('domainsDashboard.taken')}
+                                </span>
                             )}
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="font-bold text-lg">${res.price}<span className="text-xs font-normal text-muted-foreground">/yr</span></span>
+                            {res.price !== null ? (
+                                <div className="text-right">
+                                    <span className="font-bold text-lg">${res.price.toFixed(2)}</span>
+                                    <span className="text-xs font-normal text-muted-foreground">/año</span>
+                                    {res.renewalPrice && res.renewalPrice !== res.price && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Renovación: ${res.renewalPrice.toFixed(2)}/año
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <span className="text-muted-foreground">—</span>
+                            )}
                             <button
-                                onClick={() => handleBuy(res.name)}
-                                disabled={!res.available}
-                                className="bg-secondary hover:bg-primary hover:text-primary-foreground text-foreground font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => res.price && handleBuy(res.name, res.price)}
+                                disabled={!res.available || isPurchasing !== null}
+                                className="bg-secondary hover:bg-primary hover:text-primary-foreground text-foreground font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
                             >
-                                {t('domainsDashboard.buy')}
+                                {isPurchasing === res.name ? (
+                                    <Loader2 size={16} className="animate-spin mx-auto" />
+                                ) : (
+                                    t('domainsDashboard.buy')
+                                )}
                             </button>
                         </div>
                     </div>
                 ))}
-                {results.length === 0 && !isSearching && (
+                {results.length === 0 && !isSearching && !error && (
                     <div className="text-center py-10 text-muted-foreground">
-                        {t('domainsDashboard.enterKeyword')}
+                        <Globe size={40} className="mx-auto mb-3 opacity-30" />
+                        <p>{t('domainsDashboard.enterKeyword')}</p>
+                        <p className="text-xs mt-2">Busca tu nombre de negocio o marca para encontrar dominios disponibles</p>
+                    </div>
+                )}
+                {isSearching && (
+                    <div className="text-center py-10">
+                        <Loader2 size={32} className="animate-spin mx-auto mb-3 text-primary" />
+                        <p className="text-muted-foreground">Buscando dominios disponibles...</p>
                     </div>
                 )}
             </div>
+            
+            {/* Footer */}
             <div className="mt-4 p-3 bg-secondary/20 rounded-lg text-xs text-muted-foreground flex items-center justify-center">
-                <Globe size={12} className="mr-1" /> {t('domainsDashboard.poweredBy')}
+                <Globe size={12} className="mr-1" /> Powered by Name.com Reseller API
             </div>
         </div>
     );
@@ -482,7 +617,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 // --- MAIN DASHBOARD COMPONENT ---
 const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { domains, addDomain } = useEditor();
+    const { domains, addDomain } = useDomains();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);

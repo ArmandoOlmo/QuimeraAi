@@ -32,7 +32,7 @@ type StatusFilter = ReviewStatus | 'all';
 
 const ReviewsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { products } = useProducts(user?.uid || '', storeId);
     const {

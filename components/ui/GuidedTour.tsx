@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useProject } from '../../contexts/project';
 import { Sparkles, ArrowRight, Check, X, SkipForward, Lightbulb, MessageCircle } from 'lucide-react';
 import AIContentAssistant from './AIContentAssistant';
 
@@ -63,7 +63,7 @@ const TOUR_STEPS: TourStep[] = [
 ];
 
 const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) => {
-    const { data, setData, activeProjectId } = useEditor();
+    const { data, setData, activeProjectId } = useProject();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
     const [aiAssistOpen, setAiAssistOpen] = useState(false);

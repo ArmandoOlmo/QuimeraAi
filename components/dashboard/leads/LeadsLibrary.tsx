@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useCRM } from '../../../contexts/crm';
 import {
     Search, Plus, Trash2, Download, Upload,
     Users, CheckCircle2, Clock, Filter, MoreVertical,
@@ -9,7 +9,7 @@ import { LibraryLead, Lead } from '../../../types';
 import AddLeadModal from './AddLeadModal';
 
 const LeadsLibrary: React.FC = () => {
-    const { libraryLeads, isLoadingLibraryLeads, addLibraryLead, deleteLibraryLead, importLibraryLead } = useEditor();
+    const { libraryLeads, isLoadingLibraryLeads, addLibraryLead, deleteLibraryLead, importLibraryLead } = useCRM();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);

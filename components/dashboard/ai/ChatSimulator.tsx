@@ -1,6 +1,6 @@
 import React from 'react';
 import { AiAssistantConfig, Project } from '../../../types';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useCRM } from '../../../contexts/crm';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore from '../../chat/ChatCore';
 
@@ -10,7 +10,7 @@ interface ChatSimulatorProps {
 }
 
 const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
-    const { addLead } = useEditor();
+    const { addLead } = useCRM();
     
     // Get appearance config with defaults
     const appearance = config.appearance || getDefaultAppearanceConfig();

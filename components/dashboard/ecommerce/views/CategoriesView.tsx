@@ -14,7 +14,7 @@ import {
     GripVertical,
     Loader2,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
 import { Category } from '../../../../types/ecommerce';
@@ -22,7 +22,7 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 
 const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { categories, isLoading, addCategory, updateCategory, deleteCategory } = useCategories(user?.uid || '', storeId);
     const { products } = useProducts(user?.uid || '', storeId);

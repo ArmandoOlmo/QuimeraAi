@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useUI } from '../../contexts/core/UIContext';
 import { Sun, Moon, Circle } from 'lucide-react';
 
 const ThemeToggle: React.FC = () => {
-  const { themeMode, setThemeMode } = useEditor();
+  const { themeMode, setThemeMode } = useUI();
 
   const toggleTheme = () => {
     if (themeMode === 'light') {

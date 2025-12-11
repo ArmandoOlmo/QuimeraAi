@@ -19,7 +19,8 @@ import {
     AlertCircle,
     Menu,
 } from 'lucide-react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useProject } from '../../../contexts/project';
 import { useEmailSettings, useEmailLogs } from '../../../hooks/useEmailSettings';
 import DashboardSidebar from '../DashboardSidebar';
 import CampaignsView from './views/CampaignsView';
@@ -47,10 +48,11 @@ interface EmailDashboardProps {
 
 const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectId }) => {
     const { t } = useTranslation();
-    const { user, activeProjectId } = useEditor();
+    const { user } = useAuth();
+    const { activeProjectId } = useProject();
     const userId = user?.uid || '';
-    // Use prop projectId if provided, otherwise use activeProjectId from context, or fallback to 'default'
-    const projectId = propProjectId || activeProjectId || 'default';
+    // Use prop projectId if provided, otherwise use activeProjectId from context
+    const projectId = propProjectId || activeProjectId || '';
 
     const [activeView, setActiveView] = useState<EmailView>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -58,6 +60,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId, { limit: 100 });
 
     const isLoading = settingsLoading || logsLoading;
+    const hasValidProject = Boolean(userId && projectId && projectId !== 'default');
 
     const navItems: { id: EmailView; label: string; icon: React.ElementType }[] = [
         { id: 'overview', label: t('email.overview', 'Vista General'), icon: Mail },
@@ -72,6 +75,25 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="animate-spin text-primary" size={32} />
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasValidProject) {
+        return (
+            <div className="flex h-screen bg-background text-foreground">
+                <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center p-6">
+                        <Mail className="mx-auto text-muted-foreground mb-4" size={48} />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                            {t('email.noProjectSelected', 'No hay proyecto seleccionado')}
+                        </h3>
+                        <p className="text-muted-foreground">
+                            {t('email.selectProjectFirst', 'Selecciona un proyecto para acceder al Email Marketing')}
+                        </p>
+                    </div>
                 </div>
             </div>
         );

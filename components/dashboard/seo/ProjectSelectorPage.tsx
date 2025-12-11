@@ -20,7 +20,8 @@ import {
     Sparkles,
     Menu,
 } from 'lucide-react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useUI } from '../../../contexts/core/UIContext';
+import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
 
@@ -34,7 +35,8 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
-    const { projects, isLoadingProjects, setIsOnboardingOpen, setView } = useEditor();
+    const { setIsOnboardingOpen, setView } = useUI();
+    const { projects, isLoadingProjects } = useProject();
     
     // Local state
     const [searchQuery, setSearchQuery] = useState('');

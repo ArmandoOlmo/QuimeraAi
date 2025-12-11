@@ -1,6 +1,7 @@
 
 import React, { ReactNode, forwardRef } from 'react';
-import { useEditor } from '../contexts/EditorContext';
+import { useUI } from '../contexts/core/UIContext';
+import { useProject } from '../contexts/project';
 import { PreviewDevice, PreviewOrientation } from '../types';
 
 interface BrowserPreviewProps {
@@ -23,7 +24,8 @@ const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = 
 };
 
 const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ children }, ref) => {
-  const { previewDevice, previewOrientation, activeProject } = useEditor();
+  const { previewDevice, previewOrientation } = useUI();
+  const { activeProject } = useProject();
   
   const projectSlug = activeProject?.name 
     ? activeProject.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')

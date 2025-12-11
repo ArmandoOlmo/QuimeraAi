@@ -52,7 +52,8 @@ const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = 
 };
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice, previewOrientation }) => {
-    const { componentStyles, customComponents, theme } = useEditor();
+    const { componentStyles, customComponents } = useAdmin();
+    const { theme } = useProject();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
     const [renderKey, setRenderKey] = useState(0);
     

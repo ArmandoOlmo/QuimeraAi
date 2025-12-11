@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useUI } from '../../contexts/core/UIContext';
+import { useProject } from '../../contexts/project';
 import { SEOConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
@@ -14,16 +15,16 @@ interface SEODashboardProps {
 
 const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => {
   const { t } = useTranslation();
+  const { setView } = useUI();
   const { 
     seoConfig, 
     updateSeoConfig, 
     activeProject, 
-    setView,
     projects,
     activeProjectId,
     loadProject,
     isLoadingProjects
-  } = useEditor();
+  } = useProject();
   const [activeTab, setActiveTab] = useState<SeoTab>(initialTab);
   const [localConfig, setLocalConfig] = useState<SEOConfig | null>(seoConfig);
   const [isSaving, setIsSaving] = useState(false);

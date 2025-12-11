@@ -19,7 +19,7 @@ import {
     MoreVertical,
     Star,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { Customer } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
@@ -27,7 +27,7 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 
 const CustomersView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const { customers, isLoading, getTopCustomers } = useCustomers(user?.uid || '', storeId);

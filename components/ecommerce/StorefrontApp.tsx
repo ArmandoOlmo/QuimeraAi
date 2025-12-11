@@ -1,0 +1,214 @@
+/**
+ * StorefrontApp Component
+ * 
+ * Root component for the storefront that can be rendered both on
+ * server (SSR) and client (hydration). Used for custom domains.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
+import StorefrontLayout from './StorefrontLayout';
+import ProductDetailPageWithCart from './ProductDetailPageWithCart';
+import CheckoutPageEnhanced from './CheckoutPageEnhanced';
+import OrderConfirmation from './OrderConfirmation';
+import { Loader2 } from 'lucide-react';
+
+// Import storefront pages
+import StorefrontHome from './pages/StorefrontHome';
+import StorefrontCategory from './pages/StorefrontCategory';
+
+interface StorefrontAppProps {
+    projectId: string;
+    initialData?: any;
+    hostname?: string;
+    serverUrl?: string; // For SSR routing
+}
+
+type StorefrontView = 'home' | 'product' | 'category' | 'checkout' | 'order-confirmation';
+
+interface RouteState {
+    view: StorefrontView;
+    params: {
+        productSlug?: string;
+        categorySlug?: string;
+        orderId?: string;
+    };
+}
+
+/**
+ * Parse URL to determine view and params
+ */
+function parseUrl(url: string): RouteState {
+    const path = url.replace(/^\/store\/[^\/]+/, '').replace(/^\//, '') || '/';
+    
+    // Product page: /product/:slug
+    const productMatch = path.match(/^product\/([^\/]+)/);
+    if (productMatch) {
+        return { view: 'product', params: { productSlug: productMatch[1] } };
+    }
+    
+    // Category page: /category/:slug
+    const categoryMatch = path.match(/^category\/([^\/]+)/);
+    if (categoryMatch) {
+        return { view: 'category', params: { categorySlug: categoryMatch[1] } };
+    }
+    
+    // Checkout
+    if (path.startsWith('checkout')) {
+        return { view: 'checkout', params: {} };
+    }
+    
+    // Order confirmation: /order/:orderId
+    const orderMatch = path.match(/^order\/([^\/]+)/);
+    if (orderMatch) {
+        return { view: 'order-confirmation', params: { orderId: orderMatch[1] } };
+    }
+    
+    // Default: home
+    return { view: 'home', params: {} };
+}
+
+const StorefrontApp: React.FC<StorefrontAppProps> = ({
+    projectId,
+    initialData,
+    hostname,
+    serverUrl
+}) => {
+    // Route state
+    const [route, setRoute] = useState<RouteState>(() => {
+        // Use server URL for SSR, or window.location for client
+        const url = serverUrl || (typeof window !== 'undefined' ? window.location.pathname : '/');
+        return parseUrl(url);
+    });
+
+    // Project data
+    const [projectData, setProjectData] = useState<any>(initialData || null);
+    const [isLoading, setIsLoading] = useState(!initialData);
+
+    // Handle browser navigation (client-side only)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handlePopState = () => {
+            setRoute(parseUrl(window.location.pathname));
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
+
+    // Fetch project data if not provided (client-side hydration without initial data)
+    useEffect(() => {
+        if (projectData || typeof window === 'undefined') return;
+
+        const fetchData = async () => {
+            try {
+                const storeDoc = await getDoc(doc(db, 'publicStores', projectId));
+                if (storeDoc.exists()) {
+                    setProjectData(storeDoc.data());
+                }
+            } catch (error) {
+                console.error('Error fetching store data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [projectId, projectData]);
+
+    // Navigation functions
+    const navigate = (path: string) => {
+        if (typeof window !== 'undefined') {
+            // For custom domain, use root paths
+            const fullPath = hostname ? path : `/store/${projectId}${path}`;
+            window.history.pushState({}, '', fullPath);
+            setRoute(parseUrl(path));
+        }
+    };
+
+    const navigateHome = () => navigate('/');
+    const navigateToProduct = (slug: string) => navigate(`/product/${slug}`);
+    const navigateToCategory = (slug: string) => navigate(`/category/${slug}`);
+    const navigateToCheckout = () => navigate('/checkout');
+    const navigateToOrder = (orderId: string) => navigate(`/order/${orderId}`);
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
+                    <p className="text-gray-500">Cargando tienda...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Render based on route
+    const renderContent = () => {
+        switch (route.view) {
+            case 'product':
+                return (
+                    <ProductDetailPageWithCart
+                        storeId={projectId}
+                        productSlug={route.params.productSlug!}
+                        onNavigateToStore={navigateHome}
+                    />
+                );
+
+            case 'category':
+                return (
+                    <StorefrontCategory
+                        storeId={projectId}
+                        categorySlug={route.params.categorySlug!}
+                        onNavigateHome={navigateHome}
+                        onNavigateToProduct={navigateToProduct}
+                    />
+                );
+
+            case 'checkout':
+                return (
+                    <CheckoutPageEnhanced
+                        storeId={projectId}
+                        onSuccess={navigateToOrder}
+                        onBack={navigateHome}
+                        onNavigateToStore={navigateHome}
+                    />
+                );
+
+            case 'order-confirmation':
+                return (
+                    <OrderConfirmation
+                        storeId={projectId}
+                        orderId={route.params.orderId!}
+                        onContinueShopping={navigateHome}
+                    />
+                );
+
+            case 'home':
+            default:
+                return (
+                    <StorefrontHome
+                        storeId={projectId}
+                        projectData={projectData}
+                        onNavigateToProduct={navigateToProduct}
+                        onNavigateToCategory={navigateToCategory}
+                    />
+                );
+        }
+    };
+
+    return (
+        <StorefrontLayout
+            storeId={projectId}
+            onNavigateHome={navigateHome}
+            onNavigateToCheckout={navigateToCheckout}
+        >
+            {renderContent()}
+        </StorefrontLayout>
+    );
+};
+
+export default StorefrontApp;

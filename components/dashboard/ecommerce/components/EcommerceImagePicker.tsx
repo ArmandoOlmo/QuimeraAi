@@ -17,7 +17,8 @@ import {
     FolderOpen,
     Plus,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useFiles } from '../../../../contexts/files';
+import { useProject } from '../../../../contexts/project';
 import { useToast } from '../../../../contexts/ToastContext';
 import { FileRecord } from '../../../../types';
 
@@ -39,7 +40,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     multiple = true,
 }) => {
     const { t } = useTranslation();
-    const { files, globalFiles, fetchGlobalFiles, uploadFile, projects, activeProjectId } = useEditor();
+    const { files, globalFiles, fetchGlobalFiles, uploadFile } = useFiles();
+    const { projects, activeProjectId } = useProject();
     const { success, error: showError } = useToast();
     
     const [librarySource, setLibrarySource] = useState<'project' | 'global'>('project');

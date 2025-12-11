@@ -26,7 +26,7 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 
 const OrdersView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { orders, isLoading, updateOrderStatus, addTrackingInfo } = useOrders(user?.uid || '', storeId);
 

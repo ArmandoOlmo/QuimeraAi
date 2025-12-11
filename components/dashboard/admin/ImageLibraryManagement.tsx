@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useFiles } from '../../../contexts/files';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
@@ -15,7 +15,7 @@ interface ImageLibraryManagementProps {
 }
 
 const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack }) => {
-    const { globalFiles, isGlobalFilesLoading, fetchGlobalFiles, uploadGlobalFile, deleteGlobalFile } = useEditor();
+    const { globalFiles, isGlobalFilesLoading, fetchGlobalFiles, uploadGlobalFile, deleteGlobalFile } = useFiles();
     const { success, error: showError } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);

@@ -18,7 +18,7 @@ import {
     Copy,
     ExternalLink,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEcommerceContext } from '../EcommerceDashboard';
 import {
     seedDemoStore,
@@ -45,7 +45,7 @@ interface DemoDataSeederProps {
 
 const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId, projectName } = useEcommerceContext();
     
     const [isSeeding, setIsSeeding] = useState(false);

@@ -1,29 +1,41 @@
 /**
  * Step1BusinessInfo
- * First step: Business name and industry selection
+ * First step: Business name, industry selection, and ecommerce option
  */
 
 import React, { useState, useMemo } from 'react';
-import { Building2, Search, ChevronDown } from 'lucide-react';
+import { Building2, Search, ChevronDown, ShoppingBag, Package, FileText, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
+import { ECOMMERCE_INDUSTRIES, EcommerceType } from '../../../types/onboarding';
 
 interface Step1BusinessInfoProps {
     businessName: string;
     industry: string;
     subIndustry?: string;
+    hasEcommerce?: boolean;
+    ecommerceType?: EcommerceType;
     onUpdate: (name: string, industry: string, subIndustry?: string) => void;
+    onEcommerceUpdate: (hasEcommerce: boolean, ecommerceType?: EcommerceType) => void;
 }
 
 const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
     businessName,
     industry,
     subIndustry,
+    hasEcommerce = false,
+    ecommerceType,
     onUpdate,
+    onEcommerceUpdate,
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // Check if selected industry is an ecommerce-related industry
+    const isEcommerceIndustry = useMemo(() => {
+        return ECOMMERCE_INDUSTRIES.includes(industry);
+    }, [industry]);
 
     // Get translated industry label
     const getIndustryLabel = (ind: { id: string; labelKey: string }) => {
@@ -210,6 +222,103 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         </>
                     )}
                 </div>
+            </div>
+
+            {/* Ecommerce Toggle */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-card border border-border rounded-xl">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <ShoppingBag size={20} className="text-primary" />
+                        </div>
+                        <div>
+                            <p className="font-medium text-foreground">
+                                {t('onboarding.sellProductsOnline', '¿Vendes productos online?')}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {t('onboarding.sellProductsOnlineDesc', 'Incluiremos una tienda en tu sitio web')}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                            hasEcommerce ? 'bg-primary' : 'bg-muted'
+                        }`}
+                        role="switch"
+                        aria-checked={hasEcommerce}
+                    >
+                        <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                hasEcommerce ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                        />
+                    </button>
+                </div>
+
+                {/* Ecommerce suggestion for retail industries */}
+                {isEcommerceIndustry && !hasEcommerce && (
+                    <div className="p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
+                        <p className="text-sm text-foreground">
+                            <span className="font-semibold">💡 {t('onboarding.suggestion', 'Sugerencia')}:</span>{' '}
+                            {t('onboarding.ecommerceSuggestion', 'Tu industria suele incluir venta de productos. ¿Quieres agregar una tienda online?')}
+                        </p>
+                    </div>
+                )}
+
+                {/* Product Type Selector - Only shown if ecommerce is enabled */}
+                {hasEcommerce && (
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border">
+                        <p className="text-sm font-medium text-foreground">
+                            {t('onboarding.productType', 'Tipo de productos')}
+                        </p>
+                        <div className="grid grid-cols-3 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => onEcommerceUpdate(true, 'physical')}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                    ecommerceType === 'physical'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                }`}
+                            >
+                                <Package size={24} className={ecommerceType === 'physical' ? 'text-primary' : 'text-muted-foreground'} />
+                                <span className={`text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
+                                    {t('onboarding.physical', 'Físicos')}
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onEcommerceUpdate(true, 'digital')}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                    ecommerceType === 'digital'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                }`}
+                            >
+                                <FileText size={24} className={ecommerceType === 'digital' ? 'text-primary' : 'text-muted-foreground'} />
+                                <span className={`text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
+                                    {t('onboarding.digital', 'Digitales')}
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onEcommerceUpdate(true, 'both')}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                    ecommerceType === 'both'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                }`}
+                            >
+                                <Layers size={24} className={ecommerceType === 'both' ? 'text-primary' : 'text-muted-foreground'} />
+                                <span className={`text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
+                                    {t('onboarding.both', 'Ambos')}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Tip */}

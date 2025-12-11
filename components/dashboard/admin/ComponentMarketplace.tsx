@@ -5,7 +5,8 @@ import { Search, Download, Star, Eye, Package, X, Check } from 'lucide-react';
 import ComponentRating from './ComponentRating';
 
 const ComponentMarketplace: React.FC = () => {
-    const { customComponents, userDocument } = useEditor();
+    const { userDocument } = useAuth();
+    const { customComponents } = useAdmin();
     // TODO: Implement duplicateCustomComponent in EditorContext
     const duplicateCustomComponent = async (_id: string) => { console.warn('duplicateCustomComponent not implemented'); };
     const [searchTerm, setSearchTerm] = useState('');

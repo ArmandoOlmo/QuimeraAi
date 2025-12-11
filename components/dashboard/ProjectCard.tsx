@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useProject } from '../../contexts/project';
 import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Image as ImageIcon } from 'lucide-react';
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
@@ -22,7 +23,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   onSelect 
 }) => {
   const { t } = useTranslation();
-  const { createProjectFromTemplate, loadProject, deleteProject, user, userDocument } = useEditor();
+  const { user, userDocument } = useAuth();
+  const { createProjectFromTemplate, loadProject, deleteProject } = useProject();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showThumbnailEditor, setShowThumbnailEditor] = useState(false);

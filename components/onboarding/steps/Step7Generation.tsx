@@ -1,23 +1,23 @@
 /**
- * Step6Generation
- * Sixth step: Final generation with progress tracking
+ * Step7Generation
+ * Seventh step: Final generation with progress tracking
  */
 
 import React, { useEffect, useState } from 'react';
-import { Rocket, FileText, Image, Loader2, Check, AlertCircle, Sparkles, ExternalLink } from 'lucide-react';
+import { Rocket, FileText, Image, Loader2, Check, AlertCircle, Sparkles, ExternalLink, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { OnboardingProgress, GenerationProgress } from '../../../types/onboarding';
 import ImageGenerationProgress from '../components/ImageGenerationProgress';
 
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
-interface Step6GenerationProps {
+interface Step7GenerationProps {
     progress: OnboardingProgress;
     onStartGeneration: () => Promise<void>;
     onReset?: () => void;
 }
 
-const Step6Generation: React.FC<Step6GenerationProps> = ({
+const Step7Generation: React.FC<Step7GenerationProps> = ({
     progress,
     onStartGeneration,
     onReset,
@@ -121,6 +121,23 @@ const Step6Generation: React.FC<Step6GenerationProps> = ({
                         {t('onboarding.redirectingToEditor', 'Redirecting to editor...')}
                     </p>
                 </div>
+
+                {/* Ecommerce banner if store was created */}
+                {progress.hasEcommerce && progress.storeSetup && (
+                    <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                        <div className="flex items-center gap-3">
+                            <ShoppingBag size={20} className="text-primary" />
+                            <div className="text-left">
+                                <p className="font-medium text-foreground">
+                                    {t('onboarding.storeCreated', 'Tu tienda está lista')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {t('onboarding.storeCreatedDesc', 'Podrás agregar productos desde el panel de ecommerce')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -209,6 +226,17 @@ const Step6Generation: React.FC<Step6GenerationProps> = ({
                             {progress.enabledComponents?.length || 0} {t('onboarding.active', 'active')}
                         </p>
                     </div>
+                    {progress.hasEcommerce && (
+                        <div className="col-span-2 pt-2 border-t border-border">
+                            <div className="flex items-center gap-2">
+                                <ShoppingBag size={14} className="text-primary" />
+                                <span className="text-muted-foreground">{t('onboarding.store', 'Tienda')}:</span>
+                                <span className="font-medium text-foreground">
+                                    {progress.storeSetup?.storeName || progress.businessName}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -251,9 +279,4 @@ const Step6Generation: React.FC<Step6GenerationProps> = ({
     );
 };
 
-export default Step6Generation;
-
-
-
-
-
+export default Step7Generation;

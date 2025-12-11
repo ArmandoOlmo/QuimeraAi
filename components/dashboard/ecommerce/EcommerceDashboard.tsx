@@ -40,6 +40,7 @@ import ProductsView from './views/ProductsView';
 import CategoriesView from './views/CategoriesView';
 import OrdersView from './views/OrdersView';
 import CustomersView from './views/CustomersView';
+import StoreUsersView from './views/StoreUsersView';
 import DiscountsView from './views/DiscountsView';
 import ReviewsView from './views/ReviewsView';
 import StockAlertsView from './views/StockAlertsView';
@@ -84,7 +85,8 @@ export const useEcommerceContext = () => React.useContext(EcommerceContext);
 
 const EcommerceDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { user, projects, activeProject, activeProjectId, loadProject } = useEditor();
+    const { user } = useAuth();
+    const { projects, activeProject, activeProjectId, loadProject } = useProject();
     const [activeView, setActiveView] = useState<EcommerceView>(() => {
         const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
         return savedView || 'overview';
@@ -246,6 +248,8 @@ const EcommerceDashboard: React.FC = () => {
                 return <OrdersView />;
             case 'customers':
                 return <CustomersView />;
+            case 'store-users':
+                return <StoreUsersView />;
             case 'discounts':
                 return <DiscountsView />;
             case 'reviews':

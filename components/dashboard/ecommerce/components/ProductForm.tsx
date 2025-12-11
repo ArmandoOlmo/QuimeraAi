@@ -16,7 +16,7 @@ import {
     Sparkles,
     FolderOpen,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import { useProductAI } from '../hooks/useProductAI';
@@ -34,7 +34,7 @@ interface ProductFormProps {
 
 const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }) => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const { addProduct, updateProduct, uploadImage, deleteImage, isLoading } = useProducts(user?.uid || '', storeId);

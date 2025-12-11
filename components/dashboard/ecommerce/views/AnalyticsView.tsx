@@ -34,7 +34,7 @@ import {
     Area,
     AreaChart,
 } from 'recharts';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEcommerceAnalytics } from '../hooks/useEcommerceAnalytics';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
@@ -43,7 +43,7 @@ type DateRange = '7d' | '30d' | '90d' | '1y';
 
 const AnalyticsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const [dateRange, setDateRange] = useState<DateRange>('30d');

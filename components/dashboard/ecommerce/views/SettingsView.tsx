@@ -28,7 +28,7 @@ import {
     Clock,
     Unlink,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useStoreSettings } from '../hooks/useStoreSettings';
 import { StoreSettings, ShippingZone } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
@@ -41,7 +41,7 @@ type SettingsTab = 'general' | 'payment' | 'shipping' | 'notifications' | 'email
 
 const SettingsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const { 

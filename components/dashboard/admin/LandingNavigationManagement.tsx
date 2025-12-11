@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useUI } from '../../../contexts/core/UIContext';
+import { useCMS } from '../../../contexts/cms';
+import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import MenuEditor from '../navigation/MenuEditor';
 import { Menu as MenuIcon, Plus, Search, ArrowLeft, Edit2, Copy, Trash2, AlertCircle, Info, Layout, LayoutGrid, ChevronRight, Lightbulb, ArrowRight } from 'lucide-react';
@@ -12,7 +14,9 @@ interface LandingNavigationManagementProps {
 
 const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { menus, deleteMenu, saveMenu, data, activeProject, projects, loadProject, setView } = useEditor();
+    const { setView } = useUI();
+    const { menus, deleteMenu, saveMenu } = useCMS();
+    const { data, activeProject, projects, loadProject } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
     const [isCreating, setIsCreating] = useState(false);

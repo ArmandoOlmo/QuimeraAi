@@ -13,7 +13,7 @@ import {
     Upload
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import {
     db,
@@ -71,7 +71,7 @@ const getDefaultConfig = (): AppInfoConfig => ({
 
 const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { user, userDocument } = useEditor();
+    const { user, userDocument } = useAuth();
     const { success, error: showError, info } = useToast();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useEditor } from '../../contexts/EditorContext';
+import { useUI } from '../../contexts/core/UIContext';
 
 interface ModalProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ children, onClose, isOpen, maxWidth = 'max-w-3xl', className = '' }) => {
-  const { themeMode } = useEditor();
+  const { themeMode } = useUI();
 
   if (!isOpen) return null;
 

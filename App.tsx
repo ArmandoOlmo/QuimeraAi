@@ -1,6 +1,8 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { AppProviders } from './contexts/AppProviders';
-import { useEditor } from './contexts/EditorContext';
+import { useAuth } from './contexts/core/AuthContext';
+import { useUI } from './contexts/core/UIContext';
+import { useProject } from './contexts/project';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
@@ -49,35 +51,20 @@ const AppContent: React.FC<AppContentProps> = ({
   routeAdminView,
   routeProjectId
 }) => {
-  const {
-    isSidebarOpen,
-    setIsSidebarOpen,
-    view,
-    setView,
-    previewRef,
-    activeProjectId,
-    loadProject,
-    data,
-    userDocument,
-    setAdminView,
-  } = useEditor();
+  const { userDocument } = useAuth();
+  const { view, setView, setAdminView, isSidebarOpen, setIsSidebarOpen, previewRef } = useUI();
+  const { activeProjectId, loadProject, data } = useProject();
   const seoConfig = useSEO();
 
-  // Sync route state with EditorContext
+  // Sync route state with contexts
   useEffect(() => {
-    // Sync view from route
     if (routeView && routeView !== view) {
       setView(routeView);
     }
-
-    // Sync adminView from route - always sync when on superadmin view
     if (routeView === 'superadmin') {
-      // Use routeAdminView or default to 'main' for /admin root
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
-
-    // Sync projectId from route - load project if different
     if (routeProjectId && routeProjectId !== activeProjectId) {
       loadProject(routeProjectId, false, false);
     }
@@ -112,19 +99,9 @@ const AppContent: React.FC<AppContentProps> = ({
 // =============================================================================
 
 const AuthGate: React.FC = () => {
-  const {
-    user,
-    loadingAuth,
-    verificationEmail,
-    setVerificationEmail,
-    isProfileModalOpen,
-    closeProfileModal,
-    userDocument
-  } = useEditor();
-
+  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument } = useAuth();
   const { navigate } = useRouter();
 
-  // Set user context for monitoring when user changes
   useEffect(() => {
     if (user && userDocument) {
       setUserContext({
@@ -137,7 +114,6 @@ const AuthGate: React.FC = () => {
     }
   }, [user, userDocument]);
 
-  // Handle logout
   const handleLogout = async () => {
     await signOut(auth);
     setVerificationEmail(null);
@@ -146,11 +122,7 @@ const AuthGate: React.FC = () => {
 
   return (
     <Router
-      user={user ? {
-        uid: user.uid,
-        email: user.email,
-        emailVerified: user.emailVerified,
-      } : null}
+      user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
       userRole={userDocument?.role}
       loadingAuth={loadingAuth}
       onVerificationEmailSent={setVerificationEmail}
@@ -159,11 +131,7 @@ const AuthGate: React.FC = () => {
     >
       {({ view, adminView, projectId }) => (
         <>
-          <AppContent
-            routeView={view}
-            routeAdminView={adminView}
-            routeProjectId={projectId}
-          />
+          <AppContent routeView={view} routeAdminView={adminView} routeProjectId={projectId} />
           {isProfileModalOpen && (
             <Suspense fallback={null}>
               <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
@@ -182,26 +150,16 @@ const AuthGate: React.FC = () => {
 const App: React.FC = () => {
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
 
-  // Initialize monitoring on app start
   useEffect(() => {
     initializeMonitoring();
   }, []);
 
-  // Listen for navigation changes to detect preview route
   useEffect(() => {
-    const handleNavigation = () => {
-      setIsPreview(isPreviewRoute());
-    };
-
-    // Listen to popstate for back/forward navigation
+    const handleNavigation = () => setIsPreview(isPreviewRoute());
     window.addEventListener('popstate', handleNavigation);
-
-    return () => {
-      window.removeEventListener('popstate', handleNavigation);
-    };
+    return () => window.removeEventListener('popstate', handleNavigation);
   }, []);
 
-  // Render preview route without authentication or EditorProvider
   if (isPreview) {
     return (
       <ErrorBoundary>
@@ -212,7 +170,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Normal app with authentication and routing
   return (
     <ErrorBoundary>
       <AppProviders>

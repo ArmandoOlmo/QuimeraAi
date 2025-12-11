@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useProject } from '../../../contexts/project';
 import { checkComponentAccessibility, A11yReport, A11yIssue } from '../../../utils/accessibilityChecker';
 import { AlertCircle, AlertTriangle, Info, CheckCircle, Play, Download, Shield } from 'lucide-react';
 
 const AccessibilityChecker: React.FC = () => {
-    const { activeProject, data } = useEditor();
+    const { activeProject, data } = useProject();
     const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
     const [reports, setReports] = useState<A11yReport[]>([]);
     const [isScanning, setIsScanning] = useState(false);

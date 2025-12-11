@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useProject } from '../../../contexts/project';
+import { useAdmin } from '../../../contexts/admin';
 import { PageSection, CustomComponent } from '../../../types';
 import { BarChart3, TrendingUp, Package, Users, Calendar, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
@@ -14,7 +15,8 @@ interface ComponentAnalytics {
 }
 
 const AnalyticsDashboard: React.FC = () => {
-  const { projects, componentStatus, customComponents } = useEditor();
+  const { projects } = useProject();
+  const { componentStatus, customComponents } = useAdmin();
   const [sortBy, setSortBy] = useState<'usage' | 'projects' | 'name'>('usage');
   const [filterType, setFilterType] = useState<'all' | 'standard' | 'custom'>('all');
 

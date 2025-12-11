@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useUI } from '../../contexts/core/UIContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { 
@@ -158,7 +158,7 @@ const CategoryChip: React.FC<{
 
 const SuperAdminDashboard = () => {
     const { t } = useTranslation();
-    const { adminView, setAdminView } = useEditor();
+    const { adminView, setAdminView } = useUI();
     const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');

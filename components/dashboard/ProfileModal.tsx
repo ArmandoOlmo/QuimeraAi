@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
 import Modal from '../ui/Modal';
 import { 
     auth, 
@@ -27,7 +27,7 @@ interface ProfileModalProps {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     const { t } = useTranslation();
-    const { user, userDocument, setUserDocument } = useEditor();
+    const { user, userDocument, setUserDocument } = useAuth();
     const [name, setName] = useState('');
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);

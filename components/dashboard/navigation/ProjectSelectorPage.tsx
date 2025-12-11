@@ -33,7 +33,8 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
-    const { projects, isLoadingProjects, setIsOnboardingOpen } = useEditor();
+    const { setIsOnboardingOpen } = useUI();
+    const { projects, isLoadingProjects } = useProject();
     
     // Local state
     const [searchQuery, setSearchQuery] = useState('');

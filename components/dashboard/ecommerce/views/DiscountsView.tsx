@@ -19,7 +19,7 @@ import {
     Clock,
     Loader2,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useDiscounts } from '../hooks/useDiscounts';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
@@ -27,7 +27,7 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 
 const DiscountsView: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const {

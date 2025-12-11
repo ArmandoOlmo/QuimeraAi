@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAdmin } from '../../../contexts/admin';
+import { useProject } from '../../../contexts/project';
 import { PageSection, CustomComponent } from '../../../types';
 import { Search, Filter, Package, BookOpen } from 'lucide-react';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
@@ -108,7 +109,8 @@ const componentCategories: Record<PageSection, string> = {
 };
 
 const ComponentLibrary: React.FC = () => {
-    const { componentStatus, updateComponentStatus, projects, customComponents } = useEditor();
+    const { componentStatus, updateComponentStatus, customComponents } = useAdmin();
+    const { projects } = useProject();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
     const [filterCategory, setFilterCategory] = useState<string>('all');

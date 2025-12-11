@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+import { useProject } from '../../contexts/project';
 import DashboardSidebar from './DashboardSidebar';
 import { 
     LayoutTemplate, 
@@ -26,7 +26,7 @@ import { INDUSTRIES } from '../../data/industries';
 
 const UserTemplates: React.FC = () => {
     const { t } = useTranslation();
-    const { projects, createProjectFromTemplate } = useEditor();
+    const { projects, createProjectFromTemplate } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Search and Filter States

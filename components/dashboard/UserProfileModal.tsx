@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAuth } from '../../contexts/core/AuthContext';
+import { useFiles } from '../../contexts/files';
 import { X, Camera, User, Mail, Shield, Save, Loader2 } from 'lucide-react';
 import { ROLE_LABELS, ROLE_COLORS } from '../../constants/roles';
 
@@ -9,7 +10,10 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose }) => {
-    const { userDocument, updateUserProfile, uploadFile } = useEditor();
+    const { userDocument } = useAuth();
+    const { uploadFile } = useFiles();
+    // TODO: Add updateUserProfile to AuthContext
+    const updateUserProfile = async (data: any) => { console.warn('updateUserProfile not implemented'); };
     const [name, setName] = useState(userDocument?.name || '');
     const [loading, setLoading] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);

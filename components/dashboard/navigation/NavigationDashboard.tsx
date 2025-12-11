@@ -2,7 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useUI } from '../../../contexts/core/UIContext';
+import { useCMS } from '../../../contexts/cms';
+import { useProject } from '../../../contexts/project';
 import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers } from 'lucide-react';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
@@ -10,7 +12,9 @@ import ProjectSelectorPage from './ProjectSelectorPage';
 
 const NavigationDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { menus, deleteMenu, saveMenu, activeProject, activeProjectId, projects, loadProject, data, setView } = useEditor();
+    const { setView } = useUI();
+    const { menus, deleteMenu, saveMenu } = useCMS();
+    const { activeProject, activeProjectId, projects, loadProject, data } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
     const [isCreating, setIsCreating] = useState(false);

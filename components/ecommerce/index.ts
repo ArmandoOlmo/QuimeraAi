@@ -20,6 +20,11 @@ export { default as ProductDetailPageWithCart } from './ProductDetailPageWithCar
 // Cart Context
 export { StorefrontCartProvider, useStorefrontCart } from './context';
 
+// Auth Context & Components
+export { StoreAuthProvider, useStoreAuth, useStoreAuthOptional } from './context';
+export { StoreAuthModal, UserAccountButton } from './auth';
+export { MyAccountPage } from './account';
+
 // Order
 export { default as OrderConfirmation } from './OrderConfirmation';
 export { default as OrderTracker } from './OrderTracker';
