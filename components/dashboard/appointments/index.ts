@@ -1,37 +1,22 @@
 /**
- * Appointments Module
- * Exportación centralizada de todos los componentes de gestión de citas
+ * Appointments Dashboard - Barrel Export
  */
 
-// Main Dashboard
 export { default as AppointmentsDashboard } from './AppointmentsDashboard';
 
-// Views
-export { CalendarWeekView } from './views/CalendarWeekView';
-export { CalendarMonthView } from './views/CalendarMonthView';
-export { CalendarDayView } from './views/CalendarDayView';
-export { AppointmentsListView } from './views/AppointmentsListView';
-
 // Components
-export { AppointmentCard } from './components/AppointmentCard';
-export { CreateAppointmentModal } from './components/CreateAppointmentModal';
-export { AppointmentDetailDrawer } from './components/AppointmentDetailDrawer';
-export { LeadContactSelector } from './components/LeadContactSelector';
-export { AIPreparationPanel } from './components/AIPreparationPanel';
-export { GoogleCalendarConnect } from './components/GoogleCalendarConnect';
+export { default as AppointmentCard } from './components/AppointmentCard';
+export { default as AppointmentDetailDrawer } from './components/AppointmentDetailDrawer';
+export { default as CreateAppointmentModal } from './components/CreateAppointmentModal';
+export { default as GoogleCalendarConnect } from './components/GoogleCalendarConnect';
+export { default as LeadContactSelector } from './components/LeadContactSelector';
+export { default as AIPreparationPanel } from './components/AIPreparationPanel';
+
+// Views
+export { default as AppointmentsListView } from './views/AppointmentsListView';
+export { default as CalendarDayView } from './views/CalendarDayView';
+export { default as CalendarMonthView } from './views/CalendarMonthView';
+export { default as CalendarWeekView } from './views/CalendarWeekView';
 
 // Hooks
 export { useAppointments } from './hooks/useAppointments';
-
-// Utils
-export * from './utils/appointmentHelpers';
-
-
-
-
-
-
-
-
-
-
