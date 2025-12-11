@@ -1,28 +1,54 @@
 /**
  * ViewRouter Component
  * Maneja el enrutamiento de vistas de la aplicación de manera centralizada
+ * 
+ * Performance: Uses React.lazy for code-splitting of view components
+ * Each dashboard is loaded only when needed, reducing initial bundle size
  */
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { View, UserDocument, PageData } from '../types';
-import Controls from './Controls';
-import LandingPage from './LandingPage';
-import BrowserPreview from './BrowserPreview';
-import SimpleEditorHeader from './SimpleEditorHeader';
+
+// Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
-import Dashboard from './dashboard/Dashboard';
-import SuperAdminDashboard from './dashboard/SuperAdminDashboard';
-import CMSDashboard from './cms/CMSDashboard';
-import NavigationDashboard from './dashboard/navigation/NavigationDashboard';
-import AiAssistantDashboard from './dashboard/ai/AiAssistantDashboard';
-import LeadsDashboard from './dashboard/leads/LeadsDashboard';
-import AppointmentsDashboard from './dashboard/appointments/AppointmentsDashboard';
-import DomainsDashboard from './dashboard/domains/DomainsDashboard';
-import SEODashboard from './dashboard/SEODashboard';
-import FinanceDashboard from './dashboard/finance/FinanceDashboard';
-import EcommerceDashboard from './dashboard/ecommerce/EcommerceDashboard';
-import EmailDashboard from './dashboard/email/EmailDashboard';
-import UserTemplates from './dashboard/UserTemplates';
+
+// Loading fallback for lazy components
+const ViewLoading = () => (
+    <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+            <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+    </div>
+);
+
+// ============================================================================
+// LAZY-LOADED COMPONENTS - Each view is loaded only when accessed
+// This significantly reduces initial bundle size
+// ============================================================================
+
+// Dashboard views
+const Dashboard = lazy(() => import('./dashboard/Dashboard'));
+const SuperAdminDashboard = lazy(() => import('./dashboard/SuperAdminDashboard'));
+const UserTemplates = lazy(() => import('./dashboard/UserTemplates'));
+
+// Feature dashboards
+const CMSDashboard = lazy(() => import('./cms/CMSDashboard'));
+const NavigationDashboard = lazy(() => import('./dashboard/navigation/NavigationDashboard'));
+const AiAssistantDashboard = lazy(() => import('./dashboard/ai/AiAssistantDashboard'));
+const LeadsDashboard = lazy(() => import('./dashboard/leads/LeadsDashboard'));
+const AppointmentsDashboard = lazy(() => import('./dashboard/appointments/AppointmentsDashboard'));
+const DomainsDashboard = lazy(() => import('./dashboard/domains/DomainsDashboard'));
+const SEODashboard = lazy(() => import('./dashboard/SEODashboard'));
+const FinanceDashboard = lazy(() => import('./dashboard/finance/FinanceDashboard'));
+const EcommerceDashboard = lazy(() => import('./dashboard/ecommerce/EcommerceDashboard'));
+const EmailDashboard = lazy(() => import('./dashboard/email/EmailDashboard'));
+
+// Editor components
+const Controls = lazy(() => import('./Controls'));
+const LandingPage = lazy(() => import('./LandingPage'));
+const BrowserPreview = lazy(() => import('./BrowserPreview'));
+const SimpleEditorHeader = lazy(() => import('./SimpleEditorHeader'));
 
 interface ViewRouterProps {
     view: View;
@@ -42,10 +68,10 @@ const hasAdminAccess = (role?: string): boolean => {
 };
 
 /**
- * Mapa de vistas a componentes
+ * Mapa de vistas a componentes lazy
  * Facilita agregar nuevas vistas sin modificar lógica condicional
  */
-const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
+const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
     'cms': CMSDashboard,
     'navigation': NavigationDashboard,
     'ai-assistant': AiAssistantDashboard,
@@ -61,6 +87,7 @@ const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
 
 /**
  * ViewRouter - Componente de enrutamiento principal
+ * Uses React.lazy + Suspense for code-splitting
  */
 const ViewRouter: React.FC<ViewRouterProps> = ({
     view,
@@ -75,18 +102,30 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
     // SuperAdmin View
     if (view === 'superadmin' && hasAdminAccess(userDocument?.role)) {
-        return <SuperAdminDashboard />;
+        return (
+            <Suspense fallback={<ViewLoading />}>
+                <SuperAdminDashboard />
+            </Suspense>
+        );
     }
 
     // Simple Dashboard Views (mapped components)
     const ViewComponent = VIEW_COMPONENTS[view];
     if (ViewComponent) {
-        return <ViewComponent />;
+        return (
+            <Suspense fallback={<ViewLoading />}>
+                <ViewComponent />
+            </Suspense>
+        );
     }
 
     // Dashboard Views (websites, assets, dashboard)
     if (view === 'dashboard' || view === 'websites' || view === 'assets' || !activeProjectId || !data) {
-        return <Dashboard />;
+        return (
+            <Suspense fallback={<ViewLoading />}>
+                <Dashboard />
+            </Suspense>
+        );
     }
 
     // Editor View (default)
@@ -101,20 +140,26 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
             
             {/* Main Editor Content */}
             <div className="flex flex-col flex-1 min-w-0">
-                <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+                <Suspense fallback={<ViewLoading />}>
+                    <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+                </Suspense>
                 
                 <div className="flex flex-1 overflow-hidden relative">
                     {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
-                    <Controls />
+                    <Suspense fallback={<ViewLoading />}>
+                        <Controls />
+                    </Suspense>
                     
                     {/* Preview Area - Hidden on mobile when Controls sidebar is open */}
                     <main className={`
                         flex-1 p-4 sm:p-8 flex justify-center overflow-auto
                         ${isSidebarOpen ? 'hidden md:flex' : 'flex'}
                     `}>
-                        <BrowserPreview ref={previewRef}>
-                            <LandingPage />
-                        </BrowserPreview>
+                        <Suspense fallback={<ViewLoading />}>
+                            <BrowserPreview ref={previewRef}>
+                                <LandingPage />
+                            </BrowserPreview>
+                        </Suspense>
                     </main>
                 </div>
             </div>

@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+// Migrated to modular contexts for better performance
+import { useAuth, useUI, useAdmin } from '../../contexts';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -45,7 +46,12 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, setView, userDocument, view, setAdminView, themeMode, setThemeMode, usage, isLoadingUsage, sidebarOrder, setSidebarOrder } = useEditor();
+  
+  // Using modular contexts - better performance
+  const { user, userDocument } = useAuth();
+  const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
+  const { usage, isLoadingUsage } = useAdmin();
+  
   const { navigate, path } = useRouter();
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true
@@ -146,6 +152,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories' },
     { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders' },
     { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers' },
+    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users' },
     { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts' },
     { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics' },
     { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings' },
@@ -434,6 +441,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
                 alt="Quimera Logo"
                 className="w-10 h-10 object-contain flex-shrink-0"
+                width={40}
+                height={40}
+                loading="eager"
+                decoding="async"
               />
               {/* Text Logo (Hidden when collapsed on desktop) */}
               <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>

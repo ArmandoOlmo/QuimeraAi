@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
+// Migrated to modular contexts for better performance
+import { useAuth, useProject, useUI } from '../../contexts';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
@@ -21,15 +22,12 @@ import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useI
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
-    const {
-        userDocument,
-        user,
-        projects,
-        isLoadingProjects,
-        view,
-        setIsOnboardingOpen,
-        addNewProject
-    } = useEditor();
+    
+    // Using modular contexts - each hook only subscribes to relevant state
+    const { user, userDocument } = useAuth();
+    const { projects, isLoadingProjects, addNewProject } = useProject();
+    const { view, isOnboardingOpen, setIsOnboardingOpen } = useUI();
+    
     const { navigate } = useRouter();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -441,6 +439,10 @@ const Dashboard: React.FC = () => {
                                                 src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
                                                 alt="Quimera Logo"
                                                 className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                                width={64}
+                                                height={64}
+                                                loading="eager"
+                                                decoding="async"
                                             />
                                             <span>
                                                 {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{userDocument?.name?.split(' ')[0] || 'Creator'}</span>.
@@ -505,6 +507,8 @@ const Dashboard: React.FC = () => {
                                             src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FALeTxAC97FPhl7ymtEhAn.jpg?alt=media&token=e1ed6666-f72c-41bc-ad51-165161f361c2"
                                             alt="Quimera AI Guide"
                                             className="w-auto h-full max-h-[400px] object-contain"
+                                            loading="lazy"
+                                            decoding="async"
                                         />
                                     </div>
 

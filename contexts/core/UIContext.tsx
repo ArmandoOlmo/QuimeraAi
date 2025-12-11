@@ -35,9 +35,17 @@ interface UIContextType {
     openProfileModal: () => void;
     closeProfileModal: () => void;
     
+    // Onboarding
+    isOnboardingOpen: boolean;
+    setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    
     // Theme
     themeMode: ThemeMode;
     setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
+    
+    // Sidebar Order (User Preferences)
+    sidebarOrder: string[];
+    setSidebarOrder: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -62,10 +70,19 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     
+    // Onboarding
+    const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+    
     // Theme - Load from localStorage
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
         const saved = localStorage.getItem('themeMode');
         return (saved as ThemeMode) || 'dark';
+    });
+    
+    // Sidebar Order - Load from localStorage
+    const [sidebarOrder, setSidebarOrder] = useState<string[]>(() => {
+        const saved = localStorage.getItem('sidebar-nav-order');
+        return saved ? JSON.parse(saved) : [];
     });
     
     // Functions
@@ -110,8 +127,12 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         isProfileModalOpen,
         openProfileModal,
         closeProfileModal,
+        isOnboardingOpen,
+        setIsOnboardingOpen,
         themeMode,
         setThemeMode,
+        sidebarOrder,
+        setSidebarOrder,
     };
     
     return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
