@@ -2,15 +2,30 @@
  * Contexts Index
  * Punto de entrada principal para todos los contextos de la aplicación
  * 
- * Importa contextos específicos:
- * import { useAuth } from '@/contexts';
- * import { useProject, useCRM } from '@/contexts';
+ * IMPORTANTE: La app actualmente usa EditorProvider (legacy).
+ * Los nuevos hooks modulares (useAuth, useProject, etc.) solo funcionan
+ * cuando la app esté envuelta en AppProviders.
  * 
- * O importa el wrapper completo:
- * import { AppProviders } from '@/contexts';
+ * Para migrar la app:
+ * 1. Reemplazar <EditorProvider> con <AppProviders> en App.tsx
+ * 2. Migrar componentes uno por uno a los nuevos hooks
+ * 
+ * Mientras tanto, usa useEditor() que sigue funcionando.
  */
 
-// App Providers (Composition)
+// =============================================================================
+// LEGACY EXPORTS (Usar mientras la app use EditorProvider)
+// =============================================================================
+export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
+export { ToastProvider, useToast } from './ToastContext';
+export { LanguageProvider, useLanguage } from './LanguageContext';
+
+// =============================================================================
+// NEW MODULAR CONTEXTS (Solo funcionan con AppProviders)
+// =============================================================================
+// NOTA: No usar estos hooks hasta migrar App.tsx a AppProviders
+
+// App Providers (Composition) - Para futura migración
 export { AppProviders, LightProviders } from './AppProviders';
 
 // Core Contexts
@@ -26,11 +41,5 @@ export { AdminProvider, useAdmin } from './admin';
 export { DomainsProvider, useDomains } from './domains';
 export { AIProvider, useAI } from './ai';
 
-// Legacy exports (para compatibilidad)
-// TODO: Migrar componentes a usar los nuevos hooks
-export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
-export { ToastProvider, useToast } from './ToastContext';
-export { LanguageProvider, useLanguage } from './LanguageContext';
-
-// Compatibility layer
+// Compatibility layer (para cuando se use AppProviders)
 export { useEditorCompat } from './compatibility';

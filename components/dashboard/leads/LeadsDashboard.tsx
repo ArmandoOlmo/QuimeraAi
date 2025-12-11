@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-// Migrated to modular contexts for better performance
-import { useAuth, useCRM, useAI, useProject } from '../../../contexts';
+import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
@@ -75,7 +74,7 @@ interface LeadCardProps {
 }
 
 const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
-    const { updateLead } = useCRM();
+    const { updateLead } = useEditor();
     const [showPalette, setShowPalette] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -235,23 +234,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
 
 const LeadsDashboard: React.FC = () => {
-    // Using modular contexts - better performance, granular re-renders
-    const { user } = useAuth();
-    const { 
-        leads, 
-        updateLeadStatus, 
-        deleteLead, 
-        addLead, 
-        updateLead,
-        addLeadActivity, 
-        getLeadActivities, 
-        addLeadTask, 
-        updateLeadTask, 
-        deleteLeadTask, 
-        getLeadTasks 
-    } = useCRM();
-    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    const { activeProject } = useProject();
+    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, hasApiKey, promptForKeySelection, handleApiError, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, user, activeProject } = useEditor();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);

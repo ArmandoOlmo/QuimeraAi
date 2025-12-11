@@ -1,8 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-// Migrated to modular contexts for better performance
-import { useAuth, useProject, useUI } from '../../contexts';
+import { useEditor } from '../../contexts/EditorContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
@@ -22,12 +21,15 @@ import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useI
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
-    
-    // Using modular contexts - each hook only subscribes to relevant state
-    const { user, userDocument } = useAuth();
-    const { projects, isLoadingProjects, addNewProject } = useProject();
-    const { view, isOnboardingOpen, setIsOnboardingOpen } = useUI();
-    
+    const {
+        userDocument,
+        user,
+        projects,
+        isLoadingProjects,
+        view,
+        setIsOnboardingOpen,
+        addNewProject
+    } = useEditor();
     const { navigate } = useRouter();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
