@@ -1,0 +1,1 @@
+export { useEditorCompat } from './useEditorCompat';
