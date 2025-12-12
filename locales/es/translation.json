@@ -911,7 +911,7 @@
     "location": "Ubicación",
     "priority": "Prioridad",
     "type": "Tipo",
-    "reminders": "Recordatorios",
+    "remindersLabel": "Recordatorios",
     "copyMeetingLink": "Copiar enlace de reunión",
     "downloadCalendar": "Descargar calendario (.ics)",
     "copyDetails": "Copiar detalles para compartir",

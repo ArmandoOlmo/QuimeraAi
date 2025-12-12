@@ -969,7 +969,7 @@
     "location": "Location",
     "priority": "Priority",
     "type": "Type",
-    "reminders": "Reminders",
+    "remindersLabel": "Reminders",
     "copyMeetingLink": "Copy meeting link",
     "downloadCalendar": "Download calendar (.ics)",
     "copyDetails": "Copy details to share",

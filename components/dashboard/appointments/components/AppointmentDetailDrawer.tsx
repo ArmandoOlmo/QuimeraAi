@@ -528,7 +528,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             {/* Reminders */}
                             <div>
                                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                                    {t('appointments.reminders')}
+                                    {t('appointments.remindersLabel')}
                                 </h4>
                                 <div className="space-y-2">
                                     {appointment.reminders.map(reminder => (
