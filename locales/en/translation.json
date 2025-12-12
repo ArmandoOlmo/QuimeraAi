@@ -3350,6 +3350,12 @@
       "open": "Open Project",
       "deleting": "Deleting..."
     },
+    "aria": {
+      "open": "Open {{name}}",
+      "select": "Select {{name}}",
+      "optionsMenu": "Project options menu",
+      "actionsMenu": "Project actions"
+    },
     "deleteConfirm": {
       "template": "Remove this template from your view?",
       "project": "Delete \"{{name}}\" permanently?"

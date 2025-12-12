@@ -200,7 +200,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             handleOpenProject();
           }
         }}
-        aria-label={`Open ${project.name}`}
+        aria-label={t('project.aria.open', { name: project.name })}
       >
         <img
           src={project.thumbnailUrl}
@@ -224,7 +224,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   onChange={handleCheckboxClick}
                   onClick={handleCheckboxClick}
                   className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-primary checked:border-primary cursor-pointer transition-all"
-                  aria-label={`Select ${project.name}`}
+                  aria-label={t('project.aria.select', { name: project.name })}
                 />
               </div>
             )}
@@ -256,7 +256,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   toggleMenu(e);
                 }}
                 className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors shadow-lg pointer-events-auto"
-                aria-label="Project options menu"
+                aria-label={t('project.aria.optionsMenu')}
                 aria-expanded={showMenu}
                 aria-haspopup="true"
               >
@@ -267,7 +267,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 <div
                   className="absolute right-0 top-full mt-2 w-44 bg-popover border border-border rounded-xl shadow-2xl py-2 flex flex-col z-30 animate-fade-in-up"
                   role="menu"
-                  aria-label="Project actions"
+                  aria-label={t('project.aria.actionsMenu')}
                 >
                   <button
                     onClick={handleEditClick}

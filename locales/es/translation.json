@@ -3462,6 +3462,12 @@
         "open": "Abrir Proyecto",
         "deleting": "Eliminando..."
       },
+      "aria": {
+        "open": "Abrir {{name}}",
+        "select": "Seleccionar {{name}}",
+        "optionsMenu": "Menú de opciones del proyecto",
+        "actionsMenu": "Acciones del proyecto"
+      },
       "deleteConfirm": {
         "template": "¿Eliminar esta plantilla de tu vista?",
         "project": "¿Eliminar \"{{name}}\" permanentemente?"
