@@ -53,7 +53,7 @@ const AppContent: React.FC<AppContentProps> = ({
 }) => {
   const { userDocument } = useAuth();
   const { view, setView, setAdminView, isSidebarOpen, setIsSidebarOpen, previewRef } = useUI();
-  const { activeProjectId, loadProject, data } = useProject();
+  const { activeProjectId, loadProject, data, isLoadingProjects } = useProject();
   const seoConfig = useSEO();
 
   // Sync route state with contexts
@@ -65,10 +65,11 @@ const AppContent: React.FC<AppContentProps> = ({
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
-    if (routeProjectId && routeProjectId !== activeProjectId) {
+    // Only attempt to load project after projects have finished loading
+    if (routeProjectId && routeProjectId !== activeProjectId && !isLoadingProjects) {
       loadProject(routeProjectId, false, false);
     }
-  }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject]);
+  }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects]);
 
   return (
     <>

@@ -453,3 +453,4 @@ export interface WelcomeEmailVariables {
     socialLinks?: EmailSocialLinks;
 }
 
+

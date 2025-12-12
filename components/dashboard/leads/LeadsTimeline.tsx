@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LeadActivity, ActivityType } from '../../../types';
 import { Phone, Mail, Calendar, MessageSquare, TrendingUp, CheckCircle, Plus, Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const ACTIVITY_ICONS: Record<ActivityType, { icon: React.ElementType; color: str
 };
 
 const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity }) => {
+    const { t } = useTranslation();
     const [isAdding, setIsAdding] = useState(false);
     const [newActivity, setNewActivity] = useState<{ type: ActivityType; title: string; description: string }>({
         type: 'note',
@@ -57,20 +59,20 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays < 7) return `${diffDays}d ago`;
-        
+
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
     };
 
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Activity Timeline</h3>
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t('leads.timeline.title')}</h3>
                 {!isAdding && (
-                    <button 
+                    <button
                         onClick={() => setIsAdding(true)}
                         className="text-xs text-primary hover:underline font-bold flex items-center"
                     >
-                        <Plus size={12} className="mr-1" /> Log Activity
+                        <Plus size={12} className="mr-1" />{t('leads.timeline.logActivity')}
                     </button>
                 )}
             </div>
@@ -81,9 +83,9 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-xs text-muted-foreground mb-1 block">Type</label>
-                            <select 
+                            <select
                                 value={newActivity.type}
-                                onChange={e => setNewActivity({...newActivity, type: e.target.value as ActivityType})}
+                                onChange={e => setNewActivity({ ...newActivity, type: e.target.value as ActivityType })}
                                 className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
                                 <option value="call">Phone Call</option>
@@ -94,10 +96,10 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground mb-1 block">Title</label>
-                            <input 
+                            <input
                                 type="text"
                                 value={newActivity.title}
-                                onChange={e => setNewActivity({...newActivity, title: e.target.value})}
+                                onChange={e => setNewActivity({ ...newActivity, title: e.target.value })}
                                 placeholder="Quick summary..."
                                 className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 required
@@ -106,16 +108,16 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                     </div>
                     <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Description (optional)</label>
-                        <textarea 
+                        <textarea
                             value={newActivity.description}
-                            onChange={e => setNewActivity({...newActivity, description: e.target.value})}
+                            onChange={e => setNewActivity({ ...newActivity, description: e.target.value })}
                             placeholder="Additional details..."
                             className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                             rows={2}
                         />
                     </div>
                     <div className="flex gap-2 justify-end">
-                        <button 
+                        <button
                             type="button"
                             onClick={() => {
                                 setIsAdding(false);
@@ -125,13 +127,13 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button
                             type="submit"
                             disabled={isSubmitting || !newActivity.title.trim()}
                             className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90 transition-colors disabled:opacity-50 flex items-center"
                         >
                             {isSubmitting ? <Loader2 size={12} className="animate-spin mr-1" /> : <Plus size={12} className="mr-1" />}
-                            Add Activity
+                            {t('leads.timeline.addActivity')}
                         </button>
                     </div>
                 </form>
@@ -141,25 +143,25 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
             <div className="space-y-3">
                 {activities.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-sm italic">
-                        No activities yet. Log your first interaction!
+                        {t('leads.timeline.noActivities')}
                     </div>
                 ) : (
                     activities.map((activity, index) => {
                         const config = ACTIVITY_ICONS[activity.type];
                         const Icon = config.icon;
-                        
+
                         return (
                             <div key={activity.id} className="relative flex gap-3">
                                 {/* Timeline Line */}
                                 {index < activities.length - 1 && (
                                     <div className="absolute left-[15px] top-8 w-0.5 h-full bg-border" />
                                 )}
-                                
+
                                 {/* Icon */}
                                 <div className={`relative z-10 shrink-0 w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center`}>
                                     <Icon size={14} className={config.color} />
                                 </div>
-                                
+
                                 {/* Content */}
                                 <div className="flex-1 pb-4">
                                     <div className="flex items-start justify-between gap-2">

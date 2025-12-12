@@ -110,3 +110,4 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
 
 export default WishlistButton;
 
+

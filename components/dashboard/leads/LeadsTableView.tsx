@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lead, LeadStatus } from '../../../types';
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Eye, Edit, Trash2, Bot, LayoutGrid } from 'lucide-react';
 
@@ -23,14 +24,15 @@ const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
     lost: 'bg-red-500',
 };
 
-const LeadsTableView: React.FC<LeadsTableViewProps> = ({ 
-    leads, 
-    onLeadClick, 
+const LeadsTableView: React.FC<LeadsTableViewProps> = ({
+    leads,
+    onLeadClick,
     onDelete,
     selectedLeadIds,
     onToggleSelect,
     onToggleSelectAll
 }) => {
+    const { t } = useTranslation();
     const [sortField, setSortField] = useState<SortField>('createdAt');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [currentPage, setCurrentPage] = useState(1);
@@ -99,12 +101,12 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
         if (sortField !== field) {
             return <ArrowUpDown size={14} className="text-muted-foreground" />;
         }
-        return sortDirection === 'asc' ? 
-            <ArrowUp size={14} className="text-primary" /> : 
+        return sortDirection === 'asc' ?
+            <ArrowUp size={14} className="text-primary" /> :
             <ArrowDown size={14} className="text-primary" />;
     };
 
-    const allPageLeadsSelected = paginatedLeads.length > 0 && 
+    const allPageLeadsSelected = paginatedLeads.length > 0 &&
         paginatedLeads.every(lead => selectedLeadIds.includes(lead.id));
 
     return (
@@ -127,7 +129,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('name')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Name
+                                    {t('common.name')}
                                     <SortIcon field="name" />
                                 </button>
                             </th>
@@ -136,7 +138,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('email')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Email
+                                    {t('leads.email')}
                                     <SortIcon field="email" />
                                 </button>
                             </th>
@@ -145,7 +147,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('company')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Company
+                                    {t('leads.company')}
                                     <SortIcon field="company" />
                                 </button>
                             </th>
@@ -154,7 +156,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('value')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Value
+                                    {t('leads.value')}
                                     <SortIcon field="value" />
                                 </button>
                             </th>
@@ -163,7 +165,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('status')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Status
+                                    {t('leads.status')}
                                     <SortIcon field="status" />
                                 </button>
                             </th>
@@ -172,15 +174,15 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     onClick={() => handleSort('aiScore')}
                                     className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
-                                    Score
+                                    {t('leads.score')}
                                     <SortIcon field="aiScore" />
                                 </button>
                             </th>
                             <th className="px-4 py-3 text-left">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Source</span>
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('leads.source')}</span>
                             </th>
                             <th className="px-4 py-3 text-right">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Actions</span>
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('leads.actions')}</span>
                             </th>
                         </tr>
                     </thead>
@@ -188,9 +190,8 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                         {paginatedLeads.map((lead, index) => (
                             <tr
                                 key={lead.id}
-                                className={`border-b border-border hover:bg-secondary/10 transition-colors ${
-                                    index % 2 === 0 ? 'bg-card' : 'bg-secondary/5'
-                                }`}
+                                className={`border-b border-border hover:bg-secondary/10 transition-colors ${index % 2 === 0 ? 'bg-card' : 'bg-secondary/5'
+                                    }`}
                             >
                                 <td className="px-4 py-3">
                                     <input
@@ -225,11 +226,10 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                 <td className="px-4 py-3">
                                     {lead.aiScore !== undefined ? (
                                         <div className="flex items-center gap-1">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${
-                                                lead.aiScore > 75 ? 'bg-green-500' : 
-                                                lead.aiScore > 40 ? 'bg-yellow-500' : 
-                                                'bg-red-500'
-                                            }`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
+                                                    lead.aiScore > 40 ? 'bg-yellow-500' :
+                                                        'bg-red-500'
+                                                }`} />
                                             <span className="text-sm font-bold">{lead.aiScore}</span>
                                         </div>
                                     ) : (
@@ -275,7 +275,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
 
                 {paginatedLeads.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
-                        No leads found
+                        {t('leads.noLeadsFound')}
                     </div>
                 )}
             </div>

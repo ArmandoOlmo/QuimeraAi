@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai';
 import { Shield, Save, Sparkles } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
 
 const LeadCaptureSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
-    
+
     const defaultConfig: LeadCaptureConfig = {
         enabled: true,
         preChatForm: false,
@@ -20,7 +21,7 @@ const LeadCaptureSettings: React.FC = () => {
     const [config, setConfig] = useState<LeadCaptureConfig>(
         aiAssistantConfig.leadCaptureConfig || defaultConfig
     );
-    
+
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -185,7 +186,7 @@ const LeadCaptureSettings: React.FC = () => {
             {/* Trigger Settings */}
             <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                 <h3 className="font-bold text-foreground text-lg">Trigger Settings</h3>
-                
+
                 {/* Messages Threshold */}
                 <div>
                     <label className="block text-sm font-medium text-foreground mb-2">

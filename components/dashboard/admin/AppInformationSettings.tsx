@@ -78,7 +78,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [statusMessage, setStatusMessage] = useState<string>('Ready to edit your global app information.');
+    const [statusMessage, setStatusMessage] = useState<string>(t('superadmin.appInfo.readyToEdit'));
     const [uploadingAsset, setUploadingAsset] = useState<'favicon' | 'social' | null>(null);
 
     const [appName, setAppName] = useState(getDefaultConfig().appName);
@@ -116,11 +116,11 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                     const defaults = getDefaultConfig();
                     hydrateState(defaults);
                     setSavedConfig(defaults);
-                    setStatusMessage('Start by adding your brand information and hit save.');
+                    setStatusMessage(t('superadmin.appInfo.startAdding'));
                 }
             } catch (error) {
                 console.error('Error loading app information:', error);
-                showError('No se pudo cargar la información de la aplicación.');
+                showError(t('superadmin.appInfo.loadError'));
             } finally {
                 setIsLoading(false);
                 setHasUnsavedChanges(false);
@@ -153,10 +153,10 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         if (config.updatedAt) {
             const formattedDate = new Date(config.updatedAt).toLocaleString();
             setStatusMessage(
-                `Última actualización ${formattedDate} por ${config.updatedBy || 'Super Admin'}`
+                t('superadmin.appInfo.lastUpdatedBy', { date: formattedDate, user: config.updatedBy || 'Super Admin' })
             );
         } else {
-            setStatusMessage('Ready to edit your global app information.');
+            setStatusMessage(t('superadmin.appInfo.readyToEdit'));
         }
     };
 
@@ -193,10 +193,10 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
             setSavedConfig(payload);
             updateStatusMessage(payload);
             setHasUnsavedChanges(false);
-            success('Información global guardada correctamente.');
+            success(t('superadmin.appInfo.saveSuccess'));
         } catch (error) {
             console.error('Error saving app information:', error);
-            showError('No se pudo guardar la información. Intenta nuevamente.');
+            showError(t('superadmin.appInfo.saveError'));
         } finally {
             setIsSaving(false);
         }
@@ -206,20 +206,20 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         if (savedConfig) {
             hydrateState(savedConfig);
             setHasUnsavedChanges(false);
-            info('Restauraste la última versión guardada.');
+            info(t('superadmin.appInfo.resetSuccess'));
         }
     };
 
     const validateImage = (file: File, type: 'favicon' | 'social') => {
         const maxSize = type === 'favicon' ? 512 * 1024 : 3 * 1024 * 1024; // 512 KB vs 3 MB
         if (!file.type.startsWith('image/')) {
-            showError('Solo se aceptan imágenes.');
+            showError(t('superadmin.appInfo.imageOnly'));
             return false;
         }
         if (file.size > maxSize) {
             showError(type === 'favicon'
-                ? 'El favicon debe pesar menos de 512 KB.'
-                : 'La imagen social debe pesar menos de 3 MB.');
+                ? t('superadmin.appInfo.faviconSizeError')
+                : t('superadmin.appInfo.socialSizeError'));
             return false;
         }
         return true;
@@ -241,19 +241,19 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                 }
                 setFaviconUrl(downloadURL);
                 setFaviconStoragePath(storagePath);
-                success('Favicon actualizado.');
+                success(t('superadmin.appInfo.faviconUpdated'));
             } else {
                 if (socialImageStoragePath && socialImageStoragePath !== storagePath) {
                     await deleteObject(ref(storage, socialImageStoragePath)).catch(() => undefined);
                 }
                 setSocialImageUrl(downloadURL);
                 setSocialImageStoragePath(storagePath);
-                success('Imagen para redes actualizada.');
+                success(t('superadmin.appInfo.socialUpdated'));
             }
             setHasUnsavedChanges(true);
         } catch (error) {
             console.error('Asset upload error:', error);
-            showError('No se pudo subir el archivo. Intenta nuevamente.');
+            showError(t('messages.uploadError'));
         } finally {
             setUploadingAsset(null);
         }
@@ -267,25 +267,25 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                 }
                 setFaviconUrl('');
                 setFaviconStoragePath(undefined);
-                success('Favicon eliminado.');
+                success(t('superadmin.appInfo.faviconRemoved'));
             } else {
                 if (socialImageStoragePath) {
                     await deleteObject(ref(storage, socialImageStoragePath)).catch(() => undefined);
                 }
                 setSocialImageUrl('');
                 setSocialImageStoragePath(undefined);
-                success('Imagen social eliminada.');
+                success(t('superadmin.appInfo.socialRemoved'));
             }
             setHasUnsavedChanges(true);
         } catch (error) {
             console.error('Asset removal error:', error);
-            showError('No se pudo eliminar el archivo.');
+            showError(t('messages.deleteError'));
         }
     };
 
     const renderCharCounter = (current: number, limit: number) => (
         <div className="flex justify-end text-xs text-editor-text-secondary mt-1">
-            {current}/{limit} caracteres
+            {current}/{limit} {t('superadmin.appInfo.chars')}
         </div>
     );
 
@@ -298,7 +298,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors"
-                            title="Open menu"
+                            title={t('common.openMenu')}
                         >
                             <Menu className="w-4 h-4" />
                         </button>
@@ -310,7 +310,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                 </h1>
                                 {hasUnsavedChanges && (
                                     <span className="text-xs font-semibold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
-                                        Cambios sin guardar
+                                        {t('superadmin.appInfo.unsavedChanges')}
                                     </span>
                                 )}
                             </div>
@@ -319,12 +319,19 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                     </div>
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={onBack}
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            {t('superadmin.backToAdmin')}
+                        </button>
+                        <button
                             onClick={handleReset}
                             disabled={!savedConfig || isSaving}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                         >
                             <RefreshCcw className="w-4 h-4" />
-                            Reset
+                            {t('superadmin.appInfo.reset')}
                         </button>
                         <button
                             onClick={handleSave}
@@ -332,14 +339,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                             className="h-9 px-3 text-editor-accent font-medium text-sm hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center gap-1.5"
                         >
                             <Save className="w-4 h-4" />
-                            {isSaving ? 'Guardando...' : 'Guardar cambios'}
-                        </button>
-                        <button
-                            onClick={onBack}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Admin
+                            {isSaving ? t('superadmin.saving') : t('superadmin.appInfo.saveChanges')}
                         </button>
                     </div>
                 </header>
@@ -357,15 +357,15 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         <div className="flex items-center gap-2 mb-4">
                                             <Sparkles className="text-editor-accent w-5 h-5" />
                                             <div>
-                                                <h2 className="text-xl font-semibold">Brand Identity</h2>
+                                                <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandIdentity')}</h2>
                                                 <p className="text-sm text-editor-text-secondary">
-                                                    Define el nombre oficial, tagline y datos básicos visibles en toda la plataforma.
+                                                    {t('superadmin.appInfo.brandIdentityDesc')}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">App Name</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.appName')}</label>
                                                 <input
                                                     type="text"
                                                     value={appName}
@@ -375,7 +375,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Tagline</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.tagline')}</label>
                                                 <input
                                                     type="text"
                                                     value={tagline}
@@ -385,7 +385,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Primary Domain</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.primaryDomain')}</label>
                                                 <input
                                                     type="url"
                                                     value={primaryDomain}
@@ -395,7 +395,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Support Email</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.supportEmail')}</label>
                                                 <input
                                                     type="email"
                                                     value={supportEmail}
@@ -405,7 +405,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 />
                                             </div>
                                             <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium mb-1">Documentation URL</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.documentationUrl')}</label>
                                                 <input
                                                     type="url"
                                                     value={documentationUrl}
@@ -421,15 +421,15 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         <div className="flex items-center gap-2 mb-4">
                                             <Info className="text-blue-400 w-5 h-5" />
                                             <div>
-                                                <h2 className="text-xl font-semibold">Site Description</h2>
+                                                <h2 className="text-xl font-semibold">{t('superadmin.appInfo.siteDescription')}</h2>
                                                 <p className="text-sm text-editor-text-secondary">
-                                                    Controla la descripción corta y extendida utilizada en emails, snippets y templates.
+                                                    {t('superadmin.appInfo.siteDescriptionDesc')}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Short Description</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.shortDescription')}</label>
                                                 <textarea
                                                     rows={3}
                                                     value={siteDescription}
@@ -440,7 +440,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 {renderCharCounter(siteDescription.length, SITE_DESCRIPTION_LIMIT)}
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Narrative / Long Description</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.longDescription')}</label>
                                                 <textarea
                                                     rows={5}
                                                     value={longDescription}
@@ -457,15 +457,15 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         <div className="flex items-center gap-2 mb-4">
                                             <Globe className="text-green-400 w-5 h-5" />
                                             <div>
-                                                <h2 className="text-xl font-semibold">Metadata Defaults</h2>
+                                                <h2 className="text-xl font-semibold">{t('superadmin.appInfo.metadataDefaults')}</h2>
                                                 <p className="text-sm text-editor-text-secondary">
-                                                    Define el meta title, descripción y keywords usados por defecto en las nuevas propiedades.
+                                                    {t('superadmin.appInfo.metadataDefaultsDesc')}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Meta Title</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.metaTitle')}</label>
                                                 <input
                                                     type="text"
                                                     value={metaTitle}
@@ -474,7 +474,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Meta Description</label>
+                                                <label className="block text-sm font-medium mb-1">{t('superadmin.appInfo.metaDescription')}</label>
                                                 <textarea
                                                     rows={3}
                                                     value={metaDescription}
@@ -486,7 +486,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">
-                                                    Keywords (separados por coma)
+                                                    {t('superadmin.appInfo.keywordsLabel')}
                                                 </label>
                                                 <input
                                                     type="text"
@@ -503,24 +503,24 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         <div className="flex items-center gap-2 mb-4">
                                             <ImageIcon className="text-purple-400 w-5 h-5" />
                                             <div>
-                                                <h2 className="text-xl font-semibold">Brand Assets</h2>
+                                                <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandAssets')}</h2>
                                                 <p className="text-sm text-editor-text-secondary">
-                                                    Sube un favicon global y la imagen base para previews sociales.
+                                                    {t('superadmin.appInfo.brandAssetsDesc')}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <AssetUploader
-                                                title="Favicon"
-                                                description="PNG, SVG o ICO · 512 KB máx."
+                                                title={t('superadmin.appInfo.favicon')}
+                                                description={t('superadmin.appInfo.faviconFormat')}
                                                 imageUrl={faviconUrl}
                                                 isUploading={uploadingAsset === 'favicon'}
                                                 onUpload={() => faviconInputRef.current?.click()}
                                                 onRemove={() => handleRemoveAsset('favicon')}
                                             />
                                             <AssetUploader
-                                                title="Social Preview"
-                                                description="1200x630 recomendado · 3 MB máx."
+                                                title={t('superadmin.appInfo.socialPreview')}
+                                                description={t('superadmin.appInfo.socialFormat')}
                                                 imageUrl={socialImageUrl}
                                                 isUploading={uploadingAsset === 'social'}
                                                 onUpload={() => socialImageInputRef.current?.click()}
@@ -556,22 +556,22 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-5">
                                         <div className="flex items-center gap-2 mb-4">
                                             <CheckCircle className="text-editor-accent w-5 h-5" />
-                                            <h3 className="text-lg font-semibold">Live Preview</h3>
+                                            <h3 className="text-lg font-semibold">{t('superadmin.appInfo.livePreview')}</h3>
                                         </div>
                                         <div className="space-y-3 text-sm">
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">Meta Title</p>
+                                                <p className="text-editor-text-secondary text-xs uppercase">{t('superadmin.appInfo.metaTitle')}</p>
                                                 <p className="text-editor-text-primary font-medium">{metaTitle || '—'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">Description</p>
+                                                <p className="text-editor-text-secondary text-xs uppercase">{t('superadmin.voiceDescription')}</p>
                                                 <p className="text-editor-text-secondary">{metaDescription || '—'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">Keywords</p>
+                                                <p className="text-editor-text-secondary text-xs uppercase">{t('seo.keywords')}</p>
                                                 <div className="flex flex-wrap gap-2 mt-1">
                                                     {keywordsArray.length === 0 ? (
-                                                        <span className="text-editor-text-secondary text-xs">No keywords</span>
+                                                        <span className="text-editor-text-secondary text-xs">{t('superadmin.appInfo.noKeywords')}</span>
                                                     ) : (
                                                         keywordsArray.map(keyword => (
                                                             <span key={keyword} className="text-xs px-2 py-1 rounded-full bg-editor-border/60 text-editor-text-secondary">
@@ -585,24 +585,24 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     </div>
 
                                     <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-5">
-                                        <h3 className="text-lg font-semibold mb-3">Publishing checklist</h3>
+                                        <h3 className="text-lg font-semibold mb-3">{t('superadmin.appInfo.publishingChecklist')}</h3>
                                         <ul className="space-y-3 text-sm">
-                                            <ChecklistItem checked={Boolean(faviconUrl)} label="Favicon subido" />
-                                            <ChecklistItem checked={Boolean(socialImageUrl)} label="Imagen social configurada" />
-                                            <ChecklistItem checked={siteDescription.length >= 60} label="Descripción corta (>60 caracteres)" />
-                                            <ChecklistItem checked={metaDescription.length >= 80} label="Meta description optimizada" />
-                                            <ChecklistItem checked={keywordsArray.length >= 3} label="Mínimo 3 keywords" />
+                                            <ChecklistItem checked={Boolean(faviconUrl)} label={t('superadmin.appInfo.faviconUploaded')} />
+                                            <ChecklistItem checked={Boolean(socialImageUrl)} label={t('superadmin.appInfo.socialConfigured')} />
+                                            <ChecklistItem checked={siteDescription.length >= 60} label={t('superadmin.appInfo.shortDescCheck')} />
+                                            <ChecklistItem checked={metaDescription.length >= 80} label={t('superadmin.appInfo.metaDescCheck')} />
+                                            <ChecklistItem checked={keywordsArray.length >= 3} label={t('superadmin.appInfo.minKeywords')} />
                                         </ul>
                                     </div>
 
                                     <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 space-y-3 text-sm text-editor-text-secondary">
                                         <h3 className="text-blue-400 font-semibold flex items-center gap-2">
                                             <Info className="w-4 h-4" />
-                                            Recomendaciones
+                                            {t('superadmin.appInfo.recommendations')}
                                         </h3>
-                                        <p>• Mantén el meta title debajo de 60 caracteres.</p>
-                                        <p>• Utiliza el long description como base para IA y documentación.</p>
-                                        <p>• Actualiza favicon/social image si cambias de branding.</p>
+                                        <p>• {t('superadmin.appInfo.recMetaTitle')}</p>
+                                        <p>• {t('superadmin.appInfo.recLongDesc')}</p>
+                                        <p>• {t('superadmin.appInfo.recUpdateAssets')}</p>
                                     </div>
                                 </aside>
                             </div>
@@ -623,41 +623,44 @@ interface AssetUploaderProps {
     onRemove: () => void;
 }
 
-const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, imageUrl, isUploading, onUpload, onRemove }) => (
-    <div className="p-4 border border-dashed border-editor-border rounded-lg bg-editor-bg">
-        <div className="flex items-center justify-between mb-3">
-            <div>
-                <p className="text-sm font-semibold text-editor-text-primary">{title}</p>
-                <p className="text-xs text-editor-text-secondary">{description}</p>
-            </div>
-            {imageUrl && (
-                <button
-                    onClick={onRemove}
-                    className="text-xs text-red-500 hover:text-red-400 transition-colors"
-                >
-                    Remove
-                </button>
-            )}
-        </div>
-        <div className="aspect-video bg-editor-panel-bg flex items-center justify-center rounded-lg mb-3 border border-editor-border/60 overflow-hidden">
-            {imageUrl ? (
-                <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-            ) : (
-                <div className="text-center text-editor-text-secondary text-xs px-4">
-                    No file uploaded
+const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, imageUrl, isUploading, onUpload, onRemove }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="p-4 border border-dashed border-editor-border rounded-lg bg-editor-bg">
+            <div className="flex items-center justify-between mb-3">
+                <div>
+                    <p className="text-sm font-semibold text-editor-text-primary">{title}</p>
+                    <p className="text-xs text-editor-text-secondary">{description}</p>
                 </div>
-            )}
+                {imageUrl && (
+                    <button
+                        onClick={onRemove}
+                        className="text-xs text-red-500 hover:text-red-400 transition-colors"
+                    >
+                        {t('superadmin.appInfo.remove')}
+                    </button>
+                )}
+            </div>
+            <div className="aspect-video bg-editor-panel-bg flex items-center justify-center rounded-lg mb-3 border border-editor-border/60 overflow-hidden">
+                {imageUrl ? (
+                    <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="text-center text-editor-text-secondary text-xs px-4">
+                        {t('superadmin.appInfo.noFileUploaded')}
+                    </div>
+                )}
+            </div>
+            <button
+                onClick={onUpload}
+                disabled={isUploading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-editor-border text-sm font-medium hover:bg-editor-border/40 transition-colors disabled:opacity-50"
+            >
+                <Upload className="w-4 h-4" />
+                {isUploading ? t('superadmin.appInfo.uploading') : imageUrl ? t('superadmin.appInfo.updateFile') : t('superadmin.appInfo.uploadFile')}
+            </button>
         </div>
-        <button
-            onClick={onUpload}
-            disabled={isUploading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-editor-border text-sm font-medium hover:bg-editor-border/40 transition-colors disabled:opacity-50"
-        >
-            <Upload className="w-4 h-4" />
-            {isUploading ? 'Subiendo...' : imageUrl ? 'Actualizar archivo' : 'Subir archivo'}
-        </button>
-    </div>
-);
+    );
+};
 
 const ChecklistItem: React.FC<{ checked: boolean; label: string }> = ({ checked, label }) => (
     <li className="flex items-center gap-2">

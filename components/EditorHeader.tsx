@@ -4,7 +4,6 @@ import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
 import ThemeToggle from './ui/ThemeToggle';
-import LanguageSelector from './ui/LanguageSelector';
 // Replaced non-existent 'Cube' icon with 'Box'.
 import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box } from 'lucide-react';
 
@@ -59,7 +58,7 @@ const EditorHeader: React.FC = () => {
     saveProject();
     setSaveState('saved');
     setTimeout(() => {
-        setSaveState('idle');
+      setSaveState('idle');
     }, 2500);
   };
 
@@ -87,12 +86,12 @@ const EditorHeader: React.FC = () => {
   return (
     <header className="bg-editor-bg border-b border-editor-border/50 h-14 flex-shrink-0 z-20">
       <div className="h-full flex items-center justify-between px-3 gap-3">
-        
+
         {/* LEFT SECTION - Navigation & Project */}
         <div className="flex items-center gap-2 min-w-0">
           {/* Mobile Menu */}
-          <button 
-            title={t('editor.toggleSidebar')} 
+          <button
+            title={t('editor.toggleSidebar')}
             className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full transition-colors md:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
@@ -100,8 +99,8 @@ const EditorHeader: React.FC = () => {
           </button>
 
           {/* Dashboard Button */}
-          <button 
-            title={t('editor.goToDashboard')} 
+          <button
+            title={t('editor.goToDashboard')}
             className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-md transition-colors"
             onClick={handleGoToDashboard}
           >
@@ -142,11 +141,10 @@ const EditorHeader: React.FC = () => {
                 key={name}
                 title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
                 onClick={() => setPreviewDevice(name)}
-                className={`h-9 w-9 flex items-center justify-center transition-all ${
-                  previewDevice === name 
-                    ? 'text-editor-accent' 
+                className={`h-9 w-9 flex items-center justify-center transition-all ${previewDevice === name
+                    ? 'text-editor-accent'
                     : 'text-editor-text-secondary hover:text-editor-text-primary'
-                }`}
+                  }`}
               >
                 {icon}
               </button>
@@ -159,13 +157,12 @@ const EditorHeader: React.FC = () => {
                 title={`${option.label}${orientationDisabled ? ` (${t('editor.desktopOnlyLandscape')})` : ''}`}
                 onClick={() => setPreviewOrientation(option.value)}
                 disabled={orientationDisabled}
-                className={`h-9 w-9 text-xs font-semibold transition-all ${
-                  previewOrientation === option.value
+                className={`h-9 w-9 text-xs font-semibold transition-all ${previewOrientation === option.value
                     ? 'text-editor-accent'
                     : 'text-editor-text-secondary hover:text-editor-text-primary'
-                } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-pressed={previewOrientation === option.value}
-                aria-label={`Preview ${option.label}`}
+                aria-label={`${t('editor.preview')} ${option.label}`}
               >
                 {option.short}
               </button>
@@ -175,9 +172,8 @@ const EditorHeader: React.FC = () => {
 
         {/* RIGHT SECTION - Actions */}
         <div className="flex items-center gap-1">
-          {/* Theme & Language - Subtle icons only */}
+          {/* Theme Toggle */}
           <ThemeToggle />
-          <LanguageSelector />
 
           {/* Save Button - Subtle */}
           <button

@@ -119,39 +119,39 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         {
             label: 'Quimera Vision Pro',
             value: 'gemini-3-pro-image-preview',
-            description: t('editor.quimeraVisionProDesc', { defaultValue: 'Best quality, text in images, thinking level' }),
+            description: t('editor.quimeraVisionProDesc'),
             icon: 'vision'
         },
         {
             label: 'Quimera Ultra',
             value: 'imagen-4.0-ultra-generate-001',
-            description: t('editor.quimeraUltraDesc', { defaultValue: 'Highest quality, slower generation' }),
+            description: t('editor.quimeraUltraDesc'),
             icon: 'ultra'
         },
         {
             label: 'Quimera Standard',
             value: 'imagen-4.0-generate-001',
-            description: t('editor.quimeraStandardDesc', { defaultValue: 'Balanced quality and speed' }),
+            description: t('editor.quimeraStandardDesc'),
             icon: 'standard'
         },
         {
             label: 'Quimera Fast',
             value: 'imagen-4.0-fast-generate-001',
-            description: t('editor.quimeraFastDesc', { defaultValue: 'Fastest generation, good quality' }),
+            description: t('editor.quimeraFastDesc'),
             icon: 'fast'
         },
     ];
 
     const THINKING_LEVELS = [
-        { label: t('editor.none', { defaultValue: 'None' }), value: 'none', description: 'No thinking, fastest' },
-        { label: t('editor.low', { defaultValue: 'Low' }), value: 'low', description: 'Basic reasoning' },
-        { label: t('editor.medium', { defaultValue: 'Medium' }), value: 'medium', description: 'Balanced thinking' },
-        { label: t('editor.high', { defaultValue: 'High' }), value: 'high', description: 'Deep reasoning, best for text' },
+        { label: t('editor.none'), value: 'none', description: t('editor.noThinkingDesc', { defaultValue: 'No thinking, fastest' }) },
+        { label: t('editor.low'), value: 'low', description: t('editor.basicReasoningDesc', { defaultValue: 'Basic reasoning' }) },
+        { label: t('editor.medium'), value: 'medium', description: t('editor.balancedThinkingDesc', { defaultValue: 'Balanced thinking' }) },
+        { label: t('editor.high'), value: 'high', description: t('editor.deepReasoningDesc', { defaultValue: 'Deep reasoning, best for text' }) },
     ];
 
     const PERSON_GENERATION = [
-        { label: t('editor.allowAdults', { defaultValue: 'Allow Adults' }), value: 'allow_adult', description: 'Generate adult people' },
-        { label: t('editor.dontAllow', { defaultValue: "Don't Allow" }), value: 'dont_allow', description: 'No people generation' },
+        { label: t('editor.allowAdults'), value: 'allow_adult', description: t('editor.generateAdultsDesc', { defaultValue: 'Generate adult people' }) },
+        { label: t('editor.dontAllow'), value: 'dont_allow', description: t('editor.noPeopleDesc', { defaultValue: 'No people generation' }) },
     ];
 
     const [prompt, setPrompt] = useState('');
@@ -361,7 +361,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             <div className="flex items-center gap-2 mb-2">
                                 <Sparkles size={14} className="text-editor-accent" />
                                 <label className="block text-xs font-medium text-editor-text-secondary">
-                                    {t('editor.model', { defaultValue: 'Quimera Model' })}
+                                    {t('editor.model')}
                                 </label>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
@@ -370,8 +370,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         key={model.value}
                                         onClick={() => setSelectedModel(model.value)}
                                         className={`text-xs py-1.5 px-3 rounded-full transition-all flex items-center gap-1.5 ${selectedModel === model.value
-                                                ? 'bg-editor-accent text-editor-bg font-medium'
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                            ? 'bg-editor-accent text-editor-bg font-medium'
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
                                             }`}
                                         title={model.description}
                                     >
@@ -386,7 +386,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             {selectedModel === 'gemini-3-pro-image-preview' && (
                                 <p className="text-xs text-editor-accent/80 mt-2 flex items-center gap-1">
                                     <Brain size={11} />
-                                    {t('editor.quimeraVisionProActive', { defaultValue: 'Best for text & complex scenes' })}
+                                    {t('editor.quimeraVisionProActive')}
                                 </p>
                             )}
                         </div>
@@ -537,7 +537,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
                                     <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
                                     <p className="text-xs text-amber-400">
-                                        {t('editor.warning4K', { defaultValue: '4K images are large and may slow down your website. Consider using 2K for better performance.' })}
+                                        {t('editor.warning4K')}
                                     </p>
                                 </div>
                             )}
@@ -561,7 +561,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-editor-accent">
                                             <Eye size={14} />
-                                            <span className="text-xs font-bold uppercase">{t('editor.quimeraVisionControls', { defaultValue: 'Vision Pro Controls' })}</span>
+                                            <span className="text-xs font-bold uppercase">{t('editor.quimeraVisionControls')}</span>
                                         </div>
 
                                         {/* Thinking Level */}
@@ -569,7 +569,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             <div className="flex items-center gap-1.5 mb-1.5">
                                                 <Brain size={11} className="text-editor-text-secondary" />
                                                 <label className="text-xs text-editor-text-secondary">
-                                                    {t('editor.thinkingLevel', { defaultValue: 'Thinking' })}
+                                                    {t('editor.thinkingLevel')}
                                                 </label>
                                             </div>
                                             <div className="flex gap-1">
@@ -578,8 +578,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                         key={level.value}
                                                         onClick={() => setThinkingLevel(level.value)}
                                                         className={`text-xs py-1 px-2 rounded-full transition-all ${thinkingLevel === level.value
-                                                                ? 'bg-editor-accent text-editor-bg font-medium'
-                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                            ? 'bg-editor-accent text-editor-bg font-medium'
+                                                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
                                                             }`}
                                                         title={level.description}
                                                     >
@@ -594,7 +594,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             <div className="flex items-center gap-1.5 mb-1.5">
                                                 <Users size={11} className="text-editor-text-secondary" />
                                                 <label className="text-xs text-editor-text-secondary">
-                                                    {t('editor.personGeneration', { defaultValue: 'People' })}
+                                                    {t('editor.personGeneration')}
                                                 </label>
                                             </div>
                                             <div className="flex gap-1">
@@ -603,8 +603,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                         key={option.value}
                                                         onClick={() => setPersonGeneration(option.value)}
                                                         className={`text-xs py-1 px-2 rounded-full transition-all ${personGeneration === option.value
-                                                                ? 'bg-editor-accent text-editor-bg font-medium'
-                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                            ? 'bg-editor-accent text-editor-bg font-medium'
+                                                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
                                                             }`}
                                                         title={option.description}
                                                     >
@@ -620,7 +620,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                 <div className="flex items-center gap-1.5">
                                                     <Thermometer size={11} className="text-editor-text-secondary" />
                                                     <label className="text-xs text-editor-text-secondary">
-                                                        {t('editor.temperature', { defaultValue: 'Creativity' })}
+                                                        {t('editor.temperature')}
                                                     </label>
                                                 </div>
                                                 <span className="text-xs text-editor-accent font-mono">{temperature.toFixed(1)}</span>
@@ -635,8 +635,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                 className="w-full h-1 bg-editor-border rounded-full appearance-none cursor-pointer accent-editor-accent"
                                             />
                                             <div className="flex justify-between text-[10px] text-editor-text-secondary/60 mt-1">
-                                                <span>{t('editor.precise', { defaultValue: 'Precise' })}</span>
-                                                <span>{t('editor.creative', { defaultValue: 'Creative' })}</span>
+                                                <span>{t('editor.precise')}</span>
+                                                <span>{t('editor.creative')}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -782,9 +782,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };
 

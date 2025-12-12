@@ -11,6 +11,7 @@
  * TODO: Extend the Gemini proxy to support multimodal (file + text) requests
  */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, FileText, X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { KnowledgeDocument } from '../../../types';
 
@@ -41,7 +42,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const content = e.target?.result as string;
-                    
+
                     // For PDFs, we'll use Gemini API to extract text
                     if (fileType === 'application/pdf') {
                         extractPDFWithGemini(file).then(resolve).catch(reject);
@@ -50,7 +51,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
                     }
                 };
                 reader.onerror = reject;
-                
+
                 if (fileType === 'application/pdf') {
                     reader.readAsDataURL(file);
                 } else {
@@ -71,7 +72,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             'Por favor, copia y pega el contenido del documento manualmente, ' +
             'o usa archivos de texto (.txt, .md) en su lugar.'
         );
-        
+
         /* 
         // Original implementation (requires Vision API with direct access):
         try {
@@ -123,7 +124,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             }
 
             // Validate file type
-            const isSupported = SUPPORTED_TYPES.some(type => 
+            const isSupported = SUPPORTED_TYPES.some(type =>
                 file.type === type.mime || file.name.endsWith(type.ext)
             );
 
@@ -153,7 +154,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 
             setUploadStatus('success');
             setStatusMessage(`Successfully uploaded ${file.name}`);
-            
+
             // Reset file input
             event.target.value = '';
 
@@ -167,7 +168,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             console.error('Error uploading document:', error);
             setUploadStatus('error');
             setStatusMessage(error.message || 'Failed to upload document');
-            
+
             // Clear error message after 5 seconds
             setTimeout(() => {
                 setUploadStatus('idle');
@@ -192,10 +193,10 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 
     const formatDate = (timestamp: { seconds: number; nanoseconds: number }): string => {
         const date = new Date(timestamp.seconds * 1000);
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
     };
 
@@ -229,11 +230,10 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 
             {/* Status Message */}
             {uploadStatus !== 'idle' && (
-                <div className={`flex items-center gap-2 p-3 rounded-lg ${
-                    uploadStatus === 'success' 
-                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800' 
+                <div className={`flex items-center gap-2 p-3 rounded-lg ${uploadStatus === 'success'
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                         : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
-                }`}>
+                    }`}>
                     {uploadStatus === 'success' ? (
                         <CheckCircle size={18} />
                     ) : (

@@ -141,6 +141,13 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                         </div>
                         <div className="flex items-center gap-1">
                             <button
+                                onClick={onBack}
+                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
+                            >
+                                <ArrowLeft size={16} />
+                                Volver
+                            </button>
+                            <button
                                 onClick={handleCreate}
                                 className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                             >
@@ -155,13 +162,6 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                             >
                                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                                 <span className="hidden sm:inline">Sync Defaults</span>
-                            </button>
-                            <button
-                                onClick={onBack}
-                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                            >
-                                <ArrowLeft size={16} className="mr-1.5" />
-                                Volver
                             </button>
                         </div>
                     </header>

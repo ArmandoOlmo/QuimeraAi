@@ -20,6 +20,7 @@ import {
     List,
     Sparkles,
     Menu,
+    ArrowLeft,
 } from 'lucide-react';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
@@ -124,7 +125,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Right: View Controls */}
+                    {/* Right: View Controls & Back Button */}
                     <div className="flex items-center gap-2">
                         <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
                             <button
@@ -144,6 +145,17 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 <List size={16} />
                             </button>
                         </div>
+                        
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                                aria-label={t('common.back', 'Volver')}
+                            >
+                                <ArrowLeft size={16} />
+                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            </button>
+                        )}
                     </div>
                 </header>
 

@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Sparkles,
     Loader2,
@@ -60,7 +61,7 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({
     defaultExpanded = true,
 }) => {
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-    
+
     return (
         <div className="border border-border/50 rounded-xl overflow-hidden">
             <button
@@ -75,7 +76,7 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({
                 </div>
                 {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            
+
             {isExpanded && (
                 <div className="p-4 animate-fade-in">
                     {children}
@@ -87,13 +88,13 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({
 
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     const [copied, setCopied] = useState(false);
-    
+
     const handleCopy = async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
-    
+
     return (
         <button
             onClick={handleCopy}
@@ -119,24 +120,24 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
     const { activeProject } = useProject();
     const [isGenerating, setIsGenerating] = useState(false);
     const [activeGeneration, setActiveGeneration] = useState<string | null>(null);
-    
+
     const insights = appointment.aiInsights;
-    
+
     // Generate full preparation
     const generateFullPreparation = async () => {
         if (hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
-        
+
         setIsGenerating(true);
         setActiveGeneration('full');
-        
+
         try {
-            const participantInfo = appointment.participants.map(p => 
+            const participantInfo = appointment.participants.map(p =>
                 `- ${p.name} (${p.email})${p.company ? ` de ${p.company}` : ''}`
             ).join('\n');
-            
+
             const leadInfo = linkedLeads?.map(l => `
                 Lead: ${l.name}
                 Empresa: ${l.company || 'No especificada'}
@@ -145,7 +146,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 Score: ${l.leadScore || l.aiScore || 'No calculado'}
                 Notas: ${l.notes || 'Sin notas'}
             `).join('\n\n') || '';
-            
+
             const prompt = `
                 Eres un asistente de ventas experto. Prepara un briefing completo para esta reunión.
                 
@@ -181,13 +182,13 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 
                 Responde SOLO con el JSON válido.
             `;
-            
+
             const projectId = activeProject?.id || 'appointment-ai-prep';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
             const responseText = extractTextFromResponse(response);
-            
+
             const data = JSON.parse(responseText);
-            
+
             const newInsights: AppointmentAiInsights = {
                 summary: data.summary,
                 preparationTips: data.preparationTips,
@@ -200,9 +201,9 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 generatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                 model: 'gemini-2.5-flash',
             };
-            
+
             onInsightsGenerated(newInsights);
-            
+
             if (user) {
                 logApiCall({
                     userId: user.uid,
@@ -211,7 +212,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     success: true,
                 });
             }
-            
+
         } catch (error: any) {
             if (user) {
                 logApiCall({
@@ -228,20 +229,20 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             setActiveGeneration(null);
         }
     };
-    
+
     // Generate specific section
     const generateSection = async (section: 'questions' | 'objections' | 'strategy') => {
         if (hasApiKey === false) {
             await promptForKeySelection();
             return;
         }
-        
+
         setIsGenerating(true);
         setActiveGeneration(section);
-        
+
         try {
             let prompt = '';
-            
+
             switch (section) {
                 case 'questions':
                     prompt = `
@@ -256,7 +257,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         Devuelve SOLO JSON válido: { "questions": ["pregunta 1", "pregunta 2", ...] }
                     `;
                     break;
-                    
+
                 case 'objections':
                     prompt = `
                         Para una reunión de ${appointment.type} titulada "${appointment.title}",
@@ -266,7 +267,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         Devuelve SOLO JSON válido: { "objections": ["Objeción: X | Respuesta: Y", ...] }
                     `;
                     break;
-                    
+
                 case 'strategy':
                     prompt = `
                         Para una reunión de ${appointment.type} titulada "${appointment.title}",
@@ -281,15 +282,15 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     `;
                     break;
             }
-            
+
             const projectId = activeProject?.id || 'appointment-ai-section';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
             const responseText = extractTextFromResponse(response);
-            
+
             const data = JSON.parse(responseText);
-            
+
             const updates: Partial<AppointmentAiInsights> = {};
-            
+
             if (section === 'questions' && data.questions) {
                 updates.suggestedQuestions = data.questions;
             } else if (section === 'objections' && data.objections) {
@@ -297,13 +298,13 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             } else if (section === 'strategy' && data.strategy) {
                 updates.recommendedApproach = data.strategy;
             }
-            
+
             onInsightsGenerated({
                 ...insights,
                 ...updates,
                 generatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
             });
-            
+
         } catch (error: any) {
             handleApiError(error);
         } finally {
@@ -311,7 +312,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             setActiveGeneration(null);
         }
     };
-    
+
     return (
         <div className={`space-y-4 ${className}`}>
             {/* Header */}
@@ -327,7 +328,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         </p>
                     </div>
                 </div>
-                
+
                 <button
                     onClick={generateFullPreparation}
                     disabled={isGenerating}
@@ -346,7 +347,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     )}
                 </button>
             </div>
-            
+
             {/* Quick stats */}
             {insights?.successProbability !== undefined && (
                 <div className="grid grid-cols-2 gap-3">
@@ -361,23 +362,23 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             <span className={`
                                 text-3xl font-bold
                                 ${insights.successProbability >= 70 ? 'text-green-500' :
-                                  insights.successProbability >= 40 ? 'text-yellow-500' : 'text-red-500'}
+                                    insights.successProbability >= 40 ? 'text-yellow-500' : 'text-red-500'}
                             `}>
                                 {insights.successProbability}%
                             </span>
                         </div>
                         <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
-                            <div 
+                            <div
                                 className={`
                                     h-full transition-all duration-1000
                                     ${insights.successProbability >= 70 ? 'bg-green-500' :
-                                      insights.successProbability >= 40 ? 'bg-yellow-500' : 'bg-red-500'}
+                                        insights.successProbability >= 40 ? 'bg-yellow-500' : 'bg-red-500'}
                                 `}
                                 style={{ width: `${insights.successProbability}%` }}
                             />
                         </div>
                     </div>
-                    
+
                     {insights.recommendedDuration && (
                         <div className="p-4 bg-secondary/30 rounded-xl">
                             <div className="flex items-center gap-2 mb-2">
@@ -394,7 +395,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     )}
                 </div>
             )}
-            
+
             {/* Summary */}
             {insights?.summary && (
                 <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
@@ -406,7 +407,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Expandable sections */}
             <div className="space-y-3">
                 {/* Preparation Tips */}
@@ -418,7 +419,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     {insights?.preparationTips ? (
                         <ul className="space-y-2">
                             {insights.preparationTips.map((tip, i) => (
-                                <li 
+                                <li
                                     key={i}
                                     className="flex items-start gap-3 p-2 bg-secondary/30 rounded-lg group"
                                 >
@@ -436,7 +437,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         </p>
                     )}
                 </ExpandableSection>
-                
+
                 {/* Suggested Questions */}
                 <ExpandableSection
                     title="Preguntas sugeridas"
@@ -446,7 +447,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     <div className="space-y-2">
                         {insights?.suggestedQuestions ? (
                             insights.suggestedQuestions.map((question, i) => (
-                                <div 
+                                <div
                                     key={i}
                                     className="p-3 bg-secondary/30 rounded-lg group flex items-start gap-2"
                                 >
@@ -475,7 +476,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         )}
                     </div>
                 </ExpandableSection>
-                
+
                 {/* Potential Objections */}
                 <ExpandableSection
                     title="Posibles objeciones"
@@ -485,7 +486,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     <div className="space-y-2">
                         {insights?.potentialObjections ? (
                             insights.potentialObjections.map((objection, i) => (
-                                <div 
+                                <div
                                     key={i}
                                     className="p-3 bg-secondary/30 rounded-lg group"
                                 >
@@ -516,7 +517,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         )}
                     </div>
                 </ExpandableSection>
-                
+
                 {/* Recommended Strategy */}
                 <ExpandableSection
                     title="Estrategia recomendada"
@@ -553,7 +554,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     )}
                 </ExpandableSection>
             </div>
-            
+
             {/* Footer */}
             {insights?.generatedAt && (
                 <p className="text-xs text-muted-foreground text-center">

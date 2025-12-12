@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Rocket, FileText, Image, Loader2, Check, AlertCircle, Sparkles, ExternalLink, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { OnboardingProgress, GenerationProgress } from '../../../types/onboarding';
+import { INDUSTRIES } from '../../../data/industries';
 import ImageGenerationProgress from '../components/ImageGenerationProgress';
 
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -24,6 +25,11 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 }) => {
     const { t } = useTranslation();
     const [hasStarted, setHasStarted] = useState(false);
+
+    const industryLabel = React.useMemo(() => {
+        const ind = INDUSTRIES.find(i => i.id === progress.industry);
+        return ind ? t(ind.labelKey, ind.id.replace(/-/g, ' ')) : progress.industry.replace(/-/g, ' ');
+    }, [progress.industry, t]);
 
     const generationProgress = progress.generationProgress;
     const phase = generationProgress?.phase || 'idle';
@@ -129,10 +135,10 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                             <ShoppingBag size={20} className="text-primary" />
                             <div className="text-left">
                                 <p className="font-medium text-foreground">
-                                    {t('onboarding.storeCreated', 'Tu tienda está lista')}
+                                    {t('onboarding.storeCreated', 'Your store is ready')}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {t('onboarding.storeCreatedDesc', 'Podrás agregar productos desde el panel de ecommerce')}
+                                    {t('onboarding.storeCreatedDesc', 'You can add products from the ecommerce dashboard')}
                                 </p>
                             </div>
                         </div>
@@ -188,9 +194,9 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                 <div className="relative w-24 h-24 mx-auto mb-6">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-orange-500 to-pink-500 animate-spin-slow opacity-50 blur-xl" />
                     <div className="relative w-24 h-24 rounded-full bg-card border-2 border-border flex items-center justify-center">
-                        <img 
-                            src={QUIMERA_LOGO} 
-                            alt="Quimera" 
+                        <img
+                            src={QUIMERA_LOGO}
+                            alt="Quimera"
                             className="w-16 h-16 object-contain animate-pulse"
                         />
                     </div>
@@ -216,8 +222,8 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     </div>
                     <div>
                         <span className="text-muted-foreground">{t('onboarding.industry', 'Industry')}:</span>
-                        <p className="font-medium text-foreground capitalize">
-                            {progress.industry.replace(/-/g, ' ')}
+                        <p className="font-medium text-foreground">
+                            {industryLabel}
                         </p>
                     </div>
                     <div>
@@ -230,7 +236,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                         <div className="col-span-2 pt-2 border-t border-border">
                             <div className="flex items-center gap-2">
                                 <ShoppingBag size={14} className="text-primary" />
-                                <span className="text-muted-foreground">{t('onboarding.store', 'Tienda')}:</span>
+                                <span className="text-muted-foreground">{t('onboarding.store', 'Store')}:</span>
                                 <span className="font-medium text-foreground">
                                     {progress.storeSetup?.storeName || progress.businessName}
                                 </span>
@@ -280,4 +286,5 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 };
 
 export default Step7Generation;
+
 

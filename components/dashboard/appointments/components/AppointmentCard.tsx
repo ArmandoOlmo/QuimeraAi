@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Clock,
     Video,
@@ -93,20 +94,21 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     className = '',
     animationDelay = 0,
 }) => {
+    const { t } = useTranslation();
     const [showMenu, setShowMenu] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    
+
     const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
     const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status];
     const TypeIcon = TYPE_ICONS[appointment.type];
-    
+
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
     const duration = calculateDuration(appointment.startDate, appointment.endDate);
     const inProgress = isInProgress(appointment);
     const past = isPast(appointment.endDate);
     const today = isToday(startDate);
-    
+
     // Gradient classes based on type
     const gradientClasses: Record<string, string> = {
         blue: 'from-blue-500/20 via-blue-500/5 to-transparent',
@@ -118,7 +120,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         pink: 'from-pink-500/20 via-pink-500/5 to-transparent',
         green: 'from-green-500/20 via-green-500/5 to-transparent',
     };
-    
+
     const solidColorClasses: Record<string, string> = {
         blue: 'bg-blue-500',
         violet: 'bg-violet-500',
@@ -129,7 +131,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         pink: 'bg-pink-500',
         green: 'bg-green-500',
     };
-    
+
     const textColorClasses: Record<string, string> = {
         blue: 'text-blue-500',
         violet: 'text-violet-500',
@@ -140,11 +142,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         pink: 'text-pink-500',
         green: 'text-green-500',
     };
-    
+
     // ==========================================================================
     // MINIMAL VARIANT (for calendar cells)
     // ==========================================================================
-    
+
     if (variant === 'minimal') {
         return (
             <div
@@ -165,11 +167,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             </div>
         );
     }
-    
+
     // ==========================================================================
     // COMPACT VARIANT
     // ==========================================================================
-    
+
     if (variant === 'compact') {
         return (
             <div
@@ -192,7 +194,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             >
                 {/* Left color indicator */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${solidColorClasses[typeConfig.color]} rounded-l-xl`} />
-                
+
                 <div className="flex items-center gap-3 pl-2">
                     {/* Icon */}
                     <div className={`
@@ -203,7 +205,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     `}>
                         <TypeIcon size={14} />
                     </div>
-                    
+
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm text-foreground truncate">
@@ -214,7 +216,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             {formatTime(appointment.startDate)} - {formatTime(appointment.endDate)}
                         </p>
                     </div>
-                    
+
                     {/* Status badge */}
                     <span className={`
                         ${statusConfig.bgColor} ${statusConfig.color}
@@ -233,11 +235,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             </div>
         );
     }
-    
+
     // ==========================================================================
     // DEFAULT VARIANT (Full card with glassmorphism)
     // ==========================================================================
-    
+
     return (
         <div
             onClick={onClick}
@@ -256,7 +258,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 animate-fade-in-up
                 ${className}
             `}
-            style={{ 
+            style={{
                 animationDelay: `${animationDelay}ms`,
             }}
         >
@@ -266,7 +268,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 opacity-0 group-hover:opacity-100
                 transition-opacity duration-500
             `} />
-            
+
             {/* Animated border glow on hover */}
             <div className={`
                 absolute inset-0 rounded-2xl
@@ -274,11 +276,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 transition-opacity duration-500
                 pointer-events-none
             `}
-            style={{
-                background: `linear-gradient(135deg, ${typeConfig.color === 'blue' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)'} 0%, transparent 50%)`,
-            }}
+                style={{
+                    background: `linear-gradient(135deg, ${typeConfig.color === 'blue' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)'} 0%, transparent 50%)`,
+                }}
             />
-            
+
             {/* Left color indicator with animation */}
             <div className={`
                 absolute left-0 top-0 bottom-0 w-1.5 
@@ -290,7 +292,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 {/* Animated shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-transparent" />
             </div>
-            
+
             {/* Content */}
             <div className="relative p-5 pl-6">
                 {/* Header */}
@@ -308,7 +310,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             {/* Shine effect */}
                             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
                         </div>
-                        
+
                         <div>
                             <h4 className="font-bold text-foreground text-base mb-0.5 line-clamp-1">
                                 {appointment.title}
@@ -318,7 +320,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Status & Actions */}
                     <div className="flex items-center gap-2">
                         {/* Status badge */}
@@ -337,7 +339,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             )}
                             {statusConfig.label}
                         </span>
-                        
+
                         {/* Menu button */}
                         {showActions && (
                             <div className="relative">
@@ -353,7 +355,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 >
                                     <MoreVertical size={16} />
                                 </button>
-                                
+
                                 {/* Dropdown menu */}
                                 {showMenu && (
                                     <div className="
@@ -370,7 +372,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                                 className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
                                             >
                                                 <Edit size={14} />
-                                                Editar
+                                                {t('appointments.actions.edit')}
                                             </button>
                                         )}
                                         <button
@@ -378,14 +380,14 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                             className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
                                         >
                                             <Copy size={14} />
-                                            Duplicar
+                                            {t('common.duplicate')}
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}
                                             className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
                                         >
                                             <Bell size={14} />
-                                            Recordatorios
+                                            {t('appointments.form.reminders')}
                                         </button>
                                         <div className="my-1 border-t border-border/50" />
                                         {onDelete && (
@@ -394,7 +396,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                                 className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
                                             >
                                                 <Trash2 size={14} />
-                                                Eliminar
+                                                {t('appointments.actions.delete')}
                                             </button>
                                         )}
                                     </div>
@@ -403,7 +405,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         )}
                     </div>
                 </div>
-                
+
                 {/* Time & Location */}
                 <div className="space-y-2 sm:space-y-2.5 mb-3 sm:mb-4">
                     {/* Date & Time */}
@@ -416,9 +418,9 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         </div>
                         <div className="flex flex-wrap items-center">
                             <span className="text-foreground font-medium">
-                                {today ? 'Hoy' : startDate.toLocaleDateString('es-ES', { 
-                                    day: 'numeric', 
-                                    month: 'short' 
+                                {today ? t('appointments.today') : startDate.toLocaleDateString('es-ES', {
+                                    day: 'numeric',
+                                    month: 'short'
                                 })}
                             </span>
                             <span className="text-muted-foreground mx-1">·</span>
@@ -430,7 +432,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             </span>
                         </div>
                     </div>
-                    
+
                     {/* Location - Hidden on very small screens */}
                     {appointment.location && (
                         <div className="hidden xs:flex items-center gap-2 text-xs sm:text-sm">
@@ -447,17 +449,17 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 )}
                             </div>
                             <span className="text-muted-foreground truncate max-w-[150px] sm:max-w-none">
-                                {appointment.location.type === 'virtual' 
-                                    ? 'Virtual'
+                                {appointment.location.type === 'virtual'
+                                    ? t('appointments.locations.virtual')
                                     : appointment.location.type === 'phone'
-                                        ? 'Llamada'
-                                        : 'Presencial'
+                                        ? t('appointments.locations.phone')
+                                        : t('appointments.locations.physical')
                                 }
                             </span>
                         </div>
                     )}
                 </div>
-                
+
                 {/* Participants */}
                 <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-white/5">
                     <div className="flex items-center gap-1 sm:gap-2">
@@ -479,8 +481,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     title={participant.name}
                                 >
                                     {participant.avatar ? (
-                                        <img 
-                                            src={participant.avatar} 
+                                        <img
+                                            src={participant.avatar}
                                             alt={participant.name}
                                             className="w-full h-full rounded-full object-cover"
                                         />
@@ -489,7 +491,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     )}
                                 </div>
                             ))}
-                            
+
                             {appointment.participants.length > 3 && (
                                 <div className="
                                     relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
@@ -502,13 +504,13 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Participant count - hidden on mobile */}
                         <span className="text-xs text-muted-foreground hidden md:inline">
                             {appointment.participants.length}
                         </span>
                     </div>
-                    
+
                     {/* Right side indicators */}
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* AI Insights indicator */}
@@ -521,14 +523,14 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 <Sparkles size={10} className="sm:w-3 sm:h-3" />
                             </div>
                         )}
-                        
+
                         {/* Relative time - shortened on mobile */}
                         <span className="text-[10px] sm:text-xs text-muted-foreground max-w-[60px] sm:max-w-none truncate">
                             {getRelativeTime(appointment.startDate)}
                         </span>
                     </div>
                 </div>
-                
+
                 {/* Quick actions (visible on hover) */}
                 <div className={`
                     mt-4 pt-3 border-t border-white/5
@@ -558,10 +560,10 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             `}
                         >
                             <Video size={16} />
-                            Unirse
+                            {t('appointments.actions.join')}
                         </button>
                     )}
-                    
+
                     {/* Edit button */}
                     {onEdit && (
                         <button
@@ -575,12 +577,12 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             "
                         >
                             <Edit size={16} />
-                            Editar
+                            {t('appointments.actions.edit')}
                         </button>
                     )}
                 </div>
             </div>
-            
+
             {/* Priority indicator (top right corner) */}
             {appointment.priority === 'high' || appointment.priority === 'critical' ? (
                 <div className={`

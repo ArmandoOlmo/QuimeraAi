@@ -145,23 +145,23 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                     <Store size={32} className="text-primary-foreground" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
-                    {t('onboarding.step6Heading', 'Configura tu Tienda')}
+                    {t('onboarding.step6Heading', 'Store Setup')}
                 </h3>
                 <p className="text-muted-foreground">
-                    {t('onboarding.step6Subheading', 'Configura los detalles básicos de tu tienda online')}
+                    {t('onboarding.step6Subheading', 'Configure basic details for your online store')}
                 </p>
             </div>
 
             {/* Store Name */}
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-foreground">
-                    {t('onboarding.storeName', 'Nombre de la Tienda')}
+                    {t('onboarding.storeName', 'Store Name')}
                 </label>
                 <input
                     type="text"
                     value={storeSetup?.storeName || businessName}
                     onChange={(e) => handleStoreName(e.target.value)}
-                    placeholder={t('onboarding.storeNamePlaceholder', 'Nombre de tu tienda')}
+                    placeholder={t('onboarding.storeNamePlaceholder', 'Your Store Name')}
                     className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
             </div>
@@ -169,7 +169,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
             {/* Currency Selector */}
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-foreground">
-                    {t('onboarding.currency', 'Moneda')}
+                    {t('onboarding.currency', 'Currency')}
                 </label>
                 <div className="relative">
                     <button
@@ -177,8 +177,8 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                         className={`
                             w-full px-4 py-3 bg-card border rounded-xl text-left
                             flex items-center justify-between transition-all
-                            ${isCurrencyOpen 
-                                ? 'border-primary ring-2 ring-primary/50' 
+                            ${isCurrencyOpen
+                                ? 'border-primary ring-2 ring-primary/50'
                                 : 'border-border hover:border-muted-foreground'
                             }
                         `}
@@ -189,16 +189,16 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 {selectedCurrency.symbol} {selectedCurrency.code} - {selectedCurrency.name}
                             </span>
                         </div>
-                        <ChevronDown 
-                            size={18} 
-                            className={`text-muted-foreground transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`} 
+                        <ChevronDown
+                            size={18}
+                            className={`text-muted-foreground transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`}
                         />
                     </button>
 
                     {isCurrencyOpen && (
                         <>
-                            <div 
-                                className="fixed inset-0 z-40" 
+                            <div
+                                className="fixed inset-0 z-40"
                                 onClick={() => setIsCurrencyOpen(false)}
                             />
                             <div className="absolute z-50 w-full mt-2 rounded-xl shadow-2xl overflow-hidden border border-border bg-popover max-h-64 overflow-y-auto">
@@ -208,8 +208,8 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                         onClick={() => handleCurrencyChange(currency.code)}
                                         className={`
                                             w-full px-4 py-3 text-left text-sm transition-colors flex items-center justify-between
-                                            ${storeSetup?.currency === currency.code 
-                                                ? 'bg-primary/20 text-primary' 
+                                            ${storeSetup?.currency === currency.code
+                                                ? 'bg-primary/20 text-primary'
                                                 : 'text-popover-foreground hover:bg-accent'
                                             }
                                         `}
@@ -230,7 +230,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
             {ecommerceType !== 'digital' && (
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-foreground">
-                        {t('onboarding.shippingType', 'Tipo de Envío')}
+                        {t('onboarding.shippingType', 'Shipping Type')}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                         {SHIPPING_TYPES.filter(s => s.id !== 'digital_only').map((shipping) => (
@@ -238,16 +238,14 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 key={shipping.id}
                                 type="button"
                                 onClick={() => handleShippingChange(shipping.id)}
-                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                                    storeSetup?.shippingType === shipping.id
+                                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${storeSetup?.shippingType === shipping.id
                                         ? 'border-primary bg-primary/10'
                                         : 'border-border hover:border-muted-foreground'
-                                }`}
+                                    }`}
                             >
                                 <span className="text-xl">{shipping.icon}</span>
-                                <span className={`text-sm font-medium ${
-                                    storeSetup?.shippingType === shipping.id ? 'text-primary' : 'text-foreground'
-                                }`}>
+                                <span className={`text-sm font-medium ${storeSetup?.shippingType === shipping.id ? 'text-primary' : 'text-foreground'
+                                    }`}>
                                     {t(shipping.labelKey, shipping.id)}
                                 </span>
                             </button>
@@ -260,7 +258,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <label className="block text-sm font-medium text-foreground">
-                        {t('onboarding.productCategories', 'Categorías de Productos')}
+                        {t('onboarding.productCategories', 'Product Categories')}
                     </label>
                     <button
                         onClick={onGenerateCategories}
@@ -272,7 +270,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                         ) : (
                             <Sparkles size={14} />
                         )}
-                        {t('onboarding.regenerateCategories', 'Regenerar')}
+                        {t('onboarding.regenerateCategories', 'Regenerate')}
                     </button>
                 </div>
 
@@ -282,7 +280,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                         <div className="flex items-center gap-3">
                             <Loader2 size={20} className="animate-spin text-primary" />
                             <span className="text-sm text-muted-foreground">
-                                {t('onboarding.generatingCategories', 'Generando categorías con AI...')}
+                                {t('onboarding.generatingCategories', 'Generating categories with AI...')}
                             </span>
                         </div>
                     </div>
@@ -298,11 +296,10 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                     <button
                                         key={category}
                                         onClick={() => handleCategoryToggle(category)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                            isSelected
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isSelected
                                                 ? 'bg-primary text-primary-foreground'
                                                 : 'bg-muted text-foreground hover:bg-muted/80'
-                                        }`}
+                                            }`}
                                     >
                                         {isSelected && <Check size={14} />}
                                         {category}
@@ -318,7 +315,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 value={newCategory}
                                 onChange={(e) => setNewCategory(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
-                                placeholder={t('onboarding.addCategoryPlaceholder', 'Agregar categoría personalizada...')}
+                                placeholder={t('onboarding.addCategoryPlaceholder', 'Add custom category...')}
                                 className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                             />
                             <button
@@ -335,7 +332,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                 {/* Selected count */}
                 {storeSetup && storeSetup.selectedCategories.length > 0 && (
                     <p className="text-xs text-muted-foreground">
-                        {t('onboarding.selectedCategories', '{{count}} categorías seleccionadas', {
+                        {t('onboarding.selectedCategories', '{{count}} categories selected', {
                             count: storeSetup.selectedCategories.length,
                         })}
                     </p>
@@ -346,7 +343,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
             <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
                 <p className="text-sm text-foreground">
                     <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
-                    {t('onboarding.step6Tip', 'Selecciona al menos una categoría. Podrás agregar más productos y categorías después en el panel de ecommerce.')}
+                    {t('onboarding.step6Tip', 'Select at least one category. You can add more products and categories later in the ecommerce dashboard.')}
                 </p>
             </div>
         </div>

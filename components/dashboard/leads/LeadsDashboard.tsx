@@ -28,13 +28,16 @@ import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
-const LEAD_STAGES: { id: LeadStatus; label: string; color: string }[] = [
-    { id: 'new', label: 'New Lead', color: 'bg-blue-500' },
-    { id: 'contacted', label: 'Contacted', color: 'bg-yellow-500' },
-    { id: 'qualified', label: 'Qualified', color: 'bg-purple-500' },
-    { id: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
-    { id: 'won', label: 'Won', color: 'bg-green-500' },
-    { id: 'lost', label: 'Lost', color: 'bg-red-500' },
+import { useTranslation } from 'react-i18next';
+
+// Moved inside component or memoized hook
+const getLeadStages = (t: any) => [
+    { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
+    { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-yellow-500' },
+    { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-purple-500' },
+    { id: 'negotiation', label: t('leads.stages.negotiation'), color: 'bg-orange-500' },
+    { id: 'won', label: t('leads.stages.won'), color: 'bg-green-500' },
+    { id: 'lost', label: t('leads.stages.lost'), color: 'bg-red-500' },
 ];
 
 const CARD_COLORS = [
@@ -77,6 +80,7 @@ interface LeadCardProps {
 }
 
 const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
+    const { t } = useTranslation();
     const { updateLead } = useCRM();
     const [showPalette, setShowPalette] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -141,7 +145,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                         className="text-[10px] sm:text-xs text-muted-foreground hover:text-red-500 col-span-6 border-t border-border pt-1.5 sm:pt-2 mt-1 font-medium"
                         title="Clear"
                     >
-                        Clear Marker
+                        {t('leads.dashboard.clearMarker')}
                     </button>
                 </div>
             )}
@@ -211,7 +215,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                 <div className="flex gap-0.5 sm:gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                         className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-yellow-500 transition-colors"
-                        title="Add Emoji Marker"
+                        title={t('leads.dashboard.addEmoji')}
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
                     >
                         <Smile size={10} className="sm:hidden" />
@@ -219,7 +223,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                     </button>
                     <button
                         className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors"
-                        title="Change Color"
+                        title={t('leads.dashboard.changeColor')}
                         onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); setShowEmojiPicker(false); }}
                     >
                         <Palette size={10} className="sm:hidden" />
@@ -237,6 +241,8 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
 
 
 const LeadsDashboard: React.FC = () => {
+    const { t } = useTranslation();
+    const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
     const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
@@ -580,7 +586,7 @@ const LeadsDashboard: React.FC = () => {
                 Context: ${selectedLead.notes}
                 My Goal: Move them to the next stage of the pipeline.
             `;
-            
+
             const projectId = activeProject?.id || 'leads-email-draft';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
             const responseText = extractTextFromResponse(response);
@@ -631,20 +637,20 @@ const LeadsDashboard: React.FC = () => {
                             <div className="flex items-center gap-2 sm:gap-4">
                                 <div className="flex items-center gap-1.5 sm:gap-2">
                                     <LayoutGrid className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
-                                    <h1 className="text-sm sm:text-lg font-semibold text-foreground">Leads CRM</h1>
+                                    <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('leads.dashboard.title')}</h1>
                                 </div>
                                 <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-border/50">
                                     <button
                                         onClick={() => setActiveTab('pipeline')}
                                         className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
-                                        Pipeline
+                                        {t('leads.dashboard.pipeline')}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('library')}
                                         className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
-                                        Library
+                                        {t('leads.dashboard.library')}
                                     </button>
                                 </div>
                             </div>
@@ -656,18 +662,18 @@ const LeadsDashboard: React.FC = () => {
                                     {/* Stats Row (Hidden on mobile) */}
                                     <div className="hidden lg:flex items-center gap-6 mr-4">
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pipeline Value</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.pipelineValue')}</p>
                                             <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Conversion Rate</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.conversionRate')}</p>
                                             <div className="flex items-center text-green-500">
                                                 <p className="text-lg font-bold mr-1">{stats.conversionRate}%</p>
                                                 <ArrowUpRight size={14} />
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Active Leads</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.activeLeads')}</p>
                                             <p className="text-lg font-bold text-foreground">{stats.activeLeads}</p>
                                         </div>
                                     </div>
@@ -677,21 +683,21 @@ const LeadsDashboard: React.FC = () => {
                                         <button
                                             onClick={() => setViewMode('kanban')}
                                             className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                            title="Kanban View"
+                                            title={t('leads.dashboard.kanbanView')}
                                         >
                                             <Columns className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('table')}
                                             className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                            title="Table View"
+                                            title={t('leads.dashboard.tableView')}
                                         >
                                             <Table className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('list')}
                                             className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                            title="List View"
+                                            title={t('leads.dashboard.listView')}
                                         >
                                             <List className="w-4 h-4" />
                                         </button>
@@ -702,7 +708,7 @@ const LeadsDashboard: React.FC = () => {
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                         <input
                                             type="text"
-                                            placeholder="Search..."
+                                            placeholder={t('leads.dashboard.search')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
@@ -726,7 +732,7 @@ const LeadsDashboard: React.FC = () => {
                                     <button
                                         onClick={handleExportCSV}
                                         className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                                        title="Export to CSV"
+                                        title={t('leads.dashboard.exportCsv')}
                                     >
                                         <Download className="w-4 h-4" />
                                     </button>
@@ -735,7 +741,7 @@ const LeadsDashboard: React.FC = () => {
                                         className="flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 whitespace-nowrap"
                                     >
                                         <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                        <span className="hidden sm:inline">Add Lead</span>
+                                        <span className="hidden sm:inline">{t('leads.dashboard.addLead')}</span>
                                     </button>
                                 </>
                             )}
@@ -759,7 +765,7 @@ const LeadsDashboard: React.FC = () => {
                                 <span className="text-xs text-muted-foreground">Active:</span>
                                 <span className="text-xs font-bold text-foreground">{stats.activeLeads}</span>
                             </div>
-                            
+
                             {/* Mobile view mode selector */}
                             <div className="sm:hidden flex items-center gap-0.5 ml-auto shrink-0">
                                 <button
@@ -796,7 +802,7 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="sm:hidden">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="font-bold text-xs">
-                                            {selectedLeadIds.length} selected
+                                            {selectedLeadIds.length} {t('leads.dashboard.selected')}
                                         </span>
                                         <button
                                             onClick={() => setSelectedLeadIds([])}
@@ -1100,7 +1106,7 @@ const LeadsDashboard: React.FC = () => {
                             <div className="p-4 sm:p-6 border-b border-border bg-secondary/10">
                                 {/* Mobile drag indicator */}
                                 <div className="sm:hidden w-10 h-1 bg-border rounded-full mx-auto mb-3" />
-                                
+
                                 <div className="flex justify-between items-start gap-2">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2 flex-wrap">
@@ -1649,8 +1655,8 @@ const LeadsDashboard: React.FC = () => {
                                         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-0">
                                             {/* Mobile: Stack buttons vertically */}
                                             <div className="flex flex-col sm:flex-row gap-2">
-                                                <button 
-                                                    onClick={() => window.location.href = `mailto:${selectedLead.email}`} 
+                                                <button
+                                                    onClick={() => window.location.href = `mailto:${selectedLead.email}`}
                                                     className="flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-bold hover:opacity-90 transition-colors shadow-md"
                                                 >
                                                     <Mail size={14} className="mr-1.5 sm:mr-2" /> Send Email

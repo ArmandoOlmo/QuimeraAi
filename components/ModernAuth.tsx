@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-    auth, 
-    GoogleAuthProvider, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    updateProfile, 
-    sendEmailVerification, 
-    signOut, 
-    sendPasswordResetEmail, 
+import {
+    auth,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile,
+    sendEmailVerification,
+    signOut,
+    sendPasswordResetEmail,
     signInWithPopup,
 } from '../firebase';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Zap, Layout, Palette, CheckCircle, Image as ImageIcon, MessageSquare, BarChart3 } from 'lucide-react';
@@ -28,7 +28,7 @@ type AuthMode = 'login' | 'register' | 'forgotPassword';
 const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initialMode = 'login', onNavigateToLanding }) => {
     const { t } = useTranslation();
     const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
-    
+
     // Auth Form State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -61,21 +61,21 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
         setError('');
         setIsLoading(true);
         const provider = new GoogleAuthProvider();
-        
+
         provider.setCustomParameters({
             prompt: 'select_account',
             display: 'popup'
         });
-        
+
         try {
             await signInWithPopup(auth, provider);
         } catch (err: any) {
             if (err.code === 'auth/unauthorized-domain') {
-                setError('Dominio no autorizado. Por favor contacta al administrador.');
+                setError(t('auth.errors.unauthorizedDomain'));
             } else if (err.code === 'auth/popup-blocked') {
-                setError('El popup fue bloqueado. Por favor permite popups en tu navegador.');
+                setError(t('auth.errors.popupBlocked'));
             } else if (err.code === 'auth/popup-closed-by-user') {
-                setError('Login cancelado. Por favor intenta de nuevo.');
+                setError(t('auth.errors.loginCancelled'));
             } else {
                 setError(t('auth.errors.googleSignInFailed') + ' (' + err.code + ')');
             }
@@ -122,7 +122,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     displayName: name,
                     photoURL: '',
                 });
-                
+
                 await sendEmailVerification(user);
                 await signOut(auth);
 
@@ -179,15 +179,15 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
             <div className="w-full lg:w-1/2 flex flex-col bg-[#0A0A0A] relative">
                 {/* Back to Landing Button - Top Left */}
                 {onNavigateToLanding && (
-                    <button 
+                    <button
                         onClick={onNavigateToLanding}
                         className="absolute top-6 left-6 z-10 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-sm font-medium">{t('common.back') || 'Back'}</span>
+                        <span className="text-sm font-medium">{t('common.back')}</span>
                     </button>
                 )}
-                
+
                 {/* Language Selector - Top Right */}
                 <div className="absolute top-6 right-6 z-10">
                     <LanguageSelector variant="minimal" />
@@ -238,8 +238,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                 <p className="text-white mb-6">
                                     {t('auth.resetLinkSent')} <strong className="text-yellow-400">{resetEmailSentTo}</strong>.
                                 </p>
-                                <button 
-                                    onClick={() => setAuthMode('login')} 
+                                <button
+                                    onClick={() => setAuthMode('login')}
                                     className="text-sm text-gray-400 hover:text-white underline"
                                 >
                                     {t('auth.backToLogin')}
@@ -253,29 +253,29 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
                                             {t('auth.username')}
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            value={name} 
-                                            onChange={(e) => setName(e.target.value)} 
-                                            required 
-                                            className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all" 
-                                            placeholder="Tu nombre"
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            required
+                                            className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all"
+                                            placeholder={t('auth.yourNamePlaceholder')}
                                         />
                                     </div>
                                 )}
-                                
+
                                 {/* Email */}
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
                                         {t('auth.email')}
                                     </label>
-                                    <input 
-                                        type="email" 
-                                        value={email} 
-                                        onChange={(e) => setEmail(e.target.value)} 
-                                        required 
-                                        className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all" 
-                                        placeholder="tu@email.com"
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all"
+                                        placeholder={t('auth.emailPlaceholder')}
                                     />
                                 </div>
 
@@ -287,9 +287,9 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                                 {t('auth.password')}
                                             </label>
                                             {authMode === 'login' && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setAuthMode('forgotPassword')} 
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAuthMode('forgotPassword')}
                                                     className="text-xs text-yellow-500 hover:text-yellow-400 hover:underline"
                                                 >
                                                     {t('auth.forgot')}
@@ -297,17 +297,17 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                             )}
                                         </div>
                                         <div className="relative">
-                                            <input 
-                                                type={showPassword ? "text" : "password"} 
-                                                value={password} 
-                                                onChange={(e) => setPassword(e.target.value)} 
-                                                required 
-                                                className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all pr-12" 
-                                                placeholder="••••••••"
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                required
+                                                className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all pr-12"
+                                                placeholder={t('auth.passwordPlaceholder')}
                                             />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setShowPassword(!showPassword)} 
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
                                             >
                                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -322,21 +322,21 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
                                             {t('auth.repeatPassword')}
                                         </label>
-                                        <input 
-                                            type="password" 
-                                            value={repeatPassword} 
-                                            onChange={(e) => setRepeatPassword(e.target.value)} 
-                                            required 
-                                            className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all" 
-                                            placeholder="••••••••"
+                                        <input
+                                            type="password"
+                                            value={repeatPassword}
+                                            onChange={(e) => setRepeatPassword(e.target.value)}
+                                            required
+                                            className="w-full bg-white/5 text-white p-3.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 outline-none transition-all"
+                                            placeholder={t('auth.passwordPlaceholder')}
                                         />
                                     </div>
                                 )}
 
                                 {/* Submit Button */}
-                                <button 
-                                    type="submit" 
-                                    disabled={isLoading} 
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
                                     className="w-full bg-yellow-500 text-black font-bold py-3.5 px-4 rounded-lg shadow-lg hover:bg-yellow-400 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6 group"
                                 >
                                     {isLoading ? (
@@ -362,18 +362,18 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                                 </span>
                                             </div>
                                         </div>
-                                        <button 
-                                            type="button" 
-                                            onClick={handleGoogleSignIn} 
-                                            disabled={isLoading} 
+                                        <button
+                                            type="button"
+                                            onClick={handleGoogleSignIn}
+                                            disabled={isLoading}
                                             className="w-full flex items-center justify-center bg-white text-gray-900 font-bold py-3.5 px-4 rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 border border-white/10"
                                         >
-                                            <img 
-                                                src="https://storage.googleapis.com/quimera_assets/google.svg" 
-                                                alt="Google" 
+                                            <img
+                                                src="https://storage.googleapis.com/quimera_assets/google.svg"
+                                                alt="Google"
                                                 className="w-5 h-5 mr-3"
                                             />
-                                            Google
+                                            {t('auth.google')}
                                         </button>
                                     </>
                                 )}
@@ -384,8 +384,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                         <div className="mt-8 text-center">
                             <p className="text-sm text-gray-400">
                                 {authMode === 'login' ? t('auth.newHere') : authMode === 'forgotPassword' ? t('auth.alreadyHaveAccount') : t('auth.alreadyHaveAccount')}
-                                <button 
-                                    onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} 
+                                <button
+                                    onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                                     className="ml-2 font-bold text-yellow-400 hover:text-yellow-300 hover:underline transition-colors"
                                 >
                                     {authMode === 'login' ? t('auth.createAccount') : t('auth.signIn')}
@@ -405,7 +405,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
 
                 {/* Action Button - Top Right */}
                 <div className="absolute top-6 right-6 z-20">
-                    <button 
+                    <button
                         onClick={() => window.open('https://quimera.ai', '_blank')}
                         className="bg-yellow-500 text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2 group"
                     >
@@ -428,10 +428,10 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     {/* Features Grid - 6 cards in 2x3 */}
                     <div className="grid grid-cols-2 gap-5">
                         {features.map((feature, index) => (
-                            <div 
+                            <div
                                 key={index}
                                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
-                                style={{ 
+                                style={{
                                     animationDelay: `${index * 0.1}s`,
                                     animation: 'fade-in-up 0.6s ease-out forwards'
                                 }}

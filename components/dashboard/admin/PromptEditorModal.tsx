@@ -9,9 +9,10 @@ interface PromptEditorModalProps {
     isOpen: boolean;
     onClose: () => void;
     promptToEdit: LLMPrompt | null;
+    initialPrompt?: Partial<LLMPrompt> | null;
 }
 
-const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, promptToEdit }) => {
+const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, promptToEdit, initialPrompt }) => {
     const { savePrompt } = useAdmin();
     const [formData, setFormData] = useState({
         name: '',
@@ -33,6 +34,15 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                 model: promptToEdit.model,
                 version: promptToEdit.version,
                 area: promptToEdit.area || 'Other',
+            });
+        } else if (initialPrompt) {
+            setFormData({
+                name: initialPrompt.name || '',
+                description: initialPrompt.description || '',
+                template: initialPrompt.template || '',
+                model: initialPrompt.model || 'gemini-3-pro-preview',
+                version: initialPrompt.version || 1,
+                area: (initialPrompt.area as any) || 'Other',
             });
         } else {
             setFormData({
@@ -61,7 +71,7 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
         setError('');
         try {
             const dataToSave = { ...formData };
-            if (promptToEdit) {
+            if (promptToEdit?.id) {
                 (dataToSave as any).id = promptToEdit.id;
             }
             await savePrompt(dataToSave);

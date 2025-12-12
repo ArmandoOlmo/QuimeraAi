@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
@@ -27,6 +28,7 @@ const voices: { name: AiAssistantConfig['voiceName']; description: string; gende
 ];
 
 const AiAssistantDashboard: React.FC = () => {
+    const { t } = useTranslation();
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject, projects, loadProject } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -69,7 +71,7 @@ const AiAssistantDashboard: React.FC = () => {
                             </button>
                             <div className="flex items-center gap-2">
                                 <Bot className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground">Quimera Chat</h1>
+                                <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
                             </div>
                         </div>
                     </header>
@@ -77,9 +79,9 @@ const AiAssistantDashboard: React.FC = () => {
                     <main className="flex-1 overflow-y-auto p-8 bg-secondary/10">
                         <div className="max-w-5xl mx-auto">
                             <div className="text-center mb-12">
-                                <h2 className="text-3xl font-bold mb-4">Select a Project</h2>
+                                <h2 className="text-3xl font-bold mb-4">{t('aiAssistant.dashboard.selectProject')}</h2>
                                 <p className="text-muted-foreground max-w-lg mx-auto text-lg">
-                                    Choose a website project to configure its AI Assistant.
+                                    {t('aiAssistant.dashboard.selectProjectDesc')}
                                 </p>
                             </div>
 
@@ -120,8 +122,8 @@ const AiAssistantDashboard: React.FC = () => {
                             ) : (
                                 <div className="text-center py-20 bg-card rounded-2xl border border-dashed border-border">
                                     <LayoutGrid className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
-                                    <h3 className="text-lg font-bold mb-2">No Projects Found</h3>
-                                    <p className="text-sm text-muted-foreground mb-6">Create a new website project to start using Quimera Chat.</p>
+                                    <h3 className="text-lg font-bold mb-2">{t('aiAssistant.dashboard.noProjects')}</h3>
+                                    <p className="text-sm text-muted-foreground mb-6">{t('aiAssistant.dashboard.noProjectsDesc')}</p>
                                 </div>
                             )}
                         </div>
@@ -137,34 +139,34 @@ const AiAssistantDashboard: React.FC = () => {
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl shadow-sm">
-                            <h3 className="font-bold text-lg mb-4">Performance Overview</h3>
+                            <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.performanceOverview')}</h3>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
                                     <span className="block text-2xl font-bold text-primary">142</span>
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Chats</span>
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.chats')}</span>
                                 </div>
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
                                     <span className="block text-2xl font-bold text-green-500">28</span>
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Leads</span>
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.leads')}</span>
                                 </div>
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
                                     <span className="block text-2xl font-bold text-blue-500">1.2s</span>
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Latency</span>
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.latency')}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="bg-card border border-border rounded-xl p-6">
-                            <h3 className="font-bold text-lg mb-4">Configuration Status</h3>
+                            <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span> <span className="text-sm font-medium">Business Profile</span></div>
-                                    <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">Active</span>
+                                    <div className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span> <span className="text-sm font-medium">{t('aiAssistant.dashboard.businessProfile')}</span></div>
+                                    <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">{t('aiAssistant.dashboard.active')}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center"><span className={`w-2 h-2 rounded-full mr-3 ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`}></span> <span className="text-sm font-medium">Live Voice</span></div>
+                                    <div className="flex items-center"><span className={`w-2 h-2 rounded-full mr-3 ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`}></span> <span className="text-sm font-medium">{t('aiAssistant.dashboard.liveVoice')}</span></div>
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${formData.enableLiveVoice ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                        {formData.enableLiveVoice ? 'Enabled' : 'Disabled'}
+                                        {formData.enableLiveVoice ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
                                     </span>
                                 </div>
                             </div>
@@ -176,28 +178,28 @@ const AiAssistantDashboard: React.FC = () => {
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Business Profile</label>
+                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.businessProfile')}</label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
-                                placeholder="Describe your business mission, history, and value proposition..."
+                                placeholder={t('aiAssistant.dashboard.placeholders.businessProfile')}
                                 value={formData.businessProfile}
                                 onChange={(e) => updateForm('businessProfile', e.target.value)}
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Products & Services</label>
+                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.productsServices')}</label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
-                                placeholder="List your key products, prices, and features..."
+                                placeholder={t('aiAssistant.dashboard.placeholders.productsServices')}
                                 value={formData.productsServices}
                                 onChange={(e) => updateForm('productsServices', e.target.value)}
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">Policies & Contact</label>
+                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.policiesContact')}</label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
-                                placeholder="Return policy, opening hours, address, phone..."
+                                placeholder={t('aiAssistant.dashboard.placeholders.policiesContact')}
                                 value={formData.policiesContact}
                                 onChange={(e) => updateForm('policiesContact', e.target.value)}
                             />
@@ -208,7 +210,7 @@ const AiAssistantDashboard: React.FC = () => {
                             <div className="flex items-center gap-2 mb-4">
                                 <BookOpen size={20} className="text-primary" />
                                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                                    Frequently Asked Questions
+                                    {t('aiAssistant.dashboard.faqSection')}
                                 </h3>
                             </div>
                             <FAQManager
@@ -222,7 +224,7 @@ const AiAssistantDashboard: React.FC = () => {
                             <div className="flex items-center gap-2 mb-4">
                                 <FileText size={20} className="text-primary" />
                                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                                    Knowledge Documents
+                                    {t('aiAssistant.dashboard.knowledgeDocs')}
                                 </h3>
                             </div>
                             <KnowledgeDocumentUploader
@@ -238,7 +240,7 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="space-y-8 animate-fade-in-up">
                         <div className="grid grid-cols-1 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-foreground mb-2">Assistant Name</label>
+                                <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.assistantName')}</label>
                                 <input
                                     type="text"
                                     value={formData.agentName}
@@ -247,7 +249,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-foreground mb-2">Languages</label>
+                                <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.languages')}</label>
                                 <div className="flex items-center bg-card border border-border rounded-xl px-3">
                                     <Globe size={18} className="text-muted-foreground mr-2" />
                                     <input
@@ -255,15 +257,15 @@ const AiAssistantDashboard: React.FC = () => {
                                         value={formData.languages}
                                         onChange={(e) => updateForm('languages', e.target.value)}
                                         className="w-full bg-transparent py-3 focus:outline-none"
-                                        placeholder="e.g. English, Spanish (Auto-detection enabled)"
+                                        placeholder={t('aiAssistant.dashboard.languagesPlaceholder')}
                                     />
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-2">The AI will automatically detect the user's language and reply in the same language.</p>
+                                <p className="text-xs text-muted-foreground mt-2">{t('aiAssistant.dashboard.autoDetect')}</p>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-foreground mb-4">Tone of Voice</label>
+                            <label className="block text-sm font-bold text-foreground mb-4">{t('aiAssistant.dashboard.toneOfVoice')}</label>
                             <div className="grid grid-cols-2 gap-3">
                                 {['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'].map(tone => (
                                     <button
@@ -278,7 +280,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-foreground mb-2">System Prompt (Instructions)</label>
+                            <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.systemPrompt')}</label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-xs"
                                 value={formData.specialInstructions}
@@ -293,8 +295,8 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg flex items-center"><Mic className="mr-2 text-primary" /> Enable Live Voice</h3>
-                                <p className="text-sm text-muted-foreground">Allow users to speak with your assistant in real-time.</p>
+                                <h3 className="font-bold text-lg flex items-center"><Mic className="mr-2 text-primary" /> {t('aiAssistant.dashboard.enableLiveVoice')}</h3>
+                                <p className="text-sm text-muted-foreground">{t('aiAssistant.dashboard.enableLiveVoiceDesc')}</p>
                             </div>
                             <button
                                 onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
@@ -305,7 +307,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div className="bg-card border border-border p-6 rounded-xl">
-                            <label className="block text-sm font-bold text-foreground mb-4 flex items-center"><Radio className="mr-2 text-primary" /> Select Voice Personality</label>
+                            <label className="block text-sm font-bold text-foreground mb-4 flex items-center"><Radio className="mr-2 text-primary" /> {t('aiAssistant.dashboard.selectVoice')}</label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {voices.map(v => (
                                     <button
@@ -346,8 +348,8 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg">Activate Assistant</h3>
-                                <p className="text-sm text-muted-foreground">Enable the chat widget on your live site.</p>
+                                <h3 className="font-bold text-lg">{t('aiAssistant.dashboard.activateAssistant')}</h3>
+                                <p className="text-sm text-muted-foreground">{t('aiAssistant.dashboard.activateAssistantDesc')}</p>
                             </div>
                             <button
                                 onClick={() => updateForm('isActive', !formData.isActive)}
@@ -358,7 +360,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div className="bg-card border border-border p-6 rounded-xl">
-                            <label className="block text-sm font-bold text-foreground mb-4">Widget Color</label>
+                            <label className="block text-sm font-bold text-foreground mb-4">{t('aiAssistant.dashboard.widgetColor')}</label>
                             <div className="flex gap-4">
                                 {['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#000000'].map(color => (
                                     <button
@@ -397,7 +399,7 @@ const AiAssistantDashboard: React.FC = () => {
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-lg font-semibold text-foreground">Quimera Chat</h1>
+                            <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
                             <span className="text-xs text-muted-foreground flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> {activeProject.name}</span>
                         </div>
                     </div>
@@ -410,12 +412,12 @@ const AiAssistantDashboard: React.FC = () => {
                             {isSaving ? (
                                 <>
                                     <Save className="w-4 h-4" />
-                                    <span>Saving...</span>
+                                    <span>{t('aiAssistant.dashboard.saving')}</span>
                                 </>
                             ) : (
                                 <>
                                     <Save className="w-4 h-4" />
-                                    <span>Save</span>
+                                    <span>{t('aiAssistant.dashboard.save')}</span>
                                 </>
                             )}
                         </button>
@@ -430,13 +432,13 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="px-8 pt-8 pb-4">
                             <div className="flex space-x-1 bg-secondary/30 p-1 rounded-xl overflow-x-auto">
                                 {[
-                                    { id: 'overview', label: 'Overview' },
-                                    { id: 'knowledge', label: 'Knowledge' },
-                                    { id: 'personality', label: 'Personality' },
-                                    { id: 'voice', label: 'Voice & Live' },
-                                    { id: 'leadCapture', label: 'Lead Capture' },
-                                    { id: 'customization', label: 'Customization' },
-                                    { id: 'settings', label: 'Settings' },
+                                    { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview') },
+                                    { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge') },
+                                    { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality') },
+                                    { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice') },
+                                    { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture') },
+                                    { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization') },
+                                    { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings') },
                                 ].map(tab => (
                                     <button
                                         key={tab.id}
@@ -460,7 +462,7 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-overlay pointer-events-none"></div>
 
                         <div className="relative z-10 flex flex-col items-center">
-                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">Live Simulator</h3>
+                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">{t('aiAssistant.dashboard.liveSimulator')}</h3>
 
                             {/* Phone Mockup */}
                             <div className="w-[360px] h-[700px] bg-white dark:bg-black rounded-[40px] border-[12px] border-gray-800 shadow-2xl relative overflow-hidden flex flex-col">

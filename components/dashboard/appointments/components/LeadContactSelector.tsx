@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Search,
     Users,
@@ -18,8 +19,8 @@ import {
     UserPlus,
 } from 'lucide-react';
 import { Lead, AppointmentParticipant } from '../../../../types';
-import { 
-    getInitials, 
+import {
+    getInitials,
     getAvatarColor,
     generateParticipantId,
 } from '../utils/appointmentHelpers';
@@ -53,7 +54,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
     const [isHovered, setIsHovered] = useState(false);
     const scoreInfo = lead.leadScore !== undefined ? getLeadScoreLabel(lead.leadScore) : null;
     const sourceConfig = lead.source ? getSourceConfig(lead.source) : null;
-    
+
     return (
         <div
             onClick={() => !isDisabled && onToggle()}
@@ -62,8 +63,8 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
             className={`
                 relative p-4 rounded-xl border-2 cursor-pointer
                 transition-all duration-200
-                ${isSelected 
-                    ? 'border-primary bg-primary/5 shadow-sm' 
+                ${isSelected
+                    ? 'border-primary bg-primary/5 shadow-sm'
                     : isDisabled
                         ? 'border-border/50 bg-muted/20 opacity-50 cursor-not-allowed'
                         : 'border-border hover:border-primary/30 hover:bg-secondary/30'
@@ -75,14 +76,14 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                 absolute top-3 right-3 w-5 h-5 rounded-full border-2
                 flex items-center justify-center
                 transition-all duration-200
-                ${isSelected 
-                    ? 'bg-primary border-primary' 
+                ${isSelected
+                    ? 'bg-primary border-primary'
                     : 'border-muted-foreground/30'
                 }
             `}>
                 {isSelected && <Check size={12} className="text-primary-foreground" />}
             </div>
-            
+
             <div className="flex items-start gap-3">
                 {/* Avatar */}
                 <div className={`
@@ -91,7 +92,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                     ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
                 `}>
                     {getInitials(lead.name || '')}
-                    
+
                     {/* Score indicator */}
                     {scoreInfo && (
                         <div className={`
@@ -103,20 +104,20 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                         </div>
                     )}
                 </div>
-                
+
                 {/* Info */}
                 <div className="flex-1 min-w-0 pr-6">
                     <h4 className="font-semibold text-foreground text-sm truncate">
                         {lead.name}
                     </h4>
-                    
+
                     {lead.company && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Building2 size={10} />
                             {lead.company}
                         </p>
                     )}
-                    
+
                     <div className="flex items-center gap-3 mt-2">
                         {lead.email && (
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -131,7 +132,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                             </span>
                         )}
                     </div>
-                    
+
                     {/* Tags */}
                     <div className="flex items-center gap-2 mt-2">
                         {sourceConfig && (
@@ -145,10 +146,10 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                             <span className={`
                                 text-[10px] px-1.5 py-0.5 rounded font-medium
                                 ${lead.status === 'new' ? 'bg-blue-500/10 text-blue-500' :
-                                  lead.status === 'qualified' ? 'bg-purple-500/10 text-purple-500' :
-                                  lead.status === 'won' ? 'bg-green-500/10 text-green-500' :
-                                  lead.status === 'lost' ? 'bg-red-500/10 text-red-500' :
-                                  'bg-muted text-muted-foreground'}
+                                    lead.status === 'qualified' ? 'bg-purple-500/10 text-purple-500' :
+                                        lead.status === 'won' ? 'bg-green-500/10 text-green-500' :
+                                            lead.status === 'lost' ? 'bg-red-500/10 text-red-500' :
+                                                'bg-muted text-muted-foreground'}
                             `}>
                                 {lead.status}
                             </span>
@@ -156,7 +157,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                     </div>
                 </div>
             </div>
-            
+
             {/* Hover preview */}
             {isHovered && !isDisabled && lead.notes && (
                 <div className="mt-3 pt-3 border-t border-border/50 animate-fade-in">
@@ -184,11 +185,11 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [showFilters, setShowFilters] = useState(false);
-    
+
     // Filter leads
     const filteredLeads = useMemo(() => {
         let result = leads;
-        
+
         // Search filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
@@ -199,12 +200,12 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                 lead.phone?.includes(query)
             );
         }
-        
+
         // Status filter
         if (statusFilter !== 'all') {
             result = result.filter(lead => lead.status === statusFilter);
         }
-        
+
         // Sort by score and name
         result = [...result].sort((a, b) => {
             // First by score (higher first)
@@ -214,10 +215,10 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             // Then by name
             return (a.name || '').localeCompare(b.name || '');
         });
-        
+
         return result;
     }, [leads, searchQuery, statusFilter]);
-    
+
     // Toggle selection
     const toggleLead = (leadId: string) => {
         if (selectedLeadIds.includes(leadId)) {
@@ -229,21 +230,21 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             onSelectionChange([...selectedLeadIds, leadId]);
         }
     };
-    
+
     // Select all visible
     const selectAll = () => {
         const visibleIds = filteredLeads.map(l => l.id);
-        const newSelection = maxSelection 
-            ? visibleIds.slice(0, maxSelection) 
+        const newSelection = maxSelection
+            ? visibleIds.slice(0, maxSelection)
             : visibleIds;
         onSelectionChange(newSelection);
     };
-    
+
     // Clear selection
     const clearSelection = () => {
         onSelectionChange([]);
     };
-    
+
     // Import selected leads
     const handleImport = () => {
         const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
@@ -258,12 +259,12 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             role: 'attendee' as const,
             status: 'pending' as const,
         }));
-        
+
         onImport(participants, selectedLeadIds);
     };
-    
+
     const reachedMax = maxSelection ? selectedLeadIds.length >= maxSelection : false;
-    
+
     return (
         <div className={`flex flex-col ${className}`}>
             {/* Header */}
@@ -275,7 +276,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         {leads.length} disponibles
                     </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     {selectedLeadIds.length > 0 && (
                         <button
@@ -294,7 +295,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     </button>
                 </div>
             </div>
-            
+
             {/* Search & Filters */}
             <div className="flex gap-2 mb-4">
                 <div className="relative flex-1">
@@ -307,14 +308,14 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         className="w-full h-10 bg-secondary/50 border border-border rounded-xl pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     />
                 </div>
-                
+
                 <button
                     onClick={() => setShowFilters(!showFilters)}
                     className={`
                         h-10 px-3 rounded-xl border flex items-center gap-2 text-sm
                         transition-colors
-                        ${showFilters 
-                            ? 'border-primary bg-primary/5 text-primary' 
+                        ${showFilters
+                            ? 'border-primary bg-primary/5 text-primary'
                             : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50'
                         }
                     `}
@@ -324,7 +325,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     <ChevronDown size={14} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </button>
             </div>
-            
+
             {/* Filters panel */}
             {showFilters && (
                 <div className="mb-4 p-3 bg-secondary/30 rounded-xl border border-border animate-scale-in">
@@ -339,8 +340,8 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                                 className={`
                                     px-3 py-1.5 rounded-lg text-xs font-medium
                                     transition-colors
-                                    ${statusFilter === status 
-                                        ? 'bg-primary text-primary-foreground' 
+                                    ${statusFilter === status
+                                        ? 'bg-primary text-primary-foreground'
                                         : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
                                     }
                                 `}
@@ -351,7 +352,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Selection summary */}
             {selectedLeadIds.length > 0 && (
                 <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between animate-fade-in">
@@ -368,7 +369,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                             </span>
                         )}
                     </div>
-                    
+
                     <button
                         onClick={handleImport}
                         className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"
@@ -378,15 +379,15 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     </button>
                 </div>
             )}
-            
+
             {/* Leads grid */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {filteredLeads.length === 0 ? (
                     <div className="text-center py-12">
                         <Users className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                         <p className="text-sm text-muted-foreground">
-                            {searchQuery || statusFilter !== 'all' 
-                                ? 'No se encontraron leads con esos criterios' 
+                            {searchQuery || statusFilter !== 'all'
+                                ? 'No se encontraron leads con esos criterios'
                                 : 'No hay leads disponibles'
                             }
                         </p>
@@ -405,7 +406,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     </div>
                 )}
             </div>
-            
+
             {/* Selected chips */}
             {selectedLeadIds.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
@@ -439,6 +440,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
 };
 
 export default LeadContactSelector;
+
 
 
 

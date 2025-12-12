@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Calendar,
     Check,
@@ -43,12 +44,12 @@ interface GoogleCalendarConnectProps {
 const GoogleCalendarIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24">
         {/* Calendar base - gray */}
-        <path fill="#5F6368" d="M19.5 4H18V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H4.5C3.12 4 2 5.12 2 6.5v13C2 20.88 3.12 22 4.5 22h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 5.12 20.88 4 19.5 4zM4.5 6H6v1c0 .55.45 1 1 1s1-.45 1-1V6h8v1c0 .55.45 1 1 1s1-.45 1-1V6h1.5c.28 0 .5.22.5.5V9H4V6.5c0-.28.22-.5.5-.5zm15 14H4.5c-.28 0-.5-.22-.5-.5V11h16v8.5c0 .28-.22.5-.5.5z"/>
+        <path fill="#5F6368" d="M19.5 4H18V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H4.5C3.12 4 2 5.12 2 6.5v13C2 20.88 3.12 22 4.5 22h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 5.12 20.88 4 19.5 4zM4.5 6H6v1c0 .55.45 1 1 1s1-.45 1-1V6h8v1c0 .55.45 1 1 1s1-.45 1-1V6h1.5c.28 0 .5.22.5.5V9H4V6.5c0-.28.22-.5.5-.5zm15 14H4.5c-.28 0-.5-.22-.5-.5V11h16v8.5c0 .28-.22.5-.5.5z" />
         {/* Google colors squares */}
-        <rect fill="#EA4335" x="6" y="12" width="4" height="4" rx="0.5"/>
-        <rect fill="#FBBC05" x="11" y="12" width="4" height="4" rx="0.5"/>
-        <rect fill="#34A853" x="6" y="17" width="4" height="2" rx="0.5"/>
-        <rect fill="#4285F4" x="11" y="17" width="4" height="2" rx="0.5"/>
+        <rect fill="#EA4335" x="6" y="12" width="4" height="4" rx="0.5" />
+        <rect fill="#FBBC05" x="11" y="12" width="4" height="4" rx="0.5" />
+        <rect fill="#34A853" x="6" y="17" width="4" height="2" rx="0.5" />
+        <rect fill="#4285F4" x="11" y="17" width="4" height="2" rx="0.5" />
     </svg>
 );
 
@@ -70,7 +71,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     const [isSyncing, setIsSyncing] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     const handleConnect = async () => {
         setIsLoading(true);
         setError(null);
@@ -82,10 +83,10 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
             setIsLoading(false);
         }
     };
-    
+
     const handleDisconnect = async () => {
         if (!confirm('¿Estás seguro de que deseas desconectar Google Calendar?')) return;
-        
+
         setIsLoading(true);
         try {
             await onDisconnect();
@@ -95,7 +96,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
             setIsLoading(false);
         }
     };
-    
+
     const handleSync = async () => {
         setIsSyncing(true);
         setError(null);
@@ -107,7 +108,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
             setIsSyncing(false);
         }
     };
-    
+
     const getSyncStatusInfo = () => {
         switch (syncStatus) {
             case 'synced':
@@ -120,10 +121,10 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                 return { color: 'text-muted-foreground', bg: 'bg-muted', label: 'No sincronizado', icon: Calendar };
         }
     };
-    
+
     const statusInfo = getSyncStatusInfo();
     const StatusIcon = statusInfo.icon;
-    
+
     // Not connected state
     if (!isConnected) {
         return (
@@ -140,7 +141,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             </p>
                         </div>
                     </div>
-                    
+
                     <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Check size={16} className="text-green-500" />
@@ -155,7 +156,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             Crear Google Meet automáticamente
                         </div>
                     </div>
-                    
+
                     {error && (
                         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                             <p className="text-sm text-red-500 flex items-center gap-2">
@@ -164,7 +165,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             </p>
                         </div>
                     )}
-                    
+
                     <button
                         onClick={handleConnect}
                         disabled={isLoading}
@@ -179,7 +180,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             {isLoading ? 'Conectando...' : 'Conectar con Google Calendar'}
                         </span>
                     </button>
-                    
+
                     <p className="text-xs text-muted-foreground text-center mt-3">
                         Usamos OAuth 2.0 para una conexión segura
                     </p>
@@ -187,7 +188,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
             </div>
         );
     }
-    
+
     // Connected state
     return (
         <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
@@ -213,7 +214,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         )}
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handleSync}
@@ -227,13 +228,13 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             <RefreshCw size={18} />
                         )}
                     </button>
-                    
+
                     <button
                         onClick={() => setShowSettings(!showSettings)}
                         className={`
                             p-2 rounded-lg transition-colors
-                            ${showSettings 
-                                ? 'bg-secondary text-foreground' 
+                            ${showSettings
+                                ? 'bg-secondary text-foreground'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                             }
                         `}
@@ -242,7 +243,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     </button>
                 </div>
             </div>
-            
+
             {/* Settings panel */}
             {showSettings && (
                 <div className="p-4 border-b border-border bg-secondary/10 animate-fade-in">
@@ -259,7 +260,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 <input
                                     type="checkbox"
                                     checked={config?.syncEnabled ?? true}
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                     className="sr-only peer"
                                 />
                                 <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors">
@@ -271,7 +272,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 </div>
                             </label>
                         </div>
-                        
+
                         {/* Calendar selector */}
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-2">
@@ -279,13 +280,13 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             </label>
                             <select
                                 value={config?.calendarId || 'primary'}
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 className="w-full h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
                                 <option value="primary">Calendario principal</option>
                             </select>
                         </div>
-                        
+
                         {/* Disconnect button */}
                         <button
                             onClick={handleDisconnect}
@@ -302,7 +303,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Status info */}
             <div className="p-4">
                 {error && (
@@ -313,22 +314,22 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         </p>
                     </div>
                 )}
-                
+
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Última sincronización:</span>
                     <span className="text-foreground">
-                        {lastSyncTime 
-                            ? lastSyncTime.toLocaleString('es-ES', { 
+                        {lastSyncTime
+                            ? lastSyncTime.toLocaleString('es-ES', {
                                 day: 'numeric',
                                 month: 'short',
                                 hour: '2-digit',
                                 minute: '2-digit'
-                              })
+                            })
                             : 'Nunca'
                         }
                     </span>
                 </div>
-                
+
                 <a
                     href="https://calendar.google.com"
                     target="_blank"

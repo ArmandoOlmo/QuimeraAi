@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin/AdminContext';
@@ -16,6 +17,7 @@ interface TenantManagementProps {
 }
 
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const { canPerform } = useAuth();
     const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -58,10 +60,10 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
     const handleDeleteTenant = async (tenantId: string) => {
         if (!canPerform('canDeleteTenants')) {
-            alert('No tienes permiso para eliminar tenants.');
+            alert(t('superadmin.tenant.alerts.noPermission', 'No tienes permiso para eliminar tenants.'));
             return;
         }
-        if (window.confirm('¿Estás seguro de eliminar este tenant? Esta acción no se puede deshacer.')) {
+        if (window.confirm(t('superadmin.tenant.alerts.deleteConfirm', '¿Estás seguro de eliminar este tenant? Esta acción no se puede deshacer.'))) {
             await deleteTenant(tenantId);
         }
     };
@@ -159,96 +161,97 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <Folder size={14} />
                                 <span className="text-sm">{tenant.usage.projectCount} / {tenant.limits.maxProjects}</span>
                             </div>
-                            <span className="text-xs text-editor-text-secondary">Proyectos</span>
                         </div>
-
-                        {tenant.type === 'agency' && (
-                            <div className="text-center">
-                                <div className="flex items-center gap-1 text-editor-text-secondary">
-                                    <Users size={14} />
-                                    <span className="text-sm">{tenant.usage.userCount} / {tenant.limits.maxUsers}</span>
-                                </div>
-                                <span className="text-xs text-editor-text-secondary">Usuarios</span>
-                            </div>
-                        )}
-
-                        <div className="text-center">
-                            <div className="flex items-center gap-1 text-editor-text-secondary">
-                                <HardDrive size={14} />
-                                <span className="text-sm">{tenant.usage.storageUsedGB.toFixed(1)} GB</span>
-                            </div>
-                            <span className="text-xs text-editor-text-secondary">Almacenamiento</span>
-                        </div>
-
-                        <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-md text-sm font-medium">
-                            {tenant.subscriptionPlan}
-                        </div>
+                        <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.projects', 'Proyectos')}</span>
                     </div>
 
-                    {/* Acciones */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setSelectedTenant(tenant)}
-                            className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-bg rounded-lg transition-colors"
-                            title="Ver detalles"
-                        >
-                            <Edit2 size={18} />
-                        </button>
-                        {canPerform('canDeleteTenants') && (
-                            <button
-                                onClick={() => handleDeleteTenant(tenant.id)}
-                                className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="Eliminar"
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        )}
+                    {tenant.type === 'agency' && (
+                        <div className="text-center">
+                            <div className="flex items-center gap-1 text-editor-text-secondary">
+                                <Users size={14} />
+                                <span className="text-sm">{tenant.usage.userCount} / {tenant.limits.maxUsers}</span>
+                            </div>
+                            <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.users', 'Usuarios')}</span>
+                        </div>
+                    )}
+
+                    <div className="text-center">
+                        <div className="flex items-center gap-1 text-editor-text-secondary">
+                            <HardDrive size={14} />
+                            <span className="text-sm">{tenant.usage.storageUsedGB.toFixed(1)} GB</span>
+                        </div>
+                        <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.storage', 'Almacenamiento')}</span>
+                    </div>
+
+                    <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-md text-sm font-medium">
+                        {tenant.subscriptionPlan}
                     </div>
                 </div>
 
+                {/* Acciones */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setSelectedTenant(tenant)}
+                        className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-bg rounded-lg transition-colors"
+                        title="Ver detalles"
+                    >
+                        <Edit2 size={18} />
+                    </button>
+                    {canPerform('canDeleteTenants') && (
+                        <button
+                            onClick={() => handleDeleteTenant(tenant.id)}
+                            className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Eliminar"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    )}
+                </div>
                 {/* Vista expandida para agencias */}
-                {isExpanded && tenant.type === 'agency' && (
-                    <div className="border-t border-editor-border p-4 bg-editor-bg/50">
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-editor-text-primary flex items-center gap-2">
-                                <Users size={16} />
-                                Miembros del equipo ({tenantMembers.length})
-                            </h4>
-                            <button className="flex items-center gap-1 text-sm text-editor-accent hover:text-editor-accent/80 transition-colors">
-                                <UserPlus size={14} />
-                                Invitar usuario
-                            </button>
-                        </div>
+                {
+                    isExpanded && tenant.type === 'agency' && (
+                        <div className="border-t border-editor-border p-4 bg-editor-bg/50">
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-editor-text-primary flex items-center gap-2">
+                                    <Users size={16} />
+                                    {t('superadmin.tenant.agency.members', 'Miembros del equipo')} ({tenantMembers.length})
+                                </h4>
+                                <button className="flex items-center gap-1 text-sm text-editor-accent hover:text-editor-accent/80 transition-colors">
+                                    <UserPlus size={14} />
+                                    {t('superadmin.tenant.agency.invite', 'Invitar usuario')}
+                                </button>
+                            </div>
 
-                        <div className="space-y-2">
-                            {tenantMembers.length > 0 ? (
-                                tenantMembers.map(member => (
-                                    <div key={member.id} className="flex items-center justify-between p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
-                                        <div className="flex items-center gap-3">
-                                            <img
-                                                src={member.photoURL || `https://ui-avatars.com/api/?name=${member.name}&background=3f3f46&color=e4e4e7`}
-                                                alt={member.name}
-                                                className="w-10 h-10 rounded-full object-cover"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-editor-text-primary">{member.name}</p>
-                                                <p className="text-xs text-editor-text-secondary">{member.email}</p>
+                            <div className="space-y-2">
+                                {tenantMembers.length > 0 ? (
+                                    tenantMembers.map(member => (
+                                        <div key={member.id} className="flex items-center justify-between p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    src={member.photoURL || `https://ui-avatars.com/api/?name=${member.name}&background=3f3f46&color=e4e4e7`}
+                                                    alt={member.name}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                                <div>
+                                                    <p className="text-sm font-medium text-editor-text-primary">{member.name}</p>
+                                                    <p className="text-xs text-editor-text-secondary">{member.email}</p>
+                                                </div>
                                             </div>
+                                            <span className="px-2 py-1 text-xs bg-editor-border text-editor-text-secondary rounded-md">
+                                                {member.tenantRole || 'member'}
+                                            </span>
                                         </div>
-                                        <span className="px-2 py-1 text-xs bg-editor-border text-editor-text-secondary rounded-md">
-                                            {member.tenantRole || 'member'}
-                                        </span>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm text-editor-text-secondary text-center py-4">
-                                    No hay miembros en este equipo
-                                </p>
-                            )}
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-editor-text-secondary text-center py-4">
+                                        {t('superadmin.tenant.agency.noMembers', 'No hay miembros en este equipo')}
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
+            </div >
         );
     };
 
@@ -273,7 +276,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         </button>
                         <div className="flex items-center gap-2">
                             <Users className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">Gestión de Tenants</h1>
+                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.tenant.title', 'Gestión de Tenants')}</h1>
                         </div>
                     </div>
                     <button
@@ -281,7 +284,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Volver
+                        {t('superadmin.tenant.back', 'Volver')}
                     </button>
                 </header>
 
@@ -289,27 +292,27 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     {/* Métricas */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <MetricCard
-                            title="Total Tenants"
+                            title={t('superadmin.tenant.totalTenants', 'Total Tenants')}
                             value={tenants.length}
-                            subtitle={`${individualCount} individuales, ${agencyCount} agencias`}
+                            subtitle={`${individualCount} ${t('superadmin.tenant.individual', 'individual')}, ${agencyCount} ${t('superadmin.tenant.agencyLabel', 'agencia')}`}
                             icon={<Users size={20} />}
                         />
                         <MetricCard
-                            title="Tenants Activos"
+                            title={t('superadmin.tenant.activeTenants', 'Tenants Activos')}
                             value={activeCount}
                             subtitle={`${((activeCount / tenants.length) * 100).toFixed(0)}% del total`}
                             icon={<CheckCircle size={20} />}
                         />
                         <MetricCard
-                            title="MRR Total"
+                            title={t('superadmin.tenant.totalMrr', 'MRR Total')}
                             value={`$${calculateTotalMRR().toLocaleString()}`}
-                            trend="+8% este mes"
+                            trend={t('superadmin.tenant.metrics.trend', '+8% este mes')}
                             icon={<DollarSign size={20} />}
                         />
                         <MetricCard
-                            title="Proyectos Totales"
+                            title={t('superadmin.tenant.totalProjects', 'Proyectos Totales')}
                             value={tenants.reduce((sum, t) => sum + t.usage.projectCount, 0)}
-                            subtitle="En todos los tenants"
+                            subtitle={t('superadmin.tenant.metrics.allTenantsSubtitle', 'En todos los tenants')}
                             icon={<Folder size={20} />}
                         />
                     </div>
@@ -326,7 +329,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         : 'text-editor-text-secondary hover:text-editor-text-primary'
                                         }`}
                                 >
-                                    Todos ({tenants.length})
+                                    {t('superadmin.tenant.allTenants', 'Todos')} ({tenants.length})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('individual')}
@@ -336,7 +339,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         }`}
                                 >
                                     <User size={16} />
-                                    Individuales ({individualCount})
+                                    {t('superadmin.tenant.individual', 'Individuales')} ({individualCount})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('agency')}
@@ -346,7 +349,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         }`}
                                 >
                                     <Building2 size={16} />
-                                    Agencias ({agencyCount})
+                                    {t('superadmin.tenant.agency', 'Agencias')} ({agencyCount})
                                 </button>
                             </div>
 

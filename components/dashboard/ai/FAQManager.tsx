@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { FAQItem } from '../../../types';
 
@@ -8,6 +9,7 @@ interface FAQManagerProps {
 }
 
 const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
+    const { t } = useTranslation();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [formData, setFormData] = useState<{ question: string; answer: string }>({
@@ -49,7 +51,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this FAQ?')) {
+        if (confirm(t('aiAssistant.faq.deleteConfirm'))) {
             onFAQsChange(faqs.filter(faq => faq.id !== id));
         }
     };
@@ -69,7 +71,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                     className="w-full py-3 px-4 border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-card/50 transition-all text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-center gap-2"
                 >
                     <Plus size={18} />
-                    Add FAQ
+                    {t('aiAssistant.faq.addFaq')}
                 </button>
             )}
 
@@ -78,25 +80,25 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                 <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                     <div>
                         <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
-                            Question
+                            {t('aiAssistant.faq.question')}
                         </label>
                         <input
                             type="text"
                             value={formData.question}
                             onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                            placeholder="What is your return policy?"
+                            placeholder={t('aiAssistant.faq.questionPlaceholder')}
                             className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                             autoFocus
                         />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
-                            Answer
+                            {t('aiAssistant.faq.answer')}
                         </label>
                         <textarea
                             value={formData.answer}
                             onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-                            placeholder="We offer a 30-day return policy for all products..."
+                            placeholder={t('aiAssistant.faq.answerPlaceholder')}
                             className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[100px] resize-y"
                             rows={4}
                         />
@@ -108,14 +110,14 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                             className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             <Save size={16} />
-                            {editingId ? 'Update' : 'Add'} FAQ
+                            {editingId ? t('aiAssistant.faq.update') : t('aiAssistant.faq.add')} FAQ
                         </button>
                         <button
                             onClick={handleCancel}
                             className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                         >
                             <X size={16} />
-                            Cancel
+                            {t('aiAssistant.faq.cancel')}
                         </button>
                     </div>
                 </div>
@@ -125,7 +127,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             {faqs.length > 0 && (
                 <div className="space-y-2">
                     <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                        Existing FAQs ({faqs.length})
+                        {t('aiAssistant.faq.existingFaqs')} ({faqs.length})
                     </h4>
                     <div className="space-y-2">
                         {faqs.map((faq) => (
@@ -141,14 +143,14 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                                         <button
                                             onClick={() => handleEdit(faq)}
                                             className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
-                                            title="Edit"
+                                            title={t('aiAssistant.faq.edit')}
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(faq.id)}
                                             className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
-                                            title="Delete"
+                                            title={t('aiAssistant.faq.delete')}
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -166,9 +168,9 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             {/* Empty State */}
             {faqs.length === 0 && !isAdding && (
                 <div className="text-center py-8 bg-card/50 rounded-xl border border-dashed border-border">
-                    <p className="text-sm text-muted-foreground mb-1">No FAQs added yet</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('aiAssistant.faq.noFaqs')}</p>
                     <p className="text-xs text-muted-foreground">
-                        Add frequently asked questions to help your chatbot provide instant answers
+                        {t('aiAssistant.faq.noFaqsDesc')}
                     </p>
                 </div>
             )}

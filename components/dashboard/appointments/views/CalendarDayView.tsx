@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, Plus } from 'lucide-react';
 import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
 import { AppointmentCard } from '../components/AppointmentCard';
@@ -48,22 +49,23 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     workingHoursStart = 8,
     workingHoursEnd = 18,
 }) => {
+    const { t } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [currentTimeTop, setCurrentTimeTop] = useState(0);
-    
+
     const isCurrentDay = isToday(currentDate);
-    
+
     // Filter appointments for current day
     const dayAppointments = useMemo(() => {
         const start = getStartOfDay(currentDate);
         const end = getEndOfDay(currentDate);
-        
+
         return appointments.filter(apt => {
             const aptDate = timestampToDate(apt.startDate);
             return aptDate >= start && aptDate <= end;
         }).sort((a, b) => a.startDate.seconds - b.startDate.seconds);
     }, [appointments, currentDate]);
-    
+
     // Update current time indicator
     useEffect(() => {
         const updateCurrentTime = () => {
@@ -71,13 +73,13 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
             const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
             setCurrentTimeTop((minutesSinceMidnight / 60) * HOUR_HEIGHT);
         };
-        
+
         updateCurrentTime();
         const interval = setInterval(updateCurrentTime, 60000);
-        
+
         return () => clearInterval(interval);
     }, []);
-    
+
     // Scroll to current time on mount
     useEffect(() => {
         if (scrollContainerRef.current) {
@@ -85,11 +87,11 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
             scrollContainerRef.current.scrollTop = scrollTo;
         }
     }, [workingHoursStart]);
-    
+
     // Calculate appointment positions
     const dayStart = new Date(currentDate);
     dayStart.setHours(0, 0, 0, 0);
-    
+
     return (
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-background">
             {/* Left sidebar with day info - Hidden on mobile, shown as header */}
@@ -108,41 +110,41 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     <p className="text-sm text-muted-foreground mt-1">
                         {currentDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                     </p>
-                    
+
                     {isCurrentDay && (
                         <div className="mt-3 flex items-center gap-2 text-sm text-primary">
                             <div className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                             </div>
-                            Hoy
+                            {t('appointments.today')}
                         </div>
                     )}
                 </div>
-                
+
                 {/* Appointments list for the day */}
                 <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-2 lg:space-y-3">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-foreground">
-                            Citas
+                            {t('appointments.appointments')}
                         </h3>
                         <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
                             {dayAppointments.length}
                         </span>
                     </div>
-                    
+
                     {dayAppointments.length === 0 ? (
                         <div className="text-center py-6">
                             <Clock className="mx-auto h-10 w-10 text-muted-foreground/30 mb-2" />
                             <p className="text-sm text-muted-foreground">
-                                Sin citas
+                                {t('appointments.noAppointments')}
                             </p>
                             <button
                                 onClick={() => onSlotClick(currentDate, workingHoursStart)}
                                 className="mt-2 text-sm text-primary hover:underline flex items-center gap-1 mx-auto"
                             >
                                 <Plus size={14} />
-                                Crear
+                                {t('common.create')}
                             </button>
                         </div>
                     ) : (
@@ -158,7 +160,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     )}
                 </div>
             </div>
-            
+
             {/* Mobile day header */}
             <div className={`
                 md:hidden px-4 py-3 border-b border-border flex items-center justify-between
@@ -173,7 +175,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                             {currentDate.toLocaleDateString('es-ES', { weekday: 'short', month: 'short' })}
                         </p>
                         {isCurrentDay && (
-                            <span className="text-xs text-primary">Hoy</span>
+                            <span className="text-xs text-primary">{t('appointments.today')}</span>
                         )}
                     </div>
                 </div>
@@ -181,7 +183,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     {dayAppointments.length} cita{dayAppointments.length !== 1 ? 's' : ''}
                 </span>
             </div>
-            
+
             {/* Main timeline view */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
@@ -190,7 +192,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                         {formatDateOnly({ seconds: currentDate.getTime() / 1000, nanoseconds: 0 })}
                     </span>
                 </div>
-                
+
                 {/* Scrollable timeline */}
                 <div
                     ref={scrollContainerRef}
@@ -207,8 +209,8 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                 >
                                     <span className={`
                                         text-sm font-medium
-                                        ${hour >= workingHoursStart && hour < workingHoursEnd 
-                                            ? 'text-foreground' 
+                                        ${hour >= workingHoursStart && hour < workingHoursEnd
+                                            ? 'text-foreground'
                                             : 'text-muted-foreground/50'
                                         }
                                     `}>
@@ -217,13 +219,13 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                 </div>
                             ))}
                         </div>
-                        
+
                         {/* Timeline content */}
                         <div className="flex-1 relative">
                             {/* Hour slots */}
                             {HOURS.map(hour => {
                                 const isWorkingHour = hour >= workingHoursStart && hour < workingHoursEnd;
-                                
+
                                 return (
                                     <div
                                         key={hour}
@@ -242,11 +244,11 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                         style={{ height: `${HOUR_HEIGHT}px` }}
                                     >
                                         {/* Half-hour line */}
-                                        <div 
+                                        <div
                                             className="absolute left-0 right-0 border-b border-dashed border-border/20"
                                             style={{ top: `${HOUR_HEIGHT / 2}px` }}
                                         />
-                                        
+
                                         {/* Hover indicator */}
                                         <div className="
                                             absolute inset-2 rounded-xl
@@ -263,20 +265,20 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     </div>
                                 );
                             })}
-                            
+
                             {/* Appointments */}
                             {dayAppointments.map(apt => {
                                 const typeConfig = APPOINTMENT_TYPE_CONFIGS[apt.type];
                                 const startDate = timestampToDate(apt.startDate);
                                 const endDate = timestampToDate(apt.endDate);
-                                
+
                                 const startMinutes = startDate.getHours() * 60 + startDate.getMinutes();
                                 const endMinutes = endDate.getHours() * 60 + endDate.getMinutes();
                                 const durationMinutes = endMinutes - startMinutes;
-                                
+
                                 const top = (startMinutes / 60) * HOUR_HEIGHT;
                                 const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 40);
-                                
+
                                 const gradientClasses: Record<string, string> = {
                                     blue: 'from-blue-500 to-blue-600',
                                     violet: 'from-violet-500 to-purple-600',
@@ -287,7 +289,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     pink: 'from-pink-500 to-rose-600',
                                     green: 'from-green-500 to-emerald-600',
                                 };
-                                
+
                                 return (
                                     <div
                                         key={apt.id}
@@ -342,7 +344,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     </div>
                                 );
                             })}
-                            
+
                             {/* Current time indicator */}
                             {isCurrentDay && (
                                 <div

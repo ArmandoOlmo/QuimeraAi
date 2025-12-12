@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LeadCustomField } from '../../../types';
 import { Plus, X, Settings, Save, Sparkles } from 'lucide-react';
 import Modal from '../../ui/Modal';
@@ -18,6 +19,7 @@ export interface CustomFieldDefinition {
 }
 
 const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsConfig, onSaveConfig }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [fields, setFields] = useState<CustomFieldDefinition[]>(customFieldsConfig);
     const [newFieldName, setNewFieldName] = useState('');
@@ -25,7 +27,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 
     const handleAddField = () => {
         if (!newFieldName.trim()) return;
-        
+
         const newField: CustomFieldDefinition = {
             id: `custom_${Date.now()}`,
             name: newFieldName,
@@ -33,7 +35,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
             options: newFieldType === 'select' ? ['Option 1', 'Option 2'] : undefined,
             required: false
         };
-        
+
         setFields([...fields, newField]);
         setNewFieldName('');
         setNewFieldType('text');
@@ -76,7 +78,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} maxWidth="max-w-2xl">
                 <div className="p-6 border-b border-border bg-secondary/10 flex justify-between items-center">
-                    <h3 className="font-bold text-lg">Custom Fields Configuration</h3>
+                    <h3 className="font-bold text-lg">{t('leads.customFields.title')}</h3>
                     <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
                         <X size={24} />
                     </button>
@@ -109,9 +111,9 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 
                     {/* Existing Fields */}
                     <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-muted-foreground uppercase">Existing Custom Fields</h4>
+                        <h4 className="text-sm font-bold text-muted-foreground uppercase">{t('leads.customFields.existingFields')}</h4>
                         {fields.length === 0 ? (
-                            <p className="text-sm text-muted-foreground italic">No custom fields defined yet.</p>
+                            <p className="text-sm text-muted-foreground italic">{t('leads.customFields.noFields')}</p>
                         ) : (
                             fields.map(field => (
                                 <div key={field.id} className="flex items-center gap-3 bg-secondary/20 p-3 rounded-lg border border-border">
@@ -145,7 +147,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 
                     {/* Add New Field */}
                     <div className="border-t border-border pt-6">
-                        <h4 className="text-sm font-bold text-muted-foreground uppercase mb-3">Add New Field</h4>
+                        <h4 className="text-sm font-bold text-muted-foreground uppercase mb-3">{t('leads.customFields.addNew')}</h4>
                         <div className="grid grid-cols-12 gap-3">
                             <input
                                 type="text"
@@ -185,14 +187,14 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                             onClick={() => setIsOpen(false)}
                             className="px-4 py-2 border border-border rounded hover:bg-secondary transition-colors"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             onClick={handleSave}
                             className="px-4 py-2 bg-primary text-primary-foreground rounded font-bold hover:opacity-90 transition-colors flex items-center gap-2"
                         >
                             <Save size={16} />
-                            Save Configuration
+                            {t('leads.customFields.saveConfig')}
                         </button>
                     </div>
                 </div>

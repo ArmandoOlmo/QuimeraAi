@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 interface LanguageSelectorProps {
   className?: string;
-  variant?: 'dropdown' | 'minimal' | 'button';
+  variant?: 'dropdown' | 'minimal' | 'sidebar' | 'button';
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
@@ -30,6 +30,35 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     i18n.changeLanguage(lng);
     setIsOpen(false);
   };
+
+  if (variant === 'sidebar') {
+    return (
+      <div className={className}>
+        <div className="grid grid-cols-2 gap-2">
+          {languages.map((lang) => {
+            const isActive = i18n.language === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={[
+                  'h-9 rounded-lg border text-xs font-bold transition-colors',
+                  'flex items-center justify-center gap-2',
+                  isActive
+                    ? 'bg-primary text-primary-foreground border-primary/30'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/70 hover:text-foreground',
+                ].join(' ')}
+                aria-label={`Switch to ${lang.name}`}
+                aria-pressed={isActive}
+              >
+                <span>{lang.shortName}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {

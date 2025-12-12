@@ -29,43 +29,7 @@ const ALL_COMPONENTS: PageSection[] = [
 ];
 
 // Component labels
-const COMPONENT_LABELS: Record<PageSection, string> = {
-    header: 'Header / Navigation',
-    hero: 'Hero Section',
-    heroSplit: 'Hero Split',
-    features: 'Features',
-    services: 'Services',
-    testimonials: 'Testimonials',
-    team: 'Team',
-    portfolio: 'Portfolio',
-    pricing: 'Pricing',
-    faq: 'FAQ',
-    cta: 'Call to Action',
-    video: 'Video',
-    slideshow: 'Slideshow',
-    howItWorks: 'How It Works',
-    newsletter: 'Newsletter',
-    leads: 'Contact Form',
-    banner: 'Banner',
-    menu: 'Menu (Restaurant)',
-    map: 'Map',
-    footer: 'Footer',
-    chatbot: 'Chatbot',
-    typography: 'Typography',
-    colors: 'Colors',
-    products: 'Products Grid',
-    storeSettings: 'Store Settings',
-    featuredProducts: 'Featured Products',
-    categoryGrid: 'Category Grid',
-    productHero: 'Product Hero',
-    saleCountdown: 'Sale Countdown',
-    trustBadges: 'Trust Badges',
-    recentlyViewed: 'Recently Viewed',
-    productReviews: 'Product Reviews',
-    collectionBanner: 'Collection Banner',
-    productBundle: 'Product Bundle',
-    announcementBar: 'Announcement Bar',
-};
+
 
 const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
     templates,
@@ -101,19 +65,19 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 const templateComponents = Object.keys(template.sectionVisibility || {}).filter(
                     key => template.sectionVisibility?.[key as keyof typeof template.sectionVisibility]
                 ) as PageSection[];
-                
+
                 // Enable only recommended + optional for this industry (intersected with what template has)
-                const enabled = templateComponents.filter(comp => 
-                    industryDefaults.recommended.includes(comp) || 
+                const enabled = templateComponents.filter(comp =>
+                    industryDefaults.recommended.includes(comp) ||
                     industryDefaults.optional.includes(comp) ||
                     comp === 'header' || comp === 'footer'
                 );
-                
+
                 // Disable what template has but industry doesn't need
-                const disabled = templateComponents.filter(comp => 
+                const disabled = templateComponents.filter(comp =>
                     !enabled.includes(comp)
                 );
-                
+
                 setLocalEnabledComponents(enabled);
                 setLocalDisabledComponents(disabled);
             }
@@ -153,34 +117,34 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
         const templateComponents = Object.keys(template.sectionVisibility || {}).filter(
             key => template.sectionVisibility?.[key as keyof typeof template.sectionVisibility]
         ) as PageSection[];
-        
+
         // Get recommended components for this industry
         const recommended = rec?.suggestedComponents || industryDefaults.recommended;
         const disabled = rec?.disabledComponents || industryDefaults.disabled;
-        
+
         // Enable only components that: 1) template has AND 2) are recommended for industry
-        const enabledComponents = templateComponents.filter(comp => 
-            recommended.includes(comp) || 
+        const enabledComponents = templateComponents.filter(comp =>
+            recommended.includes(comp) ||
             industryDefaults.optional.includes(comp) ||
             comp === 'header' || comp === 'footer' // Always keep header/footer
         );
-        
+
         // Disable components that: 1) template has BUT 2) are not needed for this industry
-        const disabledComponents = templateComponents.filter(comp => 
-            disabled.includes(comp) || 
+        const disabledComponents = templateComponents.filter(comp =>
+            disabled.includes(comp) ||
             (!recommended.includes(comp) && !industryDefaults.optional.includes(comp) && comp !== 'header' && comp !== 'footer')
         );
-        
+
         // Debug logging only in development
         if (import.meta.env.DEV) {
             console.log('📋 Template components:', templateComponents);
             console.log('✅ Enabled:', enabledComponents);
             console.log('❌ Disabled:', disabledComponents);
         }
-        
+
         setLocalEnabledComponents(enabledComponents);
         setLocalDisabledComponents(disabledComponents);
-        
+
         onUpdate(template.id, template.name, enabledComponents, disabledComponents);
     };
 
@@ -296,8 +260,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 onClick={() => handleSelectTemplate(template)}
                                 className={`
                                     relative group rounded-xl overflow-hidden border-2 transition-all
-                                    ${isSelected 
-                                        ? 'border-yellow-500 ring-2 ring-yellow-500/30' 
+                                    ${isSelected
+                                        ? 'border-yellow-500 ring-2 ring-yellow-500/30'
                                         : 'border-editor-border hover:border-editor-border-hover'
                                     }
                                 `}
@@ -305,8 +269,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 {/* Thumbnail */}
                                 <div className="aspect-video bg-editor-sidebar overflow-hidden">
                                     {template.thumbnailUrl ? (
-                                        <img 
-                                            src={template.thumbnailUrl} 
+                                        <img
+                                            src={template.thumbnailUrl}
                                             alt={template.name}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
@@ -401,7 +365,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                             ) : (
                                                 <EyeOff size={14} className="opacity-50" />
                                             )}
-                                            <span className="truncate">{COMPONENT_LABELS[component]}</span>
+                                            <span className="truncate">{t(`onboarding.componentsList.${component}` as any, component)}</span>
                                             {isRecommended && (
                                                 <Star size={10} className="text-yellow-400 flex-shrink-0" />
                                             )}

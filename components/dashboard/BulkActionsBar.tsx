@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Download, CheckCircle, X } from 'lucide-react';
 
 interface BulkActionsBarProps {
@@ -16,6 +17,8 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   onExportSelected,
   onChangeStatus,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
       <div className="bg-card border-2 border-primary shadow-2xl shadow-primary/20 rounded-full px-6 py-3 flex items-center gap-4">
@@ -24,7 +27,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
             <span className="text-sm font-bold text-primary">{selectedCount}</span>
           </div>
-          <span className="text-sm font-medium text-foreground">selected</span>
+          <span className="text-sm font-medium text-foreground">{t('bulk.selected')}</span>
         </div>
 
         {/* Actions */}
@@ -33,8 +36,8 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           <button
             onClick={onExportSelected}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-            title="Export selected projects"
-            aria-label="Export selected projects"
+            title={t('bulk.exportSelected')}
+            aria-label={t('bulk.exportSelected')}
           >
             <Download size={18} />
           </button>
@@ -43,32 +46,32 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           <button
             onClick={() => onChangeStatus('Published')}
             className="px-3 py-1.5 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
-            title="Mark as published"
-            aria-label="Mark selected as published"
+            title={t('dashboard.published')}
+            aria-label={t('dashboard.published')}
           >
             <CheckCircle size={16} />
-            <span className="hidden sm:inline">Publish</span>
+            <span className="hidden sm:inline">{t('bulk.publish')}</span>
           </button>
 
           {/* Mark as Draft */}
           <button
             onClick={() => onChangeStatus('Draft')}
             className="px-3 py-1.5 rounded-lg bg-slate-500/10 text-slate-600 hover:bg-slate-500/20 transition-colors text-sm font-medium"
-            title="Mark as draft"
-            aria-label="Mark selected as draft"
+            title={t('dashboard.draft')}
+            aria-label={t('dashboard.draft')}
           >
-            Draft
+            {t('bulk.draft')}
           </button>
 
           {/* Delete */}
           <button
             onClick={onDeleteSelected}
             className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
-            title="Delete selected"
-            aria-label="Delete selected projects"
+            title={t('bulk.deleteSelected')}
+            aria-label={t('bulk.deleteSelected')}
           >
             <Trash2 size={16} />
-            <span className="hidden sm:inline">Delete</span>
+            <span className="hidden sm:inline">{t('bulk.delete')}</span>
           </button>
         </div>
 
@@ -77,8 +80,8 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           <button
             onClick={onClearSelection}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-            title="Clear selection"
-            aria-label="Clear selection"
+            title={t('bulk.clearSelection')}
+            aria-label={t('bulk.clearSelection')}
           >
             <X size={18} />
           </button>

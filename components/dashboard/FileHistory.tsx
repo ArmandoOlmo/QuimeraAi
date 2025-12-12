@@ -10,6 +10,7 @@ import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Cale
 import DragDropZone from '../ui/DragDropZone';
 import Modal from '../ui/Modal';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
+import { useTranslation } from 'react-i18next';
 
 // Constants for controls
 const ASPECT_RATIOS = [
@@ -22,7 +23,7 @@ const ASPECT_RATIOS = [
 ];
 
 const STYLES = [
-    'None', 'Photorealistic', 'Cinematic', 'Anime', 'Digital Art', 
+    'None', 'Photorealistic', 'Cinematic', 'Anime', 'Digital Art',
     'Oil Painting', '3D Render', 'Minimalist', 'Cyberpunk', 'Watercolor'
 ];
 
@@ -33,8 +34,8 @@ const RESOLUTIONS = [
 ];
 
 const LIGHTING_OPTIONS = [
-    'None', 'Natural Lighting', 'Soft Lighting', 'Dramatic Lighting', 
-    'Golden Hour', 'Blue Hour', 'Studio Lighting', 'Neon Lighting', 
+    'None', 'Natural Lighting', 'Soft Lighting', 'Dramatic Lighting',
+    'Golden Hour', 'Blue Hour', 'Studio Lighting', 'Neon Lighting',
     'Rim Lighting', 'Volumetric Lighting'
 ];
 
@@ -46,7 +47,7 @@ const CAMERA_ANGLES = [
 
 const COLOR_GRADING = [
     'None', 'Warm Tones', 'Cool Tones', 'Vibrant', 'Desaturated',
-    'High Contrast', 'Low Contrast', 'Cinematic', 'Vintage', 
+    'High Contrast', 'Low Contrast', 'Cinematic', 'Vintage',
     'Black and White', 'Sepia'
 ];
 
@@ -56,6 +57,7 @@ const DEPTH_OF_FIELD = [
 ];
 
 const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({ file, onClose }) => {
+    const { t } = useTranslation();
     const { deleteFile, updateFileNotes, generateFileSummary } = useFiles();
     const { success, error: showError } = useToast();
     const [notes, setNotes] = useState(file.notes);
@@ -68,15 +70,15 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
         }
         notesTimeoutRef.current = window.setTimeout(() => {
             updateFileNotes(file.id, e.target.value);
-            success('Notes saved');
+            success(t('assets.preview.notesSaved'));
         }, 1000);
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Delete this file?')) {
+        if (window.confirm(t('assets.actions.deleteConfirm'))) {
             try {
                 await deleteFile(file.id, file.storagePath);
-                success('File deleted successfully');
+                success(t('assets.actions.deleted'));
                 onClose();
             } catch (err) {
                 showError('Failed to delete file');
@@ -126,7 +128,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                 ) : (
                     <div className="flex flex-col items-center text-gray-400 relative z-10">
                         <FileText size={80} className="mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Preview not available for this file type</p>
+                        <p className="text-lg font-medium">{t('assets.preview.notAvailable')}</p>
                     </div>
                 )}
             </div>
@@ -137,7 +139,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                 <div className="p-4 border-b border-editor-border/50">
                     <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                            <p className="text-sm font-bold text-editor-text-primary mb-1">File Information</p>
+                            <p className="text-sm font-bold text-editor-text-primary mb-1">{t('assets.preview.title')}</p>
                             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-editor-text-secondary">
                                 <span className="flex items-center">
                                     <HardDrive size={14} className="mr-2 text-editor-accent" />
@@ -153,12 +155,12 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
 
                     {/* Notes */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">Notes</label>
+                        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('assets.preview.notes')}</label>
                         <textarea
                             value={notes}
                             onChange={handleNotesChange}
                             rows={2}
-                            placeholder="Add notes about this file..."
+                            placeholder={t('assets.preview.notes')}
                             className="w-full bg-editor-bg text-sm text-editor-text-primary p-3 rounded-lg border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none resize-none"
                         />
                     </div>
@@ -168,7 +170,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                         <div className="bg-editor-bg/50 p-3 rounded-lg border border-editor-border/50">
                             <div className="flex items-center mb-2">
                                 <Sparkles size={14} className="text-editor-accent mr-2" />
-                                <span className="text-xs font-bold text-editor-accent uppercase">AI Summary</span>
+                                <span className="text-xs font-bold text-editor-accent uppercase">{t('assets.preview.aiSummary')}</span>
                             </div>
                             <p className="text-sm text-editor-text-primary leading-relaxed">{file.aiSummary}</p>
                         </div>
@@ -183,13 +185,13 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                             disabled={!isSummarizable}
                             className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-editor-accent/10 text-editor-accent hover:bg-editor-accent hover:text-editor-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Sparkles size={14} className="mr-1.5" /> Generate Summary
+                            <Sparkles size={14} className="mr-1.5" /> {t('assets.preview.generateSummary')}
                         </button>
                         <button
                             onClick={handleDelete}
                             className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                         >
-                            <Trash2 size={14} className="mr-1.5" /> Delete
+                            <Trash2 size={14} className="mr-1.5" /> {t('assets.actions.delete')}
                         </button>
                     </div>
                     <a
@@ -197,7 +199,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                         download={file.name}
                         className="flex items-center bg-editor-accent text-editor-bg px-6 py-2.5 rounded-lg font-bold shadow-lg hover:bg-editor-accent-hover transition-transform hover:scale-105 text-sm"
                     >
-                        <Download size={16} className="mr-2" /> Download
+                        <Download size={16} className="mr-2" /> {t('assets.actions.download')}
                     </a>
                 </div>
             </div>
@@ -205,32 +207,33 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
     );
 };
 
-const FileItem: React.FC<{ 
-    file: FileRecord; 
-    variant: 'widget' | 'full'; 
+const FileItem: React.FC<{
+    file: FileRecord;
+    variant: 'widget' | 'full';
     onPreview: (file: FileRecord) => void;
     isSelected?: boolean;
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
     onAddToReference?: (base64Data: string) => Promise<void>;
 }> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference }) => {
+    const { t } = useTranslation();
     const isImage = file.type.startsWith('image/');
     const [isAdding, setIsAdding] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
-    
+
     // Try to convert rendered img element to base64 using canvas
     // Note: This will fail for cross-origin images without proper CORS headers
     const getImageAsBase64 = (): string | null => {
         const imgElement = imgRef.current;
         if (!imgElement || !imgElement.complete || imgElement.naturalWidth === 0) return null;
-        
+
         try {
             const canvas = document.createElement('canvas');
             canvas.width = imgElement.naturalWidth;
             canvas.height = imgElement.naturalHeight;
             const ctx = canvas.getContext('2d');
             if (!ctx) return null;
-            
+
             ctx.drawImage(imgElement, 0, 0);
             // This will throw SecurityError for tainted canvas (cross-origin without CORS)
             return canvas.toDataURL('image/jpeg', 0.85);
@@ -240,7 +243,7 @@ const FileItem: React.FC<{
             return null;
         }
     };
-    
+
     const handleDragStart = (e: React.DragEvent) => {
         if (isImage) {
             const base64 = getImageAsBase64();
@@ -272,14 +275,14 @@ const FileItem: React.FC<{
     };
 
     return (
-        <div 
+        <div
             className={`rounded-xl transition-all duration-200 group relative overflow-hidden h-full ${isSelected ? 'ring-2 ring-primary' : ''} ${isImage ? 'cursor-grab active:cursor-grabbing' : ''}`}
             draggable={isImage}
             onDragStart={handleDragStart}
         >
             {/* Image/File Preview */}
-            <div 
-                className="aspect-square w-full bg-secondary/30 relative cursor-pointer overflow-hidden" 
+            <div
+                className="aspect-square w-full bg-secondary/30 relative cursor-pointer overflow-hidden"
                 onClick={() => {
                     if (isSelectionMode && onToggleSelect) {
                         onToggleSelect();
@@ -291,7 +294,7 @@ const FileItem: React.FC<{
                         onPreview(file);
                     }
                 }}
-                title={isSelectionMode ? "Click to select" : isImage ? "Drag to use as reference • Double click to view" : "Double click to view details"}
+                title={isSelectionMode ? t('assets.preview.clickToSelect') : isImage ? t('assets.preview.dragToUse') : t('assets.preview.doubleClick')}
             >
                 {isImage ? (
                     <img
@@ -307,11 +310,11 @@ const FileItem: React.FC<{
                         <p className="text-xs mt-2 px-2 text-center truncate w-full">{file.name}</p>
                     </div>
                 )}
-                
+
                 {/* Selection checkbox */}
                 {isSelectionMode && (
                     <div className="absolute top-2 left-2 z-10">
-                        <button 
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleSelect?.();
@@ -333,7 +336,7 @@ const FileItem: React.FC<{
                         onClick={handleAddToReference}
                         disabled={isAdding}
                         className={`absolute top-2 right-2 z-10 p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg transition-all transform hover:scale-110 ${isAdding ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                        title="Add as reference image"
+                        title={t('assets.preview.addAsReference')}
                     >
                         {isAdding ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -347,7 +350,7 @@ const FileItem: React.FC<{
                 {isImage && !isSelectionMode && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="text-white text-xs font-medium truncate">{file.name}</p>
-                        <p className="text-purple-300 text-[10px] mt-0.5">Drag to use as reference</p>
+                        <p className="text-purple-300 text-[10px] mt-0.5">{t('assets.preview.dragToUse')}</p>
                     </div>
                 )}
             </div>
@@ -360,13 +363,14 @@ interface FileHistoryProps {
 }
 
 const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
+    const { t } = useTranslation();
     const { files, isFilesLoading, uploadFile, deleteFile } = useFiles();
     const { projects } = useProject();
     const { generateImage, enhancePrompt } = useAI();
     const { success, error: showError } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const referenceFileInputRef = useRef<HTMLInputElement>(null);
-    
+
     // State for integrated generator
     const [prompt, setPrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
@@ -381,23 +385,23 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [referenceImages, setReferenceImages] = useState<string[]>([]);
     const [isDragging, setIsDragging] = useState(false);
-    
+
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all');
 
     // Use the custom hook for asset management
-    const library = useAssetLibrary({ 
-        files, 
-        itemsPerPage: variant === 'widget' ? 12 : 24 
+    const library = useAssetLibrary({
+        files,
+        itemsPerPage: variant === 'widget' ? 12 : 24
     });
 
     // Reference images handlers
     const processFiles = (files: FileList | File[]) => {
         const remainingSlots = 14 - referenceImages.length;
-        
+
         if (remainingSlots <= 0) {
-            alert("Maximum 14 reference images allowed.");
+            alert(t('assets.generator.maxReferences'));
             return;
         }
 
@@ -433,31 +437,31 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
-        
+
         // First try base64 data (converted during drag)
         const base64Data = e.dataTransfer.getData('application/x-library-image-base64');
         if (base64Data) {
             // Already base64, add directly
             if (referenceImages.length >= 14) {
-                showError("Maximum 14 reference images allowed.");
+                showError(t('assets.generator.maxReferences'));
                 return;
             }
             if (referenceImages.includes(base64Data)) {
-                showError("This image is already added as reference.");
+                showError(t('assets.generator.alreadyAdded'));
                 return;
             }
             setReferenceImages(prev => [...prev, base64Data]);
-            success("Image added as reference!");
+            success(t('assets.generator.imageAdded'));
             return;
         }
-        
+
         // Fallback: try URL and convert
         const libraryImageUrl = e.dataTransfer.getData('application/x-library-image');
         if (libraryImageUrl) {
             await addImageToReference(libraryImageUrl);
             return;
         }
-        
+
         // Otherwise process as file upload
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             processFiles(e.dataTransfer.files);
@@ -469,19 +473,19 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
-            
+
             img.onload = () => {
                 try {
                     const canvas = document.createElement('canvas');
                     canvas.width = img.naturalWidth;
                     canvas.height = img.naturalHeight;
-                    
+
                     const ctx = canvas.getContext('2d');
                     if (!ctx) {
                         reject(new Error('Could not get canvas context'));
                         return;
                     }
-                    
+
                     ctx.drawImage(img, 0, 0);
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
                     resolve(dataUrl);
@@ -490,11 +494,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     reject(error);
                 }
             };
-            
+
             img.onerror = () => {
                 reject(new Error('Failed to load image'));
             };
-            
+
             // Add cache buster to avoid CORS cache issues
             const separator = url.includes('?') ? '&' : '?';
             img.src = `${url}${separator}t=${Date.now()}`;
@@ -504,30 +508,30 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     // Add image as base64 to reference images (from library)
     const addImageToReference = async (imageData: string) => {
         if (referenceImages.length >= 14) {
-            showError("Maximum 14 reference images allowed.");
+            showError(t('assets.generator.maxReferences'));
             return;
         }
-        
+
         // Check if already a base64 data URL
         if (imageData.startsWith('data:')) {
             if (referenceImages.includes(imageData)) {
-                showError("This image is already added as reference.");
+                showError(t('assets.generator.alreadyAdded'));
                 return;
             }
             setReferenceImages(prev => [...prev, imageData]);
-            success("Image added as reference!");
+            success(t('assets.generator.imageAdded'));
             return;
         }
-        
+
         // If it's a URL, try to convert using fetch+canvas (may fail with CORS)
         try {
             const fullUrl = imageData.startsWith('//') ? `https:${imageData}` : imageData;
             const converted = await urlToBase64(fullUrl);
             setReferenceImages(prev => [...prev, converted]);
-            success("Image added as reference!");
+            success(t('assets.generator.imageAdded'));
         } catch (error) {
             // CORS error - show helpful message
-            showError("Cannot add this image. Please upload from your computer using the upload button.");
+            showError(t('assets.generator.cannotAdd'));
             console.warn('CORS error adding image to reference. Use local upload instead:', error);
         }
     };
@@ -544,8 +548,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         setIsGenerating(true);
         try {
             const options = {
-                aspectRatio, 
-                style, 
+                aspectRatio,
+                style,
                 destination: 'user' as const,
                 resolution,
                 lighting: lighting !== 'None' ? lighting : undefined,
@@ -554,26 +558,27 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             };
-            
+
+
             await generateImage(prompt, options);
-            success('Image generated successfully!');
+            success(t('assets.generator.generated'));
             setPrompt('');
             setReferenceImages([]);
         } catch (error) {
             console.error(error);
-            showError("Generation failed. Check console details.");
+            showError(t('assets.generator.generationFailed'));
         } finally {
             setIsGenerating(false);
         }
     };
-    
+
     const handleEnhancePrompt = async () => {
         if (!prompt.trim()) return;
         setIsEnhancing(true);
         try {
             const enhanced = await enhancePrompt(prompt);
             setPrompt(enhanced);
-            success('Prompt enhanced!');
+            success(t('assets.generator.enhanced'));
         } catch (error) {
             console.error(error);
             showError('Failed to enhance prompt');
@@ -617,18 +622,18 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         if (selectedProjectFilter === 'all') {
             return filesByProject;
         }
-        
+
         if (filesByProject[selectedProjectFilter]) {
             return { [selectedProjectFilter]: filesByProject[selectedProjectFilter] };
         }
-        
+
         return {};
     }, [filesByProject, selectedProjectFilter]);
 
     const handleFileUpload = async (file: File) => {
         try {
             await uploadFile(file);
-            success(`${file.name} uploaded successfully`);
+            success(`${file.name} ${t('assets.actions.uploadSuccess')}`);
         } catch (err) {
             showError('Failed to upload file');
         }
@@ -636,14 +641,14 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
     const handleBulkDelete = async () => {
         if (library.selectedFiles.length === 0) return;
-        
-        if (!window.confirm(`Delete ${library.selectedFiles.length} file(s)?`)) return;
-        
+
+        if (!window.confirm(t('assets.actions.bulkDeleteConfirm', { count: library.selectedFiles.length }))) return;
+
         try {
             await Promise.all(
                 library.selectedFiles.map(f => deleteFile(f.id, f.storagePath))
             );
-            success(`${library.selectedFiles.length} file(s) deleted`);
+            success(t('assets.actions.bulkDeleted', { count: library.selectedFiles.length }));
             library.clearSelection();
             library.toggleSelectionMode();
         } catch (err) {
@@ -653,7 +658,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
     const handleBulkDownload = () => {
         if (library.selectedFiles.length === 0) return;
-        
+
         library.selectedFiles.forEach(file => {
             const link = document.createElement('a');
             link.href = file.downloadURL;
@@ -662,11 +667,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
             link.click();
             document.body.removeChild(link);
         });
-        
+
         success(`Downloading ${library.selectedFiles.length} file(s)`);
     };
 
-    const containerClasses = variant === 'widget' 
+    const containerClasses = variant === 'widget'
         ? "bg-card/50 rounded-2xl border border-border p-5 backdrop-blur-sm"
         : "h-full flex flex-col";
 
@@ -683,227 +688,227 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
             {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget */}
             {variant !== 'widget' && (
-            <div className="mb-8 p-6 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 rounded-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
-                        <Zap className="w-6 h-6 text-white" />
+                <div className="mb-8 p-6 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 rounded-2xl">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
+                            <Zap className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-foreground">{t('assets.generator.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('assets.generator.subtitle')}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-foreground">Quimera Image Generator</h2>
-                        <p className="text-sm text-muted-foreground">Create stunning AI images with advanced controls</p>
-                    </div>
-                </div>
 
-                <div className="space-y-4">
-                    {/* Prompt */}
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="block text-sm font-bold text-foreground">Prompt</label>
-                            <button 
-                                onClick={handleEnhancePrompt}
-                                disabled={isEnhancing || !prompt}
-                                className="flex items-center text-xs text-purple-600 hover:text-purple-700 transition-colors disabled:opacity-50"
-                                title="Use AI to improve your prompt"
+                    <div className="space-y-4">
+                        {/* Prompt */}
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-bold text-foreground">{t('assets.generator.promptLabel')}</label>
+                                <button
+                                    onClick={handleEnhancePrompt}
+                                    disabled={isEnhancing || !prompt}
+                                    className="flex items-center text-xs text-purple-600 hover:text-purple-700 transition-colors disabled:opacity-50"
+                                    title="Use AI to improve your prompt"
+                                >
+                                    {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
+                                    {t('assets.generator.enhance')}
+                                </button>
+                            </div>
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder={t('assets.generator.promptLabel')}
+                                className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                            />
+                        </div>
+
+                        {/* Reference Images */}
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-xs font-bold text-muted-foreground uppercase">{t('assets.generator.referenceImages')}</label>
+                                <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
+                            </div>
+
+                            <input
+                                type="file"
+                                ref={referenceFileInputRef}
+                                accept="image/*"
+                                multiple
+                                onChange={handleReferenceImageUpload}
+                                className="hidden"
+                            />
+
+                            <div
+                                className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-purple-500 bg-purple-500/10' : 'border-border hover:border-purple-500 hover:bg-purple-500/5'}`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
                             >
-                                {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1"/> : <Wand2 size={12} className="mr-1"/>}
-                                Enhance
+                                {referenceImages.length > 0 ? (
+                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                        {referenceImages.map((img, idx) => (
+                                            <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-border">
+                                                <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
+                                                    className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {referenceImages.length < 14 && (
+                                            <button
+                                                onClick={() => referenceFileInputRef.current?.click()}
+                                                className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                <Plus size={16} />
+                                                <span className="text-[10px]">{t('assets.generator.addButton')}</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => referenceFileInputRef.current?.click()}
+                                        className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
+                                    >
+                                        <Upload size={24} />
+                                        <span className="text-xs font-medium">{t('assets.generator.uploadText')}</span>
+                                        <span className="text-xs opacity-70">{t('assets.generator.dragText')}</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Quick Controls Row */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('assets.controls.aspectRatio')}</label>
+                                <select
+                                    value={aspectRatio}
+                                    onChange={(e) => setAspectRatio(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    {ASPECT_RATIOS.map(ratio => (
+                                        <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('assets.controls.style')}</label>
+                                <select
+                                    value={style}
+                                    onChange={(e) => setStyle(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    {STYLES.map(s => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Resolution</label>
+                                <select
+                                    value={resolution}
+                                    onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    {RESOLUTIONS.map(res => (
+                                        <option key={res.value} value={res.value}>{res.label}</option>
+                                    ))}
+                                </select>
+                                {/* 4K Warning */}
+                                {resolution === '4K' && (
+                                    <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
+                                        <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                            4K images are large and may slow down your website. Consider using 2K for better performance.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Advanced Controls Toggle */}
+                        <div className="border-t border-border/50 pt-3">
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="text-xs text-purple-600 hover:text-purple-700 font-bold uppercase transition-colors flex items-center justify-between w-full"
+                            >
+                                <span>Advanced Controls</span>
+                                <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
                             </button>
                         </div>
-                        <textarea 
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Describe the image you want to generate..."
-                            className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
-                        />
-                    </div>
 
-                    {/* Reference Images */}
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="block text-xs font-bold text-muted-foreground uppercase">Reference Images (Optional)</label>
-                            <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
-                        </div>
-                        
-                        <input
-                            type="file"
-                            ref={referenceFileInputRef}
-                            accept="image/*"
-                            multiple
-                            onChange={handleReferenceImageUpload}
-                            className="hidden"
-                        />
-                        
-                        <div 
-                            className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-purple-500 bg-purple-500/10' : 'border-border hover:border-purple-500 hover:bg-purple-500/5'}`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        >
-                            {referenceImages.length > 0 ? (
-                                <div className="grid grid-cols-3 gap-2 mb-2">
-                                    {referenceImages.map((img, idx) => (
-                                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-border">
-                                            <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={10} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {referenceImages.length < 14 && (
-                                        <button
-                                            onClick={() => referenceFileInputRef.current?.click()}
-                                            className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                                        >
-                                            <Plus size={16} />
-                                            <span className="text-[10px]">Add</span>
-                                        </button>
-                                    )}
+                        {showAdvanced && (
+                            <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Lighting</label>
+                                    <select
+                                        value={lighting}
+                                        onChange={(e) => setLighting(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {LIGHTING_OPTIONS.map(l => (
+                                            <option key={l} value={l}>{l}</option>
+                                        ))}
+                                    </select>
                                 </div>
-                            ) : (
-                                <button
-                                    onClick={() => referenceFileInputRef.current?.click()}
-                                    className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
-                                >
-                                    <Upload size={24} />
-                                    <span className="text-xs font-medium">Click to upload or drag from library below</span>
-                                    <span className="text-xs opacity-70">Up to 14 images • Drag images from your assets</span>
-                                </button>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Quick Controls Row */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div>
-                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Aspect Ratio</label>
-                            <select 
-                                value={aspectRatio}
-                                onChange={(e) => setAspectRatio(e.target.value)}
-                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                {ASPECT_RATIOS.map(ratio => (
-                                    <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Style</label>
-                            <select 
-                                value={style}
-                                onChange={(e) => setStyle(e.target.value)}
-                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                {STYLES.map(s => (
-                                    <option key={s} value={s}>{s}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Resolution</label>
-                            <select 
-                                value={resolution}
-                                onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                {RESOLUTIONS.map(res => (
-                                    <option key={res.value} value={res.value}>{res.label}</option>
-                                ))}
-                            </select>
-                            {/* 4K Warning */}
-                            {resolution === '4K' && (
-                                <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
-                                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                                        4K images are large and may slow down your website. Consider using 2K for better performance.
-                                    </p>
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Camera Angle</label>
+                                    <select
+                                        value={cameraAngle}
+                                        onChange={(e) => setCameraAngle(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {CAMERA_ANGLES.map(c => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
                                 </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Advanced Controls Toggle */}
-                    <div className="border-t border-border/50 pt-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Color Grading</label>
+                                    <select
+                                        value={colorGrading}
+                                        onChange={(e) => setColorGrading(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {COLOR_GRADING.map(c => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Depth of Field</label>
+                                    <select
+                                        value={depthOfField}
+                                        onChange={(e) => setDepthOfField(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {DEPTH_OF_FIELD.map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Generate Button */}
                         <button
-                            onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="text-xs text-purple-600 hover:text-purple-700 font-bold uppercase transition-colors flex items-center justify-between w-full"
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !prompt}
+                            className="w-full py-3 text-purple-500 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-purple-400"
                         >
-                            <span>Advanced Controls</span>
-                            <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
+                            {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
+                            {isGenerating ? 'Generating...' : 'Generate Image'}
                         </button>
                     </div>
-
-                    {showAdvanced && (
-                        <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-                            <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Lighting</label>
-                                <select 
-                                    value={lighting}
-                                    onChange={(e) => setLighting(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    {LIGHTING_OPTIONS.map(l => (
-                                        <option key={l} value={l}>{l}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Camera Angle</label>
-                                <select 
-                                    value={cameraAngle}
-                                    onChange={(e) => setCameraAngle(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    {CAMERA_ANGLES.map(c => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Color Grading</label>
-                                <select 
-                                    value={colorGrading}
-                                    onChange={(e) => setColorGrading(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    {COLOR_GRADING.map(c => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Depth of Field</label>
-                                <select 
-                                    value={depthOfField}
-                                    onChange={(e) => setDepthOfField(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    {DEPTH_OF_FIELD.map(d => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Generate Button */}
-                    <button 
-                        onClick={handleGenerate}
-                        disabled={isGenerating || !prompt}
-                        className="w-full py-3 text-purple-500 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-purple-400"
-                    >
-                        {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                        {isGenerating ? 'Generating...' : 'Generate Image'}
-                    </button>
                 </div>
-            </div>
             )}
 
             {/* ASSET LIBRARY SECTION */}
@@ -920,7 +925,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                             </span>
                         )}
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         {/* Search */}
                         <div className="relative flex-1 sm:flex-initial sm:w-48">
@@ -944,7 +949,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         </button>
 
                         {/* Selection Mode Toggle */}
-                        <button 
+                        <button
                             onClick={library.toggleSelectionMode}
                             className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${library.isSelectionMode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Selection Mode"
@@ -1073,7 +1078,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         <div className="space-y-6">
                             {Object.entries(filteredFilesByProject).map(([projectId, projectFiles]) => {
                                 if (projectFiles.length === 0) return null;
-                                
+
                                 return (
                                     <div key={projectId} className="space-y-3">
                                         {/* Project Header */}
@@ -1085,14 +1090,14 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                 {projectFiles.length} {projectFiles.length === 1 ? 'asset' : 'assets'}
                                             </span>
                                         </div>
-                                        
+
                                         {/* Project Files Grid */}
                                         <div className={gridClasses}>
                                             {projectFiles.map(file => (
                                                 <div key={file.id} className="h-full">
-                                                    <FileItem 
-                                                        file={file} 
-                                                        variant={variant} 
+                                                    <FileItem
+                                                        file={file}
+                                                        variant={variant}
                                                         onPreview={setPreviewFile}
                                                         isSelected={library.isSelected(file.id)}
                                                         onToggleSelect={() => library.toggleSelection(file.id)}

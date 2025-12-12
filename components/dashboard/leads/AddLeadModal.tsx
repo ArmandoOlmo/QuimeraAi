@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     X, User, Mail, Phone, Briefcase, Building2,
     Globe, DollarSign, Plus, Loader2, Sparkles
@@ -13,6 +14,7 @@ interface AddLeadModalProps {
 }
 
 const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }) => {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<Partial<Lead>>({
         name: '',
@@ -72,8 +74,8 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                             <Sparkles size={20} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-xl text-foreground tracking-tight">Add New Lead</h3>
-                            <p className="text-xs text-muted-foreground font-medium">Enter lead details to track in your pipeline</p>
+                            <h3 className="font-bold text-xl text-foreground tracking-tight">{t('leads.addNewLead')}</h3>
+                            <p className="text-xs text-muted-foreground font-medium">{t('leads.enterLeadDetails')}</p>
                         </div>
                     </div>
                     <button
@@ -89,12 +91,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 {/* Primary Info Section */}
                 <div className="space-y-4">
                     <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        <User size={12} /> Contact Information
+                        <User size={12} /> {t('leads.contactInfo')}
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Full Name <span className="text-red-400">*</span></label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('common.name')} <span className="text-red-400">*</span></label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -108,7 +110,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                         </div>
 
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Email Address <span className="text-red-400">*</span></label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.email')} <span className="text-red-400">*</span></label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -123,7 +125,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                         </div>
 
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Phone Number</label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.phone')}</label>
                             <div className="relative">
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -137,7 +139,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                         </div>
 
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Job Title</label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.jobTitle')}</label>
                             <div className="relative">
                                 <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -154,12 +156,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 {/* Company Info Section */}
                 <div className="space-y-4 pt-2 border-t border-white/5">
                     <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        <Building2 size={12} /> Company Details
+                        <Building2 size={12} /> {t('leads.companyDetails')}
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Company Name</label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.companyName')}</label>
                             <div className="relative">
                                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -172,7 +174,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                         </div>
 
                         <div className="space-y-1.5 group">
-                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">Industry</label>
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.industry')}</label>
                             <div className="relative">
                                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                 <input
@@ -189,7 +191,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 {/* Deal Value Section */}
                 <div className="space-y-4 pt-2 border-t border-white/5">
                     <div className="space-y-1.5 group max-w-[50%]">
-                        <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-green-500 transition-colors">Estimated Deal Value</label>
+                        <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-green-500 transition-colors">{t('leads.dealValue')}</label>
                         <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-green-500 transition-colors" size={16} />
                             <input
@@ -211,7 +213,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                         onClick={onClose}
                         className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="submit"
@@ -223,12 +225,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                             {isSubmitting ? (
                                 <>
                                     <Loader2 size={16} className="animate-spin" />
-                                    Creating...
+                                    {t('leads.creating')}
                                 </>
                             ) : (
                                 <>
                                     <Plus size={16} />
-                                    Create Lead
+                                    {t('leads.createLead')}
                                 </>
                             )}
                         </span>

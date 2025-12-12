@@ -17,6 +17,9 @@ import { getGoogleGenAI } from '../../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
+import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp } from '../../firebase';
+import { Timestamp } from 'firebase/firestore';
+import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 // ... existing imports ...
 
 // --- Types ---
@@ -27,19 +30,223 @@ interface Message {
 }
 
 // --- Tools Definition ---
+const EDITOR_SECTION_IDS = [
+    "header", "hero", "heroSplit", "features", "testimonials", "pricing", "faq", "cta",
+    "services", "team", "video", "slideshow", "portfolio", "leads", "newsletter", "howItWorks",
+    "map", "menu", "banner", "chatbot", "footer", "typography", "colors",
+    "storeSettings", "products", "featuredProducts", "categoryGrid", "productHero",
+    "saleCountdown", "trustBadges", "recentlyViewed", "productReviews", "collectionBanner",
+    "productBundle", "announcementBar"
+] as const;
+
+type EditorSectionId = typeof EDITOR_SECTION_IDS[number];
+
+const resolveEditorSectionId = (input: string): EditorSectionId | null => {
+    const normalize = (s: string) =>
+        String(s || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+
+    const needle = normalize(input);
+    if (!needle) return null;
+
+    const synonyms: Record<string, EditorSectionId> = {
+        // Core sections
+        hero: 'hero',
+        header: 'header',
+        encabezado: 'header',
+        cabecera: 'header',
+        footer: 'footer',
+        pie: 'footer',
+        piedepagina: 'footer',
+        // Content sections
+        caracteristicas: 'features',
+        features: 'features',
+        testimonios: 'testimonials',
+        testimonials: 'testimonials',
+        precios: 'pricing',
+        pricing: 'pricing',
+        preguntas: 'faq',
+        faq: 'faq',
+        servicios: 'services',
+        services: 'services',
+        equipo: 'team',
+        team: 'team',
+        portafolio: 'portfolio',
+        portfolio: 'portfolio',
+        comofunciona: 'howItWorks',
+        howitworks: 'howItWorks',
+        pasos: 'howItWorks',
+        // Additional sections
+        cta: 'cta',
+        llamadaalaaccion: 'cta',
+        video: 'video',
+        slideshow: 'slideshow',
+        galeria: 'slideshow',
+        carrusel: 'slideshow',
+        leads: 'leads',
+        formulario: 'leads',
+        contacto: 'leads',
+        newsletter: 'newsletter',
+        boletin: 'newsletter',
+        map: 'map',
+        mapa: 'map',
+        menu: 'menu',
+        carta: 'menu',
+        banner: 'banner',
+        chatbot: 'chatbot',
+        // Hero variants
+        herosplit: 'heroSplit',
+        // Styling
+        tipografia: 'typography',
+        typography: 'typography',
+        fuentes: 'typography',
+        colores: 'colors',
+        colors: 'colors',
+        paleta: 'colors',
+        // Ecommerce
+        storesettings: 'storeSettings',
+        tienda: 'storeSettings',
+        featuredproducts: 'featuredProducts',
+        productosdestacados: 'featuredProducts',
+        categorygrid: 'categoryGrid',
+        categorias: 'categoryGrid',
+        producthero: 'productHero',
+        salecountdown: 'saleCountdown',
+        oferta: 'saleCountdown',
+        trustbadges: 'trustBadges',
+        confianza: 'trustBadges',
+        recentlyviewed: 'recentlyViewed',
+        vistosrecientemente: 'recentlyViewed',
+        productreviews: 'productReviews',
+        resenas: 'productReviews',
+        collectionbanner: 'collectionBanner',
+        productbundle: 'productBundle',
+        paquetes: 'productBundle',
+        announcementbar: 'announcementBar',
+        anuncio: 'announcementBar',
+        products: 'products',
+        productos: 'products',
+    };
+    if (synonyms[needle]) return synonyms[needle];
+
+    for (const id of EDITOR_SECTION_IDS) {
+        if (normalize(id) === needle) return id;
+    }
+    return null;
+};
+
+const OPEN_SECTION_TOOLS: FunctionDeclaration[] = EDITOR_SECTION_IDS.map((sectionName) => ({
+    name: `open_${sectionName}`,
+    description: `Open the editor Properties panel for the '${sectionName}' section.`,
+    parameters: {
+        type: Type.OBJECT,
+        properties: {},
+    },
+}));
+
+const SECTION_ITEM_TOOLS: FunctionDeclaration[] = [
+    {
+        name: 'open_features_item',
+        description: 'Open Features and scroll to a specific feature item (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_testimonials_item',
+        description: 'Open Testimonials and scroll to a specific testimonial (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_pricing_tier',
+        description: 'Open Pricing and scroll to a specific pricing tier (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_services_item',
+        description: 'Open Services and scroll to a specific service item (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_faq_item',
+        description: 'Open FAQ and scroll to a specific question (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_menu_item',
+        description: 'Open Menu and scroll to a specific dish item (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_howItWorks_step',
+        description: 'Open How It Works and scroll to a specific step (1-based index).',
+        parameters: { type: Type.OBJECT, properties: { index: { type: Type.NUMBER } }, required: ['index'] }
+    },
+    {
+        name: 'open_section_item',
+        description: 'Open an editor section and scroll to an item (1-based index).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                sectionName: { type: Type.STRING, enum: ["features", "testimonials", "pricing", "services", "faq", "menu", "howItWorks"] },
+                index: { type: Type.NUMBER }
+            },
+            required: ['sectionName', 'index']
+        }
+    },
+];
+
 const TOOLS: FunctionDeclaration[] = [
     {
         name: 'change_view',
-        description: 'Navigate to a different section. Views: dashboard, websites, editor, cms, assets, navigation, superadmin, ai-assistant, leads, domains.',
+        description: 'Navigate to a different section. Views: dashboard, websites, editor, cms, assets, navigation, superadmin, ai-assistant, leads, domains, seo, finance, templates, appointments, ecommerce, email.',
         parameters: {
             type: Type.OBJECT,
             properties: {
                 viewName: {
                     type: Type.STRING,
-                    enum: ["dashboard", "websites", "editor", "cms", "assets", "navigation", "superadmin", "ai-assistant", "leads", "domains"]
+                    enum: ["dashboard", "websites", "editor", "cms", "assets", "navigation", "superadmin", "ai-assistant", "leads", "domains", "seo", "finance", "templates", "appointments", "ecommerce", "email"]
                 }
             },
             required: ['viewName']
+        }
+    },
+    // One tool per editor section (no args): open_hero, open_features, ...
+    ...OPEN_SECTION_TOOLS,
+    // Tools to focus list items inside Properties
+    ...SECTION_ITEM_TOOLS,
+    {
+        name: 'select_section',
+        description: 'Open the editor controls for a specific website section/component and focus it in the sidebar.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                sectionName: {
+                    type: Type.STRING,
+                    enum: [
+                        "header", "hero", "heroSplit", "features", "testimonials", "pricing", "faq", "cta",
+                        "services", "team", "video", "slideshow", "portfolio", "leads", "newsletter", "howItWorks",
+                        "map", "menu", "banner", "chatbot", "footer", "typography", "colors",
+                        "storeSettings", "products", "featuredProducts", "categoryGrid", "productHero",
+                        "saleCountdown", "trustBadges", "recentlyViewed", "productReviews", "collectionBanner",
+                        "productBundle", "announcementBar"
+                    ]
+                }
+            },
+            required: ['sectionName']
+        }
+    },
+    {
+        name: 'update_project_theme',
+        description: 'Update the active project theme (used by the Properties panel). Supports dot-paths like "buttonBorderRadius", "fontFamilyHeader", "palette.primary", etc.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                path: { type: Type.STRING, description: 'Dot-path to a theme field, e.g. "buttonBorderRadius" or "palette.primary".' },
+                value: { type: Type.STRING, description: 'Value to set. If you need boolean/number/object/array, pass JSON (e.g. true, 12, {"a":1}).' }
+            },
+            required: ['path', 'value']
         }
     },
     {
@@ -246,6 +453,145 @@ const TOOLS: FunctionDeclaration[] = [
                     items: { type: Type.STRING },
                     description: 'New section order as array of section names (required for reorder)'
                 }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'update_project_seo',
+        description: 'Update SEO config for the active project.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                updates: { type: Type.OBJECT, description: 'Partial SEO config fields to merge (title, description, keywords, robots, canonical, og*, twitter*, etc.)' }
+            },
+            required: ['updates']
+        }
+    },
+    {
+        name: 'update_global_seo',
+        description: 'Update global SEO defaults (Super Admin).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                defaultLanguage: { type: Type.STRING },
+                defaultRobots: { type: Type.STRING },
+                defaultSchemaType: { type: Type.STRING },
+                defaultOgType: { type: Type.STRING },
+                defaultTwitterCard: { type: Type.STRING },
+                aiCrawlingEnabled: { type: Type.BOOLEAN },
+                googleVerification: { type: Type.STRING },
+                bingVerification: { type: Type.STRING },
+                aiDescriptionTemplate: { type: Type.STRING },
+                defaultAiTopics: { type: Type.STRING }
+            }
+        }
+    },
+    {
+        name: 'manage_template',
+        description: 'Create/duplicate/archive templates.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['create', 'duplicate', 'archive', 'unarchive'] },
+                templateId: { type: Type.STRING }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'manage_appointment',
+        description: 'Create/update/delete appointments.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'status'] },
+                id: { type: Type.STRING },
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                startDate: { type: Type.STRING, description: 'ISO datetime (e.g., 2025-12-12T15:00:00Z)' },
+                endDate: { type: Type.STRING, description: 'ISO datetime (e.g., 2025-12-12T15:30:00Z)' },
+                status: { type: Type.STRING, description: 'Appointment status (scheduled, confirmed, completed, cancelled, no_show, etc.)' }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'email_settings',
+        description: 'Update email marketing settings for the active project.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                updates: { type: Type.OBJECT },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' }
+            },
+            required: ['updates']
+        }
+    },
+    {
+        name: 'email_campaign',
+        description: 'Create/update/delete an email campaign for the active project.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
+                campaignId: { type: Type.STRING },
+                campaign: { type: Type.OBJECT, description: 'Campaign fields (name, subject, type, content, audienceType, status, etc.)' }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'ecommerce_project',
+        description: 'Enable/disable ecommerce for a project (storeId == projectId).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['enable', 'disable'] },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
+                projectName: { type: Type.STRING, description: 'Optional; used for store naming on first enable.' }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'ecommerce_product',
+        description: 'Create/update/delete a product in the active project store.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                productId: { type: Type.STRING },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
+                product: { type: Type.OBJECT, description: 'Product fields to set/merge' }
+            },
+            required: ['action']
+        }
+    },
+    {
+        name: 'ecommerce_order',
+        description: 'Update order status in the active project store.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                orderId: { type: Type.STRING },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
+                status: { type: Type.STRING, description: 'Order status (pending, paid, shipped, delivered, cancelled, refunded, etc.)' }
+            },
+            required: ['orderId', 'status']
+        }
+    },
+    {
+        name: 'finance_expense',
+        description: 'Create/update/delete finance expenses for the active project.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
+                expenseId: { type: Type.STRING },
+                expense: { type: Type.OBJECT, description: 'Expense fields (date, supplier, category, subtotal, tax, total, currency, items, status, originalFileUrl)' }
             },
             required: ['action']
         }
@@ -632,19 +978,34 @@ const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebase
 const GlobalAiAssistant: React.FC = () => {
     const {
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
-        hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig, onSectionSelect,
+        hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig,
         theme, setTheme,
         getPrompt, addNewProject,
+        updateSeoConfig,
         componentStatus, customComponents
     } = useEditor();
 
     const { user } = useAuth();
-    const { view, setView } = useUI();
-    const { projects, brandIdentity, setBrandIdentity, componentOrder, setComponentOrder, sectionVisibility, setSectionVisibility } = useProject();
+    const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
+    const {
+        projects,
+        brandIdentity,
+        setBrandIdentity,
+        componentOrder,
+        setComponentOrder,
+        sectionVisibility,
+        setSectionVisibility,
+        createNewTemplate,
+        archiveTemplate,
+        duplicateTemplate,
+    } = useProject();
     const { leads, addLead, updateLead, updateLeadStatus, deleteLead } = useCRM();
     const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
     const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
     const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
+
+    // Global kill switch (Super Admin)
+    if (globalAssistantConfig?.isEnabled === false) return null;
 
     // State
     const [isOpen, setIsOpen] = useState(false);
@@ -678,7 +1039,8 @@ const GlobalAiAssistant: React.FC = () => {
     const projectsRef = useRef(projects);
     const loadProjectRef = useRef(loadProject);
     const themeModeRef = useRef(themeMode);
-    const onSectionSelectRef = useRef(onSectionSelect);
+    const onSectionSelectRef = useRef(uiOnSectionSelect);
+    const onSectionItemSelectRef = useRef(onSectionItemSelect);
     const setViewRef = useRef(setView);
     const setAdminViewRef = useRef(setAdminView);
     const setThemeModeRef = useRef(setThemeMode);
@@ -699,6 +1061,7 @@ const GlobalAiAssistant: React.FC = () => {
     const deleteCMSPostRef = useRef(deleteCMSPost);
     const aiConfigRef = useRef(aiAssistantConfig);
     const saveAiConfigRef = useRef(saveAiAssistantConfig);
+    const updateSeoConfigRef = useRef(updateSeoConfig);
     const domainsRef = useRef(domains);
     const addDomainRef = useRef(addDomain);
     const deleteDomainRef = useRef(deleteDomain);
@@ -712,6 +1075,10 @@ const GlobalAiAssistant: React.FC = () => {
     const setComponentOrderRef = useRef(setComponentOrder);
     const sectionVisibilityRef = useRef(sectionVisibility);
     const setSectionVisibilityRef = useRef(setSectionVisibility);
+    const createNewTemplateRef = useRef(createNewTemplate);
+    const archiveTemplateRef = useRef(archiveTemplate);
+    const duplicateTemplateRef = useRef(duplicateTemplate);
+    const globalAssistantConfigRef = useRef(globalAssistantConfig);
 
     // Sync Refs
     useEffect(() => { dataRef.current = data; }, [data]);
@@ -719,7 +1086,8 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { projectsRef.current = projects; }, [projects]);
     useEffect(() => { loadProjectRef.current = loadProject; }, [loadProject]);
     useEffect(() => { themeModeRef.current = themeMode; }, [themeMode]);
-    useEffect(() => { onSectionSelectRef.current = onSectionSelect; }, [onSectionSelect]);
+    useEffect(() => { onSectionSelectRef.current = uiOnSectionSelect; }, [uiOnSectionSelect]);
+    useEffect(() => { onSectionItemSelectRef.current = onSectionItemSelect; }, [onSectionItemSelect]);
     useEffect(() => { setViewRef.current = setView; }, [setView]);
     useEffect(() => { setAdminViewRef.current = setAdminView; }, [setAdminView]);
     useEffect(() => { setThemeModeRef.current = setThemeMode; }, [setThemeMode]);
@@ -739,6 +1107,7 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { deleteCMSPostRef.current = deleteCMSPost; }, [deleteCMSPost]);
     useEffect(() => { aiConfigRef.current = aiAssistantConfig; }, [aiAssistantConfig]);
     useEffect(() => { saveAiConfigRef.current = saveAiAssistantConfig; }, [saveAiAssistantConfig]);
+    useEffect(() => { updateSeoConfigRef.current = updateSeoConfig; }, [updateSeoConfig]);
     useEffect(() => { domainsRef.current = domains; }, [domains]);
     useEffect(() => { addDomainRef.current = addDomain; }, [addDomain]);
     useEffect(() => { deleteDomainRef.current = deleteDomain; }, [deleteDomain]);
@@ -752,6 +1121,72 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { setComponentOrderRef.current = setComponentOrder; }, [setComponentOrder]);
     useEffect(() => { sectionVisibilityRef.current = sectionVisibility; }, [sectionVisibility]);
     useEffect(() => { setSectionVisibilityRef.current = setSectionVisibility; }, [setSectionVisibility]);
+    useEffect(() => { createNewTemplateRef.current = createNewTemplate; }, [createNewTemplate]);
+    useEffect(() => { archiveTemplateRef.current = archiveTemplate; }, [archiveTemplate]);
+    useEffect(() => { duplicateTemplateRef.current = duplicateTemplate; }, [duplicateTemplate]);
+    useEffect(() => { globalAssistantConfigRef.current = globalAssistantConfig; }, [globalAssistantConfig]);
+
+    const isToolAllowed = (
+        toolName: string,
+        args: any,
+        mode: 'chat' | 'voice'
+    ): { allowed: boolean; scopeId?: string; error?: string } => {
+        const role = userDocumentRef.current?.role;
+        if (role === 'owner' || role === 'superadmin') return { allowed: true };
+
+        const config = globalAssistantConfigRef.current;
+        const permissions = config?.permissions || {};
+
+        // If no permissions are configured, keep legacy behavior: allow tools (except role-gated ones)
+        if (Object.keys(permissions).length === 0) return { allowed: true };
+
+        // Map tool -> scope
+        let scopeId: string | null = null;
+        if (toolName === 'change_view') scopeId = String(args?.viewName || '');
+        else if (toolName === 'open_features_item') scopeId = 'features';
+        else if (toolName === 'open_testimonials_item') scopeId = 'testimonials';
+        else if (toolName === 'open_pricing_tier') scopeId = 'pricing';
+        else if (toolName === 'open_services_item') scopeId = 'services';
+        else if (toolName === 'open_faq_item') scopeId = 'faq';
+        else if (toolName === 'open_menu_item') scopeId = 'menu';
+        else if (toolName === 'open_howItWorks_step') scopeId = 'howItWorks';
+        else if (toolName === 'open_section_item') scopeId = String(args?.sectionName || '');
+        else if (toolName === 'select_section') {
+            const section = String(args?.sectionName || '');
+            // Avoid collision with CRM leads view scope
+            scopeId = section === 'leads' ? 'leads-form' : section;
+        }
+        else if (toolName.startsWith('open_')) {
+            const section = toolName.slice('open_'.length);
+            scopeId = section === 'leads' ? 'leads-form' : section;
+        }
+        else if (toolName === 'navigate_admin') scopeId = 'superadmin';
+        else if (toolName === 'manage_cms_post') scopeId = 'cms';
+        else if (toolName === 'manage_lead') scopeId = 'leads';
+        else if (toolName === 'manage_domain') scopeId = 'domains';
+        else if (toolName === 'update_chat_config') scopeId = 'ai-assistant';
+        else if (toolName === 'generate_image_asset') scopeId = 'assets';
+        else if (toolName === 'update_project_seo' || toolName === 'update_global_seo') scopeId = 'seo';
+        else if (toolName === 'manage_template') scopeId = 'templates';
+        else if (toolName === 'manage_appointment') scopeId = 'appointments';
+        else if (toolName === 'email_settings' || toolName === 'email_campaign') scopeId = 'email';
+        else if (toolName === 'ecommerce_project' || toolName === 'ecommerce_product' || toolName === 'ecommerce_order') scopeId = 'ecommerce';
+        else if (toolName === 'finance_expense') scopeId = 'finance';
+        else if (toolName === 'update_site_content' || toolName === 'manage_sections' || toolName === 'manage_section_items' || toolName === 'change_theme')
+            scopeId = 'editor';
+        else if (toolName === 'load_project' || toolName === 'create_website') scopeId = 'websites';
+
+        // If unknown tool or unmapped, allow (we'll tighten this once all tools are mapped in settings)
+        if (!scopeId) return { allowed: true };
+
+        // Mirror Settings UI default behavior: missing scope == allowed
+        const perm = permissions[scopeId] || { chat: true, voice: true };
+        const allowed = perm?.[mode] === true;
+        if (!allowed) {
+            return { allowed: false, scopeId, error: `Permission denied for scope '${scopeId}' in ${mode} mode.` };
+        }
+        return { allowed: true, scopeId };
+    };
 
     const isConnectedRef = useRef(false);
 
@@ -932,7 +1367,95 @@ const GlobalAiAssistant: React.FC = () => {
         return true;
     };
 
-    const executeTool = async (name: string, args: any): Promise<{ result?: string, error?: string }> => {
+    const parseToolValue = (raw: any) => {
+        if (raw === null || raw === undefined) return raw;
+        if (typeof raw !== 'string') return raw;
+        const trimmed = raw.trim();
+        if (trimmed === '') return '';
+        // Try JSON for booleans/numbers/objects/arrays
+        if (
+            trimmed === 'true' ||
+            trimmed === 'false' ||
+            trimmed === 'null' ||
+            /^-?\d+(\.\d+)?$/.test(trimmed) ||
+            trimmed.startsWith('{') ||
+            trimmed.startsWith('[') ||
+            trimmed.startsWith('"')
+        ) {
+            try { return JSON.parse(trimmed); } catch { /* fall through */ }
+        }
+        return raw;
+    };
+
+    const updateThemePath = (path: string, value: any) => {
+        const deepSet = (obj: any, p: string, v: any) => {
+            const keys = p.split('.');
+            let cur = obj;
+            for (let i = 0; i < keys.length - 1; i++) {
+                const key = keys[i];
+                if (cur[key] === undefined || cur[key] === null) cur[key] = {};
+                if (typeof cur[key] !== 'object') {
+                    console.warn(`Cannot traverse theme path '${p}' at '${key}': value is primitive.`);
+                    return;
+                }
+                cur = cur[key];
+            }
+            cur[keys[keys.length - 1]] = v;
+        };
+
+        try {
+            const mutableClone = JSON.parse(JSON.stringify(themeRef.current || {}));
+            deepSet(mutableClone, path, value);
+            themeRef.current = mutableClone;
+        } catch (e) { console.warn("Optimistic theme ref update failed", e); }
+
+        setTheme(prev => {
+            const next = JSON.parse(JSON.stringify(prev || {}));
+            deepSet(next, path, value);
+            return next;
+        });
+
+        return true;
+    };
+
+    const openEditorSection = (sectionName: EditorSectionId) => {
+        // Ensure a project is loaded; if not, load the most recent one as a sensible default.
+        if (!activeProjectRef.current || !dataRef.current) {
+            const candidate = projectsRef.current.find(p => (p as any).status !== 'Template') || projectsRef.current[0];
+            if (!candidate) return { error: "No projects available. Create or load a project first." };
+            loadProjectRef.current(candidate.id);
+            activeProjectRef.current = candidate;
+            dataRef.current = candidate.data;
+        }
+
+        // Ensure we're in editor and focus the requested section in the sidebar
+        setViewRef.current('editor');
+        onSectionSelectRef.current(sectionName as any);
+        return { result: `Opened editor controls for section '${sectionName}'.` };
+    };
+
+    const openEditorSectionItem = (sectionName: EditorSectionId, index0: number) => {
+        if (!Number.isFinite(index0) || index0 < 0) return { error: "index must be >= 1." };
+
+        // Ensure a project is loaded; if not, load the most recent one as a sensible default.
+        if (!activeProjectRef.current || !dataRef.current) {
+            const candidate = projectsRef.current.find(p => (p as any).status !== 'Template') || projectsRef.current[0];
+            if (!candidate) return { error: "No projects available. Create or load a project first." };
+            loadProjectRef.current(candidate.id);
+            activeProjectRef.current = candidate;
+            dataRef.current = candidate.data;
+        }
+
+        setViewRef.current('editor');
+        onSectionItemSelectRef.current(sectionName as any, index0);
+        return { result: `Opened '${sectionName}' and focused item #${index0 + 1}.` };
+    };
+
+    const executeTool = async (
+        name: string,
+        args: any,
+        mode: 'chat' | 'voice' = 'chat'
+    ): Promise<{ result?: string, error?: string }> => {
         console.log(`[Tool Execution] ${name}`, {
             args,
             timestamp: new Date().toISOString()
@@ -948,6 +1471,13 @@ const GlobalAiAssistant: React.FC = () => {
 
             lastToolCallRef.current = { name, args: serializedArgs, timestamp: now };
 
+            const permission = isToolAllowed(name, args, mode);
+            if (!permission.allowed) {
+                const result = { error: permission.error || 'Permission denied.' };
+                console.log(`[Tool Result] ${name}`, result);
+                return result;
+            }
+
             if (name === 'change_view') {
                 const newView = args['viewName'] as any;
                 if (viewRef.current === newView) {
@@ -959,6 +1489,67 @@ const GlobalAiAssistant: React.FC = () => {
                 const result = { result: `Navigated to ${newView}.` };
                 console.log(`[Tool Result] ${name}`, result);
                 return result;
+            }
+            else if (name === 'open_features_item') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('features', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_testimonials_item') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('testimonials', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_pricing_tier') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('pricing', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_services_item') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('services', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_faq_item') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('faq', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_menu_item') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('menu', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_howItWorks_step') {
+                const index1 = Number(args?.index);
+                return openEditorSectionItem('howItWorks', Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name === 'open_section_item') {
+                const sectionName = args?.sectionName as EditorSectionId;
+                const index1 = Number(args?.index);
+                const resolved = EDITOR_SECTION_IDS.includes(sectionName)
+                    ? (sectionName as EditorSectionId)
+                    : resolveEditorSectionId(sectionName as any);
+                if (!resolved) return { error: `Unknown section '${sectionName}'.` };
+                return openEditorSectionItem(resolved, Math.max(0, Math.floor(index1) - 1));
+            }
+            else if (name.startsWith('open_')) {
+                const rawSection = name.slice('open_'.length);
+                const resolved = EDITOR_SECTION_IDS.includes(rawSection as any)
+                    ? (rawSection as EditorSectionId)
+                    : resolveEditorSectionId(rawSection);
+                if (!resolved) return { error: `Unknown section tool '${name}'.` };
+                return openEditorSection(resolved);
+            }
+            else if (name === 'select_section') {
+                const sectionName = args?.sectionName as any;
+                if (!sectionName) return { error: "sectionName required." };
+                const resolved = EDITOR_SECTION_IDS.includes(sectionName)
+                    ? (sectionName as EditorSectionId)
+                    : resolveEditorSectionId(sectionName);
+                if (!resolved) return { error: `Unknown section '${sectionName}'.` };
+                return openEditorSection(resolved);
+            }
+            else if (name === 'update_project_theme') {
+                const path = String(args?.path || '').trim();
+                if (!path) return { error: "path required." };
+                const value = parseToolValue(args?.value);
+                updateThemePath(path, value);
+                return { result: `Updated theme '${path}'.` };
             }
             else if (name === 'navigate_admin') {
                 const adminViewName = args['adminViewName'] as any;
@@ -1284,6 +1875,312 @@ const GlobalAiAssistant: React.FC = () => {
                 const result = { error: "Invalid action for manage_sections." };
                 console.log(`[Tool Result] ${name}`, result);
                 return result;
+            }
+
+            // --- SEO ---
+            else if (name === 'update_project_seo') {
+                const updates = args?.updates;
+                if (!updates || typeof updates !== 'object') {
+                    return { error: "updates object required." };
+                }
+                await updateSeoConfigRef.current(updates);
+                return { result: "Project SEO updated." };
+            }
+            else if (name === 'update_global_seo') {
+                const role = userDocumentRef.current?.role;
+                if (role !== 'superadmin' && role !== 'owner') {
+                    return { error: "Unauthorized: Only Super Admins can update global SEO." };
+                }
+                const payload = { ...args, updatedAt: serverTimestamp() };
+                await setDoc(doc(db, 'globalSettings', 'seo'), payload, { merge: true });
+                return { result: "Global SEO settings updated." };
+            }
+
+            // --- TEMPLATES ---
+            else if (name === 'manage_template') {
+                const action = args?.action as string;
+                const templateId = args?.templateId as string | undefined;
+                if (action === 'create') {
+                    await createNewTemplateRef.current();
+                    return { result: "Created new template." };
+                }
+                if (action === 'duplicate') {
+                    if (!templateId) return { error: "templateId required for duplicate." };
+                    await duplicateTemplateRef.current(templateId);
+                    return { result: "Template duplicated." };
+                }
+                if (action === 'archive' || action === 'unarchive') {
+                    if (!templateId) return { error: "templateId required for archive/unarchive." };
+                    await archiveTemplateRef.current(templateId, action === 'archive');
+                    return { result: action === 'archive' ? "Template archived." : "Template unarchived." };
+                }
+                return { error: "Invalid action for manage_template." };
+            }
+
+            // --- APPOINTMENTS ---
+            else if (name === 'manage_appointment') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const action = args?.action as string;
+                const id = args?.id as string | undefined;
+                const title = args?.title as string | undefined;
+                const description = args?.description as string | undefined;
+                const status = args?.status as string | undefined;
+                const startIso = args?.startDate as string | undefined;
+                const endIso = args?.endDate as string | undefined;
+
+                const appointmentsCol = collection(db, 'users', user.uid, 'appointments');
+
+                const parseDate = (iso?: string) => {
+                    if (!iso) return undefined;
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return undefined;
+                    return dateToTimestamp(d);
+                };
+
+                if (action === 'create') {
+                    const now = dateToTimestamp(new Date());
+                    const startDate = parseDate(startIso) || now;
+                    const endDate = parseDate(endIso) || startDate;
+                    const payload: any = {
+                        title: title || 'Nueva Cita',
+                        status: status || 'scheduled',
+                        startDate,
+                        endDate,
+                        createdAt: now,
+                        createdBy: user.uid,
+                        organizerId: user.uid,
+                    };
+                    if (description) payload.description = description;
+                    const docRef = await addDoc(appointmentsCol, payload);
+                    return { result: `Appointment created: ${docRef.id}` };
+                }
+
+                if (action === 'update') {
+                    if (!id) return { error: "id required for update." };
+                    const updatePayload: any = { updatedAt: dateToTimestamp(new Date()), updatedBy: user.uid };
+                    if (title !== undefined) updatePayload.title = title;
+                    if (description !== undefined) updatePayload.description = description;
+                    const parsedStart = parseDate(startIso);
+                    const parsedEnd = parseDate(endIso);
+                    if (parsedStart) updatePayload.startDate = parsedStart;
+                    if (parsedEnd) updatePayload.endDate = parsedEnd;
+                    if (status) updatePayload.status = status;
+                    await updateDoc(doc(db, 'users', user.uid, 'appointments', id), updatePayload);
+                    return { result: "Appointment updated." };
+                }
+
+                if (action === 'status') {
+                    if (!id) return { error: "id required for status." };
+                    if (!status) return { error: "status required." };
+                    await updateDoc(doc(db, 'users', user.uid, 'appointments', id), {
+                        status,
+                        updatedAt: dateToTimestamp(new Date()),
+                        updatedBy: user.uid,
+                    });
+                    return { result: "Appointment status updated." };
+                }
+
+                if (action === 'delete') {
+                    if (!id) return { error: "id required for delete." };
+                    await deleteDoc(doc(db, 'users', user.uid, 'appointments', id));
+                    return { result: "Appointment deleted." };
+                }
+
+                return { error: "Invalid action for manage_appointment." };
+            }
+
+            // --- EMAIL ---
+            else if (name === 'email_settings') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
+                const updates = args?.updates;
+                if (!updates || typeof updates !== 'object') return { error: "updates object required." };
+                const settingsPath = `users/${user.uid}/projects/${projectId}/settings/email`;
+                await setDoc(doc(db, settingsPath), { ...updates, updatedAt: serverTimestamp() }, { merge: true });
+                return { result: "Email settings updated." };
+            }
+            else if (name === 'email_campaign') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const action = args?.action as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
+                const campaignsPath = `users/${user.uid}/projects/${projectId}/emailCampaigns`;
+
+                if (action === 'create') {
+                    const campaign = (args?.campaign || {}) as any;
+                    const stats = campaign.stats || {
+                        totalRecipients: 0, sent: 0, delivered: 0, opened: 0, uniqueOpens: 0,
+                        clicked: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0,
+                    };
+                    const payload = {
+                        ...campaign,
+                        status: campaign.status || 'draft',
+                        stats,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    };
+                    const docRef = await addDoc(collection(db, campaignsPath), payload);
+                    return { result: `Campaign created: ${docRef.id}` };
+                }
+
+                if (action === 'update') {
+                    const campaignId = args?.campaignId as string | undefined;
+                    if (!campaignId) return { error: "campaignId required for update." };
+                    const campaign = (args?.campaign || {}) as any;
+                    await updateDoc(doc(db, campaignsPath, campaignId), { ...campaign, updatedAt: serverTimestamp() });
+                    return { result: "Campaign updated." };
+                }
+
+                if (action === 'delete') {
+                    const campaignId = args?.campaignId as string | undefined;
+                    if (!campaignId) return { error: "campaignId required for delete." };
+                    await deleteDoc(doc(db, campaignsPath, campaignId));
+                    return { result: "Campaign deleted." };
+                }
+
+                return { error: "Invalid action for email_campaign." };
+            }
+
+            // --- ECOMMERCE ---
+            else if (name === 'ecommerce_project') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const action = args?.action as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                const projectName = (args?.projectName as string | undefined) || activeProjectRef.current?.name || 'Mi Proyecto';
+                if (!projectId) return { error: "No active project. Load a project first." };
+
+                const configPath = `users/${user.uid}/projects/${projectId}/ecommerce/config`;
+                const storePath = `users/${user.uid}/stores/${projectId}`;
+
+                if (action === 'enable') {
+                    await setDoc(doc(db, configPath), {
+                        projectId,
+                        projectName,
+                        ecommerceEnabled: true,
+                        storeId: projectId,
+                        storeName: `Tienda - ${projectName}`,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    }, { merge: true });
+
+                    const storeRef = doc(db, storePath);
+                    const storeDoc = await getDoc(storeRef);
+                    if (!storeDoc.exists()) {
+                        await setDoc(storeRef, {
+                            name: `Tienda - ${projectName}`,
+                            projectId,
+                            createdAt: serverTimestamp(),
+                            updatedAt: serverTimestamp(),
+                            isActive: true,
+                            ownerId: user.uid,
+                        });
+                    } else {
+                        await updateDoc(storeRef, { updatedAt: serverTimestamp(), isActive: true });
+                    }
+
+                    return { result: "Ecommerce enabled for project." };
+                }
+
+                if (action === 'disable') {
+                    await setDoc(doc(db, configPath), { ecommerceEnabled: false, updatedAt: serverTimestamp() }, { merge: true });
+                    return { result: "Ecommerce disabled for project." };
+                }
+
+                return { error: "Invalid action for ecommerce_project." };
+            }
+            else if (name === 'ecommerce_product') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const action = args?.action as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
+                const productsPath = `users/${user.uid}/stores/${projectId}/products`;
+
+                const slugify = (s: string) => s
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+
+                if (action === 'create') {
+                    const product = (args?.product || {}) as any;
+                    if (!product?.name) return { error: "product.name required." };
+                    const payload = {
+                        ...product,
+                        slug: product.slug || slugify(product.name),
+                        images: product.images || [],
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    };
+                    const docRef = await addDoc(collection(db, productsPath), payload);
+                    return { result: `Product created: ${docRef.id}` };
+                }
+
+                if (action === 'update') {
+                    const productId = args?.productId as string | undefined;
+                    if (!productId) return { error: "productId required for update." };
+                    const product = (args?.product || {}) as any;
+                    const updatePayload: any = { ...product, updatedAt: serverTimestamp() };
+                    if (product?.name && !product.slug) updatePayload.slug = slugify(product.name);
+                    await updateDoc(doc(db, productsPath, productId), updatePayload);
+                    return { result: "Product updated." };
+                }
+
+                if (action === 'delete') {
+                    const productId = args?.productId as string | undefined;
+                    if (!productId) return { error: "productId required for delete." };
+                    await deleteDoc(doc(db, productsPath, productId));
+                    return { result: "Product deleted." };
+                }
+
+                return { error: "Invalid action for ecommerce_product." };
+            }
+            else if (name === 'ecommerce_order') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const orderId = args?.orderId as string;
+                const status = args?.status as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
+                const ordersPath = `users/${user.uid}/stores/${projectId}/orders`;
+
+                const updateData: any = { status, updatedAt: serverTimestamp() };
+                if (status === 'cancelled') updateData.cancelledAt = serverTimestamp();
+                if (status === 'refunded') updateData.refundedAt = serverTimestamp();
+                if (status === 'shipped') updateData.shippedAt = serverTimestamp();
+                if (status === 'delivered') updateData.deliveredAt = serverTimestamp();
+
+                await updateDoc(doc(db, ordersPath, orderId), updateData);
+                return { result: "Order status updated." };
+            }
+
+            // --- FINANCE ---
+            else if (name === 'finance_expense') {
+                if (!user?.uid) return { error: "Not authenticated." };
+                const action = args?.action as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
+                const expenseId = args?.expenseId as string | undefined;
+                const expensesPath = `users/${user.uid}/projects/${projectId}/finance/expenses`;
+
+                if (action === 'create') {
+                    const expense = (args?.expense || {}) as any;
+                    const payload = { ...expense, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+                    const docRef = await addDoc(collection(db, expensesPath), payload);
+                    return { result: `Expense created: ${docRef.id}` };
+                }
+                if (action === 'update') {
+                    if (!expenseId) return { error: "expenseId required for update." };
+                    const expense = (args?.expense || {}) as any;
+                    await updateDoc(doc(db, expensesPath, expenseId), { ...expense, updatedAt: serverTimestamp() });
+                    return { result: "Expense updated." };
+                }
+                if (action === 'delete') {
+                    if (!expenseId) return { error: "expenseId required for delete." };
+                    await deleteDoc(doc(db, expensesPath, expenseId));
+                    return { result: "Expense deleted." };
+                }
+                return { error: "Invalid action for finance_expense." };
             }
 
             const unknownResult = { error: `Unknown tool: ${name}` };
@@ -1666,7 +2563,7 @@ You: "✓ Made the hero button green and increased its size"
                             })));
                             const functionResponses = [];
                             for (const fc of message.toolCall.functionCalls) {
-                                const { result, error } = await executeTool(fc.name, fc.args);
+                                const { result, error } = await executeTool(fc.name, fc.args, 'voice');
                                 functionResponses.push({ id: fc.id, name: fc.name, response: { result: result || error || "Done" } });
                             }
                             console.log('[Voice Mode] Sending tool responses back to model');
@@ -1700,6 +2597,119 @@ You: "✓ Made the hero button green and increased its size"
         }
     };
 
+    const tryExtractToolCall = (raw: string): { name: string; args: any } | null => {
+        const text = String(raw || '').trim();
+        if (!text) return null;
+
+        const tryParse = (candidate: string) => {
+            try {
+                const parsed = JSON.parse(candidate);
+                if (parsed?.tool_call?.name) return { name: parsed.tool_call.name, args: parsed.tool_call.args || {} };
+                if (Array.isArray(parsed?.tool_calls) && parsed.tool_calls[0]?.name) {
+                    return { name: parsed.tool_calls[0].name, args: parsed.tool_calls[0].args || {} };
+                }
+                if (parsed?.function_call?.name) {
+                    const args = parsed.function_call.args ?? parsed.function_call.arguments;
+                    if (typeof args === 'string') {
+                        try { return { name: parsed.function_call.name, args: JSON.parse(args) }; } catch { return { name: parsed.function_call.name, args: {} }; }
+                    }
+                    return { name: parsed.function_call.name, args: args || {} };
+                }
+                if (parsed?.name && parsed?.args) return { name: parsed.name, args: parsed.args || {} };
+            } catch { }
+            return null;
+        };
+
+        // 1) Whole string as JSON
+        const direct = tryParse(text);
+        if (direct) return direct;
+
+        // 2) JSON fenced block
+        const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        if (fenced?.[1]) {
+            const fencedParsed = tryParse(fenced[1].trim());
+            if (fencedParsed) return fencedParsed;
+        }
+
+        // 3) First balanced JSON object in the text
+        const start = text.indexOf('{');
+        if (start === -1) return null;
+        let depth = 0;
+        let inStr = false;
+        let esc = false;
+        for (let i = start; i < text.length; i++) {
+            const ch = text[i];
+            if (inStr) {
+                if (esc) esc = false;
+                else if (ch === '\\') esc = true;
+                else if (ch === '"') inStr = false;
+                continue;
+            }
+            if (ch === '"') { inStr = true; continue; }
+            if (ch === '{') depth++;
+            if (ch === '}') depth--;
+            if (depth === 0) {
+                const candidate = text.slice(start, i + 1);
+                const parsed = tryParse(candidate);
+                if (parsed) return parsed;
+                break;
+            }
+        }
+        return null;
+    };
+
+    const inferToolCallFromUserText = (userText: string): { name: string; args: any } | null => {
+        const raw = String(userText || '');
+        const norm = normalizeText(raw);
+
+        console.log('[InferTool] Input:', { raw, norm });
+
+        // 1) Match "item X" / "#X" etc
+        const numMatch = norm.match(/(?:#|numero|num|item|tier|plan|paso|step|elemento)\s*(\d{1,3})/);
+        const index = numMatch ? Number(numMatch[1]) : null;
+
+        if (index && index > 0) {
+            if (norm.includes('feature') || norm.includes('caracter')) return { name: 'open_features_item', args: { index } };
+            if (norm.includes('testimonial') || norm.includes('testimonio')) return { name: 'open_testimonials_item', args: { index } };
+            if (norm.includes('pricing') || norm.includes('precio') || norm.includes('tier') || norm.includes('plan')) return { name: 'open_pricing_tier', args: { index } };
+            if (norm.includes('service') || norm.includes('servicio')) return { name: 'open_services_item', args: { index } };
+            if (norm.includes('faq') || norm.includes('pregunta') || norm.includes('question')) return { name: 'open_faq_item', args: { index } };
+            if (norm.includes('menu') || norm.includes('dish') || norm.includes('platillo')) return { name: 'open_menu_item', args: { index } };
+            if (norm.includes('how it works') || norm.includes('howitworks') || norm.includes('paso') || norm.includes('step') || norm.includes('como funciona')) return { name: 'open_howItWorks_step', args: { index } };
+        }
+
+        // 2) "abre X" / "open X" / "ir a X" / "ve a X" / "muéstrame X"
+        const openPrefixes = ['abre ', 'open ', 'ir a ', 've a ', 'muestrame ', 'abrir ', 'edit ', 'editar ', 'go to '];
+        let foundSection: EditorSectionId | null = null;
+
+        for (const prefix of openPrefixes) {
+            if (norm.includes(prefix)) {
+                const after = norm.split(prefix)[1]?.trim();
+                if (after) {
+                    foundSection = resolveEditorSectionId(after);
+                    if (foundSection) break;
+                }
+            }
+        }
+
+        // 3) Also check if ANY known section word appears anywhere
+        if (!foundSection) {
+            const words = raw.split(/\s+/);
+            for (const word of words) {
+                foundSection = resolveEditorSectionId(word);
+                if (foundSection) break;
+            }
+        }
+
+        if (foundSection) {
+            console.log('[InferTool] Found section:', foundSection);
+            return { name: 'select_section', args: { sectionName: foundSection } };
+        }
+
+        console.log('[InferTool] No match');
+        return null;
+    };
+
     const handleTextSend = async () => {
         if (!input.trim()) return;
         const userMsg = input;
@@ -1709,6 +2719,28 @@ You: "✓ Made the hero button green and increased its size"
         if (!isLiveActive) {
             setIsThinking(true);
             try {
+                // ============================================================
+                // FAST PATH: Check if we can infer the tool call directly from
+                // the user's message BEFORE calling the LLM. This is more reliable
+                // and faster for simple commands like "abre hero", "open features", etc.
+                // ============================================================
+                console.log('[Global Assistant] === FAST PATH CHECK ===', { userMsg });
+                const directInferred = inferToolCallFromUserText(userMsg);
+                console.log('[Global Assistant] inferToolCallFromUserText result:', directInferred);
+                
+                if (directInferred?.name) {
+                    console.log('[Global Assistant] FAST PATH - Executing:', directInferred);
+                    setIsExecutingCommands(true);
+                    const { result, error } = await executeTool(directInferred.name, directInferred.args || {}, 'chat');
+                    setIsExecutingCommands(false);
+                    setIsThinking(false);
+                    const feedback = result || error || "✓ Listo";
+                    setMessages(prev => [...prev, { role: 'model', text: `✅ ${feedback}` }]);
+                    return;
+                }
+
+                console.log('[Global Assistant] No FAST PATH match, calling LLM...');
+
                 // Build conversation history for the prompt
                 const historyText = messages
                     .filter(m => !m.isToolOutput)
@@ -1740,46 +2772,44 @@ User: ${userMsg}`;
 
                 // Call the proxy API - use activeProject if available, otherwise use userId for rate limiting
                 const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
-                const response = await generateContentViaProxy(proxyProjectId, fullPrompt, 'gemini-2.5-flash', {
-                    temperature: 0.8,
-                    maxOutputTokens: 2048
+                const promptConfig = getPromptRef.current('global-assistant-main');
+                const chatModel = promptConfig?.model || 'gemini-2.5-flash';
+                const response = await generateContentViaProxy(proxyProjectId, fullPrompt, chatModel, {
+                    temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
+                    maxOutputTokens: typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 500
                 }, user?.uid);
 
                 let responseText = extractTextFromResponse(response).trim();
-                console.log('[Global Assistant] Proxy Response:', responseText);
+                console.log('[Global Assistant] Proxy Response:', responseText?.substring(0, 300));
 
                 // Check if the response is a tool call
                 let turnCount = 0;
                 while (turnCount < 5) {
-                    try {
-                        // Try to parse as JSON tool call
-                        const parsed = JSON.parse(responseText);
-                        if (parsed.tool_call && parsed.tool_call.name) {
-                            turnCount++;
-                            console.log(`[Global Assistant] Tool call detected (turn ${turnCount}):`, parsed.tool_call);
-                            setIsExecutingCommands(true);
+                    const toolCall = tryExtractToolCall(responseText);
+                    if (toolCall?.name) {
+                        turnCount++;
+                        console.log(`[Global Assistant] Tool call detected (turn ${turnCount}):`, toolCall);
+                        setIsExecutingCommands(true);
 
-                            const { result, error } = await executeTool(parsed.tool_call.name, parsed.tool_call.args || {});
-                            const feedback = result || error || "Done";
+                        const { result, error } = await executeTool(toolCall.name, toolCall.args || {}, 'chat');
+                        const feedback = result || error || "Done";
 
-                            // Send the tool result back to get final response
-                            const followUpPrompt = `${fullPrompt}
+                        // Send the tool result back to get final response
+                        const followUpPrompt = `${fullPrompt}
 
-Assistant called tool: ${parsed.tool_call.name}
+Assistant called tool: ${toolCall.name}
+Tool args: ${JSON.stringify(toolCall.args || {})}
 Tool result: ${feedback}
 
 Now provide a brief response to the user about what was done.`;
 
-                            const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, 'gemini-2.5-flash', {
-                                temperature: 0.7,
-                                maxOutputTokens: 1024
-                            }, user?.uid);
+                        const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, chatModel, {
+                            temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
+                            maxOutputTokens: typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 500
+                        }, user?.uid);
 
-                            responseText = extractTextFromResponse(followUpResponse).trim();
-                            continue;
-                        }
-                    } catch (e) {
-                        // Not JSON, treat as regular text response
+                        responseText = extractTextFromResponse(followUpResponse).trim();
+                        continue;
                     }
                     break;
                 }

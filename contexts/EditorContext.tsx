@@ -447,6 +447,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         
         Remember: Rich formatting with emojis = Better UX! 🚀
         `,
+        enabledTemplates: undefined, // use defaults until saved from Super Admin
+        customInstructions: '',
         permissions: {}, // Initialize empty, components will handle defaults
         temperature: 0.7,
         maxTokens: 500,

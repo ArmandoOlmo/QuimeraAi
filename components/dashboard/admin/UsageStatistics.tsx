@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fetchRealUsageData } from '../../../services/usageStatisticsService';
 import { UsageData, MonthlyData, ApiCallStat, UserActivity, TemplateUsage } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
@@ -10,6 +11,7 @@ interface UsageStatisticsProps {
 }
 
 const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
+    const { t } = useTranslation();
     const maxCount = Math.max(...data.map(d => d.count), 0);
     const chartHeight = 200;
     const barWidth = 30;
@@ -17,7 +19,7 @@ const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
 
     return (
         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">New Users (Last 6 Months)</h3>
+            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.charts.newUsers', { defaultValue: 'New Users (Last 6 Months)' })}</h3>
             <div className="w-full overflow-x-auto">
                 <svg width={data.length * (barWidth + barMargin)} height={chartHeight + 40}>
                     {data.map((item, index) => {
@@ -47,6 +49,7 @@ const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
 };
 
 const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
+    const { t } = useTranslation();
     const total = data.reduce((sum, item) => sum + item.count, 0);
     const radius = 80;
     const circumference = 2 * Math.PI * radius;
@@ -55,7 +58,7 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
 
     return (
         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border h-full">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">API Calls by Model</h3>
+            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.charts.apiCallsByModel', { defaultValue: 'API Calls by Model' })}</h3>
             <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative w-48 h-48">
                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
@@ -80,7 +83,7 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-3xl font-bold text-editor-text-primary">{total.toLocaleString()}</span>
-                        <span className="text-sm text-editor-text-secondary">Total Calls</span>
+                        <span className="text-sm text-editor-text-secondary">{t('superadmin.usage.charts.totalCalls', { defaultValue: 'Total Calls' })}</span>
                     </div>
                 </div>
                 <div className="flex-1">
@@ -102,6 +105,7 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
 };
 
 const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<UsageData | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -130,7 +134,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
             <div className="flex h-screen bg-editor-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-8 h-8 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-editor-text-secondary">Loading statistics...</p>
+                    <p className="text-editor-text-secondary">{t('superadmin.usage.loading', { defaultValue: 'Loading statistics...' })}</p>
                 </div>
             </div>
         );
@@ -141,13 +145,13 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
             <div className="flex h-screen bg-editor-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4 max-w-md text-center">
                     <AlertCircle className="w-12 h-12 text-red-500" />
-                    <h3 className="text-xl font-semibold text-editor-text-primary">Error Loading Statistics</h3>
+                    <h3 className="text-xl font-semibold text-editor-text-primary">{t('superadmin.usage.errorTitle', { defaultValue: 'Error Loading Statistics' })}</h3>
                     <p className="text-editor-text-secondary">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                     >
-                        Retry
+                        {t('superadmin.usage.retry', { defaultValue: 'Retry' })}
                     </button>
                 </div>
             </div>
@@ -173,22 +177,22 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                         </button>
                         <div className="flex items-center gap-2">
                             <BarChart3 className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">Usage Statistics</h1>
+                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.usage.title', { defaultValue: 'Usage Statistics' })}</h1>
                         </div>
                     </div>
                     <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                         <ArrowLeft className="w-4 h-4" />
-                        Volver
+                        {t('common.back', { defaultValue: 'Back' })}
                     </button>
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-8">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard title="Total Users" value={data.totalUsers.toLocaleString()} icon={<Users size={24} />} />
-                        <StatCard title="Total Projects" value={data.totalProjects.toLocaleString()} icon={<Copy size={24} />} />
-                        <StatCard title="Total API Calls" value={data.totalApiCalls.toLocaleString()} icon={<Bot size={24} />} />
-                        <StatCard title="Popular Template" value={data.popularTemplates[0].name} icon={<LayoutTemplate size={24} />} />
+                        <StatCard title={t('superadmin.usage.kpi.totalUsers', { defaultValue: 'Total Users' })} value={data.totalUsers.toLocaleString()} icon={<Users size={24} />} />
+                        <StatCard title={t('superadmin.usage.kpi.totalProjects', { defaultValue: 'Total Projects' })} value={data.totalProjects.toLocaleString()} icon={<Copy size={24} />} />
+                        <StatCard title={t('superadmin.usage.kpi.totalApiCalls', { defaultValue: 'Total API Calls' })} value={data.totalApiCalls.toLocaleString()} icon={<Bot size={24} />} />
+                        <StatCard title={t('superadmin.usage.kpi.popularTemplate', { defaultValue: 'Popular Template' })} value={data.popularTemplates[0].name} icon={<LayoutTemplate size={24} />} />
                     </div>
 
                     {/* Charts */}
@@ -200,7 +204,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                     {/* Data Tables */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Top 5 Active Users</h3>
+                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.lists.topActiveUsers', { defaultValue: 'Top 5 Active Users' })}</h3>
                             <ul className="space-y-3">
                                 {data.topUsers.map(user => (
                                     <li key={user.id} className="flex items-center justify-between">
@@ -213,19 +217,19 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold text-sm text-editor-text-primary">{user.projectCount}</p>
-                                            <p className="text-xs text-editor-text-secondary">Projects</p>
+                                            <p className="text-xs text-editor-text-secondary">{t('superadmin.usage.lists.projectsLabel', { defaultValue: 'Projects' })}</p>
                                         </div>
                                     </li>
                                 ))}
                             </ul>
                         </div>
                         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Most Used Templates</h3>
+                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.lists.mostUsedTemplates', { defaultValue: 'Most Used Templates' })}</h3>
                             <ul className="space-y-3">
                                 {data.popularTemplates.map(template => (
                                     <li key={template.id} className="flex items-center justify-between">
                                         <p className="font-medium text-sm text-editor-text-primary">{template.name}</p>
-                                        <p className="font-semibold text-sm text-editor-text-secondary">{template.count.toLocaleString()} uses</p>
+                                        <p className="font-semibold text-sm text-editor-text-secondary">{template.count.toLocaleString()} {t('superadmin.usage.lists.usesSuffix', { defaultValue: 'uses' })}</p>
                                     </li>
                                 ))}
                             </ul>

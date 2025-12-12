@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react';
 import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
 import {
@@ -44,7 +45,7 @@ interface DayAppointmentChipProps {
 
 const DayAppointmentChip: React.FC<DayAppointmentChipProps> = ({ appointment, onClick }) => {
     const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
-    
+
     const colorClasses: Record<string, string> = {
         blue: 'bg-blue-500',
         violet: 'bg-violet-500',
@@ -55,7 +56,7 @@ const DayAppointmentChip: React.FC<DayAppointmentChipProps> = ({ appointment, on
         pink: 'bg-pink-500',
         green: 'bg-green-500',
     };
-    
+
     return (
         <button
             onClick={(e) => { e.stopPropagation(); onClick(); }}
@@ -83,23 +84,24 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
     onDayClick,
     weekStartsOn = 1,
 }) => {
+    const { t } = useTranslation();
     // Get ordered days for headers
     const orderedDays = useMemo(() => {
         const days = [...DAYS_ES];
         const reordered = [...days.slice(weekStartsOn), ...days.slice(0, weekStartsOn)];
         return reordered;
     }, [weekStartsOn]);
-    
+
     // Get all days to display
     const monthDays = useMemo(() => getMonthDays(currentDate, weekStartsOn), [currentDate, weekStartsOn]);
-    
+
     // Current month for comparison
     const currentMonth = currentDate.getMonth();
-    
+
     // Group appointments by day
     const appointmentsByDay = useMemo(() => {
         const map = new Map<string, Appointment[]>();
-        
+
         appointments.forEach(apt => {
             const aptDate = timestampToDate(apt.startDate);
             const dayKey = aptDate.toISOString().split('T')[0];
@@ -108,15 +110,15 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
             }
             map.get(dayKey)!.push(apt);
         });
-        
+
         // Sort appointments within each day
         map.forEach((dayApts) => {
             dayApts.sort((a, b) => a.startDate.seconds - b.startDate.seconds);
         });
-        
+
         return map;
     }, [appointments]);
-    
+
     // Split days into weeks
     const weeks = useMemo(() => {
         const result: Date[][] = [];
@@ -125,7 +127,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
         }
         return result;
     }, [monthDays]);
-    
+
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-background p-4">
             {/* Day headers */}
@@ -142,7 +144,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                     </div>
                 ))}
             </div>
-            
+
             {/* Calendar grid */}
             <div className="flex-1 grid grid-rows-[repeat(auto-fill,1fr)] gap-1">
                 {weeks.map((week, weekIndex) => (
@@ -153,7 +155,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                             const isCurrentMonth = day.getMonth() === currentMonth;
                             const isCurrentDay = isToday(day);
                             const hasMore = dayAppointments.length > MAX_VISIBLE_APPOINTMENTS;
-                            
+
                             return (
                                 <div
                                     key={dayKey}
@@ -163,10 +165,10 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                         cursor-pointer group
                                         transition-all duration-200
                                         hover:border-primary/50 hover:shadow-lg
-                                        ${isCurrentDay 
-                                            ? 'border-primary bg-primary/5' 
-                                            : isCurrentMonth 
-                                                ? 'border-border/50 bg-card/50 hover:bg-card' 
+                                        ${isCurrentDay
+                                            ? 'border-primary bg-primary/5'
+                                            : isCurrentMonth
+                                                ? 'border-border/50 bg-card/50 hover:bg-card'
                                                 : 'border-transparent bg-muted/20 opacity-50'
                                         }
                                     `}
@@ -174,21 +176,21 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                     {/* Day number */}
                                     <div className="p-2 flex items-center justify-between">
                                         <span className={`
-                                            ${isCurrentDay 
-                                                ? 'w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm' 
+                                            ${isCurrentDay
+                                                ? 'w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm'
                                                 : `text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'}`
                                             }
                                         `}>
                                             {day.getDate()}
                                         </span>
-                                        
+
                                         {dayAppointments.length > 0 && !isCurrentDay && (
                                             <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
                                                 {dayAppointments.length}
                                             </span>
                                         )}
                                     </div>
-                                    
+
                                     {/* Appointments */}
                                     {isCurrentMonth && dayAppointments.length > 0 && (
                                         <div className="px-1.5 pb-1.5 space-y-1">
@@ -199,7 +201,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                                     onClick={() => onAppointmentClick(apt)}
                                                 />
                                             ))}
-                                            
+
                                             {hasMore && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onDayClick(day); }}
@@ -210,13 +212,13 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                                         flex items-center justify-center gap-1
                                                     "
                                                 >
-                                                    +{dayAppointments.length - MAX_VISIBLE_APPOINTMENTS} más
+                                                    +{dayAppointments.length - MAX_VISIBLE_APPOINTMENTS} {t('common.more')}
                                                     <ChevronRight size={12} />
                                                 </button>
                                             )}
                                         </div>
                                     )}
-                                    
+
                                     {/* Hover overlay */}
                                     <div className="
                                         absolute inset-0 bg-primary/5
@@ -234,6 +236,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
 };
 
 export default CalendarMonthView;
+
 
 
 

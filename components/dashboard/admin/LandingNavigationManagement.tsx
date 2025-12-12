@@ -147,19 +147,19 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {activeProject && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                                <span className="mr-1.5">Project:</span>
-                                <span className="font-semibold text-foreground">{activeProject.name}</span>
-                            </div>
-                        )}
-                        <button 
+                        <button
                             onClick={onBack}
                             className="flex items-center text-sm font-medium h-9 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
                             Back
                         </button>
+                        {activeProject && (
+                            <div className="flex items-center text-sm text-muted-foreground">
+                                <span className="mr-1.5">Project:</span>
+                                <span className="font-semibold text-foreground">{activeProject.name}</span>
+                            </div>
+                        )}
                     </div>
                 </header>
 

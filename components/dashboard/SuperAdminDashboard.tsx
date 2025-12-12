@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { 
-    Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle, 
-    ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap, 
-    Store, FlaskConical, Accessibility, Languages, Search, FileText, 
+import {
+    Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle,
+    ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap,
+    Store, FlaskConical, Accessibility, Languages, Search, FileText,
     Navigation, Star, Settings, Grid3x3, List
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
@@ -71,17 +71,18 @@ const ADMIN_ROUTES: Record<string, string> = {
 };
 
 // Components
-const AdminCard: React.FC<{ 
+const AdminCard: React.FC<{
     feature: AdminFeature;
     onClick?: () => void;
     viewMode: ViewMode;
 }> = ({ feature, onClick, viewMode }) => {
+    const { t } = useTranslation();
     const isCompact = viewMode === 'compact';
     const isList = viewMode === 'list';
 
     return (
-        <div 
-            onClick={onClick} 
+        <div
+            onClick={onClick}
             className={`
                 group relative bg-editor-panel-bg rounded-xl border border-editor-border
                 hover:border-editor-accent hover:shadow-lg hover:shadow-editor-accent/10
@@ -91,7 +92,7 @@ const AdminCard: React.FC<{
             `}
         >
             <div className="absolute inset-0 bg-gradient-to-br from-editor-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
+
             <div className={`relative z-10 ${isList ? 'flex items-center gap-4 flex-1' : ''}`}>
                 <div className={`
                     bg-editor-accent/10 rounded-lg text-editor-accent
@@ -102,7 +103,7 @@ const AdminCard: React.FC<{
                 `}>
                     {feature.icon}
                 </div>
-                
+
                 <div className={`${isList ? 'flex-1' : isCompact ? 'mt-2' : 'mt-4'}`}>
                     <div className="flex items-center gap-2">
                         <h3 className={`
@@ -114,7 +115,7 @@ const AdminCard: React.FC<{
                         </h3>
                         {feature.isNew && (
                             <span className="px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">
-                                Nuevo
+                                {t ? t('superadmin.new') : 'New'}
                             </span>
                         )}
                         {feature.isPremium && (
@@ -146,8 +147,8 @@ const CategoryChip: React.FC<{
         onClick={onClick}
         className={`
             px-4 py-2 font-medium text-sm transition-all duration-200
-            ${active 
-                ? 'text-editor-accent' 
+            ${active
+                ? 'text-editor-accent'
                 : 'text-editor-text-secondary hover:text-editor-text-primary'
             }
         `}
@@ -183,27 +184,27 @@ const SuperAdminDashboard = () => {
         { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES },
         { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO },
         { id: 'billing', title: t('superadmin.billing'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', route: ROUTES.ADMIN_BILLING, isPremium: true },
-        
+
         // Content Management
         { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES },
         { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS },
         { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT },
         { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES },
         { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION },
-        
+
         // Development & Design
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS },
         { id: 'marketplace', title: t('superadmin.marketplace'), description: t('superadmin.marketplaceDesc'), icon: <Store size={24} />, category: 'development', route: ROUTES.ADMIN_MARKETPLACE },
         { id: 'conditional-rules', title: t('superadmin.conditionalRules'), description: t('superadmin.conditionalRulesDesc'), icon: <Zap size={24} />, category: 'development', route: ROUTES.ADMIN_CONDITIONAL_RULES },
         { id: 'accessibility', title: t('superadmin.accessibilityChecker'), description: t('superadmin.accessibilityCheckerDesc'), icon: <Accessibility size={24} />, category: 'development', route: ROUTES.ADMIN_ACCESSIBILITY },
-        
+
         // Analytics & Testing
         { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS },
         { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS },
         { id: 'ab-testing', title: t('superadmin.abTesting'), description: t('superadmin.abTestingDesc'), icon: <FlaskConical size={24} />, category: 'analytics', route: ROUTES.ADMIN_AB_TESTING, isNew: true },
-        
+
         // System & AI
-        { id: 'global-assistant', title: t('superadmin.globalAssistant'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_ASSISTANT },
+        { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT },
         { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS },
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO },
     ];
@@ -213,7 +214,7 @@ const SuperAdminDashboard = () => {
         adminFeatures.forEach(feature => {
             categoryMap.set(feature.category, (categoryMap.get(feature.category) || 0) + 1);
         });
-        
+
         return [
             { id: 'all', label: t('common.all'), count: adminFeatures.length },
             { id: 'core', label: t('superadmin.categoryCore'), count: categoryMap.get('core') || 0 },
@@ -227,7 +228,7 @@ const SuperAdminDashboard = () => {
     const filteredFeatures = useMemo(() => {
         return adminFeatures.filter(feature => {
             const matchesCategory = selectedCategory === 'all' || feature.category === selectedCategory;
-            const matchesSearch = searchQuery === '' || 
+            const matchesSearch = searchQuery === '' ||
                 feature.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 feature.description.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesSearch;
@@ -256,7 +257,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
-    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.componentMarketplace')} onBack={handleBack}><ComponentMarketplace /></AdminViewLayout>;
+    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.marketplace')} onBack={handleBack}><ComponentMarketplace /></AdminViewLayout>;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={handleBack}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
     if (adminView === 'ab-testing') return <AdminViewLayout title={t('superadmin.abTestingTitle')} onBack={handleBack} noPadding><ABTestingDashboard /></AdminViewLayout>;
@@ -271,7 +272,7 @@ const SuperAdminDashboard = () => {
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <button 
+                        <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
                         >
@@ -280,38 +281,38 @@ const SuperAdminDashboard = () => {
                         <Shield className="text-editor-accent w-5 h-5" />
                         <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-3">
-                            <button 
-                                onClick={() => setViewMode('grid')} 
-                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title="Vista Grid"
-                            >
-                                <Grid3x3 className="w-5 h-5" />
-                            </button>
-                            <button 
-                                onClick={() => setViewMode('list')} 
-                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title="Vista Lista"
-                            >
-                                <List className="w-5 h-5" />
-                            </button>
-                            <button 
-                                onClick={() => setViewMode('compact')} 
-                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title="Vista Compacta"
-                            >
-                                <Settings className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <button 
-                            onClick={handleBackToDashboard} 
+                        <button
+                            onClick={handleBackToDashboard}
                             className="flex items-center text-sm font-medium text-editor-text-secondary hover:text-editor-accent transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1.5" />
                             <span className="hidden sm:inline">{t('superadmin.backToDashboard')}</span>
                         </button>
+                        <div className="hidden md:flex items-center gap-3">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewGrid')}
+                            >
+                                <Grid3x3 className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewList')}
+                            >
+                                <List className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('compact')}
+                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewCompact')}
+                            >
+                                <Settings className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -322,7 +323,7 @@ const SuperAdminDashboard = () => {
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-editor-text-secondary w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Buscar funcionalidades..."
+                                placeholder={t('superadmin.searchFeatures')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:border-editor-accent focus:ring-2 focus:ring-editor-accent/20 transition-all"
@@ -339,7 +340,7 @@ const SuperAdminDashboard = () => {
                         {/* Results count */}
                         <div className="flex items-center justify-between mb-4">
                             <p className="text-sm text-editor-text-secondary">
-                                Mostrando <span className="font-semibold text-editor-text-primary">{filteredFeatures.length}</span> de <span className="font-semibold">{adminFeatures.length}</span> funcionalidades
+                                {t('superadmin.showingResults', { count: filteredFeatures.length, total: adminFeatures.length })}
                             </p>
                             {(searchQuery || selectedCategory !== 'all') && (
                                 <button
@@ -349,7 +350,7 @@ const SuperAdminDashboard = () => {
                                     }}
                                     className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
                                 >
-                                    Limpiar filtros
+                                    {t('superadmin.clearFilters')}
                                 </button>
                             )}
                         </div>
@@ -367,10 +368,10 @@ const SuperAdminDashboard = () => {
                                     <Search className="w-8 h-8 text-editor-text-secondary" />
                                 </div>
                                 <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
-                                    No se encontraron resultados
+                                    {t('superadmin.noResultsFound')}
                                 </h3>
                                 <p className="text-editor-text-secondary mb-4">
-                                    Intenta con otros términos de búsqueda o filtros
+                                    {t('superadmin.noResultsDesc')}
                                 </p>
                                 <button
                                     onClick={() => {
@@ -379,7 +380,7 @@ const SuperAdminDashboard = () => {
                                     }}
                                     className="px-4 py-2 text-editor-accent hover:text-editor-accent/80 transition-colors font-medium"
                                 >
-                                    Ver todas las funcionalidades
+                                    {t('superadmin.viewAllFeatures')}
                                 </button>
                             </div>
                         )}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
-import { 
-    Palette, MessageSquare, 
+import {
+    Palette, MessageSquare,
     Settings as SettingsIcon, Smile, Image as ImageIcon, Zap,
     ChevronDown, X
 } from 'lucide-react';
@@ -18,18 +19,18 @@ const COMMON_EMOJIS = [
 
 const ChatCustomizationSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
-    
+
     const [config, setConfig] = useState<ChatAppearanceConfig>(
         aiAssistantConfig.appearance || getDefaultAppearanceConfig()
     );
-    
+
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         branding: true,
         behavior: false,
         messages: false,
         button: false
     });
-    
+
     const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
     const [newQuickReply, setNewQuickReply] = useState({ text: '', emoji: '' });
 
@@ -141,15 +142,15 @@ const ChatCustomizationSettings: React.FC = () => {
         });
     };
 
-    const AccordionSection = ({ 
-        title, 
-        icon: Icon, 
-        section, 
-        children 
-    }: { 
-        title: string; 
-        icon: React.ElementType; 
-        section: string; 
+    const AccordionSection = ({
+        title,
+        icon: Icon,
+        section,
+        children
+    }: {
+        title: string;
+        icon: React.ElementType;
+        section: string;
         children: React.ReactNode;
     }) => (
         <div className="border-b border-border/30 last:border-0">
@@ -167,11 +168,10 @@ const ChatCustomizationSettings: React.FC = () => {
                     <ChevronDown size={18} className="text-muted-foreground" />
                 </div>
             </button>
-            
-            <div 
-                className={`grid transition-all duration-300 ease-in-out overflow-hidden ${
-                    expandedSections[section] ? 'grid-rows-[1fr] opacity-100 pb-7' : 'grid-rows-[0fr] opacity-0'
-                }`}
+
+            <div
+                className={`grid transition-all duration-300 ease-in-out overflow-hidden ${expandedSections[section] ? 'grid-rows-[1fr] opacity-100 pb-7' : 'grid-rows-[0fr] opacity-0'
+                    }`}
             >
                 <div className="min-h-0">
                     <div className="pt-2 space-y-6 px-1">
@@ -202,115 +202,72 @@ const ChatCustomizationSettings: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-                    
-                    {/* Theme Presets - Cleaner UI */}
-                    <div className="bg-gradient-to-br from-purple-500/5 to-blue-500/5 border border-purple-500/10 rounded-2xl p-6">
-                        <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
-                            <Zap className="text-purple-500" size={20} />
-                            Quick Theme Presets
-                        </h3>
-                        <div className="grid grid-cols-6 gap-3">
-                            {Object.keys(THEME_PRESETS).map((presetName) => (
-                                <button
-                                    key={presetName}
-                                    onClick={() => applyPreset(presetName as keyof typeof THEME_PRESETS)}
-                                    className="group flex flex-col items-center p-2 rounded-xl hover:bg-secondary/30 transition-all"
-                                >
-                                    <div 
-                                        className="w-12 h-12 rounded-full mb-2 border-2 border-transparent group-hover:scale-110 transition-transform shadow-sm group-hover:border-primary"
-                                        style={{ 
-                                            backgroundColor: THEME_PRESETS[presetName as keyof typeof THEME_PRESETS].colors?.primaryColor 
-                                        }}
-                                    />
-                                    <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground capitalize">{presetName}</span>
-                                </button>
-                            ))}
-                        </div>
+
+                {/* Theme Presets - Cleaner UI */}
+                <div className="bg-gradient-to-br from-purple-500/5 to-blue-500/5 border border-purple-500/10 rounded-2xl p-6">
+                    <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
+                        <Zap className="text-purple-500" size={20} />
+                        Quick Theme Presets
+                    </h3>
+                    <div className="grid grid-cols-6 gap-3">
+                        {Object.keys(THEME_PRESETS).map((presetName) => (
+                            <button
+                                key={presetName}
+                                onClick={() => applyPreset(presetName as keyof typeof THEME_PRESETS)}
+                                className="group flex flex-col items-center p-2 rounded-xl hover:bg-secondary/30 transition-all"
+                            >
+                                <div
+                                    className="w-12 h-12 rounded-full mb-2 border-2 border-transparent group-hover:scale-110 transition-transform shadow-sm group-hover:border-primary"
+                                    style={{
+                                        backgroundColor: THEME_PRESETS[presetName as keyof typeof THEME_PRESETS].colors?.primaryColor
+                                    }}
+                                />
+                                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground capitalize">{presetName}</span>
+                            </button>
+                        ))}
                     </div>
+                </div>
 
-                    {/* Main Settings Container - Clean & Light */}
-                    <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
-                        {/* Branding & Logo */}
-                        <AccordionSection title="Branding & Logo" icon={ImageIcon} section="branding">
-                            <div className="space-y-5">
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo Type</label>
-                                    <div className="flex gap-2">
-                                        {['none', 'emoji', 'image'].map((type) => (
-                                            <button
-                                                key={type}
-                                                onClick={() => updateBranding('logoType', type)}
-                                                className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${
-                                                    config.branding.logoType === type
-                                                        ? 'bg-primary text-white shadow-md'
-                                                        : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                {/* Main Settings Container - Clean & Light */}
+                <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
+                    {/* Branding & Logo */}
+                    <AccordionSection title="Branding & Logo" icon={ImageIcon} section="branding">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo Type</label>
+                                <div className="flex gap-2">
+                                    {['none', 'emoji', 'image'].map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => updateBranding('logoType', type)}
+                                            className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.branding.logoType === type
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
-                                            >
-                                                {type}
-                                            </button>
-                                        ))}
-                                    </div>
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
                                 </div>
+                            </div>
 
-                                {config.branding.logoType === 'emoji' && (
-                                    <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo Emoji</label>
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => setShowEmojiPicker(showEmojiPicker === 'logo' ? null : 'logo')}
-                                                className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
-                                            >
-                                                {config.branding.logoEmoji || '💬'}
-                                            </button>
-                                            {showEmojiPicker === 'logo' && (
-                                                <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 z-50 max-w-sm">
-                                                    {COMMON_EMOJIS.map((emoji) => (
-                                                        <button
-                                                            key={emoji}
-                                                            onClick={() => {
-                                                                updateBranding('logoEmoji', emoji);
-                                                                setShowEmojiPicker(null);
-                                                            }}
-                                                            className="text-2xl hover:scale-125 transition-transform p-2 hover:bg-secondary/50 rounded-lg"
-                                                        >
-                                                            {emoji}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {config.branding.logoType === 'image' && (
-                                    <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo URL</label>
-                                        <input
-                                            type="text"
-                                            value={config.branding.logoUrl || ''}
-                                            onChange={(e) => updateBranding('logoUrl', e.target.value)}
-                                            placeholder="https://example.com/logo.png"
-                                            className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
-                                        />
-                                    </div>
-                                )}
-
+                            {config.branding.logoType === 'emoji' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Bot Avatar Emoji</label>
+                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo Emoji</label>
                                     <div className="relative">
                                         <button
-                                            onClick={() => setShowEmojiPicker(showEmojiPicker === 'bot' ? null : 'bot')}
+                                            onClick={() => setShowEmojiPicker(showEmojiPicker === 'logo' ? null : 'logo')}
                                             className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
                                         >
-                                            {config.branding.botAvatarEmoji || '🤖'}
+                                            {config.branding.logoEmoji || '💬'}
                                         </button>
-                                        {showEmojiPicker === 'bot' && (
+                                        {showEmojiPicker === 'logo' && (
                                             <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 z-50 max-w-sm">
                                                 {COMMON_EMOJIS.map((emoji) => (
                                                     <button
                                                         key={emoji}
                                                         onClick={() => {
-                                                            updateBranding('botAvatarEmoji', emoji);
+                                                            updateBranding('logoEmoji', emoji);
                                                             setShowEmojiPicker(null);
                                                         }}
                                                         className="text-2xl hover:scale-125 transition-transform p-2 hover:bg-secondary/50 rounded-lg"
@@ -322,220 +279,258 @@ const ChatCustomizationSettings: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
+                            )}
 
-                                <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
-                                    <span className="text-sm font-medium text-foreground">Show Bot Avatar</span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={config.branding.showBotAvatar}
-                                            onChange={(e) => updateBranding('showBotAvatar', e.target.checked)}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                                    </label>
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        {/* Behavior */}
-                        <AccordionSection title="Position & Behavior" icon={SettingsIcon} section="behavior">
-                            <div className="space-y-5">
+                            {config.branding.logoType === 'image' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Position</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['bottom-right', 'bottom-left', 'top-right', 'top-left'].map((pos) => (
-                                            <button
-                                                key={pos}
-                                                onClick={() => updateBehavior('position', pos)}
-                                                className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${
-                                                    config.behavior.position === pos
-                                                        ? 'bg-primary text-white shadow-md'
-                                                        : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                                                }`}
-                                            >
-                                                {pos.replace('-', ' ')}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Size</label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {['sm', 'md', 'lg', 'xl'].map((size) => (
-                                            <button
-                                                key={size}
-                                                onClick={() => updateBehavior('width', size)}
-                                                className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${
-                                                    config.behavior.width === size
-                                                        ? 'bg-primary text-white shadow-md'
-                                                        : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                                                }`}
-                                            >
-                                                {size}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
-                                    <span className="text-sm font-medium text-foreground">Auto-open chat</span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={config.behavior.autoOpen}
-                                            onChange={(e) => updateBehavior('autoOpen', e.target.checked)}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                                    </label>
-                                </div>
-
-                                {config.behavior.autoOpen && (
-                                    <div className="p-4 bg-card border border-border/50 rounded-lg">
-                                        <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                                            Auto-open delay: {config.behavior.autoOpenDelay}s
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="30"
-                                            value={config.behavior.autoOpenDelay}
-                                            onChange={(e) => updateBehavior('autoOpenDelay', parseInt(e.target.value))}
-                                            className="w-full accent-primary h-2 bg-secondary/50 rounded-lg appearance-none cursor-pointer"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </AccordionSection>
-
-                        {/* Messages */}
-                        <AccordionSection title="Custom Messages" icon={MessageSquare} section="messages">
-                            <div className="space-y-5">
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Welcome Message</label>
-                                    <textarea
-                                        value={config.messages.welcomeMessage}
-                                        onChange={(e) => updateMessages('welcomeMessage', e.target.value)}
-                                        rows={3}
-                                        className="w-full px-4 py-3 bg-card border border-border/50 rounded-lg text-foreground resize-none focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Input Placeholder</label>
+                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo URL</label>
                                     <input
                                         type="text"
-                                        value={config.messages.inputPlaceholder}
-                                        onChange={(e) => updateMessages('inputPlaceholder', e.target.value)}
+                                        value={config.branding.logoUrl || ''}
+                                        onChange={(e) => updateBranding('logoUrl', e.target.value)}
+                                        placeholder="https://example.com/logo.png"
                                         className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                     />
                                 </div>
+                            )}
 
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Quick Replies</label>
-                                    <div className="space-y-2">
-                                        {config.messages.quickReplies.map((qr) => (
-                                            <div key={qr.id} className="flex items-center gap-3 p-3 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
-                                                <span className="text-lg">{qr.emoji}</span>
-                                                <span className="flex-1 text-sm text-foreground">{qr.text}</span>
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Bot Avatar Emoji</label>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowEmojiPicker(showEmojiPicker === 'bot' ? null : 'bot')}
+                                        className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
+                                    >
+                                        {config.branding.botAvatarEmoji || '🤖'}
+                                    </button>
+                                    {showEmojiPicker === 'bot' && (
+                                        <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 z-50 max-w-sm">
+                                            {COMMON_EMOJIS.map((emoji) => (
                                                 <button
-                                                    onClick={() => removeQuickReply(qr.id)}
-                                                    className="p-1.5 hover:bg-red-500/20 rounded text-red-500 transition-colors"
+                                                    key={emoji}
+                                                    onClick={() => {
+                                                        updateBranding('botAvatarEmoji', emoji);
+                                                        setShowEmojiPicker(null);
+                                                    }}
+                                                    className="text-2xl hover:scale-125 transition-transform p-2 hover:bg-secondary/50 rounded-lg"
                                                 >
-                                                    <X size={16} />
+                                                    {emoji}
                                                 </button>
-                                            </div>
-                                        ))}
-                                        <div className="flex gap-2 pt-2">
-                                            <input
-                                                type="text"
-                                                value={newQuickReply.text}
-                                                onChange={(e) => setNewQuickReply({ ...newQuickReply, text: e.target.value })}
-                                                placeholder="Add quick reply..."
-                                                className="flex-1 px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground text-sm focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
-                                            />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
+                                <span className="text-sm font-medium text-foreground">Show Bot Avatar</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.branding.showBotAvatar}
+                                        onChange={(e) => updateBranding('showBotAvatar', e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </AccordionSection>
+
+                    {/* Behavior */}
+                    <AccordionSection title="Position & Behavior" icon={SettingsIcon} section="behavior">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Position</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['bottom-right', 'bottom-left', 'top-right', 'top-left'].map((pos) => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => updateBehavior('position', pos)}
+                                            className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.behavior.position === pos
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                }`}
+                                        >
+                                            {pos.replace('-', ' ')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Size</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {['sm', 'md', 'lg', 'xl'].map((size) => (
+                                        <button
+                                            key={size}
+                                            onClick={() => updateBehavior('width', size)}
+                                            className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.behavior.width === size
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
+                                <span className="text-sm font-medium text-foreground">Auto-open chat</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.behavior.autoOpen}
+                                        onChange={(e) => updateBehavior('autoOpen', e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                </label>
+                            </div>
+
+                            {config.behavior.autoOpen && (
+                                <div className="p-4 bg-card border border-border/50 rounded-lg">
+                                    <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                                        Auto-open delay: {config.behavior.autoOpenDelay}s
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="30"
+                                        value={config.behavior.autoOpenDelay}
+                                        onChange={(e) => updateBehavior('autoOpenDelay', parseInt(e.target.value))}
+                                        className="w-full accent-primary h-2 bg-secondary/50 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </AccordionSection>
+
+                    {/* Messages */}
+                    <AccordionSection title="Custom Messages" icon={MessageSquare} section="messages">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Welcome Message</label>
+                                <textarea
+                                    value={config.messages.welcomeMessage}
+                                    onChange={(e) => updateMessages('welcomeMessage', e.target.value)}
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-card border border-border/50 rounded-lg text-foreground resize-none focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Input Placeholder</label>
+                                <input
+                                    type="text"
+                                    value={config.messages.inputPlaceholder}
+                                    onChange={(e) => updateMessages('inputPlaceholder', e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Quick Replies</label>
+                                <div className="space-y-2">
+                                    {config.messages.quickReplies.map((qr) => (
+                                        <div key={qr.id} className="flex items-center gap-3 p-3 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
+                                            <span className="text-lg">{qr.emoji}</span>
+                                            <span className="flex-1 text-sm text-foreground">{qr.text}</span>
                                             <button
-                                                onClick={addQuickReply}
-                                                className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                                                onClick={() => removeQuickReply(qr.id)}
+                                                className="p-1.5 hover:bg-red-500/20 rounded text-red-500 transition-colors"
                                             >
-                                                Add
+                                                <X size={16} />
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        {/* Button */}
-                        <AccordionSection title="Chat Button" icon={Smile} section="button">
-                            <div className="space-y-5">
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Button Style</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['circle', 'rounded', 'square'].map((style) => (
-                                            <button
-                                                key={style}
-                                                onClick={() => updateButton('buttonStyle', style)}
-                                                className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${
-                                                    config.button.buttonStyle === style
-                                                        ? 'bg-primary text-white shadow-md'
-                                                        : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                                                }`}
-                                            >
-                                                {style}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Button Size</label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {['sm', 'md', 'lg', 'xl'].map((size) => (
-                                            <button
-                                                key={size}
-                                                onClick={() => updateButton('buttonSize', size)}
-                                                className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${
-                                                    config.button.buttonSize === size
-                                                        ? 'bg-primary text-white shadow-md'
-                                                        : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                                                }`}
-                                            >
-                                                {size}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
-                                    <span className="text-sm font-medium text-foreground">Pulse Effect</span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                                    ))}
+                                    <div className="flex gap-2 pt-2">
                                         <input
-                                            type="checkbox"
-                                            checked={config.button.pulseEffect}
-                                            onChange={(e) => updateButton('pulseEffect', e.target.checked)}
-                                            className="sr-only peer"
+                                            type="text"
+                                            value={newQuickReply.text}
+                                            onChange={(e) => setNewQuickReply({ ...newQuickReply, text: e.target.value })}
+                                            placeholder="Add quick reply..."
+                                            className="flex-1 px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground text-sm focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                         />
-                                        <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                                    </label>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Tooltip Text</label>
-                                    <input
-                                        type="text"
-                                        value={config.button.tooltipText}
-                                        onChange={(e) => updateButton('tooltipText', e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
-                                    />
+                                        <button
+                                            onClick={addQuickReply}
+                                            className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </AccordionSection>
-                    </div>
+                        </div>
+                    </AccordionSection>
+
+                    {/* Button */}
+                    <AccordionSection title="Chat Button" icon={Smile} section="button">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Button Style</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['circle', 'rounded', 'square'].map((style) => (
+                                        <button
+                                            key={style}
+                                            onClick={() => updateButton('buttonStyle', style)}
+                                            className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.button.buttonStyle === style
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                }`}
+                                        >
+                                            {style}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Button Size</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {['sm', 'md', 'lg', 'xl'].map((size) => (
+                                        <button
+                                            key={size}
+                                            onClick={() => updateButton('buttonSize', size)}
+                                            className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.button.buttonSize === size
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
+                                <span className="text-sm font-medium text-foreground">Pulse Effect</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.button.pulseEffect}
+                                        onChange={(e) => updateButton('pulseEffect', e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Tooltip Text</label>
+                                <input
+                                    type="text"
+                                    value={config.button.tooltipText}
+                                    onChange={(e) => updateButton('tooltipText', e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+                    </AccordionSection>
                 </div>
             </div>
+        </div>
     );
 };
 

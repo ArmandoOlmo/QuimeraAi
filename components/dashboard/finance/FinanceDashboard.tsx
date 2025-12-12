@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { 
-    LayoutGrid, Upload, DollarSign, Calendar, Trash2, CheckCircle2, 
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+    LayoutGrid, Upload, DollarSign, Calendar, Trash2, CheckCircle2,
     Loader2, TrendingUp, Download, Receipt, Sparkles, AlertTriangle,
     FileText, BarChart3, PieChart as PieChartIcon, Menu, TrendingDown,
     Brain, Zap, Target, Eye
 } from 'lucide-react';
-import { 
-    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
+import {
+    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     Area, AreaChart
 } from 'recharts';
@@ -17,6 +18,7 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
+import { db, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from '../../../firebase';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -32,6 +34,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FinanceDashboard: React.FC = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { hasApiKey, handleApiError } = useAI();
     const { activeProject } = useProject();
@@ -49,7 +52,7 @@ const FinanceDashboard: React.FC = () => {
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [selectedExpense, setSelectedExpense] = useState<ExpenseRecord | null>(null);
     const [activeView, setActiveView] = useState<'overview' | 'list' | 'analytics'>('overview');
-    
+
     // AI Features states
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [aiReport, setAiReport] = useState<string | null>(null);
@@ -68,7 +71,7 @@ const FinanceDashboard: React.FC = () => {
             acc[category] = (acc[category] || 0) + expense.total;
             return acc;
         }, {} as Record<string, number>);
-        
+
         return Object.entries(grouped).map(([name, value]) => ({
             name,
             value,
@@ -83,7 +86,7 @@ const FinanceDashboard: React.FC = () => {
             acc[month] = (acc[month] || 0) + expense.total;
             return acc;
         }, {} as Record<string, number>);
-        
+
         return Object.entries(grouped)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([month, total]) => ({
@@ -96,15 +99,45 @@ const FinanceDashboard: React.FC = () => {
     // Detección de anomalías
     const anomalies = useMemo(() => {
         if (expenses.length < 3) return [];
-        
+
         const avgExpense = totalExpenses / expenses.length;
         const threshold = avgExpense * 2; // Gastos 2x mayores al promedio
-        
+
         return expenses.filter(e => e.total > threshold).map(e => ({
             ...e,
             reason: `Gasto ${((e.total / avgExpense) * 100).toFixed(0)}% superior al promedio`
         }));
     }, [expenses, totalExpenses]);
+
+    // Realtime persistence per project
+    useEffect(() => {
+        const userId = user?.uid;
+        const projectId = activeProject?.id;
+        if (!userId || !projectId) {
+            setExpenses([]);
+            return;
+        }
+
+        const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance', 'expenses');
+        const q = query(expensesRef, orderBy('date', 'desc'));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ExpenseRecord));
+                setExpenses(data);
+                // Keep selectedExpense in sync if it still exists
+                if (selectedExpense?.id) {
+                    const updated = data.find(e => e.id === selectedExpense.id) || null;
+                    if (updated) setSelectedExpense(updated);
+                }
+            },
+            (err) => {
+                console.error('Error fetching expenses:', err);
+            }
+        );
+        return () => unsubscribe();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.uid, activeProject?.id]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -115,15 +148,20 @@ const FinanceDashboard: React.FC = () => {
 
         try {
             const file = files[0];
-            
+
             if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-                throw new Error('Formato no soportado. Sube una imagen o PDF.');
+                throw new Error(t('financeDashboard.formatError'));
             }
 
             const extractedData = await extractExpenseFromReceipt(file);
 
-            const newExpense: ExpenseRecord = {
-                id: Date.now().toString(),
+            const userId = user?.uid;
+            const projectId = activeProject?.id;
+            if (!userId || !projectId) {
+                throw new Error(t('financeDashboard.selectProject'));
+            }
+
+            const newExpense: Omit<ExpenseRecord, 'id'> = {
                 date: extractedData.date || new Date().toISOString().split('T')[0],
                 supplier: extractedData.supplier || 'Desconocido',
                 category: extractedData.category || 'Otros',
@@ -134,11 +172,12 @@ const FinanceDashboard: React.FC = () => {
                 items: extractedData.items || [],
                 confidence: extractedData.confidence || 0,
                 status: 'pending',
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 }
+                createdAt: serverTimestamp()
             };
 
-            setExpenses(prev => [newExpense, ...prev]);
-            setSelectedExpense(newExpense);
+            const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance', 'expenses');
+            const docRef = await addDoc(expensesRef, { ...newExpense, updatedAt: serverTimestamp() });
+            setSelectedExpense({ id: docRef.id, ...newExpense } as ExpenseRecord);
 
         } catch (error: any) {
             console.error('Error processing receipt:', error);
@@ -149,19 +188,27 @@ const FinanceDashboard: React.FC = () => {
         }
     };
 
-    const handleDeleteExpense = (id: string) => {
-        if (confirm('¿Estás seguro de eliminar este registro?')) {
-            setExpenses(prev => prev.filter(e => e.id !== id));
-            if (selectedExpense?.id === id) setSelectedExpense(null);
-        }
-    };
+    const handleDeleteExpense = useCallback(async (id: string) => {
+        const userId = user?.uid;
+        const projectId = activeProject?.id;
+        if (!userId || !projectId) return;
+        if (!confirm(t('financeDashboard.deleteConfirm'))) return;
+        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance', 'expenses', id));
+        if (selectedExpense?.id === id) setSelectedExpense(null);
+    }, [user?.uid, activeProject?.id, selectedExpense?.id]);
 
-    const handleUpdateExpense = (id: string, updates: Partial<ExpenseRecord>) => {
-        setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+    const handleUpdateExpense = useCallback(async (id: string, updates: Partial<ExpenseRecord>) => {
+        const userId = user?.uid;
+        const projectId = activeProject?.id;
+        if (!userId || !projectId) return;
+        await updateDoc(doc(db, 'users', userId, 'projects', projectId, 'finance', 'expenses', id), {
+            ...updates,
+            updatedAt: serverTimestamp(),
+        } as any);
         if (selectedExpense?.id === id) {
             setSelectedExpense(prev => prev ? { ...prev, ...updates } : null);
         }
-    };
+    }, [user?.uid, activeProject?.id, selectedExpense?.id]);
 
     // AI: Generar reporte financiero
     const generateFinancialReport = async () => {
@@ -306,7 +353,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
                 <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
@@ -316,7 +363,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                         </button>
                         <div className="flex items-center gap-2">
                             <DollarSign className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">Finanzas & Gastos AI</h1>
+                            <h1 className="text-lg font-semibold text-foreground">{t('financeDashboard.title')}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -337,18 +384,17 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                 {/* View Tabs */}
                 <div className="flex border-b border-border px-6 bg-card/50">
                     {[
-                        { id: 'overview', label: 'Resumen', icon: BarChart3 },
-                        { id: 'list', label: 'Movimientos', icon: Receipt },
-                        { id: 'analytics', label: 'AI Analytics', icon: Brain }
+                        { id: 'overview', label: t('financeDashboard.overview'), icon: BarChart3 },
+                        { id: 'list', label: t('financeDashboard.movements'), icon: Receipt },
+                        { id: 'analytics', label: t('financeDashboard.aiAnalytics'), icon: Brain }
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveView(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-                                activeView === tab.id
-                                    ? 'border-primary text-foreground font-semibold'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeView === tab.id
+                                ? 'border-primary text-foreground font-semibold'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             <tab.icon className="w-4 h-4" />
                             <span className="hidden sm:inline">{tab.label}</span>
@@ -381,14 +427,14 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             </div>
                                         )}
                                         <h3 className="text-lg font-bold text-foreground">
-                                            {isUploading ? 'Analizando con IA...' : 'Sube tu Factura o Ticket'}
+                                            {isUploading ? t('financeDashboard.analyzing') : t('financeDashboard.uploadTitle')}
                                         </h3>
                                         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                                            IA extraerá automáticamente fecha, proveedor, montos y categorizará el gasto
+                                            {t('financeDashboard.uploadDesc')}
                                         </p>
                                         {!isUploading && (
                                             <span className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-bold mt-2">
-                                                Seleccionar Archivo
+                                                {t('financeDashboard.selectFile')}
                                             </span>
                                         )}
                                     </label>
@@ -406,20 +452,20 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                         <div className="bg-card border border-border rounded-xl p-6">
                                             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                                 <TrendingUp className="w-5 h-5 text-primary" />
-                                                Tendencia de Gastos Mensuales
+                                                {t('financeDashboard.monthlyTrend')}
                                             </h3>
                                             <ResponsiveContainer width="100%" height={300}>
                                                 <AreaChart data={expensesByMonth}>
                                                     <defs>
                                                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
-                                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
+                                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                                                         </linearGradient>
                                                     </defs>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                                     <XAxis dataKey="month" stroke="#94a3b8" />
                                                     <YAxis stroke="#94a3b8" />
-                                                    <Tooltip 
+                                                    <Tooltip
                                                         contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                                                         labelStyle={{ color: '#f1f5f9' }}
                                                     />
@@ -435,7 +481,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             <div className="bg-card border border-border rounded-xl p-6">
                                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                                     <PieChartIcon className="w-5 h-5 text-primary" />
-                                                    Por Categoría
+                                                    {t('financeDashboard.byCategory')}
                                                 </h3>
                                                 <ResponsiveContainer width="100%" height={250}>
                                                     <PieChart>
@@ -453,7 +499,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                                                 <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                                                             ))}
                                                         </Pie>
-                                                        <Tooltip 
+                                                        <Tooltip
                                                             contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                                                         />
                                                     </PieChart>
@@ -461,13 +507,13 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             </div>
 
                                             <div className="bg-card border border-border rounded-xl p-6">
-                                                <h3 className="text-lg font-bold mb-4">Top Categorías</h3>
+                                                <h3 className="text-lg font-bold mb-4">{t('financeDashboard.topCategories')}</h3>
                                                 <div className="space-y-3">
                                                     {expensesByCategory.slice(0, 5).map((cat) => (
                                                         <div key={cat.name} className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
-                                                                <div 
-                                                                    className="w-3 h-3 rounded-full" 
+                                                                <div
+                                                                    className="w-3 h-3 rounded-full"
                                                                     style={{ backgroundColor: CATEGORY_COLORS[cat.name] || '#6b7280' }}
                                                                 />
                                                                 <span className="text-sm font-medium">{cat.name}</span>
@@ -484,8 +530,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                 {expenses.length === 0 && (
                                     <div className="bg-card border border-dashed border-border rounded-xl p-12 text-center">
                                         <BarChart3 className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
-                                        <h3 className="text-lg font-bold mb-2">Sin datos aún</h3>
-                                        <p className="text-sm text-muted-foreground">Sube tu primer recibo para ver gráficas y análisis</p>
+                                        <h3 className="text-lg font-bold mb-2">{t('financeDashboard.noDataYet')}</h3>
+                                        <p className="text-sm text-muted-foreground">{t('financeDashboard.uploadFirst')}</p>
                                     </div>
                                 )}
                             </div>
@@ -496,23 +542,23 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
                                     <div className="flex items-center gap-2 mb-4">
                                         <Target className="w-5 h-5 text-primary" />
-                                        <h3 className="font-bold">Estadísticas</h3>
+                                        <h3 className="font-bold">{t('financeDashboard.statistics')}</h3>
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Total Gastos</p>
+                                            <p className="text-xs text-muted-foreground mb-1">{t('financeDashboard.totalExpenses')}</p>
                                             <p className="text-2xl font-bold text-primary">${totalExpenses.toLocaleString()}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Promedio Mensual</p>
+                                            <p className="text-xs text-muted-foreground mb-1">{t('financeDashboard.monthlyAverage')}</p>
                                             <p className="text-xl font-bold">${monthlyAverage.toFixed(0).toLocaleString()}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Total Movimientos</p>
+                                            <p className="text-xs text-muted-foreground mb-1">{t('financeDashboard.totalMovements')}</p>
                                             <p className="text-xl font-bold">{expenses.length}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Categorías Activas</p>
+                                            <p className="text-xs text-muted-foreground mb-1">{t('financeDashboard.activeCategories')}</p>
                                             <p className="text-xl font-bold">{expensesByCategory.length}</p>
                                         </div>
                                     </div>
@@ -524,8 +570,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                         <div className="flex items-start gap-2 mb-3">
                                             <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
                                             <div>
-                                                <h4 className="font-bold text-yellow-600 dark:text-yellow-400">Gastos Anómalos Detectados</h4>
-                                                <p className="text-xs text-muted-foreground mt-1">{anomalies.length} gastos inusuales encontrados</p>
+                                                <h4 className="font-bold text-yellow-600 dark:text-yellow-400">{t('financeDashboard.anomaliesDetected')}</h4>
+                                                <p className="text-xs text-muted-foreground mt-1">{anomalies.length} {t('financeDashboard.unusualExpenses')}</p>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -547,7 +593,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                     className="w-full py-2 px-4 rounded-lg border border-border hover:bg-secondary transition-colors text-sm font-medium"
                                 >
                                     <Eye className="w-4 h-4 inline mr-2" />
-                                    {showAnomalies ? 'Ocultar' : 'Ver'} Anomalías ({anomalies.length})
+                                    {showAnomalies ? t('financeDashboard.hideAnomalies') : t('financeDashboard.showAnomalies')} {t('financeDashboard.anomalies')} ({anomalies.length})
                                 </button>
                             </div>
                         </div>
@@ -559,32 +605,32 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                             <div className="lg:col-span-2">
                                 <div className="bg-card border border-border rounded-xl overflow-hidden">
                                     <div className="p-4 border-b border-border flex justify-between items-center">
-                                        <h3 className="font-bold text-foreground">Movimientos Recientes</h3>
+                                        <h3 className="font-bold text-foreground">{t('financeDashboard.recentMovements')}</h3>
                                     </div>
-                                    
+
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm text-left">
                                             <thead className="bg-secondary/20 text-muted-foreground font-bold uppercase text-xs">
                                                 <tr>
-                                                    <th className="px-4 py-3">Fecha</th>
-                                                    <th className="px-4 py-3">Proveedor</th>
-                                                    <th className="px-4 py-3">Categoría</th>
-                                                    <th className="px-4 py-3 text-right">Total</th>
-                                                    <th className="px-4 py-3 text-center">Estado</th>
-                                                    <th className="px-4 py-3 text-right">Acciones</th>
+                                                    <th className="px-4 py-3">{t('financeDashboard.date')}</th>
+                                                    <th className="px-4 py-3">{t('financeDashboard.supplier')}</th>
+                                                    <th className="px-4 py-3">{t('financeDashboard.category')}</th>
+                                                    <th className="px-4 py-3 text-right">{t('financeDashboard.total')}</th>
+                                                    <th className="px-4 py-3 text-center">{t('financeDashboard.status')}</th>
+                                                    <th className="px-4 py-3 text-right">{t('financeDashboard.actions')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border">
                                                 {expenses.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">
-                                                            No hay gastos registrados aún. Sube tu primer recibo.
+                                                            {t('financeDashboard.noExpenses')}
                                                         </td>
                                                     </tr>
                                                 ) : (
                                                     expenses.map(expense => (
-                                                        <tr 
-                                                            key={expense.id} 
+                                                        <tr
+                                                            key={expense.id}
                                                             className={`hover:bg-secondary/10 transition-colors cursor-pointer ${selectedExpense?.id === expense.id ? 'bg-primary/5 border-l-2 border-primary' : ''}`}
                                                             onClick={() => setSelectedExpense(expense)}
                                                         >
@@ -598,9 +644,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <span 
+                                                                <span
                                                                     className="px-2 py-1 rounded-full text-xs font-medium"
-                                                                    style={{ 
+                                                                    style={{
                                                                         backgroundColor: `${CATEGORY_COLORS[expense.category]}20`,
                                                                         color: CATEGORY_COLORS[expense.category]
                                                                     }}
@@ -612,11 +658,11 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                                                 ${expense.total.toLocaleString()}
                                                             </td>
                                                             <td className="px-4 py-3 text-center">
-                                                                {expense.status === 'approved' && <CheckCircle2 size={16} className="inline text-green-500"/>}
-                                                                {expense.status === 'pending' && <Loader2 size={16} className="inline text-yellow-500"/>}
+                                                                {expense.status === 'approved' && <CheckCircle2 size={16} className="inline text-green-500" />}
+                                                                {expense.status === 'pending' && <Loader2 size={16} className="inline text-yellow-500" />}
                                                             </td>
                                                             <td className="px-4 py-3 text-right">
-                                                                <button 
+                                                                <button
                                                                     onClick={(e) => { e.stopPropagation(); handleDeleteExpense(expense.id); }}
                                                                     className="text-muted-foreground hover:text-red-500 transition-colors"
                                                                 >
@@ -639,15 +685,15 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                         <div className="flex justify-between items-start mb-6">
                                             <h3 className="text-lg font-bold flex items-center gap-2">
                                                 <Receipt className="text-primary" size={20} />
-                                                Detalle del Gasto
+                                                {t('financeDashboard.expenseDetail')}
                                             </h3>
                                         </div>
 
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">Proveedor</label>
-                                                <input 
-                                                    type="text" 
+                                                <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">{t('financeDashboard.supplier')}</label>
+                                                <input
+                                                    type="text"
                                                     value={selectedExpense.supplier}
                                                     onChange={(e) => handleUpdateExpense(selectedExpense.id, { supplier: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/50 outline-none"
@@ -656,18 +702,18 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">Fecha</label>
-                                                    <input 
-                                                        type="date" 
+                                                    <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">{t('financeDashboard.date')}</label>
+                                                    <input
+                                                        type="date"
                                                         value={selectedExpense.date}
                                                         onChange={(e) => handleUpdateExpense(selectedExpense.id, { date: e.target.value })}
                                                         className="w-full bg-secondary/20 border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">Total</label>
-                                                    <input 
-                                                        type="number" 
+                                                    <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">{t('financeDashboard.total')}</label>
+                                                    <input
+                                                        type="number"
                                                         value={selectedExpense.total}
                                                         onChange={(e) => handleUpdateExpense(selectedExpense.id, { total: parseFloat(e.target.value) || 0 })}
                                                         className="w-full bg-secondary/20 border border-border rounded-lg px-3 py-2 text-sm font-bold text-green-600 focus:ring-2 focus:ring-primary/50 outline-none"
@@ -676,8 +722,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             </div>
 
                                             <div>
-                                                <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">Categoría</label>
-                                                <select 
+                                                <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">{t('financeDashboard.category')}</label>
+                                                <select
                                                     value={selectedExpense.category}
                                                     onChange={(e) => handleUpdateExpense(selectedExpense.id, { category: e.target.value })}
                                                     className="w-full bg-secondary/20 border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
@@ -691,21 +737,21 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                                     className="mt-2 w-full text-xs flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                                                 >
                                                     <Sparkles className="w-3 h-3" />
-                                                    Recategorizar con IA
+                                                    {t('financeDashboard.recategorizeAI')}
                                                 </button>
                                             </div>
 
                                             <div className="bg-secondary/10 rounded-lg p-4 border border-border">
                                                 <div className="flex justify-between text-sm mb-1">
-                                                    <span className="text-muted-foreground">Subtotal:</span>
+                                                    <span className="text-muted-foreground">{t('financeDashboard.subtotal')}:</span>
                                                     <span>${selectedExpense.subtotal.toLocaleString()}</span>
                                                 </div>
                                                 <div className="flex justify-between text-sm mb-1">
-                                                    <span className="text-muted-foreground">Impuestos:</span>
+                                                    <span className="text-muted-foreground">{t('financeDashboard.taxes')}:</span>
                                                     <span>${selectedExpense.tax.toLocaleString()}</span>
                                                 </div>
                                                 <div className="border-t border-border mt-2 pt-2 flex justify-between font-bold text-lg">
-                                                    <span>Total:</span>
+                                                    <span>{t('financeDashboard.total')}:</span>
                                                     <span>${selectedExpense.total.toLocaleString()}</span>
                                                 </div>
                                             </div>
@@ -713,17 +759,17 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             {selectedExpense.confidence < 0.8 && (
                                                 <div className="bg-yellow-500/10 text-yellow-600 text-xs p-3 rounded-lg border border-yellow-500/20 flex items-start gap-2">
                                                     <TrendingUp size={14} className="mt-0.5 shrink-0" />
-                                                    <p>Revisa los datos. Confianza de IA: {Math.round(selectedExpense.confidence * 100)}%</p>
+                                                    <p>{t('financeDashboard.reviewData')} {Math.round(selectedExpense.confidence * 100)}%</p>
                                                 </div>
                                             )}
 
                                             <div className="flex gap-3 pt-4">
-                                                <button 
+                                                <button
                                                     onClick={() => handleUpdateExpense(selectedExpense.id, { status: 'approved' })}
                                                     className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-colors ${selectedExpense.status === 'approved' ? 'bg-green-500 text-white cursor-default' : 'bg-primary text-primary-foreground hover:opacity-90'}`}
                                                     disabled={selectedExpense.status === 'approved'}
                                                 >
-                                                    {selectedExpense.status === 'approved' ? 'Aprobado' : 'Aprobar Gasto'}
+                                                    {selectedExpense.status === 'approved' ? t('financeDashboard.approved') : t('financeDashboard.approveExpense')}
                                                 </button>
                                             </div>
                                         </div>
@@ -731,7 +777,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 bg-secondary/5 rounded-xl border border-dashed border-border/50">
                                         <Receipt className="w-12 h-12 mb-4 opacity-20" />
-                                        <p className="text-sm text-center">Selecciona un gasto de la lista para ver detalles</p>
+                                        <p className="text-sm text-center">{t('financeDashboard.selectExpense')}</p>
                                     </div>
                                 )}
                             </div>
@@ -749,8 +795,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             <FileText className="w-6 h-6 text-primary" />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-lg mb-1">Reporte Financiero AI</h3>
-                                            <p className="text-sm text-muted-foreground">Genera un análisis ejecutivo completo de tus gastos</p>
+                                            <h3 className="font-bold text-lg mb-1">{t('financeDashboard.aiFinancialReport')}</h3>
+                                            <p className="text-sm text-muted-foreground">{t('financeDashboard.generateReport')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -761,12 +807,12 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                         {isGeneratingReport ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                                Generando...
+                                                {t('financeDashboard.generating')}
                                             </>
                                         ) : (
                                             <>
                                                 <Sparkles className="w-4 h-4" />
-                                                Generar Reporte
+                                                {t('financeDashboard.generateReportBtn')}
                                             </>
                                         )}
                                     </button>
@@ -778,8 +824,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                             <TrendingUp className="w-6 h-6 text-purple-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-lg mb-1">Análisis Predictivo</h3>
-                                            <p className="text-sm text-muted-foreground">Proyecciones y tendencias para los próximos meses</p>
+                                            <h3 className="font-bold text-lg mb-1">{t('financeDashboard.trendAnalysis')}</h3>
+                                            <p className="text-sm text-muted-foreground">{t('financeDashboard.analyzeDesc')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -790,12 +836,12 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
                                         {isAnalyzingTrends ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                                Analizando...
+                                                {t('financeDashboard.generating')}
                                             </>
                                         ) : (
                                             <>
                                                 <Brain className="w-4 h-4" />
-                                                Analizar Tendencias
+                                                {t('financeDashboard.analyzeTrends')}
                                             </>
                                         )}
                                     </button>

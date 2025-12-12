@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCRM } from '../../../contexts/crm';
 import {
     Search, Plus, Trash2, Download, Upload,
@@ -9,6 +10,7 @@ import { LibraryLead, Lead } from '../../../types';
 import AddLeadModal from './AddLeadModal';
 
 const LeadsLibrary: React.FC = () => {
+    const { t } = useTranslation();
     const { libraryLeads, isLoadingLibraryLeads, addLibraryLead, deleteLibraryLead, importLibraryLead } = useCRM();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
@@ -110,8 +112,8 @@ const LeadsLibrary: React.FC = () => {
             <div className="p-6 border-b border-border space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-foreground">Leads Library</h2>
-                        <p className="text-muted-foreground">Repository for all your potential leads</p>
+                        <h2 className="text-2xl font-bold text-foreground">{t('leads.library.title')}</h2>
+                        <p className="text-muted-foreground">{t('leads.library.description')}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -119,7 +121,7 @@ const LeadsLibrary: React.FC = () => {
                             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
                         >
                             <Plus size={18} />
-                            Add Lead
+                            {t('leads.addLead')}
                         </button>
                     </div>
                 </div>
@@ -128,28 +130,28 @@ const LeadsLibrary: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-card border border-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">Total Leads</span>
+                            <span className="text-sm text-muted-foreground font-medium">{t('leads.totalLeads')}</span>
                             <Users size={16} className="text-primary" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.total}</p>
                     </div>
                     <div className="bg-card border border-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">Imported</span>
+                            <span className="text-sm text-muted-foreground font-medium">{t('leads.imported')}</span>
                             <CheckCircle2 size={16} className="text-green-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.imported}</p>
                     </div>
                     <div className="bg-card border border-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">Pending</span>
+                            <span className="text-sm text-muted-foreground font-medium">{t('leads.pending')}</span>
                             <Clock size={16} className="text-yellow-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.notImported}</p>
                     </div>
                     <div className="bg-card border border-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">Import Rate</span>
+                            <span className="text-sm text-muted-foreground font-medium">{t('leads.importRate')}</span>
                             <RefreshCw size={16} className="text-blue-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.importRate}%</p>
@@ -163,7 +165,7 @@ const LeadsLibrary: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <input
                         type="text"
-                        placeholder="Search leads..."
+                        placeholder={t('common.search') + '...'}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-10 bg-background border border-border rounded-lg pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
@@ -181,14 +183,14 @@ const LeadsLibrary: React.FC = () => {
                             className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
                         >
                             <Upload size={14} />
-                            {isImporting ? 'Importing...' : 'Import to CRM'}
+                            {isImporting ? t('common.importing') : t('leads.importToCRM')}
                         </button>
                         <button
                             onClick={handleDeleteSelected}
                             className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-md text-sm font-medium transition-colors"
                         >
                             <Trash2 size={14} />
-                            Delete
+                            {t('common.delete')}
                         </button>
                     </div>
                 )}
@@ -208,25 +210,25 @@ const LeadsLibrary: React.FC = () => {
                                         className="rounded border-border text-primary focus:ring-primary/20"
                                     />
                                 </th>
-                                <th className="p-4">Name</th>
-                                <th className="p-4">Email</th>
-                                <th className="p-4">Company</th>
-                                <th className="p-4">Source</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Date Added</th>
+                                <th className="p-4">{t('common.name')}</th>
+                                <th className="p-4">{t('leads.email')}</th>
+                                <th className="p-4">{t('leads.company')}</th>
+                                <th className="p-4">{t('leads.source')}</th>
+                                <th className="p-4">{t('leads.status')}</th>
+                                <th className="p-4">{t('leads.dateAdded')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {isLoadingLibraryLeads ? (
                                 <tr>
                                     <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                                        Loading leads...
+                                        {t('common.loading')}
                                     </td>
                                 </tr>
                             ) : filteredLeads.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                                        No leads found in library
+                                        {t('leads.noLeadsFound')}
                                     </td>
                                 </tr>
                             ) : (

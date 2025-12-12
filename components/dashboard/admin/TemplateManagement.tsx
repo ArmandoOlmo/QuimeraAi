@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../../contexts/ToastContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
@@ -41,6 +42,7 @@ type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const { error: showError } = useToast();
     const { userDocument } = useAuth();
     const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -131,7 +133,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     // Update template in Firestore
     const updateTemplate = async (templateId: string, updates: Partial<Project>) => {
         console.log('🔄 updateTemplate called with:', { templateId, updates });
-        
+
         const template = templates.find(t => t.id === templateId);
         if (!template) throw new Error('Template not found');
 
@@ -143,10 +145,10 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
         const { id, ...dataToSave } = updatedData;
 
-        console.log('📤 Saving to Firestore:', { 
-            templateId, 
-            thumbnailUrl: dataToSave.thumbnailUrl?.substring(0, 50), 
-            industries: dataToSave.industries 
+        console.log('📤 Saving to Firestore:', {
+            templateId,
+            thumbnailUrl: dataToSave.thumbnailUrl?.substring(0, 50),
+            industries: dataToSave.industries
         });
 
         const templateDocRef = doc(db, 'templates', templateId);
@@ -253,7 +255,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <LayoutTemplate className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">Templates</h1>
+                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
                         </div>
 
                         {/* Search Bar - Desktop */}
@@ -261,7 +263,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
-                                placeholder="Search templates..."
+                                placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
                                 className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -275,6 +277,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     </div>
 
                     <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                        {/* Back Button - First */}
+                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden lg:inline">{t('superadmin.templateManagement.back', 'Back')}</span>
+                        </button>
+
                         {/* View Mode Toggle - Mobile */}
                         <div className="flex sm:hidden items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
                             <button
@@ -317,17 +325,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                         >
                             <Filter className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden lg:inline ml-1.5">Filters</span>
+                            <span className="hidden lg:inline ml-1.5">{t('superadmin.templateManagement.filters', 'Filters')}</span>
                         </button>
 
                         <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-editor-accent hover:bg-editor-accent/10">
                             <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline ml-1.5">New</span>
-                        </button>
-
-                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden lg:inline">Volver</span>
+                            <span className="hidden sm:inline ml-1.5">{t('superadmin.templateManagement.new', 'New')}</span>
                         </button>
                     </div>
                 </header>
@@ -338,7 +341,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <Search className="w-5 h-5 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="text"
-                            placeholder="Search templates..."
+                            placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
                             className="flex-1 bg-transparent outline-none text-base min-w-0"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -440,39 +443,39 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <LayoutTemplate size={16} className="text-editor-accent" />
-                                <span className="text-xs text-editor-text-secondary">Templates</span>
+                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.title', 'Templates')}</span>
                             </div>
                             <div className="text-xl font-bold">{templates.length}</div>
-                            <span className="text-xs text-editor-text-secondary">{activeTemplates} active</span>
+                            <span className="text-xs text-editor-text-secondary">{activeTemplates} {t('superadmin.templateManagement.active', 'active')}</span>
                         </div>
 
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <Globe size={16} className="text-blue-500" />
-                                <span className="text-xs text-editor-text-secondary">Sites</span>
+                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</span>
                             </div>
                             <div className="text-xl font-bold">{totalSitesUsingTemplates}</div>
-                            <span className="text-xs text-editor-text-secondary">created</span>
+                            <span className="text-xs text-editor-text-secondary">{t('superadmin.sitesCreated').toLowerCase()}</span>
                         </div>
 
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <TrendingUp size={16} className="text-green-500" />
-                                <span className="text-xs text-editor-text-secondary">Popular</span>
+                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</span>
                             </div>
                             <div className="text-sm font-bold truncate">{mostUsedTemplate?.name || 'N/A'}</div>
                             <span className="text-xs text-editor-text-secondary">
-                                {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} uses` : ''}
+                                {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} ${t('superadmin.templateManagement.uses', 'uses')}` : ''}
                             </span>
                         </div>
 
                         <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
                             <div className="flex items-center gap-2 mb-1">
                                 <Archive size={16} className="text-orange-500" />
-                                <span className="text-xs text-editor-text-secondary">Archived</span>
+                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.archived', 'Archived')}</span>
                             </div>
                             <div className="text-xl font-bold">{archivedTemplates}</div>
-                            <span className="text-xs text-editor-text-secondary">templates</span>
+                            <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.title', 'Templates')}</span>
                         </div>
                     </div>
 
@@ -480,39 +483,39 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     <div className="hidden sm:flex flex-wrap items-center gap-6 mb-6 text-sm">
                         <div className="flex items-center gap-2">
                             <LayoutTemplate size={16} className="text-editor-accent" />
-                            <span className="text-editor-text-secondary">Total Templates:</span>
+                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.totalTemplates', 'Total Templates')}:</span>
                             <span className="font-bold">{templates.length}</span>
-                            <span className="text-editor-text-secondary text-xs">({activeTemplates} active)</span>
+                            <span className="text-editor-text-secondary text-xs">({activeTemplates} {t('superadmin.templateManagement.active', 'active')})</span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <Globe size={16} className="text-blue-500" />
-                            <span className="text-editor-text-secondary">Sites Created:</span>
+                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}:</span>
                             <span className="font-bold">{totalSitesUsingTemplates}</span>
-                            <span className="text-editor-text-secondary text-xs">from templates</span>
+                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.fromTemplates', 'from templates')}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <TrendingUp size={16} className="text-green-500" />
-                            <span className="text-editor-text-secondary">Most Popular:</span>
+                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}:</span>
                             <span className="font-bold">{mostUsedTemplate?.name || 'N/A'}</span>
                             <span className="text-editor-text-secondary text-xs">
-                                {mostUsedTemplate ? `(${getTemplateUsage(mostUsedTemplate.id)} uses)` : ''}
+                                {mostUsedTemplate ? `(${getTemplateUsage(mostUsedTemplate.id)} ${t('superadmin.templateManagement.uses', 'uses')})` : ''}
                             </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <Archive size={16} className="text-orange-500" />
-                            <span className="text-editor-text-secondary">Archived:</span>
+                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.archived', 'Archived')}:</span>
                             <span className="font-bold">{archivedTemplates}</span>
-                            <span className="text-editor-text-secondary text-xs">templates</span>
+                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.title', 'Templates')}</span>
                         </div>
                     </div>
 
                     {/* Results Header */}
                     <div className="flex items-center justify-between mb-4">
                         <p className="text-sm text-editor-text-secondary">
-                            {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? 'template' : 'templates'}
+                            {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? t('superadmin.templateManagement.title', 'template').toLowerCase().slice(0, -1) : t('superadmin.templateManagement.title', 'Templates').toLowerCase()}
                         </p>
                     </div>
 
@@ -543,7 +546,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                                                 <div className="text-center">
                                                     <Archive className="w-10 h-10 sm:w-12 sm:h-12 text-white mx-auto mb-2" />
-                                                    <span className="text-white text-sm font-semibold">Archived</span>
+                                                    <span className="text-white text-sm font-semibold">{t('superadmin.templateManagement.archivedLabel', 'Archived')}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -639,14 +642,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (window.confirm(`Delete "${template.name}"?`)) {
+                                                        if (window.confirm(t('superadmin.templateManagement.deleteConfirmation', { name: template.name }))) {
                                                             deleteProject(template.id).catch(err => {
-                                                                alert(err.message || 'No tienes permisos para borrar templates');
+                                                                showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
                                                             });
                                                         }
                                                     }}
                                                     className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
-                                                    title="Delete"
+                                                    title={t('superadmin.templateManagement.delete', 'Delete')}
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -753,7 +756,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     onClick={() => {
                                                         if (window.confirm(`Delete "${template.name}"?`)) {
                                                             deleteProject(template.id).catch(err => {
-                                                                alert(err.message || 'No tienes permisos para borrar templates');
+                                                                showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
                                                             });
                                                         }
                                                     }}
@@ -774,11 +777,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     {filteredAndSortedTemplates.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                             <LayoutTemplate className="w-16 h-16 text-editor-text-secondary/40 mb-4" />
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-2">No templates found</h3>
+                            <h3 className="text-lg font-semibold text-editor-text-primary mb-2">{t('superadmin.templateManagement.noTemplates', 'No templates found')}</h3>
                             <p className="text-sm text-editor-text-secondary mb-6 max-w-md">
                                 {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
-                                    ? 'Try adjusting your search or filter criteria'
-                                    : 'Get started by creating your first template'
+                                    ? t('superadmin.templateManagement.noTemplatesDesc', 'Try adjusting your search or filter criteria')
+                                    : t('superadmin.createFirstTemplate', 'Get started by creating your first template')
                                 }
                             </p>
                             {!(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
@@ -787,7 +790,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
                                 >
                                     <Plus size={18} />
-                                    Create Template
+                                    {t('superadmin.templateManagement.createTemplate', 'Create Template')}
                                 </button>
                             )}
                         </div>
@@ -868,50 +871,50 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {/* Template Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                                 <div className="bg-editor-bg/50 rounded-xl p-4">
-                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">Template Information</h3>
+                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">{t('superadmin.templateInformation', 'Template Information')}</h3>
                                     <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">Sites Using:</span>
+                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.sitesUsing', 'Sites Using')}:</span>
                                             <span className="font-medium">{getTemplateUsage(previewTemplate.id)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">Last Updated:</span>
+                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.lastUpdated', 'Last Updated')}:</span>
                                             <span className="font-medium text-xs sm:text-sm truncate ml-2">{previewTemplate.lastUpdated}</span>
                                         </div>
                                         {previewTemplate.author && (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-editor-text-secondary">Author:</span>
+                                                <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.author', 'Author')}:</span>
                                                 <span className="font-medium">{previewTemplate.author}</span>
                                             </div>
                                         )}
                                         {previewTemplate.version && (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-editor-text-secondary">Version:</span>
+                                                <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.version', 'Version')}:</span>
                                                 <span className="font-medium">{previewTemplate.version}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">Status:</span>
+                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.status', 'Status')}:</span>
                                             <span className={`font-medium ${previewTemplate.isArchived ? 'text-orange-500' : 'text-green-500'}`}>
-                                                {previewTemplate.isArchived ? 'Archived' : 'Active'}
+                                                {previewTemplate.isArchived ? t('superadmin.templateManagement.archivedLabel', 'Archived') : t('superadmin.templateManagement.active', 'Active')}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="bg-editor-bg/50 rounded-xl p-4">
-                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">Brand Identity</h3>
+                                    <h3 className="font-semibold mb-3 text-sm sm:text-base">{t('superadmin.brandIdentity', 'Brand Identity')}</h3>
                                     <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">Business:</span>
+                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.business', 'Business')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.name || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">Target Audience:</span>
+                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.targetAudience', 'Target Audience')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.targetAudience || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">Tone:</span>
+                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.tone', 'Tone')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.toneOfVoice || 'N/A'}</p>
                                         </div>
                                     </div>
@@ -921,7 +924,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {/* Description */}
                             {previewTemplate.description && (
                                 <div className="mb-4 sm:mb-6">
-                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Description</h3>
+                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.description', 'Description')}</h3>
                                     <p className="text-sm text-editor-text-secondary leading-relaxed">{previewTemplate.description}</p>
                                 </div>
                             )}
@@ -947,7 +950,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {/* Tags */}
                             {previewTemplate.tags && previewTemplate.tags.length > 0 && (
                                 <div className="mb-4 sm:mb-6">
-                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('cms.tags')}</h3>
+                                    <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('cms.tags', 'Tags')}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.tags.map(tag => (
                                             <span key={tag} className="bg-editor-border px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm">
@@ -960,7 +963,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Sections Included */}
                             <div className="mb-4 sm:mb-6">
-                                <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Included Sections</h3>
+                                <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.includedSections', 'Included Sections')}</h3>
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                     {previewTemplate.componentOrder.map(section => (
                                         <span key={section} className="bg-editor-accent/10 text-editor-accent px-2.5 sm:px-3 py-1 rounded-lg sm:rounded text-xs sm:text-sm">
@@ -980,7 +983,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-accent text-white rounded-xl sm:rounded-lg hover:bg-editor-accent/90 transition-colors text-sm font-medium"
                                 >
                                     <Edit size={18} />
-                                    <span className="hidden xs:inline">Edit</span>
+                                    <span className="hidden xs:inline">{t('superadmin.templateManagement.edit', 'Edit')}</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -1000,7 +1003,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-xl sm:rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                                 >
                                     <ImageIcon size={18} />
-                                    <span className="hidden xs:inline">Thumbnail</span>
+                                    <span className="hidden xs:inline">{t('superadmin.templateManagement.thumbnail', 'Thumbnail')}</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -1020,23 +1023,23 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
                                 >
                                     {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
-                                    {previewTemplate.isArchived ? 'Activate' : 'Archive'}
+                                    {previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}
                                 </button>
                                 {canDeleteTemplates() && (
                                     <button
                                         onClick={() => {
-                                            if (window.confirm(`Delete "${previewTemplate.name}"?`)) {
+                                            if (window.confirm(t('superadmin.templateManagement.deleteConfirmation', { name: previewTemplate.name }))) {
                                                 deleteProject(previewTemplate.id)
                                                     .then(() => setPreviewTemplate(null))
                                                     .catch(err => {
-                                                        alert(err.message || 'No tienes permisos para borrar templates');
+                                                        showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
                                                     });
                                             }
                                         }}
                                         className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-red-500/10 text-red-500 rounded-xl sm:rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium"
                                     >
                                         <Trash2 size={18} />
-                                        Delete
+                                        {t('superadmin.templateManagement.delete', 'Delete')}
                                     </button>
                                 )}
                             </div>

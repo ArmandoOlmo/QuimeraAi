@@ -14,8 +14,7 @@ import StatCard from './StatCard';
 import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
-import LanguageSelector from '../ui/LanguageSelector';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { importProjectFromFile } from '../../utils/projectImporter';
 import { downloadMultipleProjectsAsJSON } from '../../utils/projectExporter';
@@ -250,7 +249,7 @@ const Dashboard: React.FC = () => {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} aria-hidden="true" />
                                 <input
                                     type="search"
-                                    placeholder={t('dashboard.searchProjects')}
+                                    placeholder={t('dashboard.searchPlaceholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm shadow-sm focus:shadow-md"
@@ -274,6 +273,16 @@ const Dashboard: React.FC = () => {
 
                     {/* Right Section - Actions & Language */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Back Button - First item in right section */}
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.goBack', 'Volver')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
+
                         {/* View Mode Toggle - Only on Websites view */}
                         {isWebsites && (
                             <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
@@ -363,18 +372,13 @@ const Dashboard: React.FC = () => {
                                     localStorage.setItem('quimera_show_instructions', 'true');
                                 }}
                                 className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title={t('dashboard.showHelp', 'Mostrar guía')}
+                                title={t('dashboard.showHelp')}
                             >
                                 <BookOpen className="w-4 h-4" />
-                                <span className="hidden lg:inline">{t('dashboard.help', 'Ayuda')}</span>
+                                <span className="hidden lg:inline">{t('dashboard.help')}</span>
                             </button>
                         )}
 
-                        {/* Separator */}
-                        <div className="hidden sm:block h-6 w-px bg-border/50 mx-1"></div>
-
-                        {/* Language Selector */}
-                        <LanguageSelector />
                     </div>
                 </header>
 
@@ -391,12 +395,12 @@ const Dashboard: React.FC = () => {
                                 <Search className="text-muted-foreground" size={20} aria-hidden="true" />
                                 <input
                                     type="search"
-                                    placeholder="Search projects..."
+                                    placeholder={t('dashboard.searchPlaceholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
                                     autoFocus
-                                    aria-label="Search projects"
+                                    aria-label={t('dashboard.searchProjects')}
                                 />
                                 <button
                                     onClick={() => setShowMobileSearch(false)}
@@ -408,7 +412,7 @@ const Dashboard: React.FC = () => {
                             </div>
                             {searchQuery && (
                                 <div className="text-xs text-muted-foreground" role="status" aria-live="polite">
-                                    {userProjects.length} results found
+                                    {t('dashboard.resultsFound', { count: userProjects.length })}
                                 </div>
                             )}
                         </div>
@@ -450,7 +454,7 @@ const Dashboard: React.FC = () => {
                                         {/* New Project CTA - Opens Onboarding */}
                                         <button
                                             onClick={() => setIsOnboardingOpen(true)}
-                                            className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-slate-900 font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                            className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
                                             aria-label={t('dashboard.newProject')}
                                         >
                                             <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
@@ -532,10 +536,10 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <h2 className="text-xl font-bold text-foreground">
-                                                        {t('dashboard.instructionsTitle', '¿Cómo usar Quimera.ai?')}
+                                                        {t('dashboard.instructionsTitle')}
                                                     </h2>
                                                     <p className="text-sm text-muted-foreground">
-                                                        {t('dashboard.instructionsSubtitle', 'Sigue estos pasos para crear tu sitio web')}
+                                                        {t('dashboard.instructionsSubtitle')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -550,11 +554,11 @@ const Dashboard: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Sparkles className="w-4 h-4 text-primary" />
                                                             <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step1Title', 'Crea tu proyecto')}
+                                                                {t('dashboard.step1Title')}
                                                             </span>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step1Desc', 'Haz clic en "Nuevo Proyecto" y describe tu negocio para generar tu sitio con IA')}
+                                                            {t('dashboard.step1Desc')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -568,11 +572,11 @@ const Dashboard: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Palette className="w-4 h-4 text-purple-500" />
                                                             <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step2Title', 'Personaliza el diseño')}
+                                                                {t('dashboard.step2Title')}
                                                             </span>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step2Desc', 'Edita colores, textos, imágenes y secciones desde el editor visual')}
+                                                            {t('dashboard.step2Desc')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -586,11 +590,11 @@ const Dashboard: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <LayoutTemplate className="w-4 h-4 text-blue-500" />
                                                             <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step3Title', 'O usa una plantilla')}
+                                                                {t('dashboard.step3Title')}
                                                             </span>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step3Desc', 'Explora plantillas profesionales en la sección "Plantillas" del menú')}
+                                                            {t('dashboard.step3Desc')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -604,11 +608,11 @@ const Dashboard: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Rocket className="w-4 h-4 text-green-500" />
                                                             <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step4Title', 'Publica tu sitio')}
+                                                                {t('dashboard.step4Title')}
                                                             </span>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step4Desc', 'Conecta tu dominio o usa nuestro hosting gratuito para publicar')}
+                                                            {t('dashboard.step4Desc')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -616,13 +620,13 @@ const Dashboard: React.FC = () => {
 
                                             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                                                 <p className="text-xs text-muted-foreground">
-                                                    {t('dashboard.instructionsTip', '💡 Puedes cerrar esta guía y siempre verla de nuevo desde la configuración')}
+                                                    {t('dashboard.instructionsTip')}
                                                 </p>
                                                 <button
                                                     onClick={dismissInstructions}
                                                     className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                                                 >
-                                                    {t('dashboard.gotIt', 'Entendido, ocultar')}
+                                                    {t('dashboard.gotIt')}
                                                 </button>
                                             </div>
                                         </div>
@@ -641,7 +645,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Total Websites</div>
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.totalWebsites')}</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
@@ -651,7 +655,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="text-3xl font-extrabold text-foreground">{publishedCount}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Published</div>
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.published')}</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
@@ -661,7 +665,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="text-3xl font-extrabold text-foreground">{draftCount}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Drafts</div>
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.draft')}</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
@@ -671,7 +675,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="text-3xl font-extrabold text-foreground">{userProjects.length}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Filtered</div>
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.filtered')}</div>
                                 </div>
                             </section>
                         )}
@@ -720,7 +724,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-muted-foreground">
-                                                Showing {userProjects.length} of {allUserProjects.length} projects
+                                                {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
                                             </span>
                                             {/* Mobile controls */}
                                             <div className="flex items-center gap-2 sm:hidden">
@@ -778,15 +782,15 @@ const Dashboard: React.FC = () => {
                                 ) : (
                                     <EmptyState
                                         icon={searchQuery ? Search : Globe}
-                                        title={searchQuery ? 'No projects found' : 'No websites yet'}
+                                        title={searchQuery ? t('dashboard.emptyState.titleNoProjects') : t('dashboard.emptyState.titleNoWebsites')}
                                         description={
                                             searchQuery
-                                                ? `No projects match "${searchQuery}". Try adjusting your search or clear filters.`
-                                                : 'Start building your online presence. Create your first website in minutes with our AI-powered builder.'
+                                                ? t('dashboard.emptyState.descNoProjects', { query: searchQuery })
+                                                : t('dashboard.emptyState.descNoWebsites')
                                         }
                                         illustration={searchQuery ? 'search' : 'website'}
                                         action={searchQuery ? undefined : {
-                                            label: 'Create Your First Website',
+                                            label: t('dashboard.emptyState.createFirst'),
                                             onClick: () => setIsOnboardingOpen(true),
                                             icon: Plus
                                         }}

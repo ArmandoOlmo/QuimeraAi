@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
@@ -12,12 +13,13 @@ interface ProjectListItemProps {
 }
 
 const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { createProjectFromTemplate, loadProject, deleteProject } = useProject();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   const isTemplate = project.status === 'Template';
 
   // Close menu when clicking outside
@@ -37,13 +39,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
   }, [showMenu]);
 
   const handleOpenProject = () => {
-    if (isDeleting) return; 
-    
+    if (isDeleting) return;
+
     // Track analytics
     if (!isTemplate) {
       trackProjectOpened(project.id, project.name, project.status);
     }
-    
+
     if (isTemplate) {
       createProjectFromTemplate(project.id);
     } else {
@@ -59,12 +61,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    
+
     if (isDeleting) return;
 
-    const confirmMsg = isTemplate 
-      ? 'Remove this template from your view?' 
-      : `Delete "${project.name}" permanently?`;
+    const confirmMsg = isTemplate
+      ? t('project.deleteConfirm.template')
+      : t('project.deleteConfirm.project', { name: project.name });
 
     if (window.confirm(confirmMsg)) {
       setIsDeleting(true);
@@ -72,12 +74,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
         if (!isTemplate) {
           trackProjectDeleted(project.id, project.name);
         }
-        
+
         await deleteProject(project.id);
       } catch (err) {
         console.error("Deletion failed", err);
         setIsDeleting(false);
-        alert("Failed to delete project. Please try again.");
+        alert(t('project.deleteError'));
       }
     }
   };
@@ -93,7 +95,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
     setShowMenu(false);
     if (!user) return;
 
-    const newName = prompt("Enter name for duplicated project:", `${project.name} (Copy)`);
+    const newName = prompt(t('project.actions.enterDuplicateName'), `${project.name} (Copy)`);
     if (!newName) return;
 
     await createProjectFromTemplate(project.id, newName);
@@ -103,7 +105,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
     e.stopPropagation();
     setShowMenu(false);
     if (!user?.email) {
-      alert('User email is required to download project');
+      alert(t('project.actions.emailRequired'));
       return;
     }
     downloadProjectAsJSON(project, user.email);
@@ -114,13 +116,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-    return `${Math.floor(diffDays / 365)} years ago`;
+
+    if (diffDays === 0) return t('common.today');
+    if (diffDays === 1) return t('common.yesterday');
+    if (diffDays < 7) return t('common.daysAgo', { count: diffDays });
+    if (diffDays < 30) return t('common.weeksAgo', { count: Math.floor(diffDays / 7) });
+    if (diffDays < 365) return t('common.monthsAgo', { count: Math.floor(diffDays / 30) });
+    return t('common.yearsAgo', { count: Math.floor(diffDays / 365) });
   };
 
   const statusColor = {
@@ -128,6 +130,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
     'Draft': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
     'Template': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
   }[project.status];
+
+  const translatedStatus = {
+    'Published': t('dashboard.published'),
+    'Draft': t('dashboard.draft'),
+    'Template': t('dashboard.template'),
+  }[project.status] || project.status;
 
   return (
     <div
@@ -143,8 +151,8 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
       {/* Thumbnail */}
       <div className="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
         {project.thumbnailUrl ? (
-          <img 
-            src={project.thumbnailUrl} 
+          <img
+            src={project.thumbnailUrl}
             alt={project.name}
             className="w-full h-full object-cover"
           />
@@ -162,12 +170,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
             {project.name}
           </h3>
           <span className={`px-2 py-1 rounded-md text-xs font-medium ${statusColor}`}>
-            {project.status}
+            {translatedStatus}
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <Clock size={14} />
-          <span>Updated {formatDate(project.lastUpdated)}</span>
+          <span>{t('common.updated')} {formatDate(project.lastUpdated)}</span>
         </div>
       </div>
 
@@ -176,7 +184,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
         <button
           onClick={toggleMenu}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label="More options"
+          aria-label={t('common.openMenu')}
         >
           {isDeleting ? (
             <Loader2 className="animate-spin" size={20} />
@@ -193,16 +201,16 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
               className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <Pencil size={16} />
-              <span>Edit</span>
+              <span>{isTemplate ? t('project.actions.useTemplate') : t('project.actions.edit')}</span>
             </button>
-            
+
             {!isTemplate && (
               <button
                 onClick={handleDuplicateClick}
                 className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <Copy size={16} />
-                <span>Duplicate</span>
+                <span>{t('project.actions.duplicate')}</span>
               </button>
             )}
 
@@ -211,7 +219,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
               className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <Download size={16} />
-              <span>Download</span>
+              <span>{t('project.actions.export')}</span>
             </button>
 
             <button
@@ -219,7 +227,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
               className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
             >
               <Trash2 size={16} />
-              <span>{isTemplate ? 'Remove' : 'Delete'}</span>
+              <span>{isTemplate ? t('common.remove') : t('project.actions.delete')}</span>
             </button>
           </div>
         )}

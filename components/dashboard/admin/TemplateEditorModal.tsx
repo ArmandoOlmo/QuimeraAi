@@ -159,11 +159,11 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const THUMBNAIL_STYLES = [
-        { label: t('editor.minimalist', { defaultValue: 'Minimalist' }), value: 'Minimalist' },
-        { label: t('editor.photorealistic', { defaultValue: 'Photorealistic' }), value: 'Photorealistic' },
-        { label: t('editor.digitalArt', { defaultValue: 'Digital Art' }), value: 'Digital Art' },
-        { label: t('editor.3dRender', { defaultValue: '3D Render' }), value: '3D Render' },
-        { label: t('editor.cyberpunk', { defaultValue: 'Cyberpunk' }), value: 'Cyberpunk' },
+        { label: t('superadmin.templateEditor.styles.minimalist', 'Minimalist'), value: 'Minimalist' },
+        { label: t('superadmin.templateEditor.styles.photorealistic', 'Photorealistic'), value: 'Photorealistic' },
+        { label: t('superadmin.templateEditor.styles.digitalArt', 'Digital Art'), value: 'Digital Art' },
+        { label: t('superadmin.templateEditor.styles.3dRender', '3D Render'), value: '3D Render' },
+        { label: t('superadmin.templateEditor.styles.cyberpunk', 'Cyberpunk'), value: 'Cyberpunk' },
     ];
 
     // Reset form when template changes
@@ -470,9 +470,9 @@ Return ONLY the JSON array, no other text.`;
                     console.error('❌ Empty response text. Full response:', proxyResponse);
                     // More specific error message based on finishReason
                     if (finishReason === 'MAX_TOKENS') {
-                        throw new Error('La respuesta fue truncada. Intenta de nuevo.');
+                        throw new Error(t('superadmin.templateEditor.errors.truncated', 'Response was truncated. Try again.'));
                     }
-                    throw new Error('La API no devolvió una respuesta válida. Intenta con otro template.');
+                    throw new Error(t('superadmin.templateEditor.errors.apiInvalid', 'The API did not return a valid response. Try with another template.'));
                 }
             } else {
                 responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
@@ -525,12 +525,12 @@ Return ONLY the JSON array, no other text.`;
                 setAiSuggestions(suggestedIds);
             } else {
                 // Show error if no valid industries found
-                setError('No se pudieron sugerir industrias. Intenta de nuevo.');
+                setError(t('superadmin.templateEditor.errors.suggest', 'Could not suggest industries. Try again.'));
                 console.warn('No valid industries found in AI response:', responseText);
             }
         } catch (error) {
             console.error('AI suggestion error:', error);
-            setError('Error al sugerir industrias. Verifica tu conexión.');
+            setError(t('superadmin.templateEditor.errors.suggestError', 'Error suggesting industries. Check your connection.'));
             handleApiError(error);
         } finally {
             setIsAiSuggesting(false);
@@ -613,7 +613,8 @@ Return ONLY the JSON array, no other text.`;
             onClose();
         } catch (err) {
             console.error('Failed to update template:', err);
-            setError(t('messages.updateError'));
+            console.error('Failed to update template:', err);
+            setError(t('superadmin.templateEditor.errors.update', 'Failed to update template.'));
         } finally {
             setIsLoading(false);
         }
@@ -678,7 +679,7 @@ Return ONLY the JSON array, no other text.`;
             : extractTemplateColors(template).colors;
 
         if (colorsToAnalyze.length === 0) {
-            setError('No colors found. Import a color palette first.');
+            setError(t('superadmin.templateEditor.errors.noColors', 'No colors found. Import a color palette first.'));
             return;
         }
 
@@ -738,11 +739,11 @@ Name:`;
                 // Replace name completely with AI-generated name
                 setFormData(prev => ({ ...prev, name: cleanName }));
             } else {
-                setError('Could not generate a valid name. Try again.');
+                setError(t('superadmin.templateEditor.errors.nameInvalid', 'Could not generate a valid name. Try again.'));
             }
         } catch (err) {
             console.error('AI name generation failed:', err);
-            setError('Failed to generate name. Please try again.');
+            setError(t('superadmin.templateEditor.errors.nameError', 'Failed to generate name. Please try again.'));
         } finally {
             setIsGeneratingName(false);
         }
@@ -766,7 +767,7 @@ Name:`;
                         <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-white">Template Editor</h2>
+                        <h2 className="text-base font-semibold text-white">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
                         <p className="text-xs text-editor-text-secondary">{template?.name}</p>
                     </div>
                 </div>
@@ -796,14 +797,14 @@ Name:`;
                                 <div className="space-y-3">
                                     {/* Name with AI Button */}
                                     <div>
-                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">Nombre</label>
+                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">{t('superadmin.templateEditor.nameLabel', 'Name')}</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleChange}
-                                                placeholder="Template name"
+                                                placeholder={t('superadmin.templateEditor.namePlaceholder', 'Template name')}
                                                 className="flex-1 bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
                                             />
                                             <button
@@ -811,7 +812,7 @@ Name:`;
                                                 onClick={handleGenerateNameWithAI}
                                                 disabled={isGeneratingName || displayColors.length === 0}
                                                 className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-40"
-                                                title="Generar nombre con IA"
+                                                title={t('superadmin.templateEditor.generateNameTitle', 'Generate name with AI')}
                                             >
                                                 {isGeneratingName ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                                             </button>
@@ -820,13 +821,13 @@ Name:`;
 
                                     {/* Category */}
                                     <div>
-                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">Categoría</label>
+                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">{t('superadmin.templateEditor.categoryLabel', 'Category')}</label>
                                         <input
                                             type="text"
                                             name="category"
                                             value={formData.category}
                                             onChange={handleChange}
-                                            placeholder="e.g., Hospitality & Dining"
+                                            placeholder={t('superadmin.templateEditor.categoryPlaceholder', 'e.g., Hospitality & Dining')}
                                             className="w-full bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
                                         />
                                     </div>
@@ -838,7 +839,7 @@ Name:`;
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <Palette className="w-4 h-4 text-purple-400" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">Colores</span>
+                                        <span className="text-xs font-medium text-editor-text-secondary">{t('superadmin.templateEditor.colorsLabel', 'Colors')}</span>
                                     </div>
                                     <button
                                         type="button"
@@ -846,7 +847,7 @@ Name:`;
                                         className="text-[10px] px-2 py-1 bg-purple-600/20 text-purple-300 rounded-md hover:bg-purple-600/30 transition-colors flex items-center gap-1"
                                     >
                                         <Sparkles size={10} />
-                                        {showCoolorsImporter ? 'Cerrar' : 'Importar Coolors'}
+                                        {showCoolorsImporter ? t('superadmin.templateEditor.close', 'Close') : t('superadmin.templateEditor.importCoolors', 'Import Coolors')}
                                     </button>
                                 </div>
 
@@ -861,7 +862,7 @@ Name:`;
                                         />
                                     ))}
                                     {displayColors.length === 0 && (
-                                        <p className="text-xs text-editor-text-secondary/50">Sin colores</p>
+                                        <p className="text-xs text-editor-text-secondary/50">{t('superadmin.templateEditor.noColors', 'No colors')}</p>
                                     )}
                                 </div>
 
@@ -891,7 +892,7 @@ Name:`;
                                         className="text-[10px] px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {isAiSuggesting ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
-                                        {isAiSuggesting ? 'Analizando...' : 'Sugerir IA'}
+                                        {isAiSuggesting ? t('superadmin.templateEditor.analyzing', 'Analyzing...') : t('superadmin.templateEditor.suggestAI', 'Suggest AI')}
                                     </button>
                                 </div>
 
@@ -927,7 +928,7 @@ Name:`;
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <ImageIcon className="w-4 h-4 text-editor-accent" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">Miniatura</span>
+                                        <span className="text-xs font-medium text-editor-text-secondary">{t('superadmin.templateEditor.thumbnailLabel', 'Thumbnail')}</span>
                                     </div>
                                     <div className="flex gap-1.5">
                                         <input type="file" ref={fileInputRef} accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
@@ -935,7 +936,7 @@ Name:`;
                                             type="button"
                                             onClick={() => fileInputRef.current?.click()}
                                             className="p-1.5 text-xs bg-editor-border text-editor-text-secondary hover:text-white rounded-lg transition-colors"
-                                            title="Subir imagen"
+                                            title={t('superadmin.templateEditor.uploadImageTitle', 'Upload image')}
                                         >
                                             <Upload className="w-3.5 h-3.5" />
                                         </button>
@@ -946,7 +947,7 @@ Name:`;
                                                 ? 'bg-purple-600 text-white'
                                                 : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                                                 }`}
-                                            title="Generar con IA"
+                                            title={t('superadmin.templateEditor.generateIATitle', 'Generate with AI')}
                                         >
                                             <Zap className="w-3.5 h-3.5" />
                                         </button>
@@ -961,7 +962,7 @@ Name:`;
                                         <div className="flex items-center justify-center h-full text-editor-text-secondary/50">
                                             <div className="text-center">
                                                 <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-30" />
-                                                <p className="text-xs">Sin miniatura</p>
+                                                <p className="text-xs">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
                                             </div>
                                         </div>
                                     )}
@@ -971,7 +972,7 @@ Name:`;
                                 {showThumbnailGenerator && (
                                     <div className="mt-3 p-3 bg-purple-900/10 rounded-lg border border-purple-500/20">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] font-medium text-purple-300">Generador IA</span>
+                                            <span className="text-[10px] font-medium text-purple-300">{t('superadmin.templateEditor.generatorTitle', 'AI Generator')}</span>
                                             <div className="flex gap-1">
                                                 <button
                                                     type="button"
@@ -979,7 +980,7 @@ Name:`;
                                                     disabled={isEnhancingPrompt}
                                                     className="text-[10px] px-1.5 py-0.5 text-purple-400 hover:text-purple-300 disabled:opacity-50"
                                                 >
-                                                    {isEnhancingPrompt ? <Loader2 size={10} className="animate-spin" /> : 'Sugerir'}
+                                                    {isEnhancingPrompt ? <Loader2 size={10} className="animate-spin" /> : t('superadmin.templateEditor.suggest', 'Suggest')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -987,7 +988,7 @@ Name:`;
                                                     disabled={isEnhancingPrompt || !thumbnailPrompt}
                                                     className="text-[10px] px-1.5 py-0.5 text-editor-accent hover:text-white disabled:opacity-50"
                                                 >
-                                                    Mejorar
+                                                    {t('superadmin.templateEditor.enhance', 'Enhance')}
                                                 </button>
                                             </div>
                                         </div>
@@ -995,7 +996,7 @@ Name:`;
                                         <textarea
                                             value={thumbnailPrompt}
                                             onChange={(e) => setThumbnailPrompt(e.target.value)}
-                                            placeholder="Describe la imagen..."
+                                            placeholder={t('superadmin.templateEditor.describePlaceholder', 'Describe the image...')}
                                             className="w-full bg-editor-bg border border-editor-border rounded-lg p-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none resize-none h-16"
                                         />
 
@@ -1023,9 +1024,9 @@ Name:`;
                                             className="w-full py-1.5 mt-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-lg disabled:opacity-40 flex items-center justify-center gap-1.5"
                                         >
                                             {isGeneratingThumbnail ? (
-                                                <><Loader2 size={12} className="animate-spin" /> Generando...</>
+                                                <><Loader2 size={12} className="animate-spin" /> {t('superadmin.templateEditor.generating', 'Generating...')}</>
                                             ) : (
-                                                <><Zap size={12} /> Generar</>
+                                                <><Zap size={12} /> {t('superadmin.templateEditor.generate', 'Generate')}</>
                                             )}
                                         </button>
 
@@ -1048,7 +1049,7 @@ Name:`;
                                                     onClick={applyGeneratedThumbnail}
                                                     className="w-full py-1.5 bg-editor-accent text-editor-bg text-xs font-medium rounded-lg flex items-center justify-center gap-1"
                                                 >
-                                                    <Save size={12} /> Usar esta imagen
+                                                    <Save size={12} /> {t('superadmin.templateEditor.useImage', 'Use this image')}
                                                 </button>
                                             </div>
                                         )}
@@ -1066,7 +1067,7 @@ Name:`;
                         onClick={onClose}
                         className="px-4 py-1.5 text-sm text-editor-text-secondary hover:text-white transition-colors"
                     >
-                        Cancelar
+                        {t('superadmin.templateEditor.cancel', 'Cancel')}
                     </button>
                     <button
                         type="submit"
@@ -1074,7 +1075,7 @@ Name:`;
                         className="flex items-center gap-1.5 px-4 py-1.5 bg-editor-accent text-white text-sm font-medium rounded-lg hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
                     >
                         <Save className="w-3.5 h-3.5" />
-                        {isLoading ? 'Guardando...' : 'Guardar'}
+                        {isLoading ? t('superadmin.templateEditor.saving', 'Saving...') : t('superadmin.templateEditor.save', 'Save')}
                     </button>
                 </div>
             </form>

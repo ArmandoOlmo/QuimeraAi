@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BillingData, Plan, ServiceModule } from '../../../types';
 import { fetchBillingData } from '../../../data/mockBillingData';
 import DashboardSidebar from '../DashboardSidebar';
@@ -11,6 +12,7 @@ interface BillingManagementProps {
 }
 
 const AnnualRevenueChart: React.FC<{ data: { month: string; revenue: number }[] }> = ({ data }) => {
+    const { t } = useTranslation();
     const chartHeight = 250;
     const chartWidth = 600;
     const maxRevenue = Math.max(...data.map(d => d.revenue));
@@ -24,7 +26,7 @@ const AnnualRevenueChart: React.FC<{ data: { month: string; revenue: number }[] 
 
     return (
         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border col-span-2">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Annual Revenue Trend</h3>
+            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.billing.annualRevenueTrend')}</h3>
             <div className="w-full overflow-x-auto">
                 <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} className="min-w-[600px]">
                     <defs>
@@ -57,6 +59,7 @@ const AnnualRevenueChart: React.FC<{ data: { month: string; revenue: number }[] 
 };
 
 const PlanDistributionChart: React.FC<{ data: { planName: string; subscribers: number; color: string }[] }> = ({ data }) => {
+    const { t } = useTranslation();
     const total = data.reduce((sum, item) => sum + item.subscribers, 0);
     const radius = 80;
     const circumference = 2 * Math.PI * radius;
@@ -64,7 +67,7 @@ const PlanDistributionChart: React.FC<{ data: { planName: string; subscribers: n
 
     return (
         <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border h-full">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Subscribers by Plan</h3>
+            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.billing.subscribersByPlan')}</h3>
             <div className="flex flex-col items-center gap-6">
                 <div className="relative w-48 h-48">
                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
@@ -78,7 +81,7 @@ const PlanDistributionChart: React.FC<{ data: { planName: string; subscribers: n
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-3xl font-bold text-editor-text-primary">{total.toLocaleString()}</span>
-                        <span className="text-sm text-editor-text-secondary">Subscribers</span>
+                        <span className="text-sm text-editor-text-secondary">{t('superadmin.billing.subscribers')}</span>
                     </div>
                 </div>
                 <ul className="w-full space-y-2">
@@ -95,6 +98,7 @@ const PlanDistributionChart: React.FC<{ data: { planName: string; subscribers: n
 };
 
 const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<BillingData | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPlanEditorOpen, setIsPlanEditorOpen] = useState(false);
@@ -132,7 +136,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
             <div className="flex justify-between items-start">
                 <div>
                     <h4 className="font-bold text-editor-text-primary">{plan.name}</h4>
-                    {plan.isFeatured && <span className="text-xs font-medium text-green-400">Featured</span>}
+                    {plan.isFeatured && <span className="text-xs font-medium text-green-400">{t('superadmin.billing.featured')}</span>}
                 </div>
                 <div className="inline-flex items-center space-x-1">
                     <button onClick={() => handleEditPlan(plan)} className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent"><Edit size={18} /></button>
@@ -140,8 +144,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                 </div>
             </div>
             <div className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-editor-text-secondary">Monthly:</span><span>${plan.price.monthly.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-editor-text-secondary">Annually:</span><span>${plan.price.annually.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-editor-text-secondary">{t('superadmin.billing.monthly')}</span><span>${plan.price.monthly.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-editor-text-secondary">{t('superadmin.billing.annually')}</span><span>${plan.price.annually.toLocaleString()}</span></div>
             </div>
         </div>
     );
@@ -164,25 +168,25 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors" title="Volver">
+                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors" title={t('common.back')}>
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
                                 <CreditCard className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">Payments & Plans</h1>
+                                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.billing.title')}</h1>
                             </div>
                         </div>
                         <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                             <ArrowLeft className="w-4 h-4" />
-                            Volver
+                            {t('superadmin.backToAdmin')}
                         </button>
                     </header>
                     <main className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-8">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <StatCard title="MRR" value={`$${data.mrr.toLocaleString()}`} icon={<BarChart size={24} />} />
-                            <StatCard title="Active Subs" value={data.activeSubscriptions.toLocaleString()} icon={<Users size={24} />} />
-                            <StatCard title="ARPU" value={`$${data.arpu.toFixed(2)}`} icon={<BarChart size={24} transform="scale(-1, 1)" />} />
-                            <StatCard title="Churn Rate" value={`${data.churnRate.toFixed(1)}%`} icon={<TrendingDown size={24} />} />
+                            <StatCard title={t('superadmin.billing.mrr')} value={`$${data.mrr.toLocaleString()}`} icon={<BarChart size={24} />} />
+                            <StatCard title={t('superadmin.billing.activeSubs')} value={data.activeSubscriptions.toLocaleString()} icon={<Users size={24} />} />
+                            <StatCard title={t('superadmin.billing.arpu')} value={`$${data.arpu.toFixed(2)}`} icon={<BarChart size={24} transform="scale(-1, 1)" />} />
+                            <StatCard title={t('superadmin.billing.churnRate')} value={`${data.churnRate.toFixed(1)}%`} icon={<TrendingDown size={24} />} />
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <AnnualRevenueChart data={data.revenueTrend} />
@@ -190,8 +194,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                         </div>
                         <div>
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-semibold text-editor-text-primary">Subscription Plans</h3>
-                                <button onClick={handleCreatePlan} className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors"><Plus size={16} className="mr-1.5" /> Create Plan</button>
+                                <h3 className="text-xl font-semibold text-editor-text-primary">{t('superadmin.billing.subscriptionPlans')}</h3>
+                                <button onClick={handleCreatePlan} className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors"><Plus size={16} className="mr-1.5" /> {t('superadmin.billing.createPlan')}</button>
                             </div>
 
                             {/* Mobile & Tablet View */}
@@ -204,10 +208,10 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                                 <table className="w-full text-left">
                                     <thead className="bg-editor-panel-bg/50">
                                         <tr className="border-b border-editor-border">
-                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">Plan</th>
-                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">Monthly Price</th>
-                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">Annual Price</th>
-                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">Status</th>
+                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">{t('superadmin.billing.tablePlan')}</th>
+                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">{t('superadmin.billing.tableMonthlyPrice')}</th>
+                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">{t('superadmin.billing.tableAnnualPrice')}</th>
+                                            <th className="p-4 text-sm font-semibold text-editor-text-secondary">{t('superadmin.billing.tableStatus')}</th>
                                             <th className="p-4"></th>
                                         </tr>
                                     </thead>
@@ -217,7 +221,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                                                 <td className="p-4 font-medium">{plan.name}</td>
                                                 <td className="p-4 text-editor-text-secondary">${plan.price.monthly.toLocaleString()}</td>
                                                 <td className="p-4 text-editor-text-secondary">${plan.price.annually.toLocaleString()}</td>
-                                                <td className="p-4">{plan.isFeatured && <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-400">Featured</span>}</td>
+                                                <td className="p-4">{plan.isFeatured && <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-400">{t('superadmin.billing.featured')}</span>}</td>
                                                 <td className="p-4 text-right">
                                                     <div className="inline-flex items-center space-x-1">
                                                         <button onClick={() => handleEditPlan(plan)} className="p-2 text-editor-text-secondary rounded-full hover:bg-editor-border hover:text-editor-accent"><Edit size={18} /></button>
@@ -231,7 +235,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-xl font-semibold text-editor-text-primary mb-4">Service Modules</h3>
+                            <h3 className="text-xl font-semibold text-editor-text-primary mb-4">{t('superadmin.billing.serviceModules')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {data.serviceModules.map(module => (
                                     <div key={module.id} className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border">

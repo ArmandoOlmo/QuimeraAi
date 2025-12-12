@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin';
 import { UserRole, UserDocument } from '../../../types';
@@ -15,6 +16,7 @@ interface AdminManagementProps {
 }
 
 const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const { userPermissions, isUserOwner, userDocument } = useAuth();
     const { allUsers, fetchAllUsers, updateUserRole, deleteUserRecord, createAdmin } = useAdmin();
 
@@ -34,7 +36,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                 await fetchAllUsers();
             } catch (error: any) {
                 console.error("Error fetching users:", error);
-                setErrorMessage("Error al cargar usuarios: " + (error.message || "Error desconocido"));
+                setErrorMessage(t('superadmin.admins.errorLoading', 'Error al cargar usuarios: ') + (error.message || t('common.unknownError', 'Error desconocido')));
             } finally {
                 setLoading(false);
             }
@@ -74,7 +76,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
         setErrorMessage('');
 
         if (!newAdminEmail || !newAdminName) {
-            setErrorMessage('Por favor completa todos los campos');
+            setErrorMessage(t('superadmin.admins.fillAllFields', 'Por favor completa todos los campos'));
             return;
         }
 
@@ -85,7 +87,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             setNewAdminName('');
             setNewAdminRole('admin');
         } catch (error: any) {
-            setErrorMessage(error.message || 'Error al crear administrador');
+            setErrorMessage(error.message || t('superadmin.admins.createError', 'Error al crear administrador'));
         }
     };
 
@@ -93,16 +95,16 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
         try {
             await updateUserRole(userId, newRole);
         } catch (error: any) {
-            alert(error.message || 'Error al cambiar rol');
+            alert(error.message || t('superadmin.admins.roleChangeError', 'Error al cambiar rol'));
         }
     };
 
     const handleDelete = async (userId: string) => {
-        if (window.confirm('¿Estás seguro de eliminar este administrador?')) {
+        if (window.confirm(t('superadmin.admins.deleteConfirm', '¿Estás seguro de eliminar este administrador?'))) {
             try {
                 await deleteUserRecord(userId);
             } catch (error: any) {
-                alert(error.message || 'Error al eliminar');
+                alert(error.message || t('superadmin.admins.deleteError', 'Error al eliminar'));
             }
         }
     };
@@ -123,7 +125,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         </button>
                         <div className="flex items-center gap-2">
                             <Shield className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold">Gestión de Administradores</h1>
+                            <h1 className="text-lg font-semibold">{t('superadmin.admins.title', 'Gestión de Administradores')}</h1>
                         </div>
                     </div>
                     <button
@@ -131,7 +133,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Volver
+                        {t('superadmin.admins.back', 'Volver')}
                     </button>
                 </header>
 
@@ -141,12 +143,12 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="flex items-start gap-3">
                             <AlertCircle className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
                             <div className="flex-1">
-                                <h3 className="font-semibold text-blue-400 mb-2">Sistema de Jerarquía</h3>
+                                <h3 className="font-semibold text-blue-400 mb-2">{t('superadmin.admins.hierarchy.title', 'Sistema de Jerarquía')}</h3>
                                 <div className="text-sm text-editor-text-secondary space-y-1">
-                                    <p><strong className="text-yellow-400">Owner:</strong> {userDocument?.email === 'armandoolmomiranda@gmail.com' ? 'Tú' : 'armandoolmomiranda@gmail.com'} - Único que puede crear Super Admins</p>
-                                    <p><strong className="text-purple-400">Super Admin:</strong> Acceso total excepto crear otros Super Admins</p>
-                                    <p><strong className="text-blue-400">Admin:</strong> Gestión de usuarios y tenants, sin acceso a configuraciones críticas</p>
-                                    <p><strong className="text-green-400">Manager:</strong> Solo visualización y gestión básica de contenido</p>
+                                    <p><strong className="text-yellow-400">{t('superadmin.admins.hierarchy.owner', 'Owner')}:</strong> {userDocument?.email === 'armandoolmomiranda@gmail.com' ? t('superadmin.admins.hierarchy.ownerYou', 'Tú') : 'armandoolmomiranda@gmail.com'} {t('superadmin.admins.hierarchy.ownerDesc', ' - Único que puede crear Super Admins')}</p>
+                                    <p><strong className="text-purple-400">{t('superadmin.admins.hierarchy.superadmin', 'Super Admin')}</strong>{t('superadmin.admins.hierarchy.superadminDesc', ': Acceso total excepto crear otros Super Admins')}</p>
+                                    <p><strong className="text-blue-400">{t('superadmin.admins.hierarchy.admin', 'Admin')}</strong>{t('superadmin.admins.hierarchy.adminDesc', ': Gestión de usuarios y tenants, sin acceso a configuraciones críticas')}</p>
+                                    <p><strong className="text-green-400">{t('superadmin.admins.hierarchy.manager', 'Manager')}</strong>{t('superadmin.admins.hierarchy.managerDesc', ': Solo visualización y gestión básica de contenido')}</p>
                                 </div>
                             </div>
                         </div>
@@ -156,7 +158,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-editor-text-secondary">Total Admins</span>
+                                <span className="text-sm text-editor-text-secondary">{t('superadmin.admins.totalAdmins', 'Total Admins')}</span>
                                 <Users size={20} className="text-editor-accent" />
                             </div>
                             <p className="text-2xl font-bold text-editor-text-primary mt-2">{admins.length}</p>
@@ -198,7 +200,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                 className="flex items-center gap-2 px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
-                                Crear Nuevo Administrador
+                                {t('superadmin.admins.create', 'Crear Nuevo Administrador')}
                             </button>
                         </div>
                     )}
@@ -207,7 +209,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                     {loading ? (
                         <div className="text-center py-12">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-editor-accent mx-auto mb-4"></div>
-                            <p className="text-editor-text-secondary">Cargando administradores...</p>
+                            <p className="text-editor-text-secondary">{t('superadmin.admins.loading', 'Cargando administradores...')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -240,7 +242,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                     </div>
                                                     <p className="text-sm text-editor-text-secondary">{admin.email}</p>
                                                     <p className="text-xs text-editor-text-secondary mt-1">
-                                                        {ROLE_DESCRIPTIONS[admin.role || 'user']}
+                                                        {t(`superadmin.roleDescriptions.${admin.role || 'user'}`, ROLE_DESCRIPTIONS[admin.role || 'user'])}
                                                     </p>
                                                 </div>
                                             </div >
@@ -260,7 +262,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                     </select>
                                                 ) : (
                                                     <span className={`px-3 py-1 rounded-md text-sm border ${ROLE_COLORS[admin.role || 'user']}`}>
-                                                        {ROLE_LABELS[admin.role || 'user']}
+                                                        {t(`superadmin.roles.${admin.role || 'user'}`, ROLE_LABELS[admin.role || 'user'])}
                                                     </span>
                                                 )}
 
@@ -285,10 +287,10 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                     <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg">
                                         <Shield size={48} className="mx-auto text-editor-text-secondary mb-4" />
                                         <p className="text-lg font-semibold text-editor-text-primary mb-2">
-                                            No hay administradores
+                                            {t('superadmin.admins.noAdmins', 'No hay administradores')}
                                         </p>
                                         <p className="text-editor-text-secondary">
-                                            Crea el primer administrador del sistema
+                                            {t('superadmin.admins.createFirst', 'Crea el primer administrador del sistema')}
                                         </p>
                                     </div>
                                 )
@@ -303,7 +305,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
-                            <h2 className="text-xl font-bold text-editor-text-primary mb-4">Crear Nuevo Administrador</h2>
+                            <h2 className="text-xl font-bold text-editor-text-primary mb-4">{t('superadmin.admins.createModal.title', 'Crear Nuevo Administrador')}</h2>
 
                             {errorMessage && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
@@ -313,29 +315,29 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Nombre</label>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.name', 'Nombre')}</label>
                                     <input
                                         type="text"
                                         value={newAdminName}
                                         onChange={(e) => setNewAdminName(e.target.value)}
-                                        placeholder="Juan Pérez"
+                                        placeholder={t('superadmin.admins.createModal.namePlaceholder', 'Juan Pérez')}
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.email', 'Email')}</label>
                                     <input
                                         type="email"
                                         value={newAdminEmail}
                                         onChange={(e) => setNewAdminEmail(e.target.value)}
-                                        placeholder="juan@ejemplo.com"
+                                        placeholder={t('superadmin.admins.createModal.emailPlaceholder', 'juan@ejemplo.com')}
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Rol</label>
+                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.role', 'Rol')}</label>
                                     <select
                                         value={newAdminRole}
                                         onChange={(e) => setNewAdminRole(e.target.value as UserRole)}
@@ -346,7 +348,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                         <option value="manager">Manager</option>
                                     </select>
                                     <p className="text-xs text-editor-text-secondary mt-2">
-                                        {ROLE_DESCRIPTIONS[newAdminRole]}
+                                        {t(`superadmin.roleDescriptions.${newAdminRole}`, ROLE_DESCRIPTIONS[newAdminRole])}
                                     </p>
                                 </div>
                             </div>
@@ -359,13 +361,13 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                     }}
                                     className="flex-1 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
                                 >
-                                    Cancelar
+                                    {t('superadmin.admins.createModal.cancel', 'Cancelar')}
                                 </button>
                                 <button
                                     onClick={handleCreateAdmin}
                                     className="flex-1 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
                                 >
-                                    Crear
+                                    {t('superadmin.admins.createModal.create', 'Crear')}
                                 </button>
                             </div>
                         </div>

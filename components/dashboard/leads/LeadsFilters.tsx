@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LeadStatus } from '../../../types';
 import { Filter, X, ChevronDown, DollarSign, Star, Calendar, Tag } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const SOURCES = [
 ];
 
 const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, availableTags }) => {
+    const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(false);
 
     const updateFilter = (key: keyof LeadsFiltersState, value: any) => {
@@ -73,7 +75,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
         });
     };
 
-    const activeFiltersCount = 
+    const activeFiltersCount =
         filters.statuses.length +
         filters.sources.length +
         filters.tags.length +
@@ -90,7 +92,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             >
                 <div className="flex items-center gap-2">
                     <Filter size={16} className="text-primary" />
-                    <span className="font-bold text-sm">Advanced Filters</span>
+                    <span className="font-bold text-sm">{t('leads.filters.advancedFilters')}</span>
                     {activeFiltersCount > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
                             {activeFiltersCount}
@@ -106,11 +108,11 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             }}
                             className="text-xs text-red-500 hover:underline"
                         >
-                            Clear All
+                            {t('leads.filters.clearAll')}
                         </button>
                     )}
-                    <ChevronDown 
-                        size={16} 
+                    <ChevronDown
+                        size={16}
                         className={`text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     />
                 </div>
@@ -122,18 +124,17 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     {/* Status Filter */}
                     <div>
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                            Status
+                            {t('leads.status')}
                         </label>
                         <div className="flex flex-wrap gap-2">
                             {LEAD_STATUSES.map(status => (
                                 <button
                                     key={status.id}
                                     onClick={() => toggleStatus(status.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                        filters.statuses.includes(status.id)
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filters.statuses.includes(status.id)
                                             ? 'bg-primary text-primary-foreground shadow-sm'
                                             : 'bg-secondary/50 text-foreground hover:bg-secondary'
-                                    }`}
+                                        }`}
                                 >
                                     {status.label}
                                 </button>
@@ -144,18 +145,17 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     {/* Source Filter */}
                     <div>
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                            Source
+                            {t('leads.source')}
                         </label>
                         <div className="flex flex-wrap gap-2">
                             {SOURCES.map(source => (
                                 <button
                                     key={source.id}
                                     onClick={() => toggleSource(source.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                        filters.sources.includes(source.id)
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filters.sources.includes(source.id)
                                             ? 'bg-primary text-primary-foreground shadow-sm'
                                             : 'bg-secondary/50 text-foreground hover:bg-secondary'
-                                    }`}
+                                        }`}
                                 >
                                     {source.label}
                                 </button>
@@ -167,7 +167,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div>
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                             <DollarSign size={12} />
-                            Deal Value Range
+                            {t('leads.filters.dealValueRange')}
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -195,7 +195,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div>
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                             <Star size={12} />
-                            AI Score Range
+                            {t('leads.filters.aiScoreRange')}
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -227,7 +227,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div>
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                             <Calendar size={12} />
-                            Created Date Range
+                            {t('leads.filters.createdDateRange')}
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -254,18 +254,17 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                         <div>
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                                 <Tag size={12} />
-                                Tags
+                                {t('leads.tags')}
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {availableTags.map(tag => (
                                     <button
                                         key={tag}
                                         onClick={() => toggleTag(tag)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                            filters.tags.includes(tag)
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filters.tags.includes(tag)
                                                 ? 'bg-primary text-primary-foreground shadow-sm'
                                                 : 'bg-secondary/50 text-foreground hover:bg-secondary'
-                                        }`}
+                                            }`}
                                     >
                                         {tag}
                                     </button>

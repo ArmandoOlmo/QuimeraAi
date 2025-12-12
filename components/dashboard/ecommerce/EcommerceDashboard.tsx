@@ -34,6 +34,7 @@ import {
 import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { EcommerceView } from '../../../types/ecommerce';
 
@@ -88,6 +89,7 @@ export const useEcommerceContext = () => React.useContext(EcommerceContext);
 const EcommerceDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
+    const { setView } = useUI();
     const { projects, activeProject, activeProjectId, loadProject } = useProject();
     const [activeView, setActiveView] = useState<EcommerceView>(() => {
         const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
@@ -286,6 +288,7 @@ const EcommerceDashboard: React.FC = () => {
         return (
             <ProjectSelectorPage
                 onProjectSelect={handleProjectSelect}
+                onBack={() => setView('dashboard')}
             />
         );
     }

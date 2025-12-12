@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     X,
     ChevronLeft,
@@ -111,16 +112,16 @@ const REMINDER_OPTIONS = [
 const getDefaultFormData = (initialDate?: Date, initialHour?: number, editingAppointment?: Appointment | null): FormData => {
     // If editing, populate from existing appointment
     if (editingAppointment) {
-        const startDate = editingAppointment.startDate instanceof Date 
-            ? editingAppointment.startDate 
+        const startDate = editingAppointment.startDate instanceof Date
+            ? editingAppointment.startDate
             : (editingAppointment.startDate as any)?.toDate?.() || new Date();
-        const endDate = editingAppointment.endDate instanceof Date 
-            ? editingAppointment.endDate 
+        const endDate = editingAppointment.endDate instanceof Date
+            ? editingAppointment.endDate
             : (editingAppointment.endDate as any)?.toDate?.() || new Date();
-        
+
         const formatDate = (d: Date) => d.toISOString().split('T')[0];
         const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
-        
+
         return {
             title: editingAppointment.title || '',
             description: editingAppointment.description || '',
@@ -146,20 +147,20 @@ const getDefaultFormData = (initialDate?: Date, initialHour?: number, editingApp
             linkedLeadIds: editingAppointment.linkedLeadIds || [],
         };
     }
-    
+
     // Default for new appointment
     const now = initialDate || new Date();
     const startHour = initialHour ?? now.getHours() + 1;
-    
+
     const startDate = new Date(now);
     startDate.setHours(startHour, 0, 0, 0);
-    
+
     const endDate = new Date(startDate);
     endDate.setMinutes(endDate.getMinutes() + 30);
-    
+
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
     const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
-    
+
     return {
         title: '',
         description: '',
@@ -198,7 +199,7 @@ interface BasicsStepProps {
 
 const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
     const TypeIcon = APPOINTMENT_TYPE_CONFIGS[data.type]?.icon;
-    
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Title */}
@@ -215,7 +216,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                     autoFocus
                 />
             </div>
-            
+
             {/* Type selector */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
@@ -232,8 +233,8 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                                 className={`
                                     relative p-3 rounded-xl border-2 text-left
                                     transition-all duration-200
-                                    ${isSelected 
-                                        ? `border-${config.color}-500 bg-${config.color}-500/10` 
+                                    ${isSelected
+                                        ? `border-${config.color}-500 bg-${config.color}-500/10`
                                         : 'border-border hover:border-muted-foreground/30 hover:bg-secondary/50'
                                     }
                                 `}
@@ -264,7 +265,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                     })}
                 </div>
             </div>
-            
+
             {/* Priority */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
@@ -281,8 +282,8 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                                 className={`
                                     flex-1 py-2.5 px-4 rounded-xl border-2 font-medium text-sm
                                     transition-all duration-200
-                                    ${isSelected 
-                                        ? `border-current ${config.color} bg-current/10` 
+                                    ${isSelected
+                                        ? `border-current ${config.color} bg-current/10`
                                         : 'border-border text-muted-foreground hover:border-muted-foreground/30'
                                     }
                                 `}
@@ -293,7 +294,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                     })}
                 </div>
             </div>
-            
+
             {/* Description */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
@@ -367,7 +368,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                     />
                 </div>
             </div>
-            
+
             {/* Quick duration buttons */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
@@ -393,7 +394,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                     ))}
                 </div>
             </div>
-            
+
             {/* Timezone */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
@@ -413,7 +414,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                     <option value="America/Buenos_Aires">Buenos Aires (GMT-3)</option>
                 </select>
             </div>
-            
+
             {/* Location type */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
@@ -432,8 +433,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                             className={`
                                 flex flex-col items-center gap-2 p-4 rounded-xl border-2
                                 transition-all duration-200
-                                ${data.locationType === type 
-                                    ? 'border-primary bg-primary/5' 
+                                ${data.locationType === type
+                                    ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-muted-foreground/30'
                                 }
                             `}
@@ -445,7 +446,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                         </button>
                     ))}
                 </div>
-                
+
                 {/* Location details */}
                 {data.locationType === 'virtual' && (
                     <input
@@ -490,7 +491,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
     const [searchQuery, setSearchQuery] = useState('');
     const [showLeadPicker, setShowLeadPicker] = useState(false);
     const [newParticipant, setNewParticipant] = useState({ name: '', email: '' });
-    
+
     const filteredLeads = useMemo(() => {
         if (!searchQuery) return leads.slice(0, 10);
         const query = searchQuery.toLowerCase();
@@ -500,7 +501,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
             lead.company?.toLowerCase().includes(query)
         ).slice(0, 10);
     }, [leads, searchQuery]);
-    
+
     const addLeadAsParticipant = (lead: Lead) => {
         const newP: AppointmentParticipant = {
             id: generateParticipantId(),
@@ -520,11 +521,11 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
         setShowLeadPicker(false);
         setSearchQuery('');
     };
-    
+
     const addExternalParticipant = () => {
         if (!newParticipant.name || !newParticipant.email) return;
         if (!isValidEmail(newParticipant.email)) return;
-        
+
         const newP: AppointmentParticipant = {
             id: generateParticipantId(),
             type: 'external',
@@ -536,16 +537,16 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
         onChange({ participants: [...data.participants, newP] });
         setNewParticipant({ name: '', email: '' });
     };
-    
+
     const removeParticipant = (id: string) => {
         const participant = data.participants.find(p => p.id === id);
         const updatedParticipants = data.participants.filter(p => p.id !== id);
-        const updatedLeadIds = participant?.leadId 
+        const updatedLeadIds = participant?.leadId
             ? data.linkedLeadIds.filter(lid => lid !== participant.leadId)
             : data.linkedLeadIds;
         onChange({ participants: updatedParticipants, linkedLeadIds: updatedLeadIds });
     };
-    
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Import from Leads */}
@@ -563,7 +564,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                         Seleccionar leads
                     </button>
                 </div>
-                
+
                 {showLeadPicker && (
                     <div className="border border-border rounded-xl p-4 bg-secondary/30 mb-4 animate-scale-in">
                         <div className="relative mb-3">
@@ -576,7 +577,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                 className="w-full h-10 bg-background border border-border rounded-lg pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             />
                         </div>
-                        
+
                         <div className="max-h-48 overflow-y-auto space-y-2">
                             {filteredLeads.map(lead => {
                                 const isAdded = data.linkedLeadIds.includes(lead.id);
@@ -589,8 +590,8 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                         className={`
                                             w-full flex items-center gap-3 p-2 rounded-lg text-left
                                             transition-colors
-                                            ${isAdded 
-                                                ? 'bg-primary/10 cursor-not-allowed' 
+                                            ${isAdded
+                                                ? 'bg-primary/10 cursor-not-allowed'
                                                 : 'hover:bg-secondary'
                                             }
                                         `}
@@ -606,7 +607,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                     </button>
                                 );
                             })}
-                            
+
                             {filteredLeads.length === 0 && (
                                 <p className="text-sm text-muted-foreground text-center py-4">
                                     No se encontraron leads
@@ -616,7 +617,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                     </div>
                 )}
             </div>
-            
+
             {/* Add external participant */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
@@ -647,13 +648,13 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                     </button>
                 </div>
             </div>
-            
+
             {/* Participants list */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
                     Participantes ({data.participants.length})
                 </label>
-                
+
                 {data.participants.length === 0 ? (
                     <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
                         <Users className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -718,7 +719,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
             onChange({ reminders: [...data.reminders, newReminder] });
         }
     };
-    
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Reminders */}
@@ -738,8 +739,8 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                                 className={`
                                     px-3 py-2 rounded-lg text-sm font-medium
                                     transition-all duration-200
-                                    ${isActive 
-                                        ? 'bg-primary text-primary-foreground' 
+                                    ${isActive
+                                        ? 'bg-primary text-primary-foreground'
                                         : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
                                     }
                                 `}
@@ -750,7 +751,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                     })}
                 </div>
             </div>
-            
+
             {/* AI Preparation */}
             <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
                 <div className="flex items-center justify-between">
@@ -782,7 +783,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                     </label>
                 </div>
             </div>
-            
+
             {/* Tags */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
@@ -823,7 +824,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                     </div>
                 )}
             </div>
-            
+
             {/* Summary */}
             <div className="p-4 rounded-xl bg-secondary/30 border border-border">
                 <h4 className="font-semibold text-foreground mb-3">Resumen</h4>
@@ -837,10 +838,10 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Fecha:</span>
                         <span className="text-foreground font-medium">
-                            {new Date(data.startDate).toLocaleDateString('es-ES', { 
-                                weekday: 'long', 
-                                day: 'numeric', 
-                                month: 'long' 
+                            {new Date(data.startDate).toLocaleDateString('es-ES', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long'
                             })}
                         </span>
                     </div>
@@ -885,18 +886,18 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     const [formData, setFormData] = useState<FormData>(() => getDefaultFormData(initialDate, initialHour, editingAppointment));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
-    
+
     const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
     const isFirstStep = currentStepIndex === 0;
     const isLastStep = currentStepIndex === STEPS.length - 1;
-    
+
     const handleChange = useCallback((updates: Partial<FormData>) => {
         setFormData(prev => ({ ...prev, ...updates }));
     }, []);
-    
+
     const validateStep = (): boolean => {
         const newErrors: string[] = [];
-        
+
         switch (currentStep) {
             case 'basics':
                 if (!formData.title.trim()) newErrors.push('El título es requerido');
@@ -906,40 +907,40 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 if (!formData.startTime) newErrors.push('La hora de inicio es requerida');
                 break;
         }
-        
+
         setErrors(newErrors);
         return newErrors.length === 0;
     };
-    
+
     const handleNext = () => {
         if (!validateStep()) return;
-        
+
         const nextIndex = currentStepIndex + 1;
         if (nextIndex < STEPS.length) {
             setCurrentStep(STEPS[nextIndex].id);
         }
     };
-    
+
     const handlePrev = () => {
         const prevIndex = currentStepIndex - 1;
         if (prevIndex >= 0) {
             setCurrentStep(STEPS[prevIndex].id);
         }
     };
-    
+
     const handleSubmit = async () => {
         if (!validateStep()) return;
-        
+
         setIsSubmitting(true);
         try {
             const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
             const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
-            
+
             // Build location object without undefined values (Firebase doesn't accept undefined)
             const location: AppointmentLocation = {
                 type: formData.locationType,
             };
-            
+
             if (formData.locationType === 'virtual' && formData.meetingUrl) {
                 location.meetingUrl = formData.meetingUrl;
             }
@@ -949,7 +950,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             if (formData.locationType === 'phone' && formData.phoneNumber) {
                 location.phoneNumber = formData.phoneNumber;
             }
-            
+
             // Build appointment data without undefined values
             const appointmentData: Partial<Appointment> = {
                 title: formData.title,
@@ -965,14 +966,14 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 tags: formData.tags.length > 0 ? formData.tags : [],
                 linkedLeadIds: formData.linkedLeadIds.length > 0 ? formData.linkedLeadIds : [],
             };
-            
+
             // Only add optional fields if they have values
             if (formData.description?.trim()) {
                 appointmentData.description = formData.description;
             }
-            
+
             await onSubmit(appointmentData);
-            
+
             onClose();
             setFormData(getDefaultFormData());
             setCurrentStep('basics');
@@ -983,7 +984,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             setIsSubmitting(false);
         }
     };
-    
+
     // Reset form when modal opens
     React.useEffect(() => {
         if (isOpen) {
@@ -992,7 +993,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             setErrors([]);
         }
     }, [isOpen, initialDate, initialHour, editingAppointment]);
-    
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
             <div className="flex flex-col h-[80vh] max-h-[700px]">
@@ -1013,7 +1014,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         <X size={20} />
                     </button>
                 </div>
-                
+
                 {/* Progress */}
                 <div className="px-6 py-4 border-b border-border/50">
                     <div className="flex items-center gap-2">
@@ -1021,7 +1022,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                             const isActive = index === currentStepIndex;
                             const isCompleted = index < currentStepIndex;
                             const Icon = step.icon;
-                            
+
                             return (
                                 <React.Fragment key={step.id}>
                                     <button
@@ -1030,10 +1031,10 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                                         className={`
                                             flex items-center gap-2 px-3 py-2 rounded-lg
                                             transition-all duration-200
-                                            ${isActive 
-                                                ? 'bg-primary text-primary-foreground' 
-                                                : isCompleted 
-                                                    ? 'bg-primary/10 text-primary cursor-pointer hover:bg-primary/20' 
+                                            ${isActive
+                                                ? 'bg-primary text-primary-foreground'
+                                                : isCompleted
+                                                    ? 'bg-primary/10 text-primary cursor-pointer hover:bg-primary/20'
                                                     : 'text-muted-foreground'
                                             }
                                         `}
@@ -1047,7 +1048,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                                             {step.label}
                                         </span>
                                     </button>
-                                    
+
                                     {index < STEPS.length - 1 && (
                                         <ChevronRight size={16} className="text-muted-foreground/50" />
                                     )}
@@ -1056,7 +1057,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         })}
                     </div>
                 </div>
-                
+
                 {/* Errors */}
                 {errors.length > 0 && (
                     <div className="mx-6 mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -1068,7 +1069,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         ))}
                     </div>
                 )}
-                
+
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                     {currentStep === 'basics' && (
@@ -1084,7 +1085,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         <SettingsStep data={formData} onChange={handleChange} />
                     )}
                 </div>
-                
+
                 {/* Footer */}
                 <div className="flex items-center justify-between p-6 border-t border-border bg-secondary/20">
                     <button
@@ -1093,8 +1094,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         className={`
                             flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
                             transition-colors
-                            ${isFirstStep 
-                                ? 'text-muted-foreground/50 cursor-not-allowed' 
+                            ${isFirstStep
+                                ? 'text-muted-foreground/50 cursor-not-allowed'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                             }
                         `}
@@ -1102,7 +1103,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         <ChevronLeft size={18} />
                         Anterior
                     </button>
-                    
+
                     {isLastStep ? (
                         <button
                             onClick={handleSubmit}

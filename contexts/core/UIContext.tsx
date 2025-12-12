@@ -6,6 +6,14 @@
 import React, { createContext, useState, useContext, useRef, ReactNode } from 'react';
 import { View, AdminView, PreviewDevice, PreviewOrientation, PageSection, ThemeMode } from '../../types';
 
+export interface ActiveSectionItem {
+    section: PageSection;
+    /**
+     * 0-based index for list-like section items (features.items, pricing.tiers, etc).
+     */
+    index: number;
+}
+
 interface UIContextType {
     // Sidebar State
     isSidebarOpen: boolean;
@@ -29,6 +37,8 @@ interface UIContextType {
     // Section Management
     activeSection: PageSection | null;
     onSectionSelect: (section: PageSection) => void;
+    activeSectionItem: ActiveSectionItem | null;
+    onSectionItemSelect: (section: PageSection, index: number) => void;
     
     // Modal State
     isProfileModalOpen: boolean;
@@ -66,6 +76,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     
     // Section Management
     const [activeSection, setActiveSection] = useState<PageSection | null>(null);
+    const [activeSectionItem, setActiveSectionItem] = useState<ActiveSectionItem | null>(null);
     
     // Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -91,7 +102,16 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     };
     
     const onSectionSelect = (section: PageSection) => {
+        console.log('[UIContext] onSectionSelect called with:', section);
         setActiveSection(section);
+        setActiveSectionItem(null);
+        setIsSidebarOpen(true);
+        console.log('[UIContext] activeSection set to:', section, 'isSidebarOpen: true');
+    };
+
+    const onSectionItemSelect = (section: PageSection, index: number) => {
+        setActiveSection(section);
+        setActiveSectionItem({ section, index });
         setIsSidebarOpen(true);
     };
     
@@ -103,9 +123,14 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setIsProfileModalOpen(false);
     };
     
-    // Persist theme mode to localStorage
+    // Persist theme mode to localStorage and apply to document
     React.useEffect(() => {
         localStorage.setItem('themeMode', themeMode);
+        
+        // Apply theme class to <html> element
+        const root = document.documentElement;
+        root.classList.remove('light', 'dark', 'black');
+        root.classList.add(themeMode);
     }, [themeMode]);
     
     const value: UIContextType = {
@@ -124,6 +149,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setPreviewOrientation,
         activeSection,
         onSectionSelect,
+        activeSectionItem,
+        onSectionItemSelect,
         isProfileModalOpen,
         openProfileModal,
         closeProfileModal,

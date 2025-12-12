@@ -126,6 +126,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         voiceName: 'Puck',
         greeting: '👋 ¡Hola! Soy tu Asistente Quimera',
         systemInstruction: 'You are the Quimera.ai Global Assistant.',
+        enabledTemplates: undefined,
+        customInstructions: '',
         permissions: {},
         temperature: 0.7,
         maxTokens: 500,
@@ -603,4 +605,5 @@ export const useAdmin = (): AdminContextType => {
     }
     return context;
 };
+
 

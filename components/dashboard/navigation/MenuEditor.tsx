@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavigationMenu, NavigationMenuItem } from '../../../types';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
@@ -44,24 +44,24 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
     const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
+
     // Use projectId prop if provided, otherwise fall back to activeProjectId
     const effectiveProjectId = projectId ?? activeProjectId;
-    
+
     // Ecommerce data for link picker
     const { products: storeProducts, categories: storeCategories } = usePublicProducts(effectiveProjectId);
     const [productSearch, setProductSearch] = useState('');
-    
+
     // Check where this menu is being used
     const usedInHeader = data?.header?.menuId === menu.id;
     const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
 
     // Item Editing State
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
-    
+
     // Drag and Drop State
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-    
+
     // Link Picker State
     const [linkPickerOpenId, setLinkPickerOpenId] = useState<string | null>(null);
     const [pickerCategory, setPickerCategory] = useState<LinkCategory>('root');
@@ -94,19 +94,19 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         if (!title.trim()) {
             return alert("Menu title is required");
         }
-        
+
         // Validar que todos los items tengan texto
         const invalidItems = items.filter(item => !item.text.trim());
         if (invalidItems.length > 0) {
             return alert("All menu items must have a name");
         }
-        
+
         // Validar que todos los items tengan href
         const itemsWithoutLinks = items.filter(item => !item.href.trim());
         if (itemsWithoutLinks.length > 0) {
             return alert("All menu items must have a link");
         }
-        
+
         setIsSaving(true);
         const updatedMenu: NavigationMenu = {
             ...menu,
@@ -125,14 +125,14 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     const handleDeleteMenu = async () => {
         let confirmMessage = "Are you sure you want to delete this menu?";
-        
+
         if (usedInHeader || usedInFooter) {
             const locations = [];
             if (usedInHeader) locations.push("Header");
             if (usedInFooter) locations.push("Footer");
             confirmMessage = `⚠️ This menu is currently being used in: ${locations.join(", ")}.\n\nDeleting it will remove these navigation links from your website.\n\nAre you sure you want to continue?`;
         }
-        
+
         if (window.confirm(confirmMessage)) {
             await deleteMenu(menu.id);
             onClose();
@@ -141,7 +141,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     const addMenuItem = () => {
         const newItem: NavigationMenuItem = {
-            id: `item_${Date.now()}`,
+            id: `item_${Date.now()} `,
             text: '',
             href: '',
             type: 'custom'
@@ -190,7 +190,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         const newItems = [...items];
         const [draggedItem] = newItems.splice(draggedIndex, 1);
         newItems.splice(dropIndex, 0, draggedItem);
-        
+
         setItems(newItems);
         setDraggedIndex(null);
     };
@@ -212,15 +212,15 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         if (pickerCategory === 'root') {
             return (
                 <div className="py-1">
-                    <button 
-                        onClick={() => handleLinkSelect(item, '#hero')} 
+                    <button
+                        onClick={() => handleLinkSelect(item, '#hero')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
                     >
                         <Globe size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
                         Home page
                     </button>
-                    <button 
-                        onClick={() => setPickerCategory('sections')} 
+                    <button
+                        onClick={() => setPickerCategory('sections')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                     >
                         <div className="flex items-center">
@@ -229,8 +229,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         </div>
                         <ChevronRight size={16} className="text-muted-foreground" />
                     </button>
-                    <button 
-                        onClick={() => setPickerCategory('store')} 
+                    <button
+                        onClick={() => setPickerCategory('store')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                     >
                         <div className="flex items-center">
@@ -239,8 +239,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         </div>
                         <ChevronRight size={16} className="text-muted-foreground" />
                     </button>
-                    <button 
-                        onClick={() => setPickerCategory('articles')} 
+                    <button
+                        onClick={() => setPickerCategory('articles')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                     >
                         <div className="flex items-center">
@@ -249,8 +249,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         </div>
                         <ChevronRight size={16} className="text-muted-foreground" />
                     </button>
-                    <button 
-                        onClick={() => setPickerCategory('policies')} 
+                    <button
+                        onClick={() => setPickerCategory('policies')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                     >
                         <div className="flex items-center">
@@ -274,7 +274,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     </div>
                     <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
                         {SECTION_LINKS.map((link) => (
-                            <button 
+                            <button
                                 key={link.value}
                                 onClick={() => handleLinkSelect(item, link.value)}
                                 className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50"
@@ -299,10 +299,10 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     </div>
                     <div className="p-2 border-b border-border">
                         <div className="relative">
-                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"/>
-                             <input 
-                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary" 
-                                placeholder="Search articles..." 
+                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary"
+                                placeholder="Search articles..."
                                 value={articleSearch}
                                 onChange={(e) => setArticleSearch(e.target.value)}
                             />
@@ -313,9 +313,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             <div className="px-4 py-2 text-xs text-muted-foreground">No published articles found.</div>
                         ) : (
                             filteredPosts.map((post) => (
-                                <button 
+                                <button
                                     key={post.id}
-                                    onClick={() => handleLinkSelect(item, `#article:${post.slug}`)}
+                                    onClick={() => handleLinkSelect(item, `#article:${post.slug} `)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={post.title}
                                 >
@@ -329,7 +329,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         }
 
         if (pickerCategory === 'policies') {
-             return (
+            return (
                 <div>
                     <div className="px-2 py-2 border-b border-border flex items-center">
                         <button onClick={() => setPickerCategory('root')} className="p-1 hover:bg-secondary rounded mr-2 text-muted-foreground hover:text-foreground">
@@ -338,9 +338,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Policies</span>
                     </div>
                     <div className="py-1">
-                         <button onClick={() => handleLinkSelect(item, '#privacy')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Privacy Policy</button>
-                         <button onClick={() => handleLinkSelect(item, '#terms')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Terms of Service</button>
-                         <button onClick={() => handleLinkSelect(item, '#refund')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Refund Policy</button>
+                        <button onClick={() => handleLinkSelect(item, '#privacy')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Privacy Policy</button>
+                        <button onClick={() => handleLinkSelect(item, '#terms')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Terms of Service</button>
+                        <button onClick={() => handleLinkSelect(item, '#refund')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Refund Policy</button>
                     </div>
                 </div>
             );
@@ -368,15 +368,15 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         </div>
                     )}
                     <div className="py-1">
-                        <button 
-                            onClick={() => handleLinkSelect(item, '#store')} 
+                        <button
+                            onClick={() => handleLinkSelect(item, '#store')}
                             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
                         >
                             <ShoppingBag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
                             All Products (Store)
                         </button>
-                        <button 
-                            onClick={() => setPickerCategory('store-categories')} 
+                        <button
+                            onClick={() => setPickerCategory('store-categories')}
                             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                         >
                             <div className="flex items-center">
@@ -388,8 +388,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             </div>
                             <ChevronRight size={16} className="text-muted-foreground" />
                         </button>
-                        <button 
-                            onClick={() => setPickerCategory('store-products')} 
+                        <button
+                            onClick={() => setPickerCategory('store-products')}
                             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
                         >
                             <div className="flex items-center">
@@ -420,9 +420,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             <div className="px-4 py-2 text-xs text-muted-foreground">No categories found. Add categories in the Ecommerce Dashboard.</div>
                         ) : (
                             storeCategories.map((category) => (
-                                <button 
+                                <button
                                     key={category.id}
-                                    onClick={() => handleLinkSelect(item, `#store/category/${category.slug}`)}
+                                    onClick={() => handleLinkSelect(item, `#store / category / ${category.slug} `)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={category.name}
                                 >
@@ -436,7 +436,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         }
 
         if (pickerCategory === 'store-products') {
-            const filteredProducts = storeProducts.filter(p => 
+            const filteredProducts = storeProducts.filter(p =>
                 p.name.toLowerCase().includes(productSearch.toLowerCase())
             );
             return (
@@ -449,10 +449,10 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     </div>
                     <div className="p-2 border-b border-border">
                         <div className="relative">
-                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"/>
-                             <input 
-                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary" 
-                                placeholder="Search products..." 
+                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary"
+                                placeholder="Search products..."
                                 value={productSearch}
                                 onChange={(e) => setProductSearch(e.target.value)}
                             />
@@ -463,9 +463,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             <div className="px-4 py-2 text-xs text-muted-foreground">No products found. Add products in the Ecommerce Dashboard.</div>
                         ) : (
                             filteredProducts.map((product) => (
-                                <button 
+                                <button
                                     key={product.id}
-                                    onClick={() => handleLinkSelect(item, `#store/product/${product.slug}`)}
+                                    onClick={() => handleLinkSelect(item, `#store / product / ${product.slug} `)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={product.name}
                                 >
@@ -485,13 +485,13 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     return (
         <div className="flex h-screen bg-background text-foreground">
-             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-             <div className="flex-1 flex flex-col overflow-hidden relative bg-[#f6f6f7] dark:bg-background black:bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden relative bg-[#f6f6f7] dark:bg-background black:bg-background">
                 {/* Header */}
                 <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
                     <div className="flex items-center gap-4">
-                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
                             <MenuIcon className="w-4 h-4" />
                         </button>
                         <button onClick={onClose} className="p-2 -ml-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
@@ -516,12 +516,12 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         )}
                     </div>
                     <div className="flex gap-2">
-                         {!isNew && (
-                             <button onClick={handleDeleteMenu} className="px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                                 Delete menu
-                             </button>
-                         )}
-                         <button 
+                        {!isNew && (
+                            <button onClick={handleDeleteMenu} className="px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                Delete menu
+                            </button>
+                        )}
+                        <button
                             onClick={handleSave}
                             disabled={isSaving}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
@@ -534,15 +534,15 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
                 <main className="flex-1 p-4 md:p-8 overflow-y-auto">
                     <div className="max-w-4xl mx-auto space-y-6">
-                        
+
                         {/* Title Section */}
                         <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-foreground mb-2">Title</label>
-                                    <input 
-                                        type="text" 
-                                        value={title} 
+                                    <input
+                                        type="text"
+                                        value={title}
                                         onChange={handleTitleChange}
                                         className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                                         placeholder="e.g. Main Menu"
@@ -550,10 +550,10 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-foreground mb-2">Handle</label>
-                                    <input 
-                                        type="text" 
-                                        value={handle} 
-                                        onChange={(e) => setHandle(e.target.value)} 
+                                    <input
+                                        type="text"
+                                        value={handle}
+                                        onChange={(e) => setHandle(e.target.value)}
                                         className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none font-mono text-sm"
                                         placeholder="e.g. main-menu"
                                     />
@@ -572,7 +572,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                 <div className="p-4 bg-secondary/10 rounded-lg border border-border">
                                     <div className="flex gap-6 flex-wrap items-center">
                                         {items.map(item => (
-                                            <a 
+                                            <a
                                                 key={item.id}
                                                 href={item.href}
                                                 onClick={(e) => e.preventDefault()}
@@ -589,20 +589,20 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
                         {/* Menu Items Section */}
                         <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm">
-                             <div className="p-6 border-b border-border">
+                            <div className="p-6 border-b border-border">
                                 <h3 className="text-md font-semibold text-foreground">Menu items</h3>
-                             </div>
+                            </div>
 
-                             <div className="divide-y divide-border overflow-visible">
+                            <div className="divide-y divide-border overflow-visible">
                                 {items.length === 0 ? (
                                     <div className="p-8 text-center text-muted-foreground text-sm">
                                         This menu doesn't have any items yet.
                                     </div>
                                 ) : (
                                     items.map((item, index) => (
-                                        <div 
-                                            key={item.id} 
-                                            className={`bg-white dark:bg-card black:bg-card relative transition-all duration-200 ${draggedIndex === index ? 'opacity-50 bg-secondary/20' : ''} ${draggedIndex !== null && draggedIndex !== index ? 'border-t-2 border-transparent hover:border-primary/50' : ''}`}
+                                        <div
+                                            key={item.id}
+                                            className={`bg - white dark: bg - card black: bg - card relative transition - all duration - 200 ${draggedIndex === index ? 'opacity-50 bg-secondary/20' : ''} ${draggedIndex !== null && draggedIndex !== index ? 'border-t-2 border-transparent hover:border-primary/50' : ''} `}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, index)}
                                             onDragOver={(e) => handleDragOver(e, index)}
@@ -613,16 +613,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                 <div className="p-4 bg-secondary/10 overflow-visible">
                                                     <div className="flex justify-between items-center mb-4">
                                                         <span className="text-sm font-semibold">Edit item</span>
-                                                        <button onClick={() => setEditingItemId(null)}><X size={16} className="text-muted-foreground"/></button>
+                                                        <button onClick={() => setEditingItemId(null)}><X size={16} className="text-muted-foreground" /></button>
                                                     </div>
                                                     <div className="space-y-4 overflow-visible">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
                                                             <div>
                                                                 <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
-                                                                <input 
+                                                                <input
                                                                     autoFocus
-                                                                    type="text" 
-                                                                    value={item.text} 
+                                                                    type="text"
+                                                                    value={item.text}
                                                                     onChange={(e) => updateMenuItem(item.id, { text: e.target.value })}
                                                                     className="w-full px-3 py-2 bg-white dark:bg-black black:bg-neutral-900 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
                                                                 />
@@ -631,11 +631,11 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                                 <label className="block text-xs font-medium text-muted-foreground mb-1">Link</label>
                                                                 <div className="relative">
                                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                                         <Search size={14} className="text-muted-foreground"/>
+                                                                        <Search size={14} className="text-muted-foreground" />
                                                                     </div>
-                                                                    <input 
-                                                                        type="text" 
-                                                                        value={item.href} 
+                                                                    <input
+                                                                        type="text"
+                                                                        value={item.href}
                                                                         onChange={(e) => {
                                                                             updateMenuItem(item.id, { href: e.target.value });
                                                                             setLinkPickerOpenId(item.id); // Open picker on type
@@ -648,7 +648,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
                                                                 {/* Link Picker Popover */}
                                                                 {linkPickerOpenId === item.id && (
-                                                                    <div 
+                                                                    <div
                                                                         ref={pickerRef}
                                                                         className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-lg shadow-2xl z-[100] animate-fade-in-up"
                                                                         style={{ minHeight: 'auto', maxHeight: '400px' }}
@@ -660,7 +660,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                         </div>
                                                     </div>
                                                     <div className="mt-4 flex justify-between">
-                                                        <button onClick={() => deleteMenuItem(item.id)} className="text-red-500 text-sm flex items-center hover:underline"><Trash2 size={14} className="mr-1"/> Delete</button>
+                                                        <button onClick={() => deleteMenuItem(item.id)} className="text-red-500 text-sm flex items-center hover:underline"><Trash2 size={14} className="mr-1" /> Delete</button>
                                                         <button onClick={() => setEditingItemId(null)} className="bg-white dark:bg-secondary black:bg-secondary border border-border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 dark:hover:bg-secondary/80">Done</button>
                                                     </div>
                                                 </div>
@@ -674,8 +674,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                         <div className="text-xs text-muted-foreground">{item.href}</div>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => setEditingItemId(item.id)} 
+                                                        <button
+                                                            onClick={() => setEditingItemId(item.id)}
                                                             className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-white dark:bg-black black:bg-neutral-900 hover:bg-secondary/50 transition-colors"
                                                         >
                                                             Edit
@@ -690,21 +690,21 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                         </div>
                                     ))
                                 )}
-                             </div>
+                            </div>
 
-                             <div className="p-4 bg-secondary/10 border-t border-border">
-                                <button 
+                            <div className="p-4 bg-secondary/10 border-t border-border">
+                                <button
                                     onClick={addMenuItem}
                                     className="flex items-center text-primary font-medium text-sm hover:underline"
                                 >
                                     <Plus size={16} className="mr-1" /> Add menu item
                                 </button>
-                             </div>
+                            </div>
                         </div>
 
                     </div>
                 </main>
-             </div>
+            </div>
         </div>
     );
 };

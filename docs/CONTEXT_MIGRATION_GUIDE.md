@@ -301,3 +301,4 @@ Para cada componente:
 | Tiempo de carga inicial | Alto | Reducido |
 | Facilidad de testing | Difícil | Fácil (mocks específicos) |
 
+

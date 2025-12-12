@@ -178,3 +178,4 @@ export function getTLD(domain: string): string {
     return parts.length > 1 ? `.${parts.slice(1).join('.')}` : '';
 }
 
+

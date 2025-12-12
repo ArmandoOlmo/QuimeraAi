@@ -8,6 +8,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
 import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck } from 'lucide-react';
+import LanguageSelector from '../ui/LanguageSelector';
 import {
   DndContext,
   closestCenter,
@@ -25,7 +26,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import UserProfileModal from './UserProfileModal';
+
 
 interface DashboardSidebarProps {
   isMobileOpen: boolean;
@@ -47,14 +48,13 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, userDocument } = useAuth();
+  const { user, userDocument, openProfileModal } = useAuth();
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
   const { usage, isLoadingUsage } = useAdmin();
   const { navigate, path } = useRouter();
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // State for collapsible sections
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -277,7 +277,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     };
 
     // Para items de ecommerce, verificar también el subView
-    const isActive = item.subView 
+    const isActive = item.subView
       ? isRouteActive(item.route) && activeEcommerceSubView === item.subView
       : isRouteActive(item.route);
     const Icon = item.icon;
@@ -393,7 +393,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
       {/* Sidebar wrapper for proper positioning of toggle button */}
       <div className={`
-        relative flex-shrink-0
+        relative flex-shrink-0 h-screen
         ${hiddenOnDesktop ? 'lg:hidden' : ''}
         ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
         ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
@@ -419,8 +419,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             setDragOffset(0);
           }}
           className={`
-              fixed lg:relative z-50 h-[100dvh] lg:h-screen bg-background border-r border-border 
-              shadow-2xl lg:shadow-xl flex flex-col overflow-y-auto
+              fixed lg:relative z-50 h-[100dvh] lg:h-full bg-background border-r border-border 
+              shadow-2xl lg:shadow-xl flex flex-col
               ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
               ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full lg:translate-x-0'}
               lg:w-full
@@ -464,7 +464,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Navigation - Optimized for mobile with momentum scroll */}
           <nav
-            className="flex-1 px-3 lg:px-4 py-4 lg:py-6 space-y-1 lg:space-y-2 overflow-y-auto overscroll-contain
+            className="flex-1 min-h-0 px-3 lg:px-4 py-4 lg:py-6 space-y-1 lg:space-y-2 overflow-y-auto overscroll-contain
                      scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent
                      [-webkit-overflow-scrolling:touch]"
             role="navigation"
@@ -503,7 +503,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       >
                         <div className="flex items-center gap-2">
                           <Globe size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Websites</span>
+                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.websitesSection')}</span>
                         </div>
                         <ChevronDown
                           size={16}
@@ -531,7 +531,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       >
                         <div className="flex items-center gap-2">
                           <ShoppingBag size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Ecommerce</span>
+                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.ecommerceSection')}</span>
                         </div>
                         <ChevronDown
                           size={16}
@@ -559,7 +559,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       >
                         <div className="flex items-center gap-2">
                           <Wrench size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Tools</span>
+                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.toolsSection')}</span>
                         </div>
                         <ChevronDown
                           size={16}
@@ -599,53 +599,61 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           </nav>
 
           {/* Footer / User Profile / Theme - Optimized for mobile */}
-          <div className="p-3 pb-6 lg:p-4 lg:pb-4 border-t border-border bg-card/50 backdrop-blur-sm safe-area-inset-bottom">
+          <div className="flex-shrink-0 p-3 pb-4 lg:p-4 lg:pb-4 border-t border-border bg-card/50 backdrop-blur-sm">
 
-            {/* Theme Selector Section - Hidden on mobile, only visible on desktop */}
-            <div className={`${isCollapsed && !isMobileOpen ? 'hidden' : 'hidden lg:block mb-4'}`}>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('common.themeColor')}</p>
-              <div className="flex gap-2 bg-muted p-1 rounded-lg">
-                <button
-                  onClick={() => setThemeMode('light')}
-                  className={`
-                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
-                          ${themeMode === 'light' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}
-                        `}
-                  title={t('common.lightMode')}
-                  aria-label={t('common.lightMode')}
-                  aria-pressed={themeMode === 'light'}
-                >
-                  <Sun size={16} />
-                </button>
-                <button
-                  onClick={() => setThemeMode('dark')}
-                  className={`
-                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
-                          ${themeMode === 'dark' ? 'bg-card text-primary shadow-sm border border-border' : 'text-muted-foreground hover:text-foreground'}
-                        `}
-                  title={t('common.darkMode')}
-                  aria-label={t('common.darkMode')}
-                  aria-pressed={themeMode === 'dark'}
-                >
-                  <Moon size={16} />
-                </button>
-                <button
-                  onClick={() => setThemeMode('black')}
-                  className={`
-                          flex-1 flex items-center justify-center py-1.5 rounded-md transition-all
-                          ${themeMode === 'black' ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}
-                        `}
-                  title={t('common.blackMode')}
-                  aria-label={t('common.blackMode')}
-                  aria-pressed={themeMode === 'black'}
-                >
-                  <Circle size={16} fill="currentColor" />
-                </button>
+            {/* Theme + Language (single compact bar) */}
+            <div className={`${isCollapsed && !isMobileOpen ? 'hidden' : 'mb-3'}`}>
+              <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border/60">
+                {/* Theme */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setThemeMode('light')}
+                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                      themeMode === 'light'
+                        ? 'bg-background text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                    }`}
+                    title={t('common.lightMode')}
+                    aria-label={t('common.lightMode')}
+                    aria-pressed={themeMode === 'light'}
+                  >
+                    <Sun size={16} />
+                  </button>
+                  <button
+                    onClick={() => setThemeMode('dark')}
+                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                      themeMode === 'dark'
+                        ? 'bg-card text-primary shadow-sm border border-border'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                    }`}
+                    title={t('common.darkMode')}
+                    aria-label={t('common.darkMode')}
+                    aria-pressed={themeMode === 'dark'}
+                  >
+                    <Moon size={16} />
+                  </button>
+                  <button
+                    onClick={() => setThemeMode('black')}
+                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                      themeMode === 'black'
+                        ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                    }`}
+                    title={t('common.blackMode')}
+                    aria-label={t('common.blackMode')}
+                    aria-pressed={themeMode === 'black'}
+                  >
+                    <Circle size={16} fill="currentColor" />
+                  </button>
+                </div>
+
+                {/* Language */}
+                <LanguageSelector className="w-[110px]" variant="sidebar" />
               </div>
             </div>
 
             {/* REFINED PRO PLAN WIDGET - Hidden when collapsed on desktop */}
-            <div className={`px-1 ${isCollapsed && !isMobileOpen ? 'hidden' : 'block mb-4 lg:mb-6'}`}>
+            <div className={`px-1 ${isCollapsed && !isMobileOpen ? 'hidden' : 'block mb-3 lg:mb-4'}`}>
               <div className="flex justify-between items-end mb-2 px-1">
                 <div className="flex items-center gap-1.5">
                   <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
@@ -677,7 +685,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <div className={`flex items-center ${isCollapsed && !isMobileOpen ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
               <div
                 className="relative group cursor-pointer touch-manipulation"
-                onClick={() => setIsProfileModalOpen(true)}
+                onClick={openProfileModal}
               >
                 {user?.photoURL ? (
                   <img src={user.photoURL} alt="User" className="w-11 h-11 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
@@ -711,11 +719,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           </div>
         </aside>
       </div>
-
-      <UserProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
     </>
   );
 };

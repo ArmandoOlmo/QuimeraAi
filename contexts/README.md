@@ -153,3 +153,4 @@ No es necesario migrar todo de una vez. El código legacy seguirá funcionando.
 4. Agregar al `AppProviders.tsx` en el orden correcto
 5. Agregar export al `contexts/index.ts`
 
+

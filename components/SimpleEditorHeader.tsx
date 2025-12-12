@@ -5,7 +5,7 @@ import { useProject } from '../contexts/project';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import ThemeToggle from './ui/ThemeToggle';
-import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu } from 'lucide-react';
+import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, ArrowLeft } from 'lucide-react';
 
 interface SimpleEditorHeaderProps {
   onOpenMobileMenu?: () => void;
@@ -139,6 +139,16 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Back Button - Go to projects/websites */}
+        <button
+          onClick={() => navigate(ROUTES.WEBSITES)}
+          className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+          aria-label={t('common.back')}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('common.back')}</span>
+        </button>
+
         {/* Theme Toggle */}
         <ThemeToggle />
 

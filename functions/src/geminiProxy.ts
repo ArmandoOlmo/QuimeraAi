@@ -97,11 +97,19 @@ function isValidUserId(userId: string): boolean {
  * SECURITY: Validate model name
  */
 const ALLOWED_MODELS = [
+    // Gemini 2.5 series
     'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    // Gemini 2.0 series
     'gemini-2.0-flash',
+    'gemini-2.0-flash-exp',
+    // Gemini 1.5 series
     'gemini-1.5-flash',
     'gemini-1.5-pro',
+    // Gemini 3 preview models
+    'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
+    // Imagen models
     'imagen-3.0-generate-002',
     'imagen-3.0-fast-generate-001',
 ];

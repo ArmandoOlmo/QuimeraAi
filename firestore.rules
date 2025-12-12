@@ -373,15 +373,16 @@ service cloud.firestore {
       allow read: if true;
       // Authenticated users can write to their own public store (for seeding/sync)
       // The storeId matches the projectId which belongs to the user
+      // Check if user owns the store (created during enableEcommerce)
       allow write: if request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       
       // Public products
       match /products/{productId} {
         allow read: if true;
         // Allow write if user owns the store
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Public categories
@@ -389,7 +390,7 @@ service cloud.firestore {
         allow read: if true;
         // Allow write if user owns the store
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Public discounts (read-only for validation)
@@ -397,7 +398,7 @@ service cloud.firestore {
         allow read: if true;
         // Allow write if user owns the store
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Public store settings (for checkout)
@@ -405,7 +406,7 @@ service cloud.firestore {
         allow read: if true;
         // Allow write if user owns the store
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Public reviews (read-only for storefront)
@@ -413,7 +414,7 @@ service cloud.firestore {
         allow read: if true;
         // Allow write if user owns the store
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
         // Allow public vote updates (helpfulVotes increment)
         allow update: if 
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpfulVotes']) &&
@@ -432,7 +433,7 @@ service cloud.firestore {
           request.resource.data.status == 'pending';
         // Only owner can update/delete
         allow update, delete: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Stock notifications
@@ -443,14 +444,14 @@ service cloud.firestore {
           isValidEmail(request.resource.data.email) &&
           isValidString(request.resource.data.productId, 1, 100);
         allow update, delete: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // Public customers (for linking with store users)
       match /customers/{customerId} {
         allow read: if true;
         allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
     }
     
@@ -461,13 +462,13 @@ service cloud.firestore {
     match /storeUsers/{storeId} {
       // Store owner has full access
       allow read, write: if request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       
       // Store users collection
       match /users/{userId} {
         // Store owner can read/write all users
         allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
         
         // Authenticated store users can read their own profile
         allow read: if request.auth != null && 
@@ -486,13 +487,13 @@ service cloud.firestore {
       // User segments (store owner only)
       match /segments/{segmentId} {
         allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
       }
       
       // User activities (store owner read, Cloud Functions write)
       match /activities/{activityId} {
         allow read: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
         // Authenticated users can read their own activities
         allow read: if request.auth != null;
         // Only Cloud Functions can write
@@ -502,7 +503,7 @@ service cloud.firestore {
       // Role configurations (store owner only)
       match /roleConfigs/{roleId} {
         allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
         // Store users can read role configs
         allow read: if request.auth != null;
       }

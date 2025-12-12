@@ -220,3 +220,4 @@ function escapeHtml(str: string): string {
         .replace(/'/g, '&#039;');
 }
 
+

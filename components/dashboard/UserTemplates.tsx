@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../../contexts/project';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
 import { 
     LayoutTemplate, 
@@ -19,6 +21,7 @@ import {
     Layers,
     CheckCircle,
     ArrowRight,
+    ArrowLeft,
     BookOpen
 } from 'lucide-react';
 import { Project } from '../../types';
@@ -27,6 +30,7 @@ import { INDUSTRIES } from '../../data/industries';
 const UserTemplates: React.FC = () => {
     const { t } = useTranslation();
     const { projects, createProjectFromTemplate } = useProject();
+    const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Search and Filter States
@@ -128,7 +132,7 @@ const UserTemplates: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-4 flex-shrink-0">
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)} 
@@ -161,6 +165,16 @@ const UserTemplates: React.FC = () => {
 
                     {/* Controls */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Back Button - First */}
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.goBack', 'Volver')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
+
                         {/* Industry Filter */}
                         <select 
                             value={filterIndustry}

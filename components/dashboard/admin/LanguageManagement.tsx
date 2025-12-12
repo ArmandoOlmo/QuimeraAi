@@ -95,14 +95,21 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('superadmin.backToAdmin')}
+            </button>
             {saveStatus === 'success' && (
-              <div className="flex items-center gap-2 text-green-500 text-sm mr-2">
+              <div className="flex items-center gap-2 text-green-500 text-sm">
                 <Check size={16} />
                 <span>{t('superadmin.savedSuccessfully')}</span>
               </div>
             )}
             {saveStatus === 'error' && (
-              <div className="flex items-center gap-2 text-red-500 text-sm mr-2">
+              <div className="flex items-center gap-2 text-red-500 text-sm">
                 <AlertCircle size={16} />
                 <span>{t('superadmin.errorSaving')}</span>
               </div>
@@ -114,13 +121,6 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             >
               <Save className="w-4 h-4" />
               {saveStatus === 'saving' ? t('superadmin.saving') : t('common.save')}
-            </button>
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('superadmin.backToAdmin')}
             </button>
           </div>
         </header>

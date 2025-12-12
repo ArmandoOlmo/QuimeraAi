@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lead, LeadStatus } from '../../../types';
 import { Mail, Phone, Building2, DollarSign, Bot, LayoutGrid, Star, Circle } from 'lucide-react';
 
@@ -19,13 +20,14 @@ const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
     lost: 'bg-red-500',
 };
 
-const LeadsListView: React.FC<LeadsListViewProps> = ({ 
-    leads, 
-    selectedLeadId, 
+const LeadsListView: React.FC<LeadsListViewProps> = ({
+    leads,
+    selectedLeadId,
     onLeadClick,
     selectedLeadIds,
     onToggleSelect
 }) => {
+    const { t } = useTranslation();
     const formatDate = (timestamp: { seconds: number; nanoseconds: number }) => {
         const date = new Date(timestamp.seconds * 1000);
         const now = new Date();
@@ -38,7 +40,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays < 7) return `${diffDays}d ago`;
-        
+
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
@@ -47,7 +49,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
             {/* Header */}
             <div className="px-4 py-3 border-b border-border bg-secondary/10 flex items-center justify-between">
                 <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                    All Leads ({leads.length})
+                    {t('leads.allLeads')} ({leads.length})
                 </span>
             </div>
 
@@ -55,19 +57,18 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
             <div className="divide-y divide-border max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
                 {leads.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
-                        No leads found
+                        {t('leads.noLeadsFound')}
                     </div>
                 ) : (
                     leads.map((lead) => {
                         const isSelected = selectedLeadId === lead.id;
                         const isChecked = selectedLeadIds.includes(lead.id);
-                        
+
                         return (
                             <div
                                 key={lead.id}
-                                className={`group flex items-center gap-3 px-4 py-3 hover:bg-secondary/10 cursor-pointer transition-colors ${
-                                    isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-                                }`}
+                                className={`group flex items-center gap-3 px-4 py-3 hover:bg-secondary/10 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                                    }`}
                                 onClick={() => onLeadClick(lead)}
                             >
                                 {/* Checkbox */}
@@ -138,9 +139,9 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                     {lead.aiScore !== undefined && (
                                         <div className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
                                             <Star size={10} className={
-                                                lead.aiScore > 75 ? 'text-green-500' : 
-                                                lead.aiScore > 40 ? 'text-yellow-500' : 
-                                                'text-red-500'
+                                                lead.aiScore > 75 ? 'text-green-500' :
+                                                    lead.aiScore > 40 ? 'text-yellow-500' :
+                                                        'text-red-500'
                                             } />
                                             <span className="text-xs font-bold">{lead.aiScore}</span>
                                         </div>

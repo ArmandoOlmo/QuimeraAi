@@ -210,3 +210,4 @@ export function getSSLStatusMessage(status: string): string {
     return messages[status] || status;
 }
 
+

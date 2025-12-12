@@ -54,7 +54,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
     const handleHoursChange = (day: keyof BusinessHours, field: keyof DayHours, value: any) => {
         const currentHours = contactInfo.businessHours || {};
         const currentDay = currentHours[day] || { isOpen: false };
-        
+
         onUpdate({
             ...contactInfo,
             businessHours: {
@@ -183,7 +183,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         {SOCIAL_PLATFORMS.map((platform) => (
                             <div key={platform.id} className="flex items-center gap-3">
                                 <span className="w-24 text-sm text-editor-text-secondary">
-                                    {platform.label}
+                                    {t(`onboarding.social.${platform.id}`, platform.label)}
                                 </span>
                                 <input
                                     type="text"
@@ -278,6 +278,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
 };
 
 export default Step5ContactInfo;
+
 
 
 

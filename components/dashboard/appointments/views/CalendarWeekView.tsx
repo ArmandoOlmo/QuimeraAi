@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
 import { AppointmentCard } from '../components/AppointmentCard';
 import {
@@ -55,18 +56,18 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
     const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
-    
+
     // Calculate position and height
     const dayStartMs = dayStart.getTime();
     const startMs = startDate.getTime();
     const endMs = endDate.getTime();
-    
+
     const startMinutesFromDayStart = (startMs - dayStartMs) / (1000 * 60);
     const durationMinutes = (endMs - startMs) / (1000 * 60);
-    
+
     const top = (startMinutesFromDayStart / 60) * HOUR_HEIGHT;
     const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 24); // Min height of 24px
-    
+
     // Gradient classes
     const gradientClasses: Record<string, string> = {
         blue: 'from-blue-500 to-blue-600',
@@ -78,9 +79,9 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
         pink: 'from-pink-500 to-rose-600',
         green: 'from-green-500 to-emerald-600',
     };
-    
+
     const isShort = height < 50;
-    
+
     return (
         <div
             onClick={(e) => { e.stopPropagation(); onClick(); }}
@@ -101,7 +102,7 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
         >
             {/* Shine overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-            
+
             {/* Content */}
             <div className={`relative h-full p-2 ${isShort ? 'flex items-center gap-2' : ''}`}>
                 <p className={`text-white font-semibold ${isShort ? 'text-xs truncate' : 'text-sm line-clamp-2'}`}>
@@ -113,7 +114,7 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
                     </p>
                 )}
             </div>
-            
+
             {/* Resize handle */}
             <div className="
                 absolute bottom-0 left-0 right-0 h-2 
@@ -137,21 +138,22 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     workingHoursStart = 8,
     workingHoursEnd = 18,
 }) => {
+    const { t } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [currentTimeTop, setCurrentTimeTop] = useState(0);
-    
+
     // Get week days
     const weekDays = useMemo(() => getWeekDays(currentDate, weekStartsOn), [currentDate, weekStartsOn]);
-    
+
     // Group appointments by day
     const appointmentsByDay = useMemo(() => {
         const map = new Map<string, Appointment[]>();
-        
+
         weekDays.forEach(day => {
             const dayKey = day.toISOString().split('T')[0];
             map.set(dayKey, []);
         });
-        
+
         appointments.forEach(apt => {
             const aptDate = timestampToDate(apt.startDate);
             const dayKey = aptDate.toISOString().split('T')[0];
@@ -159,10 +161,10 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                 map.get(dayKey)!.push(apt);
             }
         });
-        
+
         return map;
     }, [appointments, weekDays]);
-    
+
     // Update current time indicator
     useEffect(() => {
         const updateCurrentTime = () => {
@@ -170,13 +172,13 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
             const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
             setCurrentTimeTop((minutesSinceMidnight / 60) * HOUR_HEIGHT);
         };
-        
+
         updateCurrentTime();
         const interval = setInterval(updateCurrentTime, 60000); // Update every minute
-        
+
         return () => clearInterval(interval);
     }, []);
-    
+
     // Scroll to current time on mount
     useEffect(() => {
         if (scrollContainerRef.current) {
@@ -184,11 +186,11 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
             scrollContainerRef.current.scrollTop = scrollTo;
         }
     }, [workingHoursStart]);
-    
+
     // Check if today is in the current week
     const todayInWeek = weekDays.some(day => isToday(day));
     const todayIndex = weekDays.findIndex(day => isToday(day));
-    
+
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-background">
             {/* Header with days */}
@@ -199,13 +201,13 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                         GMT{new Date().getTimezoneOffset() / -60 >= 0 ? '+' : ''}{new Date().getTimezoneOffset() / -60}
                     </span>
                 </div>
-                
+
                 {/* Day headers */}
                 {weekDays.map((day, index) => {
                     const isCurrentDay = isToday(day);
                     const dayKey = day.toISOString().split('T')[0];
                     const dayAppointments = appointmentsByDay.get(dayKey) || [];
-                    
+
                     return (
                         <div
                             key={dayKey}
@@ -220,8 +222,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             </p>
                             <p className={`
                                 text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1
-                                ${isCurrentDay 
-                                    ? 'text-primary' 
+                                ${isCurrentDay
+                                    ? 'text-primary'
                                     : 'text-foreground'
                                 }
                             `}>
@@ -231,8 +233,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 <div className={`
                                     mt-0.5 sm:mt-1 inline-flex items-center justify-center
                                     px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium
-                                    ${isCurrentDay 
-                                        ? 'bg-primary/20 text-primary' 
+                                    ${isCurrentDay
+                                        ? 'bg-primary/20 text-primary'
                                         : 'bg-muted text-muted-foreground'
                                     }
                                 `}>
@@ -243,9 +245,9 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                     );
                 })}
             </div>
-            
+
             {/* Scrollable time grid */}
-            <div 
+            <div
                 ref={scrollContainerRef}
                 className="flex-1 overflow-auto custom-scrollbar"
             >
@@ -260,8 +262,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             >
                                 <span className={`
                                     text-[10px] sm:text-xs font-medium
-                                    ${hour >= workingHoursStart && hour < workingHoursEnd 
-                                        ? 'text-muted-foreground' 
+                                    ${hour >= workingHoursStart && hour < workingHoursEnd
+                                        ? 'text-muted-foreground'
                                         : 'text-muted-foreground/50'
                                     }
                                 `}>
@@ -270,7 +272,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             </div>
                         ))}
                     </div>
-                    
+
                     {/* Day columns */}
                     {weekDays.map((day, dayIndex) => {
                         const isCurrentDay = isToday(day);
@@ -278,7 +280,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                         const dayAppointments = appointmentsByDay.get(dayKey) || [];
                         const dayStart = new Date(day);
                         dayStart.setHours(0, 0, 0, 0);
-                        
+
                         return (
                             <div
                                 key={dayKey}
@@ -290,7 +292,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 {/* Hour slots */}
                                 {HOURS.map(hour => {
                                     const isWorkingHour = hour >= workingHoursStart && hour < workingHoursEnd;
-                                    
+
                                     return (
                                         <div
                                             key={hour}
@@ -309,11 +311,11 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                             style={{ height: `${HOUR_HEIGHT}px` }}
                                         >
                                             {/* Half-hour line */}
-                                            <div 
+                                            <div
                                                 className="border-b border-dashed border-border/20"
                                                 style={{ marginTop: `${HOUR_HEIGHT / 2}px` }}
                                             />
-                                            
+
                                             {/* Hover indicator */}
                                             <div className="
                                                 absolute inset-1 rounded-lg
@@ -323,13 +325,13 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                                 flex items-center justify-center
                                             ">
                                                 <span className="text-xs text-primary font-medium bg-background px-2 py-0.5 rounded">
-                                                    + Crear cita
+                                                    + {t('appointments.newAppointment')}
                                                 </span>
                                             </div>
                                         </div>
                                     );
                                 })}
-                                
+
                                 {/* Appointments */}
                                 {dayAppointments.map(apt => (
                                     <TimeSlotAppointment
@@ -339,7 +341,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                         dayStart={dayStart}
                                     />
                                 ))}
-                                
+
                                 {/* Current time indicator */}
                                 {isCurrentDay && (
                                     <div
