@@ -1,4 +1,3 @@
-```typescript
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
@@ -143,7 +142,12 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                     </div>
                                 ) : (
                                     <img
-                                        src={photoURL || `https://ui-avatars.com/api/?name=${user.name}&background=random&size=128`}
+                                        src={
+                                            photoURL ||
+                                            'https://ui-avatars.com/api/?name=' +
+                                                encodeURIComponent(user.name || 'User') +
+                                                '&background=random&size=128'
+                                        }
                                         alt={user.name}
                                         className="w-full h-full object-cover"
                                     />
