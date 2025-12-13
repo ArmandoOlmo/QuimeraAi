@@ -402,7 +402,7 @@ const AiAssistantDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-8 border-b border-border flex items-center justify-between bg-card z-20 shrink-0">
+                <header className="h-14 px-8 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center -ml-2 text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                             <Menu className="w-4 h-4" />
@@ -475,8 +475,9 @@ const AiAssistantDashboard: React.FC = () => {
                     </div>
 
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) */}
-                    <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10">
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-overlay pointer-events-none"></div>
+                    <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
+                        {/* Dot pattern - visible in both themes */}
+                        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
                         <div className="relative z-10 flex flex-col items-center">
                             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">{t('aiAssistant.dashboard.liveSimulator')}</h3>

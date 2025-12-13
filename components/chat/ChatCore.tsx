@@ -1089,11 +1089,11 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             {/* Input Bar */}
             {!isLiveActive && !showPreChatForm && (
                 <>
-                    <div className="p-2 text-center border-t text-[10px] opacity-50 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors.inputBorder, color: appearance.colors.inputText }}>
-                        <Sparkles size={10} /> {t('chatbotWidget.poweredBy')}
+                    <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors.inputBorder, color: appearance.colors.inputText }}>
+                        <Sparkles size={8} /> {t('chatbotWidget.poweredBy')}
                     </div>
                     <div 
-                        className="p-3 border-t flex items-center gap-2" 
+                        className="px-2 py-2 border-t flex items-center gap-1.5" 
                         style={{ 
                             backgroundColor: appearance.colors.inputBackground,
                             borderColor: appearance.colors.inputBorder 
@@ -1103,7 +1103,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             <button
                                 onClick={startLiveSession}
                                 disabled={isConnecting}
-                                className="p-2.5 rounded-full transition-all shadow-sm border"
+                                className="p-2 rounded-full transition-all shadow-sm border flex-shrink-0"
                                 style={{
                                     backgroundColor: isConnecting ? appearance.colors.inputBackground : (appearance.colors.accentColor + '15'),
                                     color: isConnecting ? appearance.colors.inputText : appearance.colors.accentColor,
@@ -1112,7 +1112,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                 }}
                                 title="Start Real-time Voice"
                             >
-                                {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Mic size={18} />}
+                                {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
                             </button>
                         )}
                         <input
@@ -1121,7 +1121,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={t('chatbotWidget.inputPlaceholder')}
-                            className="flex-1 px-4 py-2.5 rounded-full text-xs outline-none focus:ring-2 transition-all border"
+                            className="flex-1 min-w-0 px-3 py-2 rounded-full text-xs outline-none focus:ring-2 transition-all border"
                             style={{
                                 backgroundColor: appearance.colors.inputBackground,
                                 color: appearance.colors.inputText,
@@ -1133,10 +1133,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         <button
                             onClick={handleSend}
                             disabled={!input.trim() || isLoading}
-                            className="p-2.5 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                             style={{ backgroundColor: appearance.colors.primaryColor }}
                         >
-                            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                         </button>
                     </div>
                 </>
