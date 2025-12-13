@@ -451,7 +451,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         customInstructions: '',
         permissions: {}, // Initialize empty, components will handle defaults
         temperature: 0.7,
-        maxTokens: 500,
+        maxTokens: 2048,
         autoDetectLanguage: true,
         supportedLanguages: 'English, Spanish, French'
     });

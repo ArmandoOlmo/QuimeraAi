@@ -107,12 +107,56 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setActiveSectionItem(null);
         setIsSidebarOpen(true);
         console.log('[UIContext] activeSection set to:', section, 'isSidebarOpen: true');
+        
+        // Scroll to section in preview - use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            const element = document.getElementById(section);
+            if (element && previewRef.current) {
+                // Calculate position relative to preview container
+                const container = previewRef.current;
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // Calculate scroll position to center the element
+                const scrollTop = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
+                
+                container.scrollTo({
+                    top: Math.max(0, scrollTop),
+                    behavior: 'smooth'
+                });
+            } else if (element) {
+                // Fallback for when previewRef is not available
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const onSectionItemSelect = (section: PageSection, index: number) => {
         setActiveSection(section);
         setActiveSectionItem({ section, index });
         setIsSidebarOpen(true);
+        
+        // Scroll to section in preview - use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            const element = document.getElementById(section);
+            if (element && previewRef.current) {
+                // Calculate position relative to preview container
+                const container = previewRef.current;
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // Calculate scroll position to center the element
+                const scrollTop = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
+                
+                container.scrollTo({
+                    top: Math.max(0, scrollTop),
+                    behavior: 'smooth'
+                });
+            } else if (element) {
+                // Fallback for when previewRef is not available
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
     
     const openProfileModal = () => {

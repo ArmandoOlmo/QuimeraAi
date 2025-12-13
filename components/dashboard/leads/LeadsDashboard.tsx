@@ -30,6 +30,34 @@ import { logApiCall } from '../../../services/apiLoggingService';
 
 import { useTranslation } from 'react-i18next';
 
+// Helper to clean JSON from markdown code blocks and fix common issues
+const cleanJsonResponse = (text: string): string => {
+    if (!text) return '{}';
+    
+    // Remove markdown code blocks
+    let cleaned = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '');
+    // Trim whitespace
+    cleaned = cleaned.trim();
+    
+    // Find JSON array or object
+    const jsonMatch = cleaned.match(/[\[{][\s\S]*[\]}]/);
+    if (jsonMatch) {
+        cleaned = jsonMatch[0];
+    }
+    
+    // Fix common JSON issues from LLM
+    // Remove trailing commas before } or ]
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+    // Fix bad escape sequences - replace \n, \t etc with spaces
+    cleaned = cleaned.replace(/\\([^"\\\/bfnrtu])/g, '$1');
+    // Remove literal newlines inside strings (replace with space)
+    cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, '"$1 $2"');
+    // Remove any control characters except tab, newline, carriage return
+    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ');
+    
+    return cleaned;
+};
+
 // Moved inside component or memoized hook
 const getLeadStages = (t: any) => [
     { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
@@ -544,7 +572,9 @@ const LeadsDashboard: React.FC = () => {
                 });
             }
 
-            const data = JSON.parse(responseText);
+            // Clean markdown code blocks from response before parsing
+            const cleanedText = cleanJsonResponse(responseText);
+            const data = JSON.parse(cleanedText);
 
             await updateLead(selectedLead.id, {
                 aiScore: data.score,

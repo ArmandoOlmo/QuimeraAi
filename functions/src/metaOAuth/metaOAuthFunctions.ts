@@ -26,7 +26,7 @@ const META_OAUTH_BASE = 'https://www.facebook.com';
 const getMetaConfig = () => ({
     appId: functions.config().meta?.app_id || process.env.META_APP_ID || '',
     appSecret: functions.config().meta?.app_secret || process.env.META_APP_SECRET || '',
-    redirectUri: functions.config().meta?.redirect_uri || process.env.META_REDIRECT_URI || 'https://quimera.app/auth/meta/callback',
+    redirectUri: functions.config().meta?.redirect_uri || process.env.META_REDIRECT_URI || 'https://quimera.ai/auth/meta/callback',
 });
 
 // Default scopes for OAuth

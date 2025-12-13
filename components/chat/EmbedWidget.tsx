@@ -11,7 +11,7 @@ interface EmbedWidgetProps {
 
 const EmbedWidget: React.FC<EmbedWidgetProps> = ({ 
     projectId,
-    apiUrl = 'https://quimera.app/api/widget'
+    apiUrl = 'https://quimera.ai/api/widget'
 }) => {
     const [config, setConfig] = useState<AiAssistantConfig | null>(null);
     const [project, setProject] = useState<Project | null>(null);

@@ -387,7 +387,7 @@ export const onOrderCreate = functions.firestore
                     socialLinks: emailSettings?.socialLinks,
                 });
 
-                const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.app';
+                const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.ai';
                 const fromName = emailSettings?.fromName || storeSettings?.storeName || 'Tu Tienda';
 
                 const result = await sendEmail({
@@ -428,7 +428,7 @@ export const onOrderCreate = functions.firestore
                 try {
                     const currencySymbol = storeSettings?.currencySymbol || '$';
                     const orderDate = formatDate(order.createdAt || new Date());
-                    const dashboardUrl = `https://quimera.app/dashboard/ecommerce/orders/${orderId}`;
+                    const dashboardUrl = `https://quimera.ai/dashboard/ecommerce/orders/${orderId}`;
 
                     const emailHtml = getNewOrderAdminTemplate({
                         storeName: storeSettings?.storeName || 'Tu Tienda',
@@ -463,7 +463,7 @@ export const onOrderCreate = functions.firestore
                         to: adminEmail,
                         subject: `Nueva Orden #${order.orderNumber} - ${currencySymbol}${(order.total || 0).toFixed(2)}`,
                         html: emailHtml,
-                        from: `${storeSettings?.storeName || 'Quimera'} <noreply@quimera.app>`,
+                        from: `${storeSettings?.storeName || 'Quimera'} <noreply@quimera.ai>`,
                         tags: [
                             { name: 'type', value: 'new-order-admin' },
                             { name: 'store', value: storeId },
@@ -537,7 +537,7 @@ export const onOrderUpdate = functions.firestore
                         socialLinks: emailSettings?.socialLinks,
                     });
 
-                    const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.app';
+                    const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.ai';
                     const fromName = emailSettings?.fromName || storeSettings?.storeName || 'Tu Tienda';
 
                     const result = await sendEmail({
@@ -576,8 +576,8 @@ export const onOrderUpdate = functions.firestore
             if (after.customerEmail) {
                 try {
                     const deliveryDate = formatDate(new Date());
-                    const reviewUrl = `https://quimera.app/review/${storeId}/${orderId}`;
-                    const shopUrl = `https://quimera.app/store/${storeId}`;
+                    const reviewUrl = `https://quimera.ai/review/${storeId}/${orderId}`;
+                    const shopUrl = `https://quimera.ai/store/${storeId}`;
 
                     const emailHtml = getOrderDeliveredTemplate({
                         storeName: storeSettings?.storeName || 'Tu Tienda',
@@ -597,7 +597,7 @@ export const onOrderUpdate = functions.firestore
                         socialLinks: emailSettings?.socialLinks,
                     });
 
-                    const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.app';
+                    const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.ai';
                     const fromName = emailSettings?.fromName || storeSettings?.storeName || 'Tu Tienda';
 
                     const result = await sendEmail({
@@ -661,7 +661,7 @@ export const onProductUpdateCheckStock = functions.firestore
                 if (adminEmail) {
                     try {
                         const emailSettings = await getEmailSettings(userId, storeId);
-                        const dashboardUrl = `https://quimera.app/dashboard/ecommerce/products/${productId}`;
+                        const dashboardUrl = `https://quimera.ai/dashboard/ecommerce/products/${productId}`;
 
                         const emailHtml = getLowStockAlertTemplate({
                             storeName: storeSettings?.storeName || 'Tu Tienda',
@@ -675,14 +675,14 @@ export const onProductUpdateCheckStock = functions.firestore
                                 imageUrl: after.images?.[0]?.url,
                                 productUrl: dashboardUrl,
                             }],
-                            dashboardUrl: `https://quimera.app/dashboard/ecommerce/stock-alerts`,
+                            dashboardUrl: `https://quimera.ai/dashboard/ecommerce/stock-alerts`,
                         });
 
                         const result = await sendEmail({
                             to: adminEmail,
                             subject: `Alerta de Stock: ${after.name} tiene stock bajo`,
                             html: emailHtml,
-                            from: `${storeSettings?.storeName || 'Quimera'} <noreply@quimera.app>`,
+                            from: `${storeSettings?.storeName || 'Quimera'} <noreply@quimera.ai>`,
                             tags: [
                                 { name: 'type', value: 'low-stock-alert' },
                                 { name: 'store', value: storeId },

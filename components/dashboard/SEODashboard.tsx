@@ -45,8 +45,9 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     setLocalConfig(seoConfig);
   }, [seoConfig]);
 
+  // Always sync when activeProjectId changes
   useEffect(() => {
-    if (activeProjectId && !selectedProjectId) {
+    if (activeProjectId) {
       setSelectedProjectId(activeProjectId);
     }
   }, [activeProjectId]);

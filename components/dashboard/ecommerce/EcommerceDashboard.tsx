@@ -150,9 +150,9 @@ const EcommerceDashboard: React.FC = () => {
         };
     }, []);
 
-    // Sincronizar proyecto seleccionado con proyecto activo
+    // Sincronizar proyecto seleccionado con proyecto activo (always sync when activeProjectId changes)
     useEffect(() => {
-        if (activeProjectId && !selectedProjectId) {
+        if (activeProjectId) {
             setSelectedProjectId(activeProjectId);
         }
     }, [activeProjectId]);

@@ -232,7 +232,7 @@ export const getBaseTemplate = (params: BaseTemplateParams): string => {
                     <tr>
                         <td align="center" style="padding: 20px;">
                             <p style="color: #a1a1aa; margin: 0; font-size: 11px;">
-                                Powered by <a href="https://quimera.app" style="color: #a1a1aa;">Quimera</a>
+                                Powered by <a href="https://quimera.ai" style="color: #a1a1aa;">Quimera</a>
                             </p>
                         </td>
                     </tr>

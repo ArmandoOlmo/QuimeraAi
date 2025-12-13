@@ -8,6 +8,8 @@ import { useCRM } from '../../contexts/crm';
 import { useCMS } from '../../contexts/cms';
 import { useAI } from '../../contexts/ai';
 import { useDomains } from '../../contexts/domains';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import { FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
 import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, X, User as UserIcon, Shield } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -987,6 +989,7 @@ const GlobalAiAssistant: React.FC = () => {
 
     const { user } = useAuth();
     const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
+    const { navigate } = useRouter();
     const {
         projects,
         brandIdentity,
@@ -1042,6 +1045,7 @@ const GlobalAiAssistant: React.FC = () => {
     const onSectionSelectRef = useRef(uiOnSectionSelect);
     const onSectionItemSelectRef = useRef(onSectionItemSelect);
     const setViewRef = useRef(setView);
+    const navigateRef = useRef(navigate);
     const setAdminViewRef = useRef(setAdminView);
     const setThemeModeRef = useRef(setThemeMode);
     const setThemeRef = useRef(setTheme);
@@ -1089,6 +1093,7 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { onSectionSelectRef.current = uiOnSectionSelect; }, [uiOnSectionSelect]);
     useEffect(() => { onSectionItemSelectRef.current = onSectionItemSelect; }, [onSectionItemSelect]);
     useEffect(() => { setViewRef.current = setView; }, [setView]);
+    useEffect(() => { navigateRef.current = navigate; }, [navigate]);
     useEffect(() => { setAdminViewRef.current = setAdminView; }, [setAdminView]);
     useEffect(() => { setThemeModeRef.current = setThemeMode; }, [setThemeMode]);
     useEffect(() => { setThemeRef.current = setTheme; }, [setTheme]);
@@ -1485,8 +1490,51 @@ const GlobalAiAssistant: React.FC = () => {
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 }
+                
+                // Views that require an active project
+                const viewsRequiringProject = ['email', 'ecommerce', 'finance', 'cms', 'seo', 'editor', 'navigation'];
+                
+                // If navigating to a view that requires a project and none is active, load one
+                if (viewsRequiringProject.includes(newView) && !activeProjectRef.current) {
+                    const availableProjects = projectsRef.current.filter(p => (p as any).status !== 'Template');
+                    if (availableProjects.length > 0) {
+                        const projectToLoad = availableProjects[0];
+                        loadProjectRef.current(projectToLoad.id);
+                        activeProjectRef.current = projectToLoad;
+                        dataRef.current = projectToLoad.data;
+                        console.log(`[Tool] Auto-loaded project '${projectToLoad.name}' for ${newView} view`);
+                    } else if (projectsRef.current.length === 0) {
+                        const result = { error: `No projects available. Create a website first.` };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                }
+                
+                // Map view names to routes
+                const viewToRoute: Record<string, string> = {
+                    dashboard: ROUTES.DASHBOARD,
+                    websites: ROUTES.WEBSITES,
+                    cms: ROUTES.CMS,
+                    navigation: ROUTES.NAVIGATION,
+                    'ai-assistant': ROUTES.AI_ASSISTANT,
+                    leads: ROUTES.LEADS,
+                    appointments: ROUTES.APPOINTMENTS,
+                    domains: ROUTES.DOMAINS,
+                    seo: ROUTES.SEO,
+                    finance: ROUTES.FINANCE,
+                    ecommerce: ROUTES.ECOMMERCE,
+                    email: ROUTES.EMAIL,
+                    templates: ROUTES.TEMPLATES,
+                    assets: ROUTES.ASSETS,
+                    superadmin: ROUTES.SUPERADMIN,
+                };
+                const route = viewToRoute[newView];
+                if (route) {
+                    navigateRef.current(route);
+                }
                 setViewRef.current(newView);
-                const result = { result: `Navigated to ${newView}.` };
+                const projectInfo = activeProjectRef.current ? ` (Project: ${activeProjectRef.current.name})` : '';
+                const result = { result: `Navigated to ${newView}.${projectInfo}` };
                 console.log(`[Tool Result] ${name}`, result);
                 return result;
             }
@@ -2664,6 +2712,76 @@ You: "✓ Made the hero button green and increased its size"
 
         console.log('[InferTool] Input:', { raw, norm });
 
+        // 0) PRIORITY: Direct navigation to app views (before checking editor sections)
+        // These keywords should ALWAYS navigate to app views, not editor sections
+        const hasNavIntent = /\b(ir a|ve a|abre|abrir|open|go to|llevame|muestrame|show)\b/.test(norm);
+        if (hasNavIntent) {
+            // Email Marketing - highest priority
+            if (norm.includes('marketing') || norm.includes('campana') || norm.includes('campaign') || 
+                (norm.includes('email') && !norm.includes('newsletter'))) {
+                console.log('[InferTool] Priority match: email view');
+                return { name: 'change_view', args: { viewName: 'email' } };
+            }
+            // Finance
+            if (norm.includes('finanza') || norm.includes('finance') || norm.includes('gasto') || norm.includes('expense')) {
+                console.log('[InferTool] Priority match: finance view');
+                return { name: 'change_view', args: { viewName: 'finance' } };
+            }
+            // Ecommerce (but not "tienda" or "productos" which are editor sections)
+            if (norm.includes('ecommerce') || norm.includes('comercio') || norm.includes('pedido') || norm.includes('order')) {
+                console.log('[InferTool] Priority match: ecommerce view');
+                return { name: 'change_view', args: { viewName: 'ecommerce' } };
+            }
+            // Appointments
+            if (norm.includes('cita') || norm.includes('appointment') || norm.includes('agenda') || norm.includes('reserva')) {
+                console.log('[InferTool] Priority match: appointments view');
+                return { name: 'change_view', args: { viewName: 'appointments' } };
+            }
+            // CMS (but not "blog" which could be ambiguous)
+            if (norm.includes('cms') || norm.includes('articulo')) {
+                console.log('[InferTool] Priority match: cms view');
+                return { name: 'change_view', args: { viewName: 'cms' } };
+            }
+            // Domains
+            if (norm.includes('dominio') || norm.includes('domain')) {
+                console.log('[InferTool] Priority match: domains view');
+                return { name: 'change_view', args: { viewName: 'domains' } };
+            }
+            // SEO
+            if (norm.includes('seo')) {
+                console.log('[InferTool] Priority match: seo view');
+                return { name: 'change_view', args: { viewName: 'seo' } };
+            }
+            // Dashboard
+            if (norm.includes('dashboard') || norm.includes('inicio') || norm.includes('principal')) {
+                console.log('[InferTool] Priority match: dashboard view');
+                return { name: 'change_view', args: { viewName: 'dashboard' } };
+            }
+            
+            // PROJECT LOADING: "abre proyecto X", "carga proyecto X", "usa proyecto X"
+            const projectMatch = raw.match(/(?:proyecto|project|sitio|website)\s+["']?([^"']+)["']?/i);
+            if (projectMatch && projectMatch[1]) {
+                const projectName = projectMatch[1].trim();
+                console.log('[InferTool] Priority match: load_project', projectName);
+                return { name: 'load_project', args: { identifier: projectName } };
+            }
+            
+            // PROJECT LOADING BY NAME: "abre Boricua", "abre Mi Tienda"
+            // Check if the word after "abre/open" matches any project name
+            const openMatch = raw.match(/(?:abre|abrir|open|carga|cargar|usa|usar)\s+["']?([^"']+)["']?$/i);
+            if (openMatch && openMatch[1]) {
+                const searchTerm = normalizeText(openMatch[1]);
+                const matchedProject = projectsRef.current.find(p => {
+                    const pName = normalizeText(p.name);
+                    return pName === searchTerm || pName.includes(searchTerm) || searchTerm.includes(pName);
+                });
+                if (matchedProject) {
+                    console.log('[InferTool] Priority match: load_project by name', matchedProject.name);
+                    return { name: 'load_project', args: { identifier: matchedProject.name } };
+                }
+            }
+        }
+
         // 1) Match "item X" / "#X" etc
         const numMatch = norm.match(/(?:#|numero|num|item|tier|plan|paso|step|elemento)\s*(\d{1,3})/);
         const index = numMatch ? Number(numMatch[1]) : null;
@@ -2704,6 +2822,207 @@ You: "✓ Made the hero button green and increased its size"
         if (foundSection) {
             console.log('[InferTool] Found section:', foundSection);
             return { name: 'select_section', args: { sectionName: foundSection } };
+        }
+
+        // 4) ONLY if no editor section matched, check for APP VIEW navigation
+        // Using words that DON'T conflict with editor sections
+        const appViewMap: Record<string, string> = {
+            // Email Marketing (unique words)
+            marketing: 'email',
+            emailmarketing: 'email',
+            campanas: 'email',
+            campana: 'email',
+            correos: 'email',
+            email: 'email',
+            // Finance (unique words)
+            finanzas: 'finance',
+            finance: 'finance',
+            gastos: 'finance',
+            // Ecommerce (unique - NOT "tienda" or "productos" which are editor sections)
+            ecommerce: 'ecommerce',
+            comercio: 'ecommerce',
+            pedidos: 'ecommerce',
+            orders: 'ecommerce',
+            // Dashboard
+            dashboard: 'dashboard',
+            // Appointments (unique words)
+            citas: 'appointments',
+            appointments: 'appointments',
+            agenda: 'appointments',
+            reservas: 'appointments',
+            // CMS
+            cms: 'cms',
+            articulos: 'cms',
+            // Other views
+            dominios: 'domains',
+            domains: 'domains',
+            seo: 'seo',
+            plantillas: 'templates',
+            templates: 'templates',
+            sitios: 'websites',
+            websites: 'websites',
+        };
+
+        // Check ALL words after navigation prefix for app view match
+        for (const prefix of openPrefixes) {
+            if (norm.includes(prefix)) {
+                const afterPhrase = norm.split(prefix)[1]?.trim();
+                if (afterPhrase) {
+                    const wordsAfter = afterPhrase.split(/\s+/);
+                    for (const word of wordsAfter) {
+                        if (appViewMap[word]) {
+                            console.log('[InferTool] Found app view:', appViewMap[word]);
+                            return { name: 'change_view', args: { viewName: appViewMap[word] } };
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5) ACTION COMMANDS: create, update, delete for various components
+        const isCreate = /\b(crea|crear|create|nuevo|nueva|new|agrega|agregar|add|añade|añadir)\b/.test(norm);
+        const isDelete = /\b(elimina|eliminar|delete|borra|borrar|remove|quita|quitar)\b/.test(norm);
+        const isUpdate = /\b(actualiza|actualizar|update|edita|editar|edit|modifica|modificar|cambia|cambiar)\b/.test(norm);
+        const isSend = /\b(envia|enviar|send|manda|mandar)\b/.test(norm);
+        const isEnable = /\b(activa|activar|enable|habilita|habilitar)\b/.test(norm);
+        const isDisable = /\b(desactiva|desactivar|disable|deshabilita|deshabilitar)\b/.test(norm);
+
+        // EMAIL CAMPAIGNS
+        if ((norm.includes('campana') || norm.includes('campaign') || norm.includes('email')) && 
+            !norm.includes('tienda') && !norm.includes('producto')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: email_campaign create');
+                return { name: 'email_campaign', args: { action: 'create', campaign: {} } };
+            }
+            if (isSend) {
+                console.log('[InferTool] Fast-path: Navigate to email to send');
+                return { name: 'change_view', args: { viewName: 'email' } };
+            }
+        }
+
+        // APPOINTMENTS / CITAS
+        if (norm.includes('cita') || norm.includes('appointment') || norm.includes('reunion') || norm.includes('meeting')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: manage_appointment create');
+                return { name: 'manage_appointment', args: { action: 'create' } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: manage_appointment delete');
+                return { name: 'manage_appointment', args: { action: 'delete' } };
+            }
+        }
+
+        // PRODUCTS / PRODUCTOS
+        if ((norm.includes('producto') || norm.includes('product')) && 
+            (norm.includes('tienda') || norm.includes('ecommerce') || norm.includes('vender') || norm.includes('precio'))) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: ecommerce_product create');
+                return { name: 'ecommerce_product', args: { action: 'create', product: {} } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: ecommerce_product delete');
+                return { name: 'ecommerce_product', args: { action: 'delete' } };
+            }
+        }
+
+        // ECOMMERCE ENABLE/DISABLE
+        if (norm.includes('ecommerce') || norm.includes('tienda online') || norm.includes('comercio')) {
+            if (isEnable) {
+                console.log('[InferTool] Fast-path: ecommerce_project enable');
+                return { name: 'ecommerce_project', args: { action: 'enable' } };
+            }
+            if (isDisable) {
+                console.log('[InferTool] Fast-path: ecommerce_project disable');
+                return { name: 'ecommerce_project', args: { action: 'disable' } };
+            }
+        }
+
+        // EXPENSES / GASTOS
+        if (norm.includes('gasto') || norm.includes('expense') || norm.includes('factura') || norm.includes('invoice')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: finance_expense create');
+                return { name: 'finance_expense', args: { action: 'create', expense: {} } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: finance_expense delete');
+                return { name: 'finance_expense', args: { action: 'delete' } };
+            }
+        }
+
+        // LEADS
+        if (norm.includes('lead') || norm.includes('prospecto') || norm.includes('cliente potencial')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: manage_lead create');
+                return { name: 'manage_lead', args: { action: 'create' } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: manage_lead delete');
+                return { name: 'manage_lead', args: { action: 'delete' } };
+            }
+        }
+
+        // CMS POSTS / BLOG
+        if (norm.includes('post') || norm.includes('articulo') || norm.includes('blog') || norm.includes('publicacion')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: manage_cms_post create');
+                return { name: 'manage_cms_post', args: { action: 'create' } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: manage_cms_post delete');
+                return { name: 'manage_cms_post', args: { action: 'delete' } };
+            }
+        }
+
+        // DOMAINS
+        if (norm.includes('dominio') || norm.includes('domain')) {
+            if (isCreate || norm.includes('agrega') || norm.includes('conecta')) {
+                console.log('[InferTool] Fast-path: manage_domain add');
+                return { name: 'manage_domain', args: { action: 'add' } };
+            }
+            if (isDelete) {
+                console.log('[InferTool] Fast-path: manage_domain delete');
+                return { name: 'manage_domain', args: { action: 'delete' } };
+            }
+        }
+
+        // TEMPLATES
+        if (norm.includes('plantilla') || norm.includes('template')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: manage_template create');
+                return { name: 'manage_template', args: { action: 'create' } };
+            }
+        }
+
+        // WEBSITE / SITIO WEB
+        if ((norm.includes('sitio') || norm.includes('website') || norm.includes('pagina web') || norm.includes('landing')) &&
+            !norm.includes('seccion')) {
+            if (isCreate) {
+                console.log('[InferTool] Fast-path: create_website');
+                return { name: 'create_website', args: {} };
+            }
+        }
+
+        // IMAGE GENERATION
+        if ((norm.includes('imagen') || norm.includes('image') || norm.includes('foto')) && 
+            (norm.includes('genera') || norm.includes('generate') || norm.includes('crea') || norm.includes('create'))) {
+            console.log('[InferTool] Fast-path: generate_image_asset');
+            return { name: 'generate_image_asset', args: { prompt: raw } };
+        }
+
+        // THEME CHANGE
+        if (norm.includes('tema') || norm.includes('theme')) {
+            if (norm.includes('oscuro') || norm.includes('dark')) {
+                console.log('[InferTool] Fast-path: change_theme dark');
+                return { name: 'change_theme', args: { mode: 'dark' } };
+            }
+            if (norm.includes('claro') || norm.includes('light')) {
+                console.log('[InferTool] Fast-path: change_theme light');
+                return { name: 'change_theme', args: { mode: 'light' } };
+            }
+            if (norm.includes('negro') || norm.includes('black')) {
+                console.log('[InferTool] Fast-path: change_theme black');
+                return { name: 'change_theme', args: { mode: 'black' } };
+            }
         }
 
         console.log('[InferTool] No match');
@@ -2754,16 +3073,138 @@ You: "✓ Made the hero button green and increased its size"
 
                 const systemPrompt = getEffectiveSystemInstruction('chat');
 
+                // Build current context information
+                const currentView = viewRef.current || 'dashboard';
+                const currentProject = activeProjectRef.current;
+                const projectInfo = currentProject 
+                    ? `Active Project: "${currentProject.name}" (ID: ${currentProject.id})`
+                    : 'No project loaded - user needs to select a project first';
+                
+                // Build detailed view-specific context with available data
+                let viewContext = '';
+                let availableData = '';
+                
+                switch (currentView) {
+                    case 'editor':
+                        const visibleSections = Object.entries(sectionVisibilityRef.current || {})
+                            .filter(([_, visible]) => visible)
+                            .map(([section]) => section)
+                            .slice(0, 10);
+                        const heroData = dataRef.current?.hero;
+                        viewContext = `User is in the WEBSITE EDITOR for "${currentProject?.name || 'unknown'}".
+They can edit sections, change content, colors, fonts, and styling.
+AVAILABLE ACTIONS: edit text, change colors, show/hide sections, add items to lists (features, testimonials, etc.)`;
+                        availableData = `Visible sections: ${visibleSections.join(', ') || 'none'}
+Hero headline: "${heroData?.headline || 'not set'}"
+Hero subheadline: "${heroData?.subheadline || 'not set'}"`;
+                        break;
+                        
+                    case 'email':
+                        viewContext = `User is in EMAIL MARKETING for "${currentProject?.name || 'unknown'}".
+They can create campaigns, manage audiences, send emails, and view analytics.
+AVAILABLE ACTIONS: create campaign, edit campaign, send campaign, create audience, view stats`;
+                        availableData = `To help: Ask what they want to do - create a new campaign, send to an audience, or check analytics.`;
+                        break;
+                        
+                    case 'ecommerce':
+                        viewContext = `User is in ECOMMERCE/STORE for "${currentProject?.name || 'unknown'}".
+They can manage products, view orders, configure store settings, and track sales.
+AVAILABLE ACTIONS: add product, edit product, view orders, update order status, enable/disable store`;
+                        availableData = `To help: Ask what they want to do - add products, check orders, or configure store.`;
+                        break;
+                        
+                    case 'finance':
+                        viewContext = `User is in FINANCE for "${currentProject?.name || 'unknown'}".
+They can track expenses, manage invoices, and view financial reports.
+AVAILABLE ACTIONS: add expense, edit expense, delete expense, view reports`;
+                        availableData = `To help: Ask what expense they want to add or what financial info they need.`;
+                        break;
+                        
+                    case 'appointments':
+                        viewContext = `User is in APPOINTMENTS/CALENDAR.
+They can schedule appointments, manage bookings, and view their calendar.
+AVAILABLE ACTIONS: create appointment, edit appointment, cancel appointment, view schedule`;
+                        availableData = `To help: Ask what appointment they want to create or manage.`;
+                        break;
+                        
+                    case 'cms':
+                        const postsCount = cmsPostsRef.current?.length || 0;
+                        const recentPosts = cmsPostsRef.current?.slice(0, 3).map(p => p.title).join(', ') || 'none';
+                        viewContext = `User is in CMS/BLOG for "${currentProject?.name || 'unknown'}".
+They can create and manage blog posts and articles.
+AVAILABLE ACTIONS: create post, edit post, publish post, delete post`;
+                        availableData = `Total posts: ${postsCount}
+Recent posts: ${recentPosts}`;
+                        break;
+                        
+                    case 'leads':
+                        const leadsCount = leadsRef.current?.length || 0;
+                        const recentLeads = leadsRef.current?.slice(0, 3).map(l => l.name).join(', ') || 'none';
+                        viewContext = `User is in LEADS/CRM.
+They can manage contacts, track leads, and update lead status.
+AVAILABLE ACTIONS: add lead, edit lead, change lead status, delete lead`;
+                        availableData = `Total leads: ${leadsCount}
+Recent leads: ${recentLeads}`;
+                        break;
+                        
+                    case 'domains':
+                        viewContext = `User is in DOMAINS management.
+They can connect custom domains, verify DNS, and manage domain settings.
+AVAILABLE ACTIONS: add domain, verify domain, delete domain`;
+                        break;
+                        
+                    case 'seo':
+                        viewContext = `User is in SEO settings for "${currentProject?.name || 'unknown'}".
+They can configure meta tags, titles, descriptions, and search optimization.
+AVAILABLE ACTIONS: update SEO title, description, keywords, social sharing settings`;
+                        break;
+                        
+                    case 'dashboard':
+                    case 'websites':
+                        const projectsList = projectsRef.current?.slice(0, 5).map(p => p.name).join(', ') || 'none';
+                        const totalProjects = projectsRef.current?.length || 0;
+                        viewContext = `User is in the DASHBOARD/PROJECTS view.
+They can see all their projects and select one to work on.
+AVAILABLE ACTIONS: open project, create new website, view project list`;
+                        availableData = `Total projects: ${totalProjects}
+Available projects: ${projectsList}${totalProjects > 5 ? '...' : ''}`;
+                        break;
+                        
+                    case 'templates':
+                        viewContext = `User is in TEMPLATES.
+They can browse, create, and manage website templates.
+AVAILABLE ACTIONS: create template, duplicate template, use template`;
+                        break;
+                        
+                    default:
+                        viewContext = `User is in ${currentView.toUpperCase()} view.`;
+                }
+
                 // Full prompt with system instruction, tools, history, and user message
                 const fullPrompt = `${systemPrompt}
+
+=== CURRENT CONTEXT (THIS IS WHERE THE USER IS RIGHT NOW) ===
+VIEW: ${currentView.toUpperCase()}
+PROJECT: ${projectInfo}
+
+${viewContext}
+
+${availableData ? `CURRENT DATA:\n${availableData}` : ''}
+
+=== IMPORTANT BEHAVIOR ===
+1. The user is looking at the ${currentView.toUpperCase()} screen right now
+2. Understand their request in the context of what they're viewing
+3. Use the appropriate tool for this view
+4. If they ask to "create", "add", "edit", etc., do it for the CURRENT VIEW
+5. If no project is loaded and they need one, help them load a project first
 
 AVAILABLE TOOLS (use these to help the user):
 ${toolsDescription}
 
-IMPORTANT: When you need to use a tool, respond with ONLY a JSON object in this exact format:
+When you need to use a tool, respond with ONLY a JSON object in this exact format:
 {"tool_call": {"name": "tool_name", "args": {"param1": "value1"}}}
 
-When you don't need to use a tool, respond normally with text.
+When you don't need to use a tool, respond naturally and helpfully.
 
 CONVERSATION HISTORY:
 ${historyText}
@@ -2774,9 +3215,11 @@ User: ${userMsg}`;
                 const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
                 const promptConfig = getPromptRef.current('global-assistant-main');
                 const chatModel = promptConfig?.model || 'gemini-2.5-flash';
+                // Ensure minimum 2048 tokens to avoid MAX_TOKENS truncation with empty content
+                const configuredMaxTokens = Math.max(2048, typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 2048);
                 const response = await generateContentViaProxy(proxyProjectId, fullPrompt, chatModel, {
                     temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
-                    maxOutputTokens: typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 500
+                    maxOutputTokens: configuredMaxTokens
                 }, user?.uid);
 
                 let responseText = extractTextFromResponse(response).trim();
@@ -2805,7 +3248,7 @@ Now provide a brief response to the user about what was done.`;
 
                         const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, chatModel, {
                             temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
-                            maxOutputTokens: typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 500
+                            maxOutputTokens: configuredMaxTokens
                         }, user?.uid);
 
                         responseText = extractTextFromResponse(followUpResponse).trim();

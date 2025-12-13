@@ -122,9 +122,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     const hasChanges = (userDocument && (name !== userDocument.name || !!photoFile));
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm">
+        <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
+            <>
+                <div className="p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm rounded-t-xl">
                     <h2 className="text-xl font-bold text-foreground flex items-center">
                         {t('profile.title')}
                     </h2>
@@ -245,7 +245,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                 </div>
-            </div>
+            </>
         </Modal>
     );
 };

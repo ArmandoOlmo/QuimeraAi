@@ -140,7 +140,7 @@ Add this script to any website:
 
 ```html
 <script 
-  src="https://quimera.app/widget-embed.js" 
+  src="https://quimera.ai/widget-embed.js" 
   data-project-id="YOUR_PROJECT_ID"
 ></script>
 ```
@@ -150,9 +150,9 @@ Add this script to any website:
 ```javascript
 (function() {
   var script = document.createElement('script');
-  script.src = 'https://quimera.app/widget-embed.js';
+  script.src = 'https://quimera.ai/widget-embed.js';
   script.dataset.projectId = 'YOUR_PROJECT_ID';
-  script.dataset.apiUrl = 'https://quimera.app/api/widget'; // optional
+  script.dataset.apiUrl = 'https://quimera.ai/api/widget'; // optional
   document.body.appendChild(script);
 })();
 ```

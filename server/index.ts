@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 8080;
 
 // Cloud Run domain - used to identify if request is from custom domain
 const CLOUD_RUN_DOMAIN = process.env.CLOUD_RUN_URL || 'quimera-ai.run.app';
-const APP_DOMAIN = process.env.APP_DOMAIN || 'quimera.app';
+const APP_DOMAIN = process.env.APP_DOMAIN || 'quimera.ai';
 
 async function createServer() {
     const app = express();
@@ -161,7 +161,7 @@ function getDomainNotFoundPage(domain: string): string {
     <div class="container">
         <h1>🌐 Dominio no configurado</h1>
         <p>El dominio <code>${domain}</code> no está asociado a ningún proyecto.</p>
-        <p>Si eres el propietario, configura este dominio en tu <a href="https://quimera.app/domains">panel de dominios</a>.</p>
+        <p>Si eres el propietario, configura este dominio en tu <a href="https://quimera.ai/domains">panel de dominios</a>.</p>
     </div>
 </body>
 </html>`;

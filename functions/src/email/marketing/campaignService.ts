@@ -108,7 +108,7 @@ export const sendCampaign = functions.https.onCall(async (data: {
         const projectSettings = projectDoc.data() || {};
 
         // Prepare email parameters
-        const fromEmail = emailSettings.fromEmail || 'noreply@quimera.app';
+        const fromEmail = emailSettings.fromEmail || 'noreply@quimera.ai';
         const fromName = emailSettings.fromName || projectSettings.name || 'Quimera';
 
         // Send emails in batches
@@ -287,7 +287,7 @@ async function sendCampaignEmails(params: {
                     firstName: recipient.firstName || '',
                     lastName: recipient.lastName || '',
                     email: recipient.email,
-                    unsubscribeUrl: `https://quimera.app/unsubscribe?email=${encodeURIComponent(recipient.email)}&project=${projectId}`,
+                    unsubscribeUrl: `https://quimera.ai/unsubscribe?email=${encodeURIComponent(recipient.email)}&project=${projectId}`,
                 });
 
                 const result = await sendEmail({
@@ -396,7 +396,7 @@ export const processScheduledCampaigns = functions.pubsub
                             const result = await sendCampaignEmails({
                                 campaign,
                                 recipients,
-                                fromEmail: emailSettings.fromEmail || 'noreply@quimera.app',
+                                fromEmail: emailSettings.fromEmail || 'noreply@quimera.ai',
                                 fromName: emailSettings.fromName || projectData.name || 'Quimera',
                                 userId: userDoc.id,
                                 projectId: projectDoc.id,
@@ -481,7 +481,7 @@ export const sendTestEmail = functions.https.onCall(async (data: {
             to: testEmail,
             subject: `[TEST] ${campaign.subject}`,
             html: testHtml,
-            from: `${emailSettings.fromName || projectSettings.name || 'Quimera'} <${emailSettings.fromEmail || 'noreply@quimera.app'}>`,
+            from: `${emailSettings.fromName || projectSettings.name || 'Quimera'} <${emailSettings.fromEmail || 'noreply@quimera.ai'}>`,
         });
 
         return {

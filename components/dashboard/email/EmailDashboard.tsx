@@ -72,9 +72,9 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { settings, isLoading: settingsLoading } = useEmailSettings(userId, projectId);
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId, { limit: 100 });
 
-    // Sync selected project with active project
+    // Sync selected project with active project (always sync when activeProjectId changes)
     useEffect(() => {
-        if (activeProjectId && !selectedProjectId) {
+        if (activeProjectId) {
             setSelectedProjectId(activeProjectId);
         }
     }, [activeProjectId]);

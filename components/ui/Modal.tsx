@@ -28,7 +28,7 @@ const Modal: React.FC<ModalProps> = ({ children, onClose, isOpen, maxWidth = 'ma
         onClick={onClose}
         aria-hidden="true"
       ></div>
-      <div className={`relative bg-editor-bg border border-editor-border rounded-xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col ${className}`}>
+      <div className={`relative bg-editor-bg border border-editor-border rounded-xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col overflow-hidden ${className}`}>
         {children}
       </div>
     </div>,

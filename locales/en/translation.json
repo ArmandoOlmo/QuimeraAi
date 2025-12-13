@@ -1373,6 +1373,17 @@
       "negotiation": "Negotiation",
       "won": "Won",
       "lost": "Lost"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "logActivity": "Log Activity",
+      "addActivity": "Add Activity",
+      "noActivities": "No activities logged yet"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "addTask": "Add Task",
+      "noTasks": "No tasks yet"
     }
   },
   "domains": {

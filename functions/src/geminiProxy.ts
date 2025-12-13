@@ -25,8 +25,8 @@ const db = admin.firestore();
 // SECURITY: Allowed Origins for CORS
 // ============================================
 const ALLOWED_ORIGINS = [
-    'https://quimera.app',
-    'https://www.quimera.app',
+    'https://quimera.ai',
+    'https://www.quimera.ai',
     'https://quimeraai.web.app',
     'https://quimeraai.firebaseapp.com',
     // Development origins

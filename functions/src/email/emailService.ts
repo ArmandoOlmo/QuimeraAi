@@ -97,7 +97,7 @@ export const sendEmail = async (
 
         // Send email
         const { data, error } = await resend.emails.send({
-            from: params.from || config?.defaultFrom || 'Quimera <noreply@quimera.app>',
+            from: params.from || config?.defaultFrom || 'Quimera <noreply@quimera.ai>',
             to: recipients,
             subject: params.subject,
             html: params.html,

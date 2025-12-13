@@ -1368,6 +1368,17 @@
       "negotiation": "Negociación",
       "won": "Ganado",
       "lost": "Perdido"
+    },
+    "timeline": {
+      "title": "Línea de Tiempo",
+      "logActivity": "Registrar Actividad",
+      "addActivity": "Agregar Actividad",
+      "noActivities": "Sin actividades registradas"
+    },
+    "tasks": {
+      "title": "Tareas",
+      "addTask": "Agregar Tarea",
+      "noTasks": "Sin tareas pendientes"
     }
   },
   "domains": {
@@ -4205,5 +4216,24 @@
     "createFirst": "Crea tu primer artículo para comenzar",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar este artículo? Esta acción no se puede deshacer.",
     "bulkDeleteConfirm": "¿Eliminar {count} artículo(s)? Esta acción no se puede deshacer."
+  },
+  "profile": {
+    "title": "Configuración y Perfil",
+    "editProfile": "Editar Perfil",
+    "displayName": "Nombre para Mostrar",
+    "proPlan": "Plan Pro",
+    "saveChanges": "Guardar Cambios",
+    "changePhoto": "Cambiar Foto",
+    "uploadPhoto": "Subir Foto",
+    "dangerZone": "Zona de Peligro",
+    "deleteAccount": "Eliminar Mi Cuenta",
+    "deleteWarning": "Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.",
+    "confirmWithPassword": "Confirma con tu contraseña",
+    "confirmDeletion": "Confirmar Eliminación",
+    "errors": {
+      "updateFailed": "Error al actualizar el perfil. Por favor intenta de nuevo.",
+      "deleteFailed": "Error al eliminar la cuenta. Por favor intenta más tarde.",
+      "incorrectPassword": "Contraseña incorrecta. Por favor intenta de nuevo."
+    }
   }
 }

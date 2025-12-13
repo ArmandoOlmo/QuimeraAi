@@ -75,7 +75,7 @@ export const onLeadCreatedSendEmail = functions.firestore
 
             const siteName = projectData.name || 'Tu Sitio Web';
             const submittedAt = formatDateTime(lead.createdAt || new Date());
-            const dashboardUrl = `https://quimera.app/dashboard/leads/${leadId}?project=${projectId}`;
+            const dashboardUrl = `https://quimera.ai/dashboard/leads/${leadId}?project=${projectId}`;
 
             // Prepare email content
             const emailHtml = getLeadNotificationTemplate({
@@ -99,7 +99,7 @@ export const onLeadCreatedSendEmail = functions.firestore
                 to: ownerEmail,
                 subject: `Nuevo Lead: ${lead.name || lead.email || 'Contacto'} - ${siteName}`,
                 html: emailHtml,
-                from: `${siteName} <noreply@quimera.app>`,
+                from: `${siteName} <noreply@quimera.ai>`,
                 replyTo: lead.email,
                 tags: [
                     { name: 'type', value: 'lead-notification' },
@@ -187,7 +187,7 @@ export const onLeadScoreUpdate = functions.firestore
                 if (!ownerEmail) return;
 
                 const siteName = projectData?.name || 'Tu Sitio Web';
-                const dashboardUrl = `https://quimera.app/dashboard/leads/${leadId}?project=${projectId}`;
+                const dashboardUrl = `https://quimera.ai/dashboard/leads/${leadId}?project=${projectId}`;
 
                 // Send a special hot lead alert
                 const emailHtml = `
@@ -222,7 +222,7 @@ export const onLeadScoreUpdate = functions.firestore
                     to: ownerEmail,
                     subject: `🔥 Lead Caliente: ${after.name || after.email} (Score: ${after.leadScore})`,
                     html: emailHtml,
-                    from: `${siteName} <noreply@quimera.app>`,
+                    from: `${siteName} <noreply@quimera.ai>`,
                     tags: [
                         { name: 'type', value: 'hot-lead-alert' },
                         { name: 'project', value: projectId },

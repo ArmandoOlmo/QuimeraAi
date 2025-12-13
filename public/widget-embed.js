@@ -2,15 +2,15 @@
  * Quimera AI Chat Widget Embed Script
  * 
  * Usage:
- * <script src="https://quimera.app/widget-embed.js" data-project-id="YOUR_PROJECT_ID"></script>
+ * <script src="https://quimera.ai/widget-embed.js" data-project-id="YOUR_PROJECT_ID"></script>
  * 
  * Or programmatically:
  * <script>
  *   (function() {
  *     var script = document.createElement('script');
- *     script.src = 'https://quimera.app/widget-embed.js';
+ *     script.src = 'https://quimera.ai/widget-embed.js';
  *     script.dataset.projectId = 'YOUR_PROJECT_ID';
- *     script.dataset.apiUrl = 'https://quimera.app/api/widget'; // optional
+ *     script.dataset.apiUrl = 'https://quimera.ai/api/widget'; // optional
  *     document.body.appendChild(script);
  *   })();
  * </script>
@@ -27,7 +27,7 @@
 
     // Get configuration from data attributes
     var projectId = currentScript.getAttribute('data-project-id');
-    var apiUrl = currentScript.getAttribute('data-api-url') || 'https://quimera.app/api/widget';
+    var apiUrl = currentScript.getAttribute('data-api-url') || 'https://quimera.ai/api/widget';
 
     if (!projectId) {
         console.error('[Quimera Widget] Error: data-project-id attribute is required');
@@ -97,12 +97,12 @@
         // Load widget CSS
         var cssLink = document.createElement('link');
         cssLink.rel = 'stylesheet';
-        cssLink.href = 'https://quimera.app/widget-bundle.css';
+        cssLink.href = 'https://quimera.ai/widget-bundle.css';
         document.head.appendChild(cssLink);
         
         // Load widget JavaScript bundle
         var widgetScript = document.createElement('script');
-        widgetScript.src = 'https://quimera.app/widget-bundle.js';
+        widgetScript.src = 'https://quimera.ai/widget-bundle.js';
         widgetScript.crossOrigin = 'anonymous';
         
         widgetScript.onload = function() {
