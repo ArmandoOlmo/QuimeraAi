@@ -298,14 +298,19 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Articles</span>
                     </div>
                     <div className="p-2 border-b border-border">
-                        <div className="relative">
-                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded px-2 py-1">
+                            <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
                             <input
-                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                 placeholder="Search articles..."
                                 value={articleSearch}
                                 onChange={(e) => setArticleSearch(e.target.value)}
                             />
+                            {articleSearch && (
+                                <button onClick={() => setArticleSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={12} />
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className="py-1 max-h-80 overflow-y-auto custom-scrollbar">
@@ -448,14 +453,19 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Products</span>
                     </div>
                     <div className="p-2 border-b border-border">
-                        <div className="relative">
-                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded px-2 py-1">
+                            <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
                             <input
-                                className="w-full bg-secondary/30 border border-border rounded px-2 py-1 pl-6 text-xs outline-none focus:border-primary"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                 placeholder="Search products..."
                                 value={productSearch}
                                 onChange={(e) => setProductSearch(e.target.value)}
                             />
+                            {productSearch && (
+                                <button onClick={() => setProductSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={12} />
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className="py-1 max-h-80 overflow-y-auto custom-scrollbar">

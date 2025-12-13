@@ -175,14 +175,14 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             <div className="absolute z-50 w-full mt-2 rounded-xl shadow-2xl overflow-hidden border border-border bg-popover">
                                 {/* Search */}
                                 <div className="p-3 border-b border-border bg-popover">
-                                    <div className="relative">
-                                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder={t('onboarding.searchIndustry', 'Search industries...')}
-                                            className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm text-popover-foreground bg-background placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                             autoFocus
                                         />
                                     </div>

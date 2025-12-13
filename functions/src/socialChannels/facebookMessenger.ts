@@ -500,3 +500,4 @@ async function updateMessagesReadBefore(projectId: string, senderId: string, wat
     }
 }
 
+

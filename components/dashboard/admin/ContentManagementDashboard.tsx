@@ -4,7 +4,7 @@ import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import ModernCMSEditor from '../../cms/modern/ModernCMSEditor';
-import { Menu as MenuIcon, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, ArrowLeft, Grid, List, Eye, Copy, Filter, Download, Users } from 'lucide-react';
+import { Menu as MenuIcon, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, ArrowLeft, Grid, List, Eye, Copy, Filter, Download, Users, X } from 'lucide-react';
 import { CMSPost } from '../../../types';
 
 interface ContentManagementDashboardProps {
@@ -197,15 +197,20 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                                 {/* Search */}
                                 <div className="flex-1">
-                                    <div className="relative">
-                                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('contentManagement.searchPlaceholder')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-10 pr-3 py-2 bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <X size={16} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 

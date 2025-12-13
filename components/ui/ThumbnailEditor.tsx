@@ -489,15 +489,20 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                             </div>
 
                             {/* Search */}
-                            <div className="relative w-full sm:w-48">
+                            <div className="flex items-center gap-2 w-full sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
+                                <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('common.search', 'Search...')}
-                                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-secondary border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                    className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                 />
-                                <Search size={14} className="absolute left-2.5 top-2 text-muted-foreground" />
+                                {searchQuery && (
+                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <X size={12} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 

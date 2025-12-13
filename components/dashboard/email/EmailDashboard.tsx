@@ -244,7 +244,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                         {/* Back Button Only */}
                         <button
                             onClick={() => setView('dashboard')}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={16} />

@@ -113,14 +113,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Load languages from Firestore
     useEffect(() => {
-        // #region agent log
-        const listenerId = `lang-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LanguageContext.tsx:116',message:'Creating language listener',data:{listenerId,i18nLang:i18n.language},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
         const unsubscribe = onSnapshot(doc(db, 'settings', 'languages'), (docSnapshot) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LanguageContext.tsx:121',message:'Language snapshot received',data:{listenerId,exists:docSnapshot.exists()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-            // #endregion
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
                 if (data.config && Array.isArray(data.config)) {
@@ -142,17 +135,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
             setLoading(false);
         }, (error) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LanguageContext.tsx:145',message:'Language listener error',data:{listenerId,error:String(error),code:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-            // #endregion
             console.error("Error listening to language config:", error);
             setLoading(false);
         });
 
         return () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LanguageContext.tsx:153',message:'Cleaning up language listener',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-            // #endregion
             unsubscribe();
         };
     }, [i18n]);

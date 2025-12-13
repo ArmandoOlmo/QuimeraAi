@@ -20,6 +20,7 @@ import {
     Sparkles,
     Menu,
     ArrowLeft,
+    X,
 } from 'lucide-react';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
@@ -111,44 +112,30 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
 
                     {/* Center: Search */}
                     <div className="hidden md:flex flex-1 max-w-xl mx-8">
-                        <div className="relative w-full group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                        <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="search"
                                 placeholder={t('email.searchProjects', 'Buscar proyectos...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 aria-label={t('email.searchProjects', 'Buscar proyectos')}
                             />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right: View Controls & Back Button */}
+                    {/* Right: Back Button */}
                     <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                aria-label={t('common.gridView', 'Vista de cuadrícula')}
-                                aria-pressed={viewMode === 'grid'}
-                            >
-                                <LayoutGrid size={16} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                aria-label={t('common.listView', 'Vista de lista')}
-                                aria-pressed={viewMode === 'list'}
-                            >
-                                <List size={16} />
-                            </button>
-                        </div>
-                        
                         {onBack && (
                             <button
                                 onClick={onBack}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                                 aria-label={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={16} />
@@ -160,16 +147,21 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
 
                 {/* Mobile Search */}
                 <div className="md:hidden px-4 py-3 border-b border-border bg-background">
-                    <div className="relative w-full">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="search"
                             placeholder={t('email.searchProjects', 'Buscar proyectos...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border border-border/40 rounded-xl py-2.5 pl-11 pr-4 outline-none text-sm"
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             aria-label={t('email.searchProjects', 'Buscar proyectos')}
                         />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -280,11 +272,26 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
                                 <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
                             </select>
 
-                            {/* Mobile View Toggle */}
+                            {/* View Toggle - Desktop */}
+                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    <LayoutGrid size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    <List size={16} />
+                                </button>
+                            </div>
+
+                            {/* View Toggle - Mobile */}
                             <button
                                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                                 className="sm:hidden p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                aria-label={viewMode === 'grid' ? t('common.listView') : t('common.gridView')}
                             >
                                 {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
                             </button>

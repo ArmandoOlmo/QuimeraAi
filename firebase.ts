@@ -142,9 +142,6 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'firebase.ts:136',message:'Firebase initialized with built-in persistence',data:{dbInitialized:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1',runId:'post-fix'})}).catch(()=>{});
-// #endregion
 // NOTE: Persistence is now configured in initializeFirestore above
 // The deprecated enableMultiTabIndexedDbPersistence has been removed
 

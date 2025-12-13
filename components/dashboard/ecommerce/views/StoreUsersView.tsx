@@ -308,16 +308,20 @@ const StoreUsersView: React.FC = () => {
 
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('storeUsers.searchPlaceholder', 'Buscar por nombre, email o teléfono...')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': theme.primary } as React.CSSProperties}
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
+                    {searchTerm && (
+                        <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
 
                 <button

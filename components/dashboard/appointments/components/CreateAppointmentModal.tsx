@@ -567,15 +567,20 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
 
                 {showLeadPicker && (
                     <div className="border border-border rounded-xl p-4 bg-secondary/30 mb-4 animate-scale-in">
-                        <div className="relative mb-3">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <div className="flex items-center gap-2 mb-3 bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Buscar leads..."
-                                className="w-full h-10 bg-background border border-border rounded-lg pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
 
                         <div className="max-h-48 overflow-y-auto space-y-2">

@@ -922,3 +922,4 @@ export const getAvailableIndustries = (): string[] => {
     return Object.keys(INDUSTRY_TEMPLATES);
 };
 
+

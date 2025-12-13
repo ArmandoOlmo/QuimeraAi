@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCMS } from '../../contexts/cms';
+import { useProject } from '../../contexts/project';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft } from 'lucide-react';
+import CMSProjectSelectorPage from './CMSProjectSelectorPage';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost } from '../../types';
@@ -14,7 +16,11 @@ import { sanitizeHtml } from '../../utils/sanitize';
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { navigate } = useRouter();
-    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost } = useCMS();
+    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost, hasActiveProject, activeProjectName } = useCMS();
+    const { loadProject } = useProject();
+    
+    // Project selector state
+    const [showProjectSelector, setShowProjectSelector] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<CMSPost | null>(null);
@@ -211,6 +217,21 @@ const CMSDashboard: React.FC = () => {
         );
     }
 
+    // Handle project selection - Stay in CMS Content Creator (don't navigate to editor)
+    const handleProjectSelect = async (projectId: string) => {
+        await loadProject(projectId, false, false); // fromAdmin=false, navigateToEditor=false
+        setShowProjectSelector(false);
+    };
+
+    // Show project selector when no project is selected or user wants to change
+    if (!hasActiveProject || showProjectSelector) {
+        return (
+            <CMSProjectSelectorPage 
+                onProjectSelect={handleProjectSelect}
+            />
+        );
+    }
+
     return (
         <div className="flex h-screen bg-background text-foreground">
             {/* AI Assistant Modal */}
@@ -225,52 +246,65 @@ const CMSDashboard: React.FC = () => {
             
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
+                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                    {/* Left Section */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <PenTool className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">Content Manager</h1>
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('cms.contentManager', 'Gestor de Contenido')}</h1>
+                        </div>
+                        
+                        {/* Project Selector Button */}
+                        {activeProjectName && (
+                            <button
+                                onClick={() => setShowProjectSelector(true)}
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-secondary/50 hover:bg-secondary border border-border rounded-lg transition-colors group"
+                                title={t('cms.changeProject', 'Cambiar proyecto')}
+                            >
+                                <span className="text-sm font-medium text-foreground max-w-[120px] sm:max-w-[200px] truncate">
+                                    {activeProjectName}
+                                </span>
+                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Center Section - Search */}
+                    <div className="hidden md:flex flex-1 justify-center mx-4">
+                        <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <input 
+                                type="text" 
+                                placeholder={t('common.search', 'Buscar...')} 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
+                    {/* Right Section */}
                     <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-                        {/* Botón Volver */}
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
-
-                        {/* Búsqueda Desktop - Compacta */}
-                        <div className="relative group hidden md:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-4 h-4" />
-                            <input 
-                                type="text" 
-                                placeholder="Search..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-40 focus:w-56 h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 outline-none transition-all placeholder:text-muted-foreground/70 text-sm"
-                            />
-                        </div>
-
                         {/* Búsqueda Móvil - Expandable */}
                         <div className="md:hidden">
                             {isMobileSearchOpen ? (
                                 <div className="absolute left-0 right-0 top-full bg-background border-b border-border p-3 flex items-center gap-2 animate-slide-down z-30">
-                                    <div className="flex-1 relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                    <div className="flex items-center gap-2 flex-1 bg-muted/50 rounded-lg px-3 py-2">
+                                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                         <input 
                                             type="text" 
-                                            placeholder="Search posts..." 
+                                            placeholder={t('cms.searchPosts', 'Buscar posts...')} 
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-secondary/50 border border-border rounded-lg py-2 pl-9 pr-4 outline-none text-sm"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground"
                                             autoFocus
                                         />
                                     </div>
@@ -287,7 +321,7 @@ const CMSDashboard: React.FC = () => {
                             ) : (
                                 <button
                                     onClick={() => setIsMobileSearchOpen(true)}
-                                    className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-md transition-colors"
+                                    className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                                 >
                                     <Search className="w-4 h-4" />
                                 </button>
@@ -298,7 +332,7 @@ const CMSDashboard: React.FC = () => {
                         {cmsPosts.length > 0 && (
                             <button 
                                 onClick={handleExport}
-                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
                                 title="Export posts"
                             >
                                 <Download className="w-4 h-4" />
@@ -308,10 +342,10 @@ const CMSDashboard: React.FC = () => {
                         {/* Botón Crear con IA - Mobile compact */}
                         <button 
                             onClick={handleAiCreate}
-                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-bold transition-all text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200"
+                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
                         >
                             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Crear con IA</span>
+                            <span className="hidden sm:inline">{t('cms.createWithAI', 'Crear con IA')}</span>
                             <span className="sm:hidden">IA</span>
                         </button>
 
@@ -320,7 +354,17 @@ const CMSDashboard: React.FC = () => {
                             className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90"
                         >
                             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">New Post</span>
+                            <span className="hidden sm:inline">{t('cms.newPost', 'Nuevo Post')}</span>
+                        </button>
+
+                        {/* Botón Volver */}
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
                     </div>
                 </header>
@@ -328,49 +372,51 @@ const CMSDashboard: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
                     <div className="max-w-7xl mx-auto h-full space-y-4 sm:space-y-6">
                         
-                        {/* Métricas - Mobile optimized */}
+                        {/* Métricas - Unified responsive design */}
                         {cmsPosts.length > 0 && (
-                            <>
-                                {/* Desktop metrics */}
-                                <div className="hidden sm:flex items-center gap-8 text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="text-primary" size={18} />
-                                        <span className="text-muted-foreground">Total:</span>
-                                        <span className="font-bold text-foreground">{metrics.total}</span>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2">
-                                        <Globe className="text-green-500" size={18} />
-                                        <span className="text-muted-foreground">Published:</span>
-                                        <span className="font-bold text-green-500">{metrics.published}</span>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2">
-                                        <Edit3 className="text-yellow-500" size={18} />
-                                        <span className="text-muted-foreground">Drafts:</span>
-                                        <span className="font-bold text-yellow-500">{metrics.drafts}</span>
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                                {/* Total Posts */}
+                                <div className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/15 flex items-center justify-center mx-auto sm:mx-0">
+                                            <FileText className="text-primary" size={16} />
+                                        </div>
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{metrics.total}</p>
+                                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('cms.totalPosts', 'Total Posts')}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                {/* Mobile metrics - compact grid */}
-                                <div className="sm:hidden grid grid-cols-3 gap-2">
-                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
-                                        <FileText className="text-primary mx-auto mb-1" size={16} />
-                                        <p className="text-lg font-bold text-foreground">{metrics.total}</p>
-                                        <p className="text-[10px] text-muted-foreground uppercase">Total</p>
-                                    </div>
-                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
-                                        <Globe className="text-green-500 mx-auto mb-1" size={16} />
-                                        <p className="text-lg font-bold text-green-500">{metrics.published}</p>
-                                        <p className="text-[10px] text-muted-foreground uppercase">Published</p>
-                                    </div>
-                                    <div className="bg-card/50 border border-border rounded-lg p-3 text-center">
-                                        <Edit3 className="text-yellow-500 mx-auto mb-1" size={16} />
-                                        <p className="text-lg font-bold text-yellow-500">{metrics.drafts}</p>
-                                        <p className="text-[10px] text-muted-foreground uppercase">Drafts</p>
+
+                                {/* Published */}
+                                <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
+                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/15 flex items-center justify-center mx-auto sm:mx-0">
+                                            <Globe className="text-emerald-500" size={16} />
+                                        </div>
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-xl sm:text-2xl font-bold text-emerald-500 tracking-tight">{metrics.published}</p>
+                                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('cms.published', 'Publicados')}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </>
+
+                                {/* Drafts */}
+                                <div className="group relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
+                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
+                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/15 flex items-center justify-center mx-auto sm:mx-0">
+                                            <Edit3 className="text-amber-500" size={16} />
+                                        </div>
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{metrics.drafts}</p>
+                                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('cms.drafts', 'Borradores')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         )}
 
                         {/* Barra de Filtros */}
@@ -391,7 +437,7 @@ const CMSDashboard: React.FC = () => {
                                             }}
                                             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                                         >
-                                            <XIcon size={12} /> Clear
+                                            <XIcon size={12} /> {t('common.clear', 'Limpiar')}
                                         </button>
                                     )}
                                 </div>
@@ -434,9 +480,9 @@ const CMSDashboard: React.FC = () => {
                                     onChange={(e) => setStatusFilter(e.target.value as any)}
                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
-                                    <option value="all">All Status</option>
-                                    <option value="published">Published</option>
-                                    <option value="draft">Draft</option>
+                                    <option value="all">{t('cms.filters.allStatus', 'Todos los estados')}</option>
+                                    <option value="published">{t('cms.filters.published', 'Publicados')}</option>
+                                    <option value="draft">{t('cms.filters.draft', 'Borradores')}</option>
                                 </select>
 
                                 {/* Filtro de fecha */}
@@ -445,10 +491,10 @@ const CMSDashboard: React.FC = () => {
                                     onChange={(e) => setDateRange(e.target.value as any)}
                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="week">Last 7 Days</option>
-                                    <option value="month">Last 30 Days</option>
+                                    <option value="all">{t('cms.filters.allTime', 'Todo el tiempo')}</option>
+                                    <option value="today">{t('cms.filters.today', 'Hoy')}</option>
+                                    <option value="week">{t('cms.filters.last7Days', 'Últimos 7 días')}</option>
+                                    <option value="month">{t('cms.filters.last30Days', 'Últimos 30 días')}</option>
                                 </select>
 
                                 {/* Ordenamiento */}
@@ -457,8 +503,8 @@ const CMSDashboard: React.FC = () => {
                                     onChange={(e) => setSortBy(e.target.value as any)}
                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                 >
-                                    <option value="date">Sort by Date</option>
-                                    <option value="title">Sort by Title</option>
+                                    <option value="date">{t('cms.filters.sortByDate', 'Ordenar por fecha')}</option>
+                                    <option value="title">{t('cms.filters.sortByTitle', 'Ordenar por título')}</option>
                                 </select>
                             </div>
                         </div>
@@ -474,19 +520,19 @@ const CMSDashboard: React.FC = () => {
                                 </div>
                                 <h3 className="text-xl font-bold text-foreground mb-2">
                                     {searchQuery || statusFilter !== 'all' || dateRange !== 'all' 
-                                        ? 'No posts match your filters' 
-                                        : 'No Content Yet'}
+                                        ? t('cms.noPostsMatchFilters', 'No hay posts que coincidan con los filtros') 
+                                        : t('cms.noContentYet', 'Aún no hay contenido')}
                                 </h3>
                                 <p className="text-muted-foreground mb-6">
                                     {searchQuery || statusFilter !== 'all' || dateRange !== 'all'
-                                        ? 'Try adjusting your filters to see more results.'
-                                        : 'Start building your blog or pages using our AI-powered editor.'}
+                                        ? t('cms.tryAdjustingFilters', 'Intenta ajustar los filtros para ver más resultados.')
+                                        : t('cms.startBuildingContent', 'Comienza a crear tu blog o páginas usando nuestro editor con IA.')}
                                 </p>
                                 <button 
                                     onClick={handleCreateNew} 
-                                    className="text-yellow-400 font-bold hover:underline hover:text-yellow-300 transition-colors"
+                                    className="text-primary font-bold hover:underline hover:opacity-80 transition-colors"
                                 >
-                                    Create your first post
+                                    {t('cms.createFirstPost', 'Crear tu primer post')}
                                 </button>
                             </div>
                         ) : viewMode === 'list' ? (
@@ -505,10 +551,10 @@ const CMSDashboard: React.FC = () => {
                                                         className="rounded border-border"
                                                     />
                                                 </th>
-                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Title</th>
-                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Status</th>
-                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">Date</th>
-                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground w-32">Actions</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('cms.table.title', 'Título')}</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('cms.table.status', 'Estado')}</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('cms.table.date', 'Fecha')}</th>
+                                                <th className="p-4 text-left text-xs font-medium text-muted-foreground w-32">{t('cms.table.actions', 'Acciones')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -535,7 +581,7 @@ const CMSDashboard: React.FC = () => {
                                                             </div>
                                                             <div className="overflow-hidden">
                                                                 <p className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</p>
-                                                                <p className="text-xs text-muted-foreground line-clamp-1">{post.excerpt || 'No excerpt'}</p>
+                                                                <p className="text-xs text-muted-foreground line-clamp-1">{post.excerpt || t('cms.noExcerpt', 'Sin extracto')}</p>
                                                             </div>
                                                         </div>
                                                     </td>
@@ -621,7 +667,7 @@ const CMSDashboard: React.FC = () => {
                                                             {post.status}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{post.excerpt || 'No excerpt'}</p>
+                                                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{post.excerpt || t('cms.noExcerpt', 'Sin extracto')}</p>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                             <Calendar size={10} />
@@ -830,20 +876,20 @@ const CMSDashboard: React.FC = () => {
                         {selectedPosts.length > 0 && (
                             <div className="fixed bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto bg-card border border-border rounded-xl shadow-2xl p-3 sm:p-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 z-50 animate-fade-in-up">
                                 <span className="text-xs sm:text-sm font-medium text-foreground">
-                                    {selectedPosts.length} selected
+                                    {selectedPosts.length} {t('common.selected', 'seleccionados')}
                                 </span>
                                 <div className="flex items-center gap-2">
                                     <button 
                                         onClick={handleBulkDelete}
                                         className="px-2.5 sm:px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
                                     >
-                                        <Trash2 size={12} /> <span className="hidden sm:inline">Delete</span>
+                                        <Trash2 size={12} /> <span className="hidden sm:inline">{t('common.delete', 'Eliminar')}</span>
                                     </button>
                                     <button 
                                         onClick={() => setSelectedPosts([])}
                                         className="px-2.5 sm:px-3 py-1.5 text-xs bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors"
                                     >
-                                        Cancel
+                                        {t('common.cancel', 'Cancelar')}
                                     </button>
                                 </div>
                             </div>

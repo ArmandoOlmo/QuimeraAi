@@ -149,15 +149,20 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                         {/* Search & Filters Bar */}
                         <div className="mb-6 flex flex-wrap gap-3">
                             {/* Search */}
-                            <div className="relative flex-1 min-w-[200px]">
+                            <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-editor-border/40 rounded-lg px-3 py-2">
+                                <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
                                     value={library.searchQuery}
                                     onChange={(e) => library.setSearchQuery(e.target.value)}
                                     placeholder={t('common.search', 'Search global assets...')}
-                                    className="w-full pl-10 pr-4 py-2 text-sm bg-editor-panel-bg border border-editor-border rounded-lg focus:ring-2 focus:ring-editor-accent focus:outline-none"
+                                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 />
-                                <Search size={16} className="absolute left-3 top-3 text-editor-text-secondary" />
+                                {library.searchQuery && (
+                                    <button onClick={() => library.setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <X size={16} />
+                                    </button>
+                                )}
                             </div>
 
                             {/* Filter Toggle */}

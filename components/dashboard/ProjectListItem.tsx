@@ -126,9 +126,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
   };
 
   const statusColor = {
-    'Published': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-    'Draft': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-    'Template': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+    'Published': 'bg-green-500/20 text-green-500',
+    'Draft': 'bg-muted text-muted-foreground',
+    'Template': 'bg-primary/20 text-primary',
   }[project.status];
 
   const translatedStatus = {
@@ -142,14 +142,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
       onClick={handleOpenProject}
       className={`
         group relative flex items-center gap-4 p-4 
-        bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700
-        hover:border-blue-400 dark:hover:border-blue-500 
-        hover:shadow-lg transition-all duration-200 cursor-pointer
+        bg-card rounded-xl border border-border
+        hover:border-primary/50 hover:shadow-lg transition-all duration-200 cursor-pointer
         ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
       {/* Thumbnail */}
-      <div className="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+      <div className="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-muted">
         {project.thumbnailUrl ? (
           <img
             src={project.thumbnailUrl}
@@ -157,7 +156,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <ExternalLink size={24} />
           </div>
         )}
@@ -166,14 +165,14 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 mb-1">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+          <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
             {project.name}
           </h3>
           <span className={`px-2 py-1 rounded-md text-xs font-medium ${statusColor}`}>
             {translatedStatus}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock size={14} />
           <span>{t('common.updated')} {formatDate(project.lastUpdated)}</span>
         </div>
@@ -183,7 +182,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
       <div className="flex-shrink-0 relative" ref={menuRef}>
         <button
           onClick={toggleMenu}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
           aria-label={t('common.openMenu')}
         >
           {isDeleting ? (
@@ -195,10 +194,10 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
 
         {/* Dropdown Menu */}
         {showMenu && !isDeleting && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-lg shadow-xl border border-border z-50 overflow-hidden">
             <button
               onClick={handleEditClick}
-              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
             >
               <Pencil size={16} />
               <span>{isTemplate ? t('project.actions.useTemplate') : t('project.actions.edit')}</span>
@@ -207,7 +206,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
             {!isTemplate && (
               <button
                 onClick={handleDuplicateClick}
-                className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
               >
                 <Copy size={16} />
                 <span>{t('project.actions.duplicate')}</span>
@@ -216,7 +215,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
 
             <button
               onClick={handleDownloadClick}
-              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
             >
               <Download size={16} />
               <span>{t('project.actions.export')}</span>
@@ -224,7 +223,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
 
             <button
               onClick={handleDeleteClick}
-              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-destructive/10 text-destructive transition-colors"
             >
               <Trash2 size={16} />
               <span>{isTemplate ? t('common.remove') : t('project.actions.delete')}</span>

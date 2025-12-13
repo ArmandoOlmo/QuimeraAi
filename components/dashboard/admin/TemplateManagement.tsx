@@ -437,78 +437,78 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 )}
 
                 <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto">
-                    {/* Statistics - Mobile Cards / Desktop Inline */}
-                    {/* Mobile: Grid of compact cards */}
-                    <div className="grid grid-cols-2 gap-2 mb-4 sm:hidden">
-                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
-                            <div className="flex items-center gap-2 mb-1">
-                                <LayoutTemplate size={16} className="text-editor-accent" />
-                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.title', 'Templates')}</span>
+                    {/* Statistics Cards - Responsive Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                        {/* Total Templates Card */}
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-editor-accent/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-editor-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="p-2 sm:p-2.5 bg-editor-accent/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <LayoutTemplate size={18} className="sm:w-5 sm:h-5 text-editor-accent" />
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-editor-accent/10 text-editor-accent rounded-full">
+                                        {activeTemplates} {t('superadmin.templateManagement.active', 'active')}
+                                    </span>
+                                </div>
+                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-editor-accent transition-colors">{templates.length}</div>
+                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.totalTemplates', 'Total Templates')}</p>
                             </div>
-                            <div className="text-xl font-bold">{templates.length}</div>
-                            <span className="text-xs text-editor-text-secondary">{activeTemplates} {t('superadmin.templateManagement.active', 'active')}</span>
                         </div>
 
-                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Globe size={16} className="text-blue-500" />
-                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</span>
+                        {/* Sites Created Card */}
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="p-2 sm:p-2.5 bg-blue-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Globe size={18} className="sm:w-5 sm:h-5 text-blue-500" />
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full truncate max-w-[80px] sm:max-w-none">
+                                        {t('superadmin.templateManagement.fromTemplates', 'from templates')}
+                                    </span>
+                                </div>
+                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-blue-400 transition-colors">{totalSitesUsingTemplates}</div>
+                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</p>
                             </div>
-                            <div className="text-xl font-bold">{totalSitesUsingTemplates}</div>
-                            <span className="text-xs text-editor-text-secondary">{t('superadmin.sitesCreated').toLowerCase()}</span>
                         </div>
 
-                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
-                            <div className="flex items-center gap-2 mb-1">
-                                <TrendingUp size={16} className="text-green-500" />
-                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</span>
+                        {/* Most Popular Card */}
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-green-500/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="p-2 sm:p-2.5 bg-green-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <TrendingUp size={18} className="sm:w-5 sm:h-5 text-green-500" />
+                                    </div>
+                                    {mostUsedTemplate && (
+                                        <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full">
+                                            {getTemplateUsage(mostUsedTemplate.id)} {t('superadmin.templateManagement.uses', 'uses')}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-base sm:text-xl font-bold text-editor-text-primary mb-0.5 group-hover:text-green-400 transition-colors truncate" title={mostUsedTemplate?.name}>
+                                    {mostUsedTemplate?.name || 'N/A'}
+                                </div>
+                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</p>
                             </div>
-                            <div className="text-sm font-bold truncate">{mostUsedTemplate?.name || 'N/A'}</div>
-                            <span className="text-xs text-editor-text-secondary">
-                                {mostUsedTemplate ? `${getTemplateUsage(mostUsedTemplate.id)} ${t('superadmin.templateManagement.uses', 'uses')}` : ''}
-                            </span>
                         </div>
 
-                        <div className="bg-editor-panel-bg/60 rounded-xl p-3 border border-editor-border/50">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Archive size={16} className="text-orange-500" />
-                                <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.archived', 'Archived')}</span>
+                        {/* Archived Card */}
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-orange-500/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="p-2 sm:p-2.5 bg-orange-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Archive size={18} className="sm:w-5 sm:h-5 text-orange-500" />
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-orange-500/10 text-orange-400 rounded-full">
+                                        {t('superadmin.templateManagement.title', 'Templates')}
+                                    </span>
+                                </div>
+                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-orange-400 transition-colors">{archivedTemplates}</div>
+                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.archived', 'Archived')}</p>
                             </div>
-                            <div className="text-xl font-bold">{archivedTemplates}</div>
-                            <span className="text-xs text-editor-text-secondary">{t('superadmin.templateManagement.title', 'Templates')}</span>
-                        </div>
-                    </div>
-
-                    {/* Desktop: Inline stats */}
-                    <div className="hidden sm:flex flex-wrap items-center gap-6 mb-6 text-sm">
-                        <div className="flex items-center gap-2">
-                            <LayoutTemplate size={16} className="text-editor-accent" />
-                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.totalTemplates', 'Total Templates')}:</span>
-                            <span className="font-bold">{templates.length}</span>
-                            <span className="text-editor-text-secondary text-xs">({activeTemplates} {t('superadmin.templateManagement.active', 'active')})</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Globe size={16} className="text-blue-500" />
-                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}:</span>
-                            <span className="font-bold">{totalSitesUsingTemplates}</span>
-                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.fromTemplates', 'from templates')}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <TrendingUp size={16} className="text-green-500" />
-                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}:</span>
-                            <span className="font-bold">{mostUsedTemplate?.name || 'N/A'}</span>
-                            <span className="text-editor-text-secondary text-xs">
-                                {mostUsedTemplate ? `(${getTemplateUsage(mostUsedTemplate.id)} ${t('superadmin.templateManagement.uses', 'uses')})` : ''}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Archive size={16} className="text-orange-500" />
-                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.archived', 'Archived')}:</span>
-                            <span className="font-bold">{archivedTemplates}</span>
-                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.title', 'Templates')}</span>
                         </div>
                     </div>
 

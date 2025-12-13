@@ -472,16 +472,14 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Búsqueda */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
+          <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
           <input
             type="text"
             placeholder="Buscar por nombre, industria o tags..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#130a1d] border border-white/10 rounded-lg pl-9 pr-3 py-2 
-                       text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-yellow-500/50 
-                       focus:border-yellow-500/50 outline-none transition-all"
+            className="flex-1 bg-transparent outline-none text-sm min-w-0"
           />
         </div>
 

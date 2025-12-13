@@ -12,3 +12,22 @@ export type {
     EcommerceChatContext,
 } from './useEcommerceChat';
 
+export { useSocialChat } from './useSocialChat';
+export type {
+    ConversationWithMessages,
+    SocialChatStats,
+    SendMessageParams,
+} from './useSocialChat';
+
+export { useSocialChatAnalytics } from './useSocialChatAnalytics';
+export type {
+    DateRange,
+    ChannelMetrics,
+    DailyMetrics,
+    ResponseTimeMetrics,
+    ConversationInsights,
+    TopKeywords,
+    ChatAnalyticsSummary,
+    AnalyticsPeriod,
+} from './useSocialChatAnalytics';
+

@@ -49,14 +49,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // Auth State Observer
     useEffect(() => {
-        // #region agent log
-        const listenerId = `auth-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:52',message:'Creating auth state observer',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:57',message:'Auth state changed',data:{listenerId,hasUser:!!firebaseUser,userId:firebaseUser?.uid},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-            // #endregion
             setUser(firebaseUser);
             
             if (firebaseUser) {
@@ -112,9 +105,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         
         return () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:111',message:'Cleaning up auth state observer',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-            // #endregion
             unsubscribe();
         };
     }, []);

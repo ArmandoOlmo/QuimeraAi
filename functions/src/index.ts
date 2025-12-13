@@ -105,6 +105,19 @@ import {
     sendOutboundMessage
 } from './socialChannels';
 
+// Meta OAuth functions
+import {
+    metaOAuthCallback,
+    metaOAuthInit,
+    getMetaConnection,
+    disconnectMeta,
+    refreshMetaToken,
+    getConnectedPages,
+    getWhatsAppAccounts,
+    selectMetaAssets,
+    setupWebhooks
+} from './metaOAuth';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -222,6 +235,19 @@ export const socialChannels = {
     sendOutboundMessage
 };
 
+// Export Meta OAuth functions
+export const metaOAuth = {
+    callback: metaOAuthCallback,
+    init: metaOAuthInit,
+    getConnection: getMetaConnection,
+    disconnect: disconnectMeta,
+    refreshToken: refreshMetaToken,
+    getPages: getConnectedPages,
+    getWhatsAppAccounts: getWhatsAppAccounts,
+    selectAssets: selectMetaAssets,
+    setupWebhooks: setupWebhooks
+};
+
 // Alternative flat exports for easier routing
 export { 
     getWidgetConfig, 
@@ -300,6 +326,16 @@ export {
     instagramWebhook,
     instagramWebhookVerify,
     processIncomingMessage,
-    sendOutboundMessage
+    sendOutboundMessage,
+    // Meta OAuth exports
+    metaOAuthCallback,
+    metaOAuthInit,
+    getMetaConnection,
+    disconnectMeta,
+    refreshMetaToken,
+    getConnectedPages,
+    getWhatsAppAccounts,
+    selectMetaAssets,
+    setupWebhooks
 };
 

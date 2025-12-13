@@ -264,15 +264,20 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                 <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
                     {/* Search */}
                     <div className="p-2 border-b border-editor-border">
-                        <div className="relative">
-                            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('editor.controls.ecommerce.productSelector.searchPlaceholder', 'Search products...')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-editor-bg border border-editor-border rounded-md pl-7 pr-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={12} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -404,15 +409,20 @@ const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedP
                 <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
                     {/* Search */}
                     <div className="p-2 border-b border-editor-border">
-                        <div className="relative">
-                            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('editor.controls.ecommerce.singleProductSelector.searchPlaceholder', 'Search products...')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-editor-bg border border-editor-border rounded-md pl-7 pr-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={12} />
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -80,15 +80,20 @@ const ComponentMarketplace: React.FC = () => {
 
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-editor-text-secondary" size={20} />
+                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder="Search components..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
+                    {searchTerm && (
+                        <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
                 <div className="flex gap-2 overflow-x-auto">
                     {categories.map(cat => (

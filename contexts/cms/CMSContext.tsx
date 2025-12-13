@@ -1,6 +1,7 @@
 /**
  * CMSContext
  * Maneja posts del blog y menús de navegación
+ * Los posts están organizados por proyecto (cada cliente/proyecto tiene su propio contenido)
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
@@ -18,14 +19,19 @@ import {
     onSnapshot,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
+import { useSafeProject } from '../project';
 
 interface CMSContextType {
-    // CMS Posts
+    // CMS Posts (scoped to active project)
     cmsPosts: CMSPost[];
     isLoadingCMS: boolean;
     loadCMSPosts: () => Promise<void>;
     saveCMSPost: (post: CMSPost) => Promise<void>;
     deleteCMSPost: (postId: string) => Promise<void>;
+    
+    // Project info for CMS
+    hasActiveProject: boolean;
+    activeProjectName: string | null;
     
     // Navigation Menus
     menus: Menu[];
@@ -52,6 +58,7 @@ const defaultMenus: Menu[] = [
 
 export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
+    const { activeProject } = useSafeProject();
     
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
@@ -60,54 +67,52 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Menus State
     const [menus, setMenus] = useState<Menu[]>(defaultMenus);
 
-    // Load CMS posts with real-time updates
+    // Helper to get the posts collection path for the current project
+    const getPostsCollectionPath = useCallback(() => {
+        if (!user || !activeProject) return null;
+        return `users/${user.uid}/projects/${activeProject.id}/posts`;
+    }, [user, activeProject]);
+
+    // Load CMS posts with real-time updates (filtered by active project)
     useEffect(() => {
-        if (!user) {
+        if (!user || !activeProject) {
             setCmsPosts([]);
             return;
         }
 
-        // #region agent log
-        const listenerId = `cms-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:72',message:'Creating CMS posts listener',data:{listenerId,userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
+        const collectionPath = getPostsCollectionPath();
+        if (!collectionPath) return;
 
         const q = query(
-            collection(db, 'users', user.uid, 'posts'),
+            collection(db, collectionPath),
             orderBy('createdAt', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:83',message:'CMS posts snapshot',data:{listenerId,docCount:snapshot.docs.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
             const postsData = snapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             })) as CMSPost[];
             setCmsPosts(postsData);
         }, (error) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:92',message:'CMS posts error',data:{listenerId,error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
             console.error("Error fetching CMS posts:", error);
         });
 
         return () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:99',message:'Cleaning up CMS posts listener',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
             unsubscribe();
         };
-    }, [user]);
+    }, [user, activeProject, getPostsCollectionPath]);
 
-    // Load CMS posts manually
+    // Load CMS posts manually (for current project)
     const loadCMSPosts = async () => {
-        if (!user) return;
+        if (!user || !activeProject) return;
+
+        const collectionPath = getPostsCollectionPath();
+        if (!collectionPath) return;
 
         setIsLoadingCMS(true);
         try {
-            const postsCol = collection(db, 'users', user.uid, 'posts');
+            const postsCol = collection(db, collectionPath);
             const q = query(postsCol, orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
             const posts = snapshot.docs.map(docSnapshot => ({
@@ -122,22 +127,29 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    // Save CMS post
+    // Save CMS post (to current project)
     const saveCMSPost = async (post: CMSPost) => {
-        if (!user) return;
+        if (!user || !activeProject) {
+            console.error("Cannot save post: No user or active project");
+            return;
+        }
+
+        const collectionPath = getPostsCollectionPath();
+        if (!collectionPath) return;
 
         try {
             const { id, ...data } = post;
             const now = new Date().toISOString();
 
             if (id && id.length > 0) {
-                const postRef = doc(db, 'users', user.uid, 'posts', id);
+                const postRef = doc(db, collectionPath, id);
                 await updateDoc(postRef, { ...data, updatedAt: now });
             } else {
-                const postsCol = collection(db, 'users', user.uid, 'posts');
+                const postsCol = collection(db, collectionPath);
                 await addDoc(postsCol, { 
                     ...data, 
-                    authorId: user.uid, 
+                    authorId: user.uid,
+                    projectId: activeProject.id,
                     createdAt: now, 
                     updatedAt: now 
                 });
@@ -148,12 +160,15 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    // Delete CMS post
+    // Delete CMS post (from current project)
     const deleteCMSPost = async (postId: string) => {
-        if (!user) return;
+        if (!user || !activeProject) return;
+
+        const collectionPath = getPostsCollectionPath();
+        if (!collectionPath) return;
 
         try {
-            const postRef = doc(db, 'users', user.uid, 'posts', postId);
+            const postRef = doc(db, collectionPath, postId);
             await deleteDoc(postRef);
         } catch (error) {
             console.error("Error deleting post:", error);
@@ -201,6 +216,8 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         loadCMSPosts,
         saveCMSPost,
         deleteCMSPost,
+        hasActiveProject: !!activeProject,
+        activeProjectName: activeProject?.name || null,
         menus,
         saveMenu,
         deleteMenu,

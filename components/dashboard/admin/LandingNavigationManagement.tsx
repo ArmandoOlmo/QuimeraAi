@@ -5,7 +5,7 @@ import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import MenuEditor from '../navigation/MenuEditor';
-import { Menu as MenuIcon, Plus, Search, ArrowLeft, Edit2, Copy, Trash2, AlertCircle, Info, Layout, LayoutGrid, ChevronRight, Lightbulb, ArrowRight } from 'lucide-react';
+import { Menu as MenuIcon, Plus, Search, ArrowLeft, Edit2, Copy, Trash2, AlertCircle, Info, Layout, LayoutGrid, ChevronRight, Lightbulb, ArrowRight, X } from 'lucide-react';
 import { Menu } from '../../../types';
 
 interface LandingNavigationManagementProps {
@@ -234,15 +234,20 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             {activeProject && menus.length > 0 && (
                                 <div className="flex items-center gap-3">
                                     {/* Search */}
-                                    <div className="relative">
-                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <div className="flex items-center gap-2 w-48 bg-editor-border/40 rounded-lg px-3 py-2">
+                                        <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                                         <input 
                                             type="text"
                                             placeholder="Search menus..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-9 pr-3 py-2 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none w-48"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                     
                                     {/* Filter */}

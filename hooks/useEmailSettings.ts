@@ -579,9 +579,6 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         }, 15000);
 
         const setupListener = async () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:setupListener:start',message:'Setting up onSnapshot listener',data:{userId,projectId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
             try {
                 const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
                 const audiencesRef = collection(db, audiencesPath);
@@ -591,9 +588,6 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
                     q,
                     (snapshot) => {
                         if (!isMounted) return;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:onSnapshot:received',message:'Snapshot received',data:{docsCount:snapshot.docs.length,fromCache:snapshot.metadata.fromCache,hasPendingWrites:snapshot.metadata.hasPendingWrites},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
                         console.log(`✅ [useEmailAudiences] Snapshot received, docs: ${snapshot.docs.length}`);
                         clearTimeout(safetyTimeout);
 
@@ -607,9 +601,6 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
                     },
                     (err) => {
                         if (!isMounted) return;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:onSnapshot:error',message:'Listener error',data:{errorMessage:err.message,errorCode:err.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
                         console.error('❌ [useEmailAudiences] Error fetching audiences:', err);
                         clearTimeout(safetyTimeout);
                         setAudiences([]);
@@ -654,10 +645,6 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         source?: string[];
         filters?: any[];
     }) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:entry',message:'createAudience called',data:{userId,projectId,audienceData,dbExists:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
-        // #endregion
-
         if (!userId || !projectId || projectId === 'default') return null;
 
         setIsSaving(true);
@@ -665,9 +652,6 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
 
         try {
             const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:path',message:'Collection path created',data:{audiencesPath,userId,projectId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             const audiencesRef = collection(db, audiencesPath);
             
             const newAudience = {
@@ -679,20 +663,10 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
                 updatedAt: serverTimestamp(),
             };
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:beforeAddDoc',message:'About to call addDoc',data:{newAudienceKeys:Object.keys(newAudience),hasUndefinedValues:Object.values(newAudience).some(v=>v===undefined)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,D'})}).catch(()=>{});
-            // #endregion
-
             const docRef = await addDoc(audiencesRef, newAudience);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:success',message:'addDoc succeeded',data:{docId:docRef.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'success'})}).catch(()=>{});
-            // #endregion
             console.log(`✅ [useEmailAudiences] Created audience: ${docRef.id}`);
             return { id: docRef.id, ...newAudience };
         } catch (err: any) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:error',message:'addDoc failed',data:{errorMessage:err.message,errorName:err.name,errorCode:err.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'error'})}).catch(()=>{});
-            // #endregion
             console.error('❌ [useEmailAudiences] Error creating audience:', err);
             setError(err.message);
             throw err;

@@ -109,10 +109,6 @@ const AudiencesView: React.FC = () => {
     };
 
     const handleSaveAudience = async () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AudiencesView.tsx:handleSaveAudience:entry',message:'handleSaveAudience called',data:{newAudience,userId,projectId,editingAudienceId:editingAudience?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
         if (!newAudience.name) return;
 
         const audienceData: any = {
@@ -141,10 +137,6 @@ const AudiencesView: React.FC = () => {
                 }
                 break;
         }
-
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AudiencesView.tsx:handleSaveAudience:beforeCreate',message:'audienceData prepared',data:{audienceData,filterType:newAudience.filterType},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
 
         try {
             if (editingAudience?.id) {
@@ -200,15 +192,20 @@ const AudiencesView: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <div className="flex items-center gap-2 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                 <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('email.searchAudiences', 'Buscar audiencias...')}
-                    className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
                 />
+                {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                        <X size={16} />
+                    </button>
+                )}
             </div>
 
             {/* Audiences Grid */}

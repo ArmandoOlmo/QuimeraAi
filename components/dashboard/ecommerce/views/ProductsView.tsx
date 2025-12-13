@@ -16,6 +16,7 @@ import {
     List,
     Image as ImageIcon,
     Loader2,
+    X,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
@@ -129,15 +130,20 @@ const ProductsView: React.FC = () => {
             <div className="bg-card/50 rounded-xl p-4 border border-border">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                    <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder={t('ecommerce.searchProducts', 'Buscar productos...')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
+                        {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
 
                     {/* Category Filter */}

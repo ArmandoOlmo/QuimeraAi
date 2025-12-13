@@ -37,6 +37,12 @@ export * from './appointments';
 // Onboarding Types
 export * from './onboarding';
 
+// Meta OAuth Types
+export * from './metaOAuth';
+
+// Social Chat Types
+export * from './socialChat';
+
 
 
 

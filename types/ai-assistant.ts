@@ -115,6 +115,7 @@ export interface ChatAppearanceConfig {
 // Social Channel Configuration (for multi-channel chat)
 export interface SocialChannelConfig {
     enabled: boolean;
+    autoConfigured?: boolean; // True if configured via Meta OAuth
     // Platform-specific config (stored securely)
 }
 
@@ -122,6 +123,7 @@ export interface FacebookMessengerChannelConfig extends SocialChannelConfig {
     pageId: string;
     pageAccessToken: string;
     webhookVerifyToken: string;
+    pageName?: string;
 }
 
 export interface WhatsAppChannelConfig extends SocialChannelConfig {
@@ -129,12 +131,15 @@ export interface WhatsAppChannelConfig extends SocialChannelConfig {
     businessAccountId: string;
     accessToken: string;
     webhookVerifyToken: string;
+    displayPhoneNumber?: string;
+    verifiedName?: string;
 }
 
 export interface InstagramChannelConfig extends SocialChannelConfig {
     accountId: string;
     accessToken: string;
     webhookVerifyToken: string;
+    username?: string;
 }
 
 export interface SocialChannelsConfig {

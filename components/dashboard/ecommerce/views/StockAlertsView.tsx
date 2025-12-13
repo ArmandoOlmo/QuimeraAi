@@ -17,6 +17,7 @@ import {
     Check,
     RefreshCw,
     Send,
+    X,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
@@ -259,15 +260,20 @@ const StockAlertsView: React.FC = () => {
                             {t('ecommerce.notificationSubscribers', 'Suscriptores de Notificaciones')}
                         </h3>
                         <div className="flex gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                            <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-1.5">
+                                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Buscar..."
-                                    className="pl-9 pr-3 py-1.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 />
+                                {searchTerm && (
+                                    <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <X size={16} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

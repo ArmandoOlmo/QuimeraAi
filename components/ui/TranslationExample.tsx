@@ -163,7 +163,7 @@ const TranslationExample: React.FC = () => {
                 {t('common.upload')}
               </p>
               <p className="text-xs text-editor-text-secondary">
-                {t('dashboard.assets')}
+                {t('dashboard.assets.title')}
               </p>
             </div>
           </button>

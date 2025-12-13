@@ -70,15 +70,15 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
         }
         notesTimeoutRef.current = window.setTimeout(() => {
             updateFileNotes(file.id, e.target.value);
-            success(t('assets.preview.notesSaved'));
+            success(t('dashboard.assets.preview.notesSaved'));
         }, 1000);
     };
 
     const handleDelete = async () => {
-        if (window.confirm(t('assets.actions.deleteConfirm'))) {
+        if (window.confirm(t('dashboard.assets.actions.deleteConfirm'))) {
             try {
                 await deleteFile(file.id, file.storagePath);
-                success(t('assets.actions.deleted'));
+                success(t('dashboard.assets.actions.deleted'));
                 onClose();
             } catch (err) {
                 showError('Failed to delete file');
@@ -128,7 +128,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                 ) : (
                     <div className="flex flex-col items-center text-gray-400 relative z-10">
                         <FileText size={80} className="mb-4 opacity-50" />
-                        <p className="text-lg font-medium">{t('assets.preview.notAvailable')}</p>
+                        <p className="text-lg font-medium">{t('dashboard.assets.preview.notAvailable')}</p>
                     </div>
                 )}
             </div>
@@ -139,7 +139,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                 <div className="p-4 border-b border-editor-border/50">
                     <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                            <p className="text-sm font-bold text-editor-text-primary mb-1">{t('assets.preview.title')}</p>
+                            <p className="text-sm font-bold text-editor-text-primary mb-1">{t('dashboard.assets.preview.title')}</p>
                             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-editor-text-secondary">
                                 <span className="flex items-center">
                                     <HardDrive size={14} className="mr-2 text-editor-accent" />
@@ -155,12 +155,12 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
 
                     {/* Notes */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('assets.preview.notes')}</label>
+                        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('dashboard.assets.preview.notes')}</label>
                         <textarea
                             value={notes}
                             onChange={handleNotesChange}
                             rows={2}
-                            placeholder={t('assets.preview.notes')}
+                            placeholder={t('dashboard.assets.preview.notes')}
                             className="w-full bg-editor-bg text-sm text-editor-text-primary p-3 rounded-lg border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none resize-none"
                         />
                     </div>
@@ -170,7 +170,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                         <div className="bg-editor-bg/50 p-3 rounded-lg border border-editor-border/50">
                             <div className="flex items-center mb-2">
                                 <Sparkles size={14} className="text-editor-accent mr-2" />
-                                <span className="text-xs font-bold text-editor-accent uppercase">{t('assets.preview.aiSummary')}</span>
+                                <span className="text-xs font-bold text-editor-accent uppercase">{t('dashboard.assets.preview.aiSummary')}</span>
                             </div>
                             <p className="text-sm text-editor-text-primary leading-relaxed">{file.aiSummary}</p>
                         </div>
@@ -185,13 +185,13 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                             disabled={!isSummarizable}
                             className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-editor-accent/10 text-editor-accent hover:bg-editor-accent hover:text-editor-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Sparkles size={14} className="mr-1.5" /> {t('assets.preview.generateSummary')}
+                            <Sparkles size={14} className="mr-1.5" /> {t('dashboard.assets.preview.generateSummary')}
                         </button>
                         <button
                             onClick={handleDelete}
                             className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                         >
-                            <Trash2 size={14} className="mr-1.5" /> {t('assets.actions.delete')}
+                            <Trash2 size={14} className="mr-1.5" /> {t('dashboard.assets.actions.delete')}
                         </button>
                     </div>
                     <a
@@ -199,7 +199,7 @@ const FilePreviewModal: React.FC<{ file: FileRecord; onClose: () => void }> = ({
                         download={file.name}
                         className="flex items-center bg-editor-accent text-editor-bg px-6 py-2.5 rounded-lg font-bold shadow-lg hover:bg-editor-accent-hover transition-transform hover:scale-105 text-sm"
                     >
-                        <Download size={16} className="mr-2" /> {t('assets.actions.download')}
+                        <Download size={16} className="mr-2" /> {t('dashboard.assets.actions.download')}
                     </a>
                 </div>
             </div>
@@ -294,7 +294,7 @@ const FileItem: React.FC<{
                         onPreview(file);
                     }
                 }}
-                title={isSelectionMode ? t('assets.preview.clickToSelect') : isImage ? t('assets.preview.dragToUse') : t('assets.preview.doubleClick')}
+                title={isSelectionMode ? t('dashboard.assets.preview.clickToSelect') : isImage ? t('dashboard.assets.preview.dragToUse') : t('dashboard.assets.preview.doubleClick')}
             >
                 {isImage ? (
                     <img
@@ -335,8 +335,8 @@ const FileItem: React.FC<{
                     <button
                         onClick={handleAddToReference}
                         disabled={isAdding}
-                        className={`absolute top-2 right-2 z-10 p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg transition-all transform hover:scale-110 ${isAdding ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                        title={t('assets.preview.addAsReference')}
+                        className={`absolute top-2 right-2 z-10 p-1.5 bg-primary hover:bg-primary/80 text-primary-foreground rounded-md shadow-lg transition-all transform hover:scale-110 ${isAdding ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        title={t('dashboard.assets.preview.addAsReference')}
                     >
                         {isAdding ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -350,7 +350,7 @@ const FileItem: React.FC<{
                 {isImage && !isSelectionMode && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="text-white text-xs font-medium truncate">{file.name}</p>
-                        <p className="text-purple-300 text-[10px] mt-0.5">{t('assets.preview.dragToUse')}</p>
+                        <p className="text-primary-foreground/70 text-[10px] mt-0.5">{t('dashboard.assets.preview.dragToUse')}</p>
                     </div>
                 )}
             </div>
@@ -401,7 +401,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         const remainingSlots = 14 - referenceImages.length;
 
         if (remainingSlots <= 0) {
-            alert(t('assets.generator.maxReferences'));
+            alert(t('dashboard.assets.generator.maxReferences'));
             return;
         }
 
@@ -443,15 +443,15 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         if (base64Data) {
             // Already base64, add directly
             if (referenceImages.length >= 14) {
-                showError(t('assets.generator.maxReferences'));
+                showError(t('dashboard.assets.generator.maxReferences'));
                 return;
             }
             if (referenceImages.includes(base64Data)) {
-                showError(t('assets.generator.alreadyAdded'));
+                showError(t('dashboard.assets.generator.alreadyAdded'));
                 return;
             }
             setReferenceImages(prev => [...prev, base64Data]);
-            success(t('assets.generator.imageAdded'));
+            success(t('dashboard.assets.generator.imageAdded'));
             return;
         }
 
@@ -508,18 +508,18 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     // Add image as base64 to reference images (from library)
     const addImageToReference = async (imageData: string) => {
         if (referenceImages.length >= 14) {
-            showError(t('assets.generator.maxReferences'));
+            showError(t('dashboard.assets.generator.maxReferences'));
             return;
         }
 
         // Check if already a base64 data URL
         if (imageData.startsWith('data:')) {
             if (referenceImages.includes(imageData)) {
-                showError(t('assets.generator.alreadyAdded'));
+                showError(t('dashboard.assets.generator.alreadyAdded'));
                 return;
             }
             setReferenceImages(prev => [...prev, imageData]);
-            success(t('assets.generator.imageAdded'));
+            success(t('dashboard.assets.generator.imageAdded'));
             return;
         }
 
@@ -528,10 +528,10 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
             const fullUrl = imageData.startsWith('//') ? `https:${imageData}` : imageData;
             const converted = await urlToBase64(fullUrl);
             setReferenceImages(prev => [...prev, converted]);
-            success(t('assets.generator.imageAdded'));
+            success(t('dashboard.assets.generator.imageAdded'));
         } catch (error) {
             // CORS error - show helpful message
-            showError(t('assets.generator.cannotAdd'));
+            showError(t('dashboard.assets.generator.cannotAdd'));
             console.warn('CORS error adding image to reference. Use local upload instead:', error);
         }
     };
@@ -561,12 +561,12 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
 
             await generateImage(prompt, options);
-            success(t('assets.generator.generated'));
+            success(t('dashboard.assets.generator.generated'));
             setPrompt('');
             setReferenceImages([]);
         } catch (error) {
             console.error(error);
-            showError(t('assets.generator.generationFailed'));
+            showError(t('dashboard.assets.generator.generationFailed'));
         } finally {
             setIsGenerating(false);
         }
@@ -578,7 +578,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         try {
             const enhanced = await enhancePrompt(prompt);
             setPrompt(enhanced);
-            success(t('assets.generator.enhanced'));
+            success(t('dashboard.assets.generator.enhanced'));
         } catch (error) {
             console.error(error);
             showError('Failed to enhance prompt');
@@ -633,7 +633,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const handleFileUpload = async (file: File) => {
         try {
             await uploadFile(file);
-            success(`${file.name} ${t('assets.actions.uploadSuccess')}`);
+            success(`${file.name} ${t('dashboard.assets.actions.uploadSuccess')}`);
         } catch (err) {
             showError('Failed to upload file');
         }
@@ -642,13 +642,13 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const handleBulkDelete = async () => {
         if (library.selectedFiles.length === 0) return;
 
-        if (!window.confirm(t('assets.actions.bulkDeleteConfirm', { count: library.selectedFiles.length }))) return;
+        if (!window.confirm(t('dashboard.assets.actions.bulkDeleteConfirm', { count: library.selectedFiles.length }))) return;
 
         try {
             await Promise.all(
                 library.selectedFiles.map(f => deleteFile(f.id, f.storagePath))
             );
-            success(t('assets.actions.bulkDeleted', { count: library.selectedFiles.length }));
+            success(t('dashboard.assets.actions.bulkDeleted', { count: library.selectedFiles.length }));
             library.clearSelection();
             library.toggleSelectionMode();
         } catch (err) {
@@ -688,14 +688,14 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
             {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget */}
             {variant !== 'widget' && (
-                <div className="mb-8 p-6 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 rounded-2xl">
+                <div className="mb-8 p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
-                            <Zap className="w-6 h-6 text-white" />
+                        <div className="p-2 bg-primary rounded-lg">
+                            <Zap className="w-6 h-6 text-primary-foreground" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-foreground">{t('assets.generator.title')}</h2>
-                            <p className="text-sm text-muted-foreground">{t('assets.generator.subtitle')}</p>
+                            <h2 className="text-xl font-bold text-foreground">{t('dashboard.assets.generator.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('dashboard.assets.generator.subtitle')}</p>
                         </div>
                     </div>
 
@@ -703,29 +703,29 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         {/* Prompt */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-bold text-foreground">{t('assets.generator.promptLabel')}</label>
+                                <label className="block text-sm font-bold text-foreground">{t('dashboard.assets.generator.promptLabel')}</label>
                                 <button
                                     onClick={handleEnhancePrompt}
                                     disabled={isEnhancing || !prompt}
-                                    className="flex items-center text-xs text-purple-600 hover:text-purple-700 transition-colors disabled:opacity-50"
+                                    className="flex items-center text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
                                     title="Use AI to improve your prompt"
                                 >
                                     {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
-                                    {t('assets.generator.enhance')}
+                                    {t('dashboard.assets.generator.enhance')}
                                 </button>
                             </div>
                             <textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                placeholder={t('assets.generator.promptLabel')}
-                                className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                                placeholder={t('dashboard.assets.generator.promptLabel')}
+                                className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
                             />
                         </div>
 
                         {/* Reference Images */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-xs font-bold text-muted-foreground uppercase">{t('assets.generator.referenceImages')}</label>
+                                <label className="block text-xs font-bold text-muted-foreground uppercase">{t('dashboard.assets.generator.referenceImages')}</label>
                                 <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
                             </div>
 
@@ -739,7 +739,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                             />
 
                             <div
-                                className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-purple-500 bg-purple-500/10' : 'border-border hover:border-purple-500 hover:bg-purple-500/5'}`}
+                                className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary hover:bg-primary/5'}`}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
@@ -763,7 +763,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                 className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                             >
                                                 <Plus size={16} />
-                                                <span className="text-[10px]">{t('assets.generator.addButton')}</span>
+                                                <span className="text-[10px]">{t('dashboard.assets.generator.addButton')}</span>
                                             </button>
                                         )}
                                     </div>
@@ -773,8 +773,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                         className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
                                     >
                                         <Upload size={24} />
-                                        <span className="text-xs font-medium">{t('assets.generator.uploadText')}</span>
-                                        <span className="text-xs opacity-70">{t('assets.generator.dragText')}</span>
+                                        <span className="text-xs font-medium">{t('dashboard.assets.generator.uploadText')}</span>
+                                        <span className="text-xs opacity-70">{t('dashboard.assets.generator.dragText')}</span>
                                     </button>
                                 )}
                             </div>
@@ -783,11 +783,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         {/* Quick Controls Row */}
                         <div className="grid grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('assets.controls.aspectRatio')}</label>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.aspectRatio')}</label>
                                 <select
                                     value={aspectRatio}
                                     onChange={(e) => setAspectRatio(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
                                     {ASPECT_RATIOS.map(ratio => (
                                         <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
@@ -796,11 +796,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('assets.controls.style')}</label>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.style')}</label>
                                 <select
                                     value={style}
                                     onChange={(e) => setStyle(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
                                     {STYLES.map(s => (
                                         <option key={s} value={s}>{s}</option>
@@ -809,11 +809,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Resolution</label>
+                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.resolution')}</label>
                                 <select
                                     value={resolution}
                                     onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
                                     {RESOLUTIONS.map(res => (
                                         <option key={res.value} value={res.value}>{res.label}</option>
@@ -835,9 +835,9 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         <div className="border-t border-border/50 pt-3">
                             <button
                                 onClick={() => setShowAdvanced(!showAdvanced)}
-                                className="text-xs text-purple-600 hover:text-purple-700 font-bold uppercase transition-colors flex items-center justify-between w-full"
+                                className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
                             >
-                                <span>Advanced Controls</span>
+                                <span>{t('dashboard.assets.advancedControls')}</span>
                                 <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
                             </button>
                         </div>
@@ -845,11 +845,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         {showAdvanced && (
                             <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Lighting</label>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.lighting')}</label>
                                     <select
                                         value={lighting}
                                         onChange={(e) => setLighting(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
                                         {LIGHTING_OPTIONS.map(l => (
                                             <option key={l} value={l}>{l}</option>
@@ -858,11 +858,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Camera Angle</label>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.cameraAngle')}</label>
                                     <select
                                         value={cameraAngle}
                                         onChange={(e) => setCameraAngle(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
                                         {CAMERA_ANGLES.map(c => (
                                             <option key={c} value={c}>{c}</option>
@@ -871,11 +871,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Color Grading</label>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.colorGrading')}</label>
                                     <select
                                         value={colorGrading}
                                         onChange={(e) => setColorGrading(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
                                         {COLOR_GRADING.map(c => (
                                             <option key={c} value={c}>{c}</option>
@@ -884,11 +884,11 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Depth of Field</label>
+                                    <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('dashboard.assets.controls.depthOfField')}</label>
                                     <select
                                         value={depthOfField}
                                         onChange={(e) => setDepthOfField(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
                                         {DEPTH_OF_FIELD.map(d => (
                                             <option key={d} value={d}>{d}</option>
@@ -902,10 +902,10 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                         <button
                             onClick={handleGenerate}
                             disabled={isGenerating || !prompt}
-                            className="w-full py-3 text-purple-500 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-purple-400"
+                            className="w-full py-3 text-primary font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-primary/80"
                         >
                             {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                            {isGenerating ? 'Generating...' : 'Generate Image'}
+                            {isGenerating ? t('dashboard.assets.generator.generating') : t('dashboard.assets.generator.generateButton')}
                         </button>
                     </div>
                 </div>
@@ -928,15 +928,20 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
 
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         {/* Search */}
-                        <div className="relative flex-1 sm:flex-initial sm:w-48">
+                        <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
+                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 value={library.searchQuery}
                                 onChange={(e) => library.setSearchQuery(e.target.value)}
                                 placeholder="Search assets..."
-                                className="w-full pl-8 pr-3 py-1.5 text-xs bg-secondary border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
-                            <Search size={14} className="absolute left-2.5 top-2.5 text-muted-foreground" />
+                            {library.searchQuery && (
+                                <button onClick={() => library.setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
 
                         {/* Filter Toggle */}

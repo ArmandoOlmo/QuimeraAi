@@ -63,6 +63,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     tools: true,
   });
 
+  // State for footer collapse (true = collapsed, only user visible)
+  const [isFooterCollapsed, setIsFooterCollapsed] = useState(false);
+
   // Estado para trackear la sub-vista activa de ecommerce
   const [activeEcommerceSubView, setActiveEcommerceSubView] = useState<string>(() => {
     return localStorage.getItem('ecommerceActiveView') || 'overview';
@@ -589,121 +592,151 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           </nav>
 
           {/* Footer / User Profile / Theme - Optimized for mobile */}
-          <div className="flex-shrink-0 p-3 pb-4 lg:p-4 lg:pb-4 border-t border-border bg-card/50 backdrop-blur-sm">
-
-            {/* Theme + Language (single compact bar) */}
-            <div className={`${isCollapsed && !isMobileOpen ? 'hidden' : 'mb-3'}`}>
-              <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border/60">
-                {/* Theme */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setThemeMode('light')}
-                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                      themeMode === 'light'
-                        ? 'bg-background text-primary shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                    }`}
-                    title={t('common.lightMode')}
-                    aria-label={t('common.lightMode')}
-                    aria-pressed={themeMode === 'light'}
-                  >
-                    <Sun size={16} />
-                  </button>
-                  <button
-                    onClick={() => setThemeMode('dark')}
-                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                      themeMode === 'dark'
-                        ? 'bg-card text-primary shadow-sm border border-border'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                    }`}
-                    title={t('common.darkMode')}
-                    aria-label={t('common.darkMode')}
-                    aria-pressed={themeMode === 'dark'}
-                  >
-                    <Moon size={16} />
-                  </button>
-                  <button
-                    onClick={() => setThemeMode('black')}
-                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                      themeMode === 'black'
-                        ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                    }`}
-                    title={t('common.blackMode')}
-                    aria-label={t('common.blackMode')}
-                    aria-pressed={themeMode === 'black'}
-                  >
-                    <Circle size={16} fill="currentColor" />
-                  </button>
-                </div>
-
-                {/* Language */}
-                <LanguageSelector className="w-[110px]" variant="sidebar" />
-              </div>
-            </div>
-
-            {/* REFINED PRO PLAN WIDGET - Hidden when collapsed on desktop */}
-            <div className={`px-1 ${isCollapsed && !isMobileOpen ? 'hidden' : 'block mb-3 lg:mb-4'}`}>
-              <div className="flex justify-between items-end mb-2 px-1">
-                <div className="flex items-center gap-1.5">
-                  <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
-                  <span className="text-xs font-bold text-foreground tracking-wide">
-                    {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                  {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
-                </span>
-              </div>
-
-              <div className="h-2 lg:h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
-                  style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
-                />
-              </div>
-
-              <div className="mt-2 flex justify-between items-center px-1">
-                <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
-                <button className="text-[11px] lg:text-[10px] font-bold text-foreground hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation">
-                  {t('common.upgrade')}
-                </button>
-              </div>
-            </div>
-
-            {/* User Profile Section - Touch optimized */}
-            <div className={`flex items-center ${isCollapsed && !isMobileOpen ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
-              <div
-                className="relative group cursor-pointer touch-manipulation"
-                onClick={openProfileModal}
+          <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm relative">
+            
+            {/* Footer Toggle Button - Small circle at top center */}
+            {(!isCollapsed || isMobileOpen) && (
+              <button
+                onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
+                aria-expanded={!isFooterCollapsed}
               >
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt="User" className="w-11 h-11 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
-                ) : (
-                  <div className="w-11 h-11 lg:w-10 lg:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
-                    <UserIcon size={22} className="lg:w-5 lg:h-5 text-muted-foreground" />
+                <ChevronDown 
+                  size={14} 
+                  className={`transition-transform duration-200 ${isFooterCollapsed ? 'rotate-180' : 'rotate-0'}`}
+                  aria-hidden="true" 
+                />
+              </button>
+            )}
+
+            {/* Collapsible content wrapper */}
+            <div className={`p-3 pb-4 lg:p-4 lg:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
+
+              {/* Theme + Language (single compact bar) - Collapsible */}
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                isFooterCollapsed || (isCollapsed && !isMobileOpen) 
+                  ? 'max-h-0 opacity-0 mb-0' 
+                  : 'max-h-20 opacity-100 mb-3'
+              }`}>
+                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border/60">
+                  {/* Theme */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setThemeMode('light')}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                        themeMode === 'light'
+                          ? 'bg-background text-primary shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                      }`}
+                      title={t('common.lightMode')}
+                      aria-label={t('common.lightMode')}
+                      aria-pressed={themeMode === 'light'}
+                    >
+                      <Sun size={16} />
+                    </button>
+                    <button
+                      onClick={() => setThemeMode('dark')}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                        themeMode === 'dark'
+                          ? 'bg-card text-primary shadow-sm border border-border'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                      }`}
+                      title={t('common.darkMode')}
+                      aria-label={t('common.darkMode')}
+                      aria-pressed={themeMode === 'dark'}
+                    >
+                      <Moon size={16} />
+                    </button>
+                    <button
+                      onClick={() => setThemeMode('black')}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                        themeMode === 'black'
+                          ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                      }`}
+                      title={t('common.blackMode')}
+                      aria-label={t('common.blackMode')}
+                      aria-pressed={themeMode === 'black'}
+                    >
+                      <Circle size={16} fill="currentColor" />
+                    </button>
+                  </div>
+
+                  {/* Language */}
+                  <LanguageSelector className="w-[110px]" variant="sidebar" />
+                </div>
+              </div>
+
+              {/* REFINED PRO PLAN WIDGET - Collapsible */}
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                isFooterCollapsed || (isCollapsed && !isMobileOpen) 
+                  ? 'max-h-0 opacity-0 mb-0' 
+                  : 'max-h-28 opacity-100 mb-3 lg:mb-4'
+              }`}>
+                <div className="px-1">
+                  <div className="flex justify-between items-end mb-2 px-1">
+                    <div className="flex items-center gap-1.5">
+                      <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
+                      <span className="text-xs font-bold text-foreground tracking-wide">
+                        {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
+                      {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
+                    </span>
+                  </div>
+
+                  <div className="h-2 lg:h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
+                      style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-2 flex justify-between items-center px-1">
+                    <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
+                    <button className="text-[11px] lg:text-[10px] font-bold text-foreground hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation">
+                      {t('common.upgrade')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Profile Section - Always visible */}
+              <div className={`flex items-center ${isCollapsed && !isMobileOpen ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
+                <div
+                  className="relative group cursor-pointer touch-manipulation"
+                  onClick={openProfileModal}
+                >
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="User" className="w-11 h-11 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
+                  ) : (
+                    <div className="w-11 h-11 lg:w-10 lg:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                      <UserIcon size={22} className="lg:w-5 lg:h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 lg:w-3 lg:h-3 bg-green-500 border-2 border-background rounded-full"></div>
+                </div>
+
+                {(!isCollapsed || isMobileOpen) && (
+                  <div className="flex-1 overflow-hidden min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{userDocument?.name || t('common.creator')}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                   </div>
                 )}
-                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 lg:w-3 lg:h-3 bg-green-500 border-2 border-background rounded-full"></div>
-              </div>
 
-              {(!isCollapsed || isMobileOpen) && (
-                <div className="flex-1 overflow-hidden min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{userDocument?.name || t('common.creator')}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <div className={`${isCollapsed && !isMobileOpen ? '' : 'flex flex-col gap-1'}`}>
+                  {(!isCollapsed || isMobileOpen) && (
+                    <button
+                      onClick={handleSignOut}
+                      className="p-2.5 lg:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      aria-label={t('auth.logout')}
+                    >
+                      <LogOut size={18} className="lg:w-4 lg:h-4" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
-              )}
-
-              <div className={`${isCollapsed && !isMobileOpen ? '' : 'flex flex-col gap-1'}`}>
-                {(!isCollapsed || isMobileOpen) && (
-                  <button
-                    onClick={handleSignOut}
-                    className="p-2.5 lg:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
-                    aria-label={t('auth.logout')}
-                  >
-                    <LogOut size={18} className="lg:w-4 lg:h-4" aria-hidden="true" />
-                  </button>
-                )}
               </div>
             </div>
           </div>

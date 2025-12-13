@@ -168,7 +168,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors" title={t('common.back')}>
+                            <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-lg bg-editor-border/40 hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-all" title={t('common.back')}>
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({ onBack }) => {
                                 <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.billing.title')}</h1>
                             </div>
                         </div>
-                        <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
+                        <button onClick={onBack} className="hidden md:flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
                             <ArrowLeft className="w-4 h-4" />
                             {t('superadmin.backToAdmin')}
                         </button>

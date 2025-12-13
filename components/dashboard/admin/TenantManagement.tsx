@@ -355,15 +355,20 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                             {/* Búsqueda y filtros */}
                             <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-editor-text-secondary" />
+                                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 min-w-[200px]">
+                                    <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
                                     <input
                                         type="text"
                                         placeholder="Buscar tenants..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-10 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                     />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <X size={16} />
+                                        </button>
+                                    )}
                                 </div>
 
                                 <select

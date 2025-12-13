@@ -304,3 +304,4 @@ Para cada componente:
 
 
 
+

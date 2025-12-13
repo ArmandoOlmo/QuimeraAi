@@ -13,7 +13,7 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen
+    Globe, Briefcase, Linkedin, BookOpen, X
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
@@ -704,15 +704,20 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
 
                                     {/* Search - Desktop only */}
-                                    <div className="relative hidden md:block">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                    <div className="hidden md:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 min-w-[200px]">
+                                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('leads.dashboard.search')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="h-9 bg-transparent border border-border/30 focus:border-primary/50 rounded-md pl-9 pr-4 text-sm outline-none w-40 focus:w-56 transition-all placeholder:text-muted-foreground/70"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <X size={16} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Mobile Search Button */}
@@ -908,15 +913,20 @@ const LeadsDashboard: React.FC = () => {
                         <div className="px-3 sm:px-6 pt-3 sm:pt-4">
                             {/* Mobile search bar */}
                             <div className="sm:hidden mb-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                                     <input
                                         type="text"
                                         placeholder="Search leads..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full h-9 bg-secondary/30 border border-border/30 focus:border-primary/50 rounded-lg pl-9 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground/70"
+                                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                     />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <X size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <LeadsFilters

@@ -437,7 +437,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
                 <div className="flex flex-1 overflow-hidden">
                     {/* Main Editor */}
-                    <div className="flex-1 flex flex-col min-w-0 bg-gray-100 dark:bg-gray-900">
+                    <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
                         <EditorMenuBar 
                             editor={editor} 
                             onImageUpload={triggerImageUpload}
@@ -445,7 +445,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             isAiWorking={isAiWorking}
                         />
                         
-                        <div className="flex-1 overflow-y-auto p-8 flex justify-center">
+                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
                             <div className="w-full max-w-[900px] min-h-[800px]">
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu 

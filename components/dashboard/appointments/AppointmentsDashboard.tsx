@@ -29,6 +29,7 @@ import {
     Upload,
     TrendingUp,
     Users,
+    X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
@@ -577,15 +578,20 @@ const AppointmentsDashboard: React.FC = () => {
                     {/* Search & Filters */}
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* Search */}
-                        <div className="relative hidden sm:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <div className="hidden sm:flex items-center gap-2 w-32 sm:w-48 lg:w-64 bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder="Buscar..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-8 sm:h-9 w-32 sm:w-48 lg:w-64 bg-secondary/50 border border-border/50 rounded-xl pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/70"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
 
                         {/* Filter Button */}

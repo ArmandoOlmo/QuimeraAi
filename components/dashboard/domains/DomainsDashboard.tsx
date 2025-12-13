@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useDomains } from '../../../contexts/domains';
 import { useProject } from '../../../contexts/project';
+import { useUI } from '../../../contexts/core/UIContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings } from 'lucide-react';
+import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
 
@@ -507,13 +508,13 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
 
             <div className="flex gap-2 mb-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-3">
+                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        className="w-full bg-secondary/30 border border-border rounded-lg py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         placeholder="ej: miempresa, tutienda, etc."
                     />
                 </div>
@@ -618,6 +619,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { domains, addDomain } = useDomains();
+    const { setView } = useUI();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -654,18 +656,26 @@ const DomainsDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                         <button
                             onClick={() => setIsConnectModalOpen(true)}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 hidden sm:flex"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary hidden sm:flex"
                         >
                             <Link2 className="w-4 h-4" /> {t('domainsDashboard.connect')}
                         </button>
                         <button
                             onClick={() => setIsBuyModalOpen(true)}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary"
                         >
                             <ShoppingCart className="w-4 h-4" /> {t('domainsDashboard.buyDomain')}
+                        </button>
+                        <button
+                            onClick={() => setView('dashboard')}
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft size={16} />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
                     </div>
                 </header>

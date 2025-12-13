@@ -189,34 +189,20 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         if (!user) return;
 
-        // #region agent log
-        const listenerId = `admin-customComp-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminContext.tsx:192',message:'Creating custom components listener',data:{listenerId,userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
-
         const q = query(collection(db, 'customComponents'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminContext.tsx:200',message:'Custom components snapshot',data:{listenerId,docCount:snapshot.docs.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-            // #endregion
             const components = snapshot.docs.map(docSnapshot => ({ 
                 id: docSnapshot.id, 
                 ...docSnapshot.data() 
             } as CustomComponent));
             setCustomComponents(components);
         }, (error) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminContext.tsx:210',message:'Custom components listener ERROR',data:{listenerId,error:String(error),code:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-            // #endregion
             if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
                 console.error("Error in custom components listener:", error);
             }
         });
 
         return () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminContext.tsx:220',message:'Cleaning up custom components listener',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-            // #endregion
             unsubscribe();
         };
     }, [user]);

@@ -151,72 +151,34 @@ const UserTemplates: React.FC = () => {
 
                     {/* Search Bar */}
                     <div className="flex-1 flex justify-center px-4">
-                        <div className="relative group w-full max-w-xl hidden md:block">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                        <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input 
                                 type="search" 
                                 placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm shadow-sm focus:shadow-md"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
                     {/* Controls */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Back Button - First */}
+                        {/* Back Button */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.goBack', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
-
-                        {/* Industry Filter */}
-                        <select 
-                            value={filterIndustry}
-                            onChange={(e) => setFilterIndustry(e.target.value)}
-                            className="hidden sm:block bg-secondary/50 border border-border/40 px-3 py-2 rounded-lg text-sm outline-none focus:border-primary/60"
-                        >
-                            <option value="all">{t('superadmin.allCategories', 'Todas las categorías')}</option>
-                            {usedIndustries.map(ind => (
-                                <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
-                            ))}
-                        </select>
-
-                        {/* View Mode Toggle */}
-                        <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
-                            <button 
-                                onClick={() => setViewMode('grid')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            >
-                                <Grid size={15} />
-                            </button>
-                            <button 
-                                onClick={() => setViewMode('list')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            >
-                                <List size={15} />
-                            </button>
-                        </div>
-                        
-                        {/* Help Button - Show when instructions are hidden */}
-                        {!showInstructions && (
-                            <button 
-                                onClick={() => {
-                                    setShowInstructions(true);
-                                    localStorage.setItem('quimera_show_templates_instructions', 'true');
-                                }}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title={t('dashboard.showHelp', 'Mostrar guía')}
-                            >
-                                <BookOpen className="w-4 h-4" />
-                                <span className="hidden lg:inline">{t('dashboard.help', 'Ayuda')}</span>
-                            </button>
-                        )}
                     </div>
                 </header>
 
@@ -308,19 +270,77 @@ const UserTemplates: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Stats */}
-                        <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
-                            <div className="flex items-center gap-2">
-                                <LayoutTemplate size={16} className="text-primary" />
-                                <span className="text-muted-foreground">{t('userTemplates.availableTemplates', 'Plantillas disponibles')}:</span>
-                                <span className="font-bold">{templates.length}</span>
-                            </div>
-                            {filteredTemplates.length !== templates.length && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground">{t('userTemplates.showing', 'Mostrando')}:</span>
-                                    <span className="font-bold">{filteredTemplates.length}</span>
+                        {/* Stats & Controls Row */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                            {/* Stats Badges */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 rounded-xl">
+                                    <div className="flex items-center justify-center w-8 h-8 bg-primary/20 rounded-lg">
+                                        <LayoutTemplate size={16} className="text-primary" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-lg font-bold text-foreground leading-tight">{templates.length}</span>
+                                        <span className="text-xs text-muted-foreground leading-tight">{t('userTemplates.availableTemplates', 'Plantillas disponibles')}</span>
+                                    </div>
                                 </div>
-                            )}
+                                {filteredTemplates.length !== templates.length && (
+                                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-secondary/50 border border-border/50 rounded-xl">
+                                        <div className="flex items-center justify-center w-8 h-8 bg-secondary rounded-lg">
+                                            <Search size={14} className="text-muted-foreground" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-lg font-bold text-foreground leading-tight">{filteredTemplates.length}</span>
+                                            <span className="text-xs text-muted-foreground leading-tight">{t('userTemplates.showing', 'Mostrando')}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Controls */}
+                            <div className="flex items-center gap-2">
+                                {/* Industry Filter */}
+                                <select 
+                                    value={filterIndustry}
+                                    onChange={(e) => setFilterIndustry(e.target.value)}
+                                    className="bg-secondary/50 border border-border/40 px-3 py-2 rounded-lg text-sm outline-none focus:border-primary/60"
+                                >
+                                    <option value="all">{t('superadmin.allCategories', 'Todas las categorías')}</option>
+                                    {usedIndustries.map(ind => (
+                                        <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
+                                    ))}
+                                </select>
+
+                                {/* View Mode Toggle */}
+                                <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
+                                    <button 
+                                        onClick={() => setViewMode('grid')}
+                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <Grid size={15} />
+                                    </button>
+                                    <button 
+                                        onClick={() => setViewMode('list')}
+                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <List size={15} />
+                                    </button>
+                                </div>
+                                
+                                {/* Help Button - Show when instructions are hidden */}
+                                {!showInstructions && (
+                                    <button 
+                                        onClick={() => {
+                                            setShowInstructions(true);
+                                            localStorage.setItem('quimera_show_templates_instructions', 'true');
+                                        }}
+                                        className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10"
+                                        title={t('dashboard.showHelp', 'Mostrar guía')}
+                                    >
+                                        <BookOpen className="w-4 h-4" />
+                                        <span className="hidden lg:inline">{t('dashboard.help', 'Ayuda')}</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Templates Grid */}

@@ -1,15 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { useUI } from '../../../contexts/core/UIContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
-    Mic, Radio, BookOpen, ArrowLeft, Package, Shield
+    Mic, Radio, BookOpen, ArrowLeft, Package, Shield, Phone, Facebook, Instagram, Inbox,
+    TrendingUp, TrendingDown, Users, Zap, BarChart3, MessageCircle, RefreshCw, Search,
+    ArrowUpRight, Loader2
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
 import { AiAssistantConfig } from '../../../types';
@@ -17,8 +20,11 @@ import FAQManager from './FAQManager';
 import KnowledgeDocumentUploader from './KnowledgeDocumentUploader';
 import LeadCaptureSettings from './LeadCaptureSettings';
 import ChatCustomizationSettings from './ChatCustomizationSettings';
+import SocialChannelsSettings from './SocialChannelsSettings';
+import SocialChatInbox from './SocialChatInbox';
+import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 
-type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'settings';
+type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
 
 const voices: { name: AiAssistantConfig['voiceName']; description: string; gender: string }[] = [
     { name: 'Zephyr', description: 'Calm, balanced, professional.', gender: 'Female' },
@@ -33,6 +39,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject, projects, loadProject } = useProject();
     const { setView } = useUI();
+    const { user } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
@@ -60,6 +67,76 @@ const AiAssistantDashboard: React.FC = () => {
     };
 
     const userProjects = projects.filter(p => p.status !== 'Template');
+    const projectIds = useMemo(() => userProjects.map(p => p.id), [userProjects]);
+    
+    // Chat stats hook
+    const { 
+        stats: chatStats, 
+        globalStats, 
+        isLoading: isLoadingStats, 
+        getStatsForProject,
+        refresh: refreshStats 
+    } = useProjectChatStats(projectIds);
+
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter projects by search
+    const filteredProjects = useMemo(() => {
+        if (!searchQuery.trim()) return userProjects;
+        const query = searchQuery.toLowerCase();
+        return userProjects.filter(p => 
+            p.name.toLowerCase().includes(query)
+        );
+    }, [userProjects, searchQuery]);
+
+    // Sort projects by activity
+    const sortedProjects = useMemo(() => {
+        return [...filteredProjects].sort((a, b) => {
+            const statsA = getStatsForProject(a.id);
+            const statsB = getStatsForProject(b.id);
+            // Sort by active conversations first, then by last activity
+            if (statsA?.activeConversations !== statsB?.activeConversations) {
+                return (statsB?.activeConversations || 0) - (statsA?.activeConversations || 0);
+            }
+            const lastA = statsA?.lastActivity?.getTime() || 0;
+            const lastB = statsB?.lastActivity?.getTime() || 0;
+            return lastB - lastA;
+        });
+    }, [filteredProjects, getStatsForProject]);
+
+    // Format response time
+    const formatResponseTime = (seconds: number): string => {
+        if (seconds === 0) return '--';
+        if (seconds < 60) return `${Math.round(seconds)}s`;
+        if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+        return `${Math.round(seconds / 3600)}h`;
+    };
+
+    // Format last activity
+    const formatLastActivity = (date: Date | null): string => {
+        if (!date) return 'Sin actividad';
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+        
+        if (minutes < 1) return 'Ahora mismo';
+        if (minutes < 60) return `Hace ${minutes}m`;
+        if (hours < 24) return `Hace ${hours}h`;
+        if (days < 7) return `Hace ${days}d`;
+        return date.toLocaleDateString();
+    };
+
+    // Get channel icon
+    const getChannelIcon = (channel: string) => {
+        switch (channel) {
+            case 'whatsapp': return <Phone size={12} className="text-green-400" />;
+            case 'facebook': return <Facebook size={12} className="text-blue-500" />;
+            case 'instagram': return <Instagram size={12} className="text-pink-500" />;
+            default: return <Globe size={12} className="text-primary" />;
+        }
+    };
 
     if (!activeProject) {
         return (
@@ -76,58 +153,256 @@ const AiAssistantDashboard: React.FC = () => {
                                 <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setView('dashboard')}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={refreshStats}
+                                disabled={isLoadingStats}
+                                className="flex items-center justify-center h-9 w-9 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                title="Actualizar estadísticas"
+                            >
+                                <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
+                            </button>
+                            <button
+                                onClick={() => setView('dashboard')}
+                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                aria-label={t('common.back', 'Volver')}
+                            >
+                                <ArrowLeft size={16} />
+                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            </button>
+                        </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto p-8 bg-secondary/10">
-                        <div className="max-w-5xl mx-auto">
-                            <div className="text-center mb-12">
-                                <h2 className="text-3xl font-bold mb-4">{t('aiAssistant.dashboard.selectProject')}</h2>
-                                <p className="text-muted-foreground max-w-lg mx-auto text-lg">
+                    <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-secondary/20">
+                        <div className="max-w-7xl mx-auto p-6 lg:p-8 space-y-8">
+                            
+                            {/* Global Stats Banner */}
+                            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold flex items-center gap-3">
+                                                <BarChart3 className="text-primary" size={28} />
+                                                Quimera Chat Analytics
+                                            </h2>
+                                            <p className="text-muted-foreground mt-1">
+                                                Estadísticas en tiempo real de todos tus proyectos
+                                            </p>
+                                        </div>
+                                        {isLoadingStats && (
+                                            <Loader2 size={20} className="animate-spin text-primary" />
+                                        )}
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                                                <MessageCircle size={14} />
+                                                Chats Activos
+                                            </div>
+                                            <div className="text-3xl font-bold text-primary">
+                                                {globalStats.totalActiveChats}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                En todos los proyectos
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                                                <Zap size={14} />
+                                                Mensajes (24h)
+                                            </div>
+                                            <div className="text-3xl font-bold text-amber-500">
+                                                {globalStats.totalMessages24h}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                Últimas 24 horas
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                                                <Users size={14} />
+                                                Leads Totales
+                                            </div>
+                                            <div className="text-3xl font-bold text-green-500">
+                                                {globalStats.totalLeads}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                Generados por chat
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                                                <Clock size={14} />
+                                                Tiempo Respuesta
+                                            </div>
+                                            <div className="text-3xl font-bold text-blue-500">
+                                                {formatResponseTime(globalStats.avgResponseTime)}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                Promedio global
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Search and Filter Bar */}
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1 relative">
+                                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar proyecto..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full h-12 pl-12 pr-4 rounded-xl bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                                    />
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {filteredProjects.length} proyecto{filteredProjects.length !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+
+                            {/* Header */}
+                            <div>
+                                <h3 className="text-xl font-bold">{t('aiAssistant.dashboard.selectProject')}</h3>
+                                <p className="text-muted-foreground mt-1">
                                     {t('aiAssistant.dashboard.selectProjectDesc')}
                                 </p>
                             </div>
 
-                            {userProjects.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {userProjects.map(project => (
-                                        <button
-                                            key={project.id}
-                                            onClick={() => handleSelectProject(project.id)}
-                                            className="group relative rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex flex-col text-left h-[400px]"
-                                        >
-                                            {/* Full Background Image */}
-                                            <img
-                                                src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'}
-                                                alt={project.name}
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-
-                                            {/* Dark Gradient Overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-
-                                            {/* Hover Effect */}
-                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]" />
-
-                                            {/* Content at Bottom */}
-                                            <div className="absolute bottom-0 left-0 w-full p-6 z-20">
-                                                <h3 className="font-bold text-2xl text-white mb-2 line-clamp-2">{project.name}</h3>
-                                                <div className="flex items-center text-white/90">
-                                                    <Clock size={16} className="mr-2" />
-                                                    <span className="text-sm font-medium">
-                                                        Updated {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
-                                                    </span>
+                            {/* Project Cards Grid */}
+                            {sortedProjects.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {sortedProjects.map(project => {
+                                        const projectStats = getStatsForProject(project.id);
+                                        const hasActivity = projectStats && projectStats.activeConversations > 0;
+                                        
+                                        return (
+                                            <button
+                                                key={project.id}
+                                                onClick={() => handleSelectProject(project.id)}
+                                                className="group relative rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col text-left bg-card border border-border hover:border-primary/50"
+                                            >
+                                                {/* Activity Indicator */}
+                                                {hasActivity && (
+                                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
+                                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                                        <span className="text-xs font-semibold text-green-400">
+                                                            {projectStats.activeConversations} activo{projectStats.activeConversations !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Thumbnail Section */}
+                                                <div className="relative h-40 overflow-hidden">
+                                                    <img
+                                                        src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'}
+                                                        alt={project.name}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                                                 </div>
-                                            </div>
-                                        </button>
-                                    ))}
+
+                                                {/* Content Section */}
+                                                <div className="p-5 space-y-4">
+                                                    <div>
+                                                        <h3 className="font-bold text-lg text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                                                            {project.name}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                                            <Clock size={14} />
+                                                            <span>
+                                                                {formatLastActivity(projectStats?.lastActivity || null)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Stats Row */}
+                                                    <div className="grid grid-cols-3 gap-3">
+                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
+                                                            <div className="text-lg font-bold text-foreground">
+                                                                {projectStats?.totalMessages || 0}
+                                                            </div>
+                                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                                Mensajes
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
+                                                            <div className="text-lg font-bold text-green-500">
+                                                                {projectStats?.totalLeads || 0}
+                                                            </div>
+                                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                                Leads
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
+                                                            <div className="text-lg font-bold text-blue-500">
+                                                                {formatResponseTime(projectStats?.avgResponseTime || 0)}
+                                                            </div>
+                                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                                Resp.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Channels & Trend */}
+                                                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                                        {/* Active Channels */}
+                                                        <div className="flex items-center gap-1">
+                                                            {projectStats?.channelBreakdown.slice(0, 3).map(({ channel }) => (
+                                                                <div 
+                                                                    key={channel} 
+                                                                    className="w-6 h-6 rounded-full bg-secondary/80 flex items-center justify-center"
+                                                                    title={channel}
+                                                                >
+                                                                    {getChannelIcon(channel)}
+                                                                </div>
+                                                            ))}
+                                                            {(!projectStats?.channelBreakdown.length) && (
+                                                                <span className="text-xs text-muted-foreground">Sin canales</span>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Trend Indicator */}
+                                                        {projectStats?.trend && projectStats.trend !== 'stable' && (
+                                                            <div className={`flex items-center gap-1 text-xs font-medium ${
+                                                                projectStats.trend === 'up' 
+                                                                    ? 'text-green-500' 
+                                                                    : 'text-red-500'
+                                                            }`}>
+                                                                {projectStats.trend === 'up' ? (
+                                                                    <TrendingUp size={14} />
+                                                                ) : (
+                                                                    <TrendingDown size={14} />
+                                                                )}
+                                                                <span>{projectStats.trendPercentage.toFixed(0)}%</span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* Arrow */}
+                                                        <ArrowUpRight 
+                                                            size={18} 
+                                                            className="text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" 
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : searchQuery ? (
+                                <div className="text-center py-16 bg-card rounded-2xl border border-border">
+                                    <Search className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+                                    <h3 className="text-lg font-bold mb-2">Sin resultados</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        No se encontraron proyectos para "{searchQuery}"
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="text-center py-20 bg-card rounded-2xl border border-dashed border-border">
@@ -136,6 +411,46 @@ const AiAssistantDashboard: React.FC = () => {
                                     <p className="text-sm text-muted-foreground mb-6">{t('aiAssistant.dashboard.noProjectsDesc')}</p>
                                 </div>
                             )}
+
+                            {/* Quick Tips / Ideas Section */}
+                            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-primary/5 to-transparent border border-border">
+                                <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                    <Sparkles className="text-primary" size={20} />
+                                    Ideas para mejorar tu Dashboard
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">🎯</div>
+                                        <h5 className="font-semibold text-sm mb-1">Objetivos Semanales</h5>
+                                        <p className="text-xs text-muted-foreground">Define metas de leads y conversaciones por proyecto</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">📊</div>
+                                        <h5 className="font-semibold text-sm mb-1">Comparativas</h5>
+                                        <p className="text-xs text-muted-foreground">Compara rendimiento entre proyectos lado a lado</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">🔔</div>
+                                        <h5 className="font-semibold text-sm mb-1">Alertas Inteligentes</h5>
+                                        <p className="text-xs text-muted-foreground">Notificaciones cuando hay alta actividad</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">🤖</div>
+                                        <h5 className="font-semibold text-sm mb-1">AI Insights</h5>
+                                        <p className="text-xs text-muted-foreground">Resumen semanal generado por IA de tendencias</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">📈</div>
+                                        <h5 className="font-semibold text-sm mb-1">Gráficas Avanzadas</h5>
+                                        <p className="text-xs text-muted-foreground">Visualiza tendencias por hora del día</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                                        <div className="text-primary mb-2">🏆</div>
+                                        <h5 className="font-semibold text-sm mb-1">Leaderboard</h5>
+                                        <p className="text-xs text-muted-foreground">Ranking de proyectos con mejor engagement</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </main>
                 </div>
@@ -374,6 +689,31 @@ const AiAssistantDashboard: React.FC = () => {
                     </div>
                 );
 
+            case 'socialChannels':
+                return (
+                    <div className="animate-fade-in-up">
+                        <SocialChannelsSettings
+                            config={formData.socialChannels || {}}
+                            projectId={activeProject?.id || ''}
+                            onSave={async (socialConfig) => {
+                                const newFormData = { ...formData, socialChannels: socialConfig };
+                                setFormData(newFormData);
+                                await saveAiAssistantConfig(newFormData);
+                            }}
+                        />
+                    </div>
+                );
+
+            case 'socialInbox':
+                return (
+                    <div className="animate-fade-in-up h-[calc(100vh-200px)] -mx-8 -mb-10">
+                        <SocialChatInbox
+                            projectId={activeProject?.id || ''}
+                            userId={user?.uid}
+                        />
+                    </div>
+                );
+
             case 'settings':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
@@ -432,7 +772,7 @@ const AiAssistantDashboard: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setView('dashboard')}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={16} />
@@ -449,20 +789,23 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="px-8 pt-8 pb-4">
                             <div className="flex space-x-1 bg-secondary/30 p-1 rounded-xl overflow-x-auto">
                                 {[
-                                    { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview') },
-                                    { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge') },
-                                    { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality') },
-                                    { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice') },
-                                    { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture') },
-                                    { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization') },
-                                    { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings') },
+                                    { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={14} /> },
+                                    { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge'), icon: <Book size={14} /> },
+                                    { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality'), icon: <User size={14} /> },
+                                    { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice'), icon: <Mic size={14} /> },
+                                    { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture'), icon: <Sparkles size={14} /> },
+                                    { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization'), icon: <Sliders size={14} /> },
+                                    { id: 'socialChannels', label: 'Social', icon: <Phone size={14} /> },
+                                    { id: 'socialInbox', label: 'Inbox', icon: <Inbox size={14} /> },
+                                    { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings'), icon: <Settings size={14} /> },
                                 ].map(tab => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as Tab)}
-                                        className={`flex-1 py-2.5 px-3 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`flex items-center gap-1.5 py-2.5 px-3 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
-                                        {tab.label}
+                                        {tab.icon}
+                                        <span className="hidden xl:inline">{tab.label}</span>
                                     </button>
                                 ))}
                             </div>

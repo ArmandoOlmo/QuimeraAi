@@ -208,7 +208,7 @@ const Dashboard: React.FC = () => {
         headerTitle = t('dashboard.myWebsites');
     } else if (isAssets) {
         HeaderIcon = Images;
-        headerTitle = t('dashboard.assets');
+        headerTitle = t('dashboard.assets.title');
     }
 
     return (
@@ -245,16 +245,21 @@ const Dashboard: React.FC = () => {
                     {/* Center Section - Search Bar */}
                     <div className="flex-1 flex justify-center px-4">
                         {(isDashboard || isWebsites) && (
-                            <div className="relative group w-full max-w-xl hidden md:block" role="search">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} aria-hidden="true" />
+                            <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2" role="search">
+                                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" aria-hidden="true" />
                                 <input
                                     type="search"
                                     placeholder={t('dashboard.searchPlaceholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm shadow-sm focus:shadow-md"
+                                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                     aria-label={t('dashboard.searchProjects')}
                                 />
+                                {searchQuery && (
+                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <X size={16} />
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -271,99 +276,8 @@ const Dashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Right Section - Actions & Language */}
+                    {/* Right Section - Back Button Only */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Back Button - First item in right section */}
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                            aria-label={t('common.goBack', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
-
-                        {/* View Mode Toggle - Only on Websites view */}
-                        {isWebsites && (
-                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                    aria-label={t('dashboard.gridView')}
-                                    aria-pressed={viewMode === 'grid'}
-                                >
-                                    <LayoutGrid size={15} aria-hidden="true" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                    aria-label={t('dashboard.listView')}
-                                    aria-pressed={viewMode === 'list'}
-                                >
-                                    <List size={15} aria-hidden="true" />
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Sort Button - Only on Websites view */}
-                        {isWebsites && (
-                            <button
-                                onClick={() => {
-                                    if (sortBy === 'lastUpdated') {
-                                        setSortBy('name');
-                                        setSortOrder('asc');
-                                    } else if (sortBy === 'name' && sortOrder === 'asc') {
-                                        setSortOrder('desc');
-                                    } else {
-                                        setSortBy('lastUpdated');
-                                        setSortOrder('desc');
-                                    }
-                                }}
-                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                                aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
-                            >
-                                <ArrowUpDown size={14} aria-hidden="true" />
-                                <span className="hidden lg:inline">
-                                    {sortBy === 'name' ? t('common.name') : t('common.updated')}
-                                </span>
-                            </button>
-                        )}
-
-                        {/* Import/Export buttons - Only on Websites view */}
-                        {isWebsites && userProjects.length > 0 && (
-                            <>
-                                <button
-                                    onClick={handleExportAll}
-                                    className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                                    title={t('common.export')}
-                                    aria-label={t('dashboard.exportAllProjects')}
-                                >
-                                    <Download className="w-4 h-4" aria-hidden="true" />
-                                    <span className="hidden lg:inline">{t('common.export')}</span>
-                                </button>
-
-                                <button
-                                    onClick={handleImportClick}
-                                    disabled={isImporting}
-                                    className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/60 disabled:opacity-50"
-                                    title={t('common.import')}
-                                    aria-label={t('dashboard.importProjects')}
-                                >
-                                    <Upload className="w-4 h-4" aria-hidden="true" />
-                                    <span className="hidden lg:inline">{isImporting ? t('common.importing') : t('common.import')}</span>
-                                </button>
-
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".json"
-                                    onChange={handleFileSelect}
-                                    className="hidden"
-                                    aria-label="File input for importing projects"
-                                />
-                            </>
-                        )}
-
                         {/* Help/Instructions Button - Only on Dashboard when instructions are hidden */}
                         {isDashboard && !showInstructions && (
                             <button
@@ -379,6 +293,25 @@ const Dashboard: React.FC = () => {
                             </button>
                         )}
 
+                        {/* Back Button */}
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.goBack', 'Volver')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
+
+                        {/* Hidden file input for import */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".json"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            aria-label="File input for importing projects"
+                        />
                     </div>
                 </header>
 
@@ -638,17 +571,17 @@ const Dashboard: React.FC = () => {
                         {/* Statistics Section - Only on Websites view */}
                         {isWebsites && (
                             <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-blue-500/20">
-                                            <Globe className="text-blue-500 w-4 h-4 md:w-5 md:h-5" />
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
+                                            <Globe className="text-primary w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
                                     <div className="text-xl md:text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
                                     <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.totalWebsites')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                <div className="bg-card/50 border border-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                                         <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
                                             <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
@@ -658,20 +591,20 @@ const Dashboard: React.FC = () => {
                                     <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.published')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                <div className="bg-card/50 border border-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400 w-4 h-4 md:w-5 md:h-5" />
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-muted">
+                                            <FileEdit className="text-muted-foreground w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
                                     <div className="text-xl md:text-3xl font-extrabold text-foreground">{draftCount}</div>
                                     <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.draft')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-purple-500/20">
-                                            <LayoutGrid className="text-purple-500 w-4 h-4 md:w-5 md:h-5" />
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
+                                            <LayoutGrid className="text-primary w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
                                     <div className="text-xl md:text-3xl font-extrabold text-foreground">{userProjects.length}</div>
@@ -700,7 +633,7 @@ const Dashboard: React.FC = () => {
                                 {/* Filter Chips - Only on Websites view */}
                                 {isWebsites && (
                                     <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
-                                        <div className="flex flex-wrap gap-2 md:gap-3">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
                                             <FilterChip
                                                 label={t('dashboard.allStatus')}
                                                 active={filterStatus === 'all'}
@@ -721,6 +654,77 @@ const Dashboard: React.FC = () => {
                                                 onClick={() => setFilterStatus('Draft')}
                                                 color="gray"
                                             />
+
+                                            {/* Spacer */}
+                                            <div className="flex-1" />
+
+                                            {/* Sort Button */}
+                                            <button
+                                                onClick={() => {
+                                                    if (sortBy === 'lastUpdated') {
+                                                        setSortBy('name');
+                                                        setSortOrder('asc');
+                                                    } else if (sortBy === 'name' && sortOrder === 'asc') {
+                                                        setSortOrder('desc');
+                                                    } else {
+                                                        setSortBy('lastUpdated');
+                                                        setSortOrder('desc');
+                                                    }
+                                                }}
+                                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                                aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
+                                            >
+                                                <ArrowUpDown size={14} aria-hidden="true" />
+                                                <span className="hidden md:inline">
+                                                    {sortBy === 'name' ? t('common.name') : t('common.updated')}
+                                                </span>
+                                            </button>
+
+                                            {/* Import/Export buttons */}
+                                            {userProjects.length > 0 && (
+                                                <>
+                                                    <button
+                                                        onClick={handleExportAll}
+                                                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                                        title={t('common.export')}
+                                                        aria-label={t('dashboard.exportAllProjects')}
+                                                    >
+                                                        <Download className="w-4 h-4" aria-hidden="true" />
+                                                        <span className="hidden lg:inline">{t('common.export')}</span>
+                                                    </button>
+
+                                                    <button
+                                                        onClick={handleImportClick}
+                                                        disabled={isImporting}
+                                                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-50"
+                                                        title={t('common.import')}
+                                                        aria-label={t('dashboard.importProjects')}
+                                                    >
+                                                        <Upload className="w-4 h-4" aria-hidden="true" />
+                                                        <span className="hidden lg:inline">{isImporting ? t('common.importing') : t('common.import')}</span>
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            {/* View Mode Toggle */}
+                                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
+                                                <button
+                                                    onClick={() => setViewMode('grid')}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.gridView')}
+                                                    aria-pressed={viewMode === 'grid'}
+                                                >
+                                                    <LayoutGrid size={15} aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setViewMode('list')}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.listView')}
+                                                    aria-pressed={viewMode === 'list'}
+                                                >
+                                                    <List size={15} aria-hidden="true" />
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs md:text-sm text-muted-foreground">

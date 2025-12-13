@@ -142,7 +142,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
         {/* Back Button - Go to projects/websites */}
         <button
           onClick={() => navigate(ROUTES.WEBSITES)}
-          className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+          className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
           aria-label={t('common.back')}
         >
           <ArrowLeft className="w-4 h-4" />

@@ -21,6 +21,7 @@ import {
     Sparkles,
     Menu,
     ArrowLeft,
+    X,
 } from 'lucide-react';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
@@ -92,9 +93,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-md sticky top-0 z-40">
+                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-card/50 backdrop-blur-md sticky top-0 z-40">
                     {/* Left: Menu & Title */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-shrink-0 min-w-[200px]">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -111,45 +112,31 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     </div>
 
                     {/* Center: Search */}
-                    <div className="hidden md:flex flex-1 max-w-xl mx-8">
-                        <div className="relative w-full group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                    <div className="hidden md:flex flex-1 justify-center px-4">
+                        <div className="flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="search"
                                 placeholder={t('ecommerce.searchProjects', 'Buscar proyectos...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-secondary/50 border border-border/40 focus:border-primary/60 focus:bg-secondary/80 rounded-xl py-2.5 pl-11 pr-4 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 aria-label={t('ecommerce.searchProjects', 'Buscar proyectos')}
                             />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right: View Controls & Back Button */}
-                    <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                aria-label={t('common.gridView', 'Vista de cuadrícula')}
-                                aria-pressed={viewMode === 'grid'}
-                            >
-                                <LayoutGrid size={16} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                aria-label={t('common.listView', 'Vista de lista')}
-                                aria-pressed={viewMode === 'list'}
-                            >
-                                <List size={16} />
-                            </button>
-                        </div>
-                        
+                    {/* Right: Back Button */}
+                    <div className="flex items-center gap-2 flex-shrink-0 min-w-[200px] justify-end">
                         {onBack && (
                             <button
                                 onClick={onBack}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                                 aria-label={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={16} />
@@ -161,16 +148,21 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                 {/* Mobile Search */}
                 <div className="md:hidden px-4 py-3 border-b border-border bg-background">
-                    <div className="relative w-full">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="search"
                             placeholder={t('ecommerce.searchProjects', 'Buscar proyectos...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border border-border/40 rounded-xl py-2.5 pl-11 pr-4 outline-none text-sm"
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             aria-label={t('ecommerce.searchProjects', 'Buscar proyectos')}
                         />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -239,30 +231,30 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
                             <button
                                 onClick={() => setFilterStatus('all')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
                                     filterStatus === 'all'
-                                        ? 'bg-primary text-primary-foreground shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
                                 }`}
                             >
                                 {t('common.all', 'Todos')} ({userProjects.length})
                             </button>
                             <button
                                 onClick={() => setFilterStatus('Published')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
                                     filterStatus === 'Published'
-                                        ? 'bg-green-500 text-white shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                        ? 'bg-green-500 text-white border-green-500 shadow-md'
+                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
                                 }`}
                             >
                                 {t('dashboard.published', 'Publicados')} ({publishedCount})
                             </button>
                             <button
                                 onClick={() => setFilterStatus('Draft')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
                                     filterStatus === 'Draft'
-                                        ? 'bg-slate-500 text-white shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                        ? 'bg-slate-500 text-white border-slate-500 shadow-md'
+                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
                                 }`}
                             >
                                 {t('dashboard.draft', 'Borradores')} ({draftCount})
@@ -281,11 +273,26 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
                             </select>
 
-                            {/* Mobile View Toggle */}
+                            {/* View Toggle - Desktop */}
+                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    <LayoutGrid size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    <List size={16} />
+                                </button>
+                            </div>
+
+                            {/* View Toggle - Mobile */}
                             <button
                                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                                 className="sm:hidden p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                aria-label={viewMode === 'grid' ? t('common.listView') : t('common.gridView')}
                             >
                                 {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
                             </button>

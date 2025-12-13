@@ -1,0 +1,122 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Validate file size (in bytes)
+    function isValidSize(maxSize) {
+      return request.resource.size <= maxSize;
+    }
+    
+    // Validate content type starts with image/
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // PROFILE PICTURES
+    // Anyone can view, only owner can upload their own
+    // ============================================
+    
+    match /profile-pictures/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isImage() 
+        && isValidSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    match /profile-pictures/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isImage() 
+        && isValidSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    // ============================================
+    // USER UPLOADS
+    // Users can manage their own files
+    // ============================================
+    
+    match /user_uploads/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // USERS FOLDER (alternative structure)
+    // Users can manage their own files including store assets
+    // ============================================
+    
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // GLOBAL ASSETS
+    // Public read, authenticated users can write
+    // Access control is enforced at UI/Firestore level
+    // ============================================
+    
+    match /global_assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // GLOBAL SETTINGS (App information, brand assets)
+    // Public read for serving assets
+    // Authenticated users can write (superadmin verified at app level)
+    // ============================================
+    
+    match /global_settings/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() 
+        && isValidSize(10 * 1024 * 1024); // 10MB max per file
+    }
+    
+    // ============================================
+    // GLOBAL FILES
+    // Authenticated users can manage global files
+    // ============================================
+    
+    match /global/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // TEMPLATES & THUMBNAILS
+    // Public read, authenticated write
+    // ============================================
+    
+    match /templates/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() 
+        && isValidSize(10 * 1024 * 1024); // 10MB max
+    }
+    
+    // ============================================
+    // DEFAULT: Deny all other paths
+    // ============================================
+    
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

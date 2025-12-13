@@ -30,6 +30,7 @@ import {
     Check,
     Layers,
     Sparkles,
+    ArrowLeft,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { useEditor } from '../../../contexts/EditorContext';
@@ -496,29 +497,42 @@ const EcommerceDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Alerts */}
-                        {(pendingOrdersCount > 0 || lowStockCount > 0) && (
-                            <div className="hidden sm:flex items-center gap-3">
-                                {pendingOrdersCount > 0 && (
-                                    <button
-                                        onClick={() => handleViewChange('orders')}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-lg text-sm hover:bg-orange-500/30 transition-colors"
-                                    >
-                                        <ShoppingCart size={16} />
-                                        {pendingOrdersCount} {t('ecommerce.pendingOrders', 'pendientes')}
-                                    </button>
-                                )}
-                                {lowStockCount > 0 && (
-                                    <button
-                                        onClick={() => handleViewChange('stock_alerts')}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
-                                    >
-                                        <AlertTriangle size={16} />
-                                        {lowStockCount} {t('ecommerce.lowStock', 'bajo stock')}
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                        {/* Right Section: Alerts & Back Button */}
+                        <div className="flex items-center gap-3">
+                            {/* Alerts */}
+                            {(pendingOrdersCount > 0 || lowStockCount > 0) && (
+                                <div className="hidden sm:flex items-center gap-3">
+                                    {pendingOrdersCount > 0 && (
+                                        <button
+                                            onClick={() => handleViewChange('orders')}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-lg text-sm hover:bg-orange-500/30 transition-colors"
+                                        >
+                                            <ShoppingCart size={16} />
+                                            {pendingOrdersCount} {t('ecommerce.pendingOrders', 'pendientes')}
+                                        </button>
+                                    )}
+                                    {lowStockCount > 0 && (
+                                        <button
+                                            onClick={() => handleViewChange('stock_alerts')}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                                        >
+                                            <AlertTriangle size={16} />
+                                            {lowStockCount} {t('ecommerce.lowStock', 'bajo stock')}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Back Button */}
+                            <button
+                                onClick={() => setView('dashboard')}
+                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                aria-label={t('common.back', 'Volver')}
+                            >
+                                <ArrowLeft size={16} />
+                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            </button>
+                        </div>
                     </header>
 
                     {/* Sub-navigation */}

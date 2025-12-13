@@ -4,7 +4,7 @@ import { useCRM } from '../../../contexts/crm';
 import {
     Search, Plus, Trash2, Download, Upload,
     Users, CheckCircle2, Clock, Filter, MoreVertical,
-    FileDown, RefreshCw
+    FileDown, RefreshCw, X
 } from 'lucide-react';
 import { LibraryLead, Lead } from '../../../types';
 import AddLeadModal from './AddLeadModal';
@@ -161,15 +161,20 @@ const LeadsLibrary: React.FC = () => {
 
             {/* Actions Bar */}
             <div className="px-6 py-4 flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <div className="flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('common.search') + '...'}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-10 bg-background border border-border rounded-lg pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
 
                 {selectedLeadIds.length > 0 && (

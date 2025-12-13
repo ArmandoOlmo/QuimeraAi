@@ -43,9 +43,9 @@ interface AppInfoConfig {
     metaDescription: string;
     metaKeywords: string[];
     faviconUrl: string;
-    faviconStoragePath?: string;
+    faviconStoragePath: string;
     socialImageUrl: string;
-    socialImageStoragePath?: string;
+    socialImageStoragePath: string;
     updatedAt?: number;
     updatedBy?: string;
 }
@@ -66,7 +66,9 @@ const getDefaultConfig = (): AppInfoConfig => ({
     metaDescription: 'Build, localize, and scale marketing websites using AI. Templates, CMS, localization, and analytics included. Powered by Quimera.ai.',
     metaKeywords: ['AI website builder', 'no-code', 'marketing sites', 'Quimera'],
     faviconUrl: '',
+    faviconStoragePath: '',
     socialImageUrl: '',
+    socialImageStoragePath: '',
 });
 
 const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack }) => {
@@ -92,9 +94,9 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const [metaDescription, setMetaDescription] = useState(getDefaultConfig().metaDescription);
     const [metaKeywordsInput, setMetaKeywordsInput] = useState(getDefaultConfig().metaKeywords.join(', '));
     const [faviconUrl, setFaviconUrl] = useState('');
-    const [faviconStoragePath, setFaviconStoragePath] = useState<string | undefined>(undefined);
+    const [faviconStoragePath, setFaviconStoragePath] = useState('');
     const [socialImageUrl, setSocialImageUrl] = useState('');
-    const [socialImageStoragePath, setSocialImageStoragePath] = useState<string | undefined>(undefined);
+    const [socialImageStoragePath, setSocialImageStoragePath] = useState('');
     const [savedConfig, setSavedConfig] = useState<AppInfoConfig | null>(null);
 
     const faviconInputRef = useRef<HTMLInputElement>(null);
@@ -144,9 +146,9 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         setMetaDescription(config.metaDescription ?? defaults.metaDescription);
         setMetaKeywordsInput((config.metaKeywords ?? defaults.metaKeywords).join(', '));
         setFaviconUrl(config.faviconUrl ?? '');
-        setFaviconStoragePath(config.faviconStoragePath);
+        setFaviconStoragePath(config.faviconStoragePath ?? '');
         setSocialImageUrl(config.socialImageUrl ?? '');
-        setSocialImageStoragePath(config.socialImageStoragePath);
+        setSocialImageStoragePath(config.socialImageStoragePath ?? '');
     };
 
     const updateStatusMessage = (config: Partial<AppInfoConfig>) => {
@@ -168,6 +170,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            // Build payload, converting undefined to empty string for Firestore compatibility
             const payload: AppInfoConfig = {
                 appName,
                 tagline,
@@ -180,9 +183,9 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                 metaDescription,
                 metaKeywords: keywordsArray,
                 faviconUrl,
-                faviconStoragePath,
+                faviconStoragePath: faviconStoragePath || '',
                 socialImageUrl,
-                socialImageStoragePath,
+                socialImageStoragePath: socialImageStoragePath || '',
                 updatedAt: Date.now(),
                 updatedBy: userDocument?.name || user?.email || 'Super Admin',
             };
@@ -263,17 +266,17 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         try {
             if (type === 'favicon') {
                 if (faviconStoragePath) {
-                    await deleteObject(ref(storage, faviconStoragePath)).catch(() => undefined);
+                    await deleteObject(ref(storage, faviconStoragePath)).catch(() => {});
                 }
                 setFaviconUrl('');
-                setFaviconStoragePath(undefined);
+                setFaviconStoragePath('');
                 success(t('superadmin.appInfo.faviconRemoved'));
             } else {
                 if (socialImageStoragePath) {
-                    await deleteObject(ref(storage, socialImageStoragePath)).catch(() => undefined);
+                    await deleteObject(ref(storage, socialImageStoragePath)).catch(() => {});
                 }
                 setSocialImageUrl('');
-                setSocialImageStoragePath(undefined);
+                setSocialImageStoragePath('');
                 success(t('superadmin.appInfo.socialRemoved'));
             }
             setHasUnsavedChanges(true);
@@ -302,6 +305,14 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         >
                             <Menu className="w-4 h-4" />
                         </button>
+                        {/* Back button - Mobile */}
+                        <button
+                            onClick={onBack}
+                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-lg md:hidden transition-colors"
+                            title={t('common.back')}
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2">
                                 <Globe className="text-editor-accent w-5 h-5" />
@@ -314,24 +325,17 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs text-editor-text-secondary">{statusMessage}</p>
+                            <p className="text-xs text-editor-text-secondary hidden sm:block">{statusMessage}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={onBack}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            {t('superadmin.backToAdmin')}
-                        </button>
                         <button
                             onClick={handleReset}
                             disabled={!savedConfig || isSaving}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
                         >
                             <RefreshCcw className="w-4 h-4" />
-                            {t('superadmin.appInfo.reset')}
+                            <span className="hidden sm:inline">{t('superadmin.appInfo.reset')}</span>
                         </button>
                         <button
                             onClick={handleSave}
@@ -339,7 +343,15 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                             className="h-9 px-3 text-editor-accent font-medium text-sm hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center gap-1.5"
                         >
                             <Save className="w-4 h-4" />
-                            {isSaving ? t('superadmin.saving') : t('superadmin.appInfo.saveChanges')}
+                            <span className="hidden sm:inline">{isSaving ? t('superadmin.saving') : t('superadmin.appInfo.saveChanges')}</span>
+                        </button>
+                        {/* Back button - Desktop */}
+                        <button
+                            onClick={onBack}
+                            className="hidden md:flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            {t('common.back')}
                         </button>
                     </div>
                 </header>

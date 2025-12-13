@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
@@ -45,6 +46,7 @@ const THINKING_LEVELS = [
 ];
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => {
+    const { t } = useTranslation();
     const { files, globalFiles, uploadFile } = useFiles();
     const { generateImage, enhancePrompt } = useAI();
     const { projects } = useProject();
@@ -78,12 +80,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
     const handleFileUpload = async (file: File) => {
         try {
             await uploadFile(file);
-            success(`${file.name} uploaded successfully`);
+            success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             setIsLibraryOpen(true);
             setActiveTab('library');
             setLibrarySource('user');
         } catch (err) {
-            showError('Failed to upload file');
+            showError(t('dashboard.imagePicker.uploadError'));
         }
     };
 
@@ -104,10 +106,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                             console.log('✨ [ImagePicker] Quimera options:', options);
             const url = await generateImage(prompt, options);
             setGeneratedImage(url);
-            success('Image generated successfully');
+            success(t('dashboard.imagePicker.generateSuccess'));
         } catch (error) {
             console.error(error);
-            showError('Failed to generate image. Please try again.');
+            showError(t('dashboard.imagePicker.generateError'));
         } finally {
             setIsGenerating(false);
         }
@@ -119,10 +121,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
         try {
             const enhanced = await enhancePrompt(prompt);
             setPrompt(enhanced);
-            success('Prompt enhanced');
+            success(t('dashboard.imagePicker.enhanceSuccess'));
         } catch (error) {
             console.error(error);
-            showError('Failed to enhance prompt');
+            showError(t('dashboard.imagePicker.enhanceError'));
         } finally {
             setIsEnhancing(false);
         }
@@ -164,8 +166,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
     // Get project names for display
     const projectNames = useMemo(() => {
         const names: { [key: string]: string } = {
-            'no-project': 'Unassigned Images',
-            'global': 'Global Library'
+            'no-project': t('dashboard.imagePicker.unassignedImages'),
+            'global': t('dashboard.imagePicker.globalLibrary')
         };
 
         projects.forEach(project => {
@@ -173,7 +175,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
         });
 
         return names;
-    }, [projects]);
+    }, [projects, t]);
 
     // Filter images by selected project
     const filteredImagesByProject = useMemo(() => {
@@ -206,7 +208,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                     ) : (
                         <div className="flex items-center gap-2 text-editor-text-secondary text-sm">
                             <Image size={16} className="text-editor-text-secondary" />
-                            <span>No image selected</span>
+                            <span>{t('dashboard.imagePicker.noImageSelected')}</span>
                         </div>
                     )}
                 </div>
@@ -215,14 +217,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                 <button 
                     onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
                     className="p-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent transition-all"
-                    title="Open Library / Upload"
+                    title={t('dashboard.imagePicker.openLibrary')}
                 >
                     <Grid size={18} />
                 </button>
                 <button 
                     onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
                     className="p-2 bg-editor-bg border border-editor-border rounded-md text-editor-accent hover:bg-editor-accent hover:text-editor-bg transition-all"
-                    title="Generate with AI"
+                    title={t('dashboard.imagePicker.generateWithAI')}
                 >
                     <Zap size={18} />
                 </button>
@@ -238,7 +240,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                 onClick={() => setActiveTab('library')}
                                 className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'library' ? 'border-editor-accent text-editor-text-primary' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
                             >
-                                Asset Library
+                                {t('dashboard.imagePicker.assetLibrary')}
                             </button>
                             <button 
                                 onClick={() => setActiveTab('generate')}
@@ -264,34 +266,39 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 onClick={() => { setLibrarySource('user'); setSelectedProjectFilter('all'); }}
                                                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                             >
-                                                My Uploads
+                                                {t('dashboard.imagePicker.myUploads')}
                                             </button>
                                             <button 
                                                 onClick={() => { setLibrarySource('global'); setSelectedProjectFilter('all'); }}
                                                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center ${librarySource === 'global' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
                                             >
-                                                <Globe size={12} className="mr-1"/> Global Library
+                                                <Globe size={12} className="mr-1"/> {t('dashboard.imagePicker.globalLibrary')}
                                             </button>
                                         </div>
                                         
                                         <div className="flex gap-2 w-full sm:w-auto">
                                             {/* Search */}
-                                            <div className="relative flex-1 sm:flex-initial sm:w-48">
+                                            <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
+                                                <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                                                 <input
                                                     type="text"
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    placeholder="Search images..."
-                                                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-editor-panel-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
+                                                    placeholder={t('dashboard.imagePicker.searchImages')}
+                                                    className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                                 />
-                                                <Search size={14} className="absolute left-2.5 top-2 text-editor-text-secondary" />
+                                                {searchQuery && (
+                                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                        <X size={12} />
+                                                    </button>
+                                                )}
                                             </div>
                                             
                                             {/* Filter Button */}
                                             <button
                                                 onClick={() => setShowFilters(!showFilters)}
                                                 className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${showFilters ? 'bg-editor-accent text-editor-bg' : 'bg-editor-panel-bg border border-editor-border hover:bg-editor-border/40 text-editor-text-secondary'}`}
-                                                title="Filter by Project"
+                                                title={t('dashboard.imagePicker.filterByProject')}
                                             >
                                                 <Filter size={14} />
                                             </button>
@@ -304,7 +311,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 variant="compact"
                                             >
                                                 <button className="flex items-center gap-2 bg-editor-accent text-editor-bg px-4 py-2 rounded-lg text-sm font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
-                                                    <Upload size={16} /> Upload
+                                                    <Upload size={16} /> {t('dashboard.imagePicker.upload')}
                                                 </button>
                                             </DragDropZone>
                                         </div>
@@ -313,17 +320,17 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                     {/* Project Filter */}
                                     {showFilters && librarySource === 'user' && (
                                         <div className="p-3 bg-editor-panel-bg rounded-lg border border-editor-border animate-fade-in-up">
-                                            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">Filter by Project</label>
+                                            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('dashboard.imagePicker.filterByProject')}</label>
                                             <select
                                                 value={selectedProjectFilter}
                                                 onChange={(e) => setSelectedProjectFilter(e.target.value)}
                                                 className="w-full px-3 py-1.5 text-xs bg-editor-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
                                             >
-                                                <option value="all">All Projects</option>
+                                                <option value="all">{t('dashboard.imagePicker.allProjects')}</option>
                                                 {projects.map(project => (
                                                     <option key={project.id} value={project.id}>{project.name}</option>
                                                 ))}
-                                                <option value="no-project">Unassigned Images</option>
+                                                <option value="no-project">{t('dashboard.imagePicker.unassignedImages')}</option>
                                             </select>
                                         </div>
                                     )}
@@ -345,7 +352,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                                     {projectNames[projectId] || 'Unknown Project'}
                                                                 </h3>
                                                                 <span className="text-xs text-editor-text-secondary bg-editor-panel-bg px-2 py-0.5 rounded-md">
-                                                                    {projectImages.length} {projectImages.length === 1 ? 'image' : 'images'}
+                                                                    {projectImages.length} {projectImages.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -355,7 +362,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                             {projectImages.map(file => (
                                                                 <div 
                                                                     key={file.id} 
-                                                                    onClick={() => { onChange(file.downloadURL); setIsLibraryOpen(false); success('Image selected'); }}
+                                                                    onClick={() => { onChange(file.downloadURL); setIsLibraryOpen(false); success(t('dashboard.imagePicker.imageSelected')); }}
                                                                     className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
                                                                 >
                                                                     <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
@@ -367,7 +374,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                                         </div>
                                                                     ) : (
                                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                            <span className="text-white text-xs font-bold">Select</span>
+                                                                            <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -380,19 +387,19 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                     ) : searchQuery || (selectedProjectFilter !== 'all' && librarySource === 'user') ? (
                                         <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary">
                                             <Search size={48} className="mb-4 opacity-50" />
-                                            <p className="font-medium mb-2">No images found</p>
-                                            <p className="text-sm mb-4">Try adjusting your search or filters</p>
+                                            <p className="font-medium mb-2">{t('dashboard.imagePicker.noImagesFound')}</p>
+                                            <p className="text-sm mb-4">{t('dashboard.imagePicker.tryAdjustingFilters')}</p>
                                             <button 
                                                 onClick={() => { setSearchQuery(''); setSelectedProjectFilter('all'); }}
                                                 className="text-editor-accent hover:underline text-sm"
                                             >
-                                                Clear filters
+                                                {t('dashboard.imagePicker.clearFilters')}
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
                                             <Image size={48} className="mb-4 opacity-50" />
-                                            <p className="mb-2">{librarySource === 'user' ? 'No images found in your library.' : 'No global images available.'}</p>
+                                            <p className="mb-2">{librarySource === 'user' ? t('dashboard.imagePicker.noImagesInLibrary') : t('dashboard.imagePicker.noGlobalImages')}</p>
                                             {librarySource === 'user' && (
                                                 <DragDropZone
                                                     onFileSelect={handleFileUpload}
@@ -400,7 +407,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                     maxSizeMB={10}
                                                     variant="compact"
                                                 >
-                                                    <button className="mt-4 text-editor-accent hover:underline">Upload one now</button>
+                                                    <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
                                                 </DragDropZone>
                                             )}
                                         </div>
@@ -419,7 +426,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Sparkles size={12} className="text-editor-accent" />
-                                                <label className="block text-xs font-bold text-editor-text-secondary uppercase">Quimera Model</label>
+                                                <label className="block text-xs font-bold text-editor-text-secondary uppercase">{t('dashboard.imagePicker.quimeraModel')}</label>
                                             </div>
                                             <div className="flex flex-wrap gap-1">
                                                 {MODELS.map(model => (
@@ -446,40 +453,40 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         {/* Prompt */}
                                         <div>
                                             <div className="flex justify-between items-center mb-2">
-                                                <label className="block text-sm font-bold text-white">Prompt</label>
+                                                <label className="block text-sm font-bold text-white">{t('dashboard.imagePicker.prompt')}</label>
                                                 <button 
                                                     onClick={handleEnhancePrompt}
                                                     disabled={isEnhancing || !prompt}
                                                     className="flex items-center text-xs text-editor-accent hover:text-white transition-colors disabled:opacity-50"
-                                                    title="Use AI to improve your prompt"
+                                                    title={t('dashboard.imagePicker.enhanceTooltip')}
                                                 >
                                                     {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1"/> : <Wand2 size={12} className="mr-1"/>}
-                                                    Enhance
+                                                    {t('dashboard.imagePicker.enhance')}
                                                 </button>
                                             </div>
                                             <textarea 
                                                 value={prompt}
                                                 onChange={(e) => setPrompt(e.target.value)}
-                                                placeholder="Describe the image you want to generate..."
+                                                placeholder={t('dashboard.imagePicker.promptPlaceholder')}
                                                 className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-editor-accent outline-none resize-none h-24"
                                             />
                                         </div>
 
                                         {/* Negative Prompt */}
                                         <div>
-                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1">Negative Prompt</label>
+                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1">{t('dashboard.imagePicker.negativePrompt')}</label>
                                             <input
                                                 type="text"
                                                 value={negativePrompt}
                                                 onChange={(e) => setNegativePrompt(e.target.value)}
-                                                placeholder="What to avoid: blurry, distorted..."
+                                                placeholder={t('dashboard.imagePicker.negativePromptPlaceholder')}
                                                 className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-editor-accent"
                                             />
                                         </div>
 
                                         {/* Aspect Ratio */}
                                         <div>
-                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">Aspect Ratio</label>
+                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">{t('dashboard.imagePicker.aspectRatio')}</label>
                                             <div className="grid grid-cols-3 gap-1">
                                                 {ASPECT_RATIOS.map(ratio => (
                                                     <button
@@ -495,7 +502,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
 
                                         {/* Style */}
                                         <div>
-                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">Style</label>
+                                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">{t('dashboard.imagePicker.style')}</label>
                                             <select 
                                                 value={style}
                                                 onChange={(e) => setStyle(e.target.value)}
@@ -514,7 +521,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 className="text-xs text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center gap-2 w-full"
                                             >
                                                 <Eye size={12} />
-                                                <span className="font-medium">Vision Pro Controls</span>
+                                                <span className="font-medium">{t('dashboard.imagePicker.visionProControls')}</span>
                                                 <span className="ml-auto text-editor-accent">{showAdvanced ? '−' : '+'}</span>
                                             </button>
                                         </div>
@@ -526,7 +533,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 <div>
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <Brain size={11} className="text-editor-text-secondary" />
-                                                        <label className="text-xs text-editor-text-secondary">Thinking</label>
+                                                        <label className="text-xs text-editor-text-secondary">{t('dashboard.imagePicker.thinking')}</label>
                                                     </div>
                                                     <div className="flex gap-1">
                                                         {THINKING_LEVELS.map(level => (
@@ -549,7 +556,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 <div>
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <Users size={11} className="text-editor-text-secondary" />
-                                                        <label className="text-xs text-editor-text-secondary">People</label>
+                                                        <label className="text-xs text-editor-text-secondary">{t('dashboard.imagePicker.people')}</label>
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <button
@@ -560,7 +567,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                                     : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
                                                             }`}
                                                         >
-                                                            Allow
+                                                            {t('dashboard.imagePicker.allow')}
                                                         </button>
                                                         <button
                                                             onClick={() => setPersonGeneration('dont_allow')}
@@ -570,7 +577,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                                     : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
                                                             }`}
                                                         >
-                                                            Don't Allow
+                                                            {t('dashboard.imagePicker.dontAllow')}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -580,7 +587,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                     <div className="flex items-center justify-between mb-1">
                                                         <div className="flex items-center gap-1.5">
                                                             <Thermometer size={11} className="text-editor-text-secondary" />
-                                                            <label className="text-xs text-editor-text-secondary">Creativity</label>
+                                                            <label className="text-xs text-editor-text-secondary">{t('dashboard.imagePicker.creativity')}</label>
                                                         </div>
                                                         <span className="text-xs text-editor-accent font-mono">{temperature.toFixed(1)}</span>
                                                     </div>
@@ -604,7 +611,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 className="w-full py-2.5 bg-gradient-to-r from-editor-accent to-orange-500 text-white font-bold rounded-lg shadow-lg hover:shadow-editor-accent/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
                                             >
                                                 {isGenerating ? <Loader2 className="animate-spin mr-2" size={18} /> : <Zap className="mr-2" size={18} />}
-                                                {isGenerating ? 'Dreaming...' : 'Generate Image'}
+                                                {isGenerating ? t('dashboard.imagePicker.dreaming') : t('dashboard.imagePicker.generateImage')}
                                             </button>
                                         </div>
                                     </div>
@@ -615,8 +622,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                             {isGenerating ? (
                                                 <div className="text-center">
                                                     <div className="w-16 h-16 border-4 border-editor-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                                    <p className="text-editor-accent font-medium animate-pulse">Creating masterpiece...</p>
-                                                    <p className="text-xs text-editor-text-secondary mt-2">Powered by Quimera.ai</p>
+                                                    <p className="text-editor-accent font-medium animate-pulse">{t('dashboard.imagePicker.creatingMasterpiece')}</p>
+                                                    <p className="text-xs text-editor-text-secondary mt-2">{t('dashboard.imagePicker.poweredByQuimera')}</p>
                                                 </div>
                                             ) : generatedImage ? (
                                                 <div className="relative w-full h-full group flex items-center justify-center bg-black">
@@ -625,7 +632,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                             ) : (
                                                 <div className="text-center text-editor-text-secondary opacity-50">
                                                     <Zap size={48} className="mx-auto mb-4" />
-                                                    <p>Enter a prompt and adjust controls to start.</p>
+                                                    <p>{t('dashboard.imagePicker.enterPromptToStart')}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -633,10 +640,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         {generatedImage && (
                                             <div className="flex justify-end">
                                                 <button 
-                                                    onClick={() => { onChange(generatedImage); setIsLibraryOpen(false); success('Generated image applied'); }}
+                                                    onClick={() => { onChange(generatedImage); setIsLibraryOpen(false); success(t('dashboard.imagePicker.generatedImageApplied')); }}
                                                     className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-white"
                                                 >
-                                                    <Check size={18} /> Use This Image
+                                                    <Check size={18} /> {t('dashboard.imagePicker.useThisImage')}
                                                 </button>
                                             </div>
                                         )}

@@ -7,7 +7,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap,
     Store, FlaskConical, Accessibility, Languages, Search, FileText,
-    Navigation, Star, Settings, Grid3x3, List
+    Navigation, Star, Settings, Grid3x3, List, X
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -142,20 +142,53 @@ const CategoryChip: React.FC<{
     active: boolean;
     onClick: () => void;
     count?: number;
-}> = ({ label, active, onClick, count }) => (
-    <button
-        onClick={onClick}
-        className={`
-            px-4 py-2 font-medium text-sm transition-all duration-200
-            ${active
-                ? 'text-editor-accent'
-                : 'text-editor-text-secondary hover:text-editor-text-primary'
-            }
-        `}
-    >
-        {label} {count !== undefined && <span className="ml-1">({count})</span>}
-    </button>
-);
+    color?: 'accent' | 'emerald' | 'amber' | 'violet' | 'rose' | 'sky';
+}> = ({ label, active, onClick, count, color = 'accent' }) => {
+    const colorMap = {
+        accent: active
+            ? 'bg-editor-accent/15 text-editor-accent border-editor-accent/50 shadow-sm shadow-editor-accent/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-editor-accent/10 hover:text-editor-accent hover:border-editor-accent/30',
+        emerald: active
+            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30',
+        amber: active
+            ? 'bg-amber-500/15 text-amber-400 border-amber-500/50 shadow-sm shadow-amber-500/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/30',
+        violet: active
+            ? 'bg-violet-500/15 text-violet-400 border-violet-500/50 shadow-sm shadow-violet-500/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-violet-500/10 hover:text-violet-400 hover:border-violet-500/30',
+        rose: active
+            ? 'bg-rose-500/15 text-rose-400 border-rose-500/50 shadow-sm shadow-rose-500/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/30',
+        sky: active
+            ? 'bg-sky-500/15 text-sky-400 border-sky-500/50 shadow-sm shadow-sky-500/10'
+            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-sky-500/10 hover:text-sky-400 hover:border-sky-500/30',
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`
+                px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border transition-all duration-200
+                font-medium text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 whitespace-nowrap
+                ${colorMap[color]}
+            `}
+        >
+            <span className="truncate max-w-[80px] sm:max-w-none">{label}</span>
+            {count !== undefined && (
+                <span className={`
+                    px-1.5 py-0.5 sm:px-2 rounded-full text-[10px] sm:text-xs font-bold min-w-[20px] text-center
+                    ${active 
+                        ? 'bg-white/20' 
+                        : 'bg-editor-border/50'
+                    }
+                `}>
+                    {count}
+                </span>
+            )}
+        </button>
+    );
+};
 
 const SuperAdminDashboard = () => {
     const { t } = useTranslation();
@@ -216,12 +249,12 @@ const SuperAdminDashboard = () => {
         });
 
         return [
-            { id: 'all', label: t('common.all'), count: adminFeatures.length },
-            { id: 'core', label: t('superadmin.categoryCore'), count: categoryMap.get('core') || 0 },
-            { id: 'content', label: t('superadmin.categoryContent'), count: categoryMap.get('content') || 0 },
-            { id: 'development', label: t('superadmin.categoryDevelopment'), count: categoryMap.get('development') || 0 },
-            { id: 'analytics', label: t('superadmin.categoryAnalytics'), count: categoryMap.get('analytics') || 0 },
-            { id: 'system', label: t('superadmin.categorySystem'), count: categoryMap.get('system') || 0 },
+            { id: 'all', label: t('common.all'), count: adminFeatures.length, color: 'accent' as const },
+            { id: 'core', label: t('superadmin.categoryCore'), count: categoryMap.get('core') || 0, color: 'emerald' as const },
+            { id: 'content', label: t('superadmin.categoryContent'), count: categoryMap.get('content') || 0, color: 'amber' as const },
+            { id: 'development', label: t('superadmin.categoryDevelopment'), count: categoryMap.get('development') || 0, color: 'violet' as const },
+            { id: 'analytics', label: t('superadmin.categoryAnalytics'), count: categoryMap.get('analytics') || 0, color: 'rose' as const },
+            { id: 'system', label: t('superadmin.categorySystem'), count: categoryMap.get('system') || 0, color: 'sky' as const },
         ];
     }, [adminFeatures, t]);
 
@@ -319,22 +352,39 @@ const SuperAdminDashboard = () => {
                 <main className="flex-1 overflow-y-auto">
                     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
                         {/* Search */}
-                        <div className="relative mb-6">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-editor-text-secondary w-5 h-5" />
+                        <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 mb-6">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('superadmin.searchFeatures')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:border-editor-accent focus:ring-2 focus:ring-editor-accent/20 transition-all"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
 
-                        {/* Categories */}
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            {categories.map(cat => (
-                                <CategoryChip key={cat.id} label={cat.label} count={cat.count} active={selectedCategory === cat.id} onClick={() => setSelectedCategory(cat.id)} />
-                            ))}
+                        {/* Categories - Horizontal scroll on mobile */}
+                        <div className="mb-4 sm:mb-6">
+                            <div 
+                                className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap -mx-4 px-4 sm:mx-0 sm:px-0"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            >
+                                {categories.map(cat => (
+                                    <CategoryChip 
+                                        key={cat.id} 
+                                        label={cat.label} 
+                                        count={cat.count} 
+                                        active={selectedCategory === cat.id} 
+                                        onClick={() => setSelectedCategory(cat.id)}
+                                        color={cat.color}
+                                    />
+                                ))}
+                            </div>
                         </div>
 
                         {/* Results count */}

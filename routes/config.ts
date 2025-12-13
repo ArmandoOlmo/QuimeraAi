@@ -40,6 +40,9 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   
+  // OAuth Callback Routes
+  META_OAUTH_ERROR: '/auth/meta/error',
+  
   // Preview Routes
   PREVIEW: '/preview/:projectId',
   
@@ -119,6 +122,12 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.REGISTER,
     type: 'public',
     title: 'Register',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.META_OAUTH_ERROR,
+    type: 'public',
+    title: 'Connection Error',
     requiresAuth: false,
   },
   

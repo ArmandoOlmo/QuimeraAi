@@ -3,7 +3,7 @@
  * Composición de todos los contextos modulares de la aplicación
  */
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 
 // Core Contexts
 import { AuthProvider } from './core/AuthContext';
@@ -30,15 +30,6 @@ interface AppProvidersProps {
  * AppProviders - Wrapper con todos los contextos modulares
  */
 export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
-    // #region agent log
-    useEffect(() => {
-        const mountId = `appProviders-${Date.now()}`;
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppProviders.tsx:35',message:'AppProviders mounted',data:{mountId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-        return () => {
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppProviders.tsx:38',message:'AppProviders unmounted',data:{mountId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-        };
-    }, []);
-    // #endregion
     return (
         <AuthProvider>
             <ToastProvider>

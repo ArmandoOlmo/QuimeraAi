@@ -5,7 +5,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
-import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers } from 'lucide-react';
+import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X } from 'lucide-react';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
@@ -111,6 +111,7 @@ const NavigationDashboard: React.FC = () => {
         return (
             <ProjectSelectorPage
                 onProjectSelect={handleProjectSelect}
+                onBack={showProjectSelector ? () => setShowProjectSelector(false) : () => setView('dashboard')}
             />
         );
     }
@@ -283,15 +284,20 @@ const NavigationDashboard: React.FC = () => {
                                 {effectiveProject && menus.length > 0 && (
                                 <div className="flex items-center gap-3">
                                     {/* Búsqueda */}
-                                    <div className="relative">
-                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-1.5 w-48">
+                                        <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('navigationDashboard.searchMenus')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-9 pr-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none w-48"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Filtro */}

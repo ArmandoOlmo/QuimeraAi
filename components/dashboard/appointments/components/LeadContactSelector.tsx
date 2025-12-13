@@ -298,15 +298,20 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
 
             {/* Search & Filters */}
             <div className="flex gap-2 mb-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Buscar por nombre, email, empresa..."
-                        className="w-full h-10 bg-secondary/50 border border-border rounded-xl pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
 
                 <button

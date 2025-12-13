@@ -101,15 +101,20 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
 
                 {/* Search Bar */}
                 <div className="p-4 border-b border-editor-border flex-shrink-0">
-                    <div className="relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search documentation..."
-                            className="w-full pl-10 pr-3 py-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
 

@@ -196,7 +196,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={onBack}
-                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
+                                className="hidden sm:flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 {t('common.back')}
