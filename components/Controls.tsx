@@ -510,6 +510,20 @@ const Controls: React.FC = () => {
     });
   };
 
+  // Call all ecommerce control hooks unconditionally to comply with Rules of Hooks
+  // These must be called after setNestedData is defined since they use it
+  const featuredProductsControls = useFeaturedProductsControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const categoryGridControls = useCategoryGridControls({ data, setNestedData });
+  const productHeroControls = useProductHeroControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const trustBadgesControls = useTrustBadgesControls({ data, setNestedData });
+  const saleCountdownControls = useSaleCountdownControls({ data, setNestedData });
+  const announcementBarControls = useAnnouncementBarControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const collectionBannerControls = useCollectionBannerControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const recentlyViewedControls = useRecentlyViewedControls({ data, setNestedData });
+  const productReviewsControls = useProductReviewsControls({ data, setNestedData });
+  const productBundleControls = useProductBundleControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const storeSettingsControls = useStoreSettingsControls({ data, setNestedData });
+
   const handleAiApply = (text: string) => {
     if (aiAssistField) {
       setNestedData(aiAssistField.path, text);
@@ -4073,7 +4087,7 @@ const Controls: React.FC = () => {
         </div>
       )
     },
-    chatbot: { label: 'AI Chatbot', icon: MessageSquare, renderer: renderChatbotControls },
+    // chatbot removed - deprecated, now using AI Assistant Dashboard
     footer: { label: 'Footer', icon: Type, renderer: renderFooterControls },
     header: { label: 'Navigation Bar', icon: AlignJustify, renderer: renderHeaderControls },
     colors: { label: 'Colores', icon: Palette, renderer: () => <GlobalStylesControl mode="colors" /> },
@@ -7747,29 +7761,30 @@ const Controls: React.FC = () => {
         return renderSlideshowControlsWithTabs();
       case 'video':
         return renderVideoControlsWithTabs();
-      // Ecommerce components
+      // Ecommerce components - use pre-computed results from hooks called at component top level
+      // These hooks return { contentTab, styleTab } objects that must be wrapped in TabbedControls
       case 'featuredProducts':
-        return useFeaturedProductsControls({ data, setNestedData, storeId: activeProject?.id || '' });
+        return featuredProductsControls ? <TabbedControls contentTab={featuredProductsControls.contentTab} styleTab={featuredProductsControls.styleTab} /> : null;
       case 'categoryGrid':
-        return useCategoryGridControls({ data, setNestedData });
+        return categoryGridControls ? <TabbedControls contentTab={categoryGridControls.contentTab} styleTab={categoryGridControls.styleTab} /> : null;
       case 'productHero':
-        return useProductHeroControls({ data, setNestedData, storeId: activeProject?.id || '' });
+        return productHeroControls ? <TabbedControls contentTab={productHeroControls.contentTab} styleTab={productHeroControls.styleTab} /> : null;
       case 'trustBadges':
-        return useTrustBadgesControls({ data, setNestedData });
+        return trustBadgesControls ? <TabbedControls contentTab={trustBadgesControls.contentTab} styleTab={trustBadgesControls.styleTab} /> : null;
       case 'saleCountdown':
-        return useSaleCountdownControls({ data, setNestedData });
+        return saleCountdownControls ? <TabbedControls contentTab={saleCountdownControls.contentTab} styleTab={saleCountdownControls.styleTab} /> : null;
       case 'announcementBar':
-        return useAnnouncementBarControls({ data, setNestedData, storeId: activeProject?.id || '' });
+        return announcementBarControls ? <TabbedControls contentTab={announcementBarControls.contentTab} styleTab={announcementBarControls.styleTab} /> : null;
       case 'collectionBanner':
-        return useCollectionBannerControls({ data, setNestedData, storeId: activeProject?.id || '' });
+        return collectionBannerControls ? <TabbedControls contentTab={collectionBannerControls.contentTab} styleTab={collectionBannerControls.styleTab} /> : null;
       case 'recentlyViewed':
-        return useRecentlyViewedControls({ data, setNestedData });
+        return recentlyViewedControls ? <TabbedControls contentTab={recentlyViewedControls.contentTab} styleTab={recentlyViewedControls.styleTab} /> : null;
       case 'productReviews':
-        return useProductReviewsControls({ data, setNestedData });
+        return productReviewsControls ? <TabbedControls contentTab={productReviewsControls.contentTab} styleTab={productReviewsControls.styleTab} /> : null;
       case 'productBundle':
-        return useProductBundleControls({ data, setNestedData, storeId: activeProject?.id || '' });
+        return productBundleControls ? <TabbedControls contentTab={productBundleControls.contentTab} styleTab={productBundleControls.styleTab} /> : null;
       case 'storeSettings':
-        return useStoreSettingsControls({ data, setNestedData });
+        return storeSettingsControls ? <TabbedControls contentTab={storeSettingsControls.contentTab} styleTab={storeSettingsControls.styleTab} /> : null;
       default:
         // For sections without tabbed controls (header, footer, colors, typography, etc.)
         const controls = config.renderer();

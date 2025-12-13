@@ -1,12 +1,11 @@
 /**
  * AnalyticsView
- * Vista para análiticas de email marketing
+ * Vista para análiticas de email marketing con datos reales
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    BarChart3,
     TrendingUp,
     TrendingDown,
     Send,
@@ -14,49 +13,29 @@ import {
     MousePointer,
     AlertCircle,
     Calendar,
-    ArrowUp,
-    ArrowDown,
+    Loader2,
+    Mail,
+    BarChart3,
 } from 'lucide-react';
 import { useEmailDashboardContext } from '../EmailDashboard';
-
-// Mock analytics data
-const mockAnalytics = {
-    overview: {
-        totalSent: 12500,
-        sentChange: 15.3,
-        delivered: 12150,
-        deliveryRate: 97.2,
-        opened: 4860,
-        openRate: 40.0,
-        openChange: 5.2,
-        clicked: 972,
-        clickRate: 20.0,
-        clickChange: -2.1,
-        bounced: 350,
-        bounceRate: 2.8,
-        unsubscribed: 45,
-        unsubscribeRate: 0.36,
-    },
-    byMonth: [
-        { month: 'Jul', sent: 1800, opened: 720, clicked: 144 },
-        { month: 'Ago', sent: 2100, opened: 840, clicked: 168 },
-        { month: 'Sep', sent: 1950, opened: 780, clicked: 156 },
-        { month: 'Oct', sent: 2400, opened: 960, clicked: 192 },
-        { month: 'Nov', sent: 2250, opened: 900, clicked: 180 },
-        { month: 'Dic', sent: 2000, opened: 660, clicked: 132 },
-    ],
-    topCampaigns: [
-        { name: 'Black Friday Sale', openRate: 52.3, clickRate: 18.5 },
-        { name: 'Newsletter Noviembre', openRate: 41.2, clickRate: 12.8 },
-        { name: 'Lanzamiento Producto', openRate: 38.9, clickRate: 22.1 },
-    ],
-};
+import { useEmailLogs, useEmailCampaigns } from '../../../../hooks/useEmailSettings';
 
 type TimeRange = '7d' | '30d' | '90d' | '12m';
+
+interface MonthlyData {
+    month: string;
+    sent: number;
+    opened: number;
+    clicked: number;
+}
 
 const AnalyticsView: React.FC = () => {
     const { t } = useTranslation();
     const { userId, projectId } = useEmailDashboardContext();
+    
+    // Use real data from Firebase
+    const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId);
+    const { campaigns, isLoading: campaignsLoading } = useEmailCampaigns(userId, projectId);
 
     const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
@@ -67,7 +46,138 @@ const AnalyticsView: React.FC = () => {
         { value: '12m', label: t('email.last12months', 'Últimos 12 meses') },
     ];
 
-    const stats = mockAnalytics.overview;
+    // Filter logs based on time range
+    const filteredLogs = useMemo(() => {
+        const now = new Date();
+        let cutoffDate = new Date();
+        
+        switch (timeRange) {
+            case '7d':
+                cutoffDate.setDate(now.getDate() - 7);
+                break;
+            case '30d':
+                cutoffDate.setDate(now.getDate() - 30);
+                break;
+            case '90d':
+                cutoffDate.setDate(now.getDate() - 90);
+                break;
+            case '12m':
+                cutoffDate.setFullYear(now.getFullYear() - 1);
+                break;
+        }
+
+        return logs.filter(log => {
+            if (!log.sentAt) return false;
+            const logDate = log.sentAt.seconds 
+                ? new Date(log.sentAt.seconds * 1000) 
+                : new Date(log.sentAt);
+            return logDate >= cutoffDate;
+        });
+    }, [logs, timeRange]);
+
+    // Calculate real analytics from filtered logs
+    const analytics = useMemo(() => {
+        const totalSent = filteredLogs.length;
+        const delivered = filteredLogs.filter(log => 
+            log.status === 'delivered' || log.status === 'sent' || log.status === 'opened' || log.status === 'clicked'
+        ).length;
+        const opened = filteredLogs.filter(log => log.status === 'opened' || log.opened).length;
+        const clicked = filteredLogs.filter(log => log.status === 'clicked' || log.clicked).length;
+        const bounced = filteredLogs.filter(log => log.status === 'bounced').length;
+        const complained = filteredLogs.filter(log => log.status === 'complained').length;
+
+        // Calculate rates
+        const deliveryRate = totalSent > 0 ? (delivered / totalSent) * 100 : 0;
+        const openRate = delivered > 0 ? (opened / delivered) * 100 : 0;
+        const clickRate = opened > 0 ? (clicked / opened) * 100 : 0;
+        const bounceRate = totalSent > 0 ? (bounced / totalSent) * 100 : 0;
+        const unsubscribeRate = totalSent > 0 ? (complained / totalSent) * 100 : 0;
+
+        return {
+            totalSent,
+            delivered,
+            opened,
+            clicked,
+            bounced,
+            complained,
+            deliveryRate: deliveryRate.toFixed(1),
+            openRate: openRate.toFixed(1),
+            clickRate: clickRate.toFixed(1),
+            bounceRate: bounceRate.toFixed(1),
+            unsubscribeRate: unsubscribeRate.toFixed(2),
+        };
+    }, [filteredLogs]);
+
+    // Group logs by month for the chart
+    const monthlyData = useMemo((): MonthlyData[] => {
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthMap = new Map<string, { sent: number; opened: number; clicked: number }>();
+
+        // Initialize last 6 months
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${date.getFullYear()}-${date.getMonth()}`;
+            monthMap.set(key, { sent: 0, opened: 0, clicked: 0 });
+        }
+
+        // Populate with log data
+        filteredLogs.forEach(log => {
+            if (!log.sentAt) return;
+            const logDate = log.sentAt.seconds 
+                ? new Date(log.sentAt.seconds * 1000) 
+                : new Date(log.sentAt);
+            const key = `${logDate.getFullYear()}-${logDate.getMonth()}`;
+            
+            const existing = monthMap.get(key);
+            if (existing) {
+                existing.sent++;
+                if (log.status === 'opened' || log.opened) existing.opened++;
+                if (log.status === 'clicked' || log.clicked) existing.clicked++;
+            }
+        });
+
+        // Convert to array
+        return Array.from(monthMap.entries())
+            .map(([key, data]) => {
+                const [year, month] = key.split('-').map(Number);
+                return {
+                    month: monthNames[month],
+                    ...data,
+                };
+            })
+            .slice(-6); // Last 6 months
+    }, [filteredLogs]);
+
+    // Get top performing campaigns
+    const topCampaigns = useMemo(() => {
+        return campaigns
+            .filter(c => c.status === 'sent' && c.stats?.sent > 0)
+            .map(c => ({
+                name: c.name,
+                openRate: c.stats?.sent > 0 
+                    ? ((c.stats?.uniqueOpens || 0) / c.stats.sent * 100).toFixed(1)
+                    : '0.0',
+                clickRate: c.stats?.uniqueOpens > 0 
+                    ? ((c.stats?.uniqueClicks || 0) / c.stats.uniqueOpens * 100).toFixed(1)
+                    : '0.0',
+            }))
+            .sort((a, b) => parseFloat(b.openRate) - parseFloat(a.openRate))
+            .slice(0, 3);
+    }, [campaigns]);
+
+    const isLoading = logsLoading || campaignsLoading;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+        );
+    }
+
+    // Check if there's no data
+    const hasNoData = analytics.totalSent === 0;
 
     return (
         <div className="space-y-6">
@@ -98,197 +208,226 @@ const AnalyticsView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Main Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Emails Sent */}
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-blue-500/10 rounded-lg">
-                            <Send className="text-blue-500" size={20} />
-                        </div>
-                        <span className={`flex items-center gap-1 text-sm ${stats.sentChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {stats.sentChange >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                            {Math.abs(stats.sentChange)}%
-                        </span>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">
-                        {stats.totalSent.toLocaleString()}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                        {t('email.emailsSent', 'Emails enviados')}
-                    </p>
-                </div>
-
-                {/* Open Rate */}
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-purple-500/10 rounded-lg">
-                            <Eye className="text-purple-500" size={20} />
-                        </div>
-                        <span className={`flex items-center gap-1 text-sm ${stats.openChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {stats.openChange >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                            {Math.abs(stats.openChange)}%
-                        </span>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">
-                        {stats.openRate}%
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                        {t('email.openRate', 'Tasa de apertura')}
-                    </p>
-                </div>
-
-                {/* Click Rate */}
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-amber-500/10 rounded-lg">
-                            <MousePointer className="text-amber-500" size={20} />
-                        </div>
-                        <span className={`flex items-center gap-1 text-sm ${stats.clickChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {stats.clickChange >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                            {Math.abs(stats.clickChange)}%
-                        </span>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">
-                        {stats.clickRate}%
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                        {t('email.clickRate', 'Tasa de clicks')}
-                    </p>
-                </div>
-
-                {/* Bounce Rate */}
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-red-500/10 rounded-lg">
-                            <AlertCircle className="text-red-500" size={20} />
-                        </div>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">
-                        {stats.bounceRate}%
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                        {t('email.bounceRate', 'Tasa de rebote')}
-                    </p>
-                </div>
-            </div>
-
-            {/* Charts & Details */}
-            <div className="grid lg:grid-cols-3 gap-6">
-                {/* Chart Placeholder */}
-                <div className="lg:col-span-2 bg-card/50 border border-border rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                        {t('email.performanceOverTime', 'Rendimiento en el Tiempo')}
+            {hasNoData ? (
+                <div className="text-center py-12 bg-card/50 border border-border rounded-xl">
+                    <BarChart3 className="mx-auto text-muted-foreground mb-4" size={48} />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                        {t('email.noAnalyticsData', 'Sin datos de analíticas')}
                     </h3>
-                    
-                    {/* Simple bar chart visualization */}
-                    <div className="h-64 flex items-end gap-4 justify-between px-4">
-                        {mockAnalytics.byMonth.map((data, index) => {
-                            const maxSent = Math.max(...mockAnalytics.byMonth.map(d => d.sent));
-                            const height = (data.sent / maxSent) * 100;
-                            return (
-                                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                                    <div className="w-full flex flex-col gap-1">
-                                        <div
-                                            className="w-full bg-primary/80 rounded-t"
-                                            style={{ height: `${height * 2}px` }}
-                                        />
-                                        <div
-                                            className="w-full bg-purple-500/60 rounded"
-                                            style={{ height: `${(data.opened / data.sent) * height * 2}px` }}
-                                        />
-                                    </div>
-                                    <span className="text-xs text-muted-foreground">{data.month}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-6 mt-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-primary/80 rounded" />
-                            <span className="text-sm text-muted-foreground">{t('email.sent', 'Enviados')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-purple-500/60 rounded" />
-                            <span className="text-sm text-muted-foreground">{t('email.opened', 'Abiertos')}</span>
-                        </div>
-                    </div>
+                    <p className="text-muted-foreground mb-4">
+                        {t('email.noAnalyticsDataDesc', 'Envía tu primera campaña para ver métricas aquí')}
+                    </p>
                 </div>
-
-                {/* Top Campaigns */}
-                <div className="bg-card/50 border border-border rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                        {t('email.topCampaigns', 'Mejores Campañas')}
-                    </h3>
-                    
-                    <div className="space-y-4">
-                        {mockAnalytics.topCampaigns.map((campaign, index) => (
-                            <div key={index} className="p-3 bg-muted/30 rounded-lg">
-                                <p className="text-foreground font-medium mb-2 truncate">
-                                    {campaign.name}
-                                </p>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <p className="text-muted-foreground">{t('email.openRate', 'Apertura')}</p>
-                                        <p className="text-foreground font-semibold">{campaign.openRate}%</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-muted-foreground">{t('email.clickRate', 'Clicks')}</p>
-                                        <p className="text-foreground font-semibold">{campaign.clickRate}%</p>
-                                    </div>
+            ) : (
+                <>
+                    {/* Main Stats */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Emails Sent */}
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="p-2 bg-blue-500/10 rounded-lg">
+                                    <Send className="text-blue-500" size={20} />
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+                            <p className="text-2xl font-bold text-foreground">
+                                {analytics.totalSent.toLocaleString()}
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                                {t('email.emailsSent', 'Emails enviados')}
+                            </p>
+                        </div>
 
-            {/* Additional Stats */}
-            <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <TrendingUp className="text-green-500" size={20} />
-                        <span className="text-muted-foreground text-sm">
-                            {t('email.deliveryRate', 'Tasa de Entrega')}
-                        </span>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">{stats.deliveryRate}%</p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                        {stats.delivered.toLocaleString()} de {stats.totalSent.toLocaleString()} enviados
-                    </p>
-                </div>
+                        {/* Open Rate */}
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="p-2 bg-purple-500/10 rounded-lg">
+                                    <Eye className="text-purple-500" size={20} />
+                                </div>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">
+                                {analytics.openRate}%
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                                {t('email.openRate', 'Tasa de apertura')}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {analytics.opened.toLocaleString()} {t('email.opened', 'abiertos')}
+                            </p>
+                        </div>
 
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <AlertCircle className="text-amber-500" size={20} />
-                        <span className="text-muted-foreground text-sm">
-                            {t('email.bounces', 'Rebotes')}
-                        </span>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">{stats.bounced.toLocaleString()}</p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                        {stats.bounceRate}% del total
-                    </p>
-                </div>
+                        {/* Click Rate */}
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="p-2 bg-amber-500/10 rounded-lg">
+                                    <MousePointer className="text-amber-500" size={20} />
+                                </div>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">
+                                {analytics.clickRate}%
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                                {t('email.clickRate', 'Tasa de clicks')}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {analytics.clicked.toLocaleString()} clicks
+                            </p>
+                        </div>
 
-                <div className="bg-card/50 border border-border rounded-xl p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <TrendingDown className="text-red-500" size={20} />
-                        <span className="text-muted-foreground text-sm">
-                            {t('email.unsubscribes', 'Desuscripciones')}
-                        </span>
+                        {/* Bounce Rate */}
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="p-2 bg-red-500/10 rounded-lg">
+                                    <AlertCircle className="text-red-500" size={20} />
+                                </div>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">
+                                {analytics.bounceRate}%
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                                {t('email.bounceRate', 'Tasa de rebote')}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {analytics.bounced.toLocaleString()} {t('email.bounced', 'rebotados')}
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-2xl font-bold text-foreground">{stats.unsubscribed}</p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                        {stats.unsubscribeRate}% del total
-                    </p>
-                </div>
-            </div>
+
+                    {/* Charts & Details */}
+                    <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Chart */}
+                        <div className="lg:col-span-2 bg-card/50 border border-border rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">
+                                {t('email.performanceOverTime', 'Rendimiento en el Tiempo')}
+                            </h3>
+                            
+                            {monthlyData.some(d => d.sent > 0) ? (
+                                <>
+                                    {/* Simple bar chart visualization */}
+                                    <div className="h-64 flex items-end gap-4 justify-between px-4">
+                                        {monthlyData.map((data, index) => {
+                                            const maxSent = Math.max(...monthlyData.map(d => d.sent), 1);
+                                            const height = (data.sent / maxSent) * 100;
+                                            const openedHeight = data.sent > 0 ? (data.opened / data.sent) * height : 0;
+                                            return (
+                                                <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                                                    <div className="w-full flex flex-col gap-1 min-h-[4px]">
+                                                        <div
+                                                            className="w-full bg-primary/80 rounded-t transition-all"
+                                                            style={{ height: `${Math.max(height * 2, data.sent > 0 ? 4 : 0)}px` }}
+                                                        />
+                                                        <div
+                                                            className="w-full bg-purple-500/60 rounded transition-all"
+                                                            style={{ height: `${Math.max(openedHeight * 2, data.opened > 0 ? 2 : 0)}px` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">{data.month}</span>
+                                                    <span className="text-xs font-medium text-foreground">{data.sent}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-center gap-6 mt-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-primary/80 rounded" />
+                                            <span className="text-sm text-muted-foreground">{t('email.sent', 'Enviados')}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-purple-500/60 rounded" />
+                                            <span className="text-sm text-muted-foreground">{t('email.opened', 'Abiertos')}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                                    <div className="text-center">
+                                        <Mail size={32} className="mx-auto mb-2 opacity-50" />
+                                        <p>{t('email.noChartData', 'Sin datos para mostrar')}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Top Campaigns */}
+                        <div className="bg-card/50 border border-border rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">
+                                {t('email.topCampaigns', 'Mejores Campañas')}
+                            </h3>
+                            
+                            {topCampaigns.length > 0 ? (
+                                <div className="space-y-4">
+                                    {topCampaigns.map((campaign, index) => (
+                                        <div key={index} className="p-3 bg-muted/30 rounded-lg">
+                                            <p className="text-foreground font-medium mb-2 truncate">
+                                                {campaign.name}
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground">{t('email.openRate', 'Apertura')}</p>
+                                                    <p className="text-foreground font-semibold">{campaign.openRate}%</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground">{t('email.clickRate', 'Clicks')}</p>
+                                                    <p className="text-foreground font-semibold">{campaign.clickRate}%</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <Mail size={32} className="mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">{t('email.noCampaignsSent', 'No hay campañas enviadas')}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Additional Stats */}
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <TrendingUp className="text-green-500" size={20} />
+                                <span className="text-muted-foreground text-sm">
+                                    {t('email.deliveryRate', 'Tasa de Entrega')}
+                                </span>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">{analytics.deliveryRate}%</p>
+                            <p className="text-muted-foreground text-xs mt-1">
+                                {analytics.delivered.toLocaleString()} de {analytics.totalSent.toLocaleString()} enviados
+                            </p>
+                        </div>
+
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <AlertCircle className="text-amber-500" size={20} />
+                                <span className="text-muted-foreground text-sm">
+                                    {t('email.bounces', 'Rebotes')}
+                                </span>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">{analytics.bounced.toLocaleString()}</p>
+                            <p className="text-muted-foreground text-xs mt-1">
+                                {analytics.bounceRate}% del total
+                            </p>
+                        </div>
+
+                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <TrendingDown className="text-red-500" size={20} />
+                                <span className="text-muted-foreground text-sm">
+                                    {t('email.complaints', 'Quejas')}
+                                </span>
+                            </div>
+                            <p className="text-2xl font-bold text-foreground">{analytics.complained}</p>
+                            <p className="text-muted-foreground text-xs mt-1">
+                                {analytics.unsubscribeRate}% del total
+                            </p>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
 
 export default AnalyticsView;
-
-

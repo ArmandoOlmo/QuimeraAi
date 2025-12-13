@@ -53,6 +53,24 @@ service cloud.firestore {
         match /ecommerce/{document=**} {
           allow read, write: if request.auth != null && request.auth.uid == userId;
         }
+        
+        // Project settings subcollection (email settings, etc.)
+        match /settings/{settingId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Email marketing subcollections
+        match /emailAudiences/{audienceId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        match /emailCampaigns/{campaignId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        match /emailLogs/{logId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
       
       // User files

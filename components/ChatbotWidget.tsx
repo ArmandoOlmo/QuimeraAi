@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { MessageSquare, X } from 'lucide-react';
 import { useSafeEditor } from '../contexts/EditorContext';
+import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore from './chat/ChatCore';
@@ -19,15 +20,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 }) => {
     // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
+    const projectContext = useSafeProject();
     const { t } = useTranslation();
 
     // Use standalone config or editor context values
     const aiAssistantConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
     const addLead = editorContext?.addLead;
-    const activeProject = editorContext?.activeProject;
-    const data = editorContext?.data;
-    const componentOrder = editorContext?.componentOrder || [];
-    const sectionVisibility = editorContext?.sectionVisibility || {};
+    // Try to get activeProject from EditorContext first, then ProjectContext
+    const activeProject = editorContext?.activeProject || projectContext?.activeProject || null;
+    const data = editorContext?.data || projectContext?.data;
+    const componentOrder = editorContext?.componentOrder || projectContext?.componentOrder || [];
+    const sectionVisibility = editorContext?.sectionVisibility || projectContext?.sectionVisibility || {};
     const view = editorContext?.view || 'preview';
 
     // Get appearance config with defaults
@@ -177,8 +180,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             {/* Chat Window */}
             <div
                 className={`
-                    mb-4 ${sizeClasses.width} rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border
-                    ${isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
+                    mb-4 ${sizeClasses.width} rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border pointer-events-auto
+                    ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
                 `}
                 style={{
                     maxHeight: sizeClasses.height,
@@ -203,6 +206,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                             visibleSections: componentOrder?.filter(sec => sectionVisibility?.[sec] !== false) || []
                         }}
                     />
+                )}
+                {isOpen && !activeProject && (
+                    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                        <MessageSquare size={48} className="text-gray-400 mb-4" />
+                        <p className="text-gray-600 text-sm">{t('chatbotWidget.noProjectSelected', 'Please select a project to use the chatbot')}</p>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm transition-colors"
+                        >
+                            {t('common.close', 'Close')}
+                        </button>
+                    </div>
                 )}
             </div>
 

@@ -27,14 +27,24 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     
     return (
         <div className="absolute bottom-0 right-0 w-full h-full z-30 flex flex-col justify-end p-4 pointer-events-auto font-sans">
-            <ChatCore
-                config={config}
-                project={project}
-                appearance={appearance}
-                onLeadCapture={handleLeadCapture}
-                className="w-full bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800 transition-all duration-500 h-[500px]"
-                showHeader={true}
-            />
+            <div 
+                className="w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-500 h-[500px]"
+                style={{ 
+                    backgroundColor: appearance.colors.backgroundColor,
+                    borderColor: appearance.colors.inputBorder,
+                    borderWidth: '1px',
+                    borderStyle: 'solid'
+                }}
+            >
+                <ChatCore
+                    config={config}
+                    project={project}
+                    appearance={appearance}
+                    onLeadCapture={handleLeadCapture}
+                    className="h-full"
+                    showHeader={true}
+                />
+            </div>
         </div>
     );
 };

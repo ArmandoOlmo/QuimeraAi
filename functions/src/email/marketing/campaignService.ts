@@ -51,7 +51,7 @@ interface SendCampaignResult {
  */
 export const sendCampaign = functions.https.onCall(async (data: {
     userId: string;
-    storeId: string;
+    storeId: string;  // Note: This is actually projectId from frontend
     campaignId: string;
 }, context) => {
     // Verify authentication
@@ -59,16 +59,16 @@ export const sendCampaign = functions.https.onCall(async (data: {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { userId, storeId, campaignId } = data;
+    const { userId, storeId: projectId, campaignId } = data;
 
-    // Verify user owns this store
+    // Verify user owns this project
     if (context.auth.uid !== userId) {
-        throw new functions.https.HttpsError('permission-denied', 'User does not have access to this store');
+        throw new functions.https.HttpsError('permission-denied', 'User does not have access to this project');
     }
 
     try {
-        // Get campaign data
-        const campaignDoc = await db.doc(`users/${userId}/stores/${storeId}/emailCampaigns/${campaignId}`).get();
+        // Get campaign data (using projects path)
+        const campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
         
         if (!campaignDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'Campaign not found');
@@ -88,7 +88,7 @@ export const sendCampaign = functions.https.onCall(async (data: {
         });
 
         // Get recipients based on audience type
-        const recipients = await getRecipients(userId, storeId, campaign);
+        const recipients = await getRecipients(userId, projectId, campaign);
 
         if (recipients.length === 0) {
             await campaignDoc.ref.update({
@@ -101,15 +101,15 @@ export const sendCampaign = functions.https.onCall(async (data: {
         }
 
         // Get email settings
-        const emailSettingsDoc = await db.doc(`users/${userId}/stores/${storeId}/settings/email`).get();
+        const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
         const emailSettings = emailSettingsDoc.data() || {};
 
-        const storeSettingsDoc = await db.doc(`users/${userId}/stores/${storeId}/settings/general`).get();
-        const storeSettings = storeSettingsDoc.data() || {};
+        const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
+        const projectSettings = projectDoc.data() || {};
 
         // Prepare email parameters
-        const fromEmail = emailSettings.fromEmail || storeSettings.storeEmail || 'noreply@quimera.app';
-        const fromName = emailSettings.fromName || storeSettings.storeName || 'Quimera';
+        const fromEmail = emailSettings.fromEmail || 'noreply@quimera.app';
+        const fromName = emailSettings.fromName || projectSettings.name || 'Quimera';
 
         // Send emails in batches
         const result = await sendCampaignEmails({
@@ -118,7 +118,7 @@ export const sendCampaign = functions.https.onCall(async (data: {
             fromEmail,
             fromName,
             userId,
-            storeId,
+            projectId,
         });
 
         // Update campaign with results
@@ -137,7 +137,7 @@ export const sendCampaign = functions.https.onCall(async (data: {
         console.error('Error sending campaign:', error);
         
         // Update status to indicate failure
-        await db.doc(`users/${userId}/stores/${storeId}/emailCampaigns/${campaignId}`).update({
+        await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).update({
             status: 'draft', // Revert to draft so it can be retried
             lastError: error.message,
         });
@@ -173,7 +173,7 @@ export const sendCampaignToSegment = functions.https.onCall(async (data: {
  */
 async function getRecipients(
     userId: string,
-    storeId: string,
+    projectId: string,
     campaign: CampaignData
 ): Promise<RecipientData[]> {
     const recipients: RecipientData[] = [];
@@ -188,11 +188,11 @@ async function getRecipients(
         }
     } else if (campaign.audienceType === 'segment' && campaign.audienceSegmentId) {
         // Get segment and filter customers
-        const segmentDoc = await db.doc(`users/${userId}/stores/${storeId}/emailAudiences/${campaign.audienceSegmentId}`).get();
+        const segmentDoc = await db.doc(`users/${userId}/projects/${projectId}/emailAudiences/${campaign.audienceSegmentId}`).get();
         
         if (segmentDoc.exists) {
             const segment = segmentDoc.data();
-            const customersSnapshot = await buildSegmentQuery(userId, storeId, segment).get();
+            const customersSnapshot = await buildSegmentQuery(userId, projectId, segment).get();
             
             for (const doc of customersSnapshot.docs) {
                 const customer = doc.data();
@@ -209,9 +209,9 @@ async function getRecipients(
             }
         }
     } else {
-        // All customers who accept marketing
+        // All customers who accept marketing (check stores for ecommerce customers)
         const customersSnapshot = await db
-            .collection(`users/${userId}/stores/${storeId}/customers`)
+            .collection(`users/${userId}/stores/${projectId}/customers`)
             .where('acceptsMarketing', '==', true)
             .get();
 
@@ -234,8 +234,9 @@ async function getRecipients(
 /**
  * Build Firestore query for segment filters
  */
-function buildSegmentQuery(userId: string, storeId: string, segment: any) {
-    let query: admin.firestore.Query = db.collection(`users/${userId}/stores/${storeId}/customers`);
+function buildSegmentQuery(userId: string, projectId: string, segment: any) {
+    // Customers are in stores (ecommerce), using projectId as storeId
+    let query: admin.firestore.Query = db.collection(`users/${userId}/stores/${projectId}/customers`);
 
     // Apply basic filters
     if (segment.acceptsMarketing !== undefined) {
@@ -265,9 +266,9 @@ async function sendCampaignEmails(params: {
     fromEmail: string;
     fromName: string;
     userId: string;
-    storeId: string;
+    projectId: string;
 }): Promise<SendCampaignResult> {
-    const { campaign, recipients, fromEmail, fromName, userId, storeId } = params;
+    const { campaign, recipients, fromEmail, fromName, userId, projectId } = params;
 
     let sent = 0;
     let failed = 0;
@@ -282,11 +283,11 @@ async function sendCampaignEmails(params: {
         const emailPromises = batch.map(async (recipient) => {
             try {
                 // Personalize content
-                const personalizedHtml = renderTemplate(campaign.htmlContent, {
+                const personalizedHtml = renderTemplate(campaign.htmlContent || `<p>${campaign.subject}</p>`, {
                     firstName: recipient.firstName || '',
                     lastName: recipient.lastName || '',
                     email: recipient.email,
-                    unsubscribeUrl: `https://quimera.app/unsubscribe?email=${encodeURIComponent(recipient.email)}&store=${params.storeId}`,
+                    unsubscribeUrl: `https://quimera.app/unsubscribe?email=${encodeURIComponent(recipient.email)}&project=${projectId}`,
                 });
 
                 const result = await sendEmail({
@@ -297,15 +298,15 @@ async function sendCampaignEmails(params: {
                     tags: [
                         { name: 'type', value: 'marketing' },
                         { name: 'campaign', value: campaign.id },
-                        { name: 'store', value: storeId },
+                        { name: 'project', value: projectId },
                     ],
                 });
 
                 if (result.success) {
                     sent++;
                     
-                    // Log successful send
-                    await db.collection(`users/${userId}/stores/${storeId}/emailLogs`).add({
+                    // Log successful send (using projects path)
+                    await db.collection(`users/${userId}/projects/${projectId}/emailLogs`).add({
                         type: 'marketing',
                         templateId: 'campaign',
                         campaignId: campaign.id,
@@ -362,11 +363,12 @@ export const processScheduledCampaigns = functions.pubsub
         const usersSnapshot = await db.collection('users').get();
 
         for (const userDoc of usersSnapshot.docs) {
-            const storesSnapshot = await db.collection(`users/${userDoc.id}/stores`).get();
+            // Check projects for email campaigns
+            const projectsSnapshot = await db.collection(`users/${userDoc.id}/projects`).get();
 
-            for (const storeDoc of storesSnapshot.docs) {
+            for (const projectDoc of projectsSnapshot.docs) {
                 const campaignsSnapshot = await db
-                    .collection(`users/${userDoc.id}/stores/${storeDoc.id}/emailCampaigns`)
+                    .collection(`users/${userDoc.id}/projects/${projectDoc.id}/emailCampaigns`)
                     .where('status', '==', 'scheduled')
                     .where('scheduledAt', '<=', now)
                     .get();
@@ -380,24 +382,24 @@ export const processScheduledCampaigns = functions.pubsub
                         campaign.id = campaignDoc.id;
 
                         // Get recipients and send
-                        const recipients = await getRecipients(userDoc.id, storeDoc.id, campaign);
+                        const recipients = await getRecipients(userDoc.id, projectDoc.id, campaign);
 
                         if (recipients.length > 0) {
-                            const emailSettingsDoc = await db.doc(`users/${userDoc.id}/stores/${storeDoc.id}/settings/email`).get();
+                            const emailSettingsDoc = await db.doc(`users/${userDoc.id}/projects/${projectDoc.id}/settings/email`).get();
                             const emailSettings = emailSettingsDoc.data() || {};
 
-                            const storeSettingsDoc = await db.doc(`users/${userDoc.id}/stores/${storeDoc.id}/settings/general`).get();
-                            const storeSettings = storeSettingsDoc.data() || {};
+                            const projectDataDoc = await db.doc(`users/${userDoc.id}/projects/${projectDoc.id}`).get();
+                            const projectData = projectDataDoc.data() || {};
 
                             await campaignDoc.ref.update({ status: 'sending' });
 
                             const result = await sendCampaignEmails({
                                 campaign,
                                 recipients,
-                                fromEmail: emailSettings.fromEmail || storeSettings.storeEmail || 'noreply@quimera.app',
-                                fromName: emailSettings.fromName || storeSettings.storeName || 'Quimera',
+                                fromEmail: emailSettings.fromEmail || 'noreply@quimera.app',
+                                fromName: emailSettings.fromName || projectData.name || 'Quimera',
                                 userId: userDoc.id,
-                                storeId: storeDoc.id,
+                                projectId: projectDoc.id,
                             });
 
                             await campaignDoc.ref.update({
@@ -438,7 +440,7 @@ export const processScheduledCampaigns = functions.pubsub
  */
 export const sendTestEmail = functions.https.onCall(async (data: {
     userId: string;
-    storeId: string;
+    storeId: string;  // Note: This is actually projectId from frontend
     campaignId: string;
     testEmail: string;
 }, context) => {
@@ -446,14 +448,15 @@ export const sendTestEmail = functions.https.onCall(async (data: {
         throw new functions.https.HttpsError('permission-denied', 'Access denied');
     }
 
-    const { userId, storeId, campaignId, testEmail } = data;
+    const { userId, storeId: projectId, campaignId, testEmail } = data;
 
     if (!isValidEmail(testEmail)) {
         throw new functions.https.HttpsError('invalid-argument', 'Invalid email address');
     }
 
     try {
-        const campaignDoc = await db.doc(`users/${userId}/stores/${storeId}/emailCampaigns/${campaignId}`).get();
+        // Use projects path (frontend uses projects, not stores)
+        const campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
         
         if (!campaignDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'Campaign not found');
@@ -461,13 +464,13 @@ export const sendTestEmail = functions.https.onCall(async (data: {
 
         const campaign = campaignDoc.data() as CampaignData;
 
-        const emailSettingsDoc = await db.doc(`users/${userId}/stores/${storeId}/settings/email`).get();
+        const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
         const emailSettings = emailSettingsDoc.data() || {};
 
-        const storeSettingsDoc = await db.doc(`users/${userId}/stores/${storeId}/settings/general`).get();
-        const storeSettings = storeSettingsDoc.data() || {};
+        const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
+        const projectSettings = projectDoc.data() || {};
 
-        const testHtml = renderTemplate(campaign.htmlContent, {
+        const testHtml = renderTemplate(campaign.htmlContent || `<p>${campaign.subject}</p>`, {
             firstName: 'Test',
             lastName: 'User',
             email: testEmail,
@@ -478,7 +481,7 @@ export const sendTestEmail = functions.https.onCall(async (data: {
             to: testEmail,
             subject: `[TEST] ${campaign.subject}`,
             html: testHtml,
-            from: `${emailSettings.fromName || storeSettings.storeName || 'Quimera'} <${emailSettings.fromEmail || 'noreply@quimera.app'}>`,
+            from: `${emailSettings.fromName || projectSettings.name || 'Quimera'} <${emailSettings.fromEmail || 'noreply@quimera.app'}>`,
         });
 
         return {
@@ -489,5 +492,7 @@ export const sendTestEmail = functions.https.onCall(async (data: {
         throw new functions.https.HttpsError('internal', error.message);
     }
 });
+
+
 
 

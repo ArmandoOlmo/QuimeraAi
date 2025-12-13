@@ -36,7 +36,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
     { id: 'video', name: 'Video', icon: <Video size={18} /> },
     { id: 'howItWorks', name: 'How It Works', icon: <Puzzle size={18} /> },
     { id: 'map', name: 'Location Map', icon: <MapPin size={18} /> },
-    { id: 'chatbot', name: 'AI Chatbot', icon: <MessageCircle size={18} /> },
+    // chatbot removed - deprecated, now using AI Assistant Dashboard
     { id: 'typography', name: 'Global Typography', icon: <Type size={18} /> },
     { id: 'footer', name: 'Footer', icon: <Type size={18} /> },
 ];

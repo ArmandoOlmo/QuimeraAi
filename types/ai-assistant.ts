@@ -112,6 +112,37 @@ export interface ChatAppearanceConfig {
     theme: 'light' | 'dark' | 'auto';
 }
 
+// Social Channel Configuration (for multi-channel chat)
+export interface SocialChannelConfig {
+    enabled: boolean;
+    // Platform-specific config (stored securely)
+}
+
+export interface FacebookMessengerChannelConfig extends SocialChannelConfig {
+    pageId: string;
+    pageAccessToken: string;
+    webhookVerifyToken: string;
+}
+
+export interface WhatsAppChannelConfig extends SocialChannelConfig {
+    phoneNumberId: string;
+    businessAccountId: string;
+    accessToken: string;
+    webhookVerifyToken: string;
+}
+
+export interface InstagramChannelConfig extends SocialChannelConfig {
+    accountId: string;
+    accessToken: string;
+    webhookVerifyToken: string;
+}
+
+export interface SocialChannelsConfig {
+    facebook?: FacebookMessengerChannelConfig;
+    whatsapp?: WhatsAppChannelConfig;
+    instagram?: InstagramChannelConfig;
+}
+
 export interface AiAssistantConfig {
     agentName: string;
     tone: string;
@@ -129,6 +160,8 @@ export interface AiAssistantConfig {
     appearance?: ChatAppearanceConfig;
     enableLiveVoice: boolean;
     voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr';
+    // Social media channel integrations
+    socialChannels?: SocialChannelsConfig;
 }
 
 // =============================================================================
@@ -153,6 +186,8 @@ export interface GlobalAssistantConfig {
     autoDetectLanguage?: boolean;
     supportedLanguages?: string;
 }
+
+
 
 
 

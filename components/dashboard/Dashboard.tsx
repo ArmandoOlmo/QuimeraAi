@@ -637,45 +637,45 @@ const Dashboard: React.FC = () => {
 
                         {/* Statistics Section - Only on Websites view */}
                         {isWebsites && (
-                            <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-blue-500/20">
-                                            <Globe className="text-blue-500" size={20} />
+                            <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-blue-500/20">
+                                            <Globe className="text-blue-500 w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
-                                    <div className="text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.totalWebsites')}</div>
+                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
+                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.totalWebsites')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-green-500/20">
-                                            <CheckCircle className="text-green-500" size={20} />
+                                <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
+                                            <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
-                                    <div className="text-3xl font-extrabold text-foreground">{publishedCount}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.published')}</div>
+                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{publishedCount}</div>
+                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.published')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400" size={20} />
+                                <div className="bg-gradient-to-br from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-slate-500/20">
+                                            <FileEdit className="text-slate-400 w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
-                                    <div className="text-3xl font-extrabold text-foreground">{draftCount}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.draft')}</div>
+                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{draftCount}</div>
+                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.draft')}</div>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-2xl p-4 hover:shadow-lg transition-shadow">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-purple-500/20">
-                                            <LayoutGrid className="text-purple-500" size={20} />
+                                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-shadow">
+                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-purple-500/20">
+                                            <LayoutGrid className="text-purple-500 w-4 h-4 md:w-5 md:h-5" />
                                         </div>
                                     </div>
-                                    <div className="text-3xl font-extrabold text-foreground">{userProjects.length}</div>
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.filtered')}</div>
+                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{userProjects.length}</div>
+                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.filtered')}</div>
                                 </div>
                             </section>
                         )}
@@ -699,8 +699,8 @@ const Dashboard: React.FC = () => {
 
                                 {/* Filter Chips - Only on Websites view */}
                                 {isWebsites && (
-                                    <div className="mb-6 space-y-4">
-                                        <div className="flex flex-wrap gap-3">
+                                    <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
+                                        <div className="flex flex-wrap gap-2 md:gap-3">
                                             <FilterChip
                                                 label={t('dashboard.allStatus')}
                                                 active={filterStatus === 'all'}
@@ -723,7 +723,7 @@ const Dashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">
+                                            <span className="text-xs md:text-sm text-muted-foreground">
                                                 {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
                                             </span>
                                             {/* Mobile controls */}

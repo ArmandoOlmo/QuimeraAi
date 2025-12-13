@@ -265,3 +265,5 @@ const WishlistPage: React.FC<WishlistPageProps> = ({
 export default WishlistPage;
 
 
+
+

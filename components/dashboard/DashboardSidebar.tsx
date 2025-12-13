@@ -56,11 +56,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
-  // State for collapsible sections
+  // State for collapsible sections (true = collapsed/closed by default)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    websites: false,
-    ecommerce: false,
-    tools: false,
+    websites: true,
+    ecommerce: true,
+    tools: true,
   });
 
   // Estado para trackear la sub-vista activa de ecommerce
@@ -393,22 +393,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
       {/* Sidebar wrapper for proper positioning of toggle button */}
       <div className={`
-        relative flex-shrink-0 h-screen
+        relative flex-shrink-0 h-screen z-50
         ${hiddenOnDesktop ? 'lg:hidden' : ''}
         ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
         ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
         ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
       `}>
-        {/* Desktop Toggle Button - Aligned with editor header icons (h-14 = 56px, center = 28px) */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex absolute top-[16px] -right-3 z-[60] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
-          aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
-          aria-expanded={!isCollapsed}
-        >
-          {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
-        </button>
-
         <aside
           ref={sidebarRef}
           onTouchStart={handleTouchStart}
@@ -657,7 +647,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               <div className="flex justify-between items-end mb-2 px-1">
                 <div className="flex items-center gap-1.5">
                   <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
-                  <span className="text-xs font-bold text-gray-700 dark:text-white tracking-wide">
+                  <span className="text-xs font-bold text-foreground tracking-wide">
                     {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
                   </span>
                 </div>
@@ -675,7 +665,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
               <div className="mt-2 flex justify-between items-center px-1">
                 <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
-                <button className="text-[11px] lg:text-[10px] font-bold text-gray-700 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation">
+                <button className="text-[11px] lg:text-[10px] font-bold text-foreground hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation">
                   {t('common.upgrade')}
                 </button>
               </div>
@@ -718,6 +708,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             </div>
           </div>
         </aside>
+        
+        {/* Desktop Toggle Button - Outside aside for proper z-index */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="hidden lg:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+          aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
+          aria-expanded={!isCollapsed}
+        >
+          {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
+        </button>
       </div>
     </>
   );

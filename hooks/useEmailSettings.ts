@@ -549,4 +549,236 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
     };
 };
 
+// Hook for email audiences/segments
+export const useEmailAudiences = (userId: string, projectId: string) => {
+    const [audiences, setAudiences] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch audiences with realtime updates
+    useEffect(() => {
+        // Only proceed if we have valid userId and projectId (not empty or 'default')
+        if (!userId || !projectId || projectId === 'default') {
+            setAudiences([]);
+            setIsLoading(false);
+            return;
+        }
+
+        console.log(`🔄 [useEmailAudiences] Init for Project: ${projectId}`);
+        let unsubscribe: (() => void) | undefined;
+        let isMounted = true;
+
+        // Safety timeout
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted) {
+                console.warn('⚠️ [useEmailAudiences] Safety timeout triggered');
+                setAudiences([]);
+                setIsLoading(false);
+            }
+        }, 15000);
+
+        const setupListener = async () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:setupListener:start',message:'Setting up onSnapshot listener',data:{userId,projectId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            try {
+                const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
+                const audiencesRef = collection(db, audiencesPath);
+                const q = query(audiencesRef, orderBy('createdAt', 'desc'));
+
+                unsubscribe = onSnapshot(
+                    q,
+                    (snapshot) => {
+                        if (!isMounted) return;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:onSnapshot:received',message:'Snapshot received',data:{docsCount:snapshot.docs.length,fromCache:snapshot.metadata.fromCache,hasPendingWrites:snapshot.metadata.hasPendingWrites},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
+                        console.log(`✅ [useEmailAudiences] Snapshot received, docs: ${snapshot.docs.length}`);
+                        clearTimeout(safetyTimeout);
+
+                        const audiencesData = snapshot.docs.map((doc) => ({
+                            id: doc.id,
+                            ...doc.data(),
+                        }));
+                        setAudiences(audiencesData);
+                        setIsLoading(false);
+                        setError(null);
+                    },
+                    (err) => {
+                        if (!isMounted) return;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:onSnapshot:error',message:'Listener error',data:{errorMessage:err.message,errorCode:err.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
+                        console.error('❌ [useEmailAudiences] Error fetching audiences:', err);
+                        clearTimeout(safetyTimeout);
+                        setAudiences([]);
+                        setError(err.message);
+                        setIsLoading(false);
+                    }
+                );
+            } catch (err: any) {
+                if (!isMounted) return;
+                console.error('❌ [useEmailAudiences] Error setting up listener:', err);
+                clearTimeout(safetyTimeout);
+                setAudiences([]);
+                setError(err.message);
+                setIsLoading(false);
+            }
+        };
+
+        setupListener();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(safetyTimeout);
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [userId, projectId]);
+
+    // Create audience
+    const createAudience = useCallback(async (audienceData: {
+        name: string;
+        description?: string;
+        acceptsMarketing?: boolean;
+        hasOrdered?: boolean;
+        minOrders?: number;
+        maxOrders?: number;
+        minTotalSpent?: number;
+        maxTotalSpent?: number;
+        tags?: string[];
+        excludeTags?: string[];
+        lastOrderDaysAgo?: number;
+        source?: string[];
+        filters?: any[];
+    }) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:entry',message:'createAudience called',data:{userId,projectId,audienceData,dbExists:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
+        // #endregion
+
+        if (!userId || !projectId || projectId === 'default') return null;
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:path',message:'Collection path created',data:{audiencesPath,userId,projectId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            const audiencesRef = collection(db, audiencesPath);
+            
+            const newAudience = {
+                ...audienceData,
+                estimatedCount: 0,
+                isDefault: false,
+                createdBy: userId,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            };
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:beforeAddDoc',message:'About to call addDoc',data:{newAudienceKeys:Object.keys(newAudience),hasUndefinedValues:Object.values(newAudience).some(v=>v===undefined)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,D'})}).catch(()=>{});
+            // #endregion
+
+            const docRef = await addDoc(audiencesRef, newAudience);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:success',message:'addDoc succeeded',data:{docId:docRef.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'success'})}).catch(()=>{});
+            // #endregion
+            console.log(`✅ [useEmailAudiences] Created audience: ${docRef.id}`);
+            return { id: docRef.id, ...newAudience };
+        } catch (err: any) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEmailSettings.ts:createAudience:error',message:'addDoc failed',data:{errorMessage:err.message,errorName:err.name,errorCode:err.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'error'})}).catch(()=>{});
+            // #endregion
+            console.error('❌ [useEmailAudiences] Error creating audience:', err);
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [userId, projectId]);
+
+    // Update audience
+    const updateAudience = useCallback(async (audienceId: string, updates: Partial<{
+        name: string;
+        description?: string;
+        acceptsMarketing?: boolean;
+        hasOrdered?: boolean;
+        minOrders?: number;
+        maxOrders?: number;
+        minTotalSpent?: number;
+        maxTotalSpent?: number;
+        tags?: string[];
+        excludeTags?: string[];
+        lastOrderDaysAgo?: number;
+        source?: string[];
+        filters?: any[];
+        estimatedCount?: number;
+    }>) => {
+        if (!userId || !projectId || projectId === 'default') return;
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const audiencePath = `users/${userId}/projects/${projectId}/emailAudiences`;
+            const audienceRef = doc(db, audiencePath, audienceId);
+            
+            await updateDoc(audienceRef, {
+                ...updates,
+                updatedAt: serverTimestamp(),
+            });
+            console.log(`✅ [useEmailAudiences] Updated audience: ${audienceId}`);
+        } catch (err: any) {
+            console.error('❌ [useEmailAudiences] Error updating audience:', err);
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [userId, projectId]);
+
+    // Delete audience
+    const deleteAudience = useCallback(async (audienceId: string) => {
+        if (!userId || !projectId || projectId === 'default') return;
+
+        try {
+            const audiencePath = `users/${userId}/projects/${projectId}/emailAudiences`;
+            const audienceRef = doc(db, audiencePath, audienceId);
+            await deleteDoc(audienceRef);
+            console.log(`✅ [useEmailAudiences] Deleted audience: ${audienceId}`);
+        } catch (err: any) {
+            console.error('❌ [useEmailAudiences] Error deleting audience:', err);
+            setError(err.message);
+            throw err;
+        }
+    }, [userId, projectId]);
+
+    // Duplicate audience
+    const duplicateAudience = useCallback(async (audienceId: string) => {
+        const original = audiences.find(a => a.id === audienceId);
+        if (!original) return null;
+
+        const { id, createdAt, updatedAt, ...audienceData } = original;
+        return createAudience({
+            ...audienceData,
+            name: `${audienceData.name} (copia)`,
+        });
+    }, [audiences, createAudience]);
+
+    return {
+        audiences,
+        isLoading,
+        isSaving,
+        error,
+        createAudience,
+        updateAudience,
+        deleteAudience,
+        duplicateAudience,
+    };
+};
+
 export default useEmailSettings;

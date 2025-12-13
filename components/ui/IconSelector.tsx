@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ServiceIcon } from '../../types';
 import * as LucideIcons from 'lucide-react';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Icon categories for services
 const serviceIconCategories = {
@@ -19,6 +20,25 @@ const serviceIconCategories = {
     'Other': ['zap', 'award', 'trophy', 'rocket', 'lightbulb', 'sparkles', 'circle-dot', 'hexagon', 'layers'] as ServiceIcon[],
 };
 
+// Helper function to get translation key for category
+const getCategoryKey = (category: string) => {
+    const map: Record<string, string> = {
+        'Development': 'development',
+        'Design': 'design',
+        'Business': 'business',
+        'Communication': 'communication',
+        'Social': 'social',
+        'Tools': 'tools',
+        'Documents': 'documents',
+        'Location': 'location',
+        'Time': 'time',
+        'Security': 'security',
+        'Food & Hospitality': 'foodHospitality',
+        'Other': 'other'
+    };
+    return map[category] || 'other';
+};
+
 interface IconSelectorProps {
     value: ServiceIcon;
     onChange: (icon: ServiceIcon) => void;
@@ -27,9 +47,10 @@ interface IconSelectorProps {
 }
 
 const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, size = 'md' }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string>('Development');
-    
+
     // Map icon names to their actual components
     const getIconComponent = (iconName: ServiceIcon) => {
         const iconMap: Record<string, any> = {
@@ -167,15 +188,15 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                 </div>
                 <ChevronDown className="w-4 h-4" />
             </button>
-            
+
             {isOpen && (
                 <>
                     {/* Overlay para cerrar al hacer clic fuera */}
-                    <div 
-                        className="fixed inset-0 z-40" 
+                    <div
+                        className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    
+
                     {/* Panel de selección de iconos */}
                     <div className="absolute z-50 mt-1 w-full bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl max-h-96 overflow-hidden">
                         {/* Category tabs */}
@@ -184,17 +205,16 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
-                                    className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-                                        selectedCategory === category
+                                    className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${selectedCategory === category
                                             ? 'text-editor-accent border-b-2 border-editor-accent bg-editor-panel-bg/50'
                                             : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/30'
-                                    }`}
+                                        }`}
                                 >
-                                    {category}
+                                    {t(`editor.controls.iconSelector.categories.${getCategoryKey(category)}`, category)}
                                 </button>
                             ))}
                         </div>
-                        
+
                         {/* Icon grid */}
                         <div className="p-3 overflow-y-auto max-h-80">
                             <div className="grid grid-cols-5 gap-2">
@@ -207,11 +227,10 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                                                 onChange(iconName);
                                                 setIsOpen(false);
                                             }}
-                                            className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all hover:scale-105 ${
-                                                value === iconName
+                                            className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all hover:scale-105 ${value === iconName
                                                     ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
                                                     : 'bg-editor-bg border-editor-border text-editor-text-primary hover:border-editor-accent hover:bg-editor-panel-bg'
-                                            }`}
+                                                }`}
                                             title={iconName}
                                         >
                                             {IconComponent}

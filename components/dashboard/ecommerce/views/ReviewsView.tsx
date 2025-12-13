@@ -22,6 +22,7 @@ import {
     ThumbsUp,
     Reply,
 } from 'lucide-react';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEditor } from '../../../../contexts/EditorContext';
 import { useReviews } from '../hooks/useReviews';
 import { useProducts } from '../hooks/useProducts';

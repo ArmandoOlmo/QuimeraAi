@@ -5,12 +5,15 @@ import { useCMS } from '../../contexts/cms';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft } from 'lucide-react';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import { CMSPost } from '../../types';
 import { sanitizeHtml } from '../../utils/sanitize';
 
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
+    const { navigate } = useRouter();
     const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -234,6 +237,16 @@ const CMSDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+                        {/* Botón Volver */}
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
+
                         {/* Búsqueda Desktop - Compacta */}
                         <div className="relative group hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-4 h-4" />

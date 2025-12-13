@@ -470,7 +470,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
     // Ensure globalColors exists with defaults
     const globalColors = theme.globalColors || getDefaultGlobalColors();
-    
+
     // Determine which content to show based on mode
     const showColors = mode === 'colors' || mode === 'both';
     const showTypography = mode === 'typography' || mode === 'both';
@@ -497,19 +497,19 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
      */
     const applyPaletteToAllComponents = async (colors: GlobalColors) => {
         const componentColorMappings = generateComponentColorMappings(colors);
-        
+
         // Aplicar colores a cada componente en componentStyles
         for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
             await updateComponentStyle(componentId, { colors: componentColors }, false);
         }
-        
+
         // También actualizar los colores en data para que tengan prioridad en el merge
         if (data && setData) {
             setData((prev: PageData | null) => {
                 if (!prev) return prev;
-                
+
                 const newData = { ...prev };
-                
+
                 // Actualizar colores de cada componente en data
                 for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
                     const key = componentId as keyof PageData;
@@ -530,7 +530,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         };
                     }
                 }
-                
+
                 return newData;
             });
         }
@@ -545,7 +545,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
     const handlePaletteSelect = async (palette: ColorPalette) => {
         setIsApplying(true);
         setSelectedPaletteId(palette.id);
-        
+
         try {
             // 1. Actualizar colores globales del tema y guardar colores de la paleta para acceso rápido
             setTheme(prev => ({
@@ -591,7 +591,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
             // Aplicar colores a todos los componentes
             await applyPaletteToAllComponents(colors);
-            
+
             // Cerrar el importador y limpiar selección de paleta predefinida
             setShowCoolorsImporter(false);
             setSelectedPaletteId(null);
@@ -631,25 +631,23 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                 <div className="flex bg-editor-bg rounded-lg p-1 border border-editor-border">
                     <button
                         onClick={() => setActiveTab('colors')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'colors'
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${activeTab === 'colors'
                                 ? 'bg-editor-accent text-editor-bg shadow-sm'
                                 : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
-                        }`}
+                            }`}
                     >
                         <Palette size={16} />
-                        {t('globalStyles.colors', 'Colores')}
+                        {t('editor.controls.globalStyles.colors', 'Colors')}
                     </button>
                     <button
                         onClick={() => setActiveTab('typography')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'typography'
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${activeTab === 'typography'
                                 ? 'bg-editor-accent text-editor-bg shadow-sm'
                                 : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
-                        }`}
+                            }`}
                     >
                         <Type size={16} />
-                        {t('globalStyles.typography', 'Tipografía')}
+                        {t('editor.controls.globalStyles.typography', 'Typography')}
                     </button>
                 </div>
             )}
@@ -666,12 +664,11 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <div className="flex items-center gap-2">
                                 <Upload size={16} className="text-purple-400" />
                                 <span className="text-sm font-medium text-editor-text-primary">
-                                    {t('globalStyles.importFromCoolors', 'Importar paleta de Coolors.co')}
                                 </span>
                             </div>
                             <ChevronDown size={14} className={`text-purple-400 transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
                         </button>
-                        
+
                         {showCoolorsImporter && (
                             <div className="p-4 border-t border-purple-500/20">
                                 <CoolorsImporter onPaletteGenerated={handleCoolorsPaletteGenerated} />
@@ -684,7 +681,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         <div className="flex items-center justify-between mb-3">
                             <label className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
                                 <Sparkles size={14} />
-                                {t('globalStyles.presetPalettes', 'Paletas Predefinidas')}
+                                {t('editor.controls.globalStyles.presetPalettes', 'Preset Palettes')}
                             </label>
                             <button
                                 onClick={handleResetColors}
@@ -693,7 +690,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 title="Restablecer colores"
                             >
                                 <RotateCcw size={12} className={isApplying ? 'animate-spin' : ''} />
-                                Reset
+                                {t('editor.controls.globalStyles.reset', 'Reset')}
                             </button>
                         </div>
 
@@ -702,8 +699,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <p className="text-xs text-editor-accent flex items-start gap-2">
                                 <Info size={14} className="flex-shrink-0 mt-0.5" />
                                 <span>
-                                    Al seleccionar una paleta, los colores se aplicarán a <strong>todos los componentes</strong>. 
-                                    Luego puedes personalizarlos individualmente desde los controles de cada sección.
+                                    {t('editor.controls.globalStyles.infoBanner', 'When selecting a palette, colors will be applied to **all components**. You can then customize them individually from each section\'s controls.')}
                                 </span>
                             </p>
                         </div>
@@ -714,11 +710,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     key={palette.id}
                                     onClick={() => handlePaletteSelect(palette)}
                                     disabled={isApplying}
-                                    className={`relative p-2.5 rounded-lg border transition-all text-left group ${
-                                        selectedPaletteId === palette.id
+                                    className={`relative p-2.5 rounded-lg border transition-all text-left group ${selectedPaletteId === palette.id
                                             ? 'border-editor-accent ring-1 ring-editor-accent bg-editor-accent/10'
                                             : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg hover:bg-editor-panel-bg/50'
-                                    } ${isApplying ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
+                                        } ${isApplying ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
                                 >
                                     {/* Selection indicator */}
                                     {selectedPaletteId === palette.id && (
@@ -730,7 +725,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                             )}
                                         </div>
                                     )}
-                                    
+
                                     {/* Color Preview */}
                                     <div className="flex gap-1 mb-2">
                                         {palette.preview.map((color, idx) => (
@@ -741,7 +736,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                             />
                                         ))}
                                     </div>
-                                    
+
                                     {/* Palette Name */}
                                     <p className="text-xs font-medium text-editor-text-primary truncate">
                                         {palette.nameEs}
@@ -758,22 +753,22 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     <div>
                         <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
                             <Grid size={14} />
-                            {t('globalStyles.customColors', 'Colores Personalizados')}
+                            {t('editor.controls.globalStyles.customColors', 'Custom Colors')}
                         </label>
-                        
+
                         <div className="space-y-4">
                             {/* Primary Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                                <p className="text-xs font-semibold text-editor-text-primary mb-3">Colores Principales</p>
+                                <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.mainColors', 'Main Colors')}</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     <ColorControl
-                                        label="Primario"
+                                        label={t('editor.controls.globalStyles.primary', 'Primary')}
                                         value={globalColors.primary}
                                         onChange={(v) => handleColorChange('primary', v)}
                                         paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
-                                        label="Secundario"
+                                        label={t('editor.controls.globalStyles.secondary', 'Secondary')}
                                         value={globalColors.secondary}
                                         onChange={(v) => handleColorChange('secondary', v)}
                                         paletteColors={theme.paletteColors}
@@ -781,7 +776,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                                 <div className="mt-3">
                                     <ColorControl
-                                        label="Acento"
+                                        label={t('editor.controls.globalStyles.accent', 'Accent')}
                                         value={globalColors.accent}
                                         onChange={(v) => handleColorChange('accent', v)}
                                         paletteColors={theme.paletteColors}
@@ -791,10 +786,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                             {/* Background Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                                <p className="text-xs font-semibold text-editor-text-primary mb-3">Fondos</p>
+                                <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.backgrounds', 'Backgrounds')}</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     <ColorControl
-                                        label="Fondo Principal"
+                                        label={t('editor.controls.globalStyles.mainBackground', 'Main Background')}
                                         value={globalColors.background}
                                         onChange={(v) => {
                                             handleColorChange('background', v);
@@ -803,7 +798,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
-                                        label="Superficie"
+                                        label={t('editor.controls.globalStyles.surfaceBackground', 'Surface')}
                                         value={globalColors.surface}
                                         onChange={(v) => handleColorChange('surface', v)}
                                         paletteColors={theme.paletteColors}
@@ -813,16 +808,16 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                             {/* Text Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                                <p className="text-xs font-semibold text-editor-text-primary mb-3">Texto</p>
+                                <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.textColors', 'Text')}</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     <ColorControl
-                                        label="Texto"
+                                        label={t('editor.controls.globalStyles.text', 'Text')}
                                         value={globalColors.text}
                                         onChange={(v) => handleColorChange('text', v)}
                                         paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
-                                        label="Títulos"
+                                        label={t('editor.controls.globalStyles.headings', 'Headings')}
                                         value={globalColors.heading}
                                         onChange={(v) => handleColorChange('heading', v)}
                                         paletteColors={theme.paletteColors}
@@ -830,7 +825,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                                 <div className="mt-3">
                                     <ColorControl
-                                        label="Texto Secundario"
+                                        label={t('editor.controls.globalStyles.textSecondary', 'Secondary Text')}
                                         value={globalColors.textMuted}
                                         onChange={(v) => handleColorChange('textMuted', v)}
                                         paletteColors={theme.paletteColors}
@@ -840,22 +835,22 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                             {/* Border & Status Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                                <p className="text-xs font-semibold text-editor-text-primary mb-3">Bordes y Estados</p>
+                                <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.bordersStates', 'Borders & States')}</p>
                                 <div className="grid grid-cols-3 gap-3">
                                     <ColorControl
-                                        label="Bordes"
+                                        label={t('editor.controls.globalStyles.borders', 'Borders')}
                                         value={globalColors.border}
                                         onChange={(v) => handleColorChange('border', v)}
                                         paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
-                                        label="Éxito"
+                                        label={t('editor.controls.globalStyles.success', 'Success')}
                                         value={globalColors.success}
                                         onChange={(v) => handleColorChange('success', v)}
                                         paletteColors={theme.paletteColors}
                                     />
                                     <ColorControl
-                                        label="Error"
+                                        label={t('editor.controls.globalStyles.error', 'Error')}
                                         value={globalColors.error}
                                         onChange={(v) => handleColorChange('error', v)}
                                         paletteColors={theme.paletteColors}
@@ -874,23 +869,23 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     <div className="bg-editor-panel-bg/30 p-4 rounded-lg border border-editor-border">
                         <label className="block text-xs font-bold text-editor-accent mb-4 uppercase tracking-wider flex items-center gap-2">
                             <Type size={14} />
-                            {t('globalStyles.globalFonts', 'Fuentes Globales')}
+                            {t('editor.controls.globalStyles.globalFonts', 'Global Fonts')}
                         </label>
-                        {renderFontSelect(t('globalStyles.headingsFont', 'Títulos / Headings'), 'fontFamilyHeader')}
-                        {renderFontSelect(t('globalStyles.bodyFont', 'Texto / Body'), 'fontFamilyBody')}
-                        {renderFontSelect(t('globalStyles.buttonsFont', 'Botones / UI'), 'fontFamilyButton')}
-                        
+                        {renderFontSelect(t('editor.controls.globalStyles.headingsFont', 'Headings'), 'fontFamilyHeader')}
+                        {renderFontSelect(t('editor.controls.globalStyles.bodyFont', 'Body'), 'fontFamilyBody')}
+                        {renderFontSelect(t('editor.controls.globalStyles.buttonsFont', 'Buttons'), 'fontFamilyButton')}
+
                         {/* All Caps Toggles Section */}
                         <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-4">
                             <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                                {t('globalStyles.allCapsOptions', 'All Caps (Mayúsculas)')}
+                                {t('editor.controls.globalStyles.allCapsOptions', 'All Caps')}
                             </label>
-                            
+
                             {/* Headings All Caps */}
                             <div className="flex items-center justify-between">
                                 <div>
                                     <span className="text-sm text-editor-text-primary">
-                                        {t('globalStyles.headingsAllCaps', 'Títulos')}
+                                        {t('editor.controls.globalStyles.headingsAllCaps', 'Headings')}
                                     </span>
                                 </div>
                                 <button
@@ -902,12 +897,12 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     />
                                 </button>
                             </div>
-                            
+
                             {/* Buttons All Caps */}
                             <div className="flex items-center justify-between">
                                 <div>
                                     <span className="text-sm text-editor-text-primary">
-                                        {t('globalStyles.buttonsAllCaps', 'Botones')}
+                                        {t('editor.controls.globalStyles.buttonsAllCaps', 'Buttons')}
                                     </span>
                                 </div>
                                 <button
@@ -919,12 +914,12 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     />
                                 </button>
                             </div>
-                            
+
                             {/* Nav Links All Caps */}
                             <div className="flex items-center justify-between">
                                 <div>
                                     <span className="text-sm text-editor-text-primary">
-                                        {t('globalStyles.navLinksAllCaps', 'Links de Navegación')}
+                                        {t('editor.controls.globalStyles.navLinksAllCaps', 'Navigation Links')}
                                     </span>
                                 </div>
                                 <button
@@ -942,11 +937,11 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     {/* Font Preview */}
                     <div className="p-4 rounded-lg border border-editor-border bg-editor-bg">
                         <p className="text-xs text-editor-text-secondary mb-3 uppercase tracking-wider font-bold">
-                            {t('globalStyles.preview', 'Vista Previa')}
+                            {t('editor.controls.globalStyles.preview', 'Preview')}
                         </p>
-                        <div 
+                        <div
                             className="p-4 rounded-lg"
-                            style={{ 
+                            style={{
                                 backgroundColor: globalColors.background,
                                 borderColor: globalColors.border,
                                 borderWidth: '1px'
@@ -954,11 +949,11 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         >
                             {/* Nav Links Preview */}
                             <div className="flex gap-4 mb-4 pb-3 border-b border-white/10">
-                                {['Inicio', 'Servicios', 'Contacto'].map((link) => (
-                                    <span 
+                                {[t('editor.controls.globalStyles.navLinks.home', 'Home'), t('editor.controls.globalStyles.navLinks.services', 'Services'), t('editor.controls.globalStyles.navLinks.contact', 'Contact')].map((link) => (
+                                    <span
                                         key={link}
                                         className="text-sm"
-                                        style={{ 
+                                        style={{
                                             fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
                                             color: globalColors.text,
                                             textTransform: theme.navLinksAllCaps ? 'uppercase' : 'none',
@@ -969,30 +964,30 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     </span>
                                 ))}
                             </div>
-                            
-                            <h3 
+
+                            <h3
                                 className="text-xl mb-2 font-bold"
-                                style={{ 
+                                style={{
                                     fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
                                     color: globalColors.heading,
                                     textTransform: theme.headingsAllCaps ? 'uppercase' : 'none',
                                     letterSpacing: theme.headingsAllCaps ? '0.05em' : 'normal'
                                 }}
                             >
-                                Título de Ejemplo
+                                {t('editor.controls.globalStyles.previewTitle', 'Example Title')}
                             </h3>
-                            <p 
+                            <p
                                 className="text-sm mb-4"
-                                style={{ 
+                                style={{
                                     fontFamily: getFontStack(theme.fontFamilyBody || 'mulish'),
                                     color: globalColors.text
                                 }}
                             >
-                                Este es un párrafo de ejemplo para visualizar cómo se verá el texto del cuerpo en tu sitio web.
+                                {t('editor.controls.globalStyles.previewBody', 'This is an example paragraph...')}
                             </p>
-                            <button 
+                            <button
                                 className="px-4 py-2 rounded-md text-sm font-medium"
-                                style={{ 
+                                style={{
                                     fontFamily: getFontStack(theme.fontFamilyButton || 'poppins'),
                                     backgroundColor: globalColors.primary,
                                     color: '#ffffff',
@@ -1000,17 +995,16 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     letterSpacing: theme.buttonsAllCaps ? '0.05em' : 'normal'
                                 }}
                             >
-                                Botón de Ejemplo
+                                {t('editor.controls.globalStyles.previewButton', 'Example Button')}
                             </button>
                         </div>
                     </div>
 
                     {/* Typography Tips */}
                     <div className="p-3 rounded-lg border border-editor-accent/30 bg-editor-accent/5">
-                        <p className="text-xs text-editor-accent font-medium mb-1">💡 Tip</p>
+                        <p className="text-xs text-editor-accent font-medium mb-1">💡 {t('editor.controls.globalStyles.tip', 'Tip')}</p>
                         <p className="text-xs text-editor-text-secondary">
-                            Para un diseño profesional, usa fuentes diferentes para títulos y texto. 
-                            Por ejemplo: <strong>Playfair Display</strong> para títulos y <strong>Lato</strong> para texto.
+                            {t('editor.controls.globalStyles.tipContent', 'For a professional design, use different fonts for headings and body text. For example: Playfair Display for headings and Lato for body.')}
                         </p>
                     </div>
                 </div>

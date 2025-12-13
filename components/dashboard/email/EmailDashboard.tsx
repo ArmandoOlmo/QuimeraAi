@@ -1,31 +1,36 @@
 /**
  * EmailDashboard
  * Dashboard principal para email marketing
+ * Con selector de proyecto igual al EcommerceDashboard
  */
 
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Mail,
     Send,
     Users,
     BarChart3,
-    Settings,
     PlusCircle,
     Loader2,
-    TrendingUp,
     Eye,
     MousePointer,
     AlertCircle,
     Menu,
+    Layers,
+    ChevronDown,
+    Check,
+    ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { useEmailSettings, useEmailLogs } from '../../../hooks/useEmailSettings';
 import DashboardSidebar from '../DashboardSidebar';
 import CampaignsView from './views/CampaignsView';
 import AudiencesView from './views/AudiencesView';
 import AnalyticsView from './views/AnalyticsView';
+import EmailProjectSelectorPage from './EmailProjectSelectorPage';
 
 // Email Dashboard Context
 interface EmailDashboardContextData {
@@ -49,15 +54,30 @@ interface EmailDashboardProps {
 const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectId }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { activeProjectId } = useProject();
+    const { setView } = useUI();
+    const { projects, activeProject, activeProjectId } = useProject();
     const userId = user?.uid || '';
-    // Use prop projectId if provided, otherwise use activeProjectId from context
-    const projectId = propProjectId || activeProjectId || '';
+    
+    // State for selected project (similar to ecommerce)
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+    
+    // Determine effective project
+    const effectiveProjectId = propProjectId || selectedProjectId || activeProjectId || '';
+    const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
+    const projectId = effectiveProjectId;
 
     const [activeView, setActiveView] = useState<EmailView>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { settings, isLoading: settingsLoading } = useEmailSettings(userId, projectId);
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId, { limit: 100 });
+
+    // Sync selected project with active project
+    useEffect(() => {
+        if (activeProjectId && !selectedProjectId) {
+            setSelectedProjectId(activeProjectId);
+        }
+    }, [activeProjectId]);
 
     const isLoading = settingsLoading || logsLoading;
     const hasValidProject = Boolean(userId && projectId && projectId !== 'default');
@@ -69,31 +89,40 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
         { id: 'analytics', label: t('email.analytics', 'Analíticas'), icon: BarChart3 },
     ];
 
+    const handleProjectSelect = (projectId: string) => {
+        setSelectedProjectId(projectId);
+        setIsProjectSelectorOpen(false);
+        localStorage.setItem('emailSelectedProjectId', projectId);
+    };
+
+    // Loading state
+    if (!userId) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // No project selected - show full project selector page
+    if (!effectiveProjectId || projects.length === 0) {
+        return (
+            <EmailProjectSelectorPage
+                onProjectSelect={handleProjectSelect}
+                onBack={() => setView('dashboard')}
+            />
+        );
+    }
+
     if (isLoading) {
         return (
             <div className="flex h-screen bg-background text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="animate-spin text-primary" size={32} />
-                </div>
-            </div>
-        );
-    }
-
-    if (!hasValidProject) {
-        return (
-            <div className="flex h-screen bg-background text-foreground">
-                <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center p-6">
-                        <Mail className="mx-auto text-muted-foreground mb-4" size={48} />
-                        <h3 className="text-lg font-medium text-foreground mb-2">
-                            {t('email.noProjectSelected', 'No hay proyecto seleccionado')}
-                        </h3>
-                        <p className="text-muted-foreground">
-                            {t('email.selectProjectFirst', 'Selecciona un proyecto para acceder al Email Marketing')}
-                        </p>
-                    </div>
                 </div>
             </div>
         );
@@ -115,102 +144,152 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
 
     return (
         <EmailDashboardContext.Provider value={{ userId, projectId }}>
-            <div className="flex h-screen bg-background text-foreground">
+            <div className="min-h-screen bg-background flex">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-                <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
-                    {/* Header */}
-                    <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-border bg-background z-20 shrink-0">
-                        <div className="flex items-center justify-between h-[52px] sm:h-14">
-                            <div className="flex items-center gap-2 sm:gap-4">
-                                <button 
-                                    onClick={() => setIsMobileMenuOpen(true)} 
-                                    className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
-                                >
-                                    <Menu className="w-5 h-5" />
-                                </button>
-                                <div className="flex items-center gap-2 sm:gap-4">
-                                    <div className="flex items-center gap-1.5 sm:gap-2">
-                                        <Mail className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
-                                        <h1 className="text-sm sm:text-lg font-semibold text-foreground">
-                                            {t('email.dashboard', 'Email Marketing')}
-                                        </h1>
-                                    </div>
-                                    {/* Navigation Tabs */}
-                                    <div className="hidden sm:flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-border/50">
-                                        {navItems.map((item) => {
-                                            const Icon = item.icon;
-                                            const isActive = activeView === item.id;
-                                            return (
-                                                <button
-                                                    key={item.id}
-                                                    onClick={() => setActiveView(item.id)}
-                                                    className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all flex items-center gap-1 ${
-                                                        isActive 
-                                                            ? 'bg-background text-foreground shadow-sm' 
-                                                            : 'text-muted-foreground hover:text-foreground'
-                                                    }`}
-                                                >
-                                                    <Icon size={12} />
-                                                    {item.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
+                <div className="flex-1 flex flex-col min-h-screen">
+                    {/* Header - Simplified */}
+                    <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => setIsMobileMenuOpen(true)} 
+                                className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
                             <div className="flex items-center gap-2">
-                                {/* Stats - Hidden on mobile */}
-                                <div className="hidden lg:flex items-center gap-6 mr-4">
-                                    <div>
-                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('email.totalSent', 'Enviados')}</p>
-                                        <p className="text-lg font-bold text-foreground">{stats.totalSent.toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('email.openRate', 'Apertura')}</p>
-                                        <p className="text-lg font-bold text-green-500">
-                                            {stats.totalSent > 0 ? `${((stats.opened / stats.totalSent) * 100).toFixed(1)}%` : '0%'}
-                                        </p>
-                                    </div>
-                                </div>
-
+                                <Mail className="text-primary w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-foreground">
+                                    {t('email.dashboard', 'Email Marketing')}
+                                </h1>
+                            </div>
+                            
+                            {/* Project Selector */}
+                            <div className="relative">
                                 <button
-                                    onClick={() => setActiveView('campaigns')}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-xs sm:text-sm font-medium"
+                                    onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
+                                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                 >
-                                    <PlusCircle size={16} />
-                                    <span className="hidden sm:inline">{t('email.newCampaign', 'Nueva Campaña')}</span>
-                                    <span className="sm:hidden">Nueva</span>
+                                    <Layers size={14} />
+                                    <span className="max-w-[200px] truncate">
+                                        {effectiveProject?.name || t('email.selectProject', 'Seleccionar proyecto')}
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
                                 </button>
+
+                                {/* Dropdown */}
+                                {isProjectSelectorOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setIsProjectSelectorOpen(false)}
+                                        />
+                                        <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
+                                            <div className="px-4 py-2 border-b border-border/50 mb-2">
+                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                    {t('email.quickSwitch', 'Cambio rápido')}
+                                                </p>
+                                            </div>
+
+                                            {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
+                                                <button
+                                                    key={project.id}
+                                                    onClick={() => handleProjectSelect(project.id)}
+                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                        }`}
+                                                >
+                                                    {project.thumbnailUrl ? (
+                                                        <img
+                                                            src={project.thumbnailUrl}
+                                                            alt={project.name}
+                                                            className="w-10 h-10 rounded-lg object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                                                            <Layers size={16} className="text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 text-left min-w-0">
+                                                        <span className="text-sm font-medium text-foreground truncate block">
+                                                            {project.name}
+                                                        </span>
+                                                        <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
+                                                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                                                        </span>
+                                                    </div>
+                                                    {project.id === effectiveProjectId && (
+                                                        <Check size={16} className="text-primary flex-shrink-0" />
+                                                    )}
+                                                </button>
+                                            ))}
+
+                                            <div className="border-t border-border/50 mt-2 pt-2 px-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedProjectId(null);
+                                                        setIsProjectSelectorOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                >
+                                                    <Layers size={16} />
+                                                    {t('email.viewAllProjects', 'Ver todos los proyectos')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
-                        {/* Mobile Navigation */}
-                        <nav className="flex sm:hidden gap-1 pb-2 overflow-x-auto">
-                            {navItems.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = activeView === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveView(item.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors text-xs ${
-                                            isActive
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'text-muted-foreground bg-muted/50'
-                                        }`}
-                                    >
-                                        <Icon size={14} />
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
-                        </nav>
+                        {/* Back Button Only */}
+                        <button
+                            onClick={() => setView('dashboard')}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft size={16} />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
                     </header>
 
+                    {/* Sub-navigation */}
+                    <div className="px-4 sm:px-6 border-b border-border bg-card/30">
+                        <nav className="flex items-center justify-between py-2">
+                            <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                                {navItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = activeView === item.id;
+
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => setActiveView(item.id)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                                }`}
+                                        >
+                                            <Icon size={18} />
+                                            <span>{item.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            
+                            {/* Nueva Campaña button moved here */}
+                            <button
+                                onClick={() => setActiveView('campaigns')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-xs sm:text-sm font-medium ml-4 flex-shrink-0"
+                            >
+                                <PlusCircle size={16} />
+                                <span className="hidden sm:inline">{t('email.newCampaign', 'Nueva Campaña')}</span>
+                                <span className="sm:hidden">Nueva</span>
+                            </button>
+                        </nav>
+                    </div>
+
                     {/* Content */}
-                    <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                         {renderContent()}
                     </main>
                 </div>

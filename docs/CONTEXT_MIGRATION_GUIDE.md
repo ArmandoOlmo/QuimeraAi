@@ -302,3 +302,5 @@ Para cada componente:
 | Facilidad de testing | Difícil | Fácil (mocks específicos) |
 
 
+
+

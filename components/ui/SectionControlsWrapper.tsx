@@ -30,7 +30,7 @@ const SectionControlsWrapper: React.FC<SectionControlsWrapperProps> = ({ section
     // This is a smart wrapper that extracts content/style/advanced automatically
     
     // Define which sections should use tabs
-    const tabSections: PageSection[] = ['hero', 'features', 'services', 'pricing', 'testimonials', 'chatbot'];
+    const tabSections: PageSection[] = ['hero', 'features', 'services', 'pricing', 'testimonials'];
     
     if (!tabSections.includes(section)) {
         // For simpler sections, just show in content tab
@@ -71,6 +71,8 @@ export const organizeControlsIntoTabs = (
         style: <div className="text-center text-editor-text-secondary py-8">Style options are mixed with content</div>
     };
 };
+
+
 
 
 

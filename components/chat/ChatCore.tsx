@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
@@ -10,6 +10,7 @@ import { useProject } from '../../contexts/project';
 import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
+import { useEcommerceChat } from './hooks/useEcommerceChat';
 
 // =============================================================================
 // INTERFACES
@@ -161,6 +162,18 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const { activeProject } = useProject();
     const { t } = useTranslation();
 
+    // Ecommerce chat hook for order lookups and product info
+    const isEcommerceEnabled = !!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled;
+    const projectOwnerId = project?.userId || (activeProject as any)?.userId || user?.uid;
+    const {
+        checkOrderStatus,
+        getProductInfo,
+        getShippingInfo,
+        getReturnPolicy,
+        formatOrderResponse,
+        formatProductResponse,
+    } = useEcommerceChat(project?.id || activeProject?.id || '', projectOwnerId, config.languages?.includes('Spanish') ? 'es' : 'en');
+
     // Get lead capture config with defaults
     const leadConfig = config.leadCaptureConfig || {
         enabled: config.leadCaptureEnabled !== false,
@@ -268,6 +281,31 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             - Keep paragraphs short and readable
             - Use line breaks between different topics
             - Structure your responses clearly with headings if needed (## Heading)
+            ${isEcommerceEnabled ? `
+            
+            === ECOMMERCE CAPABILITIES ===
+            This business has an online store. You can help customers with:
+            
+            ORDER INQUIRIES:
+            - When a customer asks about their order, ask for their order number OR email
+            - Once you have the information, provide: current status, tracking number (if available), estimated delivery
+            - If there are issues, offer to escalate to human support
+            
+            PRODUCT INFORMATION:
+            - Help customers find products by name or description
+            - Provide pricing and availability information
+            - Explain product features and specifications
+            
+            SHIPPING & RETURNS:
+            - Explain shipping options and delivery times
+            - Inform about return policies and processes
+            - Help with questions about exchanges
+            
+            IMPORTANT:
+            - Always be helpful and transparent about order status
+            - If you don't have real-time data, acknowledge it and offer alternatives
+            - For complex issues (refunds, cancellations), recommend contacting support directly
+            ` : ''}
         `;
 
         return systemInstruction;
@@ -799,10 +837,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         {headerActions}
                         {onClose && (
                             <button
-                                onClick={startLiveSession}
-                                className="p-2 rounded-full hover:bg-black/5 transition-colors text-primary"
-                                title={t('chatbotWidget.startVoice')}
-                            ><Minimize2 size={18} />
+                                onClick={onClose}
+                                className="p-2 rounded-full hover:bg-black/5 transition-colors"
+                                style={{ color: appearance.colors.headerText }}
+                                title={t('common.close')}
+                            >
+                                <X size={18} />
                             </button>
                         )}
                     </div>

@@ -93,6 +93,18 @@ import {
     getDomainPricing
 } from './domains';
 
+// Social Channels functions
+import {
+    facebookWebhook,
+    facebookWebhookVerify,
+    whatsappWebhook,
+    whatsappWebhookVerify,
+    instagramWebhook,
+    instagramWebhookVerify,
+    processIncomingMessage,
+    sendOutboundMessage
+} from './socialChannels';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -194,6 +206,22 @@ export const domains = {
     getPricing: getDomainPricing
 };
 
+// Export Social Channels functions
+export const socialChannels = {
+    // Facebook Messenger
+    facebookWebhook,
+    facebookWebhookVerify,
+    // WhatsApp Business
+    whatsappWebhook,
+    whatsappWebhookVerify,
+    // Instagram DMs
+    instagramWebhook,
+    instagramWebhookVerify,
+    // Message Processing
+    processIncomingMessage,
+    sendOutboundMessage
+};
+
 // Alternative flat exports for easier routing
 export { 
     getWidgetConfig, 
@@ -263,6 +291,15 @@ export {
     checkDomainAvailability,
     searchDomainSuggestions,
     purchaseDomain,
-    getDomainPricing
+    getDomainPricing,
+    // Social Channels exports
+    facebookWebhook,
+    facebookWebhookVerify,
+    whatsappWebhook,
+    whatsappWebhookVerify,
+    instagramWebhook,
+    instagramWebhookVerify,
+    processIncomingMessage,
+    sendOutboundMessage
 };
 

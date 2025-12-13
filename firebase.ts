@@ -33,7 +33,9 @@ import {
   listAll
 } from "firebase/storage";
 import {
-  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   collection,
   doc,
   addDoc,
@@ -49,7 +51,7 @@ import {
   where,
   onSnapshot,
   startAfter,
-  enableMultiTabIndexedDbPersistence
+  CACHE_SIZE_UNLIMITED
 } from "firebase/firestore";
 
 // Firebase configuration from environment variables
@@ -74,7 +76,15 @@ export const app: FirebaseApp = initializeApp(firebaseConfig);
 // Core services - initialized synchronously as they're needed immediately
 export const auth = getAuth(app);
 export const storage = getStorage(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with persistence built-in (modern approach)
+// This replaces the deprecated enableMultiTabIndexedDbPersistence
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+  })
+});
 
 // Lazy-loaded services cache
 let _functions: ReturnType<typeof import("firebase/functions").getFunctions> | null = null;
@@ -132,18 +142,11 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// Enable Offline Persistence (async, non-blocking)
-try {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Persistence failed: Multiple tabs open.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Persistence failed: Browser not supported.');
-    }
-  });
-} catch (e) {
-  console.warn("Persistence initialization error:", e);
-}
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'firebase.ts:136',message:'Firebase initialized with built-in persistence',data:{dbInitialized:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1',runId:'post-fix'})}).catch(()=>{});
+// #endregion
+// NOTE: Persistence is now configured in initializeFirestore above
+// The deprecated enableMultiTabIndexedDbPersistence has been removed
 
 // Re-export Auth methods
 export {

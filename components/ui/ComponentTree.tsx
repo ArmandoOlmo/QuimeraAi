@@ -238,10 +238,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState({
-        structure: true,
-        content: true,
-        ecommerce: true,
-        integrations: true
+        structure: false,
+        content: false,
+        ecommerce: false,
+        integrations: false
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
 
@@ -309,7 +309,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return componentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
-            return !['header', 'footer', 'typography', 'colors', 'storeSettings', 'chatbot', 'leads', 'newsletter', 'map', ...ECOMMERCE_SECTION_IDS].includes(s) &&
+            return !['header', 'footer', 'typography', 'colors', 'storeSettings', 'leads', 'newsletter', 'map', ...ECOMMERCE_SECTION_IDS].includes(s) &&
                 componentStatus[s];
         });
     }, [componentOrder, componentStatus]);
@@ -330,7 +330,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return componentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
-            return ['chatbot', 'leads', 'newsletter', 'map'].includes(s) &&
+            return ['leads', 'newsletter', 'map'].includes(s) &&
                 componentStatus[s];
         });
     }, [componentOrder, componentStatus]);

@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
+import { useUI } from '../../../contexts/core/UIContext';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
-    Mic, Radio, BookOpen
+    Mic, Radio, BookOpen, ArrowLeft, Package, Shield
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
 import { AiAssistantConfig } from '../../../types';
@@ -31,6 +32,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject, projects, loadProject } = useProject();
+    const { setView } = useUI();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
@@ -74,6 +76,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
                             </div>
                         </div>
+                        <button
+                            onClick={() => setView('dashboard')}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft size={16} />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
                     </header>
 
                     <main className="flex-1 overflow-y-auto p-8 bg-secondary/10">
@@ -178,7 +188,10 @@ const AiAssistantDashboard: React.FC = () => {
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.businessProfile')}</label>
+                            <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
+                                <Building2 size={18} className="text-primary" />
+                                {t('aiAssistant.dashboard.businessProfile')}
+                            </label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.businessProfile')}
@@ -187,7 +200,10 @@ const AiAssistantDashboard: React.FC = () => {
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.productsServices')}</label>
+                            <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
+                                <Package size={18} className="text-primary" />
+                                {t('aiAssistant.dashboard.productsServices')}
+                            </label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.productsServices')}
@@ -196,7 +212,10 @@ const AiAssistantDashboard: React.FC = () => {
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="block text-sm font-bold text-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.policiesContact')}</label>
+                            <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
+                                <Shield size={18} className="text-primary" />
+                                {t('aiAssistant.dashboard.policiesContact')}
+                            </label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.policiesContact')}
@@ -240,7 +259,10 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="space-y-8 animate-fade-in-up">
                         <div className="grid grid-cols-1 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.assistantName')}</label>
+                                <label className="flex items-center gap-2 text-sm font-bold text-foreground mb-2">
+                                    <Bot size={18} className="text-primary" />
+                                    {t('aiAssistant.dashboard.assistantName')}
+                                </label>
                                 <input
                                     type="text"
                                     value={formData.agentName}
@@ -249,7 +271,10 @@ const AiAssistantDashboard: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.languages')}</label>
+                                <label className="flex items-center gap-2 text-sm font-bold text-foreground mb-2">
+                                    <Globe size={18} className="text-primary" />
+                                    {t('aiAssistant.dashboard.languages')}
+                                </label>
                                 <div className="flex items-center bg-card border border-border rounded-xl px-3">
                                     <Globe size={18} className="text-muted-foreground mr-2" />
                                     <input
@@ -265,7 +290,10 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-foreground mb-4">{t('aiAssistant.dashboard.toneOfVoice')}</label>
+                            <label className="flex items-center gap-2 text-sm font-bold text-foreground mb-4">
+                                <MessageSquare size={18} className="text-primary" />
+                                {t('aiAssistant.dashboard.toneOfVoice')}
+                            </label>
                             <div className="grid grid-cols-2 gap-3">
                                 {['Professional', 'Playful', 'Urgent', 'Luxury', 'Friendly', 'Minimalist'].map(tone => (
                                     <button
@@ -280,7 +308,10 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-foreground mb-2">{t('aiAssistant.dashboard.systemPrompt')}</label>
+                            <label className="flex items-center gap-2 text-sm font-bold text-foreground mb-2">
+                                <Sliders size={18} className="text-primary" />
+                                {t('aiAssistant.dashboard.systemPrompt')}
+                            </label>
                             <textarea
                                 className="w-full bg-card border border-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-xs"
                                 value={formData.specialInstructions}
@@ -358,28 +389,6 @@ const AiAssistantDashboard: React.FC = () => {
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
-
-                        <div className="bg-card border border-border p-6 rounded-xl">
-                            <label className="block text-sm font-bold text-foreground mb-4">{t('aiAssistant.dashboard.widgetColor')}</label>
-                            <div className="flex gap-4">
-                                {['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#000000'].map(color => (
-                                    <button
-                                        key={color}
-                                        onClick={() => updateForm('widgetColor', color)}
-                                        className={`w-12 h-12 rounded-full shadow-sm transition-transform hover:scale-110 ${formData.widgetColor === color ? 'ring-4 ring-primary ring-offset-2 ring-offset-card' : ''}`}
-                                        style={{ backgroundColor: color }}
-                                    />
-                                ))}
-                                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-border">
-                                    <input
-                                        type="color"
-                                        value={formData.widgetColor}
-                                        onChange={(e) => updateForm('widgetColor', e.target.value)}
-                                        className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer p-0 border-0"
-                                    />
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 );
 
@@ -421,6 +430,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 </>
                             )}
                         </button>
+                        <button
+                            onClick={() => setView('dashboard')}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                            aria-label={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft size={16} />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
                     </div>
                 </header>
 
@@ -458,34 +475,115 @@ const AiAssistantDashboard: React.FC = () => {
                     </div>
 
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) */}
-                    <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-[#f4f4f5] dark:bg-[#09090b] relative items-center justify-center p-10">
+                    <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10">
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-overlay pointer-events-none"></div>
 
                         <div className="relative z-10 flex flex-col items-center">
                             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">{t('aiAssistant.dashboard.liveSimulator')}</h3>
 
-                            {/* Phone Mockup */}
-                            <div className="w-[360px] h-[700px] bg-white dark:bg-black rounded-[40px] border-[12px] border-gray-800 shadow-2xl relative overflow-hidden flex flex-col">
-                                {/* Notch */}
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-800 rounded-b-2xl z-30"></div>
+                            {/* iPhone-style Phone Mockup */}
+                            <div className="relative">
+                                {/* Phone Frame */}
+                                <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
+                                    {/* Inner bezel highlight */}
+                                    <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
+                                    
+                                    {/* Screen */}
+                                    <div className="relative w-full h-full bg-card rounded-[40px] overflow-hidden flex flex-col">
+                                        {/* Dynamic Island */}
+                                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
+                                            <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700"></div>
+                                        </div>
 
-                                {/* Simulated Website Header */}
-                                <div className="h-20 bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 flex items-end justify-center pb-3 z-10 relative">
-                                    <span className="font-bold text-sm">{activeProject.name}</span>
-                                </div>
+                                        {/* Status Bar */}
+                                        <div className="h-12 px-6 flex items-end justify-between pb-1 text-[11px] font-semibold text-foreground z-20">
+                                            <span>9:41</span>
+                                            <div className="flex items-center gap-1">
+                                                {/* Signal */}
+                                                <div className="flex items-end gap-[2px] h-3">
+                                                    <div className="w-[3px] h-[4px] bg-foreground rounded-sm"></div>
+                                                    <div className="w-[3px] h-[6px] bg-foreground rounded-sm"></div>
+                                                    <div className="w-[3px] h-[8px] bg-foreground rounded-sm"></div>
+                                                    <div className="w-[3px] h-[10px] bg-foreground rounded-sm"></div>
+                                                </div>
+                                                {/* WiFi */}
+                                                <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.1l1.4 1.4C9.4 18.1 10.6 18.5 12 18.5s2.6-.4 3.5-1.2l1.4-1.4c-1.3-1.2-3-1.9-4.9-1.9s-3.6.7-4.9 1.9zm-2.8-2.8l1.4 1.4c1.8-1.8 4.3-2.8 6.9-2.8s5.1 1 6.9 2.8l1.4-1.4C18.7 11 15.5 9.7 12 9.7s-6.7 1.3-8.7 3.4zm-2.8-2.8l1.4 1.4C5.3 9.3 8.5 7.7 12 7.7s6.7 1.6 9.1 4l1.4-1.4C19.8 7.5 16.1 5.7 12 5.7S4.2 7.5 1.5 10.3z"/>
+                                                </svg>
+                                                {/* Battery */}
+                                                <div className="flex items-center gap-[2px]">
+                                                    <div className="w-6 h-3 border border-foreground rounded-sm flex items-center p-[2px]">
+                                                        <div className="w-full h-full bg-foreground rounded-[1px]"></div>
+                                                    </div>
+                                                    <div className="w-[2px] h-[5px] bg-foreground rounded-r-sm"></div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                {/* Simulated Content Skeleton */}
-                                <div className="flex-1 p-5 space-y-6 overflow-hidden bg-gray-50 dark:bg-gray-950">
-                                    <div className="h-48 bg-gray-200 dark:bg-gray-900 rounded-2xl w-full animate-pulse"></div>
-                                    <div className="space-y-3">
-                                        <div className="h-4 bg-gray-200 dark:bg-gray-900 rounded w-3/4 animate-pulse delay-75"></div>
-                                        <div className="h-4 bg-gray-200 dark:bg-gray-900 rounded w-1/2 animate-pulse delay-100"></div>
+                                        {/* Browser URL Bar */}
+                                        <div className="px-3 pb-2">
+                                            <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
+                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                <span className="text-[10px] text-muted-foreground truncate">{activeProject.name.toLowerCase().replace(/\s+/g, '')}.com</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Website Content */}
+                                        <div className="flex-1 overflow-hidden bg-background">
+                                            {/* Hero Section */}
+                                            <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative overflow-hidden">
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="text-center">
+                                                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-primary/20 flex items-center justify-center">
+                                                            <span className="text-lg">🏪</span>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-foreground">{activeProject.name}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Content Skeleton */}
+                                            <div className="p-4 space-y-4">
+                                                {/* Product Cards */}
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="bg-muted/50 rounded-xl p-2 space-y-2">
+                                                        <div className="h-16 bg-secondary/60 rounded-lg"></div>
+                                                        <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
+                                                        <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
+                                                    </div>
+                                                    <div className="bg-muted/50 rounded-xl p-2 space-y-2">
+                                                        <div className="h-16 bg-secondary/60 rounded-lg"></div>
+                                                        <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
+                                                        <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Text Skeleton */}
+                                                <div className="space-y-2">
+                                                    <div className="h-2 bg-secondary/40 rounded w-full"></div>
+                                                    <div className="h-2 bg-secondary/40 rounded w-5/6"></div>
+                                                    <div className="h-2 bg-secondary/40 rounded w-4/6"></div>
+                                                </div>
+
+                                                {/* CTA Button Skeleton */}
+                                                <div className="h-10 bg-primary/20 rounded-full w-3/4 mx-auto"></div>
+                                            </div>
+                                        </div>
+
+                                        {/* The Real Chat Widget */}
+                                        <ChatSimulator config={formData} project={activeProject} />
+                                        
+                                        {/* Home Indicator */}
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/30 rounded-full"></div>
                                     </div>
-                                    <div className="h-24 bg-gray-200 dark:bg-gray-900 rounded-2xl w-full animate-pulse delay-150"></div>
                                 </div>
-
-                                {/* The Real Component Being Tested */}
-                                <ChatSimulator config={formData} project={activeProject} />
+                                
+                                {/* Side buttons */}
+                                <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
+                                <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
+                                <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
+                                <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-zinc-700 rounded-r-sm"></div>
                             </div>
                         </div>
                     </div>

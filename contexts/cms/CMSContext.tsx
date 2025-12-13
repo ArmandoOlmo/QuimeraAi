@@ -67,22 +67,38 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             return;
         }
 
+        // #region agent log
+        const listenerId = `cms-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:72',message:'Creating CMS posts listener',data:{listenerId,userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
+
         const q = query(
             collection(db, 'users', user.uid, 'posts'),
             orderBy('createdAt', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:83',message:'CMS posts snapshot',data:{listenerId,docCount:snapshot.docs.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+            // #endregion
             const postsData = snapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             })) as CMSPost[];
             setCmsPosts(postsData);
         }, (error) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:92',message:'CMS posts error',data:{listenerId,error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+            // #endregion
             console.error("Error fetching CMS posts:", error);
         });
 
-        return () => unsubscribe();
+        return () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CMSContext.tsx:99',message:'Cleaning up CMS posts listener',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+            // #endregion
+            unsubscribe();
+        };
     }, [user]);
 
     // Load CMS posts manually
@@ -200,5 +216,6 @@ export const useCMS = (): CMSContextType => {
     }
     return context;
 };
+
 
 

@@ -3,6 +3,7 @@
  */
 
 export { default as EmailDashboard } from './EmailDashboard';
+export { default as EmailProjectSelectorPage } from './EmailProjectSelectorPage';
 
 // Views
 export { default as AnalyticsView } from './views/AnalyticsView';

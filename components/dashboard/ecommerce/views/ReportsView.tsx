@@ -17,6 +17,7 @@ import {
     Check,
     AlertCircle,
 } from 'lucide-react';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEditor } from '../../../../contexts/EditorContext';
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';

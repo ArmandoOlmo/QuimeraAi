@@ -82,7 +82,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     return (
         <div className="h-screen bg-background flex overflow-hidden">
             {/* Sidebar - Fixed in place */}
-            <div className="flex-shrink-0 h-screen overflow-hidden">
+            <div className="flex-shrink-0 h-screen overflow-visible z-50">
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}
                     onClose={() => setIsMobileMenuOpen(false)}
@@ -104,18 +104,11 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 >
                                     <MenuIcon size={20} />
                                 </button>
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
-                                        <MenuIcon className="text-primary" size={24} />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-lg font-bold text-foreground">
-                                            {t('navigationDashboard.selectProject', 'Seleccionar Proyecto')}
-                                        </h1>
-                                        <p className="text-xs text-muted-foreground hidden sm:block">
-                                            {t('navigationDashboard.selectProjectForMenus', 'Elige un proyecto para gestionar sus menús')}
-                                        </p>
-                                    </div>
+                                <div className="flex items-center gap-2">
+                                    <MenuIcon className="text-primary" size={20} />
+                                    <h1 className="text-lg font-bold text-foreground">
+                                        {t('navigationDashboard.selectProject', 'Seleccionar Proyecto')}
+                                    </h1>
                                 </div>
                             </div>
 

@@ -11,6 +11,24 @@ import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
 import { getDefaultGlobalColors } from '../../../data/colorPalettes';
+import {
+    OnboardingProgress,
+    OnboardingWizardStep,
+    OnboardingService,
+    OnboardingContactInfo,
+    OnboardingStoreSetup,
+    EcommerceType,
+    TemplateRecommendation,
+    GenerationProgress,
+    ImageGenerationItem,
+    getIndustryComponentDefaults,
+    ONBOARDING_STEPS,
+} from '../../../types/onboarding';
+import { PageSection, Project } from '../../../types';
+import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotConfigGenerator';
+
+// Alias for backward compatibility
+type OnboardingStep = OnboardingWizardStep;
 
 // Development mode check for conditional logging
 const isDev = import.meta.env.DEV;
@@ -134,23 +152,6 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     
     return fallback;
 };
-import {
-    OnboardingProgress,
-    OnboardingWizardStep,
-    OnboardingService,
-    OnboardingContactInfo,
-    OnboardingStoreSetup,
-    EcommerceType,
-    TemplateRecommendation,
-    GenerationProgress,
-    ImageGenerationItem,
-    getIndustryComponentDefaults,
-    ONBOARDING_STEPS,
-} from '../../../types/onboarding';
-
-// Alias for backward compatibility
-type OnboardingStep = OnboardingWizardStep;
-import { PageSection, Project } from '../../../types';
 
 // =============================================================================
 // INITIAL STATE
@@ -2030,6 +2031,20 @@ TEMPLATE #${t.index}: "${t.name}"
                 ]}
             ];
 
+            // Generate AI Assistant Configuration based on industry and business data
+            if (isDev) console.log('🤖 Generating AI Assistant configuration...');
+            const chatbotGlobalColors: GlobalColors = {
+                primary: globalColors.primary,
+                secondary: globalColors.secondary,
+                accent: globalColors.accent,
+                background: globalColors.background,
+                surface: globalColors.surface,
+                text: globalColors.text,
+                border: globalColors.border,
+            };
+            const aiAssistantConfig = generateAiAssistantConfig(progress, chatbotGlobalColors);
+            if (isDev) console.log('✅ AI Assistant config generated:', aiAssistantConfig.agentName);
+
             // Create the new project
             const newProject = {
                 id: `proj_${Date.now()}`,
@@ -2052,6 +2067,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 sourceTemplateId: selectedTemplate.id,
                 imagePrompts: simpleImagePrompts,
                 menus: projectMenus,
+                aiAssistantConfig, // Add the generated AI Assistant configuration
             };
 
             await addNewProject(newProject);

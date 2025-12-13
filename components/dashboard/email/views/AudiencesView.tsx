@@ -12,60 +12,46 @@ import {
     Edit,
     Trash2,
     Copy,
-    MoreHorizontal,
-    Filter,
     ShoppingCart,
     Mail,
     Tag,
     Calendar,
+    X,
+    Loader2,
+    DollarSign,
+    Clock,
 } from 'lucide-react';
 import { useEmailDashboardContext } from '../EmailDashboard';
+import { useEmailAudiences } from '../../../../hooks/useEmailSettings';
 import { EmailAudience } from '../../../../types/email';
 
-// Mock data for demonstration
-const mockAudiences: Partial<EmailAudience>[] = [
-    {
-        id: '1',
-        name: 'Todos los Suscriptores',
-        description: 'Clientes que aceptaron marketing',
-        acceptsMarketing: true,
-        estimatedCount: 2500,
-        isDefault: true,
-    },
-    {
-        id: '2',
-        name: 'Compradores Frecuentes',
-        description: 'Clientes con más de 3 compras',
-        minOrders: 3,
-        estimatedCount: 450,
-        isDefault: false,
-    },
-    {
-        id: '3',
-        name: 'Clientes VIP',
-        description: 'Gastaron más de $500',
-        minTotalSpent: 500,
-        estimatedCount: 120,
-        isDefault: false,
-        tags: ['vip'],
-    },
-    {
-        id: '4',
-        name: 'Clientes Inactivos',
-        description: 'Sin compras en 60 días',
-        lastOrderDaysAgo: 60,
-        estimatedCount: 380,
-        isDefault: false,
-    },
-];
+type FilterType = 'all' | 'marketing' | 'orders' | 'spending' | 'inactive';
 
 const AudiencesView: React.FC = () => {
     const { t } = useTranslation();
     const { userId, projectId } = useEmailDashboardContext();
+    const { 
+        audiences, 
+        isLoading, 
+        isSaving, 
+        createAudience, 
+        updateAudience, 
+        deleteAudience,
+        duplicateAudience 
+    } = useEmailAudiences(userId, projectId);
 
-    const [audiences] = useState<Partial<EmailAudience>[]>(mockAudiences);
     const [searchTerm, setSearchTerm] = useState('');
     const [showNewAudienceModal, setShowNewAudienceModal] = useState(false);
+    const [editingAudience, setEditingAudience] = useState<Partial<EmailAudience> | null>(null);
+    const [newAudience, setNewAudience] = useState({
+        name: '',
+        description: '',
+        filterType: 'all' as FilterType,
+        acceptsMarketing: true,
+        minOrders: '',
+        minTotalSpent: '',
+        lastOrderDaysAgo: '',
+    });
 
     const filteredAudiences = audiences.filter((audience) =>
         audience.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,10 +60,122 @@ const AudiencesView: React.FC = () => {
 
     const getAudienceIcon = (audience: Partial<EmailAudience>) => {
         if (audience.minOrders) return ShoppingCart;
-        if (audience.minTotalSpent) return Tag;
-        if (audience.lastOrderDaysAgo) return Calendar;
-        return Mail;
+        if (audience.minTotalSpent) return DollarSign;
+        if (audience.lastOrderDaysAgo) return Clock;
+        if (audience.acceptsMarketing) return Mail;
+        return Users;
     };
+
+    const resetForm = () => {
+        setNewAudience({
+            name: '',
+            description: '',
+            filterType: 'all',
+            acceptsMarketing: true,
+            minOrders: '',
+            minTotalSpent: '',
+            lastOrderDaysAgo: '',
+        });
+        setEditingAudience(null);
+    };
+
+    const handleOpenModal = (audience?: Partial<EmailAudience>) => {
+        if (audience) {
+            setEditingAudience(audience);
+            let filterType: FilterType = 'all';
+            if (audience.minOrders) filterType = 'orders';
+            else if (audience.minTotalSpent) filterType = 'spending';
+            else if (audience.lastOrderDaysAgo) filterType = 'inactive';
+            else if (audience.acceptsMarketing) filterType = 'marketing';
+
+            setNewAudience({
+                name: audience.name || '',
+                description: audience.description || '',
+                filterType,
+                acceptsMarketing: audience.acceptsMarketing ?? true,
+                minOrders: audience.minOrders?.toString() || '',
+                minTotalSpent: audience.minTotalSpent?.toString() || '',
+                lastOrderDaysAgo: audience.lastOrderDaysAgo?.toString() || '',
+            });
+        } else {
+            resetForm();
+        }
+        setShowNewAudienceModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowNewAudienceModal(false);
+        resetForm();
+    };
+
+    const handleSaveAudience = async () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AudiencesView.tsx:handleSaveAudience:entry',message:'handleSaveAudience called',data:{newAudience,userId,projectId,editingAudienceId:editingAudience?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
+        if (!newAudience.name) return;
+
+        const audienceData: any = {
+            name: newAudience.name,
+            description: newAudience.description,
+        };
+
+        // Apply filters based on type
+        switch (newAudience.filterType) {
+            case 'marketing':
+                audienceData.acceptsMarketing = true;
+                break;
+            case 'orders':
+                if (newAudience.minOrders) {
+                    audienceData.minOrders = parseInt(newAudience.minOrders);
+                }
+                break;
+            case 'spending':
+                if (newAudience.minTotalSpent) {
+                    audienceData.minTotalSpent = parseFloat(newAudience.minTotalSpent);
+                }
+                break;
+            case 'inactive':
+                if (newAudience.lastOrderDaysAgo) {
+                    audienceData.lastOrderDaysAgo = parseInt(newAudience.lastOrderDaysAgo);
+                }
+                break;
+        }
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AudiencesView.tsx:handleSaveAudience:beforeCreate',message:'audienceData prepared',data:{audienceData,filterType:newAudience.filterType},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+
+        try {
+            if (editingAudience?.id) {
+                await updateAudience(editingAudience.id, audienceData);
+            } else {
+                await createAudience(audienceData);
+            }
+            handleCloseModal();
+        } catch (err) {
+            console.error('Error saving audience:', err);
+        }
+    };
+
+    const handleDeleteAudience = async (audienceId: string, isDefault?: boolean) => {
+        if (isDefault) return;
+        if (confirm(t('email.confirmDeleteAudience', '¿Estás seguro de eliminar este segmento?'))) {
+            await deleteAudience(audienceId);
+        }
+    };
+
+    const handleDuplicateAudience = async (audienceId: string) => {
+        await duplicateAudience(audienceId);
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -93,7 +191,7 @@ const AudiencesView: React.FC = () => {
                 </div>
 
                 <button
-                    onClick={() => setShowNewAudienceModal(true)}
+                    onClick={() => handleOpenModal()}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                     <PlusCircle size={18} />
@@ -124,7 +222,7 @@ const AudiencesView: React.FC = () => {
                         {t('email.noAudiencesDesc', 'Crea segmentos para enviar emails más relevantes')}
                     </p>
                     <button
-                        onClick={() => setShowNewAudienceModal(true)}
+                        onClick={() => handleOpenModal()}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                     >
                         <PlusCircle size={18} />
@@ -138,21 +236,33 @@ const AudiencesView: React.FC = () => {
                         return (
                             <div
                                 key={audience.id}
-                                className="bg-card/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors cursor-pointer group"
+                                className="bg-card/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors group"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="p-2 bg-primary/10 rounded-lg">
                                         <Icon className="text-primary" size={20} />
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-1.5 hover:bg-muted rounded-lg" title={t('email.edit', 'Editar')}>
+                                        <button 
+                                            onClick={() => handleOpenModal(audience)}
+                                            className="p-1.5 hover:bg-muted rounded-lg" 
+                                            title={t('email.edit', 'Editar')}
+                                        >
                                             <Edit size={14} className="text-muted-foreground" />
                                         </button>
-                                        <button className="p-1.5 hover:bg-muted rounded-lg" title={t('email.duplicate', 'Duplicar')}>
+                                        <button 
+                                            onClick={() => handleDuplicateAudience(audience.id!)}
+                                            className="p-1.5 hover:bg-muted rounded-lg" 
+                                            title={t('email.duplicate', 'Duplicar')}
+                                        >
                                             <Copy size={14} className="text-muted-foreground" />
                                         </button>
                                         {!audience.isDefault && (
-                                            <button className="p-1.5 hover:bg-muted rounded-lg" title={t('email.delete', 'Eliminar')}>
+                                            <button 
+                                                onClick={() => handleDeleteAudience(audience.id!, audience.isDefault)}
+                                                className="p-1.5 hover:bg-red-500/20 rounded-lg" 
+                                                title={t('email.delete', 'Eliminar')}
+                                            >
                                                 <Trash2 size={14} className="text-red-400" />
                                             </button>
                                         )}
@@ -171,20 +281,38 @@ const AudiencesView: React.FC = () => {
                                     {audience.description}
                                 </p>
 
+                                {/* Filter info */}
+                                <div className="text-xs text-muted-foreground mb-3 space-y-1">
+                                    {audience.minOrders && (
+                                        <div className="flex items-center gap-1">
+                                            <ShoppingCart size={12} />
+                                            <span>Min. {audience.minOrders} pedidos</span>
+                                        </div>
+                                    )}
+                                    {audience.minTotalSpent && (
+                                        <div className="flex items-center gap-1">
+                                            <DollarSign size={12} />
+                                            <span>Min. ${audience.minTotalSpent} gastado</span>
+                                        </div>
+                                    )}
+                                    {audience.lastOrderDaysAgo && (
+                                        <div className="flex items-center gap-1">
+                                            <Clock size={12} />
+                                            <span>Sin compras en {audience.lastOrderDaysAgo} días</span>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-sm">
                                         <Users size={14} className="text-muted-foreground" />
                                         <span className="text-foreground font-medium">
-                                            {audience.estimatedCount?.toLocaleString()}
+                                            {audience.estimatedCount?.toLocaleString() || 0}
                                         </span>
                                         <span className="text-muted-foreground">
                                             {t('email.contacts', 'contactos')}
                                         </span>
                                     </div>
-
-                                    <button className="text-primary text-sm hover:underline">
-                                        {t('email.preview', 'Ver')}
-                                    </button>
                                 </div>
                             </div>
                         );
@@ -192,26 +320,154 @@ const AudiencesView: React.FC = () => {
                 </div>
             )}
 
-            {/* New Audience Modal - Placeholder */}
+            {/* New/Edit Audience Modal */}
             {showNewAudienceModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-lg">
-                        <div className="p-6 border-b border-border">
+                    <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
                             <h3 className="text-lg font-bold text-foreground">
-                                {t('email.newAudience', 'Nuevo Segmento')}
+                                {editingAudience 
+                                    ? t('email.editAudience', 'Editar Segmento')
+                                    : t('email.newAudience', 'Nuevo Segmento')
+                                }
                             </h3>
+                            <button
+                                onClick={handleCloseModal}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <X size={20} className="text-muted-foreground" />
+                            </button>
                         </div>
-                        <div className="p-6">
-                            <p className="text-muted-foreground text-center py-8">
-                                {t('email.audienceEditorComingSoon', 'Editor de segmentos próximamente...')}
-                            </p>
+                        
+                        <div className="p-6 space-y-4">
+                            {/* Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1">
+                                    {t('email.audienceName', 'Nombre del segmento')} *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newAudience.name}
+                                    onChange={(e) => setNewAudience({ ...newAudience, name: e.target.value })}
+                                    placeholder="Ej: Clientes VIP"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1">
+                                    {t('email.description', 'Descripción')}
+                                </label>
+                                <textarea
+                                    value={newAudience.description}
+                                    onChange={(e) => setNewAudience({ ...newAudience, description: e.target.value })}
+                                    placeholder="Describe este segmento..."
+                                    rows={2}
+                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                                />
+                            </div>
+
+                            {/* Filter Type */}
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-2">
+                                    {t('email.filterType', 'Tipo de filtro')}
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { value: 'all', label: 'Todos', icon: Users },
+                                        { value: 'marketing', label: 'Acepta Marketing', icon: Mail },
+                                        { value: 'orders', label: 'Por Pedidos', icon: ShoppingCart },
+                                        { value: 'spending', label: 'Por Gasto', icon: DollarSign },
+                                        { value: 'inactive', label: 'Inactivos', icon: Clock },
+                                    ].map((type) => {
+                                        const TypeIcon = type.icon;
+                                        return (
+                                            <button
+                                                key={type.value}
+                                                onClick={() => setNewAudience({ ...newAudience, filterType: type.value as FilterType })}
+                                                className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
+                                                    newAudience.filterType === type.value
+                                                        ? 'border-primary bg-primary/10 text-primary'
+                                                        : 'border-border hover:bg-muted text-foreground'
+                                                }`}
+                                            >
+                                                <TypeIcon size={16} />
+                                                <span className="text-sm">{type.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Conditional fields based on filter type */}
+                            {newAudience.filterType === 'orders' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">
+                                        {t('email.minOrders', 'Mínimo de pedidos')}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={newAudience.minOrders}
+                                        onChange={(e) => setNewAudience({ ...newAudience, minOrders: e.target.value })}
+                                        placeholder="Ej: 3"
+                                        min="1"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                </div>
+                            )}
+
+                            {newAudience.filterType === 'spending' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">
+                                        {t('email.minSpent', 'Mínimo gastado ($)')}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={newAudience.minTotalSpent}
+                                        onChange={(e) => setNewAudience({ ...newAudience, minTotalSpent: e.target.value })}
+                                        placeholder="Ej: 500"
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                </div>
+                            )}
+
+                            {newAudience.filterType === 'inactive' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">
+                                        {t('email.inactiveDays', 'Días sin compras')}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={newAudience.lastOrderDaysAgo}
+                                        onChange={(e) => setNewAudience({ ...newAudience, lastOrderDaysAgo: e.target.value })}
+                                        placeholder="Ej: 60"
+                                        min="1"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                </div>
+                            )}
                         </div>
+
                         <div className="p-6 border-t border-border flex justify-end gap-3">
                             <button
-                                onClick={() => setShowNewAudienceModal(false)}
+                                onClick={handleCloseModal}
                                 className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
                             >
                                 {t('common.cancel', 'Cancelar')}
+                            </button>
+                            <button
+                                onClick={handleSaveAudience}
+                                disabled={!newAudience.name || isSaving}
+                                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving && <Loader2 size={16} className="animate-spin" />}
+                                {editingAudience 
+                                    ? t('common.save', 'Guardar')
+                                    : t('email.createAudience', 'Crear Segmento')
+                                }
                             </button>
                         </div>
                     </div>
@@ -222,5 +478,3 @@ const AudiencesView: React.FC = () => {
 };
 
 export default AudiencesView;
-
-

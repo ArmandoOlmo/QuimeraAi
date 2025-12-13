@@ -73,22 +73,38 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
+        // #region agent log
+        const listenerId = `domains-deplogs-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DomainsContext.tsx:76',message:'Creating deployment logs listener',data:{listenerId,userId:user.uid,userRef:typeof user},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
+
         const q = query(
             collection(db, 'users', user.uid, 'deploymentLogs'),
             orderBy('timestamp', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DomainsContext.tsx:88',message:'Deployment logs snapshot',data:{listenerId,docCount:snapshot.docs.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
             const logs = snapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             })) as DeploymentLog[];
             setDeploymentLogs(logs);
         }, (error) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DomainsContext.tsx:98',message:'Deployment logs ERROR',data:{listenerId,error:String(error),code:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
             console.error("Error fetching deployment logs:", error);
         });
 
-        return () => unsubscribe();
+        return () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DomainsContext.tsx:106',message:'Cleaning up deployment logs listener',data:{listenerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
+            unsubscribe();
+        };
     }, [user]);
 
     // Add domain
@@ -255,5 +271,6 @@ export const useDomains = (): DomainsContextType => {
     }
     return context;
 };
+
 
 

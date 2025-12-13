@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai';
-import { Shield, Save, Sparkles } from 'lucide-react';
+import { Shield, Save, Sparkles, Power, FileText, LogOut, Users, Lock, Sliders, MessageSquare, Gift } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
 
 const LeadCaptureSettings: React.FC = () => {
@@ -48,7 +48,7 @@ const LeadCaptureSettings: React.FC = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Sparkles className="text-purple-500" />
+                        <Sparkles className="text-primary" />
                         Lead Capture Settings
                     </h2>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -58,11 +58,11 @@ const LeadCaptureSettings: React.FC = () => {
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-semibold transition-colors disabled:opacity-50"
                 >
                     {isSaving ? (
                         <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
                             Saving...
                         </>
                     ) : saveSuccess ? (
@@ -83,7 +83,10 @@ const LeadCaptureSettings: React.FC = () => {
             <div className="bg-card border border-border rounded-xl p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="font-bold text-foreground text-lg">Enable Lead Capture</h3>
+                        <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
+                            <Power size={20} className="text-primary" />
+                            Enable Lead Capture
+                        </h3>
                         <p className="text-muted-foreground text-sm mt-1">
                             Turn on/off the entire lead capture system
                         </p>
@@ -95,7 +98,7 @@ const LeadCaptureSettings: React.FC = () => {
                             onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
                             className="sr-only peer"
                         />
-                        <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                        <div className="w-14 h-7 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
             </div>
@@ -105,7 +108,10 @@ const LeadCaptureSettings: React.FC = () => {
                 {/* Pre-Chat Form */}
                 <div className="bg-card border border-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-foreground">Pre-Chat Form</h4>
+                        <h4 className="font-bold text-foreground flex items-center gap-2">
+                            <FileText size={16} className="text-primary" />
+                            Pre-Chat Form
+                        </h4>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
@@ -114,7 +120,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-muted-foreground text-sm">
@@ -125,7 +131,10 @@ const LeadCaptureSettings: React.FC = () => {
                 {/* Exit Intent */}
                 <div className="bg-card border border-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-foreground">Exit Intent</h4>
+                        <h4 className="font-bold text-foreground flex items-center gap-2">
+                            <LogOut size={16} className="text-primary" />
+                            Exit Intent
+                        </h4>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
@@ -134,7 +143,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-muted-foreground text-sm">
@@ -145,7 +154,10 @@ const LeadCaptureSettings: React.FC = () => {
                 {/* Progressive Profiling */}
                 <div className="bg-card border border-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-foreground">Progressive Profiling</h4>
+                        <h4 className="font-bold text-foreground flex items-center gap-2">
+                            <Users size={16} className="text-primary" />
+                            Progressive Profiling
+                        </h4>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
@@ -154,7 +166,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-muted-foreground text-sm">
@@ -165,7 +177,10 @@ const LeadCaptureSettings: React.FC = () => {
                 {/* Require Email for Advanced Info */}
                 <div className="bg-card border border-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-foreground">Gate Advanced Info</h4>
+                        <h4 className="font-bold text-foreground flex items-center gap-2">
+                            <Lock size={16} className="text-primary" />
+                            Gate Advanced Info
+                        </h4>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
@@ -174,7 +189,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-muted-foreground text-sm">
@@ -185,11 +200,15 @@ const LeadCaptureSettings: React.FC = () => {
 
             {/* Trigger Settings */}
             <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                <h3 className="font-bold text-foreground text-lg">Trigger Settings</h3>
+                <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
+                    <Sliders size={20} className="text-primary" />
+                    Trigger Settings
+                </h3>
 
                 {/* Messages Threshold */}
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                        <MessageSquare size={16} className="text-primary" />
                         Trigger After Messages
                     </label>
                     <p className="text-xs text-muted-foreground mb-3">
@@ -203,9 +222,9 @@ const LeadCaptureSettings: React.FC = () => {
                             value={config.triggerAfterMessages}
                             onChange={(e) => setConfig({ ...config, triggerAfterMessages: parseInt(e.target.value) })}
                             disabled={!config.enabled}
-                            className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600 disabled:opacity-50"
+                            className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary disabled:opacity-50"
                         />
-                        <span className="text-2xl font-bold text-purple-600 min-w-[3rem] text-center">
+                        <span className="text-2xl font-bold text-primary min-w-[3rem] text-center">
                             {config.triggerAfterMessages}
                         </span>
                     </div>
@@ -214,7 +233,8 @@ const LeadCaptureSettings: React.FC = () => {
                 {/* Exit Intent Offer */}
                 {config.exitIntentEnabled && (
                     <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                            <Gift size={16} className="text-primary" />
                             Exit Intent Offer Message
                         </label>
                         <textarea
@@ -222,7 +242,7 @@ const LeadCaptureSettings: React.FC = () => {
                             onChange={(e) => setConfig({ ...config, exitIntentOffer: e.target.value })}
                             disabled={!config.enabled}
                             rows={3}
-                            className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-foreground disabled:opacity-50"
+                            className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
                             placeholder="🎁 Special offer message..."
                         />
                         <p className="text-xs text-muted-foreground mt-2">
@@ -233,30 +253,30 @@ const LeadCaptureSettings: React.FC = () => {
             </div>
 
             {/* Info Box */}
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5">
-                <h4 className="font-bold text-purple-600 mb-2 flex items-center gap-2">
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-5">
+                <h4 className="font-bold text-primary mb-2 flex items-center gap-2">
                     <Sparkles size={18} />
                     How Lead Capture Works
                 </h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Pre-Chat Form:</strong> Captures info before chat starts (name, email, phone)</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Intent Detection:</strong> Automatically asks for email when detecting purchase keywords</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Message Trigger:</strong> Requests email after N messages if not captured</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Exit Intent:</strong> Last chance offer when user tries to close</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Auto Scoring:</strong> All leads get scored 0-100 automatically</span>
                     </li>
                 </ul>

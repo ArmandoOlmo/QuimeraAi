@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAI } from '../../../contexts/ai/AIContext';
 import { useEditor } from '../../../contexts/EditorContext';
 import {
     Palette, MessageSquare,
@@ -159,7 +160,7 @@ const ChatCustomizationSettings: React.FC = () => {
                 className="w-full py-6 flex items-center justify-between hover:text-primary transition-colors group"
             >
                 <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-lg transition-all ${expandedSections[section] ? 'bg-primary text-white scale-105' : 'bg-secondary/30 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                    <div className={`p-2.5 rounded-lg transition-all ${expandedSections[section] ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/30 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
                         <Icon size={18} />
                     </div>
                     <h3 className={`font-semibold text-base transition-colors ${expandedSections[section] ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{title}</h3>
@@ -188,7 +189,7 @@ const ChatCustomizationSettings: React.FC = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Palette className="text-purple-500" />
+                        <Palette className="text-primary" />
                         Chat Customization
                     </h2>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -204,9 +205,9 @@ const ChatCustomizationSettings: React.FC = () => {
             <div className="space-y-6">
 
                 {/* Theme Presets - Cleaner UI */}
-                <div className="bg-gradient-to-br from-purple-500/5 to-blue-500/5 border border-purple-500/10 rounded-2xl p-6">
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 rounded-2xl p-6">
                     <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
-                        <Zap className="text-purple-500" size={20} />
+                        <Zap className="text-primary" size={20} />
                         Quick Theme Presets
                     </h3>
                     <div className="grid grid-cols-6 gap-3">
@@ -241,7 +242,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={type}
                                             onClick={() => updateBranding('logoType', type)}
                                             className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.branding.logoType === type
-                                                    ? 'bg-primary text-white shadow-md'
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
                                                     : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
@@ -331,7 +332,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateBranding('showBotAvatar', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
                         </div>
@@ -348,7 +349,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={pos}
                                             onClick={() => updateBehavior('position', pos)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.behavior.position === pos
-                                                    ? 'bg-primary text-white shadow-md'
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
                                                     : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
@@ -366,7 +367,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={size}
                                             onClick={() => updateBehavior('width', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.behavior.width === size
-                                                    ? 'bg-primary text-white shadow-md'
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
                                                     : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
@@ -385,7 +386,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateBehavior('autoOpen', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
 
@@ -455,7 +456,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         />
                                         <button
                                             onClick={addQuickReply}
-                                            className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                                            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
                                         >
                                             Add
                                         </button>
@@ -476,7 +477,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={style}
                                             onClick={() => updateButton('buttonStyle', style)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.button.buttonStyle === style
-                                                    ? 'bg-primary text-white shadow-md'
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
                                                     : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
@@ -494,7 +495,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={size}
                                             onClick={() => updateButton('buttonSize', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.button.buttonSize === size
-                                                    ? 'bg-primary text-white shadow-md'
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
                                                     : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
@@ -513,7 +514,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateButton('pulseEffect', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
 

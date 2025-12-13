@@ -26,15 +26,15 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, 
     <button
       onClick={onClick}
       className={`
-        px-4 py-2 rounded-lg border-2 transition-all duration-200 
-        font-medium text-sm flex items-center gap-2
+        px-2.5 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg border-2 transition-all duration-200 
+        font-medium text-xs md:text-sm flex items-center gap-1.5 md:gap-2
         ${colorClasses[color]}
         ${active ? 'shadow-sm' : ''}
       `}
     >
       <span>{label}</span>
       <span className={`
-        px-2 py-0.5 rounded-full text-xs font-semibold
+        px-1.5 py-0.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold
         ${active 
           ? 'bg-white/30 dark:bg-black/20' 
           : 'bg-gray-200 dark:bg-gray-700'
