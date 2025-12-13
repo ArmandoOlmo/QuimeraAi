@@ -13,15 +13,25 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
   const { data, brandIdentity, activeProject, seoConfig } = useEditor();
 
   return useMemo(() => {
-    const projectName = activeProject?.name || brandIdentity?.businessName || 'Quimera.ai';
+    const appName = 'Quimera.ai';
+    const projectName = activeProject?.name || brandIdentity?.businessName;
     const baseTitle = options.pageTitle || data?.hero?.headline || projectName;
-    const baseDescription = options.pageDescription || data?.hero?.subheadline || 'Powered by Quimera.ai';
+    const baseDescription = options.pageDescription || data?.hero?.subheadline || 'Crea sitios web profesionales con inteligencia artificial';
     const baseImage = options.pageImage || data?.hero?.imageUrl || brandIdentity?.logoUrl;
+
+    // Generate title avoiding duplication
+    const generateTitle = (): string => {
+      if (seoConfig?.title) return seoConfig.title;
+      if (baseTitle && baseTitle !== appName) {
+        return `${baseTitle} | ${appName}`;
+      }
+      return appName;
+    };
 
     // Merge with project-specific SEO config
     const config: SEOConfig = {
       // Basic SEO
-      title: seoConfig?.title || `${baseTitle} | ${projectName}`,
+      title: generateTitle(),
       description: seoConfig?.description || baseDescription,
       keywords: seoConfig?.keywords || ['AI', 'website builder', 'no-code'],
       author: seoConfig?.author || brandIdentity?.businessName,
@@ -29,26 +39,26 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
       
       // Open Graph
       ogType: options.pageType || seoConfig?.ogType || 'website',
-      ogTitle: seoConfig?.ogTitle || baseTitle,
+      ogTitle: seoConfig?.ogTitle || baseTitle || appName,
       ogDescription: seoConfig?.ogDescription || baseDescription,
       ogImage: seoConfig?.ogImage || baseImage,
-      ogImageAlt: seoConfig?.ogImageAlt || `${projectName} - ${baseTitle}`,
+      ogImageAlt: seoConfig?.ogImageAlt || (baseTitle ? `${appName} - ${baseTitle}` : appName),
       ogUrl: seoConfig?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
-      ogSiteName: seoConfig?.ogSiteName || projectName,
+      ogSiteName: seoConfig?.ogSiteName || appName,
       
       // Twitter Card
       twitterCard: seoConfig?.twitterCard || 'summary_large_image',
       twitterSite: seoConfig?.twitterSite,
       twitterCreator: seoConfig?.twitterCreator,
-      twitterTitle: seoConfig?.twitterTitle || baseTitle,
+      twitterTitle: seoConfig?.twitterTitle || baseTitle || appName,
       twitterDescription: seoConfig?.twitterDescription || baseDescription,
       twitterImage: seoConfig?.twitterImage || baseImage,
-      twitterImageAlt: seoConfig?.twitterImageAlt || `${projectName} - ${baseTitle}`,
+      twitterImageAlt: seoConfig?.twitterImageAlt || (baseTitle ? `${appName} - ${baseTitle}` : appName),
       
       // Schema.org
       schemaType: seoConfig?.schemaType || 'WebSite',
       schemaData: seoConfig?.schemaData || {
-        name: projectName,
+        name: projectName || appName,
         url: typeof window !== 'undefined' ? window.location.origin : '',
         potentialAction: {
           '@type': 'SearchAction',
