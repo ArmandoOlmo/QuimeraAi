@@ -269,13 +269,18 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${
                             hasEcommerce ? 'bg-primary' : 'bg-muted'
                         }`}
+                        style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
                         role="switch"
                         aria-checked={hasEcommerce}
                     >
                         <span
-                            className={`pointer-events-none inline-block rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                hasEcommerce ? 'translate-x-5' : 'translate-x-0'
-                            }`}
+                            className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            style={{ 
+                                width: 18, 
+                                height: 18, 
+                                top: 1,
+                                left: hasEcommerce ? 23 : 1,
+                            }}
                         />
                     </button>
                 </div>
