@@ -215,18 +215,57 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const loadUserProjects = useCallback(async (userId: string, tenantId?: string | null) => {
         setIsLoadingProjects(true);
         try {
-            // Use tenant path if available, otherwise user path
-            const pathSegments = getProjectsCollectionPath(userId, tenantId);
-            const projectsCol = collection(db, ...pathSegments);
-            const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
-            const projectSnapshot = await getDocs(q);
-            const userProjects = projectSnapshot.docs.map(docSnap => ({ 
-                id: docSnap.id, 
-                ...docSnap.data() 
-            } as Project));
+            let allUserProjects: Project[] = [];
+            
+            // Check if this is a personal tenant (format: tenant_{userId})
+            const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+            
+            // Always load from user's personal path first
+            try {
+                const userPathSegments = ['users', userId, 'projects'];
+                const userProjectsCol = collection(db, ...userPathSegments);
+                const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
+                const userSnapshot = await getDocs(userQuery);
+                const personalProjects = userSnapshot.docs.map(docSnap => ({ 
+                    id: docSnap.id, 
+                    ...docSnap.data()
+                } as Project));
+                allUserProjects = [...personalProjects];
+            } catch (err) {
+                console.warn("Could not load personal projects:", err);
+            }
+            
+            // If there's a tenant (and it's not personal), also load from tenant path
+            if (tenantId && !isPersonalTenant) {
+                try {
+                    const tenantPathSegments = ['tenants', tenantId, 'projects'];
+                    const tenantProjectsCol = collection(db, ...tenantPathSegments);
+                    const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
+                    const tenantSnapshot = await getDocs(tenantQuery);
+                    const tenantProjects = tenantSnapshot.docs.map(docSnap => ({ 
+                        id: docSnap.id, 
+                        ...docSnap.data()
+                    } as Project));
+                    allUserProjects = [...allUserProjects, ...tenantProjects];
+                } catch (err) {
+                    console.warn("Could not load tenant projects:", err);
+                }
+            }
+            
+            // Remove duplicates by ID (in case same project exists in both)
+            const uniqueProjects = allUserProjects.filter((project, index, self) =>
+                index === self.findIndex(p => p.id === project.id)
+            );
+            
+            // Sort by lastUpdated
+            uniqueProjects.sort((a, b) => {
+                const dateA = new Date(a.lastUpdated || 0).getTime();
+                const dateB = new Date(b.lastUpdated || 0).getTime();
+                return dateB - dateA;
+            });
 
             const { templates: firestoreTemplates } = await loadGlobalTemplates();
-            setProjects([...firestoreTemplates, ...userProjects]);
+            setProjects([...firestoreTemplates, ...uniqueProjects]);
         } catch (error) {
             console.error("Error loading projects:", error);
             try {
@@ -400,10 +439,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Create project from template
     const createProjectFromTemplate = async (templateId: string, newName?: string) => {
-        if (!user) return;
+        if (!user) {
+            throw new Error("User not authenticated");
+        }
 
         const template = projects.find(p => p.id === templateId);
-        if (!template) return;
+        if (!template) {
+            throw new Error(`Template not found: ${templateId}`);
+        }
 
         const now = new Date().toISOString();
         const newProject: Omit<Project, 'id'> = {
@@ -418,13 +461,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             lastUpdated: now,
         };
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const projectsCol = collection(db, ...pathSegments);
-        const docRef = await addDoc(projectsCol, newProject);
+        try {
+            // Always save to user's personal path to avoid workspace permission issues
+            const pathSegments = ['users', user.uid, 'projects'];
+            const projectsCol = collection(db, ...pathSegments);
+            const docRef = await addDoc(projectsCol, newProject);
 
-        const createdProject = { ...newProject, id: docRef.id } as Project;
-        setProjects(prev => [createdProject, ...prev]);
-        loadProject(docRef.id, false, true);
+            const createdProject = { ...newProject, id: docRef.id } as Project;
+            setProjects(prev => [createdProject, ...prev]);
+            loadProject(docRef.id, false, true);
+        } catch (error: any) {
+            console.error("Error creating project from template:", error);
+            if (error.code === 'permission-denied') {
+                throw new Error("No tienes permiso para crear proyectos. Verifica tus permisos.");
+            }
+            throw error;
+        }
     };
 
     // Export as HTML

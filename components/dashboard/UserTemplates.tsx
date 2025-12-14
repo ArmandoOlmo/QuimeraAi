@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useProject } from '../../contexts/project';
+import { useEditor } from '../../contexts/EditorContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
@@ -29,7 +29,7 @@ import { INDUSTRIES } from '../../data/industries';
 
 const UserTemplates: React.FC = () => {
     const { t } = useTranslation();
-    const { projects, createProjectFromTemplate } = useProject();
+    const { projects, createProjectFromTemplate } = useEditor();
     const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
