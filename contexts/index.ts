@@ -38,6 +38,7 @@ export { CMSProvider, useCMS } from './cms';
 export { AdminProvider, useAdmin } from './admin';
 export { DomainsProvider, useDomains } from './domains';
 export { AIProvider, useAI } from './ai';
+export { TenantProvider, useTenant, useSafeTenant } from './tenant';
 
 // =============================================================================
 // LEGACY EXPORTS (For backwards compatibility)

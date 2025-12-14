@@ -1,6 +1,7 @@
 /**
  * ProjectContext
  * Maneja proyectos, templates y exportación
+ * Soporta multi-tenant: usa /tenants/{tenantId}/projects cuando hay tenant activo
  */
 
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
@@ -27,6 +28,24 @@ import {
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { router } from '../../hooks/useRouter';
+import { useSafeTenant } from '../tenant';
+
+// Helper to get the correct projects collection path
+// Returns tenant path if tenantId provided, otherwise user path
+const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
+    if (tenantId) {
+        return ['tenants', tenantId, 'projects'];
+    }
+    return ['users', userId, 'projects'];
+};
+
+// Helper to get storage path for project assets
+const getProjectStoragePath = (userId: string, projectId: string, tenantId?: string | null): string => {
+    if (tenantId) {
+        return `tenants/${tenantId}/projects/${projectId}`;
+    }
+    return `users/${userId}/projects/${projectId}`;
+};
 
 // Helper to generate HTML export
 const generateHtml = (project: Project) => {
@@ -110,6 +129,10 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
+    const tenantContext = useSafeTenant();
+    
+    // Get current tenant ID (null if not using multi-tenant or no tenant selected)
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
     
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
@@ -188,11 +211,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    // Load user projects
-    const loadUserProjects = useCallback(async (userId: string) => {
+    // Load user/tenant projects
+    const loadUserProjects = useCallback(async (userId: string, tenantId?: string | null) => {
         setIsLoadingProjects(true);
         try {
-            const projectsCol = collection(db, 'users', userId, 'projects');
+            // Use tenant path if available, otherwise user path
+            const pathSegments = getProjectsCollectionPath(userId, tenantId);
+            const projectsCol = collection(db, ...pathSegments);
             const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
             const projectSnapshot = await getDocs(q);
             const userProjects = projectSnapshot.docs.map(docSnap => ({ 
@@ -215,15 +240,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, []);
 
-    // Load projects when user changes
+    // Load projects when user or tenant changes
     useEffect(() => {
         if (user) {
-            loadUserProjects(user.uid);
+            loadUserProjects(user.uid, currentTenantId);
         } else {
             setProjects([]);
             setIsLoadingProjects(false);
         }
-    }, [user, loadUserProjects]);
+    }, [user, currentTenantId, loadUserProjects]);
 
     // Load project by ID
     const loadProject = useCallback((projectId: string, fromAdmin = false, navigateToEditor = true) => {
@@ -277,7 +302,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const templateRef = doc(db, 'templates', activeProjectId);
                 await updateDoc(templateRef, updatedProject);
             } else {
-                const projectRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
+                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                const projectRef = doc(db, ...pathSegments, activeProjectId);
                 await updateDoc(projectRef, updatedProject);
             }
 
@@ -288,7 +314,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error("Error saving project:", error);
             throw error;
         }
-    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility]);
+    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId]);
 
     // Auto-save effect
     useEffect(() => {
@@ -317,9 +343,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!project) return;
 
         const isTemplate = project.status === 'Template';
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
         const docRef = isTemplate
             ? doc(db, 'templates', activeProjectId)
-            : doc(db, 'users', user.uid, 'projects', activeProjectId);
+            : doc(db, ...pathSegments, activeProjectId);
 
         await updateDoc(docRef, { name: newName });
         setProjects(prev => prev.map(p =>
@@ -331,7 +358,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const addNewProject = async (project: Project): Promise<string | void> => {
         if (!user) return;
 
-        const projectsCol = collection(db, 'users', user.uid, 'projects');
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+        const projectsCol = collection(db, ...pathSegments);
         const docRef = await addDoc(projectsCol, {
             ...project,
             createdAt: serverTimestamp(),
@@ -358,7 +386,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             deletedTemplateIdsRef.current.add(projectId);
             localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
         } else {
-            await deleteDoc(doc(db, 'users', user.uid, 'projects', projectId));
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            await deleteDoc(doc(db, ...pathSegments, projectId));
         }
 
         setProjects(prev => prev.filter(p => p.id !== projectId));
@@ -389,7 +418,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             lastUpdated: now,
         };
 
-        const projectsCol = collection(db, 'users', user.uid, 'projects');
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+        const projectsCol = collection(db, ...pathSegments);
         const docRef = await addDoc(projectsCol, newProject);
 
         const createdProject = { ...newProject, id: docRef.id } as Project;
@@ -423,15 +453,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
         const storagePath = isTemplate
             ? `templates/${projectId}/thumbnail.png`
-            : `users/${user.uid}/projects/${projectId}/thumbnail.png`;
+            : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/thumbnail.png`;
 
         const storageRef = ref(storage, storagePath);
         await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(storageRef);
 
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
         const docRef = isTemplate
             ? doc(db, 'templates', projectId)
-            : doc(db, 'users', user.uid, 'projects', projectId);
+            : doc(db, ...pathSegments, projectId);
 
         await updateDoc(docRef, { thumbnail: downloadURL });
         setProjects(prev => prev.map(p =>
@@ -449,15 +480,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
         const storagePath = isTemplate
             ? `templates/${projectId}/favicon.ico`
-            : `users/${user.uid}/projects/${projectId}/favicon.ico`;
+            : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/favicon.ico`;
 
         const storageRef = ref(storage, storagePath);
         await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(storageRef);
 
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
         const docRef = isTemplate
             ? doc(db, 'templates', projectId)
-            : doc(db, 'users', user.uid, 'projects', projectId);
+            : doc(db, ...pathSegments, projectId);
 
         await updateDoc(docRef, { favicon: downloadURL });
         setProjects(prev => prev.map(p =>
@@ -531,7 +563,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const refreshProjects = async () => {
         if (user) {
-            await loadUserProjects(user.uid);
+            await loadUserProjects(user.uid, currentTenantId);
         }
     };
 

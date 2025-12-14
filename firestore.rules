@@ -39,6 +39,37 @@ service cloud.firestore {
     }
     
     // ============================================
+    // MULTI-TENANT HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is a member of a tenant
+    function isTenantMember(tenantId) {
+      return exists(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
+    }
+    
+    // Get user's role in a tenant
+    function getTenantRole(tenantId) {
+      return get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data.role;
+    }
+    
+    // Check if user has a specific permission in a tenant
+    function hasTenantPermission(tenantId, permission) {
+      let membership = get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data;
+      return membership.permissions[permission] == true;
+    }
+    
+    // Check if user is tenant owner
+    function isTenantOwner(tenantId) {
+      return isTenantMember(tenantId) && getTenantRole(tenantId) == 'agency_owner';
+    }
+    
+    // Check if user is tenant admin or higher
+    function isTenantAdminOrHigher(tenantId) {
+      let role = getTenantRole(tenantId);
+      return role == 'agency_owner' || role == 'agency_admin';
+    }
+    
+    // ============================================
     // USER DOCUMENTS
     // ============================================
     
@@ -225,6 +256,303 @@ service cloud.firestore {
     }
     
     // ============================================
+    // MULTI-TENANT SYSTEM
+    // ============================================
+    
+    // Tenant documents
+    match /tenants/{tenantId} {
+      // Read: members of the tenant or superadmin
+      allow read: if request.auth != null && 
+        (isTenantMember(tenantId) || isSuperAdminOrOwner());
+      
+      // Create: any authenticated user can create a tenant (they become owner)
+      allow create: if request.auth != null &&
+        request.resource.data.ownerUserId == request.auth.uid;
+      
+      // Update: tenant owner or superadmin
+      allow update: if request.auth != null && 
+        (isTenantOwner(tenantId) || isSuperAdminOrOwner());
+      
+      // Delete: tenant owner or superadmin
+      allow delete: if request.auth != null && 
+        (isTenantOwner(tenantId) || isSuperAdminOrOwner());
+      
+      // ============================================
+      // TENANT PROJECTS
+      // ============================================
+      match /projects/{projectId} {
+        // Read: any tenant member
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        
+        // Write: members with canManageProjects permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageProjects');
+        
+        // Project subcollections
+        match /ecommerce/{document=**} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /settings/{settingId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageProjects');
+        }
+        
+        match /emailAudiences/{audienceId} {
+          allow read, write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageProjects');
+        }
+        
+        match /emailCampaigns/{campaignId} {
+          allow read, write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageProjects');
+        }
+        
+        match /emailLogs/{logId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if false; // Only Cloud Functions
+        }
+      }
+      
+      // ============================================
+      // TENANT LEADS
+      // ============================================
+      match /leads/{leadId} {
+        // Read: members with canManageLeads permission
+        allow read: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageLeads');
+        
+        // Write: members with canManageLeads permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageLeads');
+        
+        // Lead activities
+        match /activities/{activityId} {
+          allow read, write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageLeads');
+        }
+      }
+      
+      // ============================================
+      // TENANT CMS POSTS
+      // ============================================
+      match /posts/{postId} {
+        // Read: any tenant member
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        
+        // Write: members with canManageCMS permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageCMS');
+      }
+      
+      // ============================================
+      // TENANT FILES
+      // ============================================
+      match /files/{fileId} {
+        // Read: any tenant member
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        
+        // Write: members with canManageFiles permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageFiles');
+      }
+      
+      // ============================================
+      // TENANT DOMAINS
+      // ============================================
+      match /domains/{domainId} {
+        // Read: any tenant member
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        
+        // Write: members with canManageDomains permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageDomains');
+      }
+      
+      // ============================================
+      // TENANT STORES (E-COMMERCE)
+      // ============================================
+      match /stores/{storeId} {
+        // Read: any tenant member
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        
+        // Write: members with canManageEcommerce permission
+        allow create, update, delete: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageEcommerce');
+        
+        // Store subcollections
+        match /settings/{settingId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /products/{productId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /categories/{categoryId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /orders/{orderId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /customers/{customerId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /discounts/{discountId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /shippingZones/{zoneId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /reviews/{reviewId} {
+          allow read: if request.auth != null && isTenantMember(tenantId);
+          allow write: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canManageEcommerce');
+        }
+        
+        match /analytics/{docId} {
+          allow read: if request.auth != null && 
+            isTenantMember(tenantId) && 
+            hasTenantPermission(tenantId, 'canViewAnalytics');
+          allow write: if false; // Only Cloud Functions
+        }
+      }
+      
+      // ============================================
+      // TENANT MEMBERS (internal - for reference)
+      // ============================================
+      match /members/{memberId} {
+        // Read: tenant admin or higher
+        allow read: if request.auth != null && isTenantAdminOrHigher(tenantId);
+        // Write: only via Cloud Functions or tenant owner
+        allow write: if request.auth != null && isTenantOwner(tenantId);
+      }
+      
+      // ============================================
+      // TENANT APPOINTMENTS
+      // ============================================
+      match /appointments/{appointmentId} {
+        allow read, write: if request.auth != null && isTenantMember(tenantId);
+      }
+      
+      // ============================================
+      // TENANT SETTINGS
+      // ============================================
+      match /settings/{settingId} {
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        allow write: if request.auth != null && 
+          isTenantMember(tenantId) && 
+          hasTenantPermission(tenantId, 'canManageSettings');
+      }
+    }
+    
+    // ============================================
+    // TENANT MEMBERSHIPS (Global lookup)
+    // ============================================
+    
+    match /tenantMembers/{membershipId} {
+      // Read: user can read their own memberships, or if they're admin of the tenant
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isTenantAdminOrHigher(resource.data.tenantId) ||
+        isSuperAdminOrOwner()
+      );
+      
+      // Create: only via Cloud Functions (or tenant owner for initial setup)
+      allow create: if request.auth != null && (
+        // Initial membership when creating a tenant
+        request.resource.data.role == 'agency_owner' && 
+        request.resource.data.userId == request.auth.uid
+      );
+      
+      // Update: tenant owner or superadmin
+      allow update: if request.auth != null && (
+        isTenantOwner(resource.data.tenantId) || 
+        isSuperAdminOrOwner()
+      );
+      
+      // Delete: tenant owner or superadmin
+      allow delete: if request.auth != null && (
+        isTenantOwner(resource.data.tenantId) || 
+        isSuperAdminOrOwner()
+      );
+    }
+    
+    // ============================================
+    // TENANT INVITATIONS
+    // ============================================
+    
+    match /tenantInvites/{inviteId} {
+      // Read: invitee (by email) or tenant admin+
+      allow read: if request.auth != null && (
+        resource.data.email == request.auth.token.email ||
+        isTenantAdminOrHigher(resource.data.tenantId) ||
+        isSuperAdminOrOwner()
+      );
+      
+      // Create: tenant admin+ with canInviteMembers permission
+      allow create: if request.auth != null && (
+        hasTenantPermission(request.resource.data.tenantId, 'canInviteMembers') ||
+        isSuperAdminOrOwner()
+      );
+      
+      // Update: tenant admin+ or the invitee (to accept)
+      allow update: if request.auth != null && (
+        isTenantAdminOrHigher(resource.data.tenantId) ||
+        resource.data.email == request.auth.token.email ||
+        isSuperAdminOrOwner()
+      );
+      
+      // Delete: tenant admin+ only
+      allow delete: if request.auth != null && (
+        isTenantAdminOrHigher(resource.data.tenantId) ||
+        isSuperAdminOrOwner()
+      );
+    }
+    
+    // ============================================
     // GLOBAL SETTINGS & ADMIN
     // ============================================
     
@@ -302,15 +630,6 @@ service cloud.firestore {
     match /widgetAnalytics/{analyticsId} {
       allow read: if request.auth != null && isSuperAdminOrOwner();
       allow write: if false; // Only Cloud Functions can write
-    }
-    
-    // ============================================
-    // TENANT MANAGEMENT
-    // ============================================
-    
-    match /tenants/{tenantId} {
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
     // ============================================
@@ -607,6 +926,18 @@ service cloud.firestore {
       // - domains-remove: Removes domain mapping (validates user owns the domain)
       // - domains-verifyDNS: Updates DNS verification status
       // The Cloud Functions use Admin SDK which bypasses these rules.
+    }
+    
+    // ============================================
+    // PORTAL DOMAINS - White-Label Portal Mappings
+    // ============================================
+    
+    match /portalDomains/{domainName} {
+      // Public read - SSR server needs to resolve portal domains
+      allow read: if true;
+      
+      // Write only via Cloud Functions
+      allow write: if false;
     }
   }
 }

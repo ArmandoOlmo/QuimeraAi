@@ -1,15 +1,44 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SEOConfig } from '../types';
+import { db, doc, getDoc } from '../firebase';
 
 interface GlobalSEOProps {
   config: SEOConfig;
   customMeta?: Array<{ name?: string; property?: string; content: string }>;
 }
 
+interface AppInfoConfig {
+  appName?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  faviconUrl?: string;
+  socialImageUrl?: string;
+}
+
 const GlobalSEO: React.FC<GlobalSEOProps> = ({ config, customMeta = [] }) => {
+  const [appInfo, setAppInfo] = useState<AppInfoConfig | null>(null);
+
+  // Load global app information from Firestore
   useEffect(() => {
-    // Set document title
-    document.title = config.title;
+    const loadAppInfo = async () => {
+      try {
+        const settingsRef = doc(db, 'globalSettings', 'appInfo');
+        const settingsSnap = await getDoc(settingsRef);
+        if (settingsSnap.exists()) {
+          setAppInfo(settingsSnap.data() as AppInfoConfig);
+        }
+      } catch (error) {
+        console.error('Error loading global app info for SEO:', error);
+      }
+    };
+    loadAppInfo();
+  }, []);
+
+  useEffect(() => {
+    // Use app info title if available, otherwise fall back to config
+    const title = appInfo?.metaTitle || config.title;
+    document.title = title;
 
     // Helper to create or update meta tag
     const setMetaTag = (selector: string, content: string, attribute: 'name' | 'property' = 'name') => {
@@ -25,7 +54,7 @@ const GlobalSEO: React.FC<GlobalSEOProps> = ({ config, customMeta = [] }) => {
     };
 
     // Helper to create or update link tag
-    const setLinkTag = (rel: string, href: string) => {
+    const setLinkTag = (rel: string, href: string, type?: string) => {
       if (!href) return;
       
       let element = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
@@ -35,22 +64,47 @@ const GlobalSEO: React.FC<GlobalSEOProps> = ({ config, customMeta = [] }) => {
         document.head.appendChild(element);
       }
       element.href = href;
+      if (type) {
+        element.type = type;
+      }
     };
 
-    // Basic SEO
-    setMetaTag('[name="description"]', config.description);
-    setMetaTag('[name="keywords"]', config.keywords.join(', '));
+    // Apply favicon from global app info (priority) or fallback
+    if (appInfo?.faviconUrl) {
+      // Determine type based on URL extension
+      const faviconType = appInfo.faviconUrl.includes('.svg') 
+        ? 'image/svg+xml' 
+        : appInfo.faviconUrl.includes('.ico') 
+          ? 'image/x-icon' 
+          : 'image/png';
+      setLinkTag('icon', appInfo.faviconUrl, faviconType);
+      // Also set apple-touch-icon for iOS devices
+      if (!appInfo.faviconUrl.includes('.ico')) {
+        setLinkTag('apple-touch-icon', appInfo.faviconUrl);
+      }
+    }
+
+    // Basic SEO - Use appInfo values if available, otherwise fall back to config
+    const description = appInfo?.metaDescription || config.description;
+    const keywords = appInfo?.metaKeywords?.length ? appInfo.metaKeywords : config.keywords;
+    
+    setMetaTag('[name="description"]', description);
+    setMetaTag('[name="keywords"]', keywords.join(', '));
     if (config.author) setMetaTag('[name="author"]', config.author);
     setMetaTag('[name="robots"]', config.robots);
     
     // Language
     document.documentElement.lang = config.language;
 
-    // Open Graph
+    // Open Graph - Use appInfo values if available
+    const ogTitle = appInfo?.metaTitle || config.ogTitle || config.title;
+    const ogDescription = appInfo?.metaDescription || config.ogDescription || config.description;
+    const ogImage = appInfo?.socialImageUrl || config.ogImage;
+    
     setMetaTag('[property="og:type"]', config.ogType, 'property');
-    setMetaTag('[property="og:title"]', config.ogTitle || config.title, 'property');
-    setMetaTag('[property="og:description"]', config.ogDescription || config.description, 'property');
-    if (config.ogImage) setMetaTag('[property="og:image"]', config.ogImage, 'property');
+    setMetaTag('[property="og:title"]', ogTitle, 'property');
+    setMetaTag('[property="og:description"]', ogDescription, 'property');
+    if (ogImage) setMetaTag('[property="og:image"]', ogImage, 'property');
     if (config.ogImageAlt) setMetaTag('[property="og:image:alt"]', config.ogImageAlt, 'property');
     if (config.ogUrl) setMetaTag('[property="og:url"]', config.ogUrl, 'property');
     if (config.ogSiteName) setMetaTag('[property="og:site_name"]', config.ogSiteName, 'property');
@@ -101,7 +155,7 @@ const GlobalSEO: React.FC<GlobalSEOProps> = ({ config, customMeta = [] }) => {
       const schemaMarkup = generateSchemaMarkup(config);
       scriptElement.textContent = JSON.stringify(schemaMarkup);
     }
-  }, [config, customMeta]);
+  }, [config, customMeta, appInfo]);
 
   return null; // This component doesn't render anything
 };

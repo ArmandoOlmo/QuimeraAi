@@ -453,6 +453,356 @@ export interface WelcomeEmailVariables {
     socialLinks?: EmailSocialLinks;
 }
 
+// =============================================================================
+// EMAIL EDITOR - VISUAL BLOCK SYSTEM
+// =============================================================================
+
+/**
+ * Tipos de bloques disponibles en el editor de email
+ */
+export type EmailBlockType = 
+    | 'hero' 
+    | 'text' 
+    | 'image' 
+    | 'button' 
+    | 'divider' 
+    | 'spacer' 
+    | 'columns'
+    | 'products'
+    | 'social' 
+    | 'footer';
+
+/**
+ * Tamaños de padding para bloques de email
+ */
+export type EmailPaddingSize = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+/**
+ * Tamaños de fuente para bloques de email
+ */
+export type EmailFontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+
+/**
+ * Alineación de contenido
+ */
+export type EmailAlignment = 'left' | 'center' | 'right';
+
+/**
+ * Border radius opciones
+ */
+export type EmailBorderRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+/**
+ * Estilos de un bloque de email
+ */
+export interface EmailBlockStyles {
+    backgroundColor?: string;
+    textColor?: string;
+    headingColor?: string;
+    buttonColor?: string;
+    buttonTextColor?: string;
+    linkColor?: string;
+    borderColor?: string;
+    padding?: EmailPaddingSize;
+    paddingTop?: EmailPaddingSize;
+    paddingBottom?: EmailPaddingSize;
+    alignment?: EmailAlignment;
+    fontSize?: EmailFontSize;
+    borderRadius?: EmailBorderRadius;
+    borderWidth?: number;
+}
+
+/**
+ * Contenido del bloque Hero
+ */
+export interface EmailHeroContent {
+    headline: string;
+    subheadline?: string;
+    imageUrl?: string;
+    imageAlt?: string;
+    buttonText?: string;
+    buttonUrl?: string;
+    showButton?: boolean;
+}
+
+/**
+ * Contenido del bloque Text
+ */
+export interface EmailTextContent {
+    text: string;
+    isHtml?: boolean;
+}
+
+/**
+ * Contenido del bloque Image
+ */
+export interface EmailImageContent {
+    src: string;
+    alt?: string;
+    link?: string;
+    width?: number; // percentage 0-100
+}
+
+/**
+ * Contenido del bloque Button
+ */
+export interface EmailButtonContent {
+    text: string;
+    url: string;
+    fullWidth?: boolean;
+}
+
+/**
+ * Contenido del bloque Divider
+ */
+export interface EmailDividerContent {
+    style: 'solid' | 'dashed' | 'dotted';
+    thickness: number; // 1-5
+    width: number; // percentage 0-100
+}
+
+/**
+ * Contenido del bloque Spacer
+ */
+export interface EmailSpacerContent {
+    height: number; // in pixels
+}
+
+/**
+ * Contenido del bloque Columns
+ */
+export interface EmailColumnsContent {
+    columnCount: 2 | 3;
+    columns: EmailBlock[][];
+    gap?: EmailPaddingSize;
+}
+
+/**
+ * Contenido del bloque Products
+ */
+export interface EmailProductsContent {
+    productIds: string[];
+    showPrices: boolean;
+    showButtons: boolean;
+    buttonText: string;
+    columns: 1 | 2 | 3;
+}
+
+/**
+ * Contenido del bloque Social
+ */
+export interface EmailSocialContent {
+    links: EmailSocialLinks;
+    iconStyle: 'color' | 'mono' | 'outline';
+    iconSize: 'sm' | 'md' | 'lg';
+}
+
+/**
+ * Contenido del bloque Footer
+ */
+export interface EmailFooterContent {
+    companyName?: string;
+    address?: string;
+    showUnsubscribe: boolean;
+    unsubscribeText?: string;
+    showSocialLinks: boolean;
+    socialLinks?: EmailSocialLinks;
+    copyrightText?: string;
+}
+
+/**
+ * Union type para contenido de bloques
+ */
+export type EmailBlockContent = 
+    | EmailHeroContent 
+    | EmailTextContent 
+    | EmailImageContent 
+    | EmailButtonContent 
+    | EmailDividerContent 
+    | EmailSpacerContent 
+    | EmailColumnsContent
+    | EmailProductsContent
+    | EmailSocialContent 
+    | EmailFooterContent;
+
+/**
+ * Bloque de email individual
+ */
+export interface EmailBlock {
+    id: string;
+    type: EmailBlockType;
+    visible: boolean;
+    content: EmailBlockContent;
+    styles: EmailBlockStyles;
+}
+
+/**
+ * Estilos globales del documento de email
+ */
+export interface EmailGlobalStyles {
+    fontFamily: string;
+    primaryColor: string;
+    secondaryColor?: string;
+    backgroundColor: string;
+    bodyBackgroundColor: string;
+    headingColor: string;
+    textColor: string;
+    linkColor: string;
+    borderRadius: EmailBorderRadius;
+}
+
+/**
+ * Documento completo de email (para el editor visual)
+ */
+export interface EmailDocument {
+    id: string;
+    name: string;
+    subject: string;
+    previewText?: string;
+    blocks: EmailBlock[];
+    globalStyles: EmailGlobalStyles;
+    createdAt?: FirebaseTimestamp;
+    updatedAt?: FirebaseTimestamp;
+}
+
+/**
+ * Configuración por defecto para estilos globales
+ */
+export const DEFAULT_EMAIL_GLOBAL_STYLES: EmailGlobalStyles = {
+    fontFamily: 'Arial, sans-serif',
+    primaryColor: '#4f46e5',
+    secondaryColor: '#6366f1',
+    backgroundColor: '#ffffff',
+    bodyBackgroundColor: '#f4f4f5',
+    headingColor: '#18181b',
+    textColor: '#52525b',
+    linkColor: '#4f46e5',
+    borderRadius: 'md',
+};
+
+/**
+ * Contenido por defecto para cada tipo de bloque
+ */
+export const DEFAULT_BLOCK_CONTENT: Record<EmailBlockType, EmailBlockContent> = {
+    hero: {
+        headline: 'Welcome to our newsletter',
+        subheadline: 'Stay updated with the latest news and offers',
+        imageUrl: '',
+        buttonText: 'Learn More',
+        buttonUrl: '#',
+        showButton: true,
+    } as EmailHeroContent,
+    text: {
+        text: 'Enter your text here...',
+        isHtml: false,
+    } as EmailTextContent,
+    image: {
+        src: '',
+        alt: 'Image description',
+        width: 100,
+    } as EmailImageContent,
+    button: {
+        text: 'Click Here',
+        url: '#',
+        fullWidth: false,
+    } as EmailButtonContent,
+    divider: {
+        style: 'solid',
+        thickness: 1,
+        width: 100,
+    } as EmailDividerContent,
+    spacer: {
+        height: 32,
+    } as EmailSpacerContent,
+    columns: {
+        columnCount: 2,
+        columns: [[], []],
+        gap: 'md',
+    } as EmailColumnsContent,
+    products: {
+        productIds: [],
+        showPrices: true,
+        showButtons: true,
+        buttonText: 'View Product',
+        columns: 2,
+    } as EmailProductsContent,
+    social: {
+        links: {},
+        iconStyle: 'color',
+        iconSize: 'md',
+    } as EmailSocialContent,
+    footer: {
+        companyName: 'Your Company',
+        showUnsubscribe: true,
+        unsubscribeText: 'Unsubscribe from this list',
+        showSocialLinks: false,
+        copyrightText: '© 2024 All rights reserved',
+    } as EmailFooterContent,
+};
+
+/**
+ * Estilos por defecto para cada tipo de bloque
+ */
+export const DEFAULT_BLOCK_STYLES: Record<EmailBlockType, EmailBlockStyles> = {
+    hero: {
+        backgroundColor: '#4f46e5',
+        textColor: '#ffffff',
+        headingColor: '#ffffff',
+        buttonColor: '#ffffff',
+        buttonTextColor: '#4f46e5',
+        padding: 'lg',
+        alignment: 'center',
+        borderRadius: 'none',
+    },
+    text: {
+        backgroundColor: 'transparent',
+        textColor: '#52525b',
+        padding: 'md',
+        alignment: 'left',
+        fontSize: 'md',
+    },
+    image: {
+        padding: 'sm',
+        alignment: 'center',
+        borderRadius: 'md',
+    },
+    button: {
+        buttonColor: '#4f46e5',
+        buttonTextColor: '#ffffff',
+        padding: 'md',
+        alignment: 'center',
+        borderRadius: 'md',
+    },
+    divider: {
+        borderColor: '#e4e4e7',
+        padding: 'sm',
+    },
+    spacer: {
+        padding: 'none',
+    },
+    columns: {
+        padding: 'md',
+        backgroundColor: 'transparent',
+    },
+    products: {
+        backgroundColor: 'transparent',
+        padding: 'md',
+        buttonColor: '#4f46e5',
+        buttonTextColor: '#ffffff',
+    },
+    social: {
+        padding: 'md',
+        alignment: 'center',
+    },
+    footer: {
+        backgroundColor: '#f4f4f5',
+        textColor: '#71717a',
+        padding: 'lg',
+        alignment: 'center',
+        fontSize: 'sm',
+    },
+};
+
 
 
 

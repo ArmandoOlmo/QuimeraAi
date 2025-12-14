@@ -18,6 +18,7 @@ const PublicLandingPage = lazy(() => import('../components/PublicLandingPage'));
 const PublicWebsitePreview = lazy(() => import('../components/PublicWebsitePreview'));
 const ModernAuth = lazy(() => import('../components/ModernAuth'));
 const VerificationScreen = lazy(() => import('../components/VerificationScreen'));
+const AcceptInvite = lazy(() => import('../components/auth/AcceptInvite'));
 
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazy(() => import('../components/ecommerce/ProductDetailPageWithCart'));
@@ -286,6 +287,16 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // PUBLIC ROUTES
   // =========================================================================
+  
+  // Invite page (accept team invitation)
+  if (path.startsWith('/invite/')) {
+    const token = path.split('/invite/')[1];
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AcceptInvite token={token} />
+      </Suspense>
+    );
+  }
   
   // Landing page
   if (path === '/' && !isAuthenticated) {

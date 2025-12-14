@@ -21,6 +21,7 @@ import { CMSProvider } from './cms';
 import { AdminProvider } from './admin';
 import { DomainsProvider } from './domains';
 import { AIProvider } from './ai';
+import { TenantProvider } from './tenant';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -35,23 +36,25 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             <ToastProvider>
                 <LanguageProvider>
                     <UIProvider>
-                        <EditorProvider>
-                            <ProjectProvider>
-                                <FilesProvider>
-                                    <CRMProvider>
-                                        <CMSProvider>
-                                            <AdminProvider>
-                                                <DomainsProvider>
-                                                    <AIProvider>
-                                                        {children}
-                                                    </AIProvider>
-                                                </DomainsProvider>
-                                            </AdminProvider>
-                                        </CMSProvider>
-                                    </CRMProvider>
-                                </FilesProvider>
-                            </ProjectProvider>
-                        </EditorProvider>
+                        <TenantProvider>
+                            <EditorProvider>
+                                <ProjectProvider>
+                                    <FilesProvider>
+                                        <CRMProvider>
+                                            <CMSProvider>
+                                                <AdminProvider>
+                                                    <DomainsProvider>
+                                                        <AIProvider>
+                                                            {children}
+                                                        </AIProvider>
+                                                    </DomainsProvider>
+                                                </AdminProvider>
+                                            </CMSProvider>
+                                        </CRMProvider>
+                                    </FilesProvider>
+                                </ProjectProvider>
+                            </EditorProvider>
+                        </TenantProvider>
                     </UIProvider>
                 </LanguageProvider>
             </ToastProvider>

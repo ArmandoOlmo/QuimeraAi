@@ -282,6 +282,14 @@ export interface ServiceModule {
     description: string;
 }
 
+export interface PlanLimits {
+    maxProjects: number;
+    maxUsers: number;
+    maxStorageGB: number;
+    maxAiCredits: number;
+    maxSubClients?: number;
+}
+
 export interface Plan {
     id: string;
     name: string;
@@ -291,6 +299,8 @@ export interface Plan {
     serviceModuleIds: string[];
     isFeatured: boolean;
     isArchived: boolean;
+    isCustomPricing?: boolean;
+    limits?: PlanLimits;
 }
 
 export interface BillingData {

@@ -1,12 +1,11 @@
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
-import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Filter, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket } from 'lucide-react';
-import Modal from './Modal';
+import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen } from 'lucide-react';
 import DragDropZone from './DragDropZone';
 import { searchFiles, filterFilesByType, FileTypeFilter } from '../../utils/fileHelpers';
 
@@ -49,17 +48,24 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
     const { t } = useTranslation();
     const { files, globalFiles, uploadFile } = useFiles();
     const { generateImage, enhancePrompt } = useAI();
-    const { projects } = useProject();
+    const { projects, activeProjectId, activeProject } = useProject();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'library' | 'generate'>('library');
     const [librarySource, setLibrarySource] = useState<'user' | 'global'>('user');
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    // Library filters
+    // Library filters - default to current project if available
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all');
+    const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>(activeProjectId || 'all');
+    
+    // Update filter when active project changes
+    useEffect(() => {
+        if (activeProjectId && librarySource === 'user') {
+            setSelectedProjectFilter(activeProjectId);
+        }
+    }, [activeProjectId, librarySource]);
     
     // Generator State
     const [prompt, setPrompt] = useState('');
@@ -79,11 +85,19 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
 
     const handleFileUpload = async (file: File) => {
         try {
-            await uploadFile(file);
+            // Upload file associated with the current project
+            await uploadFile(file, activeProjectId ? {
+                projectId: activeProjectId,
+                projectName: activeProject?.name
+            } : undefined);
             success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             setIsLibraryOpen(true);
             setActiveTab('library');
             setLibrarySource('user');
+            // Auto-select the current project filter if there's an active project
+            if (activeProjectId) {
+                setSelectedProjectFilter(activeProjectId);
+            }
         } catch (err) {
             showError(t('dashboard.imagePicker.uploadError'));
         }
@@ -231,8 +245,15 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
             </div>
 
             {/* Main Modal (Combined Library & Generator) */}
-            <Modal isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)}>
-                <div className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border">
+            {isLibraryOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
+                    onClick={() => setIsLibraryOpen(false)}
+                >
+                    <div 
+                        className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                     {/* Header */}
                     <div className="p-4 border-b border-editor-border flex justify-between items-center bg-editor-panel-bg">
                         <div className="flex gap-4">
@@ -294,15 +315,6 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 )}
                                             </div>
                                             
-                                            {/* Filter Button */}
-                                            <button
-                                                onClick={() => setShowFilters(!showFilters)}
-                                                className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${showFilters ? 'bg-editor-accent text-editor-bg' : 'bg-editor-panel-bg border border-editor-border hover:bg-editor-border/40 text-editor-text-secondary'}`}
-                                                title={t('dashboard.imagePicker.filterByProject')}
-                                            >
-                                                <Filter size={14} />
-                                            </button>
-                                            
                                             {/* Upload Button */}
                                             <DragDropZone
                                                 onFileSelect={handleFileUpload}
@@ -317,21 +329,60 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         </div>
                                     </div>
 
-                                    {/* Project Filter */}
-                                    {showFilters && librarySource === 'user' && (
-                                        <div className="p-3 bg-editor-panel-bg rounded-lg border border-editor-border animate-fade-in-up">
-                                            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('dashboard.imagePicker.filterByProject')}</label>
-                                            <select
-                                                value={selectedProjectFilter}
-                                                onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                                                className="w-full px-3 py-1.5 text-xs bg-editor-bg border border-editor-border rounded-lg focus:ring-1 focus:ring-editor-accent focus:outline-none"
-                                            >
-                                                <option value="all">{t('dashboard.imagePicker.allProjects')}</option>
-                                                {projects.map(project => (
-                                                    <option key={project.id} value={project.id}>{project.name}</option>
+                                    {/* Project Filter - Always visible for user library */}
+                                    {librarySource === 'user' && (
+                                        <div className="p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-xs font-bold text-editor-text-secondary uppercase">{t('dashboard.imagePicker.filterByProject')}</label>
+                                                {activeProjectId && selectedProjectFilter !== activeProjectId && (
+                                                    <button
+                                                        onClick={() => setSelectedProjectFilter(activeProjectId)}
+                                                        className="text-xs text-editor-accent hover:underline"
+                                                    >
+                                                        {t('dashboard.imagePicker.showCurrentProject')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                <button
+                                                    onClick={() => setSelectedProjectFilter('all')}
+                                                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                                                        selectedProjectFilter === 'all' 
+                                                            ? 'bg-editor-accent text-editor-bg font-bold' 
+                                                            : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
+                                                    }`}
+                                                >
+                                                    {t('dashboard.imagePicker.allProjects')}
+                                                </button>
+                                                {projects.filter(p => p.status !== 'Template').map(project => (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => setSelectedProjectFilter(project.id)}
+                                                        className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+                                                            selectedProjectFilter === project.id 
+                                                                ? 'bg-editor-accent text-editor-bg font-bold' 
+                                                                : project.id === activeProjectId
+                                                                    ? 'bg-editor-accent/20 border border-editor-accent text-editor-accent'
+                                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
+                                                        }`}
+                                                    >
+                                                        {project.id === activeProjectId && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                                        )}
+                                                        {project.name}
+                                                    </button>
                                                 ))}
-                                                <option value="no-project">{t('dashboard.imagePicker.unassignedImages')}</option>
-                                            </select>
+                                                <button
+                                                    onClick={() => setSelectedProjectFilter('no-project')}
+                                                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                                                        selectedProjectFilter === 'no-project' 
+                                                            ? 'bg-editor-accent text-editor-bg font-bold' 
+                                                            : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
+                                                    }`}
+                                                >
+                                                    {t('dashboard.imagePicker.unassignedImages')}
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -654,7 +705,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
 
                     </div>
                 </div>
-            </Modal>
+                </div>
+            )}
         </div>
     );
 };

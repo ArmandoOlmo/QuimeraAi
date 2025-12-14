@@ -25,11 +25,15 @@ import {
     Users,
     Calendar,
     AlertTriangle,
+    Palette,
 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useEmailDashboardContext } from '../EmailDashboard';
 import { useEmailCampaigns, useEmailAudiences } from '../../../../hooks/useEmailSettings';
-import { CampaignStatus, AudienceType } from '../../../../types/email';
+import { CampaignStatus, AudienceType, EmailDocument, DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../types/email';
+import EmailEditor from '../editor/EmailEditor';
+import EmailTemplateGallery from '../editor/EmailTemplateGallery';
+import { generateEmailHtml } from '../../../../utils/emailHtmlGenerator';
 
 const CampaignsView: React.FC = () => {
     const { t } = useTranslation();
@@ -42,12 +46,16 @@ const CampaignsView: React.FC = () => {
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
     const [showTestEmailModal, setShowTestEmailModal] = useState(false);
     const [showSendConfirmModal, setShowSendConfirmModal] = useState(false);
+    const [showEmailEditor, setShowEmailEditor] = useState(false);
+    const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+    const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
     const [testEmail, setTestEmail] = useState('');
     const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
     const [sendingTest, setSendingTest] = useState(false);
     const [sendError, setSendError] = useState<string | null>(null);
     const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+    const [emailDocument, setEmailDocument] = useState<Partial<EmailDocument> | null>(null);
     
     const [newCampaign, setNewCampaign] = useState({
         name: '',
@@ -128,6 +136,102 @@ const CampaignsView: React.FC = () => {
             setSendError(t('email.errorCreating', 'Error al crear la campaña'));
             setTimeout(() => setSendError(null), 5000);
         }
+    };
+
+    // Open template gallery for new campaign
+    const handleOpenVisualEditor = () => {
+        setShowNewCampaignModal(false);
+        setShowTemplateGallery(true);
+    };
+
+    // Handle template selection
+    const handleSelectTemplate = (document: EmailDocument) => {
+        setEmailDocument({
+            ...document,
+            name: newCampaign.name || document.name,
+            subject: newCampaign.subject || document.subject,
+            previewText: newCampaign.previewText || document.previewText,
+        });
+        setEditingCampaignId(null);
+        setShowTemplateGallery(false);
+        setShowEmailEditor(true);
+    };
+
+    // Start with blank template
+    const handleStartBlank = () => {
+        setEmailDocument({
+            name: newCampaign.name || 'Nueva campaña',
+            subject: newCampaign.subject || '',
+            previewText: newCampaign.previewText || '',
+            blocks: [],
+            globalStyles: DEFAULT_EMAIL_GLOBAL_STYLES,
+        });
+        setEditingCampaignId(null);
+        setShowTemplateGallery(false);
+        setShowEmailEditor(true);
+    };
+
+    // Open visual editor for existing campaign
+    const handleEditCampaign = (campaign: any) => {
+        // Try to parse existing emailDocument if stored, otherwise create new
+        const existingDoc: Partial<EmailDocument> = campaign.emailDocument || {
+            name: campaign.name,
+            subject: campaign.subject,
+            previewText: campaign.previewText || '',
+            blocks: [],
+            globalStyles: DEFAULT_EMAIL_GLOBAL_STYLES,
+        };
+        setEmailDocument(existingDoc);
+        setEditingCampaignId(campaign.id);
+        setShowEmailEditor(true);
+    };
+
+    // Save from visual editor
+    const handleSaveFromEditor = async (document: EmailDocument) => {
+        try {
+            const htmlContent = generateEmailHtml(document);
+            
+            if (editingCampaignId) {
+                // Update existing campaign
+                await updateCampaign(editingCampaignId, {
+                    name: document.name,
+                    subject: document.subject,
+                    previewText: document.previewText,
+                    htmlContent,
+                    emailDocument: document,
+                });
+                setSendSuccess(t('email.campaignUpdated', 'Campaña actualizada exitosamente'));
+            } else {
+                // Create new campaign
+                await createCampaign({
+                    name: document.name,
+                    subject: document.subject,
+                    previewText: document.previewText,
+                    type: newCampaign.type,
+                    htmlContent,
+                    audienceType: newCampaign.audienceType,
+                    audienceSegmentId: newCampaign.audienceSegmentId || undefined,
+                    emailDocument: document,
+                });
+                setSendSuccess(t('email.campaignCreated', 'Campaña creada exitosamente'));
+                resetForm();
+            }
+            
+            setShowEmailEditor(false);
+            setEmailDocument(null);
+            setEditingCampaignId(null);
+            setTimeout(() => setSendSuccess(null), 3000);
+        } catch (err) {
+            console.error('Error saving campaign:', err);
+            setSendError(t('email.errorSaving', 'Error al guardar la campaña'));
+            setTimeout(() => setSendError(null), 5000);
+        }
+    };
+
+    const handleCloseEditor = () => {
+        setShowEmailEditor(false);
+        setEmailDocument(null);
+        setEditingCampaignId(null);
     };
 
     const handleDeleteCampaign = async (campaignId: string) => {
@@ -422,6 +526,15 @@ const CampaignsView: React.FC = () => {
                                                             <TestTube size={16} className="text-blue-500" />
                                                         </button>
                                                     )}
+                                                    {campaign.status === 'draft' && (
+                                                        <button
+                                                            onClick={() => handleEditCampaign(campaign)}
+                                                            className="p-2 hover:bg-primary/20 rounded-lg transition-colors"
+                                                            title={t('email.edit', 'Editar')}
+                                                        >
+                                                            <Edit size={16} className="text-primary" />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="p-2 hover:bg-muted rounded-lg transition-colors"
                                                         title={t('email.view', 'Ver')}
@@ -573,15 +686,31 @@ const CampaignsView: React.FC = () => {
                                 <label className="block text-sm font-medium text-foreground mb-1">
                                     {t('email.content', 'Contenido del email')}
                                 </label>
-                                <textarea
-                                    value={newCampaign.content}
-                                    onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
-                                    placeholder="Escribe el contenido de tu email (HTML permitido)..."
-                                    rows={6}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono text-sm"
-                                />
+                                
+                                {/* Visual Editor Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleOpenVisualEditor}
+                                    className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-4 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg text-primary hover:bg-primary/20 hover:border-primary/50 transition-all"
+                                >
+                                    <Palette size={20} />
+                                    <span className="font-medium">{t('email.openVisualEditor', 'Abrir Editor Visual')}</span>
+                                </button>
+                                
+                                <div className="relative">
+                                    <p className="text-xs text-muted-foreground mb-2 text-center">
+                                        {t('email.orUseHtml', 'O escribe HTML directamente:')}
+                                    </p>
+                                    <textarea
+                                        value={newCampaign.content}
+                                        onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
+                                        placeholder="Escribe el contenido de tu email (HTML permitido)..."
+                                        rows={4}
+                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono text-sm"
+                                    />
+                                </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {t('email.htmlHint', 'Puedes usar HTML. Variables: {{firstName}}, {{lastName}}, {{email}}')}
+                                    {t('email.htmlHint', 'Variables: {{firstName}}, {{lastName}}, {{email}}')}
                                 </p>
                             </div>
                         </div>
@@ -707,6 +836,28 @@ const CampaignsView: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Template Gallery */}
+            {showTemplateGallery && (
+                <EmailTemplateGallery
+                    onSelect={handleSelectTemplate}
+                    onClose={() => setShowTemplateGallery(false)}
+                    onStartBlank={handleStartBlank}
+                />
+            )}
+
+            {/* Visual Email Editor - Full Screen */}
+            {showEmailEditor && emailDocument && (
+                <div className="fixed inset-0 z-[100]">
+                    <EmailEditor
+                        initialDocument={emailDocument}
+                        onSave={handleSaveFromEditor}
+                        onClose={handleCloseEditor}
+                        campaignId={editingCampaignId || undefined}
+                        campaignName={editingCampaignId ? campaigns.find(c => c.id === editingCampaignId)?.name : newCampaign.name}
+                    />
                 </div>
             )}
         </div>

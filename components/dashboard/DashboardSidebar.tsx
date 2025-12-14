@@ -9,6 +9,8 @@ import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
 import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
+import { useSafeTenant } from '../../contexts/tenant';
 import {
   DndContext,
   closestCenter,
@@ -52,6 +54,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
   const { usage, isLoadingUsage } = useAdmin();
   const { navigate, path } = useRouter();
+  const tenantContext = useSafeTenant();
+  
+  // Check if multi-tenant is available (user has tenants)
+  const showWorkspaceSwitcher = tenantContext && tenantContext.userTenants.length > 0;
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -167,6 +173,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS },
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS },
+    { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración'), view: 'settings', route: ROUTES.SETTINGS },
   ];
 
   // All items combined for backwards compatibility with drag-and-drop
@@ -454,6 +461,20 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               <X size={22} aria-hidden="true" />
             </button>
           </div>
+
+          {/* Workspace Switcher - Multi-tenant support */}
+          {showWorkspaceSwitcher && (
+            <div className={`px-3 lg:px-4 py-2 border-b border-border/50 ${isCollapsed && !isMobileOpen ? 'hidden lg:block' : ''}`}>
+              <WorkspaceSwitcher
+                collapsed={isCollapsed && !isMobileOpen}
+                onCreateWorkspace={() => {
+                  // Navigate to workspace creation or open modal
+                  navigate('/dashboard/settings/workspaces');
+                  onClose();
+                }}
+              />
+            </div>
+          )}
 
           {/* Navigation - Optimized for mobile with momentum scroll */}
           <nav

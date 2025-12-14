@@ -174,13 +174,19 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         depthOfField?: string;
         referenceImage?: string;
         referenceImages?: string[];
+        // Quimera AI specific options
+        model?: string;
+        thinkingLevel?: string;
+        personGeneration?: string;
+        temperature?: number;
+        negativePrompt?: string;
     }): Promise<string> => {
         const startTime = Date.now();
 
         try {
             // Build enhanced prompt
             let enhancedPrompt = prompt;
-            if (options?.style) {
+            if (options?.style && options.style !== 'None') {
                 enhancedPrompt = `${options.style} style: ${enhancedPrompt}`;
             }
             if (options?.lighting) {
@@ -192,14 +198,32 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
             // Try proxy first
             if (shouldUseProxy()) {
-                const result = await generateImageViaProxy(enhancedPrompt, {
-                    aspectRatio: options?.aspectRatio,
-                    referenceImages: options?.referenceImages,
-                });
+                const result = await generateImageViaProxy(
+                    user?.uid || 'anonymous',
+                    enhancedPrompt,
+                    {
+                        aspectRatio: options?.aspectRatio,
+                        style: options?.style,
+                        resolution: options?.resolution,
+                        referenceImages: options?.referenceImages,
+                        // Quimera AI specific options
+                        model: options?.model,
+                        thinkingLevel: options?.thinkingLevel,
+                        personGeneration: options?.personGeneration,
+                        temperature: options?.temperature,
+                        negativePrompt: options?.negativePrompt,
+                        // Visual controls
+                        lighting: options?.lighting,
+                        cameraAngle: options?.cameraAngle,
+                        colorGrading: options?.colorGrading,
+                        themeColors: options?.themeColors,
+                        depthOfField: options?.depthOfField,
+                    }
+                );
 
                 await logApiCall({
                     endpoint: 'imagen/generate',
-                    model: 'imagen-3.0-generate-002',
+                    model: options?.model || 'gemini-3-pro-image-preview',
                     promptTokens: enhancedPrompt.length,
                     completionTokens: 0,
                     totalTokens: enhancedPrompt.length,
@@ -208,7 +232,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     userId: user?.uid,
                 });
 
-                return result;
+                // Return the image as a data URL
+                return `data:${result.mimeType};base64,${result.image}`;
             }
 
             // Fallback to direct API

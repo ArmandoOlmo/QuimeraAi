@@ -37,8 +37,8 @@ export type FontFamily =
   'nobile' | 'cardo' | 'asap' | 'questrial' | 'dancing-script' | 'amatic-sc';
 
 // View Types
-export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email';
-export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'marketplace' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'ab-testing' | 'accessibility' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
+export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings';
+export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'billing' | 'templates' | 'components' | 'images' | 'global-assistant' | 'design-tokens' | 'analytics' | 'conditional-rules' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
 
 // Page Section Types
 export type PageSection = 

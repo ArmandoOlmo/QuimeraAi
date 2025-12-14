@@ -43,6 +43,9 @@ export * from './metaOAuth';
 // Social Chat Types
 export * from './socialChat';
 
+// Multi-Tenant Types
+export * from './multiTenant';
+
 
 
 

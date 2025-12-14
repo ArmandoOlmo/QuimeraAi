@@ -25,13 +25,19 @@ import {
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 
+interface UploadFileOptions {
+    projectId?: string;
+    projectName?: string;
+}
+
 interface FilesContextType {
     // User Files
     files: FileRecord[];
     isFilesLoading: boolean;
-    uploadFile: (file: File) => Promise<string | undefined>;
+    uploadFile: (file: File, options?: UploadFileOptions) => Promise<string | undefined>;
     deleteFile: (fileId: string, storagePath: string) => Promise<void>;
     updateFileNotes: (fileId: string, notes: string) => Promise<void>;
+    updateFileProject: (fileId: string, projectId: string | null, projectName: string | null) => Promise<void>;
     generateFileSummary: (fileId: string, downloadURL: string) => Promise<void>;
     uploadImageAndGetURL: (file: File, path: string) => Promise<string>;
     
@@ -87,13 +93,18 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [user, fetchAllFiles]);
 
     // Upload file
-    const uploadFile = async (file: File): Promise<string | undefined> => {
+    const uploadFile = async (file: File, options?: UploadFileOptions): Promise<string | undefined> => {
         if (!user) return undefined;
 
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `users/${user.uid}/files/${timestamp}_${safeFileName}`;
+            
+            // Organize files by project if projectId is provided
+            const storagePath = options?.projectId 
+                ? `users/${user.uid}/projects/${options.projectId}/files/${timestamp}_${safeFileName}`
+                : `users/${user.uid}/files/${timestamp}_${safeFileName}`;
+            
             const storageRef = ref(storage, storagePath);
             
             await uploadBytes(storageRef, file);
@@ -106,6 +117,8 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 downloadURL,
                 storagePath,
                 createdAt: new Date().toISOString(),
+                ...(options?.projectId && { projectId: options.projectId }),
+                ...(options?.projectName && { projectName: options.projectName }),
             };
 
             const filesCol = collection(db, 'users', user.uid, 'files');
@@ -153,6 +166,32 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             ));
         } catch (error) {
             console.error("Error updating file notes:", error);
+            throw error;
+        }
+    };
+
+    // Update file project assignment
+    const updateFileProject = async (fileId: string, projectId: string | null, projectName: string | null) => {
+        if (!user) return;
+
+        try {
+            const updates: Record<string, any> = {};
+            
+            if (projectId === null) {
+                // Remove project association
+                updates.projectId = null;
+                updates.projectName = null;
+            } else {
+                updates.projectId = projectId;
+                updates.projectName = projectName;
+            }
+
+            await updateDoc(doc(db, 'users', user.uid, 'files', fileId), updates);
+            setFiles(prev => prev.map(f =>
+                f.id === fileId ? { ...f, projectId: projectId || undefined, projectName: projectName || undefined } : f
+            ));
+        } catch (error) {
+            console.error("Error updating file project:", error);
             throw error;
         }
     };
@@ -254,6 +293,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         uploadFile,
         deleteFile,
         updateFileNotes,
+        updateFileProject,
         generateFileSummary,
         uploadImageAndGetURL,
         globalFiles,

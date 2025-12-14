@@ -6,7 +6,7 @@ import { ROUTES } from '../../routes/config';
 import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap,
-    Store, FlaskConical, Accessibility, Languages, Search, FileText,
+    FlaskConical, Languages, Search, FileText,
     Navigation, Star, Settings, Grid3x3, List, X
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
@@ -24,9 +24,6 @@ import GlobalSEOSettings from './admin/GlobalSEOSettings';
 import AnalyticsDashboard from './admin/AnalyticsDashboard';
 import DesignTokensEditor from './admin/DesignTokensEditor';
 import ConditionalRulesEditor from './admin/ConditionalRulesEditor';
-import ComponentMarketplace from './admin/ComponentMarketplace';
-import ABTestingDashboard from './admin/ABTestingDashboard';
-import AccessibilityChecker from './admin/AccessibilityChecker';
 import LanguageManagement from './admin/LanguageManagement';
 import AppInformationSettings from './admin/AppInformationSettings';
 import ContentManagementDashboard from './admin/ContentManagementDashboard';
@@ -58,11 +55,8 @@ const ADMIN_ROUTES: Record<string, string> = {
     'components': ROUTES.ADMIN_COMPONENTS,
     'content': ROUTES.ADMIN_CONTENT,
     'landing-navigation': ROUTES.ADMIN_LANDING_NAVIGATION,
-    'marketplace': ROUTES.ADMIN_MARKETPLACE,
     'design-tokens': ROUTES.ADMIN_DESIGN_TOKENS,
     'conditional-rules': ROUTES.ADMIN_CONDITIONAL_RULES,
-    'ab-testing': ROUTES.ADMIN_AB_TESTING,
-    'accessibility': ROUTES.ADMIN_ACCESSIBILITY,
     'analytics': ROUTES.ADMIN_ANALYTICS,
     'images': ROUTES.ADMIN_IMAGES,
     'global-assistant': ROUTES.ADMIN_GLOBAL_ASSISTANT,
@@ -216,7 +210,7 @@ const SuperAdminDashboard = () => {
         { id: 'tenants', title: t('superadmin.tenantManagement'), description: t('superadmin.tenantManagementDesc'), icon: <Users size={24} />, category: 'core', route: ROUTES.ADMIN_TENANTS },
         { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES },
         { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO },
-        { id: 'billing', title: t('superadmin.billing'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', route: ROUTES.ADMIN_BILLING, isPremium: true },
+        { id: 'billing', title: t('superadmin.billing.title'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', route: ROUTES.ADMIN_BILLING, isPremium: true },
 
         // Content Management
         { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES },
@@ -227,14 +221,11 @@ const SuperAdminDashboard = () => {
 
         // Development & Design
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS },
-        { id: 'marketplace', title: t('superadmin.marketplace'), description: t('superadmin.marketplaceDesc'), icon: <Store size={24} />, category: 'development', route: ROUTES.ADMIN_MARKETPLACE },
         { id: 'conditional-rules', title: t('superadmin.conditionalRules'), description: t('superadmin.conditionalRulesDesc'), icon: <Zap size={24} />, category: 'development', route: ROUTES.ADMIN_CONDITIONAL_RULES },
-        { id: 'accessibility', title: t('superadmin.accessibilityChecker'), description: t('superadmin.accessibilityCheckerDesc'), icon: <Accessibility size={24} />, category: 'development', route: ROUTES.ADMIN_ACCESSIBILITY },
 
         // Analytics & Testing
         { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS },
         { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS },
-        { id: 'ab-testing', title: t('superadmin.abTesting'), description: t('superadmin.abTestingDesc'), icon: <FlaskConical size={24} />, category: 'analytics', route: ROUTES.ADMIN_AB_TESTING, isNew: true },
 
         // System & AI
         { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT },
@@ -290,11 +281,8 @@ const SuperAdminDashboard = () => {
     if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
-    if (adminView === 'marketplace') return <AdminViewLayout title={t('superadmin.marketplace')} onBack={handleBack}><ComponentMarketplace /></AdminViewLayout>;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={handleBack}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
-    if (adminView === 'ab-testing') return <AdminViewLayout title={t('superadmin.abTestingTitle')} onBack={handleBack} noPadding><ABTestingDashboard /></AdminViewLayout>;
-    if (adminView === 'accessibility') return <AdminViewLayout title={t('superadmin.accessibilityCheckerTitle')} onBack={handleBack} noPadding><AccessibilityChecker /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 
     return (

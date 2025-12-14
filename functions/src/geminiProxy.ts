@@ -109,9 +109,13 @@ const ALLOWED_MODELS = [
     // Gemini 3 preview models
     'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
-    // Imagen models
+    // Imagen 3.0 models
     'imagen-3.0-generate-002',
     'imagen-3.0-fast-generate-001',
+    // Imagen 4.0 models
+    'imagen-4.0-generate-001',
+    'imagen-4.0-fast-generate-001',
+    'imagen-4.0-ultra-generate-001',
 ];
 
 function isValidModel(model: string): boolean {

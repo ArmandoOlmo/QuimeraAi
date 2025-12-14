@@ -118,6 +118,25 @@ import {
     setupWebhooks
 } from './metaOAuth';
 
+// Tenant invites functions
+import {
+    createTenantInvite,
+    acceptTenantInvite,
+    acceptTenantInviteByToken,
+    cancelTenantInvite,
+    resendTenantInvite,
+    getInviteByToken,
+    cleanupExpiredInvites
+} from './tenantInvites';
+
+// Portal domains functions
+import {
+    addPortalDomain,
+    verifyPortalDomain,
+    removePortalDomain,
+    scheduledPortalDNSCheck
+} from './portalDomains';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -248,6 +267,25 @@ export const metaOAuth = {
     setupWebhooks: setupWebhooks
 };
 
+// Export Tenant Invites functions (Multi-tenant)
+export const tenantInvites = {
+    create: createTenantInvite,
+    accept: acceptTenantInvite,
+    acceptByToken: acceptTenantInviteByToken,
+    cancel: cancelTenantInvite,
+    resend: resendTenantInvite,
+    getByToken: getInviteByToken,
+    cleanup: cleanupExpiredInvites
+};
+
+// Export Portal Domains functions (White-label)
+export const portalDomains = {
+    add: addPortalDomain,
+    verify: verifyPortalDomain,
+    remove: removePortalDomain,
+    scheduledCheck: scheduledPortalDNSCheck
+};
+
 // Alternative flat exports for easier routing
 export { 
     getWidgetConfig, 
@@ -336,6 +374,19 @@ export {
     getConnectedPages,
     getWhatsAppAccounts,
     selectMetaAssets,
-    setupWebhooks
+    setupWebhooks,
+    // Tenant Invites exports (Multi-tenant)
+    createTenantInvite,
+    acceptTenantInvite,
+    acceptTenantInviteByToken,
+    cancelTenantInvite,
+    resendTenantInvite,
+    getInviteByToken,
+    cleanupExpiredInvites,
+    // Portal Domains exports (White-label)
+    addPortalDomain,
+    verifyPortalDomain,
+    removePortalDomain,
+    scheduledPortalDNSCheck
 };
 

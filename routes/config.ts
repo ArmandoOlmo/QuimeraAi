@@ -74,6 +74,14 @@ export const ROUTES = {
   ECOMMERCE: '/ecommerce',
   EMAIL: '/email',
   
+  // Settings Routes (Workspace/Team)
+  SETTINGS: '/settings',
+  SETTINGS_TEAM: '/settings/team',
+  SETTINGS_BRANDING: '/settings/branding',
+  
+  // Invite Route (Public)
+  INVITE: '/invite/:token',
+  
   // Admin Routes
   SUPERADMIN: '/admin',
   ADMIN_ADMINS: '/admin/admins',
@@ -84,14 +92,11 @@ export const ROUTES = {
   ADMIN_BILLING: '/admin/billing',
   ADMIN_TEMPLATES: '/admin/templates',
   ADMIN_COMPONENTS: '/admin/components',
-  ADMIN_MARKETPLACE: '/admin/marketplace',
   ADMIN_IMAGES: '/admin/images',
   ADMIN_GLOBAL_ASSISTANT: '/admin/global-assistant',
   ADMIN_DESIGN_TOKENS: '/admin/design-tokens',
   ADMIN_ANALYTICS: '/admin/analytics',
   ADMIN_CONDITIONAL_RULES: '/admin/conditional-rules',
-  ADMIN_AB_TESTING: '/admin/ab-testing',
-  ADMIN_ACCESSIBILITY: '/admin/accessibility',
   ADMIN_GLOBAL_SEO: '/admin/global-seo',
   ADMIN_APP_INFO: '/admin/app-info',
   ADMIN_CONTENT: '/admin/content',
@@ -336,6 +341,48 @@ export const routeConfigs: RouteConfig[] = [
   },
   
   // =========================================================================
+  // SETTINGS ROUTES (Private - Workspace/Team Management)
+  // =========================================================================
+  {
+    path: ROUTES.SETTINGS,
+    view: 'settings',
+    type: 'private',
+    title: 'Settings',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Settings',
+  },
+  {
+    path: ROUTES.SETTINGS_TEAM,
+    view: 'settings',
+    type: 'private',
+    title: 'Team Settings',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    parent: ROUTES.SETTINGS,
+  },
+  {
+    path: ROUTES.SETTINGS_BRANDING,
+    view: 'settings',
+    type: 'private',
+    title: 'Branding Settings',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    parent: ROUTES.SETTINGS,
+  },
+  
+  // =========================================================================
+  // INVITE ROUTE (Public - Accept Team Invitations)
+  // =========================================================================
+  {
+    path: ROUTES.INVITE,
+    type: 'public',
+    title: 'Accept Invitation',
+    requiresAuth: false,
+  },
+  
+  // =========================================================================
   // ADMIN ROUTES (Private - Requires Admin Role)
   // =========================================================================
   {
@@ -439,17 +486,6 @@ export const routeConfigs: RouteConfig[] = [
     parent: ROUTES.SUPERADMIN,
   },
   {
-    path: ROUTES.ADMIN_MARKETPLACE,
-    view: 'superadmin',
-    adminView: 'marketplace',
-    type: 'admin',
-    title: 'Marketplace',
-    requiresAuth: true,
-    requiresEmailVerified: true,
-    roles: ['owner', 'superadmin', 'admin'],
-    parent: ROUTES.SUPERADMIN,
-  },
-  {
     path: ROUTES.ADMIN_IMAGES,
     view: 'superadmin',
     adminView: 'images',
@@ -499,28 +535,6 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'conditional-rules',
     type: 'admin',
     title: 'Conditional Rules',
-    requiresAuth: true,
-    requiresEmailVerified: true,
-    roles: ['owner', 'superadmin', 'admin'],
-    parent: ROUTES.SUPERADMIN,
-  },
-  {
-    path: ROUTES.ADMIN_AB_TESTING,
-    view: 'superadmin',
-    adminView: 'ab-testing',
-    type: 'admin',
-    title: 'A/B Testing',
-    requiresAuth: true,
-    requiresEmailVerified: true,
-    roles: ['owner', 'superadmin', 'admin'],
-    parent: ROUTES.SUPERADMIN,
-  },
-  {
-    path: ROUTES.ADMIN_ACCESSIBILITY,
-    view: 'superadmin',
-    adminView: 'accessibility',
-    type: 'admin',
-    title: 'Accessibility',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],

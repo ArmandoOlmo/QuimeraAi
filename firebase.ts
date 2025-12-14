@@ -48,6 +48,7 @@ import {
   query,
   orderBy,
   limit,
+  writeBatch,
   where,
   onSnapshot,
   startAfter,
@@ -180,7 +181,11 @@ export {
   limit,
   where,
   onSnapshot,
-  startAfter
+  startAfter,
+  writeBatch
 };
+
+// Re-export Functions methods
+export { httpsCallable } from 'firebase/functions';
 
 export type { User };
