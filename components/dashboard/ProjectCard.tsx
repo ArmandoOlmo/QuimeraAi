@@ -237,11 +237,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <div className="flex items-center gap-2">
             {/* Color Swatches */}
             {themeColors.length > 0 && (
-              <div className="flex gap-1 items-center">
+              <div className="flex gap-0.5">
                 {themeColors.map((color, index) => (
                   <div
                     key={index}
-                    className="w-3 h-3 rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
+                    className="w-3 h-3 rounded-full border border-white/20"
                     style={{ backgroundColor: color }}
                   />
                 ))}

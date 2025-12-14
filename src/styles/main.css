@@ -664,6 +664,22 @@ body {
 .animate-gradient-border { background: linear-gradient(90deg, #4f46e5, #10b981, #4f46e5); background-size: 200% 200%; animation: gradient-rotate 3s ease infinite; }
 .animate-shine::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); animation: shine 3s ease-in-out infinite; }
 
+/* Mobile Drawer Animation - Slide up from bottom */
+@keyframes slideUpMobile {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-mobile {
+  animation: slideUpMobile 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
 /* ============================================
    MOBILE OPTIMIZATIONS
    ============================================ */
@@ -704,18 +720,97 @@ body {
 }
 
 /* Mobile-first button reset for better touch targets */
-@media (max-width: 1023px) {
-  button, 
-  [role="button"],
-  a[href] {
+@media (max-width: 767px) {
+  /* Ensure minimum touch target size for buttons/links */
+  button:not(.no-min-touch), 
+  [role="button"]:not(.no-min-touch) {
     min-height: 44px;
-    min-width: 44px;
   }
   
   /* Larger touch targets on mobile for nav items */
   nav button,
   nav a {
     padding: 12px 16px;
+  }
+  
+  /* Improved form input sizes on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    min-height: 48px;
+  }
+  
+  /* Stack flex items vertically on small screens */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  /* Hide elements on mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  /* Responsive padding adjustments */
+  .mobile-px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .mobile-py-4 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  /* Responsive text size */
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Show elements only on tablet */
+  .tablet-only {
+    display: block;
+  }
+  
+  /* Hide elements on tablet */
+  .hide-on-tablet {
+    display: none !important;
+  }
+}
+
+/* Desktop only styles */
+@media (min-width: 1024px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+  
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (max-width: 767px) {
+  .show-on-mobile {
+    display: block !important;
   }
 }
 
@@ -727,6 +822,78 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bottom sheet modal style for mobile */
+@media (max-width: 639px) {
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-radius: 1.5rem 1.5rem 0 0;
+    max-height: 90dvh;
+  }
+}
+
+/* Floating action button for mobile */
+.fab-button {
+  position: fixed;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  right: 1.5rem;
+  z-index: 40;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Pull to refresh indicator */
+.pull-indicator {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.2s ease;
+}
+
+/* Mobile-optimized grid helpers */
+@media (max-width: 639px) {
+  .grid-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid-mobile-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Card hover effects - disable on touch devices */
+@media (hover: none) {
+  .hover\:scale-105:hover {
+    transform: none !important;
+  }
+  
+  .hover\:-translate-y-1:hover {
+    transform: none !important;
+  }
+  
+  .hover\:-translate-y-2:hover {
+    transform: none !important;
+  }
+}
+
+/* Active states for touch devices */
+@media (hover: none) {
+  button:active,
+  [role="button"]:active,
+  a:active {
+    opacity: 0.8;
   }
 }
 

@@ -31,9 +31,12 @@ import { router } from '../../hooks/useRouter';
 import { useSafeTenant } from '../tenant';
 
 // Helper to get the correct projects collection path
-// Returns tenant path if tenantId provided, otherwise user path
+// Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
 const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
-    if (tenantId) {
+    // Personal tenants (format: tenant_{userId}) should use user path
+    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+    
+    if (tenantId && !isPersonalTenant) {
         return ['tenants', tenantId, 'projects'];
     }
     return ['users', userId, 'projects'];

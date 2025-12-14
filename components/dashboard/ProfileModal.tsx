@@ -124,26 +124,26 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
             <>
-                <div className="p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm rounded-t-xl">
-                    <h2 className="text-xl font-bold text-foreground flex items-center">
+                <div className="p-4 sm:p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm sm:rounded-t-xl">
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center">
                         {t('profile.title')}
                     </h2>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="p-2.5 sm:p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors touch-manipulation">
                         <X size={20}/>
                     </button>
                 </div>
 
-                <div className="p-6 md:p-8 overflow-y-auto space-y-8 custom-scrollbar">
+                <div className="p-4 sm:p-6 md:p-8 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
                     {error && (
-                        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-4 rounded-xl flex items-center">
-                            <AlertTriangle size={16} className="mr-2" /> {error}
+                        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 sm:p-4 rounded-xl flex items-center">
+                            <AlertTriangle size={16} className="mr-2 flex-shrink-0" /> {error}
                         </div>
                     )}
                     
-                    {/* Profile Picture Section */}
-                    <div className="flex items-center gap-6">
+                    {/* Profile Picture Section - Stack vertical on mobile */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
                         <div className="relative group">
-                            <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-orange-500">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-orange-500">
                                 <img 
                                     src={photoPreview || `https://ui-avatars.com/api/?name=${name}&background=random`} 
                                     alt="Profile" 
@@ -152,15 +152,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <button 
                                 onClick={() => fileInputRef.current?.click()} 
-                                className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg"
+                                className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg touch-manipulation active:scale-95"
                             >
                                 <Camera size={16} />
                             </button>
                             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden"/>
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-bold text-2xl text-foreground">{name || 'User'}</h3>
-                            <p className="text-sm text-muted-foreground">{user?.email}</p>
+                            <h3 className="font-bold text-xl sm:text-2xl text-foreground">{name || 'User'}</h3>
+                            <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 mt-2">
                                 {t('profile.proPlan')}
                             </span>
@@ -176,16 +176,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                 type="text" 
                                 value={name} 
                                 onChange={e => setName(e.target.value)} 
-                                className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" 
+                                className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-base" 
                             />
                         </div>
                     </div>
                     
-                    <div className="flex justify-end pt-4 border-t border-border">
+                    <div className="flex justify-center sm:justify-end pt-4 border-t border-border">
                         <button 
                             onClick={handleSaveChanges} 
                             disabled={!hasChanges || isLoading} 
-                            className="bg-primary text-primary-foreground font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center"
+                            className="w-full sm:w-auto bg-primary text-primary-foreground font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center touch-manipulation active:scale-[0.98]"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
@@ -197,19 +197,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Danger Zone */}
-                    <div className="mt-10 pt-8 border-t border-border">
-                        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-                            <h3 className="font-bold text-destructive flex items-center">
-                                <Trash2 size={18} className="mr-2" /> {t('profile.dangerZone')}
+                    <div className="mt-6 sm:mt-10 pt-6 sm:pt-8 border-t border-border">
+                        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
+                            <h3 className="font-bold text-destructive flex items-center text-sm sm:text-base">
+                                <Trash2 size={18} className="mr-2 flex-shrink-0" /> {t('profile.dangerZone')}
                             </h3>
-                            <p className="text-sm text-muted-foreground mt-2 mb-4">
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-2 mb-4">
                                 {t('profile.deleteWarning')}
                             </p>
 
                             {!isDeleteConfirm ? (
                                 <button 
                                     onClick={() => setIsDeleteConfirm(true)} 
-                                    className="text-sm font-bold text-destructive hover:text-destructive/80 hover:underline transition-colors"
+                                    className="text-sm font-bold text-destructive hover:text-destructive/80 hover:underline transition-colors touch-manipulation py-2"
                                 >
                                     {t('profile.deleteAccount')}
                                 </button>
@@ -221,20 +221,20 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                         onChange={e => setDeletePassword(e.target.value)} 
                                         required 
                                         placeholder={t('profile.confirmWithPassword')}
-                                        className="w-full bg-background text-foreground p-2 rounded-lg border border-destructive/50 focus:ring-2 focus:ring-destructive focus:outline-none text-sm" 
+                                        className="w-full bg-background text-foreground p-3 rounded-lg border border-destructive/50 focus:ring-2 focus:ring-destructive focus:outline-none text-base" 
                                     />
-                                     <div className="flex items-center space-x-4">
+                                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 sm:gap-0">
                                          <button 
                                             type="submit" 
                                             disabled={isLoading} 
-                                            className="bg-destructive text-destructive-foreground font-bold py-2 px-4 rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-50 text-sm"
+                                            className="bg-destructive text-destructive-foreground font-bold py-3 sm:py-2 px-4 rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-50 text-sm touch-manipulation active:scale-[0.98]"
                                         >
                                             {t('profile.confirmDeletion')}
                                          </button>
                                          <button 
                                             type="button" 
                                             onClick={() => setIsDeleteConfirm(false)} 
-                                            className="text-sm text-muted-foreground hover:text-foreground"
+                                            className="text-sm text-muted-foreground hover:text-foreground py-2 touch-manipulation"
                                         >
                                             {t('common.cancel')}
                                          </button>
