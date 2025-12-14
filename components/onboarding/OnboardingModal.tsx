@@ -213,20 +213,20 @@ const OnboardingModal: React.FC = () => {
             />
 
             {/* Modal */}
-            <div className={`relative w-full max-w-4xl max-h-[90vh] mx-4 bg-background rounded-2xl shadow-2xl flex flex-col border border-border ${progress.step === 1 ? '' : 'overflow-hidden'}`}>
+            <div className={`relative w-full max-w-none md:max-w-4xl h-[100dvh] md:h-auto md:max-h-[90vh] md:mx-4 md:rounded-2xl bg-background shadow-2xl flex flex-col border-0 md:border border-border ${progress.step === 1 ? '' : 'overflow-hidden'}`}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card rounded-t-2xl">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-card md:rounded-t-2xl">
+                    <div className="flex items-center gap-2 md:gap-3">
                         <img 
                             src={QUIMERA_LOGO} 
                             alt="Quimera" 
-                            className="w-8 h-8 object-contain"
+                            className="w-7 h-7 md:w-8 md:h-8 object-contain"
                         />
                         <div>
-                            <h2 className="text-lg font-bold text-foreground">
+                            <h2 className="text-base md:text-lg font-bold text-foreground">
                                 {t('onboarding.title', 'Create Your Website')}
                             </h2>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">
                                 {t('onboarding.subtitle', 'AI-powered website builder')}
                             </p>
                         </div>
@@ -264,7 +264,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className={`flex-1 p-6 ${progress.step === 1 ? 'overflow-visible' : 'overflow-y-auto'}`}>
+                <div className={`flex-1 p-4 md:p-6 ${progress.step === 1 ? 'overflow-visible' : 'overflow-y-auto'}`}>
                     {error && (
                         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
                             {error}
@@ -275,21 +275,21 @@ const OnboardingModal: React.FC = () => {
 
                 {/* Footer with Navigation */}
                 {progress.step !== generationStep && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card rounded-b-2xl">
+                    <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-t border-border bg-card md:rounded-b-2xl">
                         {/* Previous Button */}
                         <button
                             onClick={previousStep}
                             disabled={!canGoPrevious()}
                             className={`
-                                flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all
+                                flex items-center gap-1 md:gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl font-medium transition-all text-sm md:text-base
                                 ${canGoPrevious()
                                     ? 'text-foreground hover:bg-accent'
                                     : 'text-muted-foreground/50 cursor-not-allowed'
                                 }
                             `}
                         >
-                            <ChevronLeft size={18} />
-                            <span>{t('onboarding.previous', 'Previous')}</span>
+                            <ChevronLeft size={16} className="md:w-[18px] md:h-[18px]" />
+                            <span className="hidden sm:inline">{t('onboarding.previous', 'Previous')}</span>
                         </button>
 
                         {/* Saving indicator */}
@@ -304,7 +304,7 @@ const OnboardingModal: React.FC = () => {
                             onClick={nextStep}
                             disabled={!canGoNext()}
                             className={`
-                                flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all
+                                flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-medium transition-all text-sm md:text-base
                                 ${canGoNext()
                                     ? 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/25 hover:scale-105'
                                     : 'bg-muted text-muted-foreground/50 cursor-not-allowed'
@@ -317,7 +317,7 @@ const OnboardingModal: React.FC = () => {
                                     : t('onboarding.next', 'Next')
                                 }
                             </span>
-                            <ChevronRight size={18} />
+                            <ChevronRight size={16} className="md:w-[18px] md:h-[18px]" />
                         </button>
                     </div>
                 )}

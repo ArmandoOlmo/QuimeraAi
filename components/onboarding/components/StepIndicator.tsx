@@ -53,7 +53,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
     };
 
     return (
-        <div className="w-full px-4 py-6">
+        <div className="w-full px-4 py-3 md:py-6">
             {/* Desktop view */}
             <div className="hidden md:flex items-center justify-between max-w-3xl mx-auto">
                 {steps.map((step, index) => {
@@ -116,15 +116,15 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
 
             {/* Mobile view - compact */}
             <div className="md:hidden">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">
+                <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-foreground">
                         {getCurrentStepLabel()}
                     </span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                         {currentStep} / {totalSteps}
                     </span>
                 </div>
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                     <div 
                         className="h-full bg-primary rounded-full transition-all duration-500"
                         style={{ width: `${(currentStep / totalSteps) * 100}%` }}
