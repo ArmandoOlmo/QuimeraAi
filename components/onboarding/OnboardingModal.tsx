@@ -213,9 +213,9 @@ const OnboardingModal: React.FC = () => {
             />
 
             {/* Modal */}
-            <div className={`relative w-full max-w-none md:max-w-4xl h-[100dvh] md:h-auto md:max-h-[90vh] md:mx-4 md:rounded-2xl bg-background shadow-2xl flex flex-col border-0 md:border border-border ${progress.step === 1 ? '' : 'overflow-hidden'}`}>
+            <div className="relative w-full max-w-none md:max-w-4xl h-[100dvh] md:h-auto md:max-h-[90vh] md:mx-4 md:rounded-2xl bg-background shadow-2xl flex flex-col border-0 md:border border-border overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-card md:rounded-t-2xl">
+                <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-card md:rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-2 md:gap-3">
                         <img 
                             src={QUIMERA_LOGO} 
@@ -255,7 +255,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Step Indicator */}
-                <div className="border-b border-border bg-card/50">
+                <div className="border-b border-border bg-card/50 flex-shrink-0">
                     <StepIndicator 
                         currentStep={progress.step} 
                         totalSteps={totalSteps}
@@ -264,7 +264,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className={`flex-1 p-4 md:p-6 ${progress.step === 1 ? 'overflow-visible' : 'overflow-y-auto'}`}>
+                <div className="flex-1 p-4 md:p-6 overflow-y-auto overscroll-contain">
                     {error && (
                         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
                             {error}
@@ -275,7 +275,7 @@ const OnboardingModal: React.FC = () => {
 
                 {/* Footer with Navigation */}
                 {progress.step !== generationStep && (
-                    <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-t border-border bg-card md:rounded-b-2xl">
+                    <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-t border-border bg-card md:rounded-b-2xl flex-shrink-0">
                         {/* Previous Button */}
                         <button
                             onClick={previousStep}

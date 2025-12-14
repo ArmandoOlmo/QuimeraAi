@@ -3,7 +3,7 @@
  * First step: Business name, industry selection, and ecommerce option
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Building2, Search, ChevronDown, ShoppingBag, Package, FileText, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
@@ -31,6 +31,20 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+
+    // Update dropdown position when opened
+    useEffect(() => {
+        if (isDropdownOpen && triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setDropdownPosition({
+                top: rect.bottom + 8,
+                left: rect.left,
+                width: rect.width,
+            });
+        }
+    }, [isDropdownOpen]);
 
     // Check if selected industry is an ecommerce-related industry
     const isEcommerceIndustry = useMemo(() => {
@@ -108,16 +122,16 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
     };
 
     return (
-        <div className="max-w-xl mx-auto space-y-8">
+        <div className="max-w-xl mx-auto space-y-4 sm:space-y-6 pb-4">
             {/* Header */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary flex items-center justify-center">
-                    <Building2 size={32} className="text-primary-foreground" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
+                    <Building2 size={24} className="sm:w-8 sm:h-8 text-primary-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
                     {t('onboarding.step1Heading', "Let's start with your business")}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                     {t('onboarding.step1Subheading', 'Tell us about your business so we can create the perfect website.')}
                 </p>
             </div>
@@ -145,54 +159,63 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 <div className="relative">
                     {/* Selected value / trigger */}
                     <button
+                        ref={triggerRef}
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className={`
                             w-full px-4 py-3 bg-card border rounded-xl text-left
-                            flex items-center justify-between transition-all
+                            flex items-center justify-between transition-all touch-manipulation
                             ${isDropdownOpen 
                                 ? 'border-primary ring-2 ring-primary/50' 
                                 : 'border-border hover:border-muted-foreground'
                             }
                         `}
                     >
-                        <span className={industry ? 'text-foreground' : 'text-muted-foreground/50'}>
+                        <span className={`text-sm sm:text-base ${industry ? 'text-foreground' : 'text-muted-foreground/50'}`}>
                             {selectedIndustryLabel || t('onboarding.selectIndustry', 'Select your industry')}
                         </span>
                         <ChevronDown 
                             size={18} 
-                            className={`text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                            className={`text-muted-foreground transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} 
                         />
                     </button>
 
-                    {/* Dropdown */}
+                    {/* Dropdown - Fixed position for mobile compatibility */}
                     {isDropdownOpen && (
                         <>
                             {/* Backdrop to close dropdown when clicking outside */}
                             <div 
-                                className="fixed inset-0 z-40" 
+                                className="fixed inset-0 z-[60] bg-black/20" 
                                 onClick={() => setIsDropdownOpen(false)}
                             />
-                            <div className="absolute z-50 w-full mt-2 rounded-xl shadow-2xl overflow-hidden border border-border bg-popover">
+                            <div 
+                                className="fixed z-[70] rounded-xl shadow-2xl overflow-hidden border border-border bg-popover"
+                                style={{
+                                    top: `${Math.min(dropdownPosition.top, window.innerHeight - 320)}px`,
+                                    left: `${dropdownPosition.left}px`,
+                                    width: `${dropdownPosition.width}px`,
+                                    maxHeight: '280px',
+                                }}
+                            >
                                 {/* Search */}
-                                <div className="p-3 border-b border-border bg-popover">
-                                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                                <div className="p-2 sm:p-3 border-b border-border bg-popover">
+                                    <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                                        <Search size={16} className="text-muted-foreground flex-shrink-0" />
                                         <input
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder={t('onboarding.searchIndustry', 'Search industries...')}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground"
                                             autoFocus
                                         />
                                     </div>
                                 </div>
 
                                 {/* Industries list */}
-                                <div className="max-h-64 overflow-y-auto bg-popover">
+                                <div className="max-h-[200px] overflow-y-auto bg-popover overscroll-contain">
                                     {Object.entries(groupedIndustries).map(([categoryKey, industries]) => (
                                         <div key={categoryKey}>
-                                            <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 bg-muted">
+                                            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 bg-muted">
                                                 {getCategoryLabel(categoryKey)}
                                             </div>
                                             {industries.map((ind) => (
@@ -200,10 +223,10 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                                     key={ind.id}
                                                     onClick={() => handleIndustrySelect(ind.id)}
                                                     className={`
-                                                        w-full px-4 py-2.5 text-left text-sm transition-colors
+                                                        w-full px-3 sm:px-4 py-2.5 text-left text-sm transition-colors touch-manipulation
                                                         ${industry === ind.id 
                                                             ? 'bg-primary/20 text-primary' 
-                                                            : 'text-popover-foreground hover:bg-accent'
+                                                            : 'text-popover-foreground hover:bg-accent active:bg-accent'
                                                         }
                                                     `}
                                                 >
@@ -213,7 +236,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                         </div>
                                     ))}
                                     {Object.keys(groupedIndustries).length === 0 && (
-                                        <div className="px-4 py-8 text-center text-muted-foreground">
+                                        <div className="px-4 py-6 text-center text-muted-foreground text-sm">
                                             {t('onboarding.noIndustriesFound', 'No industries found')}
                                         </div>
                                     )}
@@ -225,17 +248,17 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
             </div>
 
             {/* Ecommerce Toggle */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-card border border-border rounded-xl">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <ShoppingBag size={20} className="text-primary" />
+            <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                            <ShoppingBag size={18} className="sm:w-5 sm:h-5 text-primary" />
                         </div>
-                        <div>
-                            <p className="font-medium text-foreground">
+                        <div className="min-w-0">
+                            <p className="font-medium text-foreground text-sm sm:text-base">
                                 {t('onboarding.sellProductsOnline', '¿Vendes productos online?')}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                                 {t('onboarding.sellProductsOnlineDesc', 'Incluiremos una tienda en tu sitio web')}
                             </p>
                         </div>
@@ -243,7 +266,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     <button
                         type="button"
                         onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${
                             hasEcommerce ? 'bg-primary' : 'bg-muted'
                         }`}
                         role="switch"
@@ -259,8 +282,8 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
 
                 {/* Ecommerce suggestion for retail industries */}
                 {isEcommerceIndustry && !hasEcommerce && (
-                    <div className="p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
-                        <p className="text-sm text-foreground">
+                    <div className="p-2.5 sm:p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
+                        <p className="text-xs sm:text-sm text-foreground">
                             <span className="font-semibold">💡 {t('onboarding.suggestion', 'Sugerencia')}:</span>{' '}
                             {t('onboarding.ecommerceSuggestion', 'Tu industria suele incluir venta de productos. ¿Quieres agregar una tienda online?')}
                         </p>
@@ -269,50 +292,50 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
 
                 {/* Product Type Selector - Only shown if ecommerce is enabled */}
                 {hasEcommerce && (
-                    <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border">
-                        <p className="text-sm font-medium text-foreground">
+                    <div className="space-y-2 sm:space-y-3 p-3 sm:p-4 bg-muted/30 rounded-xl border border-border">
+                        <p className="text-xs sm:text-sm font-medium text-foreground">
                             {t('onboarding.productType', 'Tipo de productos')}
                         </p>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                             <button
                                 type="button"
                                 onClick={() => onEcommerceUpdate(true, 'physical')}
-                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
                                     ecommerceType === 'physical'
                                         ? 'border-primary bg-primary/10'
                                         : 'border-border hover:border-muted-foreground'
                                 }`}
                             >
-                                <Package size={24} className={ecommerceType === 'physical' ? 'text-primary' : 'text-muted-foreground'} />
-                                <span className={`text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
+                                <Package size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'physical' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
                                     {t('onboarding.physical', 'Físicos')}
                                 </span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => onEcommerceUpdate(true, 'digital')}
-                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
                                     ecommerceType === 'digital'
                                         ? 'border-primary bg-primary/10'
                                         : 'border-border hover:border-muted-foreground'
                                 }`}
                             >
-                                <FileText size={24} className={ecommerceType === 'digital' ? 'text-primary' : 'text-muted-foreground'} />
-                                <span className={`text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
+                                <FileText size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'digital' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
                                     {t('onboarding.digital', 'Digitales')}
                                 </span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => onEcommerceUpdate(true, 'both')}
-                                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
                                     ecommerceType === 'both'
                                         ? 'border-primary bg-primary/10'
                                         : 'border-border hover:border-muted-foreground'
                                 }`}
                             >
-                                <Layers size={24} className={ecommerceType === 'both' ? 'text-primary' : 'text-muted-foreground'} />
-                                <span className={`text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
+                                <Layers size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'both' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
                                     {t('onboarding.both', 'Ambos')}
                                 </span>
                             </button>
@@ -321,9 +344,9 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 )}
             </div>
 
-            {/* Tip */}
-            <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
-                <p className="text-sm text-foreground">
+            {/* Tip - Hidden on small screens when ecommerce is enabled to save space */}
+            <div className={`p-3 sm:p-4 bg-primary/10 border border-primary/30 rounded-xl ${hasEcommerce ? 'hidden sm:block' : ''}`}>
+                <p className="text-xs sm:text-sm text-foreground">
                     <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
                     {t('onboarding.step1Tip', 'Select the industry that best describes your business. This helps our AI generate relevant content for your website.')}
                 </p>
