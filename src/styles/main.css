@@ -719,11 +719,29 @@ body {
   overscroll-behavior: contain;
 }
 
+/* Switch/Toggle component - fixed dimensions to prevent deformation */
+[role="switch"] {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  flex-shrink: 0 !important;
+}
+
+[role="switch"] > span {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex-shrink: 0 !important;
+}
+
 /* Mobile-first button reset for better touch targets */
 @media (max-width: 767px) {
-  /* Ensure minimum touch target size for buttons/links */
-  button:not(.no-min-touch), 
-  [role="button"]:not(.no-min-touch) {
+  /* Ensure minimum touch target size for buttons/links - exclude switches */
+  button:not(.no-min-touch):not([role="switch"]), 
+  [role="button"]:not(.no-min-touch):not([role="switch"]) {
     min-height: 44px;
   }
   

@@ -266,14 +266,14 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     <button
                         type="button"
                         onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${
+                        className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${
                             hasEcommerce ? 'bg-primary' : 'bg-muted'
                         }`}
                         role="switch"
                         aria-checked={hasEcommerce}
                     >
                         <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            className={`pointer-events-none inline-block rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                                 hasEcommerce ? 'translate-x-5' : 'translate-x-0'
                             }`}
                         />
