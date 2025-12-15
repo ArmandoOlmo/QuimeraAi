@@ -588,9 +588,10 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </div>
             
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
-              <a href="/privacy" className="hover:text-white transition-colors">{t('landing.footerPrivacy')}</a>
-              <a href="/terms" className="hover:text-white transition-colors">{t('landing.footerTerms')}</a>
-              <a href="/contact" className="hover:text-white transition-colors">{t('landing.footerContact')}</a>
+              <a href="/privacy-policy" className="hover:text-white transition-colors">{t('landing.footerPrivacy', 'Política de Privacidad')}</a>
+              <a href="/terms-of-service" className="hover:text-white transition-colors">{t('landing.footerTerms', 'Términos de Servicio')}</a>
+              <a href="/cookie-policy" className="hover:text-white transition-colors">{t('landing.footerCookies', 'Política de Cookies')}</a>
+              <a href="/data-deletion" className="hover:text-white transition-colors">{t('landing.footerDataDeletion', 'Eliminación de Datos')}</a>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppContent } from '../../../contexts/appContent';
 import DashboardSidebar from '../DashboardSidebar';
 import AppArticleEditor from './AppArticleEditor';
+import LegalPageEditor from './LegalPageEditor';
 import { 
     Menu as MenuIcon, 
     Plus, 
@@ -28,9 +29,11 @@ import {
     Eye,
     Tag,
     Clock,
-    TrendingUp
+    TrendingUp,
+    Shield,
+    Lock
 } from 'lucide-react';
-import { AppArticle, AppArticleCategory } from '../../../types/appContent';
+import { AppArticle, AppArticleCategory, LegalPageType, LEGAL_PAGE_LABELS } from '../../../types/appContent';
 
 interface ContentManagementDashboardProps {
     onBack: () => void;
@@ -48,12 +51,18 @@ const CATEGORY_LABELS: Record<AppArticleCategory, string> = {
 
 const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { articles, isLoadingArticles, loadArticles, deleteArticle, saveArticle } = useAppContent();
+    const { articles, isLoadingArticles, loadArticles, deleteArticle, saveArticle, legalPages, isLoadingLegalPages } = useAppContent();
     
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingArticle, setEditingArticle] = useState<AppArticle | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    
+    // Tab state: 'articles' or 'legal'
+    const [activeTab, setActiveTab] = useState<'articles' | 'legal'>('articles');
+    
+    // Legal page editor
+    const [editingLegalPageType, setEditingLegalPageType] = useState<LegalPageType | null>(null);
 
     // Filters
     const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
@@ -164,7 +173,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         }
     };
 
-    // Editor view
+    // Article Editor view
     if (isEditorOpen) {
         return (
             <AppArticleEditor
@@ -173,6 +182,16 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                     setIsEditorOpen(false);
                     setEditingArticle(null);
                 }}
+            />
+        );
+    }
+
+    // Legal Page Editor view
+    if (editingLegalPageType) {
+        return (
+            <LegalPageEditor
+                pageType={editingLegalPageType}
+                onClose={() => setEditingLegalPageType(null)}
             />
         );
     }
@@ -237,6 +256,144 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             </div>
                         </div>
 
+                        {/* Tabs */}
+                        <div className="flex gap-2 mb-6 border-b border-border">
+                            <button
+                                onClick={() => setActiveTab('articles')}
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                                    activeTab === 'articles'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <FileText size={14} className="inline mr-2" />
+                                Artículos ({articles.length})
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('legal')}
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                                    activeTab === 'legal'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <Shield size={14} className="inline mr-2" />
+                                Páginas Legales
+                            </button>
+                        </div>
+
+                        {/* Legal Pages Tab Content */}
+                        {activeTab === 'legal' && (
+                            <div className="space-y-6">
+                                {/* Legal Pages Info */}
+                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                        <Shield className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-foreground mb-1">
+                                                Páginas Legales para Meta OAuth
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground">
+                                                Estas páginas son requeridas para la integración con Facebook, Instagram y WhatsApp. 
+                                                Asegúrate de publicarlas antes de enviar tu app para revisión en Meta.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Legal Pages Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(['privacy-policy', 'data-deletion', 'terms-of-service', 'cookie-policy'] as LegalPageType[]).map(pageType => {
+                                        const page = legalPages.find(p => p.type === pageType);
+                                        const isPublished = page?.status === 'published';
+                                        
+                                        return (
+                                            <div
+                                                key={pageType}
+                                                className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors"
+                                            >
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${isPublished ? 'bg-green-500/10' : 'bg-secondary'}`}>
+                                                            {pageType === 'privacy-policy' ? <Lock size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} /> :
+                                                             pageType === 'data-deletion' ? <Trash2 size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} /> :
+                                                             <FileText size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} />}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-semibold">{LEGAL_PAGE_LABELS[pageType]}</h3>
+                                                            <p className="text-xs text-muted-foreground">/{pageType}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                        isPublished 
+                                                            ? 'bg-green-500/10 text-green-600' 
+                                                            : 'bg-orange-500/10 text-orange-600'
+                                                    }`}>
+                                                        {isPublished ? 'Publicado' : 'Borrador'}
+                                                    </span>
+                                                </div>
+                                                
+                                                {page && (
+                                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                                        {page.subtitle || `${page.sections.length} secciones`}
+                                                    </p>
+                                                )}
+                                                
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => setEditingLegalPageType(pageType)}
+                                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                                                    >
+                                                        <Edit3 size={14} />
+                                                        Editar
+                                                    </button>
+                                                    <a
+                                                        href={`/${pageType}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-center gap-2 px-3 py-2 bg-secondary/50 text-foreground text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
+                                                    >
+                                                        <Eye size={14} />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Meta URLs Info */}
+                                <div className="bg-card border border-border rounded-xl p-6">
+                                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                        <Globe size={18} className="text-primary" />
+                                        URLs para Meta Developer Console
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                                            <div>
+                                                <span className="text-sm font-medium">Privacy Policy URL</span>
+                                                <p className="text-xs text-muted-foreground">Para Facebook, Instagram, WhatsApp</p>
+                                            </div>
+                                            <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
+                                                https://quimera.ai/privacy-policy
+                                            </code>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                                            <div>
+                                                <span className="text-sm font-medium">Data Deletion URL</span>
+                                                <p className="text-xs text-muted-foreground">Requerido por Meta</p>
+                                            </div>
+                                            <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
+                                                https://quimera.ai/data-deletion
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Articles Tab Content */}
+                        {activeTab === 'articles' && (
+                            <>
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                             <div className="bg-card border border-border rounded-xl p-4">
@@ -648,6 +805,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     </tbody>
                                 </table>
                             </div>
+                        )}
+                            </>
                         )}
                     </div>
                 </main>

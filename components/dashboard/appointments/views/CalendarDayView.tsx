@@ -93,7 +93,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     dayStart.setHours(0, 0, 0, 0);
 
     return (
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 bg-background">
             {/* Left sidebar with day info - Hidden on mobile, shown as header */}
             <div className="hidden md:flex md:w-72 lg:w-80 border-r border-border flex-col">
                 {/* Day header */}
@@ -185,7 +185,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
             </div>
 
             {/* Main timeline view */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
                 <div className="h-14 border-b border-border flex items-center px-4">
                     <span className="text-sm text-muted-foreground">

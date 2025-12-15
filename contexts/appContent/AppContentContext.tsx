@@ -17,6 +17,12 @@ import {
     AppContentContextType,
     DEFAULT_APP_NAVIGATION,
     DEFAULT_APP_LANDING_CONFIG,
+    LegalPage,
+    LegalPageType,
+    DEFAULT_PRIVACY_POLICY,
+    DEFAULT_DATA_DELETION,
+    DEFAULT_TERMS_OF_SERVICE,
+    DEFAULT_COOKIE_POLICY,
 } from '../../types/appContent';
 import {
     db,
@@ -41,6 +47,7 @@ const COLLECTIONS = {
     ARTICLES: 'appContent/data/articles',
     NAVIGATION: 'appContent/data/navigation',
     LANDING_CONFIG: 'appContent/data/config',
+    LEGAL_PAGES: 'appContent/data/legalPages',
 };
 
 // =============================================================================
@@ -65,6 +72,10 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Landing Config State
     const [landingConfig, setLandingConfig] = useState<AppLandingConfig | null>(null);
     const [isLoadingLandingConfig, setIsLoadingLandingConfig] = useState(false);
+    
+    // Legal Pages State
+    const [legalPages, setLegalPages] = useState<LegalPage[]>([]);
+    const [isLoadingLegalPages, setIsLoadingLegalPages] = useState(false);
 
     // ==========================================================================
     // ARTICLES
@@ -299,6 +310,116 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     }, []);
 
     // ==========================================================================
+    // LEGAL PAGES
+    // ==========================================================================
+
+    // Load legal pages with real-time updates
+    useEffect(() => {
+        setIsLoadingLegalPages(true);
+        
+        const q = query(
+            collection(db, COLLECTIONS.LEGAL_PAGES),
+            orderBy('type', 'asc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const pagesData = snapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            })) as LegalPage[];
+            
+            // If no pages exist, use defaults
+            if (pagesData.length === 0) {
+                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
+            } else {
+                setLegalPages(pagesData);
+            }
+            setIsLoadingLegalPages(false);
+        }, (error) => {
+            console.error("Error fetching legal pages:", error);
+            // Use defaults on error
+            setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
+            setIsLoadingLegalPages(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // Manual load legal pages
+    const loadLegalPages = useCallback(async () => {
+        setIsLoadingLegalPages(true);
+        try {
+            const q = query(
+                collection(db, COLLECTIONS.LEGAL_PAGES),
+                orderBy('type', 'asc')
+            );
+            const snapshot = await getDocs(q);
+            const pagesData = snapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            })) as LegalPage[];
+            
+            if (pagesData.length === 0) {
+                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
+            } else {
+                setLegalPages(pagesData);
+            }
+        } catch (error) {
+            console.error("Error loading legal pages:", error);
+            setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
+        } finally {
+            setIsLoadingLegalPages(false);
+        }
+    }, []);
+
+    // Get legal page by type
+    const getLegalPageByType = useCallback((type: LegalPageType): LegalPage | undefined => {
+        const page = legalPages.find(p => p.type === type && p.status === 'published');
+        
+        // Return defaults if not found
+        if (!page) {
+            if (type === 'privacy-policy') return DEFAULT_PRIVACY_POLICY;
+            if (type === 'data-deletion') return DEFAULT_DATA_DELETION;
+            if (type === 'terms-of-service') return DEFAULT_TERMS_OF_SERVICE;
+            if (type === 'cookie-policy') return DEFAULT_COOKIE_POLICY;
+        }
+        
+        return page;
+    }, [legalPages]);
+
+    // Save legal page
+    const saveLegalPage = useCallback(async (page: LegalPage) => {
+        try {
+            const { id, ...data } = page;
+            const now = new Date().toISOString();
+            
+            // Use type as document ID for easy retrieval
+            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, page.type);
+            await setDoc(pageRef, {
+                ...data,
+                id: page.type,
+                lastUpdated: now,
+                updatedAt: now,
+                createdAt: page.createdAt || now
+            });
+        } catch (error) {
+            console.error("Error saving legal page:", error);
+            throw error;
+        }
+    }, []);
+
+    // Delete legal page
+    const deleteLegalPage = useCallback(async (id: string) => {
+        try {
+            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, id);
+            await deleteDoc(pageRef);
+        } catch (error) {
+            console.error("Error deleting legal page:", error);
+            throw error;
+        }
+    }, []);
+
+    // ==========================================================================
     // CONTEXT VALUE
     // ==========================================================================
 
@@ -323,6 +444,14 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         isLoadingLandingConfig,
         loadLandingConfig,
         saveLandingConfig,
+        
+        // Legal Pages
+        legalPages,
+        isLoadingLegalPages,
+        loadLegalPages,
+        getLegalPageByType,
+        saveLegalPage,
+        deleteLegalPage,
     };
 
     return (
@@ -350,3 +479,4 @@ export const useSafeAppContent = (): AppContentContextType | undefined => {
 };
 
 export default AppContentContext;
+

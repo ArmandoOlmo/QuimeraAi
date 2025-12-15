@@ -44,6 +44,7 @@ const AiAssistantDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
+    const [voiceGenderFilter, setVoiceGenderFilter] = useState<'all' | 'Male' | 'Female'>('all');
 
     // Load AI config from active project when it changes
     useEffect(() => {
@@ -704,6 +705,10 @@ const AiAssistantDashboard: React.FC = () => {
                 );
 
             case 'voice':
+                const filteredVoices = voiceGenderFilter === 'all' 
+                    ? voices 
+                    : voices.filter(v => v.gender === voiceGenderFilter);
+                
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
@@ -720,16 +725,36 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         <div className="bg-card border border-border p-6 rounded-xl">
-                            <label className="block text-sm font-bold text-foreground mb-4 flex items-center"><Radio className="mr-2 text-primary" /> {t('aiAssistant.dashboard.selectVoice')}</label>
+                            <div className="flex items-center justify-between mb-4">
+                                <label className="block text-sm font-bold text-foreground flex items-center"><Radio className="mr-2 text-primary" /> {t('aiAssistant.dashboard.selectVoice')}</label>
+                                
+                                {/* Gender Filter */}
+                                <div className="flex gap-1 bg-secondary/30 p-1 rounded-lg">
+                                    {(['all', 'Male', 'Female'] as const).map((filter) => (
+                                        <button
+                                            key={filter}
+                                            onClick={() => setVoiceGenderFilter(filter)}
+                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                                                voiceGenderFilter === filter
+                                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                            }`}
+                                        >
+                                            {filter === 'all' ? 'Todos' : filter === 'Male' ? '♂ Masculino' : '♀ Femenino'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {voices.map(v => (
+                                {filteredVoices.map(v => (
                                     <button
                                         key={v.name}
                                         onClick={() => updateForm('voiceName', v.name)}
                                         className={`p-4 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voiceName === v.name ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-secondary/10 hover:border-primary/50'}`}
                                     >
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voiceName === v.name ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
-                                            {v.gender === 'Male' ? 'M' : 'F'}
+                                            {v.gender === 'Male' ? '♂' : '♀'}
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-foreground">{v.name}</h4>
@@ -738,6 +763,12 @@ const AiAssistantDashboard: React.FC = () => {
                                     </button>
                                 ))}
                             </div>
+                            
+                            {filteredVoices.length === 0 && (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <p className="text-sm">No hay voces disponibles con este filtro</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -775,7 +806,7 @@ const AiAssistantDashboard: React.FC = () => {
 
             case 'socialInbox':
                 return (
-                    <div className="animate-fade-in-up h-[calc(100vh-200px)] -mx-8 -mb-10">
+                    <div className="animate-fade-in-up h-full">
                         <SocialChatInbox
                             projectId={activeProject?.id || ''}
                             userId={user?.uid}
@@ -852,8 +883,8 @@ const AiAssistantDashboard: React.FC = () => {
 
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
 
-                    {/* LEFT: Configuration Area (Scrollable) */}
-                    <div className="lg:col-span-7 xl:col-span-5 flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]">
+                    {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
+                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-5'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]`}>
                         {/* Tabs Header */}
                         <div className="px-8 pt-8 pb-4">
                             <div className="flex space-x-1 bg-secondary/30 p-1 rounded-xl overflow-x-auto">
@@ -881,12 +912,13 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
 
                         {/* Tab Content */}
-                        <div className="flex-1 overflow-y-auto px-8 pb-10 custom-scrollbar">
+                        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'socialInbox' ? '' : 'px-8 pb-10'}`}>
                             {renderTabContent()}
                         </div>
                     </div>
 
-                    {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) */}
+                    {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) - Hidden when Inbox is active */}
+                    {activeTab !== 'socialInbox' && (
                     <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
                         {/* Dot pattern - visible in both themes */}
                         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -1000,6 +1032,7 @@ const AiAssistantDashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </div>

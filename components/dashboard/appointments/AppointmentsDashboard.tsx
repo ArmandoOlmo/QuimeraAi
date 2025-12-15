@@ -483,7 +483,7 @@ const AppointmentsDashboard: React.FC = () => {
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
                 <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-2 sm:gap-4">
@@ -823,9 +823,9 @@ const AppointmentsDashboard: React.FC = () => {
                 )}
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-hidden flex">
+                <main className="flex-1 flex min-h-0">
                     {/* Calendar/List View */}
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 flex flex-col min-h-0">
                         {isLoading ? (
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center">

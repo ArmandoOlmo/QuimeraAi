@@ -11,6 +11,7 @@ import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
 import { useEcommerceChat } from './hooks/useEcommerceChat';
+import { useWebChatConversation } from './hooks/useWebChatConversation';
 
 // =============================================================================
 // INTERFACES
@@ -202,6 +203,15 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         formatOrderResponse,
         formatProductResponse,
     } = useEcommerceChat(project?.id || activeProject?.id || '', projectOwnerId, config.languages?.includes('Spanish') ? 'es' : 'en');
+
+    // Web chat conversation hook for Inbox persistence
+    const projectIdForConversation = project?.id || activeProject?.id || '';
+    const {
+        getOrCreateConversation,
+        saveMessage: saveConversationMessage,
+        updateParticipantInfo,
+        linkToLead,
+    } = useWebChatConversation(projectIdForConversation, user?.uid);
 
     // Get lead capture config with defaults
     const leadConfig = config.leadCaptureConfig || {
@@ -602,6 +612,13 @@ ${suggestAvailableSlots()}
             const conversationText = messages.map(m => `${m.role}: ${m.text}`).join('\n');
             const leadScore = calculateLeadScore(preChatData, messages, false);
 
+            // Create conversation for Inbox with participant info
+            const convId = await getOrCreateConversation({
+                name: preChatData.name,
+                email: preChatData.email,
+                phone: preChatData.phone,
+            });
+
             if (onLeadCapture) {
                 const leadId = await onLeadCapture({
                     name: preChatData.name,
@@ -615,7 +632,11 @@ ${suggestAvailableSlots()}
                     tags: ['chatbot', 'pre-chat-form'],
                     notes: t('chatbotWidget.leadNotesPreChat')
                 });
-                if (leadId) capturedLeadIdRef.current = leadId;
+                if (leadId) {
+                    capturedLeadIdRef.current = leadId;
+                    // Link conversation to lead for Inbox
+                    if (convId) await linkToLead(leadId);
+                }
             }
 
             setLeadCaptured(true);
@@ -624,6 +645,9 @@ ${suggestAvailableSlots()}
             // Start chat with personalized welcome
             const welcomeMsg = t('chatbotWidget.welcomePersonalized', { name: preChatData.name, agentName: config.agentName });
             setMessages([{ role: 'model', text: welcomeMsg }]);
+            
+            // Save welcome message to conversation for Inbox
+            if (convId) await saveConversationMessage({ role: 'model', text: welcomeMsg });
         } catch (error) {
             console.error('Error capturing pre-chat lead:', error);
         }
@@ -638,6 +662,12 @@ ${suggestAvailableSlots()}
             const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text));
             const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
 
+            // Update participant info in conversation for Inbox
+            await updateParticipantInfo({
+                name: quickLeadEmail.split('@')[0],
+                email: quickLeadEmail,
+            });
+
             if (onLeadCapture) {
                 const leadId = await onLeadCapture({
                     name: quickLeadEmail.split('@')[0],
@@ -650,17 +680,25 @@ ${suggestAvailableSlots()}
                     tags: ['chatbot', 'mid-conversation', hasHighIntent ? 'high-intent' : 'low-intent'],
                     notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length })
                 });
-                if (leadId) capturedLeadIdRef.current = leadId;
+                if (leadId) {
+                    capturedLeadIdRef.current = leadId;
+                    // Link conversation to lead for Inbox
+                    await linkToLead(leadId);
+                }
             }
 
             setLeadCaptured(true);
             setShowLeadCaptureModal(false);
             setQuickLeadEmail('');
 
+            const thankYouMsg = t('chatbotWidget.contactSoon');
             setMessages(prev => [...prev, {
                 role: 'model',
-                text: t('chatbotWidget.contactSoon')
+                text: thankYouMsg
             }]);
+            
+            // Save message to conversation for Inbox
+            await saveConversationMessage({ role: 'model', text: thankYouMsg });
         } catch (error) {
             console.error('Error capturing lead:', error);
         }
@@ -1011,6 +1049,21 @@ ${suggestAvailableSlots()}
         const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
         setMessages(newMessages);
 
+        // Create conversation and save messages for Inbox
+        const convId = await getOrCreateConversation();
+        if (convId) {
+            // Save previous messages (like welcome message) if this is the first user message
+            const previousModelMessages = messages.filter(m => m.role === 'model');
+            if (previousModelMessages.length > 0 && messages.filter(m => m.role === 'user').length === 0) {
+                // This is the first user message, save the welcome message first
+                for (const msg of previousModelMessages) {
+                    await saveConversationMessage({ role: 'model', text: msg.text });
+                }
+            }
+            // Save the current user message
+            await saveConversationMessage({ role: 'user', text: userMessage });
+        }
+
         // Detect high intent and trigger lead capture
         if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage)) {
             setMessages(prev => [...prev, {
@@ -1123,6 +1176,9 @@ ${suggestAvailableSlots()}
             const { cleanedResponse, appointmentCreated } = await processAppointmentRequest(botResponse);
             
             setMessages(prev => [...prev, { role: 'model', text: cleanedResponse }]);
+            
+            // Save bot response to conversation for Inbox
+            await saveConversationMessage({ role: 'model', text: cleanedResponse });
             
             // If appointment was created, mark lead as captured
             if (appointmentCreated && !leadCaptured) {

@@ -192,7 +192,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     const todayIndex = weekDays.findIndex(day => isToday(day));
 
     return (
-        <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col min-h-0 bg-background">
             {/* Header with days */}
             <div className="flex border-b border-border sticky top-0 z-20 bg-background">
                 {/* Time column header */}

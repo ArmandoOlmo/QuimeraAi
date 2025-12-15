@@ -140,9 +140,9 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
 
     // Render conversation list
     const renderConversationList = () => (
-        <div className="w-full lg:w-80 xl:w-96 border-r border-border flex flex-col bg-card">
+        <div className="w-full lg:w-80 xl:w-96 border-r border-border flex flex-col bg-secondary/20">
             {/* Header */}
-            <div className="p-4 border-b border-border">
+            <div className="p-4 border-t border-b border-border">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         {onBack && (
@@ -190,18 +190,18 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                     <div className="mt-3 p-3 bg-secondary/30 rounded-lg space-y-3 animate-fade-in-up">
                         <div>
                             <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
-                            <div className="flex gap-1">
-                                {(['all', 'whatsapp', 'facebook', 'instagram'] as const).map((ch) => (
+                            <div className="flex gap-1 flex-wrap">
+                                {(['all', 'web', 'whatsapp', 'facebook', 'instagram'] as const).map((ch) => (
                                     <button
                                         key={ch}
                                         onClick={() => setFilter({ ...filter, channel: ch === 'all' ? undefined : ch })}
-                                        className={`flex-1 p-2 rounded-lg text-xs font-medium transition-colors ${
+                                        className={`flex-1 min-w-[60px] p-2 rounded-lg text-xs font-medium transition-colors ${
                                             (ch === 'all' && !filter.channel) || filter.channel === ch
                                                 ? 'bg-primary text-primary-foreground'
                                                 : 'bg-secondary/50 hover:bg-secondary'
                                         }`}
                                     >
-                                        {ch === 'all' ? 'Todos' : ch.charAt(0).toUpperCase() + ch.slice(1)}
+                                        {ch === 'all' ? 'Todos' : ch === 'web' ? 'Web Chat' : ch.charAt(0).toUpperCase() + ch.slice(1)}
                                     </button>
                                 ))}
                             </div>
@@ -330,7 +330,7 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
         return (
             <div className="flex-1 flex flex-col bg-background">
                 {/* Chat Header */}
-                <div className="p-4 border-b border-border flex items-center justify-between bg-card">
+                <div className="p-4 border-t border-b border-border flex items-center justify-between bg-card">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={clearActiveConversation}
@@ -487,12 +487,12 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     return (
         <div className="h-full flex bg-background">
             {/* Conversation List - Hidden on mobile when chat is active */}
-            <div className={`${activeConversation ? 'hidden lg:flex' : 'flex'} flex-col`}>
+            <div className={`${activeConversation ? 'hidden lg:flex' : 'flex'} flex-col bg-muted/30 border-r border-border`}>
                 {renderConversationList()}
             </div>
 
             {/* Chat Area */}
-            <div className={`${activeConversation ? 'flex' : 'hidden lg:flex'} flex-1 flex-col`}>
+            <div className={`${activeConversation ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-background`}>
                 {renderChatArea()}
             </div>
         </div>

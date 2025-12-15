@@ -42,6 +42,12 @@ export const ROUTES = {
   BLOG: '/blog',
   BLOG_ARTICLE: '/blog/:slug',
   
+  // Legal Pages (Public)
+  PRIVACY_POLICY: '/privacy-policy',
+  DATA_DELETION: '/data-deletion',
+  TERMS_OF_SERVICE: '/terms-of-service',
+  COOKIE_POLICY: '/cookie-policy',
+  
   // OAuth Callback Routes
   META_OAUTH_ERROR: '/auth/meta/error',
   
@@ -135,6 +141,30 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.META_OAUTH_ERROR,
     type: 'public',
     title: 'Connection Error',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.PRIVACY_POLICY,
+    type: 'public',
+    title: 'Privacy Policy',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.DATA_DELETION,
+    type: 'public',
+    title: 'Data Deletion',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.TERMS_OF_SERVICE,
+    type: 'public',
+    title: 'Terms of Service',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.COOKIE_POLICY,
+    type: 'public',
+    title: 'Cookie Policy',
     requiresAuth: false,
   },
   {

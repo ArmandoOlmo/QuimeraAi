@@ -13,6 +13,9 @@ import { View, AdminView } from '../types/ui';
 // LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
 
+// AppContent Provider for legal pages
+import { AppContentProvider } from '../contexts/appContent';
+
 // Lazy-loaded route components for code-splitting
 const PublicLandingPage = lazy(() => import('../components/PublicLandingPage'));
 const PublicBlogPage = lazy(() => import('../components/PublicBlogPage'));
@@ -21,6 +24,12 @@ const PublicWebsitePreview = lazy(() => import('../components/PublicWebsitePrevi
 const ModernAuth = lazy(() => import('../components/ModernAuth'));
 const VerificationScreen = lazy(() => import('../components/VerificationScreen'));
 const AcceptInvite = lazy(() => import('../components/auth/AcceptInvite'));
+
+// Lazy-loaded legal pages
+const PrivacyPolicyPage = lazy(() => import('../components/legal/PrivacyPolicyPage'));
+const DataDeletionPage = lazy(() => import('../components/legal/DataDeletionPage'));
+const TermsOfServicePage = lazy(() => import('../components/legal/TermsOfServicePage'));
+const CookiePolicyPage = lazy(() => import('../components/legal/CookiePolicyPage'));
 
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazy(() => import('../components/ecommerce/ProductDetailPageWithCart'));
@@ -342,6 +351,50 @@ const Router: React.FC<RouterProps> = ({
           onNavigateToArticle={(newSlug) => navigate(`/blog/${newSlug}`)}
         />
       </Suspense>
+    );
+  }
+
+  // Privacy Policy page (public)
+  if (path === '/privacy-policy') {
+    return (
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <PrivacyPolicyPage />
+        </Suspense>
+      </AppContentProvider>
+    );
+  }
+
+  // Data Deletion page (public)
+  if (path === '/data-deletion') {
+    return (
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <DataDeletionPage />
+        </Suspense>
+      </AppContentProvider>
+    );
+  }
+
+  // Terms of Service page (public)
+  if (path === '/terms-of-service') {
+    return (
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <TermsOfServicePage />
+        </Suspense>
+      </AppContentProvider>
+    );
+  }
+
+  // Cookie Policy page (public)
+  if (path === '/cookie-policy') {
+    return (
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <CookiePolicyPage />
+        </Suspense>
+      </AppContentProvider>
     );
   }
 
