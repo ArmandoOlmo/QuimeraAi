@@ -87,7 +87,7 @@ export interface Tenant {
     ownerTenantId?: string;        // If this is a sub-client of an agency
     
     // Subscription & Limits
-    subscriptionPlan: 'free' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
+    subscriptionPlan: 'free' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
     status: TenantStatus;
     limits: TenantLimits;
     usage: TenantUsage;
@@ -240,7 +240,7 @@ export interface TenantInvite {
 export interface CreateTenantData {
     name: string;
     type: TenantType;
-    plan?: 'free' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
+    plan?: 'free' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
     branding?: Partial<TenantBranding>;
     parentTenantId?: string;       // If creating sub-client
 }
@@ -305,21 +305,71 @@ export function getMembershipId(tenantId: string, userId: string): string {
 
 /**
  * Get default limits for a plan
+ * Updated with new pricing structure (Dec 2024)
+ * 
+ * Plans: free, starter, pro, agency, enterprise
+ * AI Credits: ~$0.01 USD real cost per credit
  */
 export function getDefaultLimitsForPlan(plan: Tenant['subscriptionPlan']): TenantLimits {
     switch (plan) {
         case 'free':
-            return { maxProjects: 3, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 100 };
+            // Free: Para explorar - 1 proyecto, 30 AI credits
+            return { 
+                maxProjects: 1, 
+                maxUsers: 1, 
+                maxStorageGB: 0.5, 
+                maxAiCredits: 30 
+            };
+        case 'starter':
+            // Starter $19/mes: Emprendedores - 5 proyectos, 300 AI credits
+            return { 
+                maxProjects: 5, 
+                maxUsers: 2, 
+                maxStorageGB: 5, 
+                maxAiCredits: 300 
+            };
         case 'pro':
-            return { maxProjects: 20, maxUsers: 5, maxStorageGB: 50, maxAiCredits: 1000 };
+            // Pro $49/mes: Negocios en crecimiento - 20 proyectos, 1500 AI credits
+            return { 
+                maxProjects: 20, 
+                maxUsers: 10, 
+                maxStorageGB: 50, 
+                maxAiCredits: 1500 
+            };
         case 'agency':
-            return { maxProjects: 50, maxUsers: 10, maxStorageGB: 100, maxAiCredits: 5000, maxSubClients: 10 };
+            // Agency $129/mes: Agencias digitales - 50 proyectos, 5000 AI credits
+            return { 
+                maxProjects: 50, 
+                maxUsers: 25, 
+                maxStorageGB: 200, 
+                maxAiCredits: 5000, 
+                maxSubClients: 10 
+            };
         case 'agency_plus':
-            return { maxProjects: 200, maxUsers: 50, maxStorageGB: 500, maxAiCredits: 20000, maxSubClients: 50 };
+            // Agency Plus (legacy) - Mapea a Agency con más recursos
+            return { 
+                maxProjects: 100, 
+                maxUsers: 50, 
+                maxStorageGB: 500, 
+                maxAiCredits: 10000, 
+                maxSubClients: 25 
+            };
         case 'enterprise':
-            return { maxProjects: 1000, maxUsers: 500, maxStorageGB: 2000, maxAiCredits: 100000, maxSubClients: 500 };
+            // Enterprise $299+/mes: Grandes organizaciones - Ilimitado
+            return { 
+                maxProjects: 1000, 
+                maxUsers: 500, 
+                maxStorageGB: 2000, 
+                maxAiCredits: 25000, 
+                maxSubClients: 100 
+            };
         default:
-            return { maxProjects: 3, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 100 };
+            return { 
+                maxProjects: 1, 
+                maxUsers: 1, 
+                maxStorageGB: 0.5, 
+                maxAiCredits: 30 
+            };
     }
 }
 

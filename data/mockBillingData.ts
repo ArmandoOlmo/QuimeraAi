@@ -1,31 +1,29 @@
 import { BillingData } from '../types';
 
+// Cloud Function URL for billing metrics
+const BILLING_API_URL = 'https://us-central1-quimeraai.cloudfunctions.net/getBillingMetrics';
+
+// Mock data as fallback
 const MOCK_DATA: BillingData = {
-  mrr: 78500,
-  activeSubscriptions: 542,
-  arpu: 144.83,
-  churnRate: 3.8,
+  mrr: 0,
+  activeSubscriptions: 0,
+  arpu: 0,
+  churnRate: 0,
   revenueTrend: [
-    { month: 'Jul', revenue: 52000 },
-    { month: 'Aug', revenue: 54500 },
-    { month: 'Sep', revenue: 58000 },
-    { month: 'Oct', revenue: 61500 },
-    { month: 'Nov', revenue: 65000 },
-    { month: 'Dec', revenue: 68000 },
-    { month: 'Jan', revenue: 70500 },
-    { month: 'Feb', revenue: 72200 },
-    { month: 'Mar', revenue: 74100 },
-    { month: 'Apr', revenue: 75800 },
-    { month: 'May', revenue: 77200 },
-    { month: 'Jun', revenue: 78500 },
+    { month: 'Jan', revenue: 0 },
+    { month: 'Feb', revenue: 0 },
+    { month: 'Mar', revenue: 0 },
+    { month: 'Apr', revenue: 0 },
+    { month: 'May', revenue: 0 },
+    { month: 'Jun', revenue: 0 },
+    { month: 'Jul', revenue: 0 },
+    { month: 'Aug', revenue: 0 },
+    { month: 'Sep', revenue: 0 },
+    { month: 'Oct', revenue: 0 },
+    { month: 'Nov', revenue: 0 },
+    { month: 'Dec', revenue: 0 },
   ],
-  planDistribution: [
-    { planId: 'plan_free', planName: 'Free', subscribers: 180, color: '#6b7280' },
-    { planId: 'plan_pro', planName: 'Pro', subscribers: 182, color: '#4f46e5' },
-    { planId: 'plan_agency', planName: 'Agency', subscribers: 95, color: '#10b981' },
-    { planId: 'plan_agency_plus', planName: 'Agency Plus', subscribers: 55, color: '#8b5cf6' },
-    { planId: 'plan_enterprise', planName: 'Enterprise', subscribers: 30, color: '#f59e0b' },
-  ],
+  planDistribution: [],
   serviceModules: [
     { id: 'module_builder', name: 'AI Website Builder', description: 'Core website creation and hosting.' },
     { id: 'module_analytics', name: 'Advanced Analytics', description: 'In-depth visitor analytics and reporting.' },
@@ -36,152 +34,90 @@ const MOCK_DATA: BillingData = {
     { id: 'module_ecommerce', name: 'E-Commerce', description: 'Full e-commerce capabilities with Stripe.' },
     { id: 'module_chat', name: 'AI Chat Widget', description: 'Embeddable chat for lead capture.' },
   ],
-  plans: [
-    {
-      id: 'plan_free',
-      name: 'Free',
-      description: 'Para comenzar a explorar Quimera.',
-      price: { monthly: 0, annually: 0 },
-      features: [
-        '3 Proyectos',
-        '100 AI credits/mes',
-        'Generación de imágenes básica',
-        'Soporte comunitario',
-        '5 GB almacenamiento',
-      ],
-      serviceModuleIds: ['module_builder'],
-      isFeatured: false,
-      isArchived: false,
-      limits: {
-        maxProjects: 3,
-        maxUsers: 1,
-        maxStorageGB: 5,
-        maxAiCredits: 100,
-      },
-    },
-    {
-      id: 'plan_pro',
-      name: 'Pro',
-      description: 'Para profesionales y equipos pequeños.',
-      price: { monthly: 99, annually: 990 },
-      features: [
-        '20 Proyectos',
-        '1,000 AI credits/mes',
-        'Dominios personalizados',
-        'E-commerce básico',
-        'Chat widget',
-        '50 GB almacenamiento',
-        'Soporte prioritario',
-      ],
-      serviceModuleIds: ['module_builder', 'module_analytics', 'module_support', 'module_ecommerce', 'module_chat'],
-      isFeatured: true,
-      isArchived: false,
-      limits: {
-        maxProjects: 20,
-        maxUsers: 5,
-        maxStorageGB: 50,
-        maxAiCredits: 1000,
-      },
-    },
-    {
-      id: 'plan_agency',
-      name: 'Agency',
-      description: 'Para agencias que gestionan múltiples clientes.',
-      price: { monthly: 299, annually: 2990 },
-      features: [
-        '50 Proyectos',
-        '5,000 AI credits/mes',
-        'Hasta 10 sub-clientes',
-        'Portal white-label básico',
-        'Branding personalizado',
-        'E-commerce avanzado',
-        '100 GB almacenamiento',
-        'Soporte prioritario',
-      ],
-      serviceModuleIds: ['module_builder', 'module_analytics', 'module_support', 'module_ecommerce', 'module_chat', 'module_multitenancy', 'module_whitelabel'],
-      isFeatured: false,
-      isArchived: false,
-      limits: {
-        maxProjects: 50,
-        maxUsers: 10,
-        maxStorageGB: 100,
-        maxAiCredits: 5000,
-        maxSubClients: 10,
-      },
-    },
-    {
-      id: 'plan_agency_plus',
-      name: 'Agency Plus',
-      description: 'Para agencias en crecimiento con más clientes.',
-      price: { monthly: 599, annually: 5990 },
-      features: [
-        '200 Proyectos',
-        '20,000 AI credits/mes',
-        'Hasta 50 sub-clientes',
-        'Portal white-label completo',
-        'Dominio personalizado para portal',
-        'API access',
-        '500 GB almacenamiento',
-        'Soporte dedicado',
-        'Reportes avanzados',
-      ],
-      serviceModuleIds: ['module_builder', 'module_analytics', 'module_support', 'module_api', 'module_ecommerce', 'module_chat', 'module_multitenancy', 'module_whitelabel'],
-      isFeatured: false,
-      isArchived: false,
-      limits: {
-        maxProjects: 200,
-        maxUsers: 50,
-        maxStorageGB: 500,
-        maxAiCredits: 20000,
-        maxSubClients: 50,
-      },
-    },
-    {
-      id: 'plan_enterprise',
-      name: 'Enterprise',
-      description: 'Para grandes organizaciones con necesidades personalizadas.',
-      price: { monthly: 0, annually: 0 }, // Custom pricing
-      features: [
-        'Proyectos ilimitados',
-        'AI credits ilimitados',
-        'Sub-clientes ilimitados',
-        'White-label completo',
-        'Múltiples dominios de portal',
-        'API completa',
-        'Almacenamiento ilimitado',
-        'Account manager dedicado',
-        'SLA personalizado',
-        'Integraciones a medida',
-      ],
-      serviceModuleIds: ['module_builder', 'module_analytics', 'module_support', 'module_api', 'module_ecommerce', 'module_chat', 'module_multitenancy', 'module_whitelabel'],
-      isFeatured: false,
-      isArchived: false,
-      isCustomPricing: true,
-      limits: {
-        maxProjects: 1000,
-        maxUsers: 500,
-        maxStorageGB: 2000,
-        maxAiCredits: 100000,
-        maxSubClients: 500,
-      },
-    },
-    {
-      id: 'plan_legacy_starter',
-      name: 'Legacy Starter',
-      description: 'Un plan antiguo que ya no se ofrece.',
-      price: { monthly: 29, annually: 290 },
-      features: ['1 Proyecto', '1,000 AI credits/mes'],
-      serviceModuleIds: ['module_builder'],
-      isFeatured: false,
-      isArchived: true,
-    },
-  ],
+  plans: [],
 };
 
-export const fetchBillingData = (): Promise<BillingData> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_DATA);
-    }, 800); // Simulate network delay
-  });
+/**
+ * Fetch billing data from Stripe via Cloud Function
+ * Falls back to empty/mock data if API fails
+ */
+export const fetchBillingData = async (): Promise<BillingData> => {
+  try {
+    const response = await fetch(BILLING_API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.warn('Billing API returned error, using fallback data');
+      return MOCK_DATA;
+    }
+
+    const data = await response.json();
+    
+    // Merge with default service modules if not provided
+    return {
+      ...data,
+      serviceModules: data.serviceModules || MOCK_DATA.serviceModules,
+    };
+
+  } catch (error) {
+    console.warn('Failed to fetch billing data from API:', error);
+    return MOCK_DATA;
+  }
+};
+
+/**
+ * Create or update a plan in Stripe
+ */
+export const savePlan = async (plan: BillingData['plans'][0]): Promise<{ success: boolean; productId?: string; error?: string }> => {
+  try {
+    const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/createOrUpdatePlan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ plan }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to save plan' };
+    }
+
+    const data = await response.json();
+    return { success: true, productId: data.productId };
+
+  } catch (error) {
+    console.error('Failed to save plan:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+/**
+ * Archive a plan in Stripe
+ */
+export const archivePlanApi = async (productId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/archivePlan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to archive plan' };
+    }
+
+    return { success: true };
+
+  } catch (error) {
+    console.error('Failed to archive plan:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 };

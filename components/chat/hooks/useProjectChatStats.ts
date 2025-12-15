@@ -78,47 +78,76 @@ export const useProjectChatStats = (projectIds: string[]) => {
             // Process each project
             for (const projectId of projectIds) {
                 try {
-                    // Fetch active conversations
+                    // Fetch active conversations - wrapped in try-catch for permission errors
                     const conversationsRef = collection(db, 'socialConversations');
-                    const activeQuery = query(
-                        conversationsRef,
-                        where('projectId', '==', projectId),
-                        where('status', 'in', ['active', 'pending']),
-                        limit(100)
-                    );
-                    const activeSnapshot = await getDocs(activeQuery);
-                    const activeConversations = activeSnapshot.size;
+                    let activeConversations = 0;
+                    
+                    try {
+                        const activeQuery = query(
+                            conversationsRef,
+                            where('projectId', '==', projectId),
+                            where('status', 'in', ['active', 'pending']),
+                            limit(100)
+                        );
+                        const activeSnapshot = await getDocs(activeQuery);
+                        activeConversations = activeSnapshot.size;
+                    } catch (permError: any) {
+                        // Silently handle permission errors - this is expected if socialConversations doesn't exist yet
+                        if (permError?.code !== 'permission-denied') {
+                            console.debug(`[useProjectChatStats] Skipping conversations for ${projectId}:`, permError?.code || 'unknown');
+                        }
+                    }
 
-                    // Fetch recent messages (last 7 days)
+                    // Fetch recent messages (last 7 days) - wrapped in try-catch for permission errors
                     const messagesRef = collection(db, 'socialMessages');
-                    const recentMessagesQuery = query(
-                        messagesRef,
-                        where('projectId', '==', projectId),
-                        where('timestamp', '>=', Timestamp.fromDate(last7d)),
-                        orderBy('timestamp', 'desc'),
-                        limit(500)
-                    );
-                    const messagesSnapshot = await getDocs(recentMessagesQuery);
-                    const messages = messagesSnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
+                    let messages: any[] = [];
+                    let messages24h = 0;
+                    
+                    try {
+                        const recentMessagesQuery = query(
+                            messagesRef,
+                            where('projectId', '==', projectId),
+                            where('timestamp', '>=', Timestamp.fromDate(last7d)),
+                            orderBy('timestamp', 'desc'),
+                            limit(500)
+                        );
+                        const messagesSnapshot = await getDocs(recentMessagesQuery);
+                        messages = messagesSnapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
 
-                    // Count messages in last 24h
-                    const messages24h = messages.filter((m: any) => {
-                        const msgTime = m.timestamp?.seconds ? new Date(m.timestamp.seconds * 1000) : null;
-                        return msgTime && msgTime >= last24h;
-                    }).length;
+                        // Count messages in last 24h
+                        messages24h = messages.filter((m: any) => {
+                            const msgTime = m.timestamp?.seconds ? new Date(m.timestamp.seconds * 1000) : null;
+                            return msgTime && msgTime >= last24h;
+                        }).length;
+                    } catch (permError: any) {
+                        // Silently handle permission errors
+                        if (permError?.code !== 'permission-denied') {
+                            console.debug(`[useProjectChatStats] Skipping messages for ${projectId}:`, permError?.code || 'unknown');
+                        }
+                    }
 
-                    // Get leads count
-                    const allConversationsQuery = query(
-                        conversationsRef,
-                        where('projectId', '==', projectId),
-                        limit(1000)
-                    );
-                    const allConversationsSnapshot = await getDocs(allConversationsQuery);
-                    const conversations = allConversationsSnapshot.docs.map(doc => doc.data());
-                    const leadsCount = conversations.filter((c: any) => c.leadId).length;
+                    // Get leads count - wrapped in try-catch
+                    let conversations: any[] = [];
+                    let leadsCount = 0;
+                    
+                    try {
+                        const allConversationsQuery = query(
+                            conversationsRef,
+                            where('projectId', '==', projectId),
+                            limit(1000)
+                        );
+                        const allConversationsSnapshot = await getDocs(allConversationsQuery);
+                        conversations = allConversationsSnapshot.docs.map(doc => doc.data());
+                        leadsCount = conversations.filter((c: any) => c.leadId).length;
+                    } catch (permError: any) {
+                        // Silently handle permission errors
+                        if (permError?.code !== 'permission-denied') {
+                            console.debug(`[useProjectChatStats] Skipping leads count for ${projectId}:`, permError?.code || 'unknown');
+                        }
+                    }
 
                     // Calculate average response time
                     let projectResponseTime = 0;

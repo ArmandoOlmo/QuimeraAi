@@ -251,7 +251,7 @@ interface EditorContextType {
     // Leads & CRM
     leads: Lead[];
     isLoadingLeads: boolean;
-    addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<void>;
+    addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<string | undefined>;
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
@@ -3462,15 +3462,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     // Leads & CRM Logic
-    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
-        if (!user) return;
+    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<string | undefined> => {
+        if (!user) return undefined;
         try {
             const leadsCol = collection(db, 'users', user.uid, 'leads');
             const now = serverTimestamp();
-            await addDoc(leadsCol, { ...leadData, createdAt: now });
+            const docRef = await addDoc(leadsCol, { ...leadData, createdAt: now });
             // Optimistic update via listener
+            return docRef.id;
         } catch (error) {
             console.error("Error adding lead:", error);
+            return undefined;
         }
     };
 

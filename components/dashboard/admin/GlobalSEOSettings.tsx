@@ -95,8 +95,6 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
             const settingsRef = doc(db, 'globalSettings', 'seo');
             await setDoc(settingsRef, config, { merge: true });
 
-            await setDoc(settingsRef, config, { merge: true });
-
             alert(t('common.saveSuccess', { defaultValue: '✅ Settings saved successfully!' }));
         } catch (error) {
             console.error('Error saving SEO settings:', error);

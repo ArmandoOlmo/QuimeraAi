@@ -197,7 +197,6 @@ quimera-ai/
 ├── scripts/          # Scripts de migración
 ├── types.ts          # TypeScript types
 ├── utils/            # Utilidades
-│   ├── conditionalEngine.ts
 │   ├── abTestingEngine.ts
 │   ├── componentValidator.ts
 │   ├── permissionsManager.ts

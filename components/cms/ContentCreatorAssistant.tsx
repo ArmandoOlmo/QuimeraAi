@@ -7,6 +7,7 @@ import { useCMS } from '../../contexts/cms';
 import { useProject } from '../../contexts/project';
 import { useAdmin } from '../../contexts/admin';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { logApiCall } from '../../services/apiLoggingService';
 
 interface ContentCreatorAssistantProps {
     onClose: () => void;
@@ -33,12 +34,13 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         setIsGenerating(true);
         setStep('generating');
 
+        let modelToUse = 'gemini-2.0-flash-exp'; // Default fallback - declared outside try for error logging
+
         try {
             // Get dynamic prompt
             const promptTemplate = getPrompt('content-creator-assistant');
 
             let promptText = '';
-            let modelToUse = 'gemini-2.0-flash-exp'; // Default fallback
 
             if (promptTemplate) {
                 promptText = promptTemplate.template
@@ -73,6 +75,17 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 temperature: 0.9
             }, user?.uid);
 
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelToUse,
+                    feature: 'content-creator-assistant',
+                    success: true
+                });
+            }
+
             console.log("📝 Raw response:", response);
             const responseText = extractTextFromResponse(response);
             console.log("📝 Response text from AI:", responseText);
@@ -102,6 +115,17 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             setGeneratedPost(parsedData);
             setStep('preview');
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelToUse,
+                    feature: 'content-creator-assistant',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             console.error("❌ Error generating content:", error);
             console.error("Error details:", error);
             alert("Hubo un error generando el contenido. Por favor intenta de nuevo.");

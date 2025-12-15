@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useState, useContext, useRef, ReactNode } from 'react';
-import { View, AdminView, PreviewDevice, PreviewOrientation, PageSection, ThemeMode } from '../../types';
+import { View, AdminView, PreviewDevice, PreviewOrientation, PageSection, ThemeMode, AppTokens } from '../../types';
+import { applyAppTokensToCSS, defaultAppTokens } from '../../utils/appTokenApplier';
 
 export interface ActiveSectionItem {
     section: PageSection;
@@ -53,6 +54,9 @@ interface UIContextType {
     themeMode: ThemeMode;
     setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
     
+    // App Tokens
+    applyAppTokens: (tokens: AppTokens | null) => void;
+    
     // Sidebar Order (User Preferences)
     sidebarOrder: string[];
     setSidebarOrder: React.Dispatch<React.SetStateAction<string[]>>;
@@ -96,7 +100,16 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         return saved ? JSON.parse(saved) : [];
     });
     
+    // Current App Tokens (stored for re-application on theme change)
+    const currentAppTokensRef = useRef<AppTokens | null>(null);
+    
     // Functions
+    
+    // Apply App Tokens to CSS variables
+    const applyAppTokens = React.useCallback((tokens: AppTokens | null) => {
+        currentAppTokensRef.current = tokens;
+        applyAppTokensToCSS(tokens, themeMode);
+    }, [themeMode]);
     const toggleDashboardSidebar = () => {
         setIsDashboardSidebarCollapsed(prev => !prev);
     };
@@ -175,7 +188,31 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         const root = document.documentElement;
         root.classList.remove('light', 'dark', 'black');
         root.classList.add(themeMode);
+        
+        // Re-apply app tokens with new theme mode
+        applyAppTokensToCSS(currentAppTokensRef.current, themeMode);
     }, [themeMode]);
+    
+    // Prevent transition flash on initial page load
+    React.useEffect(() => {
+        const root = document.documentElement;
+        // Add class to disable transitions initially
+        root.classList.add('theme-transitioning');
+        
+        // Remove after a short delay to enable smooth transitions
+        const timer = requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                root.classList.remove('theme-transitioning');
+            });
+        });
+        
+        return () => cancelAnimationFrame(timer);
+    }, []);
+    
+    // Apply default app tokens on initial load
+    React.useEffect(() => {
+        applyAppTokensToCSS(defaultAppTokens, themeMode);
+    }, []); // Only on mount
     
     const value: UIContextType = {
         isSidebarOpen,
@@ -202,6 +239,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setIsOnboardingOpen,
         themeMode,
         setThemeMode,
+        applyAppTokens,
         sidebarOrder,
         setSidebarOrder,
     };

@@ -102,6 +102,11 @@ service cloud.firestore {
         match /emailLogs/{logId} {
           allow read, write: if request.auth != null && request.auth.uid == userId;
         }
+        
+        // Project appointments subcollection (sincronizado por proyecto)
+        match /appointments/{appointmentId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
       
       // User files
@@ -621,6 +626,48 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions can write
     }
     
+    // ============================================
+    // AI CREDITS SYSTEM
+    // ============================================
+    
+    // AI Credits Usage - tenant-level usage tracking
+    match /aiCreditsUsage/{tenantId} {
+      // Superadmin can read all usage (for admin dashboard)
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      // Tenant members can read their own usage
+      allow read: if request.auth != null && isTenantMember(tenantId);
+      // Cloud Functions and superadmin can write
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // AI Credits Transactions - transaction history
+    match /aiCreditsTransactions/{transactionId} {
+      // Superadmin can read all transactions (for admin dashboard)
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      // Tenant members can read their own transactions
+      allow read: if request.auth != null &&
+        resource.data.tenantId != null &&
+        isTenantMember(resource.data.tenantId);
+      // Cloud Functions and superadmin can write (for manual credit additions)
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Subscription Plans - plan definitions and configuration
+    match /subscriptionPlans/{planId} {
+      // Anyone authenticated can read plans (needed for pricing page, plan selection, etc.)
+      allow read: if request.auth != null;
+      // Only superadmin can create, update, or delete plans
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Plan Statistics - aggregated stats per plan
+    match /planStats/{planId} {
+      // Superadmin can read stats
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      // Only Cloud Functions can write stats
+      allow write: if false;
+    }
+
     // Rate Limits - only backend can read/write
     match /rateLimits/{document=**} {
       allow read, write: if false; // Only Cloud Functions can access
@@ -904,6 +951,41 @@ service cloud.firestore {
       allow read: if true;
       // Only Cloud Functions can write
       allow write: if false;
+    }
+    
+    // ============================================
+    // SOCIAL CHAT - Conversations & Messages
+    // Used by Quimera Chat for multi-channel messaging
+    // ============================================
+    
+    // Social Conversations - conversation threads
+    match /socialConversations/{conversationId} {
+      // Authenticated users can read conversations for their projects
+      allow read: if request.auth != null;
+      
+      // Authenticated users can create/update conversations
+      allow create: if request.auth != null &&
+        hasRequiredFields(request.resource.data, ['projectId', 'channel', 'participantId']);
+      
+      allow update: if request.auth != null;
+      
+      // Only owner or superadmin can delete
+      allow delete: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    // Social Messages - individual messages
+    match /socialMessages/{messageId} {
+      // Authenticated users can read messages
+      allow read: if request.auth != null;
+      
+      // Authenticated users can create messages
+      allow create: if request.auth != null &&
+        hasRequiredFields(request.resource.data, ['projectId', 'channel', 'message']);
+      
+      allow update: if request.auth != null;
+      
+      // Only owner or superadmin can delete
+      allow delete: if request.auth != null && isSuperAdminOrOwner();
     }
     
     // ============================================

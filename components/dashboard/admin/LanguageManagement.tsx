@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle, ArrowLeft, Menu } from 'lucide-react';
+import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle, ArrowLeft, Menu, X } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -14,6 +14,11 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   const { languages, updateLanguageConfig } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingLang, setEditingLang] = useState<string | null>(null);
+  const [editingTranslations, setEditingTranslations] = useState<Record<string, string>>({});
+  const [searchKey, setSearchKey] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cambiar idioma por defecto
   const handleSetDefault = (code: string) => {
@@ -71,6 +76,156 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
 
   const enabledLanguages = languages.filter(l => l.enabled);
   const availableLanguages = languages.filter(l => !l.enabled);
+
+  // Handle export all translations
+  const handleExportAll = async () => {
+    try {
+      const allTranslations: Record<string, Record<string, unknown>> = {};
+      
+      for (const lang of enabledLanguages) {
+        try {
+          // Get translations from i18n resources
+          const resources = i18n.getResourceBundle(lang.code, 'translation');
+          if (resources) {
+            allTranslations[lang.code] = resources;
+          }
+        } catch (e) {
+          console.warn(`Could not load translations for ${lang.code}:`, e);
+        }
+      }
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(allTranslations, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `translations-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting translations:', error);
+      alert(t('superadmin.exportError', 'Error al exportar traducciones'));
+    }
+  };
+
+  // Handle import translations
+  const handleImportTranslations = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const imported = JSON.parse(content);
+
+        // Validate structure
+        if (typeof imported !== 'object') {
+          throw new Error('Invalid format');
+        }
+
+        // Add translations to i18n
+        Object.entries(imported).forEach(([langCode, translations]) => {
+          if (typeof translations === 'object' && translations !== null) {
+            i18n.addResourceBundle(langCode, 'translation', translations, true, true);
+          }
+        });
+
+        alert(t('superadmin.importSuccess', 'Traducciones importadas correctamente. Los cambios son temporales hasta que se guarden en el servidor.'));
+      } catch (error) {
+        console.error('Error importing translations:', error);
+        alert(t('superadmin.importError', 'Error al importar. Verifica que el archivo tenga el formato correcto.'));
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle edit translations
+  const handleEditTranslations = (langCode: string) => {
+    try {
+      const resources = i18n.getResourceBundle(langCode, 'translation');
+      if (resources) {
+        // Flatten nested object to dot notation for easier editing
+        const flattened = flattenObject(resources);
+        setEditingTranslations(flattened);
+        setEditingLang(langCode);
+        setShowEditModal(true);
+      }
+    } catch (error) {
+      console.error('Error loading translations for editing:', error);
+      alert(t('superadmin.loadError', 'Error al cargar traducciones'));
+    }
+  };
+
+  // Flatten nested object to dot notation
+  const flattenObject = (obj: Record<string, unknown>, prefix = ''): Record<string, string> => {
+    const result: Record<string, string> = {};
+    
+    for (const key in obj) {
+      const value = obj[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        Object.assign(result, flattenObject(value as Record<string, unknown>, newKey));
+      } else {
+        result[newKey] = String(value);
+      }
+    }
+    
+    return result;
+  };
+
+  // Unflatten dot notation back to nested object
+  const unflattenObject = (obj: Record<string, string>): Record<string, unknown> => {
+    const result: Record<string, unknown> = {};
+    
+    for (const key in obj) {
+      const keys = key.split('.');
+      let current: Record<string, unknown> = result;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!(keys[i] in current)) {
+          current[keys[i]] = {};
+        }
+        current = current[keys[i]] as Record<string, unknown>;
+      }
+      
+      current[keys[keys.length - 1]] = obj[key];
+    }
+    
+    return result;
+  };
+
+  // Save edited translations
+  const handleSaveTranslations = () => {
+    if (!editingLang) return;
+
+    try {
+      const unflattened = unflattenObject(editingTranslations);
+      i18n.addResourceBundle(editingLang, 'translation', unflattened, true, true);
+      setShowEditModal(false);
+      setEditingLang(null);
+      setEditingTranslations({});
+      setSearchKey('');
+      alert(t('superadmin.translationsSaved', 'Traducciones actualizadas. Los cambios son temporales hasta que se guarden en el servidor.'));
+    } catch (error) {
+      console.error('Error saving translations:', error);
+      alert(t('superadmin.saveError', 'Error al guardar traducciones'));
+    }
+  };
+
+  // Filter translations by search
+  const filteredTranslations = Object.entries(editingTranslations).filter(([key, value]) => 
+    key.toLowerCase().includes(searchKey.toLowerCase()) || 
+    value.toLowerCase().includes(searchKey.toLowerCase())
+  );
 
   return (
     <div className="flex h-screen bg-editor-bg text-editor-text-primary">
@@ -277,18 +432,56 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
               </p>
 
               <div className="flex flex-wrap gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".json"
+                  onChange={handleImportTranslations}
+                  className="hidden"
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                >
                   <Upload size={16} />
                   {t('superadmin.importTranslations')}
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
+                <button 
+                  onClick={handleExportAll}
+                  className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                >
                   <Download size={16} />
                   {t('superadmin.exportAll')}
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors">
-                  <Edit2 size={16} />
-                  {t('superadmin.editTranslations')}
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      const currentLang = i18n.language;
+                      handleEditTranslations(currentLang);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                  >
+                    <Edit2 size={16} />
+                    {t('superadmin.editTranslations')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick edit buttons per language */}
+              <div className="mt-4 pt-4 border-t border-editor-border">
+                <p className="text-sm text-editor-text-secondary mb-3">{t('superadmin.editByLanguage', 'Editar por idioma:')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {enabledLanguages.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleEditTranslations(lang.code)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-editor-bg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary rounded-lg text-sm transition-colors"
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.code.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -333,6 +526,103 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           </div>
         </main>
       </div>
+
+      {/* Edit Translations Modal */}
+      {showEditModal && editingLang && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-editor-panel-bg border border-editor-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-editor-border">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{languages.find(l => l.code === editingLang)?.flag}</span>
+                <h2 className="text-lg font-semibold text-editor-text-primary">
+                  {t('superadmin.editingTranslations', 'Editando traducciones')} - {editingLang.toUpperCase()}
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingLang(null);
+                  setEditingTranslations({});
+                  setSearchKey('');
+                }}
+                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="p-4 border-b border-editor-border">
+              <input
+                type="text"
+                placeholder={t('superadmin.searchTranslations', 'Buscar por clave o valor...')}
+                value={searchKey}
+                onChange={(e) => setSearchKey(e.target.value)}
+                className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+              />
+              <p className="text-xs text-editor-text-secondary mt-2">
+                {t('superadmin.translationsCount', 'Mostrando {{count}} de {{total}} traducciones', {
+                  count: filteredTranslations.length,
+                  total: Object.keys(editingTranslations).length
+                })}
+              </p>
+            </div>
+
+            {/* Translations List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {filteredTranslations.map(([key, value]) => (
+                <div key={key} className="bg-editor-bg rounded-lg p-3 border border-editor-border">
+                  <label className="block text-xs text-editor-text-secondary mb-1 font-mono">
+                    {key}
+                  </label>
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => setEditingTranslations(prev => ({
+                      ...prev,
+                      [key]: e.target.value
+                    }))}
+                    className="w-full px-3 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                  />
+                </div>
+              ))}
+              {filteredTranslations.length === 0 && (
+                <div className="text-center py-8 text-editor-text-secondary">
+                  {t('superadmin.noTranslationsFound', 'No se encontraron traducciones')}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between p-4 border-t border-editor-border">
+              <p className="text-sm text-editor-text-secondary">
+                {t('superadmin.changesAreTemporary', 'Los cambios son temporales hasta guardar en el servidor')}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingLang(null);
+                    setEditingTranslations({});
+                    setSearchKey('');
+                  }}
+                  className="px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                >
+                  {t('common.cancel', 'Cancelar')}
+                </button>
+                <button
+                  onClick={handleSaveTranslations}
+                  className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                >
+                  <Save size={16} />
+                  {t('superadmin.applyChanges', 'Aplicar cambios')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

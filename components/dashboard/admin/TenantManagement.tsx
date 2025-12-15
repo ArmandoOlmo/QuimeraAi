@@ -9,7 +9,7 @@ import {
     ArrowLeft, Users, Trash2, Building2, User, Search, Filter,
     Plus, ChevronDown, ChevronRight, MoreVertical, Edit2, UserPlus,
     Folder, HardDrive, Zap, DollarSign, CheckCircle, AlertCircle,
-    Clock, XCircle
+    Clock, XCircle, X
 } from 'lucide-react';
 
 interface TenantManagementProps {
@@ -19,7 +19,7 @@ interface TenantManagementProps {
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const { canPerform } = useAuth();
-    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers } = useAdmin();
+    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers, createTenant } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'individual' | 'agency'>('all');
@@ -447,15 +447,12 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                             try {
                                 setLoading(true);
-                                const { userDocument } = useAuth();
-                                const { createTenant } = useAdmin();
                                 await createTenant(data);
                                 setShowCreateModal(false);
-                                // Refresh handled by createTenant internally calling fetchTenants
+                                // Refresh tenants list
+                                await fetchTenants();
                             } catch (error: any) {
                                 console.error('Error creating tenant:', error);
-                                console.error('Error code:', error.code);
-                                console.error('Error message:', error.message);
                                 alert(`Error al crear el tenant: ${error.message}`);
                             } finally {
                                 setLoading(false);

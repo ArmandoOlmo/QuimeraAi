@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useAdmin } from '../../contexts/admin';
+import { logApiCall } from '../../services/apiLoggingService';
 
 const TextArea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
     <textarea
@@ -84,8 +85,30 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
             const projectId = activeProject?.id || 'content-assistant';
             const response = await generateContentViaProxy(projectId, populatedPrompt, promptTemplate.model, {}, user?.uid);
 
+            // Log successful API call for usage statistics
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: promptTemplate.model,
+                    feature: 'content-assistant',
+                    success: true
+                });
+            }
+
             setGeneratedText(extractTextFromResponse(response).trim());
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: promptTemplate?.model || 'unknown',
+                    feature: 'content-assistant',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error('Error generating content:', error);
             setGeneratedText('Sorry, there was an error generating the text. Please try again.');

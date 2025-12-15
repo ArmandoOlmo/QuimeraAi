@@ -83,18 +83,24 @@ export const useSocialChat = (projectId: string, userId?: string) => {
                 for (const docSnap of snapshot.docs) {
                     const data = docSnap.data();
                     
-                    // Get last message for each conversation
-                    const messagesRef = collection(db, 'socialMessages');
-                    const messagesQuery = query(
-                        messagesRef,
-                        where('projectId', '==', projectId),
-                        where('channel', '==', data.channel),
-                        orderBy('timestamp', 'desc'),
-                        limit(1)
-                    );
-                    
-                    const messagesSnap = await getDocs(messagesQuery);
-                    const lastMessage = messagesSnap.docs[0]?.data() as SocialMessage | undefined;
+                    // Get last message for each conversation - wrapped in try-catch
+                    let lastMessage: SocialMessage | undefined;
+                    try {
+                        const messagesRef = collection(db, 'socialMessages');
+                        const messagesQuery = query(
+                            messagesRef,
+                            where('projectId', '==', projectId),
+                            where('channel', '==', data.channel),
+                            orderBy('timestamp', 'desc'),
+                            limit(1)
+                        );
+                        
+                        const messagesSnap = await getDocs(messagesQuery);
+                        lastMessage = messagesSnap.docs[0]?.data() as SocialMessage | undefined;
+                    } catch (msgError) {
+                        // Silently handle errors fetching last message
+                        console.debug('[useSocialChat] Could not fetch last message:', msgError);
+                    }
 
                     conversationsData.push({
                         id: docSnap.id,
@@ -122,7 +128,14 @@ export const useSocialChat = (projectId: string, userId?: string) => {
                 setConversations(conversationsData);
                 setIsLoading(false);
             },
-            (err) => {
+            (err: any) => {
+                // Handle permission-denied errors silently (expected when collections don't exist)
+                if (err?.code === 'permission-denied') {
+                    console.debug('[useSocialChat] No permission to access socialConversations - this is normal if no chats exist yet');
+                    setConversations([]);
+                    setIsLoading(false);
+                    return;
+                }
                 console.error('Error fetching conversations:', err);
                 setError('Error al cargar conversaciones');
                 setIsLoading(false);

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Project } from '../../types';
 import { searchFiles } from '../../utils/fileHelpers';
+import { logApiCall } from '../../services/apiLoggingService';
 
 interface ThumbnailEditorProps {
     project: Project;
@@ -197,8 +198,30 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.0-flash', {}, user?.uid);
             const responseText = extractTextFromResponse(response);
 
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id || project.id,
+                    model: 'gemini-2.0-flash',
+                    feature: 'thumbnail-prompt-suggestion',
+                    success: true
+                });
+            }
+
             setThumbnailPrompt(responseText.trim());
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id || project.id,
+                    model: 'gemini-2.0-flash',
+                    feature: 'thumbnail-prompt-suggestion',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             console.error('Error generating prompt suggestion:', error);
             handleApiError(error);
         } finally {

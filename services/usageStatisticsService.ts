@@ -2,6 +2,73 @@ import { db, collection, getDocs, doc, getDoc, query, limit, orderBy, where, sta
 import { UsageData, MonthlyData, ApiCallStat, UserActivity, TemplateUsage } from '../types';
 import { getApiLogs } from './apiLoggingService';
 
+/**
+ * Get API usage data from the server-side apiUsage collection
+ * This collection is populated by the Cloud Functions (geminiProxy.ts)
+ */
+async function getServerApiUsage(startDate: Date): Promise<{ model: string; count: number }[]> {
+    try {
+        const apiUsageRef = collection(db, 'apiUsage');
+        const q = query(
+            apiUsageRef,
+            where('timestamp', '>=', startDate),
+            orderBy('timestamp', 'desc'),
+            limit(10000)
+        );
+        
+        const snapshot = await getDocs(q);
+        const modelCounts: Record<string, number> = {};
+        
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const model = data.model || 'unknown';
+            modelCounts[model] = (modelCounts[model] || 0) + 1;
+        });
+        
+        return Object.entries(modelCounts).map(([model, count]) => ({ model, count }));
+    } catch (error) {
+        console.warn('Error fetching server API usage:', error);
+        return [];
+    }
+}
+
+/**
+ * Get AI credits transactions for more accurate usage tracking
+ */
+async function getAiCreditsTransactions(startDate: Date): Promise<{ operation: string; count: number; credits: number }[]> {
+    try {
+        const transactionsRef = collection(db, 'aiCreditsTransactions');
+        const q = query(
+            transactionsRef,
+            where('timestamp', '>=', startDate),
+            orderBy('timestamp', 'desc'),
+            limit(10000)
+        );
+        
+        const snapshot = await getDocs(q);
+        const operationStats: Record<string, { count: number; credits: number }> = {};
+        
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const operation = data.operation || 'unknown';
+            if (!operationStats[operation]) {
+                operationStats[operation] = { count: 0, credits: 0 };
+            }
+            operationStats[operation].count++;
+            operationStats[operation].credits += data.creditsUsed || 0;
+        });
+        
+        return Object.entries(operationStats).map(([operation, stats]) => ({
+            operation,
+            count: stats.count,
+            credits: stats.credits
+        }));
+    } catch (error) {
+        console.warn('Error fetching AI credits transactions:', error);
+        return [];
+    }
+}
+
 // Configuration for scalability
 const BATCH_SIZE = 50; // Process users in batches
 const MAX_USERS_TO_PROCESS = 500; // Limit for very large user bases
@@ -147,69 +214,99 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
         const userGrowth: MonthlyData[] = Object.entries(monthlyUserCounts)
             .map(([month, count]) => ({ month, count }));
         
-        // Obtener estadísticas reales de API calls desde los logs
+        // Obtener estadísticas reales de API calls desde MÚLTIPLES fuentes
         let totalApiCalls = 0;
         const apiCallsByModel: ApiCallStat[] = [];
         
         try {
-            // Get API logs from the last 30 days
+            // Get data from the last 30 days
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             
-            const apiLogs = await getApiLogs({ startDate: thirtyDaysAgo });
-            totalApiCalls = apiLogs.filter(log => log.success).length;
-            
-            // Count by model
+            // Merge data from multiple sources for complete tracking
             const modelCounts: Record<string, number> = {};
+            
+            // Source 1: Client-side API logs (apiLogs collection)
+            const apiLogs = await getApiLogs({ startDate: thirtyDaysAgo });
             apiLogs.forEach(log => {
                 if (log.success) {
                     modelCounts[log.model] = (modelCounts[log.model] || 0) + 1;
                 }
             });
             
+            // Source 2: Server-side API usage (apiUsage collection from Cloud Functions)
+            const serverUsage = await getServerApiUsage(thirtyDaysAgo);
+            serverUsage.forEach(({ model, count }) => {
+                // Add server counts (avoid double counting by checking if already exists)
+                // Server data is authoritative since it captures ALL proxy calls
+                if (!modelCounts[model]) {
+                    modelCounts[model] = count;
+                } else {
+                    // Take the higher count (server usually has more complete data)
+                    modelCounts[model] = Math.max(modelCounts[model], count);
+                }
+            });
+            
+            // Source 3: AI Credits transactions (for additional validation)
+            const creditsTransactions = await getAiCreditsTransactions(thirtyDaysAgo);
+            // Use this data for operations-based analytics if needed
+            
+            // Calculate total
+            totalApiCalls = Object.values(modelCounts).reduce((sum, count) => sum + count, 0);
+            
             // Define colors for models
             const modelColors: Record<string, string> = {
                 'gemini-2.5-flash': '#4f46e5',
                 'gemini-2.5-pro': '#10b981',
+                'gemini-2.0-flash': '#3b82f6',
+                'gemini-2.0-flash-exp': '#60a5fa',
                 'gemini-1.5-flash': '#f59e0b',
                 'gemini-1.5-pro': '#8b5cf6',
-                'gemini-3.0-pro-image-001': '#a855f7', // Quimera Vision Pro
-                'gemini-3.0-pro-image': '#a855f7', // Alias (sin -001)
-                'imagen-4.0-generate-001': '#9333ea', // Imagen 4.0 Standard
-                'imagen-4.0-ultra-generate-001': '#8b5cf6', // Imagen 4.0 Ultra
-                'imagen-4.0-fast-generate-001': '#c084fc', // Imagen 4.0 Fast
-                'imagen-3.0-generate-002': '#ec4899', // Imagen 3.0 Legacy
+                'gemini-3-pro-preview': '#7c3aed',
+                'gemini-3-pro-image-preview': '#a855f7',
+                'gemini-3.0-pro-image-001': '#a855f7',
+                'gemini-3.0-pro-image': '#a855f7',
+                'imagen-4.0-generate-001': '#9333ea',
+                'imagen-4.0-ultra-generate-001': '#8b5cf6',
+                'imagen-4.0-fast-generate-001': '#c084fc',
+                'imagen-3.0-generate-002': '#ec4899',
+                'imagen-3.0-fast-generate-001': '#f472b6',
+                'proxy-image-generation': '#db2777',
             };
             
             // Convert to array and sort
             Object.entries(modelCounts).forEach(([model, count]) => {
-                apiCallsByModel.push({
-                    model,
-                    count,
-                    color: modelColors[model] || '#6b7280'
-                });
+                if (count > 0) {
+                    apiCallsByModel.push({
+                        model,
+                        count,
+                        color: modelColors[model] || '#6b7280'
+                    });
+                }
             });
             
             apiCallsByModel.sort((a, b) => b.count - a.count);
             
-            // If no API logs yet, use estimated data based on projects
-            if (apiCallsByModel.length === 0) {
+            // If no API data at all, use estimated data based on projects
+            if (apiCallsByModel.length === 0 && totalProjects > 0) {
                 apiCallsByModel.push(
                     { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
                     { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                    { model: 'gemini-3.0-pro-image-001', count: Math.round(totalProjects * 7), color: '#a855f7' }
+                    { model: 'gemini-3-pro-image-preview', count: Math.round(totalProjects * 7), color: '#a855f7' }
                 );
                 totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
             }
         } catch (error) {
-            console.warn('Error fetching API logs, using estimated data:', error);
+            console.warn('Error fetching API usage data, using estimated data:', error);
             // Fallback to estimated data
-            apiCallsByModel.push(
-                { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
-                { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                { model: 'gemini-3.0-pro-image-001', count: Math.round(totalProjects * 7), color: '#a855f7' }
-            );
-            totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
+            if (totalProjects > 0) {
+                apiCallsByModel.push(
+                    { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
+                    { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
+                    { model: 'gemini-3-pro-image-preview', count: Math.round(totalProjects * 7), color: '#a855f7' }
+                );
+                totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
+            }
         }
         
         return {

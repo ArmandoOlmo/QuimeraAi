@@ -32,8 +32,10 @@ const ALLOWED_ORIGINS = [
     // Development origins
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://localhost:3001',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
 ];
 
 // Pattern for dynamic subdomains
@@ -97,25 +99,22 @@ function isValidUserId(userId: string): boolean {
  * SECURITY: Validate model name
  */
 const ALLOWED_MODELS = [
-    // Gemini 2.5 series
+    // Gemini 2.5 series (latest)
     'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
     'gemini-2.5-pro',
     // Gemini 2.0 series
     'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
     'gemini-2.0-flash-exp',
-    // Gemini 1.5 series
+    // Legacy models (for backwards compatibility)
     'gemini-1.5-flash',
     'gemini-1.5-pro',
-    // Gemini 3 preview models
-    'gemini-3-pro-preview',
-    'gemini-3-pro-image-preview',
-    // Imagen 3.0 models
+    // Image generation models
+    'gemini-2.5-flash-image',
+    'gemini-2.0-flash-image',
     'imagen-3.0-generate-002',
     'imagen-3.0-fast-generate-001',
-    // Imagen 4.0 models
-    'imagen-4.0-generate-001',
-    'imagen-4.0-fast-generate-001',
-    'imagen-4.0-ultra-generate-001',
 ];
 
 function isValidModel(model: string): boolean {
@@ -241,6 +240,8 @@ async function getProjectData(projectId: string, userId?: string) {
         projectId.startsWith('content-') ||
         projectId.startsWith('enhance-') ||
         projectId.startsWith('ai-') ||
+        projectId.startsWith('chatbot-') ||
+        projectId.startsWith('quimera-chat-') ||
         (userId && projectId === userId)) {
         return {
             exists: true,
@@ -256,34 +257,228 @@ async function getProjectData(projectId: string, userId?: string) {
     if (userId) {
         const userProjectDoc = await db.collection('users').doc(userId).collection('projects').doc(projectId).get();
         if (userProjectDoc.exists) {
-            return { exists: true, data: { ...userProjectDoc.data(), userId } };
+            const projectData = userProjectDoc.data() || {};
+            // Ensure aiAssistantConfig exists with isActive true for user's own projects
+            return { 
+                exists: true, 
+                data: { 
+                    ...projectData, 
+                    userId,
+                    // Default aiAssistantConfig if not present (allow user's own projects)
+                    aiAssistantConfig: projectData.aiAssistantConfig || { isActive: true }
+                } 
+            };
         }
     }
 
     // 4. Handle Top-Level Projects (Fallback)
     const projectDoc = await db.collection('projects').doc(projectId).get();
     if (projectDoc.exists) {
-        return { exists: true, data: projectDoc.data() };
+        const projectData = projectDoc.data() || {};
+        return { 
+            exists: true, 
+            data: {
+                ...projectData,
+                // Default aiAssistantConfig if not present
+                aiAssistantConfig: projectData.aiAssistantConfig || { isActive: true }
+            }
+        };
     }
 
     return { exists: false, data: null };
 }
 
 /**
- * Track API usage for analytics
+ * AI Credit costs per operation type
+ * ~$0.01 USD real cost per credit
  */
-async function trackUsage(projectId: string, userId: string, tokensUsed: number, model: string) {
+const AI_CREDIT_COSTS = {
+    // Gemini 2.5 series (latest)
+    'gemini-2.5-flash': 1,              // ~$0.01 per request
+    'gemini-2.5-flash-lite': 1,         // ~$0.01 per request
+    'gemini-2.5-pro': 3,                // ~$0.03 per request
+    // Gemini 2.0 series
+    'gemini-2.0-flash': 1,              // ~$0.01 per request
+    'gemini-2.0-flash-lite': 1,         // ~$0.01 per request
+    'gemini-2.0-flash-exp': 1,          // ~$0.01 per request
+    // Legacy models
+    'gemini-1.5-flash': 1,              // ~$0.01 per request
+    'gemini-1.5-pro': 2,                // ~$0.02 per request
+    // Image generation
+    'gemini-2.5-flash-image': 4,        // ~$0.04 per image
+    'gemini-2.0-flash-image': 4,        // ~$0.04 per image
+    'imagen-3.0-generate-002': 4,       // ~$0.04 per image
+    'imagen-3.0-fast-generate-001': 2,  // ~$0.02 per image
+};
+
+/**
+ * Get credit cost for a model
+ */
+function getCreditCostForModel(model: string): number {
+    return AI_CREDIT_COSTS[model as keyof typeof AI_CREDIT_COSTS] || 1;
+}
+
+/**
+ * Track API usage for analytics and consume AI credits
+ */
+async function trackUsage(
+    projectId: string, 
+    userId: string, 
+    tokensUsed: number, 
+    model: string,
+    tenantId?: string,
+    operationType?: string
+) {
     try {
+        // Calculate credits to consume
+        const creditsUsed = getCreditCostForModel(model);
+        
+        // Track in apiUsage collection (existing behavior)
         await db.collection('apiUsage').add({
             projectId,
             userId,
             tokensUsed,
             model,
+            creditsUsed,
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             type: 'gemini-proxy'
         });
+        
+        // If tenantId is provided, also track in aiCreditsTransactions
+        const effectiveTenantId = tenantId || await getTenantIdForUser(userId);
+        
+        if (effectiveTenantId) {
+            // Record the credit transaction
+            await db.collection('aiCreditsTransactions').add({
+                tenantId: effectiveTenantId,
+                userId,
+                projectId,
+                operation: operationType || getOperationTypeFromModel(model),
+                creditsUsed,
+                model,
+                tokensInput: Math.floor(tokensUsed * 0.3),  // Estimate
+                tokensOutput: Math.floor(tokensUsed * 0.7), // Estimate
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            
+            // Update the usage document
+            await updateCreditsUsage(effectiveTenantId, creditsUsed, operationType || getOperationTypeFromModel(model));
+        }
+        
     } catch (error) {
         console.error('Usage tracking error:', error);
+    }
+}
+
+/**
+ * Get tenant ID for a user
+ */
+async function getTenantIdForUser(userId: string): Promise<string | null> {
+    if (!userId || userId === 'unknown' || userId === 'anonymous' || userId === 'system') {
+        return null;
+    }
+    
+    try {
+        // First check if there's a tenant membership
+        const membershipQuery = await db.collection('tenantMemberships')
+            .where('userId', '==', userId)
+            .limit(1)
+            .get();
+        
+        if (!membershipQuery.empty) {
+            return membershipQuery.docs[0].data().tenantId;
+        }
+        
+        // Fallback: use userId as tenantId for individual users
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            return userData?.tenantId || userId;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error getting tenant ID for user:', error);
+        return null;
+    }
+}
+
+/**
+ * Determine operation type from model name
+ */
+function getOperationTypeFromModel(model: string): string {
+    if (model.includes('imagen') || model.includes('image')) {
+        if (model.includes('fast')) return 'image_generation_fast';
+        if (model.includes('ultra')) return 'image_generation_ultra';
+        return 'image_generation';
+    }
+    if (model.includes('pro')) return 'ai_assistant_complex';
+    return 'ai_assistant_request';
+}
+
+/**
+ * Update the credits usage document for a tenant
+ */
+async function updateCreditsUsage(
+    tenantId: string, 
+    creditsUsed: number, 
+    operation: string
+): Promise<void> {
+    const today = new Date().toISOString().split('T')[0];
+    const usageRef = db.collection('aiCreditsUsage').doc(tenantId);
+    
+    try {
+        const usageDoc = await usageRef.get();
+        
+        if (!usageDoc.exists) {
+            // Initialize usage document if it doesn't exist
+            await usageRef.set({
+                tenantId,
+                periodStart: admin.firestore.FieldValue.serverTimestamp(),
+                periodEnd: admin.firestore.FieldValue.serverTimestamp(), // Will be updated
+                creditsIncluded: 30, // Default to free plan
+                creditsUsed,
+                creditsRemaining: 30 - creditsUsed,
+                creditsOverage: 0,
+                usageByOperation: { [operation]: creditsUsed },
+                dailyUsage: [{ date: today, credits: creditsUsed }],
+                lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            return;
+        }
+        
+        const currentData = usageDoc.data()!;
+        const newCreditsUsed = (currentData.creditsUsed || 0) + creditsUsed;
+        const newCreditsRemaining = Math.max(0, (currentData.creditsIncluded || 30) - newCreditsUsed);
+        const newCreditsOverage = Math.max(0, newCreditsUsed - (currentData.creditsIncluded || 30));
+        
+        // Update usage by operation
+        const usageByOperation = currentData.usageByOperation || {};
+        usageByOperation[operation] = (usageByOperation[operation] || 0) + creditsUsed;
+        
+        // Update daily usage
+        let dailyUsage = currentData.dailyUsage || [];
+        const todayEntry = dailyUsage.find((d: any) => d.date === today);
+        if (todayEntry) {
+            todayEntry.credits += creditsUsed;
+        } else {
+            dailyUsage.push({ date: today, credits: creditsUsed });
+            if (dailyUsage.length > 30) {
+                dailyUsage = dailyUsage.slice(-30);
+            }
+        }
+        
+        await usageRef.update({
+            creditsUsed: newCreditsUsed,
+            creditsRemaining: newCreditsRemaining,
+            creditsOverage: newCreditsOverage,
+            usageByOperation,
+            dailyUsage,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        
+    } catch (error) {
+        console.error('Error updating credits usage:', error);
     }
 }
 
@@ -346,15 +541,18 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         const { exists, data: projectData } = await getProjectData(projectId, userId);
 
         if (!exists || !projectData) {
-            res.status(404).json({ error: 'Project not found' });
+            console.warn(`[gemini-generate] Project not found: projectId=${projectId}, userId=${userId}`);
+            res.status(404).json({ error: 'Project not found', details: { projectId, userId: userId ? 'provided' : 'missing' } });
             return;
         }
 
         const finalUserId = projectData.userId || userId || 'unknown';
         const planType = projectData.planType || 'FREE';
 
-        // Check if AI assistant is active
-        if (!projectData.aiAssistantConfig?.isActive) {
+        // Check if AI assistant is active (default to true for user's own projects)
+        const isActive = projectData.aiAssistantConfig?.isActive ?? true;
+        if (!isActive) {
+            console.warn(`[gemini-generate] AI assistant not active: projectId=${projectId}`);
             res.status(403).json({ error: 'AI assistant is not active for this project' });
             return;
         }
@@ -380,39 +578,51 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
         // Make request to Gemini API
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        
+        console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}`);
+
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
+            generationConfig: {
+                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                topK: Math.min(Math.max(config.topK || 40, 1), 100),
+                topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
+                maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
+            },
+            safetySettings: [
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
+            ]
+        };
 
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
-                    topK: Math.min(Math.max(config.topK || 40, 1), 100),
-                    topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
-                    maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
-                },
-                safetySettings: [
-                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
-                ]
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!geminiResponse.ok) {
-            const errorData = await geminiResponse.json().catch(() => ({}));
-            console.error('Gemini API error:', errorData);
+            const errorText = await geminiResponse.text();
+            let errorData: any = {};
+            try {
+                errorData = JSON.parse(errorText);
+            } catch {
+                errorData = { rawError: errorText };
+            }
+            console.error(`[gemini-generate] Gemini API error (${geminiResponse.status}):`, JSON.stringify(errorData));
             res.status(geminiResponse.status).json({
                 error: 'Gemini API error',
-                details: errorData
+                details: errorData,
+                model: model,
+                status: geminiResponse.status
             });
             return;
         }

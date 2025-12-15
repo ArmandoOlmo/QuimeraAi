@@ -29,6 +29,7 @@ import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import SimpleEditorHeader from '../../SimpleEditorHeader';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
+import { logApiCall } from '../../../services/apiLoggingService';
 
 interface ModernCMSEditorProps {
     post: CMSPost | null;
@@ -289,6 +290,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const projectId = activeProject?.id || 'modern-cms-editor';
             const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
             
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: `modern-cms-${command}`,
+                    success: true
+                });
+            }
+            
             const result = extractTextFromResponse(response).trim();
             
             if (command === 'continue') {
@@ -299,6 +311,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             }
 
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: `modern-cms-${command}`,
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             handleApiError(error);
             console.error(error);
         } finally {
@@ -328,10 +351,33 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const projectId = activeProject?.id || 'modern-cms-seo';
             const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
             const responseText = extractTextFromResponse(response);
+            
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: 'modern-cms-generate-seo',
+                    success: true
+                });
+            }
+            
             const data = JSON.parse(responseText);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
-        } catch (error) { 
+        } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: modelName,
+                    feature: 'modern-cms-generate-seo',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             handleApiError(error); 
             console.error(error); 
         } finally { 

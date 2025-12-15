@@ -39,6 +39,7 @@ export { AdminProvider, useAdmin } from './admin';
 export { DomainsProvider, useDomains } from './domains';
 export { AIProvider, useAI } from './ai';
 export { TenantProvider, useTenant, useSafeTenant } from './tenant';
+export { AppContentProvider, useAppContent, useSafeAppContent } from './appContent';
 
 // =============================================================================
 // LEGACY EXPORTS (For backwards compatibility)

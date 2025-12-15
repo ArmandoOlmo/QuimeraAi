@@ -6,7 +6,9 @@ import { useSafeEditor } from '../contexts/EditorContext';
 import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
-import ChatCore from './chat/ChatCore';
+import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
+import { db, collection, addDoc, getDocs, query, where, orderBy } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ChatbotWidgetProps {
     isPreview?: boolean;
@@ -21,11 +23,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
+    const { user } = useAuth();
     const { t } = useTranslation();
 
     // Use standalone config or editor context values
     const aiAssistantConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
     const addLead = editorContext?.addLead;
+    const updateLead = editorContext?.updateLead;
     // Try to get activeProject from EditorContext first, then ProjectContext
     const activeProject = editorContext?.activeProject || projectContext?.activeProject || null;
     const data = editorContext?.data || projectContext?.data;
@@ -80,6 +84,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [leadCaptured, setLeadCaptured] = useState(false);
     const messagesRef = useRef<any[]>([]);
     const [currentSection, setCurrentSection] = useState<string>('hero');
+    const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
 
     // Detect if we're in the editor (editor view showing the preview)
     // In editor mode, we disable pointer events to allow clicking through to other components
@@ -87,6 +92,50 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Don't render if not active and not in preview
     if (!aiAssistantConfig.isActive && !isPreview) return null;
+
+    // Load appointments when chat opens
+    useEffect(() => {
+        const loadAppointments = async () => {
+            if (!user || !activeProject?.id || !isOpen) return;
+            
+            try {
+                const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProject.id, 'appointments');
+                const q = query(appointmentsRef, orderBy('startDate', 'asc'));
+                const snapshot = await getDocs(q);
+                
+                const appointmentSlots: AppointmentSlot[] = [];
+                const now = new Date();
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const startDate = data.startDate?.seconds 
+                        ? new Date(data.startDate.seconds * 1000) 
+                        : new Date();
+                    const endDate = data.endDate?.seconds 
+                        ? new Date(data.endDate.seconds * 1000) 
+                        : new Date(startDate.getTime() + 60 * 60000);
+                    
+                    // Only include future appointments
+                    if (startDate >= now && data.status !== 'cancelled') {
+                        appointmentSlots.push({
+                            id: doc.id,
+                            title: data.title || 'Cita',
+                            startDate,
+                            endDate,
+                            status: data.status || 'scheduled'
+                        });
+                    }
+                });
+                
+                setAppointments(appointmentSlots);
+                console.log('[ChatbotWidget] 📅 Loaded appointments:', appointmentSlots.length);
+            } catch (error) {
+                console.error('[ChatbotWidget] Error loading appointments:', error);
+            }
+        };
+        
+        loadAppointments();
+    }, [user, activeProject?.id, isOpen]);
 
     // Detect current section in viewport
     useEffect(() => {
@@ -135,14 +184,111 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     // Handle lead capture
-    const handleLeadCapture = async (leadData: Partial<Lead>) => {
-        await addLead({
+    const handleLeadCapture = async (leadData: Partial<Lead>): Promise<string | undefined> => {
+        const leadId = await addLead?.({
             ...leadData,
             source: 'chatbot-widget',
             status: 'new',
             tags: ['chatbot-widget', ...(leadData.tags || [])]
         });
         setLeadCaptured(true);
+        return leadId;
+    };
+
+    // Handle updating lead transcript at conversation end
+    const handleUpdateLeadTranscript = async (leadId: string, transcript: string) => {
+        if (updateLead) {
+            await updateLead(leadId, { conversationTranscript: transcript });
+        }
+    };
+
+    // Handle creating appointment from chat
+    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+        if (!user || !activeProject?.id) {
+            console.error('[ChatbotWidget] Cannot create appointment: no user or project');
+            return undefined;
+        }
+
+        try {
+            // Convert dates to Firestore timestamps
+            const dateToTimestamp = (date: Date) => ({
+                seconds: Math.floor(date.getTime() / 1000),
+                nanoseconds: 0
+            });
+
+            const now = dateToTimestamp(new Date());
+
+            // Build participant if we have contact info
+            const participants = [];
+            if (appointmentData.participantName || appointmentData.participantEmail) {
+                participants.push({
+                    id: `participant_${Date.now()}`,
+                    name: appointmentData.participantName || 'Cliente',
+                    email: appointmentData.participantEmail || '',
+                    phone: appointmentData.participantPhone || '',
+                    role: 'attendee',
+                    status: 'pending',
+                    isRequired: true,
+                });
+            }
+
+            // Create the appointment document
+            const appointmentDoc = {
+                title: appointmentData.title,
+                description: appointmentData.description || '',
+                type: appointmentData.type || 'consultation',
+                status: 'scheduled',
+                priority: 'medium',
+                startDate: dateToTimestamp(appointmentData.startDate),
+                endDate: dateToTimestamp(appointmentData.endDate),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                organizerId: user.uid,
+                organizerName: user.displayName || '',
+                organizerEmail: user.email || '',
+                participants,
+                location: { type: 'virtual' },
+                reminders: [
+                    { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
+                    { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
+                ],
+                attachments: [],
+                notes: [],
+                followUpActions: [],
+                aiPrepEnabled: true,
+                linkedLeadIds: appointmentData.linkedLeadId ? [appointmentData.linkedLeadId] : [],
+                tags: ['chatbot', 'auto-scheduled'],
+                createdAt: now,
+                createdBy: user.uid,
+                projectId: activeProject.id,
+            };
+
+            // Save to Firestore: users/{userId}/projects/{projectId}/appointments
+            const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProject.id, 'appointments');
+            const docRef = await addDoc(appointmentsRef, appointmentDoc);
+
+            console.log('[ChatbotWidget] ✅ Appointment created:', docRef.id);
+
+            // Also create a lead if we have contact info and no lead was captured yet
+            if (addLead && (appointmentData.participantEmail || appointmentData.participantName)) {
+                const leadId = await addLead({
+                    name: appointmentData.participantName || 'Cliente desde Chat',
+                    email: appointmentData.participantEmail,
+                    phone: appointmentData.participantPhone,
+                    source: 'chatbot-widget',
+                    status: 'new',
+                    message: `Cita agendada: ${appointmentData.title}`,
+                    tags: ['chatbot-widget', 'appointment-scheduled'],
+                    notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
+                });
+                setLeadCaptured(true);
+                console.log('[ChatbotWidget] ✅ Lead created from appointment:', leadId);
+            }
+
+            return docRef.id;
+        } catch (error) {
+            console.error('[ChatbotWidget] ❌ Error creating appointment:', error);
+            return undefined;
+        }
     };
 
     // Handle close with exit intent
@@ -196,6 +342,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         project={activeProject}
                         appearance={appearance}
                         onLeadCapture={handleLeadCapture}
+                        onUpdateLeadTranscript={handleUpdateLeadTranscript}
+                        onCreateAppointment={handleCreateAppointment}
+                        existingAppointments={appointments}
                         onClose={handleChatClose}
                         className="w-full h-full flex flex-col"
                         showHeader={true}

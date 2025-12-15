@@ -15,6 +15,8 @@ import LoadingScreen from './LoadingScreen';
 
 // Lazy-loaded route components for code-splitting
 const PublicLandingPage = lazy(() => import('../components/PublicLandingPage'));
+const PublicBlogPage = lazy(() => import('../components/PublicBlogPage'));
+const PublicArticlePage = lazy(() => import('../components/PublicArticlePage'));
 const PublicWebsitePreview = lazy(() => import('../components/PublicWebsitePreview'));
 const ModernAuth = lazy(() => import('../components/ModernAuth'));
 const VerificationScreen = lazy(() => import('../components/VerificationScreen'));
@@ -305,6 +307,39 @@ const Router: React.FC<RouterProps> = ({
         <PublicLandingPage 
           onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
           onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+          onNavigateToBlog={() => navigate(ROUTES.BLOG)}
+          onNavigateToArticle={(slug) => navigate(`/blog/${slug}`)}
+        />
+      </Suspense>
+    );
+  }
+
+  // Blog page (public)
+  if (path === '/blog') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicBlogPage 
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+          onNavigateToArticle={(slug) => navigate(`/blog/${slug}`)}
+        />
+      </Suspense>
+    );
+  }
+
+  // Article page (public)
+  if (path.startsWith('/blog/') && path !== '/blog/') {
+    const slug = path.replace('/blog/', '');
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicArticlePage 
+          slug={slug}
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToBlog={() => navigate(ROUTES.BLOG)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+          onNavigateToArticle={(newSlug) => navigate(`/blog/${newSlug}`)}
         />
       </Suspense>
     );
@@ -390,6 +425,8 @@ const Router: React.FC<RouterProps> = ({
       <PublicLandingPage 
         onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
         onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        onNavigateToBlog={() => navigate(ROUTES.BLOG)}
+        onNavigateToArticle={(slug) => navigate(`/blog/${slug}`)}
       />
     </Suspense>
   );

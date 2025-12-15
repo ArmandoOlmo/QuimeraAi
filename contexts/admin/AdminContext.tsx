@@ -18,7 +18,10 @@ import {
     PageSection,
     ComponentVariant,
     EditableComponentID,
+    AppTokens,
 } from '../../types';
+import { defaultAppTokens, getAppTokensWithDefaults, applyAppTokensToCSS } from '../../utils/appTokenApplier';
+import { ThemeMode } from '../../types';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
 import { defaultPrompts } from '../../data/defaultPrompts';
 import { initialData } from '../../data/initialData';
@@ -96,6 +99,10 @@ interface AdminContextType {
     designTokens: DesignTokens | null;
     updateDesignTokens: (tokens: DesignTokens) => Promise<void>;
     
+    // App Tokens (Dashboard/Admin theming)
+    appTokens: AppTokens;
+    updateAppTokens: (tokens: AppTokens) => Promise<void>;
+    
     // Global Component Status
     componentStatus: Record<PageSection, boolean>;
     updateComponentStatus: (componentId: PageSection, isEnabled: boolean) => Promise<void>;
@@ -142,6 +149,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Design Tokens
     const [designTokens, setDesignTokens] = useState<DesignTokens | null>(null);
     
+    // App Tokens (Dashboard/Admin theming)
+    const [appTokens, setAppTokens] = useState<AppTokens>(defaultAppTokens);
+    
     // Component Status
     const [componentStatus, setComponentStatus] = useState<Record<PageSection, boolean>>(defaultComponentStatus);
     
@@ -176,6 +186,17 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
                 if (tokensDoc.exists()) {
                     setDesignTokens(tokensDoc.data() as DesignTokens);
+                }
+                
+                // App tokens
+                const appTokensDoc = await getDoc(doc(db, 'settings', 'appTokens'));
+                if (appTokensDoc.exists()) {
+                    const loadedTokens = appTokensDoc.data() as Partial<AppTokens>;
+                    const fullTokens = getAppTokensWithDefaults(loadedTokens);
+                    setAppTokens(fullTokens);
+                    // Apply tokens to CSS
+                    const themeMode = (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
+                    applyAppTokensToCSS(fullTokens, themeMode);
                 }
             } catch (error) {
                 console.warn("Error fetching global settings:", error);
@@ -305,16 +326,53 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         companyName?: string 
     }): Promise<string> => {
         try {
+            // Definir límites según el plan y tipo
+            const planLimits = {
+                free: { maxProjects: 1, maxUsers: 1, maxStorageGB: 1, maxAiCredits: 100 },
+                starter: { maxProjects: 5, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 500 },
+                pro: { maxProjects: 20, maxUsers: 5, maxStorageGB: 20, maxAiCredits: 2000 },
+                agency: { maxProjects: 50, maxUsers: 20, maxStorageGB: 50, maxAiCredits: 5000 },
+                enterprise: { maxProjects: -1, maxUsers: -1, maxStorageGB: 100, maxAiCredits: 10000 }, // -1 = unlimited
+            };
+            
+            const limits = planLimits[data.plan as keyof typeof planLimits] || planLimits.free;
+            
+            // Ajustar límites para agencias
+            if (data.type === 'agency' && data.plan !== 'agency' && data.plan !== 'enterprise') {
+                limits.maxUsers = Math.max(limits.maxUsers, 5);
+                limits.maxProjects = Math.max(limits.maxProjects, 10);
+            }
+
             const tenantData = {
-                ...data,
+                type: data.type,
+                name: data.name,
+                email: data.email,
+                companyName: data.companyName || '',
                 status: 'active' as TenantStatus,
                 createdAt: new Date().toISOString(),
-                limits: {
-                    maxProjects: data.type === 'agency' ? 50 : 10,
-                    maxUsers: data.type === 'agency' ? 20 : 1,
-                    maxStorage: data.type === 'agency' ? 10737418240 : 1073741824,
+                subscriptionPlan: data.plan,
+                limits: limits,
+                usage: {
+                    projectCount: 0,
+                    userCount: 1,
+                    storageUsedGB: 0,
+                    aiCreditsUsed: 0,
+                },
+                ownerUserId: user?.uid || '',
+                memberUserIds: user?.uid ? [user.uid] : [],
+                projectIds: [],
+                settings: {
+                    allowMemberInvites: data.type === 'agency',
+                    requireTwoFactor: false,
+                    brandingEnabled: data.plan !== 'free',
+                },
+                billingInfo: {
+                    mrr: 0,
+                    nextBillingDate: undefined,
+                    paymentMethod: undefined,
                 },
             };
+            
             const docRef = await addDoc(collection(db, 'tenants'), tenantData);
             const newTenant = { ...tenantData, id: docRef.id } as Tenant;
             setTenants(prev => [...prev, newTenant]);
@@ -541,6 +599,20 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
+    // App Tokens Functions
+    const updateAppTokens = async (tokens: AppTokens) => {
+        try {
+            await setDoc(doc(db, 'settings', 'appTokens'), tokens);
+            setAppTokens(tokens);
+            // Apply tokens to CSS immediately
+            const themeMode = (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
+            applyAppTokensToCSS(tokens, themeMode);
+        } catch (error) {
+            console.error("Error updating app tokens:", error);
+            throw error;
+        }
+    };
+
     // Component Status Functions
     const updateComponentStatus = async (componentId: PageSection, isEnabled: boolean) => {
         try {
@@ -591,6 +663,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         trackComponentUsage,
         designTokens,
         updateDesignTokens,
+        appTokens,
+        updateAppTokens,
         componentStatus,
         updateComponentStatus,
         usage,

@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../../utils/geminiProxyClient';
+import { logApiCall } from '../../../../services/apiLoggingService';
 
 interface GeneratedDescription {
     description: string;
@@ -119,6 +120,17 @@ Respond in JSON format ONLY (no markdown, no explanation):
                 maxOutputTokens: 1024
             }, userId);
 
+            // Log successful API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-description',
+                    success: true
+                });
+            }
+
             const text = extractTextFromResponse(response);
             const cleaned = cleanJsonResponse(text);
             const parsed = JSON.parse(cleaned);
@@ -128,6 +140,17 @@ Respond in JSON format ONLY (no markdown, no explanation):
                 shortDescription: parsed.shortDescription || ''
             };
         } catch (err: any) {
+            // Log failed API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-description',
+                    success: false,
+                    errorMessage: err.message || 'Unknown error'
+                });
+            }
             console.error('Error generating description:', err);
             setError(err.message || 'Error al generar descripción');
             throw err;
@@ -170,6 +193,17 @@ Respond in JSON format ONLY (no markdown):
                 maxOutputTokens: 512
             }, userId);
 
+            // Log successful API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-seo',
+                    success: true
+                });
+            }
+
             const text = extractTextFromResponse(response);
             const cleaned = cleanJsonResponse(text);
             const parsed = JSON.parse(cleaned);
@@ -179,6 +213,17 @@ Respond in JSON format ONLY (no markdown):
                 metaDescription: (parsed.metaDescription || '').substring(0, 155)
             };
         } catch (err: any) {
+            // Log failed API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-seo',
+                    success: false,
+                    errorMessage: err.message || 'Unknown error'
+                });
+            }
             console.error('Error generating SEO:', err);
             setError(err.message || 'Error al generar SEO');
             throw err;
@@ -222,12 +267,34 @@ Respond in JSON format ONLY (no markdown):
                 maxOutputTokens: 256
             }, userId);
 
+            // Log successful API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-tags',
+                    success: true
+                });
+            }
+
             const text = extractTextFromResponse(response);
             const cleaned = cleanJsonResponse(text);
             const parsed = JSON.parse(cleaned);
 
             return Array.isArray(parsed.tags) ? parsed.tags : [];
         } catch (err: any) {
+            // Log failed API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-tags',
+                    success: false,
+                    errorMessage: err.message || 'Unknown error'
+                });
+            }
             console.error('Error generating tags:', err);
             setError(err.message || 'Error al generar etiquetas');
             throw err;
@@ -280,6 +347,17 @@ Respond in JSON format ONLY (no markdown, no explanation):
                 maxOutputTokens: 2048
             }, userId);
 
+            // Log successful API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-all',
+                    success: true
+                });
+            }
+
             const text = extractTextFromResponse(response);
             const cleaned = cleanJsonResponse(text);
             const parsed = JSON.parse(cleaned);
@@ -292,6 +370,17 @@ Respond in JSON format ONLY (no markdown, no explanation):
                 tags: Array.isArray(parsed.tags) ? parsed.tags : []
             };
         } catch (err: any) {
+            // Log failed API call
+            if (userId) {
+                logApiCall({
+                    userId,
+                    projectId,
+                    model: 'gemini-2.5-flash',
+                    feature: 'ecommerce-product-all',
+                    success: false,
+                    errorMessage: err.message || 'Unknown error'
+                });
+            }
             console.error('Error generating all content:', err);
             setError(err.message || 'Error al generar contenido');
             throw err;

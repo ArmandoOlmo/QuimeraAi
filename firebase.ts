@@ -52,7 +52,9 @@ import {
   where,
   onSnapshot,
   startAfter,
-  CACHE_SIZE_UNLIMITED
+  CACHE_SIZE_UNLIMITED,
+  Timestamp,
+  increment
 } from "firebase/firestore";
 
 // Firebase configuration from environment variables
@@ -182,7 +184,9 @@ export {
   where,
   onSnapshot,
   startAfter,
-  writeBatch
+  writeBatch,
+  Timestamp,
+  increment
 };
 
 // Re-export Functions methods

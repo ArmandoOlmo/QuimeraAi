@@ -15,7 +15,6 @@ tests/
 ├── setup.ts                           # Configuración global de tests
 ├── README.md                          # Este archivo
 └── utils/
-    ├── conditionalEngine.test.ts      # Tests del motor de condiciones (17 tests)
     └── performanceOptimizations.test.ts # Tests de optimizaciones (7 tests)
 ```
 
@@ -45,42 +44,12 @@ npm run test:coverage
 
 ### Solo un archivo
 ```bash
-npm test tests/utils/conditionalEngine.test.ts
+npm test tests/utils/performanceOptimizations.test.ts
 ```
 
 ---
 
 ## 📊 Cobertura
-
-### ConditionalEngine (17 tests)
-
-**Funciones probadas**:
-- ✅ `evaluateCondition()` - 8 tests
-  - Operadores: equals, notEquals, contains, greaterThan, lessThan, exists, notExists
-  - Manejo de operadores desconocidos
-  
-- ✅ `evaluateRule()` - 4 tests
-  - Match type: all (todas las condiciones)
-  - Match type: any (cualquier condición)
-  - Reglas vacías
-  
-- ✅ `shouldShowComponent()` - 3 tests
-  - Mostrar/ocultar basado en reglas
-  - Valores por defecto
-  
-- ✅ `applyConditionalStyles()` - 2 tests
-  - Merge de estilos condicionales
-  - Base styles cuando no hay reglas activas
-
-**Casos cubiertos**:
-- ✅ Evaluación de condiciones simples
-- ✅ Evaluación de condiciones complejas (múltiples)
-- ✅ Lógica AND (matchType: 'all')
-- ✅ Lógica OR (matchType: 'any')
-- ✅ Merge de estilos condicionales
-- ✅ Visibilidad condicional de componentes
-
----
 
 ### PerformanceOptimizations (7 tests)
 

@@ -36,7 +36,7 @@ const voices: { name: AiAssistantConfig['voiceName']; description: string; gende
 
 const AiAssistantDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
+    const { aiAssistantConfig, setAiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject, projects, loadProject } = useProject();
     const { setView } = useUI();
     const { user } = useAuth();
@@ -45,16 +45,26 @@ const AiAssistantDashboard: React.FC = () => {
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Sync form data if config updates
+    // Load AI config from active project when it changes
     useEffect(() => {
-        if (aiAssistantConfig) {
+        if (activeProject?.aiAssistantConfig) {
+            // Load config from project (from Firestore)
+            setFormData(activeProject.aiAssistantConfig);
+            setAiAssistantConfig(activeProject.aiAssistantConfig);
+        } else if (aiAssistantConfig) {
+            // Fallback to context config
             setFormData(aiAssistantConfig);
         }
-    }, [aiAssistantConfig]);
+    }, [activeProject?.id, activeProject?.aiAssistantConfig]);
 
     const handleSave = async () => {
+        if (!activeProject?.id) return;
         setIsSaving(true);
-        await saveAiAssistantConfig(formData);
+        try {
+            await saveAiAssistantConfig(formData, activeProject.id);
+        } catch (error) {
+            console.error('Error saving config:', error);
+        }
         setIsSaving(false);
     };
 
@@ -461,21 +471,38 @@ const AiAssistantDashboard: React.FC = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'overview':
+                const currentProjectStats = activeProject ? getStatsForProject(activeProject.id) : null;
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl shadow-sm">
-                            <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.performanceOverview')}</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-bold text-lg">{t('aiAssistant.dashboard.performanceOverview')}</h3>
+                                <button
+                                    onClick={refreshStats}
+                                    disabled={isLoadingStats}
+                                    className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                    title="Actualizar estadísticas"
+                                >
+                                    <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
+                                </button>
+                            </div>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-primary">142</span>
+                                    <span className="block text-2xl font-bold text-primary">
+                                        {currentProjectStats?.totalMessages || 0}
+                                    </span>
                                     <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.chats')}</span>
                                 </div>
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-green-500">28</span>
+                                    <span className="block text-2xl font-bold text-green-500">
+                                        {currentProjectStats?.totalLeads || 0}
+                                    </span>
                                     <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.leads')}</span>
                                 </div>
                                 <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-blue-500">1.2s</span>
+                                    <span className="block text-2xl font-bold text-blue-500">
+                                        {formatResponseTime(currentProjectStats?.avgResponseTime || 0)}
+                                    </span>
                                     <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('aiAssistant.dashboard.latency')}</span>
                                 </div>
                             </div>
@@ -484,14 +511,54 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="bg-card border border-border rounded-xl p-6">
                             <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
                             <div className="space-y-3">
+                                {/* Business Profile */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span> <span className="text-sm font-medium">{t('aiAssistant.dashboard.businessProfile')}</span></div>
-                                    <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">{t('aiAssistant.dashboard.active')}</span>
+                                    <div className="flex items-center">
+                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.businessProfile ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                                        <span className="text-sm font-medium">{t('aiAssistant.dashboard.businessProfile')}</span>
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.businessProfile ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
+                                        {formData.businessProfile ? t('aiAssistant.dashboard.active') : 'Sin configurar'}
+                                    </span>
                                 </div>
+                                {/* Knowledge Base */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center"><span className={`w-2 h-2 rounded-full mr-3 ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`}></span> <span className="text-sm font-medium">{t('aiAssistant.dashboard.liveVoice')}</span></div>
+                                    <div className="flex items-center">
+                                        <span className={`w-2 h-2 rounded-full mr-3 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                                        <span className="text-sm font-medium">Base de Conocimiento</span>
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
+                                        {formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs
+                                    </span>
+                                </div>
+                                {/* Lead Capture */}
+                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
+                                    <div className="flex items-center">
+                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.leadCaptureEnabled ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                        <span className="text-sm font-medium">Captura de Leads</span>
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.leadCaptureEnabled ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                                        {formData.leadCaptureEnabled ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
+                                    </span>
+                                </div>
+                                {/* Live Voice */}
+                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
+                                    <div className="flex items-center">
+                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                        <span className="text-sm font-medium">{t('aiAssistant.dashboard.liveVoice')}</span>
+                                    </div>
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${formData.enableLiveVoice ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
                                         {formData.enableLiveVoice ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
+                                    </span>
+                                </div>
+                                {/* Chat Active */}
+                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
+                                    <div className="flex items-center">
+                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                        <span className="text-sm font-medium">Chat Activo</span>
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.isActive ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                                        {formData.isActive ? 'Activo' : 'Desactivado'}
                                     </span>
                                 </div>
                             </div>
@@ -698,7 +765,9 @@ const AiAssistantDashboard: React.FC = () => {
                             onSave={async (socialConfig) => {
                                 const newFormData = { ...formData, socialChannels: socialConfig };
                                 setFormData(newFormData);
-                                await saveAiAssistantConfig(newFormData);
+                                if (activeProject?.id) {
+                                    await saveAiAssistantConfig(newFormData, activeProject.id);
+                                }
                             }}
                         />
                     </div>

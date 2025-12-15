@@ -1,6 +1,7 @@
 /**
  * useAppointments Hook
  * Hook personalizado para gestionar el estado y operaciones de citas
+ * Las citas están sincronizadas por proyecto (projectId)
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -13,7 +14,8 @@ import {
     AppointmentParticipant,
     DEFAULT_REMINDERS,
 } from '../../../../types';
-import { useEditor } from '../../../../contexts/EditorContext';
+import { useProject } from '../../../../contexts/project';
+import { useAuth } from '../../../../contexts/core/AuthContext';
 import {
     db,
     collection,
@@ -125,7 +127,8 @@ const DEFAULT_SORT: AppointmentSortOptions = {
 // =============================================================================
 
 export const useAppointments = (): UseAppointmentsReturn => {
-    const { user } = useEditor();
+    const { user } = useAuth();
+    const { activeProjectId } = useProject();
     
     // State
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -138,30 +141,49 @@ export const useAppointments = (): UseAppointmentsReturn => {
     const [sortOptions, setSortOptions] = useState<AppointmentSortOptions>(DEFAULT_SORT);
     
     // ==========================================================================
-    // FIREBASE LISTENER
+    // FIREBASE LISTENER - Sincronizado por proyecto
     // ==========================================================================
     
     useEffect(() => {
+        console.log('[useAppointments] 🔄 useEffect triggered', { hasUser: !!user, activeProjectId });
+        
         if (!user) {
+            console.log('[useAppointments] ⚠️ No user, clearing appointments');
             setAppointments([]);
             setIsLoading(false);
             return;
         }
-        
+
+        if (!activeProjectId) {
+            console.log('[useAppointments] ⚠️ No activeProjectId, clearing appointments');
+            setAppointments([]);
+            setIsLoading(false);
+            setError('Selecciona un proyecto para ver las citas');
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
+
+        // Ruta sincronizada por proyecto: users/{userId}/projects/{projectId}/appointments
+        const appointmentPath = `users/${user.uid}/projects/${activeProjectId}/appointments`;
+        console.log('[useAppointments] 📍 Loading appointments from:', appointmentPath);
         
-        const appointmentsRef = collection(db, 'users', user.uid, 'appointments');
+        const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProjectId, 'appointments');
         const q = query(appointmentsRef, orderBy('startDate', 'asc'));
         
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
+                console.log('[useAppointments] 📅 Received snapshot with', snapshot.size, 'documents');
+                console.log('[useAppointments] 📅 Reading from path: users/' + user.uid + '/projects/' + activeProjectId + '/appointments');
                 const appointmentsData: Appointment[] = [];
                 snapshot.forEach((doc) => {
+                    console.log('[useAppointments] 📅 Found appointment:', doc.id, doc.data().title);
                     appointmentsData.push({
                         id: doc.id,
                         ...doc.data(),
+                        projectId: activeProjectId, // Asegurar que projectId esté presente
                     } as Appointment);
                 });
                 setAppointments(appointmentsData);
@@ -175,7 +197,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         );
         
         return () => unsubscribe();
-    }, [user]);
+    }, [user, activeProjectId]);
     
     // ==========================================================================
     // FILTERED & SORTED APPOINTMENTS
@@ -373,6 +395,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     
     const createAppointment = useCallback(async (data: Partial<Appointment>): Promise<Appointment> => {
         if (!user) throw new Error('Usuario no autenticado');
+        if (!activeProjectId) throw new Error('No hay proyecto seleccionado');
         
         const now = dateToTimestamp(new Date());
         
@@ -428,6 +451,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
             tags: data.tags || [],
             createdAt: now,
             createdBy: user.uid,
+            projectId: activeProjectId, // Incluir projectId en el documento
         };
         
         // Add optional fields only if they have values
@@ -439,19 +463,22 @@ export const useAppointments = (): UseAppointmentsReturn => {
         // Final deep clean to ensure no undefined values anywhere
         const finalData = deepClean(newAppointment);
         
-        const appointmentsRef = collection(db, 'users', user.uid, 'appointments');
+        // Ruta sincronizada por proyecto: users/{userId}/projects/{projectId}/appointments
+        const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProjectId, 'appointments');
         const docRef = await addDoc(appointmentsRef, finalData);
         
         return {
             id: docRef.id,
             ...finalData,
         } as Appointment;
-    }, [user]);
+    }, [user, activeProjectId]);
     
     const updateAppointment = useCallback(async (id: string, data: Partial<Appointment>): Promise<void> => {
         if (!user) throw new Error('Usuario no autenticado');
+        if (!activeProjectId) throw new Error('No hay proyecto seleccionado');
         
-        const appointmentRef = doc(db, 'users', user.uid, 'appointments', id);
+        // Ruta sincronizada por proyecto
+        const appointmentRef = doc(db, 'users', user.uid, 'projects', activeProjectId, 'appointments', id);
         await updateDoc(appointmentRef, {
             ...data,
             updatedAt: dateToTimestamp(new Date()),
@@ -462,18 +489,20 @@ export const useAppointments = (): UseAppointmentsReturn => {
         if (selectedAppointment?.id === id) {
             setSelectedAppointment(prev => prev ? { ...prev, ...data } : null);
         }
-    }, [user, selectedAppointment]);
+    }, [user, activeProjectId, selectedAppointment]);
     
     const deleteAppointment = useCallback(async (id: string): Promise<void> => {
         if (!user) throw new Error('Usuario no autenticado');
+        if (!activeProjectId) throw new Error('No hay proyecto seleccionado');
         
-        const appointmentRef = doc(db, 'users', user.uid, 'appointments', id);
+        // Ruta sincronizada por proyecto
+        const appointmentRef = doc(db, 'users', user.uid, 'projects', activeProjectId, 'appointments', id);
         await deleteDoc(appointmentRef);
         
         if (selectedAppointment?.id === id) {
             setSelectedAppointment(null);
         }
-    }, [user, selectedAppointment]);
+    }, [user, activeProjectId, selectedAppointment]);
     
     // ==========================================================================
     // STATUS OPERATIONS
@@ -586,11 +615,12 @@ export const useAppointments = (): UseAppointmentsReturn => {
     }, []);
     
     const refresh = useCallback(async (): Promise<void> => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         
         setIsLoading(true);
         try {
-            const appointmentsRef = collection(db, 'users', user.uid, 'appointments');
+            // Ruta sincronizada por proyecto
+            const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProjectId, 'appointments');
             const q = query(appointmentsRef, orderBy('startDate', 'asc'));
             const snapshot = await getDocs(q);
             
@@ -599,6 +629,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
                 appointmentsData.push({
                     id: doc.id,
                     ...doc.data(),
+                    projectId: activeProjectId,
                 } as Appointment);
             });
             
@@ -609,7 +640,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, [user]);
+    }, [user, activeProjectId]);
     
     // ==========================================================================
     // RETURN

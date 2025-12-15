@@ -264,7 +264,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 md:p-6 overflow-y-auto overscroll-contain">
+                <div className="flex-1 min-h-0 p-4 md:p-6 overflow-y-auto overscroll-contain">
                     {error && (
                         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
                             {error}

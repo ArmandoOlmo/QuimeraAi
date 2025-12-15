@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
 import { LiveServerMessage, Modality } from '@google/genai';
-import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X } from 'lucide-react';
+import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X, Calendar } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
@@ -22,11 +22,36 @@ interface PageContext {
     visibleSections: PageSection[];
 }
 
+// Appointment data interface for chatbot integration
+export interface ChatAppointmentData {
+    title: string;
+    description?: string;
+    type?: 'video_call' | 'phone_call' | 'in_person' | 'consultation' | 'demo' | 'follow_up' | 'interview' | 'other';
+    startDate: Date;
+    endDate: Date;
+    participantName?: string;
+    participantEmail?: string;
+    participantPhone?: string;
+    linkedLeadId?: string;
+}
+
+// Simplified appointment info for availability checking
+export interface AppointmentSlot {
+    id: string;
+    title: string;
+    startDate: Date;
+    endDate: Date;
+    status: string;
+}
+
 export interface ChatCoreProps {
     config: AiAssistantConfig;
     project: Project;
     appearance: ChatAppearanceConfig;
-    onLeadCapture?: (leadData: Partial<Lead>) => Promise<void>;
+    onLeadCapture?: (leadData: Partial<Lead>) => Promise<string | undefined>;
+    onUpdateLeadTranscript?: (leadId: string, transcript: string) => Promise<void>;
+    onCreateAppointment?: (appointmentData: ChatAppointmentData) => Promise<string | undefined>;
+    existingAppointments?: AppointmentSlot[];
     className?: string;
     showHeader?: boolean;
     headerActions?: React.ReactNode;
@@ -39,6 +64,7 @@ export interface ChatCoreProps {
 interface Message {
     role: 'user' | 'model';
     text: string;
+    isVoiceMessage?: boolean;
 }
 
 interface PreChatFormData {
@@ -149,6 +175,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     project,
     appearance,
     onLeadCapture,
+    onUpdateLeadTranscript,
+    onCreateAppointment,
+    existingAppointments = [],
     className = '',
     showHeader = true,
     headerActions,
@@ -198,6 +227,20 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [preChatData, setPreChatData] = useState<PreChatFormData>({ name: '', email: '', phone: '' });
     const [quickLeadEmail, setQuickLeadEmail] = useState('');
+    
+    // Appointment Form State
+    const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+    const [appointmentForm, setAppointmentForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '10:00',
+        duration: '60', // duración en minutos
+        appointmentType: 'consultation',
+        notes: ''
+    });
+    const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
 
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
@@ -216,16 +259,124 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const sessionRef = useRef<any>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const isConnectedRef = useRef(false);
+    
+    // Voice Transcription Refs
+    const voiceTranscriptRef = useRef<{ role: 'user' | 'model'; text: string }[]>([]);
+    const currentModelResponseRef = useRef<string>('');
+    
+    // Lead tracking ref
+    const capturedLeadIdRef = useRef<string | null>(null);
 
     // =============================================================================
     // SYSTEM INSTRUCTION BUILDER
     // =============================================================================
 
     const buildSystemInstruction = () => {
+        // Log configuration being applied
+        console.log(`[ChatCore] 🤖 Building system instruction with config:`, {
+            agentName: config.agentName,
+            tone: config.tone,
+            hasBusinessProfile: !!config.businessProfile,
+            hasProductsServices: !!config.productsServices,
+            hasPoliciesContact: !!config.policiesContact,
+            faqsCount: config.faqs?.length || 0,
+            knowledgeDocsCount: config.knowledgeDocuments?.length || 0,
+            hasSpecialInstructions: !!config.specialInstructions
+        });
+        
         // Log current viewing section
         if (currentPageContext?.section) {
             console.log(`[ChatCore] 📍 Building instruction for section: ${currentPageContext.section}`);
         }
+
+        // Get current date and time info
+        const now = new Date();
+        const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const monthsOfYear = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        
+        // Get upcoming appointments for the next 14 days
+        const twoWeeksFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+        const upcomingAppointments = existingAppointments
+            .filter(apt => apt.startDate >= now && apt.startDate <= twoWeeksFromNow && apt.status !== 'cancelled')
+            .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+            .slice(0, 20); // Limit to 20 appointments
+        
+        // Format busy slots
+        const busySlots = upcomingAppointments.map(apt => {
+            const startDay = daysOfWeek[apt.startDate.getDay()];
+            const startDate = apt.startDate.getDate();
+            const startMonth = monthsOfYear[apt.startDate.getMonth()];
+            const startTime = `${apt.startDate.getHours().toString().padStart(2, '0')}:${apt.startDate.getMinutes().toString().padStart(2, '0')}`;
+            const endTime = `${apt.endDate.getHours().toString().padStart(2, '0')}:${apt.endDate.getMinutes().toString().padStart(2, '0')}`;
+            return `- ${startDay} ${startDate} de ${startMonth}: ${startTime} - ${endTime} (${apt.title})`;
+        }).join('\n');
+        
+        // Generate available time suggestions (business hours: 9 AM - 6 PM, Mon-Sat)
+        const suggestAvailableSlots = () => {
+            const suggestions: string[] = [];
+            const businessHours = { start: 9, end: 18 }; // 9 AM to 6 PM
+            
+            for (let dayOffset = 1; dayOffset <= 7 && suggestions.length < 5; dayOffset++) {
+                const checkDate = new Date(now);
+                checkDate.setDate(now.getDate() + dayOffset);
+                
+                // Skip Sundays (day 0)
+                if (checkDate.getDay() === 0) continue;
+                
+                const dayName = daysOfWeek[checkDate.getDay()];
+                const dateNum = checkDate.getDate();
+                const monthName = monthsOfYear[checkDate.getMonth()];
+                
+                // Check morning slot (10 AM)
+                const morningSlot = new Date(checkDate);
+                morningSlot.setHours(10, 0, 0, 0);
+                const morningBusy = upcomingAppointments.some(apt => 
+                    apt.startDate.getTime() <= morningSlot.getTime() && 
+                    apt.endDate.getTime() > morningSlot.getTime()
+                );
+                
+                // Check afternoon slot (3 PM)
+                const afternoonSlot = new Date(checkDate);
+                afternoonSlot.setHours(15, 0, 0, 0);
+                const afternoonBusy = upcomingAppointments.some(apt => 
+                    apt.startDate.getTime() <= afternoonSlot.getTime() && 
+                    apt.endDate.getTime() > afternoonSlot.getTime()
+                );
+                
+                if (!morningBusy) {
+                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 10:00 AM`);
+                }
+                if (!afternoonBusy && suggestions.length < 5) {
+                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 3:00 PM`);
+                }
+            }
+            
+            return suggestions.length > 0 
+                ? suggestions.map(s => `- ${s}`).join('\n')
+                : '- Consulta disponibilidad directamente';
+        };
+        
+        const currentDateTime = `
+            === FECHA Y HORA ACTUAL ===
+            Hoy es: ${daysOfWeek[now.getDay()]}, ${now.getDate()} de ${monthsOfYear[now.getMonth()]} de ${now.getFullYear()}
+            Hora actual: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}
+            Zona horaria: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+            
+            === AGENDA Y DISPONIBILIDAD ===
+            Horario de atención: Lunes a Sábado, 9:00 AM - 6:00 PM
+            
+            ${upcomingAppointments.length > 0 ? `HORARIOS OCUPADOS (próximos 14 días):
+${busySlots}` : 'No hay citas programadas en los próximos días.'}
+            
+            HORARIOS DISPONIBLES SUGERIDOS:
+${suggestAvailableSlots()}
+            
+            INSTRUCCIONES DE DISPONIBILIDAD:
+            - Revisa los horarios ocupados antes de ofrecer una cita
+            - Sugiere los horarios disponibles al cliente
+            - Si el cliente pide un horario ocupado, ofrece alternativas cercanas
+            - Horario de atención: Lunes a Sábado, 9 AM - 6 PM (cerrado domingos)
+        `;
 
         const businessContext = `
             BUSINESS NAME: ${project?.name || 'Unknown Business'}
@@ -264,6 +415,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         const systemInstruction = `
             You are ${config.agentName || 'AI Assistant'}, a ${(config.tone || 'Professional').toLowerCase()} AI assistant for ${brandName} (${brandIndustry}).
             
+            ${currentDateTime}
+            
             YOUR KNOWLEDGE BASE:
             ${businessContext}
 
@@ -281,6 +434,40 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             - Keep paragraphs short and readable
             - Use line breaks between different topics
             - Structure your responses clearly with headings if needed (## Heading)
+            
+            === APPOINTMENT SCHEDULING (VERY IMPORTANT) ===
+            You CAN and SHOULD help users schedule appointments/meetings/citas.
+            
+            When a user mentions wanting to:
+            - Schedule a meeting/appointment/cita
+            - Book a consultation/demo/call
+            - Set up a time to talk
+            - Agendar una cita/reunión
+            
+            STEP 1: Ask for the following information:
+            - Their name (nombre)
+            - Their email (correo)
+            - Preferred date (fecha preferida)
+            - Preferred time (hora preferida)
+            - Type of meeting (tipo de reunión)
+            
+            STEP 2: Once you have ALL the required info (name, email, date, time), you MUST include this EXACT block in your response:
+            
+            [APPOINTMENT_REQUEST]
+            title: Cita con [client name]
+            date: YYYY-MM-DD
+            time: HH:MM
+            duration: 60
+            type: consultation
+            name: [Client name]
+            email: [Client email]
+            phone: [Client phone if provided]
+            notes: [Any notes about the appointment]
+            [/APPOINTMENT_REQUEST]
+            
+            STEP 3: After the block, confirm: "¡Perfecto! Tu cita ha sido agendada para [date] a las [time]."
+            
+            IMPORTANT: Always include the [APPOINTMENT_REQUEST] block when you have all required info.
             ${isEcommerceEnabled ? `
             
             === ECOMMERCE CAPABILITIES ===
@@ -378,6 +565,31 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         };
     }, []);
 
+    // Function to save final transcript to lead
+    const saveFinalTranscriptToLead = async () => {
+        if (capturedLeadIdRef.current && onUpdateLeadTranscript && messages.length > 0) {
+            const fullTranscript = messages.map(m => {
+                const prefix = m.isVoiceMessage ? '🎙️ ' : '';
+                return `${prefix}${m.role === 'user' ? 'Usuario' : config.agentName || 'Asistente'}: ${m.text}`;
+            }).join('\n\n');
+            
+            try {
+                await onUpdateLeadTranscript(capturedLeadIdRef.current, fullTranscript);
+                console.log('[ChatCore] ✅ Final transcript saved to lead');
+            } catch (error) {
+                console.error('[ChatCore] ❌ Error saving final transcript:', error);
+            }
+        }
+    };
+
+    // Save transcript when component unmounts or chat closes
+    useEffect(() => {
+        return () => {
+            // Save transcript on unmount
+            saveFinalTranscriptToLead();
+        };
+    }, [messages, capturedLeadIdRef.current]);
+
     // =============================================================================
     // LEAD CAPTURE HANDLERS
     // =============================================================================
@@ -391,7 +603,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             const leadScore = calculateLeadScore(preChatData, messages, false);
 
             if (onLeadCapture) {
-                await onLeadCapture({
+                const leadId = await onLeadCapture({
                     name: preChatData.name,
                     email: preChatData.email,
                     phone: preChatData.phone,
@@ -403,6 +615,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     tags: ['chatbot', 'pre-chat-form'],
                     notes: t('chatbotWidget.leadNotesPreChat')
                 });
+                if (leadId) capturedLeadIdRef.current = leadId;
             }
 
             setLeadCaptured(true);
@@ -426,7 +639,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
 
             if (onLeadCapture) {
-                await onLeadCapture({
+                const leadId = await onLeadCapture({
                     name: quickLeadEmail.split('@')[0],
                     email: quickLeadEmail,
                     status: 'new',
@@ -437,6 +650,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     tags: ['chatbot', 'mid-conversation', hasHighIntent ? 'high-intent' : 'low-intent'],
                     notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length })
                 });
+                if (leadId) capturedLeadIdRef.current = leadId;
             }
 
             setLeadCaptured(true);
@@ -463,6 +677,324 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 text: t('chatbotWidget.askEmail')
             }]);
             setShowLeadCaptureModal(true);
+        }
+    };
+
+    // =============================================================================
+    // APPOINTMENT FORM HANDLER
+    // =============================================================================
+    
+    const handleAppointmentFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log('[ChatCore] 📅 Form submit clicked', { 
+            name: appointmentForm.name, 
+            email: appointmentForm.email, 
+            date: appointmentForm.date,
+            time: appointmentForm.time,
+            hasOnCreateAppointment: !!onCreateAppointment 
+        });
+        
+        if (!appointmentForm.name || !appointmentForm.email || !appointmentForm.date) {
+            console.log('[ChatCore] ⚠️ Missing required fields');
+            return;
+        }
+        
+        if (!onCreateAppointment) {
+            console.log('[ChatCore] ⚠️ No onCreateAppointment handler');
+            return;
+        }
+
+        setIsCreatingAppointment(true);
+
+        try {
+            const [year, month, day] = appointmentForm.date.split('-').map(Number);
+            const [hours, minutes] = appointmentForm.time.split(':').map(Number);
+
+            console.log('[ChatCore] 📅 Parsed date:', { year, month, day, hours, minutes });
+            const startDate = new Date(year, month - 1, day, hours, minutes);
+            const durationMinutes = parseInt(appointmentForm.duration) || 60;
+            const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+            const appointmentData: ChatAppointmentData = {
+                title: `Cita - ${appointmentForm.name}`,
+                description: appointmentForm.notes || `Cita agendada por ${appointmentForm.name} a través del chat`,
+                type: appointmentForm.appointmentType as any,
+                startDate,
+                endDate,
+                participantName: appointmentForm.name,
+                participantEmail: appointmentForm.email,
+                participantPhone: appointmentForm.phone || undefined,
+                linkedLeadId: capturedLeadIdRef.current || undefined,
+            };
+            
+            console.log('[ChatCore] 📅 Calling onCreateAppointment...');
+            const appointmentId = await onCreateAppointment(appointmentData);
+            console.log('[ChatCore] 📅 onCreateAppointment returned:', appointmentId);
+
+            if (appointmentId) {
+                console.log('[ChatCore] ✅ Appointment created successfully!');
+                const formattedDate = startDate.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = startDate.toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit' 
+                });
+                
+                const durationText = parseInt(appointmentForm.duration) >= 60 
+                    ? `${parseInt(appointmentForm.duration) / 60} hora${parseInt(appointmentForm.duration) > 60 ? 's' : ''}`
+                    : `${appointmentForm.duration} minutos`;
+                
+                setMessages(prev => [...prev, {
+                    role: 'model',
+                    text: `✅ **¡Cita agendada exitosamente!**\n\n📅 **Fecha:** ${formattedDate}\n⏰ **Hora:** ${formattedTime}\n⏱️ **Duración:** ${durationText}\n👤 **Nombre:** ${appointmentForm.name}\n📧 **Email:** ${appointmentForm.email}\n\n¡Te esperamos! Si necesitas cambiar o cancelar tu cita, por favor contáctanos.`
+                }]);
+                
+                setShowAppointmentForm(false);
+                setAppointmentForm({ name: '', email: '', phone: '', date: '', time: '10:00', duration: '60', appointmentType: 'consultation', notes: '' });
+            }
+        } catch (error) {
+            console.error('[ChatCore] Error creating appointment:', error);
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: '⚠️ Hubo un error al agendar la cita. Por favor intenta de nuevo o contáctanos directamente.'
+            }]);
+        } finally {
+            setIsCreatingAppointment(false);
+        }
+    };
+
+    // =============================================================================
+    // APPOINTMENT PROCESSING (AI-based)
+    // =============================================================================
+
+    const processAppointmentRequest = async (response: string): Promise<{ cleanedResponse: string; appointmentCreated: boolean }> => {
+        console.log('[ChatCore] 📅 processAppointmentRequest called');
+        console.log('[ChatCore] 📅 onCreateAppointment available:', !!onCreateAppointment);
+        
+        if (!onCreateAppointment) {
+            console.log('[ChatCore] ⚠️ No onCreateAppointment handler - skipping');
+            return { cleanedResponse: response, appointmentCreated: false };
+        }
+
+        // First try: Look for the structured block
+        const appointmentRegex = /\[APPOINTMENT_REQUEST\]([\s\S]*?)\[\/APPOINTMENT_REQUEST\]/;
+        let match = response.match(appointmentRegex);
+        
+        console.log('[ChatCore] 📅 Structured block found:', !!match);
+        
+        // Second try: Detect if AI CONFIRMED scheduling (not just offering)
+        const confirmationPhrases = [
+            /(?:tu|su|la) cita (?:ha sido |está |queda |fue )agendada/i,
+            /cita confirmada/i,
+            /appointment (?:has been |is )scheduled/i,
+            /te esperamos el/i,
+            /nos vemos el/i,
+            /quedas agendad[oa]/i,
+            /perfecto.*cita.*(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)/i,
+            /agend(?:amos|é|ado).*(?:para el|el día)/i,
+            /entonces.*cita.*(?:será|queda|es)/i,
+            /tu cita (?:será|es|queda) (?:el|para el)/i,
+            /reserv(?:amos|é|ado).*(?:para|el)/i,
+            /confirm(?:amos|o|ado).*cita/i,
+        ];
+        
+        const appointmentConfirmed = confirmationPhrases.some(regex => regex.test(response));
+        
+        // Make sure it's not just an offer (question or suggestion)
+        const offerPhrases = [
+            /podemos agendar/i,
+            /puedes agendar/i,
+            /te gustaría agendar/i,
+            /quieres agendar/i,
+            /deseas agendar/i,
+            /\?[^.]*cita/i,
+            /si (?:gustas|prefieres|quieres).*agendar/i,
+        ];
+        
+        const isJustOffer = offerPhrases.some(regex => regex.test(response));
+        
+        const appointmentMentioned = appointmentConfirmed && !isJustOffer;
+        
+        console.log('[ChatCore] 📅 Appointment confirmed phrase found:', appointmentConfirmed);
+        console.log('[ChatCore] 📅 Is just an offer:', isJustOffer);
+        console.log('[ChatCore] 📅 Will attempt extraction:', appointmentMentioned && !match);
+        
+        // If no structured block but AI mentioned scheduling, try to extract from conversation
+        if (!match && appointmentMentioned) {
+            console.log('[ChatCore] 📅 AI confirmed appointment - extracting data from response...');
+            console.log('[ChatCore] 📅 Response text:', response.substring(0, 300));
+            
+            // Try to extract date patterns
+            const datePatterns = [
+                /(\d{1,2})\s*de\s*(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+                /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*(\d{1,2})/i,
+                /(\d{4}-\d{2}-\d{2})/,
+            ];
+            
+            const timePatterns = [
+                /(\d{1,2}):(\d{2})\s*(am|pm)?/i,
+                /(\d{1,2})\s*(am|pm)/i,
+                /a las?\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|de la tarde|de la mañana)?/i,
+            ];
+            
+            // Extract name from previous messages
+            let clientName = '';
+            let clientEmail = '';
+            const recentUserMessages = messages.filter(m => m.role === 'user').slice(-5);
+            
+            for (const msg of recentUserMessages) {
+                // Look for name patterns
+                const nameMatch = msg.text.match(/(?:me llamo|soy|mi nombre es)\s+([A-Za-záéíóúñÁÉÍÓÚÑ]+)/i);
+                if (nameMatch) clientName = nameMatch[1];
+                
+                // Look for email
+                const emailMatch = msg.text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
+                if (emailMatch) clientEmail = emailMatch[1];
+            }
+            
+            // Extract date from response
+            let extractedDate = new Date();
+            extractedDate.setDate(extractedDate.getDate() + 1); // Default to tomorrow
+            
+            const monthMap: Record<string, number> = {
+                'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+                'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
+            };
+            
+            for (const pattern of datePatterns) {
+                const dateMatch = response.match(pattern);
+                if (dateMatch) {
+                    if (dateMatch[2] && monthMap[dateMatch[2].toLowerCase()] !== undefined) {
+                        const day = parseInt(dateMatch[1]);
+                        const month = monthMap[dateMatch[2].toLowerCase()];
+                        const year = new Date().getFullYear();
+                        extractedDate = new Date(year, month, day);
+                    }
+                    break;
+                }
+            }
+            
+            // Extract time from response
+            let hours = 10;
+            let minutes = 0;
+            
+            for (const pattern of timePatterns) {
+                const timeMatch = response.match(pattern);
+                if (timeMatch) {
+                    hours = parseInt(timeMatch[1]);
+                    minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+                    const ampm = timeMatch[3]?.toLowerCase();
+                    if (ampm && (ampm === 'pm' || ampm === 'de la tarde') && hours < 12) hours += 12;
+                    if (ampm && (ampm === 'am' || ampm === 'de la mañana') && hours === 12) hours = 0;
+                    break;
+                }
+            }
+            
+            extractedDate.setHours(hours, minutes, 0, 0);
+            
+            // Create appointment with extracted data
+            const appointmentData: ChatAppointmentData = {
+                title: `Cita - ${clientName || 'Cliente'}`,
+                description: `Cita agendada a través del chat. Contexto: ${response.substring(0, 200)}`,
+                type: 'consultation',
+                startDate: extractedDate,
+                endDate: new Date(extractedDate.getTime() + 60 * 60000),
+                participantName: clientName || undefined,
+                participantEmail: clientEmail || undefined,
+                linkedLeadId: capturedLeadIdRef.current || undefined,
+            };
+            
+            console.log('[ChatCore] 📅 Attempting to create appointment with data:', {
+                title: appointmentData.title,
+                startDate: appointmentData.startDate.toISOString(),
+                endDate: appointmentData.endDate.toISOString(),
+                participantName: appointmentData.participantName,
+                participantEmail: appointmentData.participantEmail
+            });
+            
+            try {
+                const appointmentId = await onCreateAppointment(appointmentData);
+                console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
+                return { 
+                    cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**', 
+                    appointmentCreated: true 
+                };
+            } catch (error) {
+                console.error('[ChatCore] ❌ Error creating appointment:', error);
+                return { cleanedResponse: response, appointmentCreated: false };
+            }
+        }
+        
+        if (!match) {
+            return { cleanedResponse: response, appointmentCreated: false };
+        }
+        
+        // Process structured block
+        const appointmentBlock = match[1];
+        const lines = appointmentBlock.trim().split('\n');
+        const data: Record<string, string> = {};
+        
+        lines.forEach(line => {
+            const colonIndex = line.indexOf(':');
+            if (colonIndex > 0) {
+                const key = line.substring(0, colonIndex).trim().toLowerCase();
+                const value = line.substring(colonIndex + 1).trim();
+                data[key] = value;
+            }
+        });
+        
+        // Parse date and time
+        const dateStr = data.date || '';
+        const timeStr = data.time || '10:00';
+        const duration = parseInt(data.duration) || 60;
+        
+        let startDate: Date;
+        let endDate: Date;
+        
+        try {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            startDate = new Date(year, month - 1, day, hours, minutes);
+            endDate = new Date(startDate.getTime() + duration * 60000);
+        } catch {
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() + 1);
+            startDate.setHours(10, 0, 0, 0);
+            endDate = new Date(startDate.getTime() + duration * 60000);
+        }
+        
+        const appointmentData: ChatAppointmentData = {
+            title: data.title || 'Cita desde Chat',
+            description: data.notes || `Cita agendada por ${data.name || 'cliente'} a través del chat`,
+            type: (data.type as any) || 'consultation',
+            startDate,
+            endDate,
+            participantName: data.name,
+            participantEmail: data.email,
+            participantPhone: data.phone,
+            linkedLeadId: capturedLeadIdRef.current || undefined,
+        };
+        
+        try {
+            const appointmentId = await onCreateAppointment(appointmentData);
+            console.log('[ChatCore] 📅 Appointment created:', appointmentId);
+            
+            const cleanedResponse = response.replace(appointmentRegex, '').trim();
+            return { 
+                cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**', 
+                appointmentCreated: true 
+            };
+        } catch (error) {
+            console.error('[ChatCore] ❌ Error creating appointment:', error);
+            const cleanedResponse = response.replace(appointmentRegex, '').trim();
+            return { 
+                cleanedResponse: cleanedResponse + '\n\n⚠️ *No se pudo agendar la cita automáticamente. Por favor contacta directamente.*', 
+                appointmentCreated: false 
+            };
         }
     };
 
@@ -586,7 +1118,16 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     success: true
                 });
             }
-            setMessages(prev => [...prev, { role: 'model', text: botResponse }]);
+            
+            // Process appointment requests in the response
+            const { cleanedResponse, appointmentCreated } = await processAppointmentRequest(botResponse);
+            
+            setMessages(prev => [...prev, { role: 'model', text: cleanedResponse }]);
+            
+            // If appointment was created, mark lead as captured
+            if (appointmentCreated && !leadCaptured) {
+                setLeadCaptured(true);
+            }
 
             // Check if we should trigger lead capture
             setTimeout(() => checkLeadCaptureThreshold(), 500);
@@ -604,8 +1145,17 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                 });
             }
             handleApiError(error);
-            console.error('ChatCore Error:', error);
-            setMessages(prev => [...prev, { role: 'model', text: t('chatbotWidget.genericError') }]);
+            console.error('ChatCore Error:', error?.message || error);
+            
+            // Provide more helpful error messages
+            let errorMessage = t('chatbotWidget.genericError');
+            if (error?.message?.includes('rate limit') || error?.message?.includes('429')) {
+                errorMessage = t('chatbotWidget.rateLimitError', 'Too many requests. Please wait a moment and try again.');
+            } else if (error?.message?.includes('API') || error?.message?.includes('configuration')) {
+                errorMessage = t('chatbotWidget.configError', 'Service temporarily unavailable. Please try again later.');
+            }
+            
+            setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
         } finally {
             setIsLoading(false);
         }
@@ -622,11 +1172,11 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // =============================================================================
 
     const startLiveSession = async () => {
-        if (!hasApiKey) {
-            promptForKeySelection();
-            return;
+        if (hasApiKey === false) { 
+            promptForKeySelection(); 
+            return; 
         }
-
+        
         if (!config.enableLiveVoice) {
             alert(t('chatbotWidget.liveVoiceDisabled'));
             return;
@@ -635,126 +1185,125 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         setIsConnecting(true);
 
         try {
-            const genai = await getGoogleGenAI();
-
-            // Initialize Audio Contexts
+            const ai = await getGoogleGenAI();
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
             const inputCtx = new AudioContextClass({ sampleRate: 16000 });
-
             audioContextRef.current = outputCtx;
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
 
-            // Connect to Live API
-            const sessionPromise = genai.live.connect({
+            const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
-                    speechConfig: {
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } },
+                    speechConfig: { 
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } } 
                     },
                     systemInstruction: buildSystemInstruction(),
+                    // Enable transcription for both user input and model output
+                    inputAudioTranscription: {},
+                    outputAudioTranscription: {},
                 },
                 callbacks: {
                     onopen: async () => {
                         setIsConnecting(false);
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
-                        console.log("Gemini Live Session Opened");
-
-                        // Start Mic Stream
                         try {
                             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                             streamRef.current = stream;
                             const source = inputCtx.createMediaStreamSource(stream);
                             const processor = inputCtx.createScriptProcessor(4096, 1, 1);
                             processorRef.current = processor;
-
                             processor.onaudioprocess = (e) => {
                                 if (!isConnectedRef.current) return;
-
                                 const inputData = e.inputBuffer.getChannelData(0);
                                 const pcm16 = floatTo16BitPCM(inputData);
                                 const base64Data = bytesToBase64(new Uint8Array(pcm16));
-
                                 sessionPromise.then(session => {
                                     if (!isConnectedRef.current) return;
-                                    try {
-                                        session.sendRealtimeInput({
-                                            media: {
-                                                mimeType: 'audio/pcm;rate=16000',
-                                                data: base64Data
-                                            }
-                                        });
-                                    } catch (err) {
-                                        console.warn("Error sending audio frame:", err);
-                                    }
+                                    try { 
+                                        session.sendRealtimeInput({ 
+                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } 
+                                        }); 
+                                    } catch (err) { }
                                 });
                             };
-
                             source.connect(processor);
                             processor.connect(inputCtx.destination);
-                        } catch (micErr) {
-                            console.error("Mic Error:", micErr);
-                            stopLiveSession();
-                            alert(t('chatbotWidget.micError'));
+                        } catch (micErr) { 
+                            stopLiveSession(); 
+                            alert("No se pudo acceder al micrófono. Permite el acceso y recarga la página."); 
                         }
                     },
                     onmessage: async (message: LiveServerMessage) => {
-                        // Handle Interruption
+                        const msg = message as any;
+                        
                         if (message.serverContent?.interrupted) {
-                            console.log("Model interrupted");
-                            activeSourcesRef.current.forEach(source => {
-                                try { source.stop(); } catch (e) { }
-                            });
+                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
                             activeSourcesRef.current = [];
-
-                            if (audioContextRef.current) {
-                                nextStartTimeRef.current = audioContextRef.current.currentTime;
-                            }
+                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
                             return;
                         }
-
+                        
+                        // Capture user input transcription (from inputAudioTranscription config)
+                        if (msg.serverContent?.inputTranscript) {
+                            const userText = msg.serverContent.inputTranscript;
+                            if (userText && userText.trim()) {
+                                voiceTranscriptRef.current.push({ role: 'user', text: userText.trim() });
+                            }
+                        }
+                        
+                        // Capture model output transcription (from outputAudioTranscription config)
+                        if (msg.serverContent?.outputTranscript) {
+                            const modelText = msg.serverContent.outputTranscript;
+                            if (modelText && modelText.trim()) {
+                                voiceTranscriptRef.current.push({ role: 'model', text: modelText.trim() });
+                            }
+                        }
+                        
+                        // Also check for text in modelTurn parts (fallback)
+                        const modelParts = message.serverContent?.modelTurn?.parts;
+                        if (modelParts) {
+                            for (const part of modelParts) {
+                                if (part.text && part.text.trim()) {
+                                    currentModelResponseRef.current += part.text;
+                                }
+                            }
+                        }
+                        
+                        // Check if turn is complete to save accumulated model response
+                        if (msg.serverContent?.turnComplete && currentModelResponseRef.current.trim()) {
+                            voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
+                            currentModelResponseRef.current = '';
+                        }
+                        
                         // Handle Audio Output
-                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                        const audioData = modelParts?.[0]?.inlineData?.data;
                         if (audioData && audioContextRef.current) {
                             const ctx = audioContextRef.current;
                             const bytes = base64ToBytes(audioData);
                             const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-
                             const source = ctx.createBufferSource();
                             source.buffer = buffer;
                             source.connect(ctx.destination);
-
                             const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
                             source.start(startTime);
                             nextStartTimeRef.current = startTime + buffer.duration;
-
                             activeSourcesRef.current.push(source);
-                            source.onended = () => {
-                                activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
-                            };
+                            source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
                         }
                     },
-                    onclose: () => {
-                        console.log("Session closed");
-                        stopLiveSession();
-                    },
-                    onerror: (err) => {
-                        console.error("Session error:", err);
-                        stopLiveSession();
-                    }
+                    onclose: () => stopLiveSession(),
+                    onerror: () => { if (!isConnectedRef.current) return; }
                 }
             });
-
             sessionRef.current = sessionPromise;
-
         } catch (error) {
             handleApiError(error);
-            console.error("Connection failed:", error);
             setIsConnecting(false);
-            alert(t('chatbotWidget.sessionError'));
+            alert("Error al iniciar sesión de voz.");
         }
     };
 
@@ -790,9 +1339,170 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             sessionRef.current = null;
         }
 
+        // Add voice transcription to chat messages
+        if (voiceTranscriptRef.current.length > 0) {
+            console.log('[ChatCore] 🎙️ Voice transcript:', voiceTranscriptRef.current);
+
+            const voiceMessages: Message[] = voiceTranscriptRef.current.map(t => ({
+                role: t.role,
+                text: t.text,
+                isVoiceMessage: true
+            }));
+
+            // Add a separator message to indicate voice conversation
+            setMessages(prev => [
+                ...prev,
+                { role: 'model', text: '🎙️ **Transcripción de llamada de voz:**', isVoiceMessage: true },
+                ...voiceMessages
+            ]);
+
+            // Process voice transcript for appointments
+            processVoiceTranscriptForAppointments(voiceTranscriptRef.current);
+
+            // Clear transcript for next session
+            voiceTranscriptRef.current = [];
+            currentModelResponseRef.current = '';
+        } else {
+            // If no transcription available, add a note
+            setMessages(prev => [
+                ...prev,
+                { role: 'model', text: '🎙️ *Llamada de voz finalizada* (transcripción no disponible)', isVoiceMessage: true }
+            ]);
+        }
+
         setIsLiveActive(false);
         setIsConnecting(false);
         nextStartTimeRef.current = 0;
+    };
+
+    // Process voice transcript for appointment detection
+    const processVoiceTranscriptForAppointments = async (transcript: { role: 'user' | 'model'; text: string }[]) => {
+        if (!onCreateAppointment) return;
+
+        console.log('[ChatCore] 🎙️📅 Processing voice transcript for appointments...');
+
+        // Combine all model responses to check for appointment confirmation
+        const modelResponses = transcript.filter(t => t.role === 'model').map(t => t.text).join(' ');
+        const userResponses = transcript.filter(t => t.role === 'user').map(t => t.text).join(' ');
+        const fullConversation = transcript.map(t => `${t.role}: ${t.text}`).join('\n');
+
+        // Check if appointment was confirmed in voice conversation
+        const appointmentConfirmed = /(?:cita|appointment|reunión|meeting).*(?:agendada|confirmada|programada|scheduled|confirmed|registrada)/i.test(modelResponses) ||
+            /(?:te espero|te esperamos|nos vemos|see you|quedamos)/i.test(modelResponses);
+
+        // Check if it's just an offer (not confirmed)
+        const isJustOffer = /(?:¿(?:te gustaría|quieres|deseas|podemos)|would you like|can we schedule|si gustas|si quieres)/i.test(modelResponses) &&
+            !appointmentConfirmed;
+
+        if (appointmentConfirmed && !isJustOffer) {
+            console.log('[ChatCore] 🎙️📅 Appointment detected in voice conversation!');
+
+            // Try to extract appointment details from conversation
+            const datePatterns = [
+                /(\d{1,2})\s*(?:de\s*)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+                /(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)/i,
+                /(?:mañana|pasado mañana|tomorrow)/i,
+                /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/
+            ];
+
+            const timePatterns = [
+                /(\d{1,2}):(\d{2})\s*(?:am|pm|AM|PM)?/,
+                /(\d{1,2})\s*(?:de la\s*)?(mañana|tarde|noche)/i,
+                /a las?\s*(\d{1,2})(?::(\d{2}))?/i
+            ];
+
+            // Extract name and email from user responses
+            const nameMatch = userResponses.match(/(?:me llamo|mi nombre es|soy)\s+([A-Za-záéíóúñÁÉÍÓÚÑ\s]+)/i) ||
+                userResponses.match(/^([A-Za-záéíóúñÁÉÍÓÚÑ]+(?:\s+[A-Za-záéíóúñÁÉÍÓÚÑ]+)?)/);
+            const emailMatch = userResponses.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+
+            let extractedDate: Date | null = null;
+            let extractedTime: { hours: number; minutes: number } | null = null;
+
+            // Try to extract date
+            for (const pattern of datePatterns) {
+                const match = fullConversation.match(pattern);
+                if (match) {
+                    const today = new Date();
+                    if (/mañana|tomorrow/i.test(match[0])) {
+                        extractedDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+                    } else if (/pasado mañana/i.test(match[0])) {
+                        extractedDate = new Date(today.getTime() + 48 * 60 * 60 * 1000);
+                    } else if (match[1] && match[2]) {
+                        const months: { [key: string]: number } = {
+                            'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+                            'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
+                        };
+                        const monthNum = months[match[2].toLowerCase()];
+                        if (monthNum !== undefined) {
+                            extractedDate = new Date(today.getFullYear(), monthNum, parseInt(match[1]));
+                        }
+                    }
+                    break;
+                }
+            }
+
+            // Try to extract time
+            for (const pattern of timePatterns) {
+                const match = fullConversation.match(pattern);
+                if (match) {
+                    let hours = parseInt(match[1]) || 10;
+                    const minutes = parseInt(match[2]) || 0;
+                    
+                    // Adjust for AM/PM or time of day
+                    if (/pm/i.test(match[0]) && hours < 12) hours += 12;
+                    if (/tarde/i.test(match[0]) && hours < 12) hours += 12;
+                    if (/noche/i.test(match[0]) && hours < 18) hours += 12;
+                    
+                    extractedTime = { hours, minutes };
+                    break;
+                }
+            }
+
+            // If we have enough info, create the appointment
+            if (extractedDate || extractedTime) {
+                const startDate = extractedDate || new Date();
+                if (extractedTime) {
+                    startDate.setHours(extractedTime.hours, extractedTime.minutes, 0, 0);
+                } else {
+                    startDate.setHours(10, 0, 0, 0); // Default 10 AM
+                }
+
+                // If date is in the past, move to next occurrence
+                if (startDate < new Date()) {
+                    startDate.setDate(startDate.getDate() + 7);
+                }
+
+                const endDate = new Date(startDate.getTime() + 60 * 60000); // 1 hour
+
+                const appointmentData: ChatAppointmentData = {
+                    title: `Cita por voz - ${nameMatch?.[1]?.trim() || 'Cliente'}`,
+                    description: `Cita agendada durante llamada de voz`,
+                    type: 'consultation',
+                    startDate,
+                    endDate,
+                    participantName: nameMatch?.[1]?.trim() || 'Cliente de llamada',
+                    participantEmail: emailMatch?.[1] || '',
+                    linkedLeadId: capturedLeadIdRef.current || undefined,
+                };
+
+                try {
+                    const appointmentId = await onCreateAppointment(appointmentData);
+                    if (appointmentId) {
+                        console.log('[ChatCore] 🎙️📅 ✅ Voice appointment created:', appointmentId);
+                        setMessages(prev => [...prev, {
+                            role: 'model',
+                            text: `✅ **Cita registrada desde llamada de voz**\n📅 ${startDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}\n⏰ ${startDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`,
+                            isVoiceMessage: true
+                        }]);
+                    }
+                } catch (error) {
+                    console.error('[ChatCore] 🎙️📅 ❌ Error creating voice appointment:', error);
+                }
+            } else {
+                console.log('[ChatCore] 🎙️📅 Appointment mentioned but no date/time extracted');
+            }
+        }
     };
 
     // =============================================================================
@@ -852,104 +1562,158 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             {/* Content Area */}
             <div className="flex-1 relative flex flex-col overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
 
-                {/* Pre-Chat Form */}
+                {/* Pre-Chat Form - Compact */}
                 {showPreChatForm && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 p-6">
-                        <div className="w-full max-w-sm">
-                            <div className="text-center mb-6">
-                                <Sparkles className="w-12 h-12 mx-auto mb-3 text-purple-500" />
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                    ¡Hola! 👋
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Para brindarte una mejor experiencia, cuéntanos un poco sobre ti
-                                </p>
+                    <div 
+                        className="absolute inset-0 flex flex-col z-20"
+                        style={{ backgroundColor: appearance.colors.backgroundColor }}
+                    >
+                        {/* Compact Header */}
+                        <div 
+                            className="px-4 py-5 text-center"
+                            style={{ background: `linear-gradient(135deg, ${appearance.colors.primaryColor}, ${appearance.colors.accentColor || appearance.colors.primaryColor}dd)` }}
+                        >
+                            <div className="w-12 h-12 mx-auto rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl mb-2">
+                                {appearance.branding.logoEmoji || '👋'}
                             </div>
-                            <form onSubmit={handlePreChatSubmit} className="space-y-4">
-                                <div>
-                                    <input
-                                        type="text"
-                                        placeholder="Tu nombre"
-                                        value={preChatData.name}
-                                        onChange={(e) => setPreChatData({ ...preChatData, name: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <input
-                                        type="email"
-                                        placeholder="Tu email"
-                                        value={preChatData.email}
-                                        onChange={(e) => setPreChatData({ ...preChatData, email: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <input
-                                        type="tel"
-                                        placeholder="Teléfono (opcional)"
-                                        value={preChatData.phone}
-                                        onChange={(e) => setPreChatData({ ...preChatData, phone: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                    />
-                                </div>
+                            <h3 className="text-sm font-bold text-white">
+                                {t('chatbotWidget.preChatTitle', '¡Hola!')}
+                            </h3>
+                            <p className="text-[10px] text-white/70 mt-1">
+                                {t('chatbotWidget.preChatSubtitle', 'Cuéntanos sobre ti')}
+                            </p>
+                        </div>
+                        
+                        {/* Compact Form */}
+                        <div className="flex-1 p-4 overflow-y-auto">
+                            <form onSubmit={handlePreChatSubmit} className="space-y-2.5">
+                                <input
+                                    type="text"
+                                    placeholder={t('chatbotWidget.preChatName', 'Tu nombre')}
+                                    value={preChatData.name}
+                                    onChange={(e) => setPreChatData({ ...preChatData, name: e.target.value })}
+                                    required
+                                    className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                    }}
+                                />
+                                <input
+                                    type="email"
+                                    placeholder={t('chatbotWidget.preChatEmail', 'Tu email')}
+                                    value={preChatData.email}
+                                    onChange={(e) => setPreChatData({ ...preChatData, email: e.target.value })}
+                                    required
+                                    className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                    }}
+                                />
+                                <input
+                                    type="tel"
+                                    placeholder={t('chatbotWidget.preChatPhone', 'Teléfono (opcional)')}
+                                    value={preChatData.phone}
+                                    onChange={(e) => setPreChatData({ ...preChatData, phone: e.target.value })}
+                                    className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                    }}
+                                />
+                                
                                 <button
                                     type="submit"
-                                    className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                                    className="w-full py-2.5 px-4 text-xs font-semibold rounded-lg transition-all hover:opacity-90 mt-1"
+                                    style={{ 
+                                        backgroundColor: appearance.colors.primaryColor,
+                                        color: '#ffffff'
+                                    }}
                                 >
-                                    Iniciar Chat 💬
+                                    {t('chatbotWidget.preChatStart', 'Iniciar Chat')} →
                                 </button>
+                                
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setShowPreChatForm(false);
-                                        const welcomeMsg = `Hello! I'm ${config.agentName}. How can I help you today?`;
+                                        const welcomeMsg = appearance.messages?.welcomeMessage || `${t('chatbotWidget.welcomeMessageDefault', { agentName: config.agentName })}`;
                                         setMessages([{ role: 'model', text: welcomeMsg }]);
                                     }}
-                                    className="w-full py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                    className="w-full py-1.5 text-[10px] opacity-50 hover:opacity-100 transition-opacity"
+                                    style={{ color: appearance.colors.botTextColor }}
                                 >
-                                    Continuar sin registro
+                                    {t('chatbotWidget.preChatSkip', 'Continuar sin registro')}
                                 </button>
                             </form>
                         </div>
                     </div>
                 )}
 
-                {/* Quick Lead Capture Modal */}
+                {/* Quick Lead Capture Modal - Compact */}
                 {showLeadCaptureModal && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-20 p-6">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                📧 Déjanos tu email
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Para enviarte la mejor información personalizada
-                            </p>
-                            <form onSubmit={handleQuickLeadCapture} className="space-y-3">
-                                <input
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    value={quickLeadEmail}
-                                    onChange={(e) => setQuickLeadEmail(e.target.value)}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    autoFocus
-                                />
+                    <div className="absolute inset-0 flex items-end justify-center bg-black/40 backdrop-blur-sm z-20 p-3">
+                        <div 
+                            className="w-full rounded-2xl overflow-hidden border"
+                            style={{ 
+                                backgroundColor: appearance.colors.botBubbleColor,
+                                borderColor: appearance.colors.inputBorder 
+                            }}
+                        >
+                            {/* Compact Header */}
+                            <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+                                <div 
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: appearance.colors.primaryColor + '20' }}
+                                >
+                                    <Sparkles size={16} style={{ color: appearance.colors.primaryColor }} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold" style={{ color: appearance.colors.botTextColor }}>
+                                        {t('chatbotWidget.leadModalTitle', '¿Te envío más info?')}
+                                    </p>
+                                    <p className="text-[10px] opacity-60" style={{ color: appearance.colors.botTextColor }}>
+                                        {t('chatbotWidget.leadModalSubtitle', 'Déjame tu email')}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowLeadCaptureModal(false)}
+                                    className="p-1 rounded-full opacity-40 hover:opacity-100 transition-opacity"
+                                >
+                                    <X size={14} style={{ color: appearance.colors.botTextColor }} />
+                                </button>
+                            </div>
+                            
+                            {/* Compact Form */}
+                            <form onSubmit={handleQuickLeadCapture} className="px-4 pb-4">
                                 <div className="flex gap-2">
+                                    <input
+                                        type="email"
+                                        placeholder="tu@email.com"
+                                        value={quickLeadEmail}
+                                        onChange={(e) => setQuickLeadEmail(e.target.value)}
+                                        required
+                                        className="flex-1 min-w-0 px-3 py-2 text-xs rounded-lg border transition-colors focus:outline-none"
+                                        style={{
+                                            backgroundColor: appearance.colors.inputBackground,
+                                            borderColor: appearance.colors.inputBorder,
+                                            color: appearance.colors.inputText,
+                                        }}
+                                        autoFocus
+                                    />
                                     <button
                                         type="submit"
-                                        className="flex-1 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+                                        className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90 flex-shrink-0"
+                                        style={{ 
+                                            backgroundColor: appearance.colors.primaryColor,
+                                            color: '#ffffff'
+                                        }}
                                     >
-                                        Enviar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowLeadCaptureModal(false)}
-                                        className="px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                    >
-                                        Ahora no
+                                        <Send size={14} />
                                     </button>
                                 </div>
                             </form>
@@ -997,22 +1761,22 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                                 {msg.role === 'model' && appearance.branding.showBotAvatar && (
                                     <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center text-base mb-1">
-                                        {appearance.branding.botAvatarEmoji}
+                                        {msg.isVoiceMessage ? <Mic size={14} className="text-purple-500" /> : appearance.branding.botAvatarEmoji}
                                     </div>
                                 )}
                                 <div
                                     className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${msg.role === 'user'
                                         ? 'rounded-tr-sm'
                                         : 'rounded-tl-sm markdown-content'
-                                        }`}
+                                        } ${msg.isVoiceMessage ? 'border border-purple-300/30' : ''}`}
                                     style={
                                         msg.role === 'user'
                                             ? {
-                                                backgroundColor: appearance.colors.userBubbleColor,
+                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.1)' : appearance.colors.userBubbleColor,
                                                 color: appearance.colors.userTextColor
                                             }
                                             : {
-                                                backgroundColor: appearance.colors.botBubbleColor,
+                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.05)' : appearance.colors.botBubbleColor,
                                                 color: appearance.colors.botTextColor
                                             }
                                     }
@@ -1045,7 +1809,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                                             {msg.text}
                                         </ReactMarkdown>
                                     ) : (
-                                        msg.text
+                                        <span className="flex items-center gap-1">
+                                            {msg.isVoiceMessage && <Mic size={10} className="text-purple-400 flex-shrink-0" />}
+                                            {msg.text}
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -1140,6 +1907,217 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                         </button>
                     </div>
                 </>
+            )}
+
+            {/* Appointment Form Modal */}
+            {showAppointmentForm && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 flex items-center justify-center p-4">
+                    <div 
+                        className="w-full max-w-sm rounded-2xl shadow-2xl p-5 animate-fade-in-up"
+                        style={{ backgroundColor: appearance.colors.backgroundColor }}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: appearance.colors.botTextColor }}>
+                                <Calendar size={18} style={{ color: appearance.colors.primaryColor }} />
+                                Agendar Cita
+                            </h3>
+                            <button 
+                                onClick={() => setShowAppointmentForm(false)}
+                                className="p-1 rounded-full hover:bg-black/10 transition-colors"
+                            >
+                                <X size={16} style={{ color: appearance.colors.botTextColor }} />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleAppointmentFormSubmit} className="space-y-3">
+                            <div>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    Nombre *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={appointmentForm.name}
+                                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                    } as React.CSSProperties}
+                                    placeholder="Tu nombre"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    Email *
+                                </label>
+                                <input
+                                    type="email"
+                                    value={appointmentForm.email}
+                                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, email: e.target.value }))}
+                                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                    } as React.CSSProperties}
+                                    placeholder="tu@email.com"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    Teléfono
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={appointmentForm.phone}
+                                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, phone: e.target.value }))}
+                                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                    } as React.CSSProperties}
+                                    placeholder="(opcional)"
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                        Fecha *
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={appointmentForm.date}
+                                        onChange={(e) => setAppointmentForm(prev => ({ ...prev, date: e.target.value }))}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                        style={{
+                                            backgroundColor: appearance.colors.inputBackground,
+                                            borderColor: appearance.colors.inputBorder,
+                                            color: appearance.colors.inputText,
+                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        } as React.CSSProperties}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                        Hora *
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={appointmentForm.time}
+                                        onChange={(e) => setAppointmentForm(prev => ({ ...prev, time: e.target.value }))}
+                                        className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                        style={{
+                                            backgroundColor: appearance.colors.inputBackground,
+                                            borderColor: appearance.colors.inputBorder,
+                                            color: appearance.colors.inputText,
+                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        } as React.CSSProperties}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                        Duración
+                                    </label>
+                                    <select
+                                        value={appointmentForm.duration}
+                                        onChange={(e) => setAppointmentForm(prev => ({ ...prev, duration: e.target.value }))}
+                                        className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                        style={{
+                                            backgroundColor: appearance.colors.inputBackground,
+                                            borderColor: appearance.colors.inputBorder,
+                                            color: appearance.colors.inputText,
+                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        } as React.CSSProperties}
+                                    >
+                                        <option value="15">15 min</option>
+                                        <option value="30">30 min</option>
+                                        <option value="45">45 min</option>
+                                        <option value="60">1 hora</option>
+                                        <option value="90">1.5 horas</option>
+                                        <option value="120">2 horas</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                        Tipo
+                                    </label>
+                                    <select
+                                        value={appointmentForm.appointmentType}
+                                        onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointmentType: e.target.value }))}
+                                        className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
+                                        style={{
+                                            backgroundColor: appearance.colors.inputBackground,
+                                            borderColor: appearance.colors.inputBorder,
+                                            color: appearance.colors.inputText,
+                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        } as React.CSSProperties}
+                                    >
+                                        <option value="consultation">Consulta</option>
+                                        <option value="meeting">Reunión</option>
+                                        <option value="service">Servicio</option>
+                                        <option value="followup">Seguimiento</option>
+                                        <option value="demo">Demo</option>
+                                        <option value="other">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    Notas
+                                </label>
+                                <textarea
+                                    value={appointmentForm.notes}
+                                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, notes: e.target.value }))}
+                                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2 resize-none"
+                                    style={{
+                                        backgroundColor: appearance.colors.inputBackground,
+                                        borderColor: appearance.colors.inputBorder,
+                                        color: appearance.colors.inputText,
+                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                    } as React.CSSProperties}
+                                    placeholder="¿En qué podemos ayudarte?"
+                                    rows={2}
+                                />
+                            </div>
+                            
+                            <button
+                                type="submit"
+                                disabled={isCreatingAppointment || !appointmentForm.name || !appointmentForm.email || !appointmentForm.date}
+                                className="w-full py-2.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                style={{ backgroundColor: appearance.colors.primaryColor }}
+                            >
+                                {isCreatingAppointment ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        Agendando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Calendar size={14} />
+                                        Confirmar Cita
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

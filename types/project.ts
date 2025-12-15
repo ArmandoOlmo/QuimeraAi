@@ -8,7 +8,7 @@ import { ThemeData, PageSection } from './ui';
 import { BrandIdentity } from './business';
 import { NavigationMenu } from './navigation';
 import { AiAssistantConfig } from './ai-assistant';
-import { ResponsiveStyles, ConditionalRule, ABTestConfig, ComponentStyles } from './features';
+import { ResponsiveStyles, ABTestConfig, ComponentStyles } from './features';
 import { SEOConfig } from './seo';
 
 // =============================================================================
@@ -33,7 +33,6 @@ export interface Project {
     menus?: NavigationMenu[];
     aiAssistantConfig?: AiAssistantConfig;
     responsiveStyles?: Record<string, ResponsiveStyles>;
-    conditionalRules?: ConditionalRule[];
     seoConfig?: SEOConfig;
     
     // Design Tokens

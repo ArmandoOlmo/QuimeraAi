@@ -51,12 +51,12 @@ const ALL_SCOPES = [
 const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBack }) => {
     const { t } = useTranslation();
 
-    const voices: { name: GlobalAssistantConfig['voiceName']; description: string; gender: string }[] = [
-        { name: 'Zephyr', description: t('superadmin.globalAssistant.voices.zephyr', 'Calm, balanced, professional.'), gender: t('superadmin.female', 'Female') },
-        { name: 'Puck', description: t('superadmin.globalAssistant.voices.puck', 'Energetic, friendly, youthful.'), gender: t('superadmin.male', 'Male') },
-        { name: 'Charon', description: t('superadmin.globalAssistant.voices.charon', 'Deep, authoritative, trustworthy.'), gender: t('superadmin.male', 'Male') },
-        { name: 'Kore', description: t('superadmin.globalAssistant.voices.kore', 'Warm, nurturing, soft.'), gender: t('superadmin.female', 'Female') },
-        { name: 'Fenrir', description: t('superadmin.globalAssistant.voices.fenrir', 'Strong, clear, direct.'), gender: t('superadmin.male', 'Male') },
+    const voices: { name: GlobalAssistantConfig['voiceName']; description: string; gender: string; genderKey: 'M' | 'F' }[] = [
+        { name: 'Zephyr', description: t('superadmin.globalAssistant.voices.zephyr', 'Calm, balanced, professional.'), gender: t('superadmin.female', 'Female'), genderKey: 'F' },
+        { name: 'Puck', description: t('superadmin.globalAssistant.voices.puck', 'Energetic, friendly, youthful.'), gender: t('superadmin.male', 'Male'), genderKey: 'M' },
+        { name: 'Charon', description: t('superadmin.globalAssistant.voices.charon', 'Deep, authoritative, trustworthy.'), gender: t('superadmin.male', 'Male'), genderKey: 'M' },
+        { name: 'Kore', description: t('superadmin.globalAssistant.voices.kore', 'Warm, nurturing, soft.'), gender: t('superadmin.female', 'Female'), genderKey: 'F' },
+        { name: 'Fenrir', description: t('superadmin.globalAssistant.voices.fenrir', 'Strong, clear, direct.'), gender: t('superadmin.male', 'Male'), genderKey: 'M' },
     ];
     const { globalAssistantConfig, saveGlobalAssistantConfig, prompts, fetchAllPrompts, syncPrompts } = useAdmin();
     const [formData, setFormData] = useState<GlobalAssistantConfig>(globalAssistantConfig);
@@ -190,7 +190,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </button>
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant')}</h1>
+                                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant.title')}</h1>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -243,7 +243,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     {/* Language Settings (NEW) */}
                                     <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
                                         <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
-                                            <Languages className="mr-2 text-editor-accent" size={20} /> Language & Intelligence
+                                            <Languages className="mr-2 text-editor-accent" size={20} /> {t('superadmin.globalAssistant.language.title', 'Language & Intelligence')}
                                         </h3>
 
                                         <div className="flex items-center justify-between">
@@ -298,7 +298,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                         className={`p-3 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voiceName === v.name ? 'border-editor-accent bg-editor-accent/10 ring-1 ring-editor-accent' : 'border-editor-border bg-editor-bg hover:border-editor-accent/50'}`}
                                                     >
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 shrink-0 ${formData.voiceName === v.name ? 'bg-editor-accent text-editor-bg' : 'bg-editor-border text-editor-text-secondary'}`}>
-                                                            {v.gender === 'Male' ? 'M' : 'F'}
+                                                            {v.genderKey}
                                                         </div>
                                                         <div>
                                                             <h4 className="font-bold text-editor-text-primary text-sm">{v.name}</h4>

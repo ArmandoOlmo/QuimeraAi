@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai/AIContext';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useProject } from '../../../contexts/project';
 import {
     Palette, MessageSquare,
     Settings as SettingsIcon, Smile, Image as ImageIcon, Zap,
@@ -20,6 +20,7 @@ const COMMON_EMOJIS = [
 
 const ChatCustomizationSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
+    const { activeProject } = useProject();
 
     const [config, setConfig] = useState<ChatAppearanceConfig>(
         aiAssistantConfig.appearance || getDefaultAppearanceConfig()
@@ -41,14 +42,19 @@ const ChatCustomizationSettings: React.FC = () => {
         }
     }, [aiAssistantConfig.appearance]);
 
+    // Helper to save config with project ID
+    const saveConfig = useCallback((newAppearanceConfig: ChatAppearanceConfig) => {
+        if (!activeProject?.id) return;
+        saveAiAssistantConfig({
+            ...aiAssistantConfig,
+            appearance: newAppearanceConfig
+        }, activeProject.id);
+    }, [activeProject?.id, aiAssistantConfig, saveAiAssistantConfig]);
+
     const applyPreset = (presetName: keyof typeof THEME_PRESETS) => {
         const newConfig = applyThemePreset(config, presetName);
         setConfig(newConfig);
-        // Update in real-time
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const toggleSection = (section: string) => {
@@ -61,11 +67,7 @@ const ChatCustomizationSettings: React.FC = () => {
             branding: { ...config.branding, [key]: value }
         };
         setConfig(newConfig);
-        // Update in real-time
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const updateBehavior = (key: string, value: any) => {
@@ -74,11 +76,7 @@ const ChatCustomizationSettings: React.FC = () => {
             behavior: { ...config.behavior, [key]: value }
         };
         setConfig(newConfig);
-        // Update in real-time
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const updateMessages = (key: string, value: any) => {
@@ -87,11 +85,7 @@ const ChatCustomizationSettings: React.FC = () => {
             messages: { ...config.messages, [key]: value }
         };
         setConfig(newConfig);
-        // Update in real-time
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const updateButton = (key: string, value: any) => {
@@ -100,11 +94,7 @@ const ChatCustomizationSettings: React.FC = () => {
             button: { ...config.button, [key]: value }
         };
         setConfig(newConfig);
-        // Update in real-time
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const addQuickReply = () => {
@@ -120,10 +110,7 @@ const ChatCustomizationSettings: React.FC = () => {
                 }
             };
             setConfig(newConfig);
-            saveAiAssistantConfig({
-                ...aiAssistantConfig,
-                appearance: newConfig
-            });
+            saveConfig(newConfig);
             setNewQuickReply({ text: '', emoji: '' });
         }
     };
@@ -137,10 +124,7 @@ const ChatCustomizationSettings: React.FC = () => {
             }
         };
         setConfig(newConfig);
-        saveAiAssistantConfig({
-            ...aiAssistantConfig,
-            appearance: newConfig
-        });
+        saveConfig(newConfig);
     };
 
     const AccordionSection = ({

@@ -192,7 +192,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
                         <StatCard title={t('superadmin.usage.kpi.totalUsers', { defaultValue: 'Total Users' })} value={data.totalUsers.toLocaleString()} icon={<Users size={24} />} />
                         <StatCard title={t('superadmin.usage.kpi.totalProjects', { defaultValue: 'Total Projects' })} value={data.totalProjects.toLocaleString()} icon={<Copy size={24} />} />
                         <StatCard title={t('superadmin.usage.kpi.totalApiCalls', { defaultValue: 'Total API Calls' })} value={data.totalApiCalls.toLocaleString()} icon={<Bot size={24} />} />
-                        <StatCard title={t('superadmin.usage.kpi.popularTemplate', { defaultValue: 'Popular Template' })} value={data.popularTemplates[0].name} icon={<LayoutTemplate size={24} />} />
+                        <StatCard title={t('superadmin.usage.kpi.popularTemplate', { defaultValue: 'Popular Template' })} value={data.popularTemplates?.[0]?.name || t('superadmin.usage.kpi.noTemplate', { defaultValue: 'N/A' })} icon={<LayoutTemplate size={24} />} />
                     </div>
 
                     {/* Charts */}

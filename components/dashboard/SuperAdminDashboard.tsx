@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
+import { useAuth } from '../../contexts/core/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import {
-    Shield, Users, LayoutTemplate, Bot, BarChart3, CreditCard, Puzzle,
-    ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette, Zap,
-    FlaskConical, Languages, Search, FileText,
-    Navigation, Star, Settings, Grid3x3, List, X
+    Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
+    ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
+    FlaskConical, Languages, Search, FileText, FolderOpen,
+    Navigation, Star, Settings, Grid3x3, List, X, Sparkles
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -15,19 +16,19 @@ import AdminManagement from './admin/AdminManagement';
 import TenantManagement from './admin/TenantManagement';
 import LLMPromptManagement from './admin/LLMPromptManagement';
 import UsageStatistics from './admin/UsageStatistics';
-import BillingManagement from './admin/BillingManagement';
 import TemplateManagement from './admin/TemplateManagement';
 import ComponentsDashboard from './admin/ComponentsDashboard';
 import ImageLibraryManagement from './admin/ImageLibraryManagement';
+import AdminAssetLibrary from './admin/AdminAssetLibrary';
 import GlobalAssistantSettings from './admin/GlobalAssistantSettings';
 import GlobalSEOSettings from './admin/GlobalSEOSettings';
 import AnalyticsDashboard from './admin/AnalyticsDashboard';
 import DesignTokensEditor from './admin/DesignTokensEditor';
-import ConditionalRulesEditor from './admin/ConditionalRulesEditor';
 import LanguageManagement from './admin/LanguageManagement';
 import AppInformationSettings from './admin/AppInformationSettings';
 import ContentManagementDashboard from './admin/ContentManagementDashboard';
 import LandingNavigationManagement from './admin/LandingNavigationManagement';
+import SubscriptionManagement from './admin/SubscriptionManagement';
 
 // Types
 type AdminFeature = {
@@ -39,6 +40,7 @@ type AdminFeature = {
     route: string;
     isPremium?: boolean;
     isNew?: boolean;
+    allowedRoles: string[]; // Roles that can access this feature
 };
 
 type ViewMode = 'grid' | 'list' | 'compact';
@@ -50,18 +52,18 @@ const ADMIN_ROUTES: Record<string, string> = {
     'languages': ROUTES.ADMIN_LANGUAGES,
     'prompts': ROUTES.ADMIN_PROMPTS,
     'stats': ROUTES.ADMIN_STATS,
-    'billing': ROUTES.ADMIN_BILLING,
     'templates': ROUTES.ADMIN_TEMPLATES,
     'components': ROUTES.ADMIN_COMPONENTS,
     'content': ROUTES.ADMIN_CONTENT,
     'landing-navigation': ROUTES.ADMIN_LANDING_NAVIGATION,
     'design-tokens': ROUTES.ADMIN_DESIGN_TOKENS,
-    'conditional-rules': ROUTES.ADMIN_CONDITIONAL_RULES,
     'analytics': ROUTES.ADMIN_ANALYTICS,
     'images': ROUTES.ADMIN_IMAGES,
+    'admin-assets': ROUTES.ADMIN_ASSETS,
     'global-assistant': ROUTES.ADMIN_GLOBAL_ASSISTANT,
     'global-seo': ROUTES.ADMIN_GLOBAL_SEO,
     'app-info': ROUTES.ADMIN_APP_INFO,
+    'subscriptions': ROUTES.ADMIN_SUBSCRIPTIONS,
 };
 
 // Components
@@ -187,11 +189,15 @@ const CategoryChip: React.FC<{
 const SuperAdminDashboard = () => {
     const { t } = useTranslation();
     const { adminView, setAdminView } = useUI();
+    const { userDocument } = useAuth();
     const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+    // Get user role (default to empty string if not set)
+    const userRole = userDocument?.role || '';
 
     // Navigate back to admin main
     const handleBack = () => {
@@ -204,34 +210,40 @@ const SuperAdminDashboard = () => {
         navigate(ROUTES.DASHBOARD);
     };
 
-    const adminFeatures: AdminFeature[] = [
+    // Define all admin features with their allowed roles
+    const allAdminFeatures: AdminFeature[] = [
         // Core Management
-        { id: 'admins', title: t('superadmin.adminManagement'), description: t('superadmin.adminManagementDesc'), icon: <Shield size={24} />, category: 'core', route: ROUTES.ADMIN_ADMINS },
-        { id: 'tenants', title: t('superadmin.tenantManagement'), description: t('superadmin.tenantManagementDesc'), icon: <Users size={24} />, category: 'core', route: ROUTES.ADMIN_TENANTS },
-        { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES },
-        { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO },
-        { id: 'billing', title: t('superadmin.billing.title'), description: t('superadmin.billingDesc'), icon: <CreditCard size={24} />, category: 'core', route: ROUTES.ADMIN_BILLING, isPremium: true },
+        { id: 'admins', title: t('superadmin.adminManagement'), description: t('superadmin.adminManagementDesc'), icon: <Shield size={24} />, category: 'core', route: ROUTES.ADMIN_ADMINS, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'tenants', title: t('superadmin.tenantManagement'), description: t('superadmin.tenantManagementDesc'), icon: <Users size={24} />, category: 'core', route: ROUTES.ADMIN_TENANTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'subscriptions', title: t('superadmin.subscriptions'), description: t('superadmin.subscriptionsDesc'), icon: <Sparkles size={24} />, category: 'core', route: ROUTES.ADMIN_SUBSCRIPTIONS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Content Management
-        { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES },
-        { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS },
-        { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT },
-        { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES },
-        { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION },
+        { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'admin-assets', title: t('superadmin.adminAssets'), description: t('superadmin.adminAssetsDesc'), icon: <FolderOpen size={24} />, category: 'content', route: ROUTES.ADMIN_ASSETS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION, allowedRoles: ['owner', 'superadmin', 'admin'] },
 
         // Development & Design
-        { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS },
-        { id: 'conditional-rules', title: t('superadmin.conditionalRules'), description: t('superadmin.conditionalRulesDesc'), icon: <Zap size={24} />, category: 'development', route: ROUTES.ADMIN_CONDITIONAL_RULES },
+        { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS, allowedRoles: ['owner', 'superadmin', 'admin'] },
 
         // Analytics & Testing
-        { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS },
-        { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS },
+        { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
+        { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
 
         // System & AI
-        { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT },
-        { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS },
-        { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO },
+        { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO, allowedRoles: ['owner', 'superadmin', 'admin'] },
     ];
+
+    // Filter features based on user role
+    const adminFeatures = useMemo(() => {
+        return allAdminFeatures.filter(feature => feature.allowedRoles.includes(userRole));
+    }, [userRole, t]);
 
     const categories = useMemo(() => {
         const categoryMap = new Map<string, number>();
@@ -272,17 +284,17 @@ const SuperAdminDashboard = () => {
     if (adminView === 'languages') return <LanguageManagement onBack={handleBack} />;
     if (adminView === 'prompts') return <LLMPromptManagement onBack={handleBack} />;
     if (adminView === 'stats') return <UsageStatistics onBack={handleBack} />;
-    if (adminView === 'billing') return <BillingManagement onBack={handleBack} />;
+    if (adminView === 'subscriptions') return <SubscriptionManagement onBack={handleBack} />;
     if (adminView === 'templates') return <TemplateManagement onBack={handleBack} />;
     if (adminView === 'components') return <ComponentsDashboard onBack={handleBack} />;
     if (adminView === 'images') return <ImageLibraryManagement onBack={handleBack} />;
+    if (adminView === 'admin-assets') return <AdminAssetLibrary onBack={handleBack} />;
     if (adminView === 'global-assistant') return <GlobalAssistantSettings onBack={handleBack} />;
     if (adminView === 'global-seo') return <GlobalSEOSettings onBack={handleBack} />;
     if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
-    if (adminView === 'conditional-rules') return <AdminViewLayout title={t('superadmin.conditionalRulesTitle')} onBack={handleBack}><ConditionalRulesEditor rules={[]} onUpdate={async (rules) => { console.log('Rules updated:', rules); }} /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 
     return (

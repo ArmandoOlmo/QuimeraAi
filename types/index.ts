@@ -46,6 +46,12 @@ export * from './socialChat';
 // Multi-Tenant Types
 export * from './multiTenant';
 
+// Subscription & AI Credits Types
+export * from './subscription';
+
+// App Content Types (Landing page de Quimera)
+export * from './appContent';
+
 
 
 

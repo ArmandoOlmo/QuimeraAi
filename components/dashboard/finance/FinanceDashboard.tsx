@@ -19,6 +19,7 @@ import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { db, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from '../../../firebase';
+import { logApiCall } from '../../../services/apiLoggingService';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -38,13 +39,40 @@ const FinanceDashboard: React.FC = () => {
     const { user } = useAuth();
     const { hasApiKey, handleApiError } = useAI();
     const { activeProject } = useProject();
-    // AI text generation helper - uses secure proxy
-    const generateText = async (prompt: string, _options?: { systemPrompt?: string; temperature?: number }) => {
+    // AI text generation helper - uses secure proxy with usage tracking
+    const generateText = async (prompt: string, _options?: { systemPrompt?: string; temperature?: number }, feature: string = 'finance-ai') => {
         const projectId = activeProject?.id || 'finance-dashboard';
-        const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {
-            temperature: _options?.temperature || 0.7
-        }, user?.uid);
-        return extractTextFromResponse(response);
+        try {
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {
+                temperature: _options?.temperature || 0.7
+            }, user?.uid);
+            
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: 'gemini-2.5-flash',
+                    feature,
+                    success: true
+                });
+            }
+            
+            return extractTextFromResponse(response);
+        } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: 'gemini-2.5-flash',
+                    feature,
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+            throw error;
+        }
     };
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
@@ -243,7 +271,7 @@ Formato: Texto limpio, profesional, con bullets y secciones claras.`;
             const report = await generateText(prompt, {
                 systemPrompt: 'Eres un analista financiero experto. Genera reportes claros, accionables y profesionales.',
                 temperature: 0.7
-            });
+            }, 'finance-ai-report');
 
             setAiReport(report);
         } catch (error) {
@@ -282,7 +310,7 @@ Sé específico con números y porcentajes.`;
             const analysis = await generateText(prompt, {
                 systemPrompt: 'Eres un analista predictivo financiero. Usa análisis de tendencias para generar proyecciones realistas.',
                 temperature: 0.6
-            });
+            }, 'finance-ai-trend-analysis');
 
             setTrendAnalysis(analysis);
         } catch (error) {
@@ -317,7 +345,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación.`;
             const suggestedCategory = await generateText(prompt, {
                 systemPrompt: 'Eres un experto en categorización de gastos empresariales.',
                 temperature: 0.3
-            });
+            }, 'finance-ai-categorization');
 
             const category = suggestedCategory.trim();
             if (Object.keys(CATEGORY_COLORS).includes(category)) {

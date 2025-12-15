@@ -24,7 +24,7 @@ interface CRMContextType {
     // Leads
     leads: Lead[];
     isLoadingLeads: boolean;
-    addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<void>;
+    addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<string | undefined>;
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
@@ -183,15 +183,16 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [user]);
 
     // Lead Operations
-    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
-        if (!user) return;
+    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<string | undefined> => {
+        if (!user) return undefined;
 
         try {
-            await addDoc(collection(db, 'users', user.uid, 'leads'), {
+            const docRef = await addDoc(collection(db, 'users', user.uid, 'leads'), {
                 ...leadData,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
+            return docRef.id;
         } catch (error) {
             console.error("Error adding lead:", error);
             throw error;

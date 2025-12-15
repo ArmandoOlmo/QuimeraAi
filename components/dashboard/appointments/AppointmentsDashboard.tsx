@@ -1,6 +1,7 @@
 /**
  * AppointmentsDashboard
  * Dashboard principal de gestión de citas
+ * Las citas están sincronizadas por proyecto
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
@@ -30,13 +31,19 @@ import {
     TrendingUp,
     Users,
     X,
+    Store,
+    ChevronDown,
+    Layers,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useCRM } from '../../../contexts/crm/CRMContext';
 import { useAI } from '../../../contexts/ai/AIContext';
+import { useUI } from '../../../contexts/core/UIContext';
+import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
+import ProjectSelectorPage from './ProjectSelectorPage';
 import {
     Appointment,
     AppointmentStatus,
@@ -89,6 +96,17 @@ const AppointmentsDashboard: React.FC = () => {
     const { user } = useAuth();
     const { leads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
+    const { setView } = useUI();
+    const { activeProject, activeProjectId, projects, loadProject } = useProject();
+
+    // Project selection state
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+    const [showProjectSelector, setShowProjectSelector] = useState(false);
+
+    // Determinar qué proyecto usar
+    const effectiveProjectId = selectedProjectId || activeProjectId;
+    const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
 
     // Use appointments hook
     const {
@@ -124,6 +142,14 @@ const AppointmentsDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isGoogleConnected, setIsGoogleConnected] = useState(false);
     const [isGeneratingAiPrep, setIsGeneratingAiPrep] = useState(false);
+
+    // Handler for project selection
+    const handleProjectSelect = (projectId: string) => {
+        setSelectedProjectId(projectId);
+        setShowProjectSelector(false);
+        // Load the project but DO NOT switch view to editor
+        loadProject(projectId, false, false);
+    };
 
     // Handlers
     const navigateDate = useCallback((direction: 'prev' | 'next' | 'today') => {
@@ -443,6 +469,16 @@ const AppointmentsDashboard: React.FC = () => {
         }
     };
 
+    // Mostrar página de selección de proyecto si no hay proyecto o si el usuario quiere ver todos
+    if (showProjectSelector || !effectiveProjectId || projects.filter(p => p.status !== 'Template').length === 0) {
+        return (
+            <ProjectSelectorPage
+                onProjectSelect={handleProjectSelect}
+                onBack={showProjectSelector ? () => setShowProjectSelector(false) : () => setView('dashboard')}
+            />
+        );
+    }
+
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
@@ -464,9 +500,85 @@ const AppointmentsDashboard: React.FC = () => {
                             </div>
                             <div>
                                 <h1 className="text-base sm:text-lg font-bold text-foreground">Citas</h1>
-                                <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
-                                    {todayAppointments.length} hoy · {upcomingAppointments.length} próx.
-                                </p>
+                                {/* Project Selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
+                                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        <Store size={12} />
+                                        <span className="max-w-[150px] truncate">
+                                            {effectiveProject?.name || 'Seleccionar proyecto'}
+                                        </span>
+                                        <ChevronDown size={12} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* Dropdown */}
+                                    {isProjectSelectorOpen && (
+                                        <>
+                                            <div 
+                                                className="fixed inset-0 z-40"
+                                                onClick={() => setIsProjectSelectorOpen(false)}
+                                            />
+                                            <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-80 overflow-auto">
+                                                {/* Header */}
+                                                <div className="px-4 py-2 border-b border-border/50 mb-2">
+                                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                        Cambio rápido
+                                                    </p>
+                                                </div>
+                                                
+                                                {/* Recent Projects */}
+                                                {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => {
+                                                            handleProjectSelect(project.id);
+                                                            setIsProjectSelectorOpen(false);
+                                                        }}
+                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
+                                                            project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                        }`}
+                                                    >
+                                                        <div className="w-8 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
+                                                            {project.thumbnailUrl ? (
+                                                                <img
+                                                                    src={project.thumbnailUrl}
+                                                                    alt={project.name}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center">
+                                                                    <Layers size={12} className="text-muted-foreground/50" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <span className="flex-1 text-sm text-left truncate">
+                                                            {project.name}
+                                                        </span>
+                                                        {project.id === effectiveProjectId && (
+                                                            <CheckCircle2 size={14} className="text-primary flex-shrink-0" />
+                                                        )}
+                                                    </button>
+                                                ))}
+
+                                                {/* Ver todos */}
+                                                <div className="border-t border-border/50 mt-2 pt-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsProjectSelectorOpen(false);
+                                                            setShowProjectSelector(true);
+                                                        }}
+                                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition-colors"
+                                                    >
+                                                        <Grid size={14} />
+                                                        Ver todos los proyectos
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

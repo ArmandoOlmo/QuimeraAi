@@ -3,7 +3,7 @@
  * Tipos para features avanzadas: design tokens, responsive, animations, conditional rules, A/B testing, etc.
  */
 
-import { PageSection } from './ui';
+import { PageSection, FontFamily } from './ui';
 
 // =============================================================================
 // DESIGN TOKENS
@@ -121,6 +121,118 @@ export interface DesignTokens {
 }
 
 // =============================================================================
+// APP TOKENS - Para Dashboard/Admin de la aplicación
+// =============================================================================
+
+/**
+ * Colores del tema para cada modo (light/dark/black)
+ */
+export interface AppThemeColors {
+    background: string;      // --editor-bg
+    panelBackground: string; // --editor-panel-bg
+    border: string;          // --editor-border
+    accent: string;          // --editor-accent
+    textPrimary: string;     // --editor-text-primary
+    textSecondary: string;   // --editor-text-secondary
+    // Colores semánticos
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+}
+
+/**
+ * Tipografía de la app con Google Fonts
+ */
+export interface AppTypography {
+    fontFamily: {
+        sans: FontFamily;    // Fuente para texto general (body, labels)
+        header: FontFamily;  // Fuente para títulos del dashboard
+        mono: FontFamily;    // Fuente monoespaciada (código, IDs)
+    };
+    fontSize: {
+        xs: string;
+        sm: string;
+        base: string;
+        lg: string;
+        xl: string;
+        '2xl': string;
+        '3xl': string;
+    };
+    fontWeight: {
+        normal: number;
+        medium: number;
+        semibold: number;
+        bold: number;
+    };
+    lineHeight: {
+        tight: number;
+        normal: number;
+        relaxed: number;
+    };
+}
+
+/**
+ * Configuración de bordes y esquinas
+ */
+export interface AppBorders {
+    radius: {
+        none: string;
+        sm: string;
+        md: string;
+        lg: string;
+        xl: string;
+        '2xl': string;
+        full: string;
+    };
+    width: {
+        none: string;
+        thin: string;
+        medium: string;
+        thick: string;
+    };
+}
+
+/**
+ * Escala de espaciado
+ */
+export interface AppSpacing {
+    none: string;
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+    '2xl': string;
+}
+
+/**
+ * Sombras para elevación
+ */
+export interface AppShadows {
+    none: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+}
+
+/**
+ * App Tokens completos - controla el aspecto del Dashboard/Admin
+ */
+export interface AppTokens {
+    colors: {
+        light: AppThemeColors;
+        dark: AppThemeColors;
+        black: AppThemeColors;
+    };
+    typography: AppTypography;
+    borders: AppBorders;
+    spacing: AppSpacing;
+    shadows: AppShadows;
+}
+
+// =============================================================================
 // RESPONSIVE CONFIGURATION
 // =============================================================================
 export type Breakpoint = 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -175,35 +287,6 @@ export interface ComponentAnimations {
     interaction?: AnimationConfig;
 }
 
-// =============================================================================
-// CONDITIONAL RULES
-// =============================================================================
-export type ConditionOperator = 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
-export type ConditionTarget = 'userRole' | 'deviceType' | 'screenSize' | 'timeOfDay' | 'location' | 'customField';
-
-export interface Condition {
-    id: string;
-    target: ConditionTarget;
-    operator: ConditionOperator;
-    value: any;
-}
-
-export interface ConditionalRule {
-    id: string;
-    name: string;
-    conditions: Condition[];
-    matchType: 'all' | 'any';
-    actions: {
-        show?: boolean;
-        applyStyles?: any;
-        redirect?: string;
-    };
-}
-
-export interface ConditionalRules {
-    rules: ConditionalRule[];
-    enabled: boolean;
-}
 
 // =============================================================================
 // A/B TESTING

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai';
+import { useProject } from '../../../contexts/project';
 import { Shield, Save, Sparkles, Power, FileText, LogOut, Users, Lock, Sliders, MessageSquare, Gift } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
 
 const LeadCaptureSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
+    const { activeProject } = useProject();
 
     const defaultConfig: LeadCaptureConfig = {
         enabled: true,
@@ -26,13 +28,14 @@ const LeadCaptureSettings: React.FC = () => {
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     const handleSave = async () => {
+        if (!activeProject?.id) return;
         setIsSaving(true);
         try {
             await saveAiAssistantConfig({
                 ...aiAssistantConfig,
                 leadCaptureEnabled: config.enabled,
                 leadCaptureConfig: config
-            });
+            }, activeProject.id);
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {

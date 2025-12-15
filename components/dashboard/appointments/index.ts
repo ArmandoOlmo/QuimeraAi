@@ -3,6 +3,7 @@
  */
 
 export { default as AppointmentsDashboard } from './AppointmentsDashboard';
+export { default as ProjectSelectorPage } from './ProjectSelectorPage';
 
 // Components
 export { default as AppointmentCard } from './components/AppointmentCard';

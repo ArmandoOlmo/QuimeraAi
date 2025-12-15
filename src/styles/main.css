@@ -390,6 +390,38 @@ html.palette-rose-coral .theme-btn-active {
    BASE STYLES
    ============================================ */
 
+/* Global theme transition for smooth color changes */
+html {
+  /* Optimize rendering during theme transitions */
+  color-scheme: light dark;
+}
+
+html,
+html * {
+  /* Smooth transition for theme color changes - applies to all elements */
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+/* Disable transitions for elements that shouldn't animate */
+html *[data-no-theme-transition],
+html *[data-no-theme-transition] *,
+html img,
+html video,
+html canvas,
+html svg path,
+html input[type="range"]::-webkit-slider-thumb,
+html .no-theme-transition,
+html .no-theme-transition * {
+  transition-property: none !important;
+}
+
+/* Prevent transition flash on page load */
+html.theme-transitioning * {
+  transition-duration: 0ms !important;
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));

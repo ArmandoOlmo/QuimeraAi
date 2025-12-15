@@ -22,6 +22,7 @@ import { AdminProvider } from './admin';
 import { DomainsProvider } from './domains';
 import { AIProvider } from './ai';
 import { TenantProvider } from './tenant';
+import { AppContentProvider } from './appContent';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -36,25 +37,27 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             <ToastProvider>
                 <LanguageProvider>
                     <UIProvider>
-                        <TenantProvider>
-                            <EditorProvider>
-                                <ProjectProvider>
-                                    <FilesProvider>
-                                        <CRMProvider>
-                                            <CMSProvider>
-                                                <AdminProvider>
-                                                    <DomainsProvider>
-                                                        <AIProvider>
-                                                            {children}
-                                                        </AIProvider>
-                                                    </DomainsProvider>
-                                                </AdminProvider>
-                                            </CMSProvider>
-                                        </CRMProvider>
-                                    </FilesProvider>
-                                </ProjectProvider>
-                            </EditorProvider>
-                        </TenantProvider>
+                        <AppContentProvider>
+                            <TenantProvider>
+                                <EditorProvider>
+                                    <ProjectProvider>
+                                        <FilesProvider>
+                                            <CRMProvider>
+                                                <CMSProvider>
+                                                    <AdminProvider>
+                                                        <DomainsProvider>
+                                                            <AIProvider>
+                                                                {children}
+                                                            </AIProvider>
+                                                        </DomainsProvider>
+                                                    </AdminProvider>
+                                                </CMSProvider>
+                                            </CRMProvider>
+                                        </FilesProvider>
+                                    </ProjectProvider>
+                                </EditorProvider>
+                            </TenantProvider>
+                        </AppContentProvider>
                     </UIProvider>
                 </LanguageProvider>
             </ToastProvider>
@@ -64,6 +67,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
 
 /**
  * LightProviders - Versión ligera para rutas públicas
+ * Incluye AppContentProvider para mostrar artículos y navegación en el landing público
  */
 export const LightProviders: React.FC<AppProvidersProps> = ({ children }) => {
     return (
@@ -71,7 +75,9 @@ export const LightProviders: React.FC<AppProvidersProps> = ({ children }) => {
             <ToastProvider>
                 <LanguageProvider>
                     <UIProvider>
-                        {children}
+                        <AppContentProvider>
+                            {children}
+                        </AppContentProvider>
                     </UIProvider>
                 </LanguageProvider>
             </ToastProvider>

@@ -5,7 +5,7 @@ import { useFiles } from '../../../contexts/files';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles } from 'lucide-react';
+import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X } from 'lucide-react';
 import { FileRecord } from '../../../types';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import DragDropZone from '../../ui/DragDropZone';
@@ -363,8 +363,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                 <img
                                                     src={file.downloadURL}
                                                     alt={file.name}
-                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105 no-theme-transition"
                                                     loading="lazy"
+                                                    decoding="async"
                                                 />
 
                                                 {/* Filename overlay on hover - only when not in selection mode */}

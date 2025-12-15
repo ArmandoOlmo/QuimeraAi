@@ -13,6 +13,7 @@ import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
 import CoolorsImporter from '../../ui/CoolorsImporter';
+import { logApiCall } from '../../../services/apiLoggingService';
 
 interface TemplateEditorModalProps {
     isOpen: boolean;
@@ -200,6 +201,8 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
         }
 
         setIsEnhancingPrompt(true);
+        let modelToUse = 'gemini-2.5-flash'; // Declared outside try for error logging
+        
         try {
             const { colors, colorInfo } = extractTemplateColors(template);
             const colorAnalysis = analyzeColorPalette(colors);
@@ -207,7 +210,6 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
             // Get dynamic prompt
             const promptTemplate = getPrompt('template-thumbnail-suggestion');
             let promptText = '';
-            let modelToUse = 'gemini-2.5-flash';
 
             if (promptTemplate) {
                 promptText = promptTemplate.template
@@ -257,8 +259,30 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
 
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: proxyProjectId,
+                    model: modelToUse,
+                    feature: 'template-thumbnail-prompt',
+                    success: true
+                });
+            }
+
             setThumbnailPrompt(responseText.trim());
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: template?.id,
+                    model: modelToUse,
+                    feature: 'template-thumbnail-prompt',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             console.error('Error generating prompt suggestion:', error);
             handleApiError(error);
         } finally {
@@ -367,6 +391,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
         setIsAiSuggesting(true);
         setAiSuggestions([]);
+        let modelToUse = 'gemini-2.5-flash'; // Declared outside try for error logging
 
         try {
             const { colors, colorInfo } = extractTemplateColors(template);
@@ -378,7 +403,6 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Get dynamic prompt
             const promptTemplate = getPrompt('template-industry-suggestion');
             let promptText = '';
-            let modelToUse = 'gemini-2.5-flash';
 
             if (promptTemplate) {
                 promptText = promptTemplate.template
@@ -478,6 +502,17 @@ Return ONLY the JSON array, no other text.`;
                 responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
 
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: proxyProjectId,
+                    model: modelToUse,
+                    feature: 'template-industry-suggestion',
+                    success: true
+                });
+            }
+
             // Parse the response
             let suggestedIds: string[] = [];
             try {
@@ -529,6 +564,17 @@ Return ONLY the JSON array, no other text.`;
                 console.warn('No valid industries found in AI response:', responseText);
             }
         } catch (error) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: template?.id,
+                    model: modelToUse,
+                    feature: 'template-industry-suggestion',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
             console.error('AI suggestion error:', error);
             setError(t('superadmin.templateEditor.errors.suggestError', 'Error suggesting industries. Check your connection.'));
             handleApiError(error);
@@ -685,12 +731,12 @@ Return ONLY the JSON array, no other text.`;
 
         setIsGeneratingName(true);
         setError('');
+        let modelToUse = 'gemini-2.5-flash'; // Declared outside try for error logging
 
         try {
             // Get dynamic prompt
             const promptTemplate = getPrompt('template-name-generation');
             let promptText = '';
-            let modelToUse = 'gemini-2.5-flash';
 
             if (promptTemplate) {
                 promptText = promptTemplate.template
@@ -726,6 +772,17 @@ Name:`;
                 text = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
             }
 
+            // Log successful API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: proxyProjectId,
+                    model: modelToUse,
+                    feature: 'template-name-generation',
+                    success: true
+                });
+            }
+
             // Clean up the response
             const cleanName = text
                 .trim()
@@ -742,6 +799,17 @@ Name:`;
                 setError(t('superadmin.templateEditor.errors.nameInvalid', 'Could not generate a valid name. Try again.'));
             }
         } catch (err) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: template?.id,
+                    model: modelToUse,
+                    feature: 'template-name-generation',
+                    success: false,
+                    errorMessage: err instanceof Error ? err.message : 'Unknown error'
+                });
+            }
             console.error('AI name generation failed:', err);
             setError(t('superadmin.templateEditor.errors.nameError', 'Failed to generate name. Please try again.'));
         } finally {

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
 import { getDefaultGlobalColors } from '../../../data/colorPalettes';
+import { logApiCall } from '../../../services/apiLoggingService';
 import {
     OnboardingProgress,
     OnboardingWizardStep,
@@ -32,6 +33,27 @@ type OnboardingStep = OnboardingWizardStep;
 
 // Development mode check for conditional logging
 const isDev = import.meta.env.DEV;
+
+/**
+ * Helper to log onboarding AI API calls
+ */
+const logOnboardingApiCall = (
+    userId: string | undefined,
+    model: string,
+    feature: string,
+    success: boolean,
+    errorMessage?: string
+) => {
+    if (userId) {
+        logApiCall({
+            userId,
+            model,
+            feature: `onboarding-${feature}`,
+            success,
+            errorMessage
+        });
+    }
+};
 
 // Helper to clean JSON from markdown code blocks and fix common issues
 const cleanJsonResponse = (text: string): string => {
@@ -451,7 +473,10 @@ export const useOnboarding = () => {
                 { temperature: 0.7, maxOutputTokens: 500 },
                 user?.uid
             );
-            
+
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'categories', true);
+
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
             
@@ -521,9 +546,13 @@ export const useOnboarding = () => {
                 {},
                 user?.uid
             );
+            
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'description', true);
+            
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, null);
-            
+
             // If parsing succeeded and we have a description object
             if (parsed && typeof parsed === 'object' && parsed.description) {
                 return {
@@ -576,9 +605,13 @@ export const useOnboarding = () => {
                 {},
                 user?.uid
             );
+            
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'services', true);
+            
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
-            
+
             if (!Array.isArray(parsed)) {
                 console.warn('Services response is not an array, returning empty');
                 return [];
@@ -753,9 +786,13 @@ TEMPLATE #${t.index}: "${t.name}"
                 { temperature: 0.7, maxOutputTokens: 600 },
                 user?.uid                    // userId (optional)
             );
+            
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'template-rec', true);
+            
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
-            
+
             if (isDev) console.log('🎯 LLM chose template:', parsed.templateId, 'from', templates.length, 'options');
 
             // Verify the template exists
@@ -1262,7 +1299,7 @@ TEMPLATE #${t.index}: "${t.name}"
         try {
             if (isDev) console.log('🎨 Generating image prompts with LLM...');
             if (isDev) console.log('   Images needed:', imagesToGenerate.length);
-            
+
             const response = await generateContentViaProxy(
                 'onboarding-image-prompts',  // projectId (must start with 'onboarding-')
                 prompt,                       // prompt text
@@ -1270,7 +1307,10 @@ TEMPLATE #${t.index}: "${t.name}"
                 { temperature: 0.7, maxOutputTokens: 4000 },
                 user?.uid                     // userId (optional)
             );
-            
+
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'image-prompts', true);
+
             const text = extractTextFromResponse(response);
             const llmPrompts = safeJsonParse(text, null);
             
@@ -1405,7 +1445,10 @@ TEMPLATE #${t.index}: "${t.name}"
                 { temperature: 0.7, maxOutputTokens: 2000 },
                 user?.uid                     // userId (optional)
             );
-            
+
+            // Log successful API call
+            logOnboardingApiCall(user?.uid, promptConfig.model, 'content-gen', true);
+
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
             

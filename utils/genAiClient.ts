@@ -24,7 +24,7 @@ const getProcessApiKey = (): string | null => {
     try {
         if (typeof import.meta !== 'undefined' && import.meta.env) {
             const metaEnv = import.meta.env as any;
-            const key = metaEnv.VITE_GEMINI_API_KEY || metaEnv.VITE_GOOGLE_AI_API_KEY;
+            const key = metaEnv.VITE_GEMINI_API_KEY || metaEnv.VITE_GOOGLE_AI_API_KEY || metaEnv.VITE_GOOGLE_API_KEY;
             if (key && key !== 'null' && key !== 'undefined' && key.trim() !== '') {
                 return key.trim();
             }

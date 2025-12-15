@@ -32,6 +32,12 @@ import {
 } from './stripeConnect';
 
 import {
+    getBillingMetrics,
+    createOrUpdatePlan,
+    archivePlan
+} from './stripeBilling';
+
+import {
     onProductWrite,
     onCategoryWrite,
     onDiscountWrite,
@@ -387,6 +393,10 @@ export {
     addPortalDomain,
     verifyPortalDomain,
     removePortalDomain,
-    scheduledPortalDNSCheck
+    scheduledPortalDNSCheck,
+    // Stripe Billing exports (Super Admin)
+    getBillingMetrics,
+    createOrUpdatePlan,
+    archivePlan
 };
 

@@ -10,6 +10,7 @@ import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApi
 import { generateImageViaProxy, generateContentViaProxy, extractTextFromResponse, shouldUseProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
 import { Modality } from '@google/genai';
+import { db, doc, updateDoc } from '../../firebase';
 
 interface AIContextType {
     // API Key Management
@@ -20,7 +21,7 @@ interface AIContextType {
     // AI Assistant Config (Project Level)
     aiAssistantConfig: AiAssistantConfig;
     setAiAssistantConfig: React.Dispatch<React.SetStateAction<AiAssistantConfig>>;
-    saveAiAssistantConfig: (config: AiAssistantConfig) => Promise<void>;
+    saveAiAssistantConfig: (config: AiAssistantConfig, projectId?: string) => Promise<void>;
     
     // Image Generation
     generateImage: (prompt: string, options?: {
@@ -155,10 +156,21 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         console.error('AI API Error:', error);
     };
 
-    // Save AI assistant config
-    const saveAiAssistantConfig = async (config: AiAssistantConfig) => {
+    // Save AI assistant config (persists to Firestore if projectId is provided)
+    const saveAiAssistantConfig = async (config: AiAssistantConfig, projectId?: string) => {
         setAiAssistantConfig(config);
-        // Note: Typically saved as part of project data
+        
+        // Persist to Firestore if we have projectId and user
+        if (projectId && user) {
+            try {
+                const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId);
+                await updateDoc(projectDocRef, { aiAssistantConfig: config });
+                console.log('✅ AI Assistant config saved to Firestore');
+            } catch (error) {
+                console.error('❌ Error saving AI Assistant config:', error);
+                throw error;
+            }
+        }
     };
 
     // Generate image
