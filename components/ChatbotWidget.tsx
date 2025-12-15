@@ -8,7 +8,7 @@ import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { db, collection, addDoc, getDocs, query, where, orderBy } from '../firebase';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/core/AuthContext';
 
 interface ChatbotWidgetProps {
     isPreview?: boolean;
