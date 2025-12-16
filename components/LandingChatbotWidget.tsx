@@ -96,6 +96,9 @@ const stripMarkdown = (text: string): string => {
 const LandingChatbotWidget: React.FC = () => {
     const { t } = useTranslation();
     const { landingChatbotConfig, designTokens } = useAdmin();
+    
+    // Debug logging
+    console.log('[LandingChatbotWidget] Rendering, isActive:', true, 'path:', typeof window !== 'undefined' ? window.location.pathname : 'SSR');
 
     // Quimera logo URL - ALWAYS use this for the public chatbot
     const QUIMERA_LOGO = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
@@ -107,6 +110,10 @@ const LandingChatbotWidget: React.FC = () => {
         ...landingChatbotConfig,
         // FORCE isActive to true - landing chatbot should always be active
         isActive: true,
+        // FORCE agent name to Quibo
+        agentName: 'Quibo',
+        agentRole: 'AI Assistant',
+        welcomeMessage: '¡Hola! 👋 Soy **Quibo**, el asistente de IA de Quimera.ai. Puedo ayudarte a conocer nuestra plataforma de creación de sitios web. ¿Qué te gustaría saber?',
         appearance: {
             ...defaultLandingChatbotConfig.appearance,
             ...(landingChatbotConfig?.appearance || {}),
@@ -124,10 +131,23 @@ const LandingChatbotWidget: React.FC = () => {
         voice: {
             ...defaultLandingChatbotConfig.voice,
             ...(landingChatbotConfig?.voice || {}),
+            // FORCE voice enabled for live voice
+            enabled: true,
+            autoPlayGreeting: false,
         },
         personality: {
             ...defaultLandingChatbotConfig.personality,
             ...(landingChatbotConfig?.personality || {}),
+            // FORCE Quibo in system prompt
+            systemPrompt: `Eres Quibo, el asistente de IA de Quimera.ai, una plataforma de creación de sitios web con inteligencia artificial.
+
+Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, resolver sus dudas y guiarlos hacia la conversión.
+
+Personalidad:
+- Amigable, profesional y entusiasta
+- Tu nombre es Quibo (derivado de Quimera)
+- Conoces a fondo todas las funcionalidades de Quimera.ai
+- Siempre ofreces ayuda proactiva`,
         },
         leadCapture: {
             ...defaultLandingChatbotConfig.leadCapture,
@@ -345,8 +365,13 @@ const LandingChatbotWidget: React.FC = () => {
         return config.appearance.excludedPaths.some(path => currentPath.startsWith(path));
     };
 
+    // Debug: Log excluded path check
+    const excluded = isExcludedPath();
+    console.log('[LandingChatbotWidget] isActive:', config.isActive, 'isExcludedPath:', excluded);
+    
     // Don't render if inactive or on excluded path
-    if (!config.isActive || isExcludedPath()) {
+    if (!config.isActive || excluded) {
+        console.log('[LandingChatbotWidget] Not rendering - isActive:', config.isActive, 'excluded:', excluded);
         return null;
     }
 
@@ -515,7 +540,7 @@ ${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n
 Asistente:`;
 
                 const result = await generateContentViaProxy(
-                    'landing-chatbot',
+                    'quimera-chat-landing', // Use pattern that's allowed in Cloud Function
                     fullPrompt,
                     'gemini-2.0-flash-exp',
                     {

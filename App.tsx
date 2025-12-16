@@ -123,27 +123,29 @@ const AuthGate: React.FC = () => {
   };
 
   return (
-    <Router
-      user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
-      userRole={userDocument?.role}
-      loadingAuth={loadingAuth}
-      onVerificationEmailSent={setVerificationEmail}
-      verificationEmail={verificationEmail}
-      onLogout={handleLogout}
-    >
-      {({ view, adminView, projectId }) => (
-        <>
-          <AppContent routeView={view} routeAdminView={adminView} routeProjectId={projectId} />
-          {isProfileModalOpen && (
-            <Suspense fallback={null}>
-              <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
-            </Suspense>
-          )}
-          {/* Landing Chatbot - Always show when user is NOT authenticated */}
-          {!user && <LandingChatbotWidget />}
-        </>
-      )}
-    </Router>
+    <>
+      <Router
+        user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
+        userRole={userDocument?.role}
+        loadingAuth={loadingAuth}
+        onVerificationEmailSent={setVerificationEmail}
+        verificationEmail={verificationEmail}
+        onLogout={handleLogout}
+      >
+        {({ view, adminView, projectId }) => (
+          <>
+            <AppContent routeView={view} routeAdminView={adminView} routeProjectId={projectId} />
+            {isProfileModalOpen && (
+              <Suspense fallback={null}>
+                <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
+              </Suspense>
+            )}
+          </>
+        )}
+      </Router>
+      {/* Landing Chatbot - Always render outside Router when user is NOT authenticated */}
+      {!user && <LandingChatbotWidget />}
+    </>
   );
 };
 
