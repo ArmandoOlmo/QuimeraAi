@@ -567,10 +567,14 @@ service cloud.firestore {
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // Settings collection (used for components, global_assistant, designTokens)
+    // Settings collection (used for components, global_assistant, designTokens, landingChatbot)
     match /settings/{settingId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
+      // Landing chatbot can be edited by any authenticated admin user
+      allow write: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        settingId == 'landingChatbot'
+      );
     }
     
     // Global files (superadmin/owner)

@@ -52,6 +52,9 @@ export * from './subscription';
 // App Content Types (Landing page de Quimera)
 export * from './appContent';
 
+// Landing Chatbot Types (Chatbot público de Quimera.ai)
+export * from './landingChatbot';
+
 
 
 

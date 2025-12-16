@@ -19,6 +19,8 @@ import {
     ComponentVariant,
     EditableComponentID,
     AppTokens,
+    LandingChatbotConfig,
+    defaultLandingChatbotConfig,
 } from '../../types';
 import { defaultAppTokens, getAppTokensWithDefaults, applyAppTokensToCSS } from '../../utils/appTokenApplier';
 import { ThemeMode } from '../../types';
@@ -79,6 +81,10 @@ interface AdminContextType {
     // Global Assistant Config
     globalAssistantConfig: GlobalAssistantConfig;
     saveGlobalAssistantConfig: (config: GlobalAssistantConfig) => Promise<void>;
+    
+    // Landing Chatbot Config
+    landingChatbotConfig: LandingChatbotConfig;
+    saveLandingChatbotConfig: (config: LandingChatbotConfig) => Promise<void>;
     
     // Component Studio
     componentStyles: ComponentStyles;
@@ -142,6 +148,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         supportedLanguages: 'English, Spanish, French'
     });
     
+    // Landing Chatbot Config
+    const [landingChatbotConfig, setLandingChatbotConfig] = useState<LandingChatbotConfig>(defaultLandingChatbotConfig);
+    
     // Component Studio State
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);
     const [customComponents, setCustomComponents] = useState<CustomComponent[]>([]);
@@ -180,6 +189,12 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 const assistantDoc = await getDoc(doc(db, 'settings', 'global_assistant'));
                 if (assistantDoc.exists()) {
                     setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
+                }
+                
+                // Landing chatbot config
+                const landingChatbotDoc = await getDoc(doc(db, 'settings', 'landingChatbot'));
+                if (landingChatbotDoc.exists()) {
+                    setLandingChatbotConfig(prev => ({ ...prev, ...landingChatbotDoc.data() }));
                 }
 
                 // Design tokens
@@ -223,6 +238,29 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }
         });
 
+        return () => {
+            unsubscribe();
+        };
+    }, [user]);
+    
+    // Setup landing chatbot config listener for real-time updates
+    useEffect(() => {
+        if (!user) return;
+        
+        const unsubscribe = onSnapshot(
+            doc(db, 'settings', 'landingChatbot'),
+            (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    setLandingChatbotConfig(prev => ({ ...prev, ...docSnapshot.data() }));
+                }
+            },
+            (error) => {
+                if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
+                    console.error("Error in landing chatbot config listener:", error);
+                }
+            }
+        );
+        
         return () => {
             unsubscribe();
         };
@@ -483,6 +521,45 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             throw error;
         }
     };
+    
+    // Landing Chatbot Config Functions
+    const saveLandingChatbotConfig = async (config: LandingChatbotConfig) => {
+        try {
+            // Deep clean function to remove undefined values recursively
+            const removeUndefined = (obj: any): any => {
+                if (obj === null || obj === undefined) return null;
+                if (Array.isArray(obj)) {
+                    return obj.map(item => removeUndefined(item));
+                }
+                if (typeof obj === 'object') {
+                    const cleaned: any = {};
+                    for (const [key, value] of Object.entries(obj)) {
+                        if (value !== undefined) {
+                            cleaned[key] = removeUndefined(value);
+                        }
+                    }
+                    return cleaned;
+                }
+                return obj;
+            };
+
+            const cleanConfig = removeUndefined(config);
+            
+            const configToSave = {
+                ...cleanConfig,
+                lastUpdated: serverTimestamp(),
+                updatedBy: user?.uid || '',
+            };
+            
+            console.log('AdminContext: Saving config to Firestore:', configToSave);
+            await setDoc(doc(db, 'settings', 'landingChatbot'), configToSave);
+            console.log('AdminContext: Config saved successfully');
+            setLandingChatbotConfig(config);
+        } catch (error) {
+            console.error("Error saving landing chatbot config:", error);
+            throw error;
+        }
+    };
 
     // Component Studio Functions
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
@@ -648,6 +725,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         syncPrompts,
         globalAssistantConfig,
         saveGlobalAssistantConfig,
+        landingChatbotConfig,
+        saveLandingChatbotConfig,
         componentStyles,
         customComponents,
         updateComponentStyle,

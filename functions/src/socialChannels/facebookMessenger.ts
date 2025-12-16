@@ -13,67 +13,75 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// =============================================================================
-// WEBHOOK VERIFICATION
-// =============================================================================
-
-/**
- * Facebook webhook verification endpoint
- * GET request to verify the webhook with Facebook
- */
-export const facebookWebhookVerify = functions.https.onRequest((req, res) => {
-    // Facebook sends these parameters
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    // Get verify token from config
-    const verifyToken = functions.config().facebook?.verify_token || 'quimera_fb_verify';
-
-    if (mode === 'subscribe' && token === verifyToken) {
-        console.log('Facebook webhook verified successfully');
-        res.status(200).send(challenge);
-    } else {
-        console.error('Facebook webhook verification failed');
-        res.sendStatus(403);
-    }
-});
+// Verify token - MUST match what you set in Meta Developer Portal
+const VERIFY_TOKEN = 'quimera_verify_token_2024';
 
 // =============================================================================
-// WEBHOOK HANDLER
+// COMBINED WEBHOOK (Handles both GET verification and POST messages)
 // =============================================================================
 
 /**
- * Facebook webhook handler
- * POST request to receive messages from Facebook Messenger
+ * Facebook Messenger Webhook - Combined endpoint
+ * GET: Webhook verification from Meta
+ * POST: Incoming messages from Messenger
  */
-export const facebookWebhook = functions.https.onRequest(async (req, res) => {
-    // Facebook requires a quick 200 response
-    if (req.method !== 'POST') {
-        res.sendStatus(405);
-        return;
-    }
+export const facebookMessengerWebhook = functions.https.onRequest(async (req, res) => {
+    console.log(`[Facebook Webhook] ${req.method} request received`);
 
-    const body = req.body;
+    // =========================================================================
+    // GET: Webhook Verification
+    // =========================================================================
+    if (req.method === 'GET') {
+        const mode = req.query['hub.mode'];
+        const token = req.query['hub.verify_token'];
+        const challenge = req.query['hub.challenge'];
 
-    // Verify this is from a Page subscription
-    if (body.object !== 'page') {
-        res.sendStatus(404);
-        return;
-    }
+        console.log('[Facebook Webhook] Verification attempt:', { mode, token: token ? '***' : 'missing' });
 
-    // Send 200 immediately to acknowledge receipt
-    res.status(200).send('EVENT_RECEIVED');
-
-    // Process entries asynchronously
-    try {
-        for (const entry of body.entry || []) {
-            await processEntry(entry);
+        if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+            console.log('[Facebook Webhook] ✅ Verification successful');
+            res.status(200).send(challenge);
+        } else {
+            console.error('[Facebook Webhook] ❌ Verification failed - token mismatch');
+            res.sendStatus(403);
         }
-    } catch (error) {
-        console.error('Error processing Facebook webhook:', error);
+        return;
     }
+
+    // =========================================================================
+    // POST: Incoming Messages
+    // =========================================================================
+    if (req.method === 'POST') {
+        const body = req.body;
+
+        // Verify this is from a Page subscription
+        if (body.object !== 'page') {
+            console.log('[Facebook Webhook] Not a page event, ignoring');
+            res.sendStatus(404);
+            return;
+        }
+
+        // Send 200 immediately to acknowledge receipt (Meta requires fast response)
+        res.status(200).send('EVENT_RECEIVED');
+
+        // Process entries asynchronously
+        try {
+            for (const entry of body.entry || []) {
+                await processEntry(entry);
+            }
+        } catch (error) {
+            console.error('[Facebook Webhook] Error processing:', error);
+        }
+        return;
+    }
+
+    // Other methods not allowed
+    res.sendStatus(405);
 });
+
+// Legacy exports for backwards compatibility
+export const facebookWebhookVerify = facebookMessengerWebhook;
+export const facebookWebhook = facebookMessengerWebhook;
 
 // =============================================================================
 // MESSAGE PROCESSING
@@ -293,8 +301,10 @@ async function processMessageInternal(
     // Import Gemini (lazily to avoid cold start issues)
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     
-    const apiKey = functions.config().gemini?.apikey;
+    // Use environment variable (from .env) or fallback to functions.config()
+    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
     if (!apiKey) {
+        console.error('[Facebook Webhook] GEMINI_API_KEY not configured');
         return { success: false, error: 'AI not configured' };
     }
 

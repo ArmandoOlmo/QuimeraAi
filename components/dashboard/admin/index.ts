@@ -19,6 +19,8 @@ export { default as AppArticleEditor } from './AppArticleEditor';
 export { default as DesignTokensEditor } from './DesignTokensEditor';
 export { default as GlobalAssistantSettings } from './GlobalAssistantSettings';
 export { default as GlobalSEOSettings } from './GlobalSEOSettings';
+export { default as LandingChatbotAdmin } from './LandingChatbotAdmin';
+export { default as LandingChatSimulator } from './LandingChatSimulator';
 export { default as ImageLibraryManagement } from './ImageLibraryManagement';
 export { default as LandingNavigationManagement } from './LandingNavigationManagement';
 export { default as LanguageManagement } from './LanguageManagement';

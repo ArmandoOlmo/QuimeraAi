@@ -1171,6 +1171,75 @@
       }
     }
   },
+  "landingChatbot": {
+    "title": "Chatbot de Landing Page",
+    "status": {
+      "active": "Chatbot Activo",
+      "inactive": "Chatbot Inactivo",
+      "activeDesc": "El chatbot está visible en la landing page pública",
+      "inactiveDesc": "El chatbot no se muestra a los visitantes"
+    },
+    "stats": {
+      "conversations": "Conversaciones",
+      "leads": "Leads",
+      "conversion": "Conversión",
+      "responseTime": "Tiempo Respuesta"
+    },
+    "configStatus": "Estado de Configuración",
+    "identity": "Identidad del Chatbot",
+    "agentName": "Nombre del Agente",
+    "agentRole": "Rol del Agente",
+    "welcomeMessage": "Mensaje de Bienvenida",
+    "tabs": {
+      "overview": "General",
+      "knowledge": "Conocimiento",
+      "personality": "Personalidad",
+      "voice": "Voz",
+      "leadCapture": "Captura de Leads",
+      "appearance": "Apariencia",
+      "social": "Redes Sociales",
+      "settings": "Ajustes"
+    },
+    "knowledge": {
+      "companyInfo": "Información de Quimera.ai",
+      "features": "Funcionalidades del Producto",
+      "pricing": "Planes y Precios",
+      "faqs": "Preguntas Frecuentes",
+      "documents": "Documentos de Conocimiento",
+      "additionalContext": "Contexto Adicional"
+    },
+    "personality": {
+      "tone": "Tono de Comunicación",
+      "responseStyle": "Estilo de Respuesta",
+      "salesMode": "Modo de Ventas",
+      "languages": "Idiomas",
+      "systemPrompt": "Instrucciones del Sistema",
+      "customInstructions": "Instrucciones Adicionales"
+    },
+    "voice": {
+      "enable": "Habilitar Voz",
+      "select": "Seleccionar Voz",
+      "autoPlay": "Saludo Automático con Voz"
+    },
+    "leadCapture": {
+      "enable": "Captura de Leads"
+    },
+    "settings": {
+      "activate": "Activar Chatbot",
+      "modelParams": "Parámetros del Modelo"
+    },
+    "errorMessage": "Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.",
+    "leadCapturedMessage": "¡Gracias! Hemos recibido tu información. Un miembro de nuestro equipo te contactará pronto. ¿Hay algo más en lo que pueda ayudarte?",
+    "leadForm": {
+      "title": "¿Te gustaría que te contactemos?",
+      "name": "Tu nombre",
+      "email": "Tu email *",
+      "phone": "Tu teléfono (opcional)",
+      "submit": "Enviar",
+      "later": "Después"
+    },
+    "liveSimulator": "Simulador en Vivo"
+  },
   "financeDashboard": {
     "title": "Finanzas & Gastos AI",
     "overview": "Resumen",
@@ -2046,6 +2115,8 @@
     "contentManagementDesc": "Gestionar artículos y páginas para landing pages",
     "landingNavigation": "Navegación de Landings",
     "landingNavigationDesc": "Gestionar menús de navegación para landing pages",
+    "landingChatbot": "Chatbot de Landing",
+    "landingChatbotDesc": "Configurar chatbot para la landing page pública de Quimera.ai",
     "categoryCore": "Principal",
     "categoryMultilingual": "Multilingüe",
     "categoryTechnical": "Técnico",

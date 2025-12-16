@@ -190,7 +190,8 @@ async function generateAIResponse(
     message: IncomingMessage,
     conversationHistory: Array<{ role: string; content: string }>
 ): Promise<ProcessedResponse> {
-    const apiKey = functions.config().gemini?.apikey;
+    // Use environment variable (from .env) or fallback to functions.config()
+    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
     
     if (!apiKey) {
         console.error('Gemini API key not configured');

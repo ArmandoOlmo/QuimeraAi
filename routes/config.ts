@@ -109,6 +109,7 @@ export const ROUTES = {
   ADMIN_CONTENT: '/admin/content',
   ADMIN_LANDING_NAVIGATION: '/admin/landing-navigation',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
+  ADMIN_LANDING_CHATBOT: '/admin/landing-chatbot',
 } as const;
 
 // =============================================================================
@@ -623,6 +624,17 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'landing-navigation',
     type: 'admin',
     title: 'Landing Navigation',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_LANDING_CHATBOT,
+    view: 'superadmin',
+    adminView: 'landing-chatbot',
+    type: 'admin',
+    title: 'Landing Chatbot',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],

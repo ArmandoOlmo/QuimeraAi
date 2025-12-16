@@ -103,6 +103,7 @@ import {
 import {
     facebookWebhook,
     facebookWebhookVerify,
+    facebookMessengerWebhook,
     whatsappWebhook,
     whatsappWebhookVerify,
     instagramWebhook,
@@ -249,6 +250,7 @@ export const socialChannels = {
     // Facebook Messenger
     facebookWebhook,
     facebookWebhookVerify,
+    facebookMessengerWebhook,
     // WhatsApp Business
     whatsappWebhook,
     whatsappWebhookVerify,
@@ -259,6 +261,9 @@ export const socialChannels = {
     processIncomingMessage,
     sendOutboundMessage
 };
+
+// Direct export for Facebook Messenger webhook (for Meta integration)
+export { facebookMessengerWebhook };
 
 // Export Meta OAuth functions
 export const metaOAuth = {

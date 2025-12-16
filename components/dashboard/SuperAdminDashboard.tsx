@@ -29,6 +29,7 @@ import AppInformationSettings from './admin/AppInformationSettings';
 import ContentManagementDashboard from './admin/ContentManagementDashboard';
 import LandingNavigationManagement from './admin/LandingNavigationManagement';
 import SubscriptionManagement from './admin/SubscriptionManagement';
+import LandingChatbotAdmin from './admin/LandingChatbotAdmin';
 
 // Types
 type AdminFeature = {
@@ -64,6 +65,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'global-seo': ROUTES.ADMIN_GLOBAL_SEO,
     'app-info': ROUTES.ADMIN_APP_INFO,
     'subscriptions': ROUTES.ADMIN_SUBSCRIPTIONS,
+    'landing-chatbot': ROUTES.ADMIN_LANDING_CHATBOT,
 };
 
 // Components
@@ -236,6 +238,7 @@ const SuperAdminDashboard = () => {
 
         // System & AI
         { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'landing-chatbot', title: t('superadmin.landingChatbot', 'Landing Chatbot'), description: t('superadmin.landingChatbotDesc', 'Configurar chatbot para la landing page pública'), icon: <Bot size={24} />, category: 'core', route: ROUTES.ADMIN_LANDING_CHATBOT, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO, allowedRoles: ['owner', 'superadmin', 'admin'] },
     ];
@@ -294,6 +297,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
     if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
+    if (adminView === 'landing-chatbot') return <LandingChatbotAdmin onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 

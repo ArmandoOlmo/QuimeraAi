@@ -22,6 +22,7 @@ import Video from './Video';
 import HowItWorks from './HowItWorks';
 import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
+import LandingChatbotWidget from './LandingChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
@@ -939,6 +940,9 @@ const LandingPageContent: React.FC = () => {
 
       {/* Chatbot Widget - Renders independently outside component order */}
       <ChatbotWidget />
+      
+      {/* Landing Chatbot Widget - For public Quimera.ai landing page visitors */}
+      <LandingChatbotWidget />
     </div>
   );
 };

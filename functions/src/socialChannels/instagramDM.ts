@@ -41,33 +41,63 @@ export const instagramWebhookVerify = functions.https.onRequest((req, res) => {
 // =============================================================================
 
 /**
- * Instagram webhook handler
+ * Instagram webhook handler - Combined endpoint for GET (verification) and POST (messages)
  */
 export const instagramWebhook = functions.https.onRequest(async (req, res) => {
-    if (req.method !== 'POST') {
-        res.sendStatus(405);
-        return;
-    }
+    console.log(`[Instagram Webhook] ${req.method} request received`);
 
-    const body = req.body;
+    // =========================================================================
+    // GET: Webhook Verification
+    // =========================================================================
+    if (req.method === 'GET') {
+        const mode = req.query['hub.mode'];
+        const token = req.query['hub.verify_token'];
+        const challenge = req.query['hub.challenge'];
 
-    // Verify this is from Instagram
-    if (body.object !== 'instagram') {
-        res.sendStatus(404);
-        return;
-    }
+        // Use same verify token as other channels
+        const verifyToken = functions.config().meta?.verify_token || process.env.META_VERIFY_TOKEN || 'quimera_verify_token_2024';
 
-    // Send 200 immediately
-    res.status(200).send('EVENT_RECEIVED');
+        console.log('[Instagram Webhook] Verification attempt:', { mode, token: token ? '***' : 'missing' });
 
-    // Process entries asynchronously
-    try {
-        for (const entry of body.entry || []) {
-            await processEntry(entry);
+        if (mode === 'subscribe' && token === verifyToken) {
+            console.log('[Instagram Webhook] ✅ Verification successful');
+            res.status(200).send(challenge);
+        } else {
+            console.error('[Instagram Webhook] ❌ Verification failed - token mismatch');
+            res.sendStatus(403);
         }
-    } catch (error) {
-        console.error('Error processing Instagram webhook:', error);
+        return;
     }
+
+    // =========================================================================
+    // POST: Incoming Messages
+    // =========================================================================
+    if (req.method === 'POST') {
+        const body = req.body;
+
+        // Verify this is from Instagram
+        if (body.object !== 'instagram') {
+            console.log('[Instagram Webhook] Not an Instagram event, ignoring');
+            res.sendStatus(404);
+            return;
+        }
+
+        // Send 200 immediately
+        res.status(200).send('EVENT_RECEIVED');
+
+        // Process entries asynchronously
+        try {
+            for (const entry of body.entry || []) {
+                await processEntry(entry);
+            }
+        } catch (error) {
+            console.error('Error processing Instagram webhook:', error);
+        }
+        return;
+    }
+
+    // Other methods not allowed
+    res.sendStatus(405);
 });
 
 // =============================================================================
@@ -275,7 +305,8 @@ async function processMessageInternal(
 ): Promise<{ success: boolean; response?: string }> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     
-    const apiKey = functions.config().gemini?.apikey;
+    // Use environment variable (from .env) or fallback to functions.config()
+    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
     if (!apiKey) {
         return { success: false };
     }
