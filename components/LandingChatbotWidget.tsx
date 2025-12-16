@@ -96,9 +96,47 @@ const stripMarkdown = (text: string): string => {
 const LandingChatbotWidget: React.FC = () => {
     const { t } = useTranslation();
     const { landingChatbotConfig, designTokens } = useAdmin();
-    
-    // Use config from context or defaults
-    const config: LandingChatbotConfig = landingChatbotConfig || defaultLandingChatbotConfig;
+
+    // Quimera logo URL
+    const QUIMERA_LOGO = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
+
+    // Use config from context merged with defaults (to ensure new fields have values)
+    const config: LandingChatbotConfig = {
+        ...defaultLandingChatbotConfig,
+        ...landingChatbotConfig,
+        // Force isActive to true for public landing chatbot
+        isActive: true,
+        appearance: {
+            ...defaultLandingChatbotConfig.appearance,
+            ...(landingChatbotConfig?.appearance || {}),
+            // Force Quimera logo if not set
+            buttonIcon: landingChatbotConfig?.appearance?.buttonIcon || 'custom-image',
+            customIconUrl: landingChatbotConfig?.appearance?.customIconUrl || QUIMERA_LOGO,
+            avatarUrl: landingChatbotConfig?.appearance?.avatarUrl || QUIMERA_LOGO,
+            // Only exclude dashboard/admin areas
+            excludedPaths: ['/dashboard', '/admin'],
+        },
+        behavior: {
+            ...defaultLandingChatbotConfig.behavior,
+            ...(landingChatbotConfig?.behavior || {}),
+        },
+        voice: {
+            ...defaultLandingChatbotConfig.voice,
+            ...(landingChatbotConfig?.voice || {}),
+        },
+        personality: {
+            ...defaultLandingChatbotConfig.personality,
+            ...(landingChatbotConfig?.personality || {}),
+        },
+        leadCapture: {
+            ...defaultLandingChatbotConfig.leadCapture,
+            ...(landingChatbotConfig?.leadCapture || {}),
+        },
+        knowledgeBase: {
+            ...defaultLandingChatbotConfig.knowledgeBase,
+            ...(landingChatbotConfig?.knowledgeBase || {}),
+        },
+    };
     
     // State
     const [isOpen, setIsOpen] = useState(false);
