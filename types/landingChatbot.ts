@@ -227,7 +227,7 @@ export interface LandingChatbotConfig {
 // =============================================================================
 
 export const defaultLandingChatbotConfig: LandingChatbotConfig = {
-    isActive: false,
+    isActive: true,  // Active by default for public landing page
     agentName: 'Quibo',
     agentRole: 'AI Assistant',
     welcomeMessage: '¡Hola! 👋 Soy **Quibo**, el asistente de IA de Quimera.ai. Puedo ayudarte a conocer nuestra plataforma de creación de sitios web. ¿Qué te gustaría saber?',

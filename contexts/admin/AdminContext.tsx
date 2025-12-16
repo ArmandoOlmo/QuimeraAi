@@ -244,9 +244,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [user]);
     
     // Setup landing chatbot config listener for real-time updates
+    // This runs for ALL users (authenticated or not) since it's for the public landing page
     useEffect(() => {
-        if (!user) return;
-        
         const unsubscribe = onSnapshot(
             doc(db, 'settings', 'landingChatbot'),
             (docSnapshot) => {
@@ -255,16 +254,17 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             },
             (error) => {
+                // Silently ignore permission errors for unauthenticated users
                 if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
                     console.error("Error in landing chatbot config listener:", error);
                 }
             }
         );
-        
+
         return () => {
             unsubscribe();
         };
-    }, [user]);
+    }, []); // No dependency on user - runs for everyone
 
     // User Management Functions
     const fetchAllUsers = async () => {
