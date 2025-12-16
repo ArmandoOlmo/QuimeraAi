@@ -97,23 +97,24 @@ const LandingChatbotWidget: React.FC = () => {
     const { t } = useTranslation();
     const { landingChatbotConfig, designTokens } = useAdmin();
 
-    // Quimera logo URL
+    // Quimera logo URL - ALWAYS use this for the public chatbot
     const QUIMERA_LOGO = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
 
-    // Use config from context merged with defaults (to ensure new fields have values)
+    // Use config from context merged with defaults
+    // IMPORTANT: Some values are FORCED for the public landing chatbot
     const config: LandingChatbotConfig = {
         ...defaultLandingChatbotConfig,
         ...landingChatbotConfig,
-        // Force isActive to true for public landing chatbot
+        // FORCE isActive to true - landing chatbot should always be active
         isActive: true,
         appearance: {
             ...defaultLandingChatbotConfig.appearance,
             ...(landingChatbotConfig?.appearance || {}),
-            // Force Quimera logo if not set
-            buttonIcon: landingChatbotConfig?.appearance?.buttonIcon || 'custom-image',
-            customIconUrl: landingChatbotConfig?.appearance?.customIconUrl || QUIMERA_LOGO,
-            avatarUrl: landingChatbotConfig?.appearance?.avatarUrl || QUIMERA_LOGO,
-            // Only exclude dashboard/admin areas
+            // FORCE Quimera logo - this is the public Quimera chatbot
+            buttonIcon: 'custom-image' as const,
+            customIconUrl: QUIMERA_LOGO,
+            avatarUrl: QUIMERA_LOGO,
+            // FORCE excluded paths - only hide in authenticated areas
             excludedPaths: ['/dashboard', '/admin'],
         },
         behavior: {
