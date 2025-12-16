@@ -31,6 +31,7 @@ import {
 import LanguageSelector from './ui/LanguageSelector';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
+import LandingChatbotWidget from './LandingChatbotWidget';
 
 // --- Brand Assets ---
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -596,6 +597,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           </div>
         </div>
       </footer>
+
+      {/* Landing Chatbot Widget - Quibo */}
+      <LandingChatbotWidget />
     </div>
   );
 };
