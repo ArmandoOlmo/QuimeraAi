@@ -139,8 +139,8 @@ const AuthGate: React.FC = () => {
               <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
             </Suspense>
           )}
-          {/* Landing Chatbot - Show when user is NOT authenticated (or still loading) */}
-          {!user && !loadingAuth && <LandingChatbotWidget />}
+          {/* Landing Chatbot - Always show when user is NOT authenticated */}
+          {!user && <LandingChatbotWidget />}
         </>
       )}
     </Router>
