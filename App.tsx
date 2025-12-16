@@ -12,6 +12,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
 import { auth, signOut } from './firebase';
 import { View, AdminView } from './types/ui';
+import LandingChatbotWidget from './components/LandingChatbotWidget';
 
 // Lazy-loaded components for code-splitting
 const ProfileModal = lazy(() => import('./components/dashboard/ProfileModal'));
@@ -138,6 +139,8 @@ const AuthGate: React.FC = () => {
               <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
             </Suspense>
           )}
+          {/* Landing Chatbot - Only show when user is NOT authenticated */}
+          {!user && <LandingChatbotWidget />}
         </>
       )}
     </Router>
