@@ -10,7 +10,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
-import { MessageSquare, X, Send, Mic, MicOff, Loader2, Bot, HelpCircle, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Mic, MicOff, Loader2, Bot, HelpCircle, Volume2, VolumeX, Sparkles, PhoneOff } from 'lucide-react';
 import { useAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
@@ -174,12 +174,20 @@ Personalidad:
     const [hasShownProactive, setHasShownProactive] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     
+    // Live Voice Mode state
+    const [isLiveMode, setIsLiveMode] = useState(false);
+    const [isLiveConnecting, setIsLiveConnecting] = useState(false);
+    const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
+    const [liveTranscript, setLiveTranscript] = useState('');
+    
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const recognitionRef = useRef<any>(null);
     const synthRef = useRef<SpeechSynthesis | null>(null);
+    const visualizerIntervalRef = useRef<number | null>(null);
+    const continuousListeningRef = useRef<boolean>(false);
 
     // Initialize speech synthesis and load voices
     useEffect(() => {
@@ -203,6 +211,26 @@ Personalidad:
         };
     }, []);
 
+    // Live Voice visualizer effect
+    useEffect(() => {
+        if (isLiveMode) {
+            visualizerIntervalRef.current = window.setInterval(() => {
+                setVisualizerLevels([
+                    Math.random() * 20 + 10,
+                    Math.random() * 40 + 10,
+                    Math.random() * 30 + 10,
+                    Math.random() * 20 + 10,
+                ]);
+            }, 100);
+        } else {
+            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+            setVisualizerLevels([1, 1, 1, 1]);
+        }
+        return () => {
+            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+        };
+    }, [isLiveMode]);
+
     // Initialize speech recognition
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -210,33 +238,77 @@ Personalidad:
             
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false;
-                recognitionRef.current.interimResults = false;
+                recognitionRef.current.continuous = true; // Enable continuous mode for live voice
+                recognitionRef.current.interimResults = true; // Show partial results
                 recognitionRef.current.lang = 'es-ES';
                 
                 recognitionRef.current.onresult = (event: any) => {
-                    const transcript = event.results[0][0].transcript;
-                    setInputValue(transcript);
-                    setIsListening(false);
-                    // Auto-send after voice input
-                    if (transcript.trim()) {
-                        setTimeout(() => {
-                            const input = document.querySelector('input[placeholder]') as HTMLInputElement;
-                            if (input) {
-                                const event = new KeyboardEvent('keypress', { key: 'Enter' });
-                                input.dispatchEvent(event);
-                            }
-                        }, 100);
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    // Show interim transcript in live mode
+                    if (isLiveMode && interimTranscript) {
+                        setLiveTranscript(interimTranscript);
+                    }
+                    
+                    // Process final transcript
+                    if (finalTranscript.trim()) {
+                        setLiveTranscript('');
+                        setInputValue(finalTranscript);
+                        
+                        // In live mode, auto-send immediately
+                        if (continuousListeningRef.current) {
+                            // Pause listening while processing
+                            recognitionRef.current?.stop();
+                            setIsListening(false);
+                            
+                            // Send message and resume listening after response
+                            sendMessageWithCallback(finalTranscript);
+                        } else {
+                            setIsListening(false);
+                        }
                     }
                 };
                 
                 recognitionRef.current.onerror = (event: any) => {
                     console.error('Speech recognition error:', event.error);
-                    setIsListening(false);
+                    if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                        setIsListening(false);
+                        if (continuousListeningRef.current) {
+                            // Try to restart after error
+                            setTimeout(() => {
+                                if (continuousListeningRef.current && recognitionRef.current) {
+                                    try { recognitionRef.current.start(); setIsListening(true); } catch (e) {}
+                                }
+                            }, 500);
+                        }
+                    }
                 };
                 
                 recognitionRef.current.onend = () => {
                     setIsListening(false);
+                    // In continuous mode, restart if we're still in live mode and not speaking
+                    if (continuousListeningRef.current && !isSpeaking) {
+                        setTimeout(() => {
+                            if (continuousListeningRef.current && recognitionRef.current) {
+                                try { 
+                                    recognitionRef.current.start(); 
+                                    setIsListening(true); 
+                                } catch (e) {
+                                    console.log('Could not restart recognition:', e);
+                                }
+                            }
+                        }, 300);
+                    }
                 };
             }
         }
@@ -246,7 +318,7 @@ Personalidad:
                 recognitionRef.current.abort();
             }
         };
-    }, []);
+    }, [isLiveMode, isSpeaking]);
 
     // Text-to-speech function
     const speak = useCallback((text: string) => {
@@ -306,6 +378,194 @@ Personalidad:
         }
         setIsSpeaking(false);
     }, []);
+
+    // Start Live Voice session
+    const startLiveSession = useCallback(() => {
+        if (!recognitionRef.current) {
+            alert('Tu navegador no soporta reconocimiento de voz');
+            return;
+        }
+        
+        setIsLiveConnecting(true);
+        
+        // Stop any ongoing speech
+        if (synthRef.current) {
+            synthRef.current.cancel();
+        }
+        
+        setTimeout(() => {
+            setIsLiveConnecting(false);
+            setIsLiveMode(true);
+            setIsVoiceMode(true);
+            continuousListeningRef.current = true;
+            
+            // Start listening
+            try {
+                recognitionRef.current.start();
+                setIsListening(true);
+            } catch (e) {
+                console.error('Could not start recognition:', e);
+            }
+            
+            // Speak a greeting
+            speak('¡Hola! Estoy escuchando. Puedes hacerme cualquier pregunta sobre Quimera.');
+        }, 500);
+    }, [speak]);
+
+    // Stop Live Voice session
+    const stopLiveSession = useCallback(() => {
+        continuousListeningRef.current = false;
+        setIsLiveMode(false);
+        setIsListening(false);
+        setLiveTranscript('');
+        
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch (e) {}
+        }
+        
+        if (synthRef.current) {
+            synthRef.current.cancel();
+        }
+        
+        setIsSpeaking(false);
+    }, []);
+
+    // Send message with callback (for live voice mode)
+    const sendMessageWithCallback = useCallback(async (userMessage: string, onComplete?: () => void) => {
+        if (!userMessage.trim()) return;
+
+        const newUserMessage: Message = {
+            id: generateMessageId(),
+            role: 'user',
+            content: userMessage.trim(),
+            timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, newUserMessage]);
+        setInputValue('');
+        setIsLoading(true);
+
+        try {
+            const systemPrompt = buildSystemPrompt();
+            const conversationHistory = messages.map(m => ({
+                role: m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: m.content }]
+            }));
+
+            let responseText = '';
+
+            if (isProxyMode()) {
+                const conversationContext = messages.map(m => 
+                    `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
+                ).join('\n');
+                
+                const fullPrompt = `${systemPrompt}
+
+${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n` : ''}Usuario: ${userMessage}
+
+Asistente:`;
+
+                const result = await generateContentViaProxy(
+                    'quimera-chat-landing',
+                    fullPrompt,
+                    'gemini-2.0-flash-exp',
+                    {
+                        temperature: config.behavior.temperature,
+                        maxOutputTokens: config.behavior.maxTokens,
+                    }
+                );
+                responseText = extractTextFromResponse(result) || 'Lo siento, no pude procesar tu mensaje.';
+            } else {
+                const genAI = await getGoogleGenAI();
+                if (!genAI) {
+                    throw new Error('API key not configured');
+                }
+                const model = genAI.getGenerativeModel({
+                    model: 'gemini-2.0-flash-exp',
+                    systemInstruction: systemPrompt
+                });
+                const chat = model.startChat({
+                    history: conversationHistory,
+                    generationConfig: {
+                        temperature: config.behavior.temperature,
+                        maxOutputTokens: config.behavior.maxTokens,
+                    }
+                });
+                const result = await chat.sendMessage(userMessage);
+                responseText = result.response.text() || 'Lo siento, no pude procesar tu mensaje.';
+            }
+
+            const assistantMessage: Message = {
+                id: generateMessageId(),
+                role: 'assistant',
+                content: responseText,
+                timestamp: new Date()
+            };
+
+            setMessages(prev => [...prev, assistantMessage]);
+            
+            // Speak the response in live mode
+            if (continuousListeningRef.current && config.voice.enabled) {
+                // Create utterance and resume listening after speaking
+                if (synthRef.current) {
+                    synthRef.current.cancel();
+                    
+                    const cleanText = stripMarkdown(responseText);
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    
+                    const selectedVoice = getVoiceByName(config.voice.voiceName, availableVoices);
+                    if (selectedVoice) utterance.voice = selectedVoice;
+                    
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1.0;
+                    
+                    utterance.onstart = () => setIsSpeaking(true);
+                    utterance.onend = () => {
+                        setIsSpeaking(false);
+                        // Resume listening after speaking
+                        if (continuousListeningRef.current && recognitionRef.current) {
+                            setTimeout(() => {
+                                try {
+                                    recognitionRef.current.start();
+                                    setIsListening(true);
+                                } catch (e) {
+                                    console.log('Could not restart recognition:', e);
+                                }
+                            }, 300);
+                        }
+                        onComplete?.();
+                    };
+                    utterance.onerror = () => {
+                        setIsSpeaking(false);
+                        onComplete?.();
+                    };
+                    
+                    synthRef.current.speak(utterance);
+                }
+            } else {
+                onComplete?.();
+            }
+
+        } catch (error) {
+            console.error('[LandingChatbot] Error in live voice:', error);
+            const errorContent = 'Lo siento, hubo un error. Intenta de nuevo.';
+            const errorMessage: Message = {
+                id: generateMessageId(),
+                role: 'assistant',
+                content: errorContent,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+            
+            if (continuousListeningRef.current) {
+                speak(errorContent);
+            }
+            onComplete?.();
+        } finally {
+            setIsLoading(false);
+        }
+    }, [messages, config, availableVoices, speak]);
     
     // Determine color source (support both new and legacy format)
     const colorSource = (config.appearance as any).colorSource || ((config.appearance as any).useAppColors ? 'app' : 'custom');
@@ -403,10 +663,31 @@ Personalidad:
 
     // Focus input when opened
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !isLiveMode) {
             inputRef.current?.focus();
         }
-    }, [isOpen]);
+    }, [isOpen, isLiveMode]);
+
+    // Stop live mode when chat is closed
+    useEffect(() => {
+        if (!isOpen && isLiveMode) {
+            stopLiveSession();
+        }
+    }, [isOpen, isLiveMode, stopLiveSession]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            continuousListeningRef.current = false;
+            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop(); } catch (e) {}
+            }
+            if (synthRef.current) {
+                synthRef.current.cancel();
+            }
+        };
+    }, []);
 
     // Proactive message timer
     useEffect(() => {
@@ -745,34 +1026,38 @@ Asistente:`;
                             )}
                         </div>
                         {/* Status indicator */}
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${isListening ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} style={{ borderColor: colors.headerBackground }}></div>
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${isLiveMode ? 'bg-red-500 animate-pulse' : isListening ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} style={{ borderColor: colors.headerBackground }}></div>
                     </div>
                     <div>
                         <h3 className="font-bold text-sm leading-tight" style={{ color: colors.headerText }}>
                             {config.agentName}
                         </h3>
                         <p className="text-[10px] opacity-90 font-medium" style={{ color: colors.headerText }}>
-                            {isListening ? 'Escuchando...' : isSpeaking ? 'Hablando...' : isLoading ? 'Escribiendo...' : 'En línea'}
+                            {isLiveMode ? (isSpeaking ? 'Hablando...' : isListening ? 'Escuchando...' : isLoading ? 'Pensando...' : 'Live Voice') : isLoading ? 'Escribiendo...' : 'En línea'}
                         </p>
                     </div>
                 </div>
                 <div className="flex gap-1 items-center">
+                    {/* Live Voice toggle in header */}
                     {config.voice.enabled && (
                         <button
                             onClick={() => {
-                                if (isVoiceMode) {
-                                    stopSpeaking();
-                                    stopListening();
+                                if (isLiveMode) {
+                                    stopLiveSession();
+                                } else {
+                                    startLiveSession();
                                 }
-                                setIsVoiceMode(!isVoiceMode);
                             }}
-                            className={`p-1.5 rounded-md transition-colors ${isVoiceMode ? 'bg-white/30' : 'hover:bg-white/20'}`}
-                            title={isVoiceMode ? 'Desactivar voz' : 'Activar voz'}
+                            disabled={isLiveConnecting}
+                            className={`p-1.5 rounded-md transition-colors ${isLiveMode ? 'bg-red-500/30' : 'hover:bg-white/20'}`}
+                            title={isLiveMode ? 'Terminar Live Voice' : 'Iniciar Live Voice'}
                         >
-                            {isVoiceMode ? (
-                                <Volume2 size={18} style={{ color: colors.headerText }} className={isSpeaking ? 'animate-pulse' : ''} />
+                            {isLiveConnecting ? (
+                                <Loader2 size={18} style={{ color: colors.headerText }} className="animate-spin" />
+                            ) : isLiveMode ? (
+                                <PhoneOff size={18} style={{ color: '#f87171' }} />
                             ) : (
-                                <VolumeX size={18} style={{ color: colors.headerText }} />
+                                <Mic size={18} style={{ color: colors.headerText }} />
                             )}
                         </button>
                     )}
@@ -787,6 +1072,62 @@ Asistente:`;
 
             {/* Messages area - Like GlobalAiAssistant */}
             <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: colors.background }}>
+                {/* Live Voice Mode Overlay */}
+                {isLiveMode && (
+                    <div className="absolute inset-0 z-20 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up" style={{ backgroundColor: `${colors.background}f5` }}>
+                        {/* Quibo Avatar */}
+                        <div className="w-32 h-32 rounded-full flex items-center justify-center mb-8 relative" style={{ backgroundColor: `${colors.primary}10` }}>
+                            <div className="absolute inset-0 rounded-full border animate-ping opacity-30" style={{ borderColor: `${colors.primary}30` }}></div>
+                            {config.appearance.avatarUrl ? (
+                                <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-20 h-20 object-contain drop-shadow-lg" />
+                            ) : (
+                                <Bot size={60} style={{ color: colors.primary }} />
+                            )}
+                        </div>
+                        
+                        {/* Audio Visualizer */}
+                        <div className="flex items-center gap-1.5 h-16 mb-8">
+                            {visualizerLevels.map((height, i) => (
+                                <div
+                                    key={i}
+                                    className="w-2 rounded-full transition-all duration-75"
+                                    style={{
+                                        height: `${height}px`,
+                                        backgroundColor: colors.primary,
+                                        opacity: 0.5 + (height / 50)
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        
+                        {/* Status Text */}
+                        <p className="text-lg font-medium mb-2" style={{ color: colors.botBubbleText }}>
+                            {isSpeaking ? 'Hablando...' : isListening ? 'Escuchando...' : isLoading ? 'Pensando...' : 'Listo'}
+                        </p>
+                        
+                        {/* Live Transcript */}
+                        {liveTranscript && (
+                            <p className="text-sm mb-4 px-4 text-center italic" style={{ color: colors.mutedText }}>
+                                "{liveTranscript}"
+                            </p>
+                        )}
+                        
+                        {/* Helper Text */}
+                        <p className="text-xs text-center max-w-xs mb-8" style={{ color: colors.mutedText }}>
+                            Pregúntame sobre planes, precios, funcionalidades o cómo empezar con Quimera.ai
+                        </p>
+                        
+                        {/* End Session Button */}
+                        <button
+                            onClick={stopLiveSession}
+                            className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full text-sm font-bold transition-colors flex items-center border border-red-500/50"
+                        >
+                            <PhoneOff size={16} className="mr-2" />
+                            Terminar sesión de voz
+                        </button>
+                    </div>
+                )}
+                
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: `${colors.inputBackground}20` }}>
                     {messages.map((message) => (
                         <div
@@ -978,28 +1319,34 @@ Asistente:`;
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            placeholder={config.inputPlaceholder}
-                            disabled={isLoading || isListening}
+                            placeholder={isLiveMode ? 'Live Voice activo - habla para interactuar' : config.inputPlaceholder}
+                            disabled={isLoading || isListening || isLiveMode}
                             className="flex-1 bg-transparent px-2 text-sm outline-none"
                             style={{ color: colors.inputText }}
                         />
                         
-                        {/* Voice button */}
-                        {config.voice.enabled && isVoiceMode && (
+                        {/* Live Voice button */}
+                        {config.voice.enabled && (
                             <button
                                 type="button"
-                                onClick={isListening ? stopListening : startListening}
-                                disabled={isLoading || isSpeaking}
-                                className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : ''}`}
-                                style={!isListening ? { color: colors.primary } : {}}
-                                title={isListening ? 'Detener grabación' : 'Hablar'}
+                                onClick={isLiveMode ? stopLiveSession : startLiveSession}
+                                disabled={isLoading || isLiveConnecting}
+                                className={`p-2 rounded-full transition-all ${isLiveConnecting ? 'animate-spin' : ''} ${isLiveMode ? 'bg-red-500/20 text-red-500' : ''}`}
+                                style={!isLiveMode && !isLiveConnecting ? { color: colors.mutedText } : {}}
+                                title={isLiveMode ? 'Terminar Live Voice' : 'Iniciar Live Voice'}
                             >
-                                <Mic size={20} />
+                                {isLiveConnecting ? (
+                                    <Loader2 size={20} />
+                                ) : isLiveMode ? (
+                                    <PhoneOff size={20} />
+                                ) : (
+                                    <Mic size={20} />
+                                )}
                             </button>
                         )}
                         
                         {/* Stop speaking button */}
-                        {isSpeaking && (
+                        {isSpeaking && !isLiveMode && (
                             <button
                                 type="button"
                                 onClick={stopSpeaking}
@@ -1014,7 +1361,7 @@ Asistente:`;
                         {/* Send button */}
                         <button
                             onClick={() => sendMessage(inputValue)}
-                            disabled={isLoading || !inputValue.trim() || isListening}
+                            disabled={isLoading || !inputValue.trim() || isListening || isLiveMode}
                             className="p-2 rounded-full shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ backgroundColor: colors.buttonBackground, color: colors.buttonIcon }}
                         >
