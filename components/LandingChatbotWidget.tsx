@@ -15,7 +15,7 @@ import { useAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { getGoogleGenAI, isProxyMode } from '../utils/genAiClient';
-import { generateContentViaProxy } from '../utils/geminiProxyClient';
+import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
 
 // =============================================================================
 // INTERFACES
@@ -464,20 +464,27 @@ const LandingChatbotWidget: React.FC = () => {
 
             if (isProxyMode()) {
                 // Use proxy for AI calls
-                const result = await generateContentViaProxy({
-                    projectId: 'landing-chatbot',
-                    model: 'gemini-2.0-flash-exp',
-                    contents: [
-                        ...conversationHistory,
-                        { role: 'user', parts: [{ text: userMessage }] }
-                    ],
-                    systemInstruction: systemPrompt,
-                    generationConfig: {
+                // Build a full prompt with system instructions and conversation history
+                const conversationContext = messages.map(m => 
+                    `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
+                ).join('\n');
+                
+                const fullPrompt = `${systemPrompt}
+
+${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n` : ''}Usuario: ${userMessage}
+
+Asistente:`;
+
+                const result = await generateContentViaProxy(
+                    'landing-chatbot',
+                    fullPrompt,
+                    'gemini-2.0-flash-exp',
+                    {
                         temperature: config.behavior.temperature,
                         maxOutputTokens: config.behavior.maxTokens,
                     }
-                });
-                responseText = result.text || 'Lo siento, no pude procesar tu mensaje.';
+                );
+                responseText = extractTextFromResponse(result) || 'Lo siento, no pude procesar tu mensaje.';
             } else {
                 // Use direct API
                 const genAI = await getGoogleGenAI();
