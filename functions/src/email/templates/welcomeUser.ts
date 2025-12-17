@@ -240,7 +240,7 @@ export const getWelcomeUserTemplate = (params: WelcomeUserParams): string => {
                     <p style="color: #71717a; margin: 0 0 20px 0; font-size: 16px;">
                         ¿Listo para crear tu primer sitio web?
                     </p>
-                    ${getButtonComponent('Ir a mi Dashboard', dashboardUrl, PRIMARY_COLOR, '#000000')}
+                    ${getButtonComponent('Ir a mi Dashboard', dashboardUrl, PRIMARY_COLOR)}
                     <p style="color: #a1a1aa; margin: 24px 0 0 0; font-size: 13px;">
                         ¿Necesitas ayuda? Escríbenos a <a href="mailto:${supportEmail}" style="color: ${SECONDARY_COLOR};">${supportEmail}</a>
                     </p>

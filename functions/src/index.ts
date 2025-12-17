@@ -426,10 +426,6 @@ export {
     verifyPortalDomain,
     removePortalDomain,
     scheduledPortalDNSCheck,
-    // Stripe Billing exports (Super Admin)
-    getBillingMetrics,
-    createOrUpdatePlan,
-    archivePlan,
     // Voice proxy exports (Google Cloud TTS)
     textToSpeech,
     getVoices,
