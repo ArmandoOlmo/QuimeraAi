@@ -448,6 +448,45 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                 </div>
                             </div>
                             
+                            {/* Landing Page Visibility - PROMINENT POSITION */}
+                            <div className="p-4 bg-green-500/10 rounded-lg border-2 border-green-500/30">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Globe className="w-5 h-5 text-green-400" />
+                                    <h4 className="font-medium text-editor-text-primary">🌐 Visibilidad en Landing Page</h4>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-6">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.showInLanding || false}
+                                            onChange={(e) => updateField('showInLanding', e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${formData.showInLanding ? 'bg-green-500' : 'bg-editor-border'}`}>
+                                            {formData.showInLanding && <Check className="w-4 h-4 text-white" />}
+                                        </div>
+                                        <span className="text-editor-text-primary font-medium">Mostrar en Landing Page</span>
+                                    </label>
+                                    {formData.showInLanding && (
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-sm text-editor-text-secondary">Orden:</label>
+                                            <input
+                                                type="number"
+                                                value={formData.landingOrder ?? 1}
+                                                onChange={(e) => updateField('landingOrder', parseInt(e.target.value) || 1)}
+                                                min={1}
+                                                max={10}
+                                                className="w-16 px-2 py-1.5 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-center focus:outline-none focus:border-green-500"
+                                            />
+                                            <span className="text-xs text-editor-text-secondary">(1 = primero)</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-green-400/80 mt-2">
+                                    ✓ Los planes marcados aparecerán en la sección de precios del landing page público de Quimera.ai
+                                </p>
+                            </div>
+                            
                             {/* Color & Icon */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -508,45 +547,6 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                     <span className="text-editor-text-primary">Popular</span>
                                 </label>
-                            </div>
-                            
-                            {/* Landing Page Visibility */}
-                            <div className="p-4 bg-editor-bg rounded-lg border border-editor-border">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <Globe className="w-5 h-5 text-editor-accent" />
-                                    <h4 className="font-medium text-editor-text-primary">Visibilidad en Landing Page</h4>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-6">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.showInLanding || false}
-                                            onChange={(e) => updateField('showInLanding', e.target.checked)}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${formData.showInLanding ? 'bg-green-500' : 'bg-editor-border'}`}>
-                                            {formData.showInLanding && <Check className="w-3 h-3 text-white" />}
-                                        </div>
-                                        <span className="text-editor-text-primary">Mostrar en Landing Page</span>
-                                    </label>
-                                    {formData.showInLanding && (
-                                        <div className="flex items-center gap-2">
-                                            <label className="text-sm text-editor-text-secondary">Orden:</label>
-                                            <input
-                                                type="number"
-                                                value={formData.landingOrder ?? 99}
-                                                onChange={(e) => updateField('landingOrder', parseInt(e.target.value) || 0)}
-                                                min={1}
-                                                max={10}
-                                                className="w-16 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-center focus:outline-none focus:border-editor-accent"
-                                            />
-                                            <span className="text-xs text-editor-text-secondary">(1 = primero)</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-xs text-editor-text-secondary mt-2">
-                                    Los planes marcados aparecerán en la sección de precios del landing page público de Quimera.ai
-                                </p>
                             </div>
                         </div>
                     )}
