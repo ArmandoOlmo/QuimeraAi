@@ -16,6 +16,7 @@ import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, 
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { getGoogleGenAI, isProxyMode } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
+import { Modality, LiveServerMessage } from '@google/genai';
 
 // =============================================================================
 // INTERFACES
@@ -88,6 +89,59 @@ const stripMarkdown = (text: string): string => {
         .replace(/\n+/g, '. ')           // Newlines
         .trim();
 };
+
+// =============================================================================
+// AUDIO HELPERS FOR GEMINI LIVE API
+// =============================================================================
+
+function base64ToBytes(base64: string) {
+    const binaryString = atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+async function decodeAudioData(
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number
+): Promise<AudioBuffer> {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
+    }
+    return buffer;
+}
+
+function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    let offset = 0;
+    for (let i = 0; i < float32Array.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buffer;
+}
 
 // =============================================================================
 // MAIN COMPONENT
@@ -171,7 +225,6 @@ Personalidad:
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [hasShownProactive, setHasShownProactive] = useState(false);
-    const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     
     // Live Voice Mode state
     const [isLiveMode, setIsLiveMode] = useState(false);
@@ -183,30 +236,22 @@ Personalidad:
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const recognitionRef = useRef<any>(null);
-    const synthRef = useRef<SpeechSynthesis | null>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
-    const continuousListeningRef = useRef<boolean>(false);
+    
+    // Gemini Live API refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const inputAudioContextRef = useRef<AudioContext | null>(null);
+    const processorRef = useRef<ScriptProcessorNode | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const nextStartTimeRef = useRef<number>(0);
+    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const sessionRef = useRef<any>(null);
+    const isConnectedRef = useRef<boolean>(false);
 
-    // Initialize speech synthesis and load voices
+    // Cleanup Gemini Live on unmount
     useEffect(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            synthRef.current = window.speechSynthesis;
-            
-            const loadVoices = () => {
-                const voices = synthRef.current?.getVoices() || [];
-                setAvailableVoices(voices);
-            };
-            
-            loadVoices();
-            synthRef.current.onvoiceschanged = loadVoices;
-        }
-        
         return () => {
-            // Cleanup speech synthesis
-            if (synthRef.current) {
-                synthRef.current.cancel();
-            }
+            stopLiveSession();
         };
     }, []);
 
@@ -230,354 +275,166 @@ Personalidad:
         };
     }, [isLiveMode]);
 
-    // Initialize speech recognition
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            
-            if (SpeechRecognition) {
-                recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = true; // Enable continuous mode for live voice
-                recognitionRef.current.interimResults = true; // Show partial results
-                recognitionRef.current.lang = 'es-ES';
-                
-                recognitionRef.current.onresult = (event: any) => {
-                    let interimTranscript = '';
-                    let finalTranscript = '';
-                    
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
-                        } else {
-                            interimTranscript += transcript;
-                        }
-                    }
-                    
-                    // Show interim transcript in live mode
-                    if (isLiveMode && interimTranscript) {
-                        setLiveTranscript(interimTranscript);
-                    }
-                    
-                    // Process final transcript
-                    if (finalTranscript.trim()) {
-                        setLiveTranscript('');
-                        setInputValue(finalTranscript);
-                        
-                        // In live mode, auto-send immediately
-                        if (continuousListeningRef.current) {
-                            // Pause listening while processing
-                            recognitionRef.current?.stop();
-                            setIsListening(false);
-                            
-                            // Send message and resume listening after response
-                            sendMessageWithCallback(finalTranscript);
-                        } else {
-                            setIsListening(false);
-                        }
-                    }
-                };
-                
-                recognitionRef.current.onerror = (event: any) => {
-                    console.error('Speech recognition error:', event.error);
-                    if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                        setIsListening(false);
-                        if (continuousListeningRef.current) {
-                            // Try to restart after error
-                            setTimeout(() => {
-                                if (continuousListeningRef.current && recognitionRef.current) {
-                                    try { recognitionRef.current.start(); setIsListening(true); } catch (e) {}
-                                }
-                            }, 500);
-                        }
-                    }
-                };
-                
-                recognitionRef.current.onend = () => {
-                    setIsListening(false);
-                    // In continuous mode, restart if we're still in live mode and not speaking
-                    if (continuousListeningRef.current && !isSpeaking) {
-                        setTimeout(() => {
-                            if (continuousListeningRef.current && recognitionRef.current) {
-                                try { 
-                                    recognitionRef.current.start(); 
-                                    setIsListening(true); 
-                                } catch (e) {
-                                    console.log('Could not restart recognition:', e);
-                                }
-                            }
-                        }, 300);
-                    }
-                };
-            }
+    // Stop Live Voice session (Gemini Live API)
+    const stopLiveSession = useCallback(() => {
+        console.log('[Quibo Live] Stopping session...');
+        isConnectedRef.current = false;
+        
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+        if (processorRef.current && inputAudioContextRef.current) {
+            processorRef.current.disconnect();
+            processorRef.current = null;
+        }
+        if (inputAudioContextRef.current) {
+            inputAudioContextRef.current.close();
+            inputAudioContextRef.current = null;
+        }
+        activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
+        activeSourcesRef.current = [];
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        if (sessionRef.current) {
+            sessionRef.current = null;
         }
         
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.abort();
-            }
-        };
-    }, [isLiveMode, isSpeaking]);
-
-    // Text-to-speech function using Web Speech API (Google on Chrome)
-    const speak = useCallback((text: string, onComplete?: () => void) => {
-        if (!synthRef.current) {
-            onComplete?.();
-            return;
-        }
-        
-        // Cancel any ongoing speech
-        synthRef.current.cancel();
-        
-        const cleanText = stripMarkdown(text);
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Set voice - try to get Spanish voice
-        const spanishVoice = availableVoices.find(v => v.lang.startsWith('es'));
-        if (spanishVoice) {
-            utterance.voice = spanishVoice;
-        }
-        
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
-        utterance.lang = 'es-ES';
-        
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => {
-            setIsSpeaking(false);
-            onComplete?.();
-        };
-        utterance.onerror = () => {
-            setIsSpeaking(false);
-            onComplete?.();
-        };
-        
-        synthRef.current.speak(utterance);
-    }, [availableVoices]);
-
-    // Start listening function
-    const startListening = useCallback(() => {
-        if (!recognitionRef.current) {
-            alert('Tu navegador no soporta reconocimiento de voz');
-            return;
-        }
-        
-        // Stop any ongoing speech
-        if (synthRef.current) {
-            synthRef.current.cancel();
-        }
-        
-        setIsListening(true);
-        recognitionRef.current.start();
-    }, []);
-
-    // Stop listening function
-    const stopListening = useCallback(() => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
-        }
+        setIsLiveMode(false);
+        setIsLiveConnecting(false);
         setIsListening(false);
-    }, []);
-
-    // Stop speaking function
-    const stopSpeaking = useCallback(() => {
-        if (synthRef.current) {
-            synthRef.current.cancel();
-        }
         setIsSpeaking(false);
+        setLiveTranscript('');
+        nextStartTimeRef.current = 0;
     }, []);
 
-    // Start Live Voice session
-    const startLiveSession = useCallback(() => {
-        if (!recognitionRef.current) {
-            alert('Tu navegador no soporta reconocimiento de voz');
-            return;
-        }
-        
-        if (!synthRef.current) {
-            alert('Tu navegador no soporta síntesis de voz');
-            return;
-        }
-
+    // Start Live Voice session (Gemini Live API)
+    const startLiveSession = useCallback(async () => {
+        console.log('[Quibo Live] Starting Gemini Live session...');
         setIsLiveConnecting(true);
+        
+        try {
+            const ai = await getGoogleGenAI();
+            
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const outputCtx = new AudioContextClass({ sampleRate: 24000 });
+            const inputCtx = new AudioContextClass({ sampleRate: 16000 });
+            audioContextRef.current = outputCtx;
+            inputAudioContextRef.current = inputCtx;
+            nextStartTimeRef.current = outputCtx.currentTime;
 
-        // Stop any ongoing speech
-        synthRef.current.cancel();
+            const systemInstruction = `Eres Quibo, el asistente de voz de Quimera.ai.
+Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, una plataforma de creación de sitios web con IA.
+- Habla en español de forma amigable y profesional
+- Tu nombre es Quibo (derivado de Quimera)
+- Puedes hablar sobre precios, funcionalidades, cómo empezar, etc.
+- Sé breve y conciso en tus respuestas de voz
+- Siempre ofrece ayuda proactiva`;
 
-        setTimeout(() => {
-            setIsLiveConnecting(false);
-            setIsLiveMode(true);
-            continuousListeningRef.current = true;
-
-            // Speak a greeting, then start listening after it finishes
-            speak('¡Hola! Estoy escuchando. Puedes hacerme cualquier pregunta sobre Quimera.', () => {
-                // Start listening after greeting finishes
-                if (continuousListeningRef.current && recognitionRef.current) {
-                    try {
-                        recognitionRef.current.start();
-                        setIsListening(true);
-                    } catch (e) {
-                        console.error('Could not start recognition:', e);
+            const sessionPromise = ai.live.connect({
+                model: 'gemini-2.0-flash-live-001',
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: { 
+                        voiceConfig: { 
+                            prebuiltVoiceConfig: { voiceName: 'Kore' } 
+                        } 
+                    },
+                    systemInstruction: systemInstruction,
+                },
+                callbacks: {
+                    onopen: async () => {
+                        console.log('[Quibo Live] Connected!');
+                        setIsLiveConnecting(false);
+                        setIsLiveMode(true);
+                        isConnectedRef.current = true;
+                        
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            streamRef.current = stream;
+                            const source = inputCtx.createMediaStreamSource(stream);
+                            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+                            processorRef.current = processor;
+                            
+                            processor.onaudioprocess = (e) => {
+                                if (!isConnectedRef.current) return;
+                                const inputData = e.inputBuffer.getChannelData(0);
+                                const pcm16 = floatTo16BitPCM(inputData);
+                                const base64Data = bytesToBase64(new Uint8Array(pcm16));
+                                sessionPromise.then(session => {
+                                    if (!isConnectedRef.current) return;
+                                    try { 
+                                        session.sendRealtimeInput({ 
+                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } 
+                                        }); 
+                                    } catch (err) { }
+                                });
+                            };
+                            
+                            source.connect(processor);
+                            processor.connect(inputCtx.destination);
+                            setIsListening(true);
+                            
+                        } catch (micErr) {
+                            console.error('[Quibo Live] Microphone error:', micErr);
+                            stopLiveSession();
+                            alert("No se pudo acceder al micrófono.");
+                        }
+                    },
+                    onmessage: async (message: LiveServerMessage) => {
+                        if (message.serverContent?.interrupted) {
+                            console.log('[Quibo Live] Audio interrupted');
+                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
+                            activeSourcesRef.current = [];
+                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
+                            return;
+                        }
+                        
+                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                        if (audioData && audioContextRef.current) {
+                            console.log('[Quibo Live] Received audio response');
+                            setIsSpeaking(true);
+                            const ctx = audioContextRef.current;
+                            const bytes = base64ToBytes(audioData);
+                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+                            const source = ctx.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(ctx.destination);
+                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                            source.start(startTime);
+                            nextStartTimeRef.current = startTime + buffer.duration;
+                            activeSourcesRef.current.push(source);
+                            source.onended = () => {
+                                activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
+                                if (activeSourcesRef.current.length === 0) {
+                                    setIsSpeaking(false);
+                                }
+                            };
+                        }
+                    },
+                    onclose: () => {
+                        console.log('[Quibo Live] Connection closed');
+                        stopLiveSession();
+                    },
+                    onerror: (error) => {
+                        console.error('[Quibo Live] Error:', error);
+                        if (isConnectedRef.current) {
+                            stopLiveSession();
+                        }
                     }
                 }
             });
-        }, 300);
-    }, [speak]);
-
-    // Stop Live Voice session
-    const stopLiveSession = useCallback(() => {
-        continuousListeningRef.current = false;
-        setIsLiveMode(false);
-        setIsListening(false);
-        setLiveTranscript('');
-        
-        if (recognitionRef.current) {
-            try { recognitionRef.current.stop(); } catch (e) {}
-        }
-        
-        if (synthRef.current) {
-            synthRef.current.cancel();
-        }
-        
-        setIsSpeaking(false);
-    }, []);
-
-    // Send message with callback (for live voice mode)
-    const sendMessageWithCallback = useCallback(async (userMessage: string, onComplete?: () => void) => {
-        if (!userMessage.trim()) return;
-
-        const newUserMessage: Message = {
-            id: generateMessageId(),
-            role: 'user',
-            content: userMessage.trim(),
-            timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, newUserMessage]);
-        setInputValue('');
-        setIsLoading(true);
-
-        try {
-            const systemPrompt = buildSystemPrompt();
-            const conversationHistory = messages.map(m => ({
-                role: m.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: m.content }]
-            }));
-
-            let responseText = '';
-
-            if (isProxyMode()) {
-                const conversationContext = messages.map(m => 
-                    `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
-                ).join('\n');
-                
-                const fullPrompt = `${systemPrompt}
-
-${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n` : ''}Usuario: ${userMessage}
-
-Asistente:`;
-
-                const result = await generateContentViaProxy(
-                    'quimera-chat-landing',
-                    fullPrompt,
-                    'gemini-2.0-flash-exp',
-                    {
-                        temperature: config.behavior.temperature,
-                        maxOutputTokens: config.behavior.maxTokens,
-                    }
-                );
-                responseText = extractTextFromResponse(result) || 'Lo siento, no pude procesar tu mensaje.';
-            } else {
-                const genAI = await getGoogleGenAI();
-                if (!genAI) {
-                    throw new Error('API key not configured');
-                }
-                const model = genAI.getGenerativeModel({
-                    model: 'gemini-2.0-flash-exp',
-                    systemInstruction: systemPrompt
-                });
-                const chat = model.startChat({
-                    history: conversationHistory,
-                    generationConfig: {
-                        temperature: config.behavior.temperature,
-                        maxOutputTokens: config.behavior.maxTokens,
-                    }
-                });
-                const result = await chat.sendMessage(userMessage);
-                responseText = result.response.text() || 'Lo siento, no pude procesar tu mensaje.';
-            }
-
-            const assistantMessage: Message = {
-                id: generateMessageId(),
-                role: 'assistant',
-                content: responseText,
-                timestamp: new Date()
-            };
-
-            setMessages(prev => [...prev, assistantMessage]);
             
-            // Speak the response in live mode using Web Speech API
-            if (continuousListeningRef.current && synthRef.current) {
-                synthRef.current.cancel();
-                
-                const cleanText = stripMarkdown(responseText);
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                
-                // Set Spanish voice
-                const spanishVoice = availableVoices.find(v => v.lang.startsWith('es'));
-                if (spanishVoice) utterance.voice = spanishVoice;
-                
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
-                utterance.lang = 'es-ES';
-                
-                utterance.onstart = () => setIsSpeaking(true);
-                utterance.onend = () => {
-                    setIsSpeaking(false);
-                    // Resume listening after speaking
-                    if (continuousListeningRef.current && recognitionRef.current) {
-                        setTimeout(() => {
-                            try {
-                                recognitionRef.current.start();
-                                setIsListening(true);
-                            } catch (e) {
-                                console.log('Could not restart recognition:', e);
-                            }
-                        }, 500);
-                    }
-                    onComplete?.();
-                };
-                utterance.onerror = () => {
-                    setIsSpeaking(false);
-                    onComplete?.();
-                };
-                
-                synthRef.current.speak(utterance);
-            } else {
-                onComplete?.();
-            }
-
+            sessionRef.current = sessionPromise;
+            
         } catch (error) {
-            console.error('[LandingChatbot] Error in live voice:', error);
-            const errorContent = 'Lo siento, hubo un error. Intenta de nuevo.';
-            const errorMessage: Message = {
-                id: generateMessageId(),
-                role: 'assistant',
-                content: errorContent,
-                timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorMessage]);
-            
-            if (continuousListeningRef.current) {
-                speak(errorContent);
-            }
-            onComplete?.();
-        } finally {
-            setIsLoading(false);
+            console.error('[Quibo Live] Failed to start:', error);
+            setIsLiveConnecting(false);
+            alert("No se pudo iniciar la sesión de voz. Verifica que la API key esté configurada.");
         }
-    }, [messages, config, availableVoices, speak]);
+    }, [stopLiveSession]);
     
     // Determine color source (support both new and legacy format)
     const colorSource = (config.appearance as any).colorSource || ((config.appearance as any).useAppColors ? 'app' : 'custom');
