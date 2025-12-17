@@ -31,6 +31,7 @@ import {
 import LanguageSelector from './ui/LanguageSelector';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
+import { useLandingPlans } from '../hooks/useLandingPlans';
 
 // --- Brand Assets ---
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -63,6 +64,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
+  
+  // Get dynamic pricing plans from Firestore (connected to Super Admin)
+  const { plans: dynamicPlans, isLoading: isLoadingPlans } = useLandingPlans({ 
+    includeFree: false, 
+    maxPlans: 3 
+  });
   
   // Use navigation from context or defaults
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
@@ -103,32 +110,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     }
   ];
 
-  const pricingPlans = [
-    {
-      nameKey: 'landing.planStarter',
-      price: '$29',
-      periodKey: 'landing.perMonth',
-      descKey: 'landing.planStarterDesc',
-      featureKeys: ['landing.feature5Projects', 'landing.featureAIContent', 'landing.featureBasicTemplates', 'landing.featureEmailSupport'],
-      featured: false
-    },
-    {
-      nameKey: 'landing.planPro',
-      price: '$79',
-      periodKey: 'landing.perMonth',
-      descKey: 'landing.planProDesc',
-      featureKeys: ['landing.featureUnlimitedProjects', 'landing.featureAIImages', 'landing.featurePremiumTemplates', 'landing.featurePrioritySupport', 'landing.featureCustomDomains', 'landing.featureAnalytics'],
-      featured: true
-    },
-    {
-      nameKey: 'landing.planEnterprise',
-      price: 'Custom',
-      periodKey: '',
-      descKey: 'landing.planEnterpriseDesc',
-      featureKeys: ['landing.featureAllPro', 'landing.featureWhiteLabel', 'landing.featureAPI', 'landing.featureDedicatedSupport', 'landing.featureCustomIntegrations', 'landing.featureSLA'],
-      featured: false
-    }
-  ];
+  // Pricing plans are now loaded dynamically from Firestore via useLandingPlans hook
+  // This connects the Super Admin plan management with the public landing page
 
   // Handle navigation item click
   const handleNavItemClick = (item: AppNavItem) => {
@@ -433,48 +416,55 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <div 
-                key={index}
-                className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all active:scale-[0.99] ${
-                  plan.featured 
-                    ? 'bg-yellow-400/10 border-2 border-yellow-400/50 order-first md:order-none'
-                    : 'bg-white/5 border border-white/10'
-                }`}
-              >
-                {plan.featured && (
-                  <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 bg-yellow-400 text-black text-xs sm:text-sm font-bold rounded-full whitespace-nowrap">
-                    {t('landing.mostPopular')}
-                  </div>
-                )}
-                <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0">{t(plan.nameKey)}</h3>
-                <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">{t(plan.descKey)}</p>
-                <div className="mb-4 sm:mb-6">
-                  <span className="text-3xl sm:text-4xl font-black">{plan.price}</span>
-                  <span className="text-gray-500 text-sm sm:text-base">{plan.periodKey ? t(plan.periodKey) : ''}</span>
-                </div>
-                <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
-                  {plan.featureKeys.map((featureKey, i) => (
-                    <li key={i} className="flex items-start gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                      <span>{t(featureKey)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button 
-                  onClick={onNavigateToRegister}
-                  className={`w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98] ${
-                    plan.featured
-                      ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-                      : 'bg-white/10 text-white hover:bg-white/20'
+          {/* Loading state */}
+          {isLoadingPlans ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+              {dynamicPlans.map((plan) => (
+                <div 
+                  key={plan.id}
+                  className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all active:scale-[0.99] ${
+                    plan.featured || plan.isPopular
+                      ? 'bg-yellow-400/10 border-2 border-yellow-400/50 order-first md:order-none'
+                      : 'bg-white/5 border border-white/10'
                   }`}
                 >
-                  {t('landing.getStarted')}
-                </button>
-              </div>
-            ))}
-          </div>
+                  {(plan.featured || plan.isPopular) && (
+                    <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 bg-yellow-400 text-black text-xs sm:text-sm font-bold rounded-full whitespace-nowrap">
+                      {t('landing.mostPopular')}
+                    </div>
+                  )}
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0">{plan.name}</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">{plan.description}</p>
+                  <div className="mb-4 sm:mb-6">
+                    <span className="text-3xl sm:text-4xl font-black">{plan.price}</span>
+                    <span className="text-gray-500 text-sm sm:text-base">{plan.period}</span>
+                  </div>
+                  <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button 
+                    onClick={onNavigateToRegister}
+                    className={`w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98] ${
+                      plan.featured || plan.isPopular
+                        ? 'bg-yellow-400 text-black hover:bg-yellow-300'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {t('landing.getStarted')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
