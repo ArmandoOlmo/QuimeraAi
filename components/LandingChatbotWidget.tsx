@@ -168,7 +168,6 @@ Personalidad:
     const [leadFormData, setLeadFormData] = useState<LeadFormData>({ name: '', email: '' });
     const [leadCaptured, setLeadCaptured] = useState(false);
     const [sessionId] = useState(generateSessionId);
-    const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [hasShownProactive, setHasShownProactive] = useState(false);
@@ -322,7 +321,10 @@ Personalidad:
 
     // Text-to-speech function using Web Speech API (Google on Chrome)
     const speak = useCallback((text: string, onComplete?: () => void) => {
-        if (!synthRef.current || !config.voice.enabled) return;
+        if (!synthRef.current) {
+            onComplete?.();
+            return;
+        }
         
         // Cancel any ongoing speech
         synthRef.current.cancel();
@@ -330,7 +332,7 @@ Personalidad:
         const cleanText = stripMarkdown(text);
         const utterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Set voice based on config - try to get Spanish voice
+        // Set voice - try to get Spanish voice
         const spanishVoice = availableVoices.find(v => v.lang.startsWith('es'));
         if (spanishVoice) {
             utterance.voice = spanishVoice;
@@ -352,7 +354,7 @@ Personalidad:
         };
         
         synthRef.current.speak(utterance);
-    }, [config.voice.enabled, availableVoices]);
+    }, [availableVoices]);
 
     // Start listening function
     const startListening = useCallback(() => {
@@ -406,7 +408,6 @@ Personalidad:
         setTimeout(() => {
             setIsLiveConnecting(false);
             setIsLiveMode(true);
-            setIsVoiceMode(true);
             continuousListeningRef.current = true;
 
             // Speak a greeting, then start listening after it finishes
@@ -517,7 +518,7 @@ Asistente:`;
             setMessages(prev => [...prev, assistantMessage]);
             
             // Speak the response in live mode using Web Speech API
-            if (continuousListeningRef.current && config.voice.enabled && synthRef.current) {
+            if (continuousListeningRef.current && synthRef.current) {
                 synthRef.current.cancel();
                 
                 const cleanText = stripMarkdown(responseText);
@@ -1356,18 +1357,6 @@ Asistente:`;
                             </button>
                         )}
                         
-                        {/* Stop speaking button */}
-                        {isSpeaking && !isLiveMode && (
-                            <button
-                                type="button"
-                                onClick={stopSpeaking}
-                                className="p-2 rounded-full transition-colors animate-pulse"
-                                style={{ backgroundColor: colors.primary, color: '#ffffff' }}
-                                title="Detener voz"
-                            >
-                                <VolumeX size={20} />
-                            </button>
-                        )}
                         
                         {/* Send button */}
                         <button
