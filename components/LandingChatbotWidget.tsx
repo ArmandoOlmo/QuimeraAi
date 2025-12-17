@@ -16,7 +16,6 @@ import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, 
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { getGoogleGenAI, isProxyMode } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
-import { textToSpeech, playBase64Audio } from '../utils/voiceProxyClient';
 
 // =============================================================================
 // INTERFACES
@@ -189,7 +188,6 @@ Personalidad:
     const synthRef = useRef<SpeechSynthesis | null>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const continuousListeningRef = useRef<boolean>(false);
-    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
     // Initialize speech synthesis and load voices
     useEffect(() => {
@@ -322,47 +320,39 @@ Personalidad:
         };
     }, [isLiveMode, isSpeaking]);
 
-    // Text-to-speech function using Google Cloud TTS
-    const speak = useCallback(async (text: string) => {
-        if (!config.voice.enabled || !isVoiceMode) return;
+    // Text-to-speech function using Web Speech API (Google on Chrome)
+    const speak = useCallback((text: string, onComplete?: () => void) => {
+        if (!synthRef.current || !config.voice.enabled) return;
         
-        // Stop any current audio
-        if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current = null;
-        }
+        // Cancel any ongoing speech
+        synthRef.current.cancel();
         
         const cleanText = stripMarkdown(text);
-        setIsSpeaking(true);
+        const utterance = new SpeechSynthesisUtterance(cleanText);
         
-        try {
-            // Use Google Cloud TTS through our proxy
-            const response = await textToSpeech(cleanText, {
-                voiceName: 'Quibo',
-                speakingRate: 1.0,
-                pitch: 0,
-            });
-            
-            // Play the audio
-            const audioData = `data:${response.mimeType};base64,${response.audio}`;
-            const audio = new Audio(audioData);
-            currentAudioRef.current = audio;
-            
-            audio.onended = () => {
-                setIsSpeaking(false);
-                currentAudioRef.current = null;
-            };
-            audio.onerror = () => {
-                setIsSpeaking(false);
-                currentAudioRef.current = null;
-            };
-            
-            await audio.play();
-        } catch (error) {
-            console.error('[LandingChatbot] TTS Error:', error);
-            setIsSpeaking(false);
+        // Set voice based on config - try to get Spanish voice
+        const spanishVoice = availableVoices.find(v => v.lang.startsWith('es'));
+        if (spanishVoice) {
+            utterance.voice = spanishVoice;
         }
-    }, [config.voice.enabled, isVoiceMode]);
+        
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.lang = 'es-ES';
+        
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            onComplete?.();
+        };
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            onComplete?.();
+        };
+        
+        synthRef.current.speak(utterance);
+    }, [config.voice.enabled, availableVoices]);
 
     // Start listening function
     const startListening = useCallback(() => {
@@ -390,12 +380,6 @@ Personalidad:
 
     // Stop speaking function
     const stopSpeaking = useCallback(() => {
-        // Stop Google TTS audio
-        if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current = null;
-        }
-        // Also stop Web Speech API (fallback)
         if (synthRef.current) {
             synthRef.current.cancel();
         }
@@ -409,30 +393,35 @@ Personalidad:
             return;
         }
         
-        setIsLiveConnecting(true);
-        
-        // Stop any ongoing speech
-        if (synthRef.current) {
-            synthRef.current.cancel();
+        if (!synthRef.current) {
+            alert('Tu navegador no soporta síntesis de voz');
+            return;
         }
-        
+
+        setIsLiveConnecting(true);
+
+        // Stop any ongoing speech
+        synthRef.current.cancel();
+
         setTimeout(() => {
             setIsLiveConnecting(false);
             setIsLiveMode(true);
             setIsVoiceMode(true);
             continuousListeningRef.current = true;
-            
-            // Start listening
-            try {
-                recognitionRef.current.start();
-                setIsListening(true);
-            } catch (e) {
-                console.error('Could not start recognition:', e);
-            }
-            
-            // Speak a greeting
-            speak('¡Hola! Estoy escuchando. Puedes hacerme cualquier pregunta sobre Quimera.');
-        }, 500);
+
+            // Speak a greeting, then start listening after it finishes
+            speak('¡Hola! Estoy escuchando. Puedes hacerme cualquier pregunta sobre Quimera.', () => {
+                // Start listening after greeting finishes
+                if (continuousListeningRef.current && recognitionRef.current) {
+                    try {
+                        recognitionRef.current.start();
+                        setIsListening(true);
+                    } catch (e) {
+                        console.error('Could not start recognition:', e);
+                    }
+                }
+            });
+        }, 300);
     }, [speak]);
 
     // Stop Live Voice session
@@ -527,58 +516,44 @@ Asistente:`;
 
             setMessages(prev => [...prev, assistantMessage]);
             
-            // Speak the response in live mode using Google TTS
-            if (continuousListeningRef.current && config.voice.enabled) {
-                try {
-                    // Stop any current audio
-                    if (currentAudioRef.current) {
-                        currentAudioRef.current.pause();
-                        currentAudioRef.current = null;
+            // Speak the response in live mode using Web Speech API
+            if (continuousListeningRef.current && config.voice.enabled && synthRef.current) {
+                synthRef.current.cancel();
+                
+                const cleanText = stripMarkdown(responseText);
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                
+                // Set Spanish voice
+                const spanishVoice = availableVoices.find(v => v.lang.startsWith('es'));
+                if (spanishVoice) utterance.voice = spanishVoice;
+                
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                utterance.lang = 'es-ES';
+                
+                utterance.onstart = () => setIsSpeaking(true);
+                utterance.onend = () => {
+                    setIsSpeaking(false);
+                    // Resume listening after speaking
+                    if (continuousListeningRef.current && recognitionRef.current) {
+                        setTimeout(() => {
+                            try {
+                                recognitionRef.current.start();
+                                setIsListening(true);
+                            } catch (e) {
+                                console.log('Could not restart recognition:', e);
+                            }
+                        }, 500);
                     }
-                    
-                    const cleanText = stripMarkdown(responseText);
-                    setIsSpeaking(true);
-                    
-                    // Use Google Cloud TTS through our proxy
-                    const ttsResponse = await textToSpeech(cleanText, {
-                        voiceName: 'Quibo',
-                        speakingRate: 1.0,
-                        pitch: 0,
-                    });
-                    
-                    // Play the audio
-                    const audioData = `data:${ttsResponse.mimeType};base64,${ttsResponse.audio}`;
-                    const audio = new Audio(audioData);
-                    currentAudioRef.current = audio;
-                    
-                    audio.onended = () => {
-                        setIsSpeaking(false);
-                        currentAudioRef.current = null;
-                        // Resume listening after speaking
-                        if (continuousListeningRef.current && recognitionRef.current) {
-                            setTimeout(() => {
-                                try {
-                                    recognitionRef.current.start();
-                                    setIsListening(true);
-                                } catch (e) {
-                                    console.log('Could not restart recognition:', e);
-                                }
-                            }, 300);
-                        }
-                        onComplete?.();
-                    };
-                    audio.onerror = () => {
-                        setIsSpeaking(false);
-                        currentAudioRef.current = null;
-                        onComplete?.();
-                    };
-                    
-                    await audio.play();
-                } catch (ttsError) {
-                    console.error('[LandingChatbot] TTS Error in live mode:', ttsError);
+                    onComplete?.();
+                };
+                utterance.onerror = () => {
                     setIsSpeaking(false);
                     onComplete?.();
-                }
+                };
+                
+                synthRef.current.speak(utterance);
             } else {
                 onComplete?.();
             }
