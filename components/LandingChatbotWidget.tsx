@@ -666,12 +666,8 @@ Asistente:`;
                 timestamp: new Date()
             }]);
             
-            // Speak welcome message if auto-play is enabled
-            if (config.voice.enabled && config.voice.autoPlayGreeting && isVoiceMode) {
-                setTimeout(() => speak(config.welcomeMessage), 500);
-            }
         }
-    }, [isOpen, config.welcomeMessage, config.voice.enabled, config.voice.autoPlayGreeting, isVoiceMode, speak]);
+    }, [isOpen, config.welcomeMessage]);
 
     // Focus input when opened
     useEffect(() => {
@@ -871,11 +867,6 @@ Asistente:`;
             };
 
             setMessages(prev => [...prev, assistantMessage]);
-            
-            // Speak the response if voice mode is enabled
-            if (isVoiceMode && config.voice.enabled) {
-                speak(responseText);
-            }
 
             // Show lead form if triggered
             if (shouldCaptureLead) {
@@ -892,11 +883,6 @@ Asistente:`;
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMessage]);
-            
-            // Speak error message if voice mode is enabled
-            if (isVoiceMode && config.voice.enabled) {
-                speak(errorContent);
-            }
         } finally {
             setIsLoading(false);
         }
