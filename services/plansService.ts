@@ -40,6 +40,10 @@ export interface StoredPlan extends SubscriptionPlan {
     isArchived?: boolean;
     archivedAt?: { seconds: number; nanoseconds: number };
     
+    // Landing Page visibility
+    showInLanding?: boolean;  // Control if this plan appears in the public landing page
+    landingOrder?: number;    // Order of appearance in landing page (lower = first)
+    
     // Statistics (computed)
     activeSubscribers?: number;
     totalRevenue?: number;
@@ -522,6 +526,8 @@ export function createEmptyPlan(): Partial<StoredPlan> {
         isPopular: false,
         color: '#6b7280',
         icon: 'Sparkles',
+        showInLanding: false,
+        landingOrder: 99,
     };
 }
 
@@ -568,3 +574,4 @@ export default {
     validatePlan,
     clearPlansCache,
 };
+

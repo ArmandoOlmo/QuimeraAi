@@ -66,10 +66,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const appContent = useSafeAppContent();
   
   // Get dynamic pricing plans from Firestore (connected to Super Admin)
-  const { plans: dynamicPlans, isLoading: isLoadingPlans } = useLandingPlans({ 
-    includeFree: false, 
-    maxPlans: 3 
-  });
+  // Only shows plans that have showInLanding = true in Super Admin
+  const { plans: dynamicPlans, isLoading: isLoadingPlans } = useLandingPlans();
   
   // Use navigation from context or defaults
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;

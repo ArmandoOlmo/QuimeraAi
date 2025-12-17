@@ -24,6 +24,7 @@ export interface LandingPlan {
     isPopular: boolean;
     color: string;
     order: number;
+    landingOrder: number;
 }
 
 interface UseLandingPlansReturn {
@@ -151,6 +152,7 @@ function transformPlanForLanding(plan: StoredPlan): LandingPlan {
         isPopular: plan.isPopular ?? false,
         color: plan.color || '#6b7280',
         order: getPlanOrder(plan.id),
+        landingOrder: plan.landingOrder ?? 99,
     };
 }
 
@@ -160,14 +162,13 @@ function transformPlanForLanding(plan: StoredPlan): LandingPlan {
 
 /**
  * Hook para cargar planes de suscripción desde Firestore
- * @param options.includeFree - Incluir plan gratuito (default: false)
- * @param options.maxPlans - Número máximo de planes a mostrar (default: 3)
+ * Solo muestra planes que tienen showInLanding = true
+ * @param options.fallbackToAll - Si no hay planes con showInLanding, mostrar todos (default: true)
  */
 export function useLandingPlans(options?: {
-    includeFree?: boolean;
-    maxPlans?: number;
+    fallbackToAll?: boolean;
 }): UseLandingPlansReturn {
-    const { includeFree = false, maxPlans = 3 } = options ?? {};
+    const { fallbackToAll = true } = options ?? {};
     
     const [rawPlans, setRawPlans] = useState<StoredPlan[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -199,26 +200,28 @@ export function useLandingPlans(options?: {
 
     // Transformar y filtrar planes
     const plans = useMemo(() => {
-        let filtered = rawPlans
-            .filter(p => includeFree || (p.price?.monthly ?? 0) > 0)
-            .map(transformPlanForLanding)
-            .sort((a, b) => a.order - b.order);
+        // Filtrar solo los planes que tienen showInLanding = true
+        let landingPlans = rawPlans.filter(p => p.showInLanding === true);
         
-        // Si hay más planes que maxPlans, seleccionar los más relevantes
-        if (filtered.length > maxPlans) {
-            // Priorizar: featured > popular > por orden
-            filtered = filtered
+        // Si no hay planes con showInLanding y fallbackToAll está activo,
+        // mostrar los 3 planes pagados más relevantes como fallback
+        if (landingPlans.length === 0 && fallbackToAll) {
+            landingPlans = rawPlans
+                .filter(p => (p.price?.monthly ?? 0) > 0)
                 .sort((a, b) => {
-                    if (a.featured !== b.featured) return a.featured ? -1 : 1;
+                    // Priorizar: featured > popular > por precio
+                    if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
                     if (a.isPopular !== b.isPopular) return a.isPopular ? -1 : 1;
-                    return a.order - b.order;
+                    return (a.price?.monthly ?? 0) - (b.price?.monthly ?? 0);
                 })
-                .slice(0, maxPlans)
-                .sort((a, b) => a.order - b.order); // Re-ordenar por orden original
+                .slice(0, 3);
         }
         
-        return filtered;
-    }, [rawPlans, includeFree, maxPlans]);
+        // Transformar y ordenar por landingOrder
+        return landingPlans
+            .map(transformPlanForLanding)
+            .sort((a, b) => a.landingOrder - b.landingOrder);
+    }, [rawPlans, fallbackToAll]);
 
     return {
         plans,
