@@ -316,7 +316,16 @@ Personalidad:
         setIsLiveConnecting(true);
         
         try {
-            const ai = await getGoogleGenAI();
+            // Check if API key is available
+            let ai;
+            try {
+                ai = await getGoogleGenAI();
+            } catch (keyError) {
+                console.error('[Quibo Live] API key not available:', keyError);
+                setIsLiveConnecting(false);
+                alert('Live Voice no está disponible. Contacta al administrador para configurar la API key de Gemini.');
+                return;
+            }
             
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
