@@ -71,6 +71,9 @@ export default defineConfig(({ mode }) => {
           },
           workbox: {
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+            // Force immediate update
+            skipWaiting: true,
+            clientsClaim: true,
             // Increase limit for large JS chunks, or use navigateFallback instead
             maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
             runtimeCaching: [

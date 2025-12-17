@@ -380,3 +380,5 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 
 export default LegalPageEditor;
 
+
+

@@ -540,3 +540,5 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
 };
 
 export default BrandingSettings;
+
+

@@ -44,6 +44,7 @@
     "proPlan": "Pro Plan",
     "monthlyCredits": "Monthly credits",
     "upgrade": "Upgrade",
+    "unlimited": "Unlimited",
     "creator": "Creator",
     "all": "All",
     "mostRecent": "Most recent",
@@ -324,7 +325,37 @@
       "team": "Team",
       "teamDesc": "Manage members and invitations",
       "branding": "Branding",
-      "brandingDesc": "Customize appearance and domain"
+      "brandingDesc": "Customize appearance and domain",
+      "subscription": {
+        "tab": "Plan",
+        "tabDesc": "Manage plan and subscription",
+        "title": "Plan & Subscription",
+        "description": "Manage your current plan, credits usage, and upgrade options.",
+        "currentPlan": "Current Plan",
+        "upgrade": "Upgrade Plan",
+        "upgradeNow": "Upgrade Now",
+        "aiCredits": "AI Credits",
+        "used": "Used",
+        "limit": "Limit",
+        "remaining": "Credits remaining",
+        "nearLimit": "Running low on credits",
+        "nearLimitDesc": "Consider upgrading your plan to get more credits.",
+        "exceededLimit": "You have exceeded your credit limit",
+        "exceededLimitDesc": "Upgrade your plan to continue using AI features.",
+        "includedFeatures": "Included in your plan",
+        "availableUpgrades": "Available plans",
+        "selectPlan": "Select",
+        "projects": "Projects",
+        "users": "Users",
+        "storage": "Storage",
+        "domains": "Domains",
+        "aiCreditsMonth": "AI Credits/month",
+        "ecommerce": "E-commerce",
+        "chatbot": "AI Chatbot",
+        "customDomains": "Custom domains",
+        "included": "Included",
+        "notIncluded": "Not included"
+      }
     },
     "profile": "Profile",
     "createNew": "Create New",
@@ -438,6 +469,67 @@
     "step4Desc": "Connect your domain or use our free hosting to publish",
     "instructionsTip": "💡 You can close this guide and view it again from settings",
     "gotIt": "Got it, hide",
+    "currentPlan": "Current Plan",
+    "upgradeToUnlock": "Unlock more with",
+    "upgradeNow": "Upgrade Plan",
+    "creditsRemaining": "credits remaining",
+    "nearLimit": "Near limit",
+    "limitExceeded": "Limit exceeded",
+    "perMonth": "/month",
+    "savePerYear": "Save ${{amount}}/year",
+    "ecommerceIncluded": "E-commerce included",
+    "customDomainsIncluded": "Custom domains",
+    "upgradeModal": {
+      "triggers": {
+        "credits": {
+          "title": "Your AI Credits are running low!",
+          "subtitle": "Upgrade your plan to get more credits and keep creating."
+        },
+        "projects": {
+          "title": "You've reached the project limit",
+          "subtitle": "Upgrade your plan to create more amazing websites."
+        },
+        "domains": {
+          "title": "Custom domains not available",
+          "subtitle": "Connect your own domain by upgrading to a higher plan."
+        },
+        "ecommerce": {
+          "title": "E-commerce not included in your plan",
+          "subtitle": "Sell online by upgrading to Pro or higher."
+        },
+        "chatbot": {
+          "title": "AI Chatbot not available",
+          "subtitle": "Add an intelligent chatbot to your site with a higher plan."
+        },
+        "users": {
+          "title": "User limit reached",
+          "subtitle": "Collaborate with more people by upgrading your plan."
+        },
+        "storage": {
+          "title": "Storage at limit",
+          "subtitle": "Get more space for your files with a higher plan."
+        },
+        "generic": {
+          "title": "Unlock more features",
+          "subtitle": "Upgrade your plan to access all Quimera AI features."
+        }
+      },
+      "billing": {
+        "monthly": "Monthly",
+        "annually": "Annual",
+        "discount": "-20%",
+        "perMonth": "/month",
+        "savePercent": "Save {{percent}}% per year"
+      },
+      "recommended": "Recommended",
+      "creditsRemaining": "You have {{remaining}} of {{total}} credits left",
+      "projectsUsed": "{{current}} of {{max}} projects used",
+      "footer": {
+        "cancelAnytime": "Cancel anytime • No commitments",
+        "later": "Later",
+        "upgradeNow": "Upgrade now"
+      }
+    },
     "template": "Template",
     "emptyState": {
       "titleNoProjects": "No projects found",
@@ -1971,6 +2063,7 @@
         "trend": "+8% this month",
         "allTenantsSubtitle": "Across all tenants"
       },
+      "agencies": "Agencies",
       "agency": {
         "members": "Team Members",
         "invite": "Invite User",

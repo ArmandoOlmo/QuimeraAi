@@ -462,3 +462,5 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
     
     return highlights[currentPlanId] || [];
 }
+
+

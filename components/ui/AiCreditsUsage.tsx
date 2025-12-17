@@ -1,6 +1,7 @@
 /**
  * AI Credits Usage Component
  * Componente para visualizar el uso de AI credits con barra de progreso y estadísticas
+ * Integrado con UpgradeContext para mostrar modal de upgrade automáticamente
  */
 
 import React, { useState, useEffect } from 'react';
@@ -26,6 +27,7 @@ import {
     SubscriptionPlanId,
     getUsageColor,
 } from '../../types/subscription';
+import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 
 // =============================================================================
 // TYPES
@@ -174,8 +176,20 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
         getUsageByOperation,
     } = useAiCredits({ tenantId, userId });
     
+    // Use global upgrade context if available
+    const upgradeContext = useSafeUpgrade();
+    
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Handler for upgrade click - uses context if available, or prop callback
+    const handleUpgradeClick = () => {
+        if (onUpgradeClick) {
+            onUpgradeClick();
+        } else if (upgradeContext) {
+            upgradeContext.showCreditsUpgrade(creditsRemaining, creditsIncluded);
+        }
+    };
     
     // Cargar uso por operación
     useEffect(() => {
@@ -394,9 +408,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             </button>
                         )}
                         
-                        {onUpgradeClick && (
+                        {/* Show upgrade button if callback provided OR if upgrade context available */}
+                        {(onUpgradeClick || upgradeContext) && (
                             <button
-                                onClick={onUpgradeClick}
+                                onClick={handleUpgradeClick}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-sm font-medium transition-colors"
                             >
                                 <Crown className="w-4 h-4" />
@@ -511,3 +526,5 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 };
 
 export default AiCreditsUsage;
+
+

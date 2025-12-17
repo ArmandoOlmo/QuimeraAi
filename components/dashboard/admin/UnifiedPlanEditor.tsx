@@ -448,11 +448,11 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                 </div>
                             </div>
                             
-                            {/* Landing Page Visibility - PROMINENT POSITION */}
-                            <div className="p-4 bg-green-500/10 rounded-lg border-2 border-green-500/30">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <Globe className="w-5 h-5 text-green-400" />
-                                    <h4 className="font-medium text-editor-text-primary">🌐 Visibilidad en Landing Page</h4>
+                            {/* Landing Page Visibility */}
+                            <div className="p-4 bg-editor-bg rounded-lg border border-editor-border">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Globe className="w-4 h-4 text-green-400" />
+                                    <h4 className="text-sm font-medium text-editor-text-primary">Visibilidad en Landing Page</h4>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-6">
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -482,8 +482,8 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-xs text-green-400/80 mt-2">
-                                    ✓ Los planes marcados aparecerán en la sección de precios del landing page público de Quimera.ai
+                                <p className="text-xs text-editor-text-secondary mt-2">
+                                    Los planes activados aparecerán en el landing page público
                                 </p>
                             </div>
                             

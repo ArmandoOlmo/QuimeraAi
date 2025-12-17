@@ -1,11 +1,12 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useDomains } from '../../../contexts/domains';
 import { useProject } from '../../../contexts/project';
 import { useUI } from '../../../contexts/core/UIContext';
+import { useSafeTenant } from '../../../contexts/tenant';
+import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft } from 'lucide-react';
+import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
 
@@ -620,14 +621,33 @@ const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { domains, addDomain } = useDomains();
     const { setView } = useUI();
+    const tenantContext = useSafeTenant();
+    const upgradeContext = useSafeUpgrade();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [connectDomainName, setConnectDomainName] = useState('');
+    
+    // Check if custom domains are allowed by the current plan
+    const subscriptionPlan = tenantContext?.currentTenant?.subscriptionPlan || 'free';
+    const customDomainsAllowed = subscriptionPlan !== 'free'; // Free plan doesn't allow custom domains
+    
+    // Handler to show upgrade modal for domains feature
+    const handleDomainUpgrade = () => {
+        if (upgradeContext) {
+            upgradeContext.openUpgradeModal('domains');
+        }
+    };
 
     const handleConnectSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!connectDomainName) return;
+        
+        // Check if custom domains are allowed
+        if (!customDomainsAllowed) {
+            handleDomainUpgrade();
+            return;
+        }
 
         await addDomain({
             id: `dom_${Date.now()}`,
@@ -638,6 +658,15 @@ const DomainsDashboard: React.FC = () => {
         });
         setIsConnectModalOpen(false);
         setConnectDomainName('');
+    };
+    
+    // Handler for buy/search domain buttons
+    const handleBuyDomain = () => {
+        if (!customDomainsAllowed) {
+            handleDomainUpgrade();
+            return;
+        }
+        setIsBuyModalOpen(true);
     };
 
     return (
@@ -658,15 +687,17 @@ const DomainsDashboard: React.FC = () => {
 
                     <div className="flex gap-2">
                         <button
-                            onClick={() => setIsConnectModalOpen(true)}
+                            onClick={() => customDomainsAllowed ? setIsConnectModalOpen(true) : handleDomainUpgrade()}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary hidden sm:flex"
                         >
+                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
                             <Link2 className="w-4 h-4" /> {t('domainsDashboard.connect')}
                         </button>
                         <button
-                            onClick={() => setIsBuyModalOpen(true)}
+                            onClick={handleBuyDomain}
                             className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary"
                         >
+                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
                             <ShoppingCart className="w-4 h-4" /> {t('domainsDashboard.buyDomain')}
                         </button>
                         <button
@@ -693,8 +724,19 @@ const DomainsDashboard: React.FC = () => {
                                     {t('domainsDashboard.noDomainsDesc')}
                                 </p>
                                 <div className="flex justify-center gap-4">
-                                    <button onClick={() => setIsConnectModalOpen(true)} className="px-6 py-3 rounded-xl border border-border bg-background hover:bg-secondary transition-colors font-bold">{t('domainsDashboard.connectExisting')}</button>
-                                    <button onClick={() => setIsBuyModalOpen(true)} className="px-6 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-colors font-bold">{t('domainsDashboard.findDomain')}</button>
+                                    {!customDomainsAllowed ? (
+                                        <button 
+                                            onClick={handleDomainUpgrade} 
+                                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold flex items-center gap-2 transition-colors"
+                                        >
+                                            <Crown className="w-5 h-5" /> Actualizar para usar dominios
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => setIsConnectModalOpen(true)} className="px-6 py-3 rounded-xl border border-border bg-background hover:bg-secondary transition-colors font-bold">{t('domainsDashboard.connectExisting')}</button>
+                                    )}
+                                    {customDomainsAllowed && (
+                                        <button onClick={handleBuyDomain} className="px-6 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-colors font-bold">{t('domainsDashboard.findDomain')}</button>
+                                    )}
                                 </div>
                             </div>
                         ) : (

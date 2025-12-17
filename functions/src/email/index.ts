@@ -31,9 +31,13 @@ export { getNewOrderAdminTemplate } from './templates/newOrderAdmin';
 export { getLowStockAlertTemplate } from './templates/lowStockAlert';
 export { getLeadNotificationTemplate } from './templates/leadNotification';
 export { getWelcomeCustomerTemplate } from './templates/welcomeCustomer';
+export { getWelcomeUserTemplate } from './templates/welcomeUser';
 
-// Triggers
+// Triggers - Lead
 export { onLeadCreatedSendEmail, onLeadScoreUpdate } from './triggers/leadTriggers';
+
+// Triggers - User
+export { onUserCreatedSendWelcomeEmail, onUserEmailVerified } from './triggers/userTriggers';
 
 // Marketing
 export { 
@@ -42,6 +46,8 @@ export {
     processScheduledCampaigns,
     sendTestEmail 
 } from './marketing/campaignService';
+
+
 
 
 

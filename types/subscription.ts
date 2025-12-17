@@ -642,3 +642,5 @@ export function getUsageColor(percentage: number): string {
     if (percentage >= 50) return '#eab308';  // Yellow
     return '#10b981';                         // Green
 }
+
+

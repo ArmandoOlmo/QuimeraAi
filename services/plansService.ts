@@ -225,6 +225,20 @@ async function syncPlanToStripe(plan: Partial<StoredPlan>): Promise<{ success: b
 }
 
 /**
+ * Remove undefined values from an object (Firestore doesn't accept undefined)
+ * Only removes top-level undefined values to avoid corrupting special Firebase objects
+ */
+function cleanForFirestore(obj: Record<string, any>): Record<string, any> {
+    const result: Record<string, any> = {};
+    for (const key in obj) {
+        if (obj[key] !== undefined) {
+            result[key] = obj[key];
+        }
+    }
+    return result;
+}
+
+/**
  * Create or update a plan in Firestore (and optionally sync to Stripe)
  */
 export async function savePlan(
@@ -236,11 +250,16 @@ export async function savePlan(
         const planRef = doc(db, PLANS_COLLECTION, plan.id);
         const existingPlan = await getDoc(planRef);
         
-        const planData: Partial<StoredPlan> = {
+        // Build plan data - explicitly handle optional fields
+        const planData: Record<string, any> = {
             ...plan,
-            updatedAt: serverTimestamp() as any,
-            updatedBy: userId,
+            updatedAt: serverTimestamp(),
         };
+        
+        // Only add updatedBy if userId is provided
+        if (userId) {
+            planData.updatedBy = userId;
+        }
         
         // Try to sync to Stripe first if enabled and plan has pricing
         let stripeError: string | undefined;
@@ -255,13 +274,20 @@ export async function savePlan(
         
         if (!existingPlan.exists()) {
             // Creating new plan
-            planData.createdAt = serverTimestamp() as any;
-            planData.createdBy = userId;
+            planData.createdAt = serverTimestamp();
+            if (userId) {
+                planData.createdBy = userId;
+            }
             planData.isArchived = false;
-            await setDoc(planRef, planData);
+        }
+        
+        // Clean all undefined values before writing to Firestore
+        const dataToSave = cleanForFirestore(planData);
+        
+        if (!existingPlan.exists()) {
+            await setDoc(planRef, dataToSave);
         } else {
-            // Updating existing plan
-            await updateDoc(planRef, planData);
+            await updateDoc(planRef, dataToSave);
         }
         
         // Clear cache
@@ -308,12 +334,15 @@ export async function archivePlan(planId: string, userId?: string, syncToStripe 
             }
         }
         
-        await updateDoc(planRef, {
+        const updateData: Record<string, any> = {
             isArchived: true,
             archivedAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-            updatedBy: userId,
-        });
+        };
+        if (userId) {
+            updateData.updatedBy = userId;
+        }
+        await updateDoc(planRef, updateData);
         
         clearPlansCache();
         
@@ -335,12 +364,15 @@ export async function restorePlan(planId: string, userId?: string): Promise<{ su
     try {
         const planRef = doc(db, PLANS_COLLECTION, planId);
         
-        await updateDoc(planRef, {
+        const updateData: Record<string, any> = {
             isArchived: false,
             archivedAt: null,
             updatedAt: serverTimestamp(),
-            updatedBy: userId,
-        });
+        };
+        if (userId) {
+            updateData.updatedBy = userId;
+        }
+        await updateDoc(planRef, updateData);
         
         clearPlansCache();
         
@@ -393,15 +425,21 @@ export async function initializePlansInFirestore(userId?: string): Promise<{ suc
         let plansCreated = 0;
         
         for (const [planId, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-            const planData: StoredPlan = {
+            const planData: Record<string, any> = {
                 ...plan,
-                createdAt: serverTimestamp() as any,
-                updatedAt: serverTimestamp() as any,
-                createdBy: userId,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
                 isArchived: false,
             };
             
-            await setDoc(doc(db, PLANS_COLLECTION, planId), planData);
+            // Only add createdBy if userId is provided
+            if (userId) {
+                planData.createdBy = userId;
+            }
+            
+            // Clean undefined values before writing
+            const cleanData = cleanForFirestore(planData);
+            await setDoc(doc(db, PLANS_COLLECTION, planId), cleanData);
             plansCreated++;
         }
         

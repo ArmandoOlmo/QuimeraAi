@@ -5,15 +5,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Palette, ArrowLeft, Building2 } from 'lucide-react';
+import { Users, Palette, ArrowLeft, Building2, CreditCard } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useTenant, useSafeTenant } from '../../../contexts/tenant';
 import TeamSettings from './TeamSettings';
+import SubscriptionSettings from './SubscriptionSettings';
 import { BrandingSettings } from '../tenant';
 import DashboardSidebar from '../DashboardSidebar';
 
-type SettingsTab = 'team' | 'branding';
+type SettingsTab = 'team' | 'branding' | 'subscription';
 
 interface SettingsPageProps {
     initialTab?: SettingsTab;
@@ -28,6 +29,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
     // Determine active tab from URL
     const getTabFromPath = (): SettingsTab => {
         if (path.includes('/branding')) return 'branding';
+        if (path.includes('/subscription')) return 'subscription';
         if (path.includes('/team')) return 'team';
         return initialTab || 'team';
     };
@@ -45,6 +47,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             navigate(ROUTES.SETTINGS_TEAM);
         } else if (tab === 'branding') {
             navigate(ROUTES.SETTINGS_BRANDING);
+        } else if (tab === 'subscription') {
+            navigate(ROUTES.SETTINGS_SUBSCRIPTION);
         }
     };
     
@@ -60,6 +64,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             label: t('settings.branding', 'Branding'),
             icon: Palette,
             description: t('settings.brandingDesc', 'Personalizar apariencia y dominio'),
+        },
+        {
+            id: 'subscription' as SettingsTab,
+            label: t('settings.subscription.tab', 'Plan'),
+            icon: CreditCard,
+            description: t('settings.subscription.tabDesc', 'Gestionar plan y suscripción'),
         },
     ];
     
@@ -138,6 +148,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                         <div className="max-w-4xl mx-auto">
                             {activeTab === 'team' && <TeamSettings />}
                             {activeTab === 'branding' && <BrandingSettings />}
+                            {activeTab === 'subscription' && <SubscriptionSettings />}
                         </div>
                     </div>
                 </div>
@@ -147,3 +158,5 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
 };
 
 export default SettingsPage;
+
+

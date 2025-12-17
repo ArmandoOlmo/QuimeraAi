@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import {
     ArrowLeft,
     Menu,
@@ -271,8 +272,14 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
 /**
  * Card de distribución de planes
  */
-const PlanDistributionCard: React.FC<{ data: Record<SubscriptionPlanId, number> }> = ({ data }) => {
-    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+const PlanDistributionCard: React.FC<{ 
+    planStats: Record<string, PlanStats>;
+    plans: Record<string, StoredPlan>;
+}> = ({ planStats, plans }) => {
+    const total = Object.values(planStats).reduce((sum, stat) => sum + stat.activeSubscribers, 0);
+    
+    // Usar los planes cargados o fallback a SUBSCRIPTION_PLANS
+    const plansToShow = Object.keys(plans).length > 0 ? plans : SUBSCRIPTION_PLANS;
     
     return (
         <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
@@ -281,8 +288,8 @@ const PlanDistributionCard: React.FC<{ data: Record<SubscriptionPlanId, number> 
                 Distribución de Planes
             </h3>
             <div className="space-y-3">
-                {Object.entries(SUBSCRIPTION_PLANS).map(([planId, plan]) => {
-                    const count = data[planId as SubscriptionPlanId] || 0;
+                {Object.entries(plansToShow).map(([planId, plan]) => {
+                    const count = planStats[planId]?.activeSubscribers || 0;
                     const percentage = total > 0 ? (count / total) * 100 : 0;
                     
                     return (
@@ -518,6 +525,7 @@ const TenantRow: React.FC<{
 
 const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -708,7 +716,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     
     // Plan handlers
     const handleSavePlan = async (plan: StoredPlan) => {
-        const result = await savePlan(plan);
+        const result = await savePlan(plan, user?.uid);
         if (result.success) {
             await loadData();
             // Show warning if Stripe sync failed but Firestore succeeded
@@ -722,7 +730,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     
     const handleArchivePlan = async (planId: string) => {
         if (!confirm('¿Estás seguro de archivar este plan? Los usuarios existentes no serán afectados.')) return;
-        const result = await archivePlan(planId);
+        const result = await archivePlan(planId, user?.uid);
         if (result.success) {
             await loadData();
             if (result.stripeError) {
@@ -734,7 +742,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     };
     
     const handleRestorePlan = async (planId: string) => {
-        const result = await restorePlan(planId);
+        const result = await restorePlan(planId, user?.uid);
         if (result.success) {
             await loadData();
         } else {
@@ -745,7 +753,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     const handleInitializePlans = async () => {
         if (!confirm('¿Inicializar los planes en Firestore? Esto solo funciona si no hay planes existentes.')) return;
         setIsRefreshing(true);
-        const result = await initializePlansInFirestore();
+        const result = await initializePlansInFirestore(user?.uid);
         if (result.success) {
             await loadData();
         } else {
@@ -908,7 +916,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </div>
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    <PlanDistributionCard data={globalStats.planDistribution} />
+                                    <PlanDistributionCard planStats={planStats} plans={plans} />
                                     
                                     {/* Alertas */}
                                     <div className="lg:col-span-2 bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
@@ -1333,3 +1341,5 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
 };
 
 export default SubscriptionManagement;
+
+

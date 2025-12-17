@@ -43,6 +43,7 @@
     "proPlan": "Plan Pro",
     "monthlyCredits": "Créditos mensuales",
     "upgrade": "Actualizar",
+    "unlimited": "Ilimitado",
     "creator": "Creador",
     "all": "Todos",
     "mostRecent": "Más recientes",
@@ -307,7 +308,37 @@
       "team": "Equipo",
       "teamDesc": "Gestionar miembros e invitaciones",
       "branding": "Branding",
-      "brandingDesc": "Personalizar apariencia y dominio"
+      "brandingDesc": "Personalizar apariencia y dominio",
+      "subscription": {
+        "tab": "Plan",
+        "tabDesc": "Gestionar plan y suscripción",
+        "title": "Plan y Suscripción",
+        "description": "Administra tu plan actual, uso de créditos y opciones de upgrade.",
+        "currentPlan": "Plan Actual",
+        "upgrade": "Mejorar Plan",
+        "upgradeNow": "Mejorar Ahora",
+        "aiCredits": "Créditos IA",
+        "used": "Usados",
+        "limit": "Límite",
+        "remaining": "Créditos restantes",
+        "nearLimit": "Te quedan pocos créditos",
+        "nearLimitDesc": "Considera actualizar tu plan para obtener más créditos.",
+        "exceededLimit": "Has excedido tu límite de créditos",
+        "exceededLimitDesc": "Actualiza tu plan para continuar usando las funciones de IA.",
+        "includedFeatures": "Incluido en tu plan",
+        "availableUpgrades": "Planes disponibles",
+        "selectPlan": "Seleccionar",
+        "projects": "Proyectos",
+        "users": "Usuarios",
+        "storage": "Almacenamiento",
+        "domains": "Dominios",
+        "aiCreditsMonth": "Créditos IA/mes",
+        "ecommerce": "E-commerce",
+        "chatbot": "Chatbot IA",
+        "customDomains": "Dominios personalizados",
+        "included": "Incluido",
+        "notIncluded": "No incluido"
+      }
     },
     "profile": "Perfil",
     "createNew": "Crear Nuevo",
@@ -421,6 +452,67 @@
     "step4Desc": "Conecta tu dominio o usa nuestro hosting gratuito para publicar",
     "instructionsTip": "💡 Puedes cerrar esta guía y siempre verla de nuevo desde la configuración",
     "gotIt": "Entendido, ocultar",
+    "currentPlan": "Plan Actual",
+    "upgradeToUnlock": "Desbloquea más con",
+    "upgradeNow": "Mejorar Plan",
+    "creditsRemaining": "créditos restantes",
+    "nearLimit": "Cerca del límite",
+    "limitExceeded": "Límite excedido",
+    "perMonth": "/mes",
+    "savePerYear": "Ahorra ${{amount}}/año",
+    "ecommerceIncluded": "E-commerce incluido",
+    "customDomainsIncluded": "Dominios personalizados",
+    "upgradeModal": {
+      "triggers": {
+        "credits": {
+          "title": "¡Tus AI Credits se están agotando!",
+          "subtitle": "Actualiza tu plan para obtener más créditos y seguir creando."
+        },
+        "projects": {
+          "title": "Has alcanzado el límite de proyectos",
+          "subtitle": "Actualiza tu plan para crear más sitios web increíbles."
+        },
+        "domains": {
+          "title": "Dominios personalizados no disponibles",
+          "subtitle": "Conecta tu propio dominio actualizando a un plan superior."
+        },
+        "ecommerce": {
+          "title": "E-commerce no incluido en tu plan",
+          "subtitle": "Vende online actualizando a Pro o superior."
+        },
+        "chatbot": {
+          "title": "AI Chatbot no disponible",
+          "subtitle": "Agrega un chatbot inteligente a tu sitio con un plan superior."
+        },
+        "users": {
+          "title": "Límite de usuarios alcanzado",
+          "subtitle": "Colabora con más personas actualizando tu plan."
+        },
+        "storage": {
+          "title": "Almacenamiento al límite",
+          "subtitle": "Obtén más espacio para tus archivos con un plan superior."
+        },
+        "generic": {
+          "title": "Desbloquea más funciones",
+          "subtitle": "Actualiza tu plan para acceder a todas las características de Quimera AI."
+        }
+      },
+      "billing": {
+        "monthly": "Mensual",
+        "annually": "Anual",
+        "discount": "-20%",
+        "perMonth": "/mes",
+        "savePercent": "Ahorras {{percent}}% al año"
+      },
+      "recommended": "Recomendado",
+      "creditsRemaining": "Te quedan {{remaining}} de {{total}} créditos",
+      "projectsUsed": "{{current}} de {{max}} proyectos usados",
+      "footer": {
+        "cancelAnytime": "Cancela cuando quieras • Sin compromisos",
+        "later": "Más tarde",
+        "upgradeNow": "Actualizar ahora"
+      }
+    },
     "template": "Plantilla",
     "emptyState": {
       "titleNoProjects": "No se encontraron proyectos",
@@ -1948,6 +2040,7 @@
         "trend": "+8% este mes",
         "allTenantsSubtitle": "En todos los tenants"
       },
+      "agencies": "Agencias",
       "agency": {
         "members": "Miembros del equipo",
         "invite": "Invitar usuario",

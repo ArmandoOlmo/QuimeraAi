@@ -567,6 +567,26 @@ service cloud.firestore {
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
+    // ============================================
+    // APP CONTENT - Public Landing Page Content
+    // Articles, Navigation, Legal Pages, Landing Config
+    // ============================================
+    
+    match /appContent/{docId} {
+      // Public read for landing page content
+      allow read: if true;
+      // Only superadmin can write
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+      
+      // Subcollections under appContent/data/
+      match /{subcollection}/{itemId} {
+        // Public read - articles, navigation, legal pages are public content
+        allow read: if true;
+        // Only superadmin can write
+        allow write: if request.auth != null && isSuperAdminOrOwner();
+      }
+    }
+    
     // Settings collection (used for components, global_assistant, designTokens, landingChatbot)
     match /settings/{settingId} {
       // Landing chatbot config is public (for landing page visitors)
@@ -660,8 +680,8 @@ service cloud.firestore {
     
     // Subscription Plans - plan definitions and configuration
     match /subscriptionPlans/{planId} {
-      // Anyone authenticated can read plans (needed for pricing page, plan selection, etc.)
-      allow read: if request.auth != null;
+      // Public read - needed for landing page pricing section
+      allow read: if true;
       // Only superadmin can create, update, or delete plans
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
@@ -692,9 +712,8 @@ service cloud.firestore {
     // Top-level projects collection (used by widget API)
     // SECURED: Only expose specific fields needed for widget
     match /projects/{projectId} {
-      // Public read for widget config
-      // Note: Use Cloud Functions to filter sensitive data
-      allow read: if true;
+      // Public read denied - use Cloud Functions (getWidgetConfig) to access safely
+      allow read: if false;
       // Only authenticated owner or superadmin can write
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }

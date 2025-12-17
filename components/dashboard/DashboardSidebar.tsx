@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
@@ -7,10 +7,15 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { useSafeTenant } from '../../contexts/tenant';
+import { useSafeUpgrade } from '../../contexts/UpgradeContext';
+import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { usePlanAccess } from '../../hooks/usePlanFeatures';
+import { PlanFeatures } from '../../types/subscription';
+import { UpgradeTrigger } from '../ui/UpgradeModal';
 import {
   DndContext,
   closestCenter,
@@ -46,18 +51,31 @@ interface NavItemData {
   disabled?: boolean;
   isFixed?: boolean;
   subView?: string; // Para sub-vistas dentro de un módulo (ej: ecommerce)
+  requiredFeature?: keyof PlanFeatures; // Feature del plan requerida para acceder
+  upgradeTrigger?: UpgradeTrigger; // Trigger para el modal de upgrade
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, userDocument, openProfileModal } = useAuth();
+  const { user, userDocument, openProfileModal, canAccessSuperAdmin } = useAuth();
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
-  const { usage, isLoadingUsage } = useAdmin();
+  const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
   const { navigate, path } = useRouter();
   const tenantContext = useSafeTenant();
+  const upgradeContext = useSafeUpgrade();
   
   // Check if multi-tenant is available (user has tenants)
   const showWorkspaceSwitcher = tenantContext && tenantContext.userTenants.length > 0;
+  
+  // Handler for upgrade button
+  const handleUpgradeClick = () => {
+    if (upgradeContext) {
+      upgradeContext.openUpgradeModal('generic');
+    }
+  };
+
+  // Get plan access functions from the dynamic hook (reads from Firestore)
+  const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature } = usePlanAccess();
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -147,30 +165,30 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites', route: ROUTES.WEBSITES },
     { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES },
     { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation', route: ROUTES.NAVIGATION },
-    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS },
-    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS },
+    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic' },
+    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains' },
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo', route: ROUTES.SEO },
   ];
 
   // Ecommerce section items (sección independiente con árbol de componentes)
   const ecommerceItems: NavItemData[] = [
-    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview' },
-    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products' },
-    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories' },
-    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders' },
-    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers' },
-    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users' },
-    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts' },
-    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics' },
-    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings' },
+    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
   ];
 
   // Tools section items
   const toolsItems: NavItemData[] = [
-    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT },
-    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS },
-    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL },
-    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS },
+    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot' },
+    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic' },
+    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic' },
+    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS }, // Available in all plans
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS },
     { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración'), view: 'settings', route: ROUTES.SETTINGS },
@@ -295,7 +313,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     // En móvil siempre mostrar expandido cuando el sidebar está abierto
     const showExpanded = !isCollapsed || isMobileOpen;
 
+    // Check if user has access to this feature
+    const hasAccess = hasFeatureAccess(item.requiredFeature);
+    const isLocked = !hasAccess && item.requiredFeature;
+    const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
+
     const handleNavClick = () => {
+      // If locked, show upgrade modal instead of navigating
+      if (isLocked && upgradeContext) {
+        upgradeContext.openUpgradeModal(item.upgradeTrigger || 'generic');
+        onClose(); // Close mobile menu
+        return;
+      }
+
       if (item.view === 'superadmin') {
         setAdminView('main');
       }
@@ -335,25 +365,27 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               ? 'w-full rounded-xl'
               : 'justify-center w-12 mx-auto rounded-lg'
             }
-            ${isActive
-              ? (showExpanded
-                ? 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]'
-                : 'text-primary dark:text-primary'
-              )
-              : (showExpanded
-                ? 'text-muted-foreground hover:bg-secondary/80 lg:hover:bg-secondary hover:text-foreground active:bg-secondary'
-                : 'text-muted-foreground hover:text-foreground'
-              )
+            ${isLocked
+              ? 'text-muted-foreground/60 hover:bg-secondary/50'
+              : isActive
+                ? (showExpanded
+                  ? 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]'
+                  : 'text-primary dark:text-primary'
+                )
+                : (showExpanded
+                  ? 'text-muted-foreground hover:bg-secondary/80 lg:hover:bg-secondary hover:text-foreground active:bg-secondary'
+                  : 'text-muted-foreground hover:text-foreground'
+                )
             }
             ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${item.isFixed ? '' : 'cursor-pointer'}
           `}
-          aria-label={item.label}
+          aria-label={isLocked ? `${item.label} (${t('common.upgrade')})` : item.label}
           aria-current={isActive ? 'page' : undefined}
-          title={!showExpanded ? item.label : undefined}
+          title={!showExpanded ? (isLocked ? `${item.label} - ${t('common.upgrade')}` : item.label) : undefined}
         >
           {/* Drag handle - Hidden on mobile for cleaner experience */}
-          {showExpanded && !item.isFixed && (
+          {showExpanded && !item.isFixed && !isLocked && (
             <div
               {...attributes}
               {...listeners}
@@ -369,18 +401,36 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             className={`
               ${showExpanded ? (item.isFixed ? 'mr-3' : 'lg:ml-5 mr-3') : ''} 
               flex-shrink-0 transition-all
+              ${isLocked ? 'opacity-50' : ''}
             `}
             aria-hidden="true"
           />
 
           {showExpanded && (
-            <span className="text-[15px] lg:text-sm font-medium whitespace-nowrap overflow-hidden transition-all">
+            <span className={`text-[15px] lg:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left ${isLocked ? 'opacity-60' : ''}`}>
               {item.label}
             </span>
           )}
 
+          {/* Lock icon for locked features */}
+          {isLocked && showExpanded && (
+            <div className="flex items-center gap-1 ml-auto">
+              <Lock size={14} className="text-muted-foreground" />
+              <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">
+                {minPlanRequired}
+              </span>
+            </div>
+          )}
+
+          {/* Lock icon for collapsed sidebar */}
+          {isLocked && !showExpanded && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+              <Lock size={10} className="text-primary-foreground" />
+            </div>
+          )}
+
           {/* Active indicator for mobile */}
-          {isActive && showExpanded && (
+          {isActive && showExpanded && !isLocked && (
             <div className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/80" />
           )}
         </button>
@@ -594,20 +644,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   </>
                 )}
 
-                {/* Panel de administración disponible para todos los usuarios */}
-                <>
-                  <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
-                  <SortableNavItem
-                    item={{
-                      id: 'superadmin',
-                      icon: Settings,
-                      label: t('dashboard.superAdmin'),
-                      view: 'superadmin',
-                      route: ROUTES.SUPERADMIN,
-                    }}
-                    index={navItems.length}
-                  />
-                </>
+                {/* Panel de administración solo para roles autorizados (owner, superadmin, admin, manager) */}
+                {canAccessSuperAdmin && (
+                  <>
+                    <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <SortableNavItem
+                      item={{
+                        id: 'superadmin',
+                        icon: Settings,
+                        label: t('dashboard.superAdmin'),
+                        view: 'superadmin',
+                        route: ROUTES.SUPERADMIN,
+                      }}
+                      index={navItems.length}
+                    />
+                  </>
+                )}
               </SortableContext>
             </DndContext>
           </nav>
@@ -700,25 +752,31 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <div className="flex items-center gap-1.5">
                       <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
                       <span className="text-xs font-bold text-foreground tracking-wide">
-                        {isLoadingUsage ? t('common.loading') : usage?.plan || t('common.proPlan')}
+                        {isLoadingCredits ? t('common.loading') : creditsUsage?.plan || t('common.proPlan')}
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                      {isLoadingUsage ? '...' : `${usage?.used || 0}/${usage?.limit || 1000}`}
+                      {isLoadingCredits ? '...' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 30}`}
                     </span>
                   </div>
 
                   <div className="h-2 lg:h-1.5 w-full bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
-                      style={{ width: `${usage ? Math.min((usage.used / usage.limit) * 100, 100) : 0}%` }}
+                      className="h-full rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
+                      style={{ 
+                        width: `${creditsUsage?.percentage || 0}%`,
+                        backgroundColor: creditsUsage?.color || 'hsl(var(--primary))'
+                      }}
                     />
                   </div>
 
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
-                    <button className="text-[11px] lg:text-[10px] font-bold text-foreground hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation">
-                      {t('common.upgrade')}
+                    <button 
+                      onClick={handleUpgradeClick}
+                      className="text-[11px] lg:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
+                    >
+                      {t('common.upgrade')} →
                     </button>
                   </div>
                 </div>

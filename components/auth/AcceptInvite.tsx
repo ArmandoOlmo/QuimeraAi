@@ -356,3 +356,5 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
 };
 
 export default AcceptInvite;
+
+

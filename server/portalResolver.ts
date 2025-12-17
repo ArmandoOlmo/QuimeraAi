@@ -430,3 +430,5 @@ export function getPortalCacheStats(): { size: number; entries: string[] } {
         entries: Array.from(portalCache.keys())
     };
 }
+
+

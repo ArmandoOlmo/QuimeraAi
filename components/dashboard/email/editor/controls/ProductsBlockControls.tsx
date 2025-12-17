@@ -235,3 +235,5 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
 };
 
 export default ProductsBlockControls;
+
+

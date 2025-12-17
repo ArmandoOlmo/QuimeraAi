@@ -923,3 +923,5 @@ export const getAvailableIndustries = (): string[] => {
 };
 
 
+
+

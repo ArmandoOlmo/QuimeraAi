@@ -73,8 +73,8 @@ service firebase.storage {
     
     match /global_assets/{allPaths=**} {
       allow read: if true;
-      allow write: if isAuthenticated() 
-        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+      // Restrict writes to admin SDK or specific validation (removed generic auth write)
+      allow write: if false; 
     }
     
     // ============================================
@@ -120,3 +120,5 @@ service firebase.storage {
     }
   }
 }
+
+

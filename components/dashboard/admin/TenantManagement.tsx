@@ -349,7 +349,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         }`}
                                 >
                                     <Building2 size={16} />
-                                    {t('superadmin.tenant.agency', 'Agencias')} ({agencyCount})
+                                    {t('superadmin.tenant.agencies', 'Agencias')} ({agencyCount})
                                 </button>
                             </div>
 

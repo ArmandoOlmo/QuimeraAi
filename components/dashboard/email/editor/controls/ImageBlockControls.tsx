@@ -212,3 +212,5 @@ const ImageBlockControls: React.FC<ImageBlockControlsProps> = ({ block, activeTa
 };
 
 export default ImageBlockControls;
+
+

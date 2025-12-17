@@ -28,6 +28,7 @@ export { default as FilterChip } from './FilterChip';
 export { default as EmptyState } from './EmptyState';
 export { default as FileHistory } from './FileHistory';
 export { default as ProfileModal } from './ProfileModal';
+export { default as UpgradeBanner } from './UpgradeBanner';
 
 export { default as UserTemplates } from './UserTemplates';
 export { default as AnalyticsWidget } from './AnalyticsWidget';
@@ -47,6 +48,8 @@ export * from './email';
 export * from './finance';
 export * from './navigation';
 export * from './seo';
+
+
 
 
 

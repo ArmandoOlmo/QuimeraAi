@@ -19,6 +19,96 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// ============================================
+// RATE LIMITING
+// ============================================
+
+const RATE_LIMITS = {
+    WIDGET_SUBMISSION: { requestsPerMinute: 5, requestsPerDay: 50 }
+};
+
+interface RateLimitCheck {
+    allowed: boolean;
+    remaining?: number;
+    resetAt?: Date;
+    message?: string;
+}
+
+/**
+ * Check rate limit for a project/IP
+ */
+async function checkRateLimit(projectId: string, identifier: string): Promise<RateLimitCheck> {
+    const now = new Date();
+    const limitKey = `${projectId}_${identifier}`; // Limit by project + IP/user
+
+    const minuteKey = `${limitKey}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}_${now.getHours()}_${now.getMinutes()}`;
+    const dayKey = `${limitKey}_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}`;
+
+    const limits = RATE_LIMITS.WIDGET_SUBMISSION;
+
+    try {
+        // Check minute limit
+        const minuteRef = db.collection('rateLimits').doc('widget_minutes').collection('entries').doc(minuteKey);
+        const minuteDoc = await minuteRef.get();
+        const minuteCount = minuteDoc.exists ? (minuteDoc.data()?.count || 0) : 0;
+
+        if (minuteCount >= limits.requestsPerMinute) {
+            return {
+                allowed: false,
+                remaining: 0,
+                resetAt: new Date(now.getTime() + 60000),
+                message: 'Rate limit exceeded: Too many submissions per minute'
+            };
+        }
+
+        // Check day limit
+        const dayRef = db.collection('rateLimits').doc('widget_days').collection('entries').doc(dayKey);
+        const dayDoc = await dayRef.get();
+        const dayCount = dayDoc.exists ? (dayDoc.data()?.count || 0) : 0;
+
+        if (dayCount >= limits.requestsPerDay) {
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            return {
+                allowed: false,
+                remaining: 0,
+                resetAt: tomorrow,
+                message: 'Rate limit exceeded: Daily quota exhausted'
+            };
+        }
+
+        // Increment counters
+        await minuteRef.set({
+            count: admin.firestore.FieldValue.increment(1),
+            projectId,
+            identifier,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await dayRef.set({
+            count: admin.firestore.FieldValue.increment(1),
+            projectId,
+            identifier,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        return {
+            allowed: true,
+            remaining: limits.requestsPerMinute - minuteCount - 1
+        };
+
+    } catch (error) {
+        console.error('Rate limit check error:', error);
+        // Fail closed
+        return {
+            allowed: false,
+            message: 'Service temporarily unavailable'
+        };
+    }
+}
+
 /**
  * Parse project ID to extract userId if present
  * Supports formats:
@@ -43,41 +133,41 @@ function parseProjectId(fullProjectId: string): { userId: string | null; project
  * 2. Otherwise, look in top-level 'projects' collection
  * 3. As fallback, search across all users' projects (slower)
  */
-async function findProject(fullProjectId: string): Promise<{ 
-    exists: boolean; 
-    data: any; 
+async function findProject(fullProjectId: string): Promise<{
+    exists: boolean;
+    data: any;
     userId: string | null;
     projectId: string;
 }> {
     const { userId, projectId } = parseProjectId(fullProjectId);
-    
+
     // 1. If userId is provided, look in user's projects
     if (userId) {
         const userProjectDoc = await db.collection('users').doc(userId)
             .collection('projects').doc(projectId).get();
-        
+
         if (userProjectDoc.exists) {
-            return { 
-                exists: true, 
-                data: userProjectDoc.data(), 
+            return {
+                exists: true,
+                data: userProjectDoc.data(),
                 userId,
-                projectId 
+                projectId
             };
         }
     }
-    
+
     // 2. Look in top-level projects collection
     const topLevelDoc = await db.collection('projects').doc(fullProjectId).get();
     if (topLevelDoc.exists) {
         const data = topLevelDoc.data();
-        return { 
-            exists: true, 
-            data, 
+        return {
+            exists: true,
+            data,
             userId: data?.userId || null,
-            projectId: fullProjectId 
+            projectId: fullProjectId
         };
     }
-    
+
     // 3. Fallback: Search in all users' projects (for backwards compatibility)
     // This is slower but ensures we find projects with the old format
     if (!userId) {
@@ -85,18 +175,18 @@ async function findProject(fullProjectId: string): Promise<{
         for (const userDoc of usersSnapshot.docs) {
             const projectDoc = await db.collection('users').doc(userDoc.id)
                 .collection('projects').doc(projectId).get();
-            
+
             if (projectDoc.exists) {
-                return { 
-                    exists: true, 
-                    data: projectDoc.data(), 
+                return {
+                    exists: true,
+                    data: projectDoc.data(),
                     userId: userDoc.id,
-                    projectId 
+                    projectId
                 };
             }
         }
     }
-    
+
     return { exists: false, data: null, userId: null, projectId };
 }
 
@@ -132,7 +222,7 @@ export const getWidgetConfig = functions.https.onRequest(async (req, res) => {
     try {
         // Extract project ID from path
         const fullProjectId = req.path.split('/').pop();
-        
+
         if (!fullProjectId) {
             res.status(400).json({ error: 'Project ID is required' });
             return;
@@ -140,7 +230,7 @@ export const getWidgetConfig = functions.https.onRequest(async (req, res) => {
 
         // Find project in multiple locations
         const { exists, data: projectData, userId, projectId } = await findProject(fullProjectId);
-        
+
         if (!exists || !projectData) {
             res.status(404).json({ error: 'Project not found' });
             return;
@@ -211,7 +301,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
         // Extract project ID from path
         const pathParts = req.path.split('/');
         const fullProjectId = pathParts[pathParts.length - 2]; // Second to last part
-        
+
         if (!fullProjectId) {
             res.status(400).json({ error: 'Project ID is required' });
             return;
@@ -219,20 +309,32 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
 
         // Find project and get owner's userId
         const { exists, data: projectData, userId, projectId } = await findProject(fullProjectId);
-        
+
         if (!exists || !projectData) {
             res.status(404).json({ error: 'Project not found' });
             return;
         }
-        
+
         if (!projectData?.aiAssistantConfig?.isActive) {
             res.status(403).json({ error: 'Chat widget is not active for this project' });
             return;
         }
 
+        // Rate limit check
+        // Use IP address as identifier (fallback to 'unknown' if not found)
+        const clientIp = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
+        // Sanitize IP to be safe for doc ID
+        const safeIp = clientIp.replace(/[^a-zA-Z0-9]/g, '_');
+
+        const rateLimit = await checkRateLimit(projectId, safeIp);
+        if (!rateLimit.allowed) {
+            res.status(429).json({ error: rateLimit.message });
+            return;
+        }
+
         // Get lead data from request body
         const leadData = req.body;
-        
+
         if (!leadData.email || !leadData.name) {
             res.status(400).json({ error: 'Name and email are required' });
             return;
@@ -250,13 +352,13 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
         };
 
         let leadRef;
-        
+
         // Save to the project owner's libraryLeads collection (preferred)
         // This ensures leads appear in the user's dashboard
         if (userId) {
             leadRef = await db.collection('users').doc(userId)
                 .collection('libraryLeads').add(lead);
-            
+
             // Successfully saved to user's library
         } else {
             // Fallback: save to top-level leads collection
@@ -264,7 +366,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
                 ...lead,
                 _warning: 'Could not determine project owner, saved to top-level collection'
             });
-            
+
             // Log activity in subcollection
             await db.collection('leads').doc(leadRef.id).collection('activities').add({
                 type: 'note',
@@ -272,7 +374,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 user: 'system'
             });
-            
+
             // Saved to fallback collection
         }
 
@@ -317,7 +419,7 @@ export const trackWidgetAnalytics = functions.https.onRequest(async (req, res) =
     try {
         const pathParts = req.path.split('/');
         const fullProjectId = pathParts[pathParts.length - 2];
-        
+
         if (!fullProjectId) {
             res.status(400).json({ error: 'Project ID is required' });
             return;
@@ -325,9 +427,9 @@ export const trackWidgetAnalytics = functions.https.onRequest(async (req, res) =
 
         // Parse project ID to get userId if available
         const { userId, projectId } = parseProjectId(fullProjectId);
-        
+
         const analyticsData = req.body;
-        
+
         // Save analytics event
         await db.collection('widgetAnalytics').add({
             projectId,

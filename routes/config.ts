@@ -86,6 +86,7 @@ export const ROUTES = {
   SETTINGS: '/settings',
   SETTINGS_TEAM: '/settings/team',
   SETTINGS_BRANDING: '/settings/branding',
+  SETTINGS_SUBSCRIPTION: '/settings/subscription',
   
   // Invite Route (Public)
   INVITE: '/invite/:token',
@@ -412,6 +413,15 @@ export const routeConfigs: RouteConfig[] = [
     view: 'settings',
     type: 'private',
     title: 'Branding Settings',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    parent: ROUTES.SETTINGS,
+  },
+  {
+    path: ROUTES.SETTINGS_SUBSCRIPTION,
+    view: 'settings',
+    type: 'private',
+    title: 'Subscription Settings',
     requiresAuth: true,
     requiresEmailVerified: true,
     parent: ROUTES.SETTINGS,

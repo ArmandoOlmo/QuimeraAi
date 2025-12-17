@@ -233,3 +233,5 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
 };
 
 export default FooterBlockControls;
+
+

@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../core/AuthContext';
 import { router } from '../../hooks/useRouter';
 import { useSafeTenant } from '../tenant';
+import { useSafeUpgrade } from '../UpgradeContext';
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -133,9 +134,13 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const tenantContext = useSafeTenant();
+    const upgradeContext = useSafeUpgrade();
     
     // Get current tenant ID (null if not using multi-tenant or no tenant selected)
     const currentTenantId = tenantContext?.currentTenant?.id || null;
+    
+    // Get project limits from tenant
+    const maxProjects = tenantContext?.currentTenant?.limits?.maxProjects || 1;
     
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
@@ -396,9 +401,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         ));
     };
 
-    // Add new project
+    // Add new project (with limit check)
     const addNewProject = async (project: Project): Promise<string | void> => {
         if (!user) return;
+
+        // Count current user projects (excluding templates)
+        const userProjects = projects.filter(p => p.status !== 'Template');
+        const currentProjectCount = userProjects.length;
+        
+        // Check project limit (-1 means unlimited)
+        if (maxProjects !== -1 && currentProjectCount >= maxProjects) {
+            // Show upgrade modal if available
+            if (upgradeContext) {
+                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+            }
+            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+        }
 
         const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
         const projectsCol = collection(db, ...pathSegments);
@@ -440,10 +458,23 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    // Create project from template
+    // Create project from template (with limit check)
     const createProjectFromTemplate = async (templateId: string, newName?: string) => {
         if (!user) {
             throw new Error("User not authenticated");
+        }
+
+        // Count current user projects (excluding templates)
+        const userProjects = projects.filter(p => p.status !== 'Template');
+        const currentProjectCount = userProjects.length;
+        
+        // Check project limit (-1 means unlimited)
+        if (maxProjects !== -1 && currentProjectCount >= maxProjects) {
+            // Show upgrade modal if available
+            if (upgradeContext) {
+                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+            }
+            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
         }
 
         const template = projects.find(p => p.id === templateId);

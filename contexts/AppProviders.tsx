@@ -23,6 +23,8 @@ import { DomainsProvider } from './domains';
 import { AIProvider } from './ai';
 import { TenantProvider } from './tenant';
 import { AppContentProvider } from './appContent';
+import { UpgradeProvider } from './UpgradeContext';
+import { PlansProvider } from './PlansContext';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -39,23 +41,27 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                     <UIProvider>
                         <AppContentProvider>
                             <TenantProvider>
-                                <EditorProvider>
-                                    <ProjectProvider>
-                                        <FilesProvider>
-                                            <CRMProvider>
-                                                <CMSProvider>
-                                                    <AdminProvider>
-                                                        <DomainsProvider>
-                                                            <AIProvider>
-                                                                {children}
-                                                            </AIProvider>
-                                                        </DomainsProvider>
-                                                    </AdminProvider>
-                                                </CMSProvider>
-                                            </CRMProvider>
-                                        </FilesProvider>
-                                    </ProjectProvider>
-                                </EditorProvider>
+                                <PlansProvider>
+                                    <EditorProvider>
+                                        <ProjectProvider>
+                                            <FilesProvider>
+                                                <CRMProvider>
+                                                    <CMSProvider>
+                                                        <AdminProvider>
+                                                            <DomainsProvider>
+                                                                <AIProvider>
+                                                                    <UpgradeProvider>
+                                                                        {children}
+                                                                    </UpgradeProvider>
+                                                                </AIProvider>
+                                                            </DomainsProvider>
+                                                        </AdminProvider>
+                                                    </CMSProvider>
+                                                </CRMProvider>
+                                            </FilesProvider>
+                                        </ProjectProvider>
+                                    </EditorProvider>
+                                </PlansProvider>
                             </TenantProvider>
                         </AppContentProvider>
                     </UIProvider>

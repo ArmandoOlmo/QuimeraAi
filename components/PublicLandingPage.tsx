@@ -421,18 +421,22 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-              {dynamicPlans.map((plan) => (
+              {dynamicPlans.map((plan, index) => (
                 <div 
                   key={plan.id}
-                  className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all active:scale-[0.99] ${
+                  className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.99] ${
                     plan.featured || plan.isPopular
-                      ? 'bg-yellow-400/10 border-2 border-yellow-400/50 order-first md:order-none'
-                      : 'bg-white/5 border border-white/10'
+                      ? 'bg-gradient-to-br from-yellow-400/15 to-yellow-600/5 border-2 border-yellow-400/50 order-first md:order-none md:scale-105 shadow-xl shadow-yellow-400/10'
+                      : 'bg-white/5 border border-white/10 hover:border-white/20'
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {(plan.featured || plan.isPopular) && (
-                    <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 bg-yellow-400 text-black text-xs sm:text-sm font-bold rounded-full whitespace-nowrap">
-                      {t('landing.mostPopular')}
+                    <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
+                      <div className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black text-xs sm:text-sm font-bold rounded-full whitespace-nowrap shadow-lg shadow-yellow-400/30">
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4" />
+                        {t('landing.mostPopular')}
+                      </div>
                     </div>
                   )}
                   <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0">{plan.name}</h3>
@@ -440,6 +444,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   <div className="mb-4 sm:mb-6">
                     <span className="text-3xl sm:text-4xl font-black">{plan.price}</span>
                     <span className="text-gray-500 text-sm sm:text-base">{plan.period}</span>
+                    {/* Annual savings badge */}
+                    {plan.priceValue > 0 && (
+                      <span className="ml-2 px-2 py-0.5 text-xs font-bold text-green-400 bg-green-400/10 rounded-full">
+                        {t('landing.saveAnnually', 'Ahorra 20%')}
+                      </span>
+                    )}
                   </div>
                   <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                     {plan.features.map((feature, i) => (
@@ -453,11 +463,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     onClick={onNavigateToRegister}
                     className={`w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98] ${
                       plan.featured || plan.isPopular
-                        ? 'bg-yellow-400 text-black hover:bg-yellow-300'
+                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:from-yellow-300 hover:to-yellow-400 shadow-lg shadow-yellow-400/20'
                         : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                   >
-                    {t('landing.getStarted')}
+                    {plan.priceValue === 0 ? t('landing.startFree', 'Empieza Gratis') : t('landing.getStarted')}
                   </button>
                 </div>
               ))}

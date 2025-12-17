@@ -333,6 +333,95 @@ export const createOrUpdatePlan = functions.https.onRequest(async (req, res) => 
 });
 
 /**
+ * Create a subscription checkout session
+ * Used when a user wants to upgrade their plan
+ */
+export const createSubscriptionCheckout = functions.https.onCall(
+    async (data: { 
+        tenantId: string; 
+        planId: string; 
+        billingCycle: 'monthly' | 'annually';
+        successUrl: string;
+        cancelUrl: string;
+    }, context) => {
+        // Require authentication
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const { tenantId, planId, billingCycle, successUrl, cancelUrl } = data;
+
+        if (!tenantId || !planId || !billingCycle) {
+            throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+        }
+
+        try {
+            const stripe = getStripe();
+
+            // Get the product and price from Stripe based on plan name
+            const products = await stripe.products.list({ active: true, limit: 100 });
+            const product = products.data.find(p => 
+                p.name.toLowerCase().includes(planId.toLowerCase()) ||
+                p.metadata?.planId === planId
+            );
+
+            if (!product) {
+                throw new functions.https.HttpsError('not-found', `Plan ${planId} not found in Stripe`);
+            }
+
+            // Get the price for this product
+            const prices = await stripe.prices.list({ 
+                product: product.id, 
+                active: true,
+                limit: 10 
+            });
+
+            const interval = billingCycle === 'annually' ? 'year' : 'month';
+            const price = prices.data.find(p => p.recurring?.interval === interval);
+
+            if (!price) {
+                throw new functions.https.HttpsError('not-found', `Price for ${billingCycle} billing not found`);
+            }
+
+            // Create checkout session
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [{
+                    price: price.id,
+                    quantity: 1,
+                }],
+                mode: 'subscription',
+                success_url: successUrl,
+                cancel_url: cancelUrl,
+                metadata: {
+                    tenantId,
+                    planId,
+                    billingCycle,
+                    userId: context.auth.uid,
+                },
+                subscription_data: {
+                    metadata: {
+                        tenantId,
+                        planId,
+                    },
+                },
+            });
+
+            return {
+                sessionId: session.id,
+                url: session.url,
+            };
+        } catch (error: any) {
+            console.error('Error creating subscription checkout:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to create checkout session'
+            );
+        }
+    }
+);
+
+/**
  * Archive (deactivate) a plan in Stripe
  */
 export const archivePlan = functions.https.onRequest(async (req, res) => {
@@ -369,3 +458,5 @@ export const archivePlan = functions.https.onRequest(async (req, res) => {
         });
     }
 });
+
+

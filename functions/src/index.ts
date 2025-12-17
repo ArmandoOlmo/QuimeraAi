@@ -35,7 +35,8 @@ import {
 import {
     getBillingMetrics,
     createOrUpdatePlan,
-    archivePlan
+    archivePlan,
+    createSubscriptionCheckout
 } from './stripeBilling';
 
 import {
@@ -70,11 +71,17 @@ import {
     onOrderCreateUpdateStoreUser
 } from './storeUsersAuth';
 
-// Email functions
+// Email functions - Lead triggers
 import {
     onLeadCreatedSendEmail,
     onLeadScoreUpdate
 } from './email/triggers/leadTriggers';
+
+// Email functions - User triggers
+import {
+    onUserCreatedSendWelcomeEmail,
+    onUserEmailVerified
+} from './email/triggers/userTriggers';
 
 import {
     sendCampaign,
@@ -226,6 +233,9 @@ export const email = {
     // Lead triggers
     onLeadCreatedSendEmail,
     onLeadScoreUpdate,
+    // User triggers
+    onUserCreatedSendWelcomeEmail,
+    onUserEmailVerified,
     // Marketing/Campaigns
     sendCampaign,
     sendCampaignToSegment,
@@ -320,6 +330,11 @@ export {
     stripeWebhook,
     createRefund,
     getPaymentStatus,
+    // Stripe Billing exports
+    getBillingMetrics,
+    createOrUpdatePlan,
+    archivePlan,
+    createSubscriptionCheckout,
     // Stripe Connect exports (Multi-tenant)
     createConnectAccount,
     createConnectOnboardingLink,
@@ -344,9 +359,13 @@ export {
     cleanupOldPendingReviews,
     getReviewStats,
     checkVerifiedPurchase,
-    // Email exports
+    // Email exports - Lead triggers
     onLeadCreatedSendEmail,
     onLeadScoreUpdate,
+    // Email exports - User triggers
+    onUserCreatedSendWelcomeEmail,
+    onUserEmailVerified,
+    // Email exports - Marketing
     sendCampaign,
     sendCampaignToSegment,
     processScheduledCampaigns,

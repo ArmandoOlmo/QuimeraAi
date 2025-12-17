@@ -14,6 +14,7 @@ import StatCard from './StatCard';
 import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
+import UpgradeBanner from './UpgradeBanner';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { importProjectFromFile } from '../../utils/projectImporter';
@@ -565,6 +566,13 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+                            </section>
+                        )}
+
+                        {/* Upgrade Banner - Show on Dashboard */}
+                        {isDashboard && (
+                            <section className="w-full">
+                                <UpgradeBanner />
                             </section>
                         )}
 

@@ -644,3 +644,5 @@ export function isNearCreditLimit(usage: AiCreditsUsage, threshold: number = 80)
 export function hasExceededCreditLimit(usage: AiCreditsUsage): boolean {
     return usage.creditsOverage > 0;
 }
+
+

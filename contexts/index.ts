@@ -42,6 +42,18 @@ export { TenantProvider, useTenant, useSafeTenant } from './tenant';
 export { AppContentProvider, useAppContent, useSafeAppContent } from './appContent';
 
 // =============================================================================
+// UPGRADE CONTEXT (For subscription upgrade flows)
+// =============================================================================
+export { UpgradeProvider, useUpgrade, useSafeUpgrade } from './UpgradeContext';
+export type { UpgradeTrigger, UpgradeMetadata } from './UpgradeContext';
+
+// =============================================================================
+// PLANS CONTEXT (For dynamic plan features from Firestore)
+// =============================================================================
+export { PlansProvider, usePlans, useSafePlans } from './PlansContext';
+export type { StoredPlanData, PlansContextValue } from './PlansContext';
+
+// =============================================================================
 // LEGACY EXPORTS (For backwards compatibility)
 // =============================================================================
 // The old EditorContext is still available for components not yet migrated
@@ -49,6 +61,8 @@ export { EditorProvider, useEditor, useSafeEditor } from './EditorContext';
 
 // Compatibility layer that maps new contexts to old useEditor interface
 export { useEditorCompat } from './compatibility';
+
+
 
 
 

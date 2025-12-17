@@ -146,11 +146,15 @@ const Pricing: React.FC<PricingProps> = ({
                 >
                   {tier.featured && (
                     <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
-                      <span 
-                          className={`px-4 py-1 text-xs font-semibold text-white uppercase tracking-wider ${borderRadiusClasses.full}`} 
-                          style={{ backgroundColor: actualColors.accent }}
+                      <span
+                          className={`animate-pulse px-4 py-1.5 text-xs font-bold text-white uppercase tracking-wider ${borderRadiusClasses.full} shadow-lg flex items-center gap-1.5`}
+                          style={{ 
+                            backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart || actualColors.accent}, ${actualColors.gradientEnd || '#ec4899'})`,
+                            boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.4)}`
+                          }}
                       >
-                        Most Popular
+                        <Sparkles size={12} />
+                        Más Popular
                       </span>
                     </div>
                   )}
@@ -273,14 +277,15 @@ const Pricing: React.FC<PricingProps> = ({
 
                   {tier.featured && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                      <div 
-                        className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider"
-                        style={{ 
-                          backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
+                      <div
+                        className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-lg"
+                        style={{
+                          backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`,
+                          boxShadow: `0 4px 20px ${hexToRgba(actualColors.gradientStart, 0.5)}`
                         }}
                       >
-                        <Sparkles size={14} />
-                        Most Popular
+                        <Sparkles size={14} className="animate-bounce" />
+                        Más Popular
                       </div>
                     </div>
                   )}
@@ -396,13 +401,14 @@ const Pricing: React.FC<PricingProps> = ({
                 >
                   {tier.featured && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div 
-                        className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20"
-                        style={{ 
-                          backgroundColor: hexToRgba(actualColors.accent, 0.5)
+                      <div
+                        className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg"
+                        style={{
+                          backgroundColor: hexToRgba(actualColors.accent, 0.5),
+                          boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.3)}`
                         }}
                       >
-                        <Zap size={14} />
+                        <Zap size={14} className="text-yellow-300" />
                         Popular
                       </div>
                     </div>
