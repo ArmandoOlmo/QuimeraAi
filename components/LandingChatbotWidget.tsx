@@ -6,17 +6,16 @@
  * hacer preguntas sobre Quimera.ai, sus precios y funcionalidades.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
-import { MessageSquare, X, Send, Mic, MicOff, Loader2, Bot, HelpCircle, Volume2, VolumeX, Sparkles, PhoneOff } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Bot, HelpCircle, Sparkles } from 'lucide-react';
 import { useAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
-import { getGoogleGenAI, isProxyMode } from '../utils/genAiClient';
+import { isProxyMode } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
-import { Modality, LiveServerMessage } from '@google/genai';
 
 // =============================================================================
 // INTERFACES
@@ -43,105 +42,6 @@ interface LeadFormData {
 const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-// =============================================================================
-// VOICE HELPERS
-// =============================================================================
-
-// Map config voice names to Web Speech API voice characteristics
-const getVoiceByName = (voiceName: string, voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
-    // Voice name mapping to characteristics
-    const voicePreferences: Record<string, { lang: string; gender: 'female' | 'male'; keywords: string[] }> = {
-        'Zephyr': { lang: 'es', gender: 'female', keywords: ['female', 'mujer', 'femenin'] },
-        'Puck': { lang: 'es', gender: 'male', keywords: ['male', 'hombre', 'masculin'] },
-        'Charon': { lang: 'es', gender: 'male', keywords: ['male', 'hombre', 'masculin'] },
-        'Kore': { lang: 'es', gender: 'female', keywords: ['female', 'mujer', 'femenin'] },
-        'Fenrir': { lang: 'es', gender: 'male', keywords: ['male', 'hombre', 'masculin'] },
-    };
-
-    const pref = voicePreferences[voiceName] || voicePreferences['Kore'];
-    
-    // Try to find a matching voice
-    // First, look for Spanish voices
-    const spanishVoices = voices.filter(v => v.lang.startsWith('es'));
-    
-    if (spanishVoices.length > 0) {
-        // Try to match gender
-        const genderMatch = spanishVoices.find(v => 
-            pref.keywords.some(k => v.name.toLowerCase().includes(k))
-        );
-        if (genderMatch) return genderMatch;
-        return spanishVoices[0];
-    }
-    
-    // Fallback to any available voice
-    return voices[0] || null;
-};
-
-// Strip markdown for speech
-const stripMarkdown = (text: string): string => {
-    return text
-        .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
-        .replace(/\*(.*?)\*/g, '$1')     // Italic
-        .replace(/`(.*?)`/g, '$1')       // Code
-        .replace(/#{1,6}\s/g, '')        // Headers
-        .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
-        .replace(/•/g, ',')              // Bullets
-        .replace(/\n+/g, '. ')           // Newlines
-        .trim();
-};
-
-// =============================================================================
-// AUDIO HELPERS FOR GEMINI LIVE API
-// =============================================================================
-
-function base64ToBytes(base64: string) {
-    const binaryString = atob(base64);
-    const length = binaryString.length;
-    const bytes = new Uint8Array(length);
-    for (let i = 0; i < length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-}
-
-function bytesToBase64(bytes: Uint8Array) {
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-}
-
-async function decodeAudioData(
-    data: Uint8Array,
-    ctx: AudioContext,
-    sampleRate: number,
-    numChannels: number
-): Promise<AudioBuffer> {
-    const dataInt16 = new Int16Array(data.buffer);
-    const frameCount = dataInt16.length / numChannels;
-    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-    for (let channel = 0; channel < numChannels; channel++) {
-        const channelData = buffer.getChannelData(channel);
-        for (let i = 0; i < frameCount; i++) {
-            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-        }
-    }
-    return buffer;
-}
-
-function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
-    const buffer = new ArrayBuffer(float32Array.length * 2);
-    const view = new DataView(buffer);
-    let offset = 0;
-    for (let i = 0; i < float32Array.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, float32Array[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    }
-    return buffer;
-}
 
 // =============================================================================
 // MAIN COMPONENT
@@ -222,240 +122,12 @@ Personalidad:
     const [leadFormData, setLeadFormData] = useState<LeadFormData>({ name: '', email: '' });
     const [leadCaptured, setLeadCaptured] = useState(false);
     const [sessionId] = useState(generateSessionId);
-    const [isSpeaking, setIsSpeaking] = useState(false);
-    const [isListening, setIsListening] = useState(false);
     const [hasShownProactive, setHasShownProactive] = useState(false);
-    
-    // Live Voice Mode state
-    const [isLiveMode, setIsLiveMode] = useState(false);
-    const [isLiveConnecting, setIsLiveConnecting] = useState(false);
-    const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
-    const [liveTranscript, setLiveTranscript] = useState('');
     
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const visualizerIntervalRef = useRef<number | null>(null);
-    
-    // Gemini Live API refs
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const inputAudioContextRef = useRef<AudioContext | null>(null);
-    const processorRef = useRef<ScriptProcessorNode | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-    const nextStartTimeRef = useRef<number>(0);
-    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
-    const sessionRef = useRef<any>(null);
-    const isConnectedRef = useRef<boolean>(false);
-
-    // Cleanup Gemini Live on unmount
-    useEffect(() => {
-        return () => {
-            stopLiveSession();
-        };
-    }, []);
-
-    // Live Voice visualizer effect
-    useEffect(() => {
-        if (isLiveMode) {
-            visualizerIntervalRef.current = window.setInterval(() => {
-                setVisualizerLevels([
-                    Math.random() * 20 + 10,
-                    Math.random() * 40 + 10,
-                    Math.random() * 30 + 10,
-                    Math.random() * 20 + 10,
-                ]);
-            }, 100);
-        } else {
-            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
-            setVisualizerLevels([1, 1, 1, 1]);
-        }
-        return () => {
-            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
-        };
-    }, [isLiveMode]);
-
-    // Stop Live Voice session (Gemini Live API)
-    const stopLiveSession = useCallback(() => {
-        console.log('[Quibo Live] Stopping session...');
-        isConnectedRef.current = false;
-        
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-            streamRef.current = null;
-        }
-        if (processorRef.current && inputAudioContextRef.current) {
-            processorRef.current.disconnect();
-            processorRef.current = null;
-        }
-        if (inputAudioContextRef.current) {
-            inputAudioContextRef.current.close();
-            inputAudioContextRef.current = null;
-        }
-        activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
-        activeSourcesRef.current = [];
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-            audioContextRef.current = null;
-        }
-        if (sessionRef.current) {
-            sessionRef.current = null;
-        }
-        
-        setIsLiveMode(false);
-        setIsLiveConnecting(false);
-        setIsListening(false);
-        setIsSpeaking(false);
-        setLiveTranscript('');
-        nextStartTimeRef.current = 0;
-    }, []);
-
-    // Start Live Voice session (Gemini Live API)
-    const startLiveSession = useCallback(async () => {
-        console.log('[Quibo Live] Starting Gemini Live session...');
-        setIsLiveConnecting(true);
-        
-        try {
-            // Check if API key is available
-            let ai;
-            try {
-                ai = await getGoogleGenAI();
-            } catch (keyError) {
-                console.error('[Quibo Live] API key not available:', keyError);
-                setIsLiveConnecting(false);
-                alert('Live Voice no está disponible. Contacta al administrador para configurar la API key de Gemini.');
-                return;
-            }
-            
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-            const outputCtx = new AudioContextClass({ sampleRate: 24000 });
-            const inputCtx = new AudioContextClass({ sampleRate: 16000 });
-            audioContextRef.current = outputCtx;
-            inputAudioContextRef.current = inputCtx;
-            nextStartTimeRef.current = outputCtx.currentTime;
-
-            const systemInstruction = `Eres Quibo, el asistente de voz de Quimera.ai.
-Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, una plataforma de creación de sitios web con IA.
-- Habla en español de forma amigable y profesional
-- Tu nombre es Quibo (derivado de Quimera)
-- Puedes hablar sobre precios, funcionalidades, cómo empezar, etc.
-- Sé breve y conciso en tus respuestas de voz
-- Siempre ofrece ayuda proactiva`;
-
-            const sessionPromise = ai.live.connect({
-                model: 'gemini-2.0-flash-live-001',
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    speechConfig: { 
-                        voiceConfig: { 
-                            prebuiltVoiceConfig: { voiceName: 'Kore' } 
-                        } 
-                    },
-                    systemInstruction: systemInstruction,
-                },
-                callbacks: {
-                    onopen: async () => {
-                        console.log('[Quibo Live] Connected!');
-                        setIsLiveConnecting(false);
-                        setIsLiveMode(true);
-                        isConnectedRef.current = true;
-                        
-                        try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            streamRef.current = stream;
-                            const source = inputCtx.createMediaStreamSource(stream);
-                            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-                            processorRef.current = processor;
-                            
-                            processor.onaudioprocess = (e) => {
-                                if (!isConnectedRef.current) return;
-                                const inputData = e.inputBuffer.getChannelData(0);
-                                const pcm16 = floatTo16BitPCM(inputData);
-                                const base64Data = bytesToBase64(new Uint8Array(pcm16));
-                                sessionPromise.then(session => {
-                                    if (!isConnectedRef.current) return;
-                                    try { 
-                                        session.sendRealtimeInput({ 
-                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } 
-                                        }); 
-                                    } catch (err) { }
-                                });
-                            };
-                            
-                            source.connect(processor);
-                            processor.connect(inputCtx.destination);
-                            setIsListening(true);
-                            
-                        } catch (micErr: any) {
-                            console.error('[Quibo Live] Microphone error:', micErr);
-                            stopLiveSession();
-                            if (micErr.name === 'NotAllowedError') {
-                                alert("Permiso de micrófono denegado. Por favor permite el acceso al micrófono en tu navegador.");
-                            } else if (micErr.name === 'NotFoundError') {
-                                alert("No se encontró ningún micrófono. Conecta un micrófono e intenta de nuevo.");
-                            } else {
-                                alert(`Error de micrófono: ${micErr.message || 'desconocido'}`);
-                            }
-                        }
-                    },
-                    onmessage: async (message: LiveServerMessage) => {
-                        if (message.serverContent?.interrupted) {
-                            console.log('[Quibo Live] Audio interrupted');
-                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) {} });
-                            activeSourcesRef.current = [];
-                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
-                            return;
-                        }
-                        
-                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-                        if (audioData && audioContextRef.current) {
-                            console.log('[Quibo Live] Received audio response');
-                            setIsSpeaking(true);
-                            const ctx = audioContextRef.current;
-                            const bytes = base64ToBytes(audioData);
-                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            const source = ctx.createBufferSource();
-                            source.buffer = buffer;
-                            source.connect(ctx.destination);
-                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                            source.start(startTime);
-                            nextStartTimeRef.current = startTime + buffer.duration;
-                            activeSourcesRef.current.push(source);
-                            source.onended = () => {
-                                activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
-                                if (activeSourcesRef.current.length === 0) {
-                                    setIsSpeaking(false);
-                                }
-                            };
-                        }
-                    },
-                    onclose: (event: any) => {
-                        console.log('[Quibo Live] Connection closed:', event);
-                        if (isConnectedRef.current) {
-                            console.log('[Quibo Live] Unexpected close, reason:', event?.reason || 'unknown');
-                        }
-                        stopLiveSession();
-                    },
-                    onerror: (error: any) => {
-                        console.error('[Quibo Live] Error:', error);
-                        const errorMsg = error?.message || error?.error?.message || JSON.stringify(error);
-                        console.error('[Quibo Live] Error details:', errorMsg);
-                        if (isConnectedRef.current) {
-                            stopLiveSession();
-                            alert(`Error en Live Voice: ${errorMsg}`);
-                        }
-                    }
-                }
-            });
-            
-            sessionRef.current = sessionPromise;
-            
-        } catch (error) {
-            console.error('[Quibo Live] Failed to start:', error);
-            setIsLiveConnecting(false);
-            alert("No se pudo iniciar la sesión de voz. Verifica que la API key esté configurada.");
-        }
-    }, [stopLiveSession]);
     
     // Determine color source (support both new and legacy format)
     const colorSource = (config.appearance as any).colorSource || ((config.appearance as any).useAppColors ? 'app' : 'custom');
@@ -549,31 +221,10 @@ Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, una plataforma de c
 
     // Focus input when opened
     useEffect(() => {
-        if (isOpen && !isLiveMode) {
+        if (isOpen) {
             inputRef.current?.focus();
         }
-    }, [isOpen, isLiveMode]);
-
-    // Stop live mode when chat is closed
-    useEffect(() => {
-        if (!isOpen && isLiveMode) {
-            stopLiveSession();
-        }
-    }, [isOpen, isLiveMode, stopLiveSession]);
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            continuousListeningRef.current = false;
-            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
-            if (recognitionRef.current) {
-                try { recognitionRef.current.stop(); } catch (e) {}
-            }
-            if (synthRef.current) {
-                synthRef.current.cancel();
-            }
-        };
-    }, []);
+    }, [isOpen]);
 
     // Proactive message timer
     useEffect(() => {
@@ -902,14 +553,14 @@ Asistente:`;
                             )}
                         </div>
                         {/* Status indicator */}
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${isLiveMode ? 'bg-red-500 animate-pulse' : isListening ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} style={{ borderColor: colors.headerBackground }}></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400" style={{ borderColor: colors.headerBackground }}></div>
                     </div>
                     <div>
                         <h3 className="font-bold text-sm leading-tight" style={{ color: colors.headerText }}>
                             {config.agentName}
                         </h3>
                         <p className="text-[10px] opacity-90 font-medium" style={{ color: colors.headerText }}>
-                            {isLiveMode ? (isSpeaking ? 'Hablando...' : isListening ? 'Escuchando...' : isLoading ? 'Pensando...' : 'Live Voice') : isLoading ? 'Escribiendo...' : 'En línea'}
+                            {isLoading ? 'Escribiendo...' : 'En línea'}
                         </p>
                     </div>
                 </div>
@@ -925,62 +576,6 @@ Asistente:`;
 
             {/* Messages area - Like GlobalAiAssistant */}
             <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: colors.background }}>
-                {/* Live Voice Mode Overlay */}
-                {isLiveMode && (
-                    <div className="absolute inset-0 z-20 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up" style={{ backgroundColor: `${colors.background}f5` }}>
-                        {/* Quibo Avatar */}
-                        <div className="w-32 h-32 rounded-full flex items-center justify-center mb-8 relative" style={{ backgroundColor: `${colors.primary}10` }}>
-                            <div className="absolute inset-0 rounded-full border animate-ping opacity-30" style={{ borderColor: `${colors.primary}30` }}></div>
-                            {config.appearance.avatarUrl ? (
-                                <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-20 h-20 object-contain drop-shadow-lg" />
-                            ) : (
-                                <Bot size={60} style={{ color: colors.primary }} />
-                            )}
-                        </div>
-                        
-                        {/* Audio Visualizer */}
-                        <div className="flex items-center gap-1.5 h-16 mb-8">
-                            {visualizerLevels.map((height, i) => (
-                                <div
-                                    key={i}
-                                    className="w-2 rounded-full transition-all duration-75"
-                                    style={{
-                                        height: `${height}px`,
-                                        backgroundColor: colors.primary,
-                                        opacity: 0.5 + (height / 50)
-                                    }}
-                                />
-                            ))}
-                        </div>
-                        
-                        {/* Status Text */}
-                        <p className="text-lg font-medium mb-2" style={{ color: colors.botBubbleText }}>
-                            {isSpeaking ? 'Hablando...' : isListening ? 'Escuchando...' : isLoading ? 'Pensando...' : 'Listo'}
-                        </p>
-                        
-                        {/* Live Transcript */}
-                        {liveTranscript && (
-                            <p className="text-sm mb-4 px-4 text-center italic" style={{ color: colors.mutedText }}>
-                                "{liveTranscript}"
-                            </p>
-                        )}
-                        
-                        {/* Helper Text */}
-                        <p className="text-xs text-center max-w-xs mb-8" style={{ color: colors.mutedText }}>
-                            Pregúntame sobre planes, precios, funcionalidades o cómo empezar con Quimera.ai
-                        </p>
-                        
-                        {/* End Session Button */}
-                        <button
-                            onClick={stopLiveSession}
-                            className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full text-sm font-bold transition-colors flex items-center border border-red-500/50"
-                        >
-                            <PhoneOff size={16} className="mr-2" />
-                            Terminar sesión de voz
-                        </button>
-                    </div>
-                )}
-                
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: `${colors.inputBackground}20` }}>
                     {messages.map((message) => (
                         <div
@@ -1172,37 +767,16 @@ Asistente:`;
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            placeholder={isLiveMode ? 'Live Voice activo - habla para interactuar' : config.inputPlaceholder}
-                            disabled={isLoading || isListening || isLiveMode}
+                            placeholder={config.inputPlaceholder}
+                            disabled={isLoading}
                             className="flex-1 bg-transparent px-2 text-sm outline-none"
                             style={{ color: colors.inputText }}
                         />
                         
-                        {/* Live Voice button */}
-                        {config.voice.enabled && (
-                            <button
-                                type="button"
-                                onClick={isLiveMode ? stopLiveSession : startLiveSession}
-                                disabled={isLoading || isLiveConnecting}
-                                className={`p-2 rounded-full transition-all ${isLiveConnecting ? 'animate-spin' : ''} ${isLiveMode ? 'bg-red-500/20 text-red-500' : ''}`}
-                                style={!isLiveMode && !isLiveConnecting ? { color: colors.mutedText } : {}}
-                                title={isLiveMode ? 'Terminar Live Voice' : 'Iniciar Live Voice'}
-                            >
-                                {isLiveConnecting ? (
-                                    <Loader2 size={20} />
-                                ) : isLiveMode ? (
-                                    <PhoneOff size={20} />
-                                ) : (
-                                    <Mic size={20} />
-                                )}
-                            </button>
-                        )}
-                        
-                        
                         {/* Send button */}
                         <button
                             onClick={() => sendMessage(inputValue)}
-                            disabled={isLoading || !inputValue.trim() || isListening || isLiveMode}
+                            disabled={isLoading || !inputValue.trim()}
                             className="p-2 rounded-full shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ backgroundColor: colors.buttonBackground, color: colors.buttonIcon }}
                         >
