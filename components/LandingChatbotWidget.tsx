@@ -16,6 +16,7 @@ import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, 
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { getGoogleGenAI, isProxyMode } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
+import { textToSpeech, playBase64Audio } from '../utils/voiceProxyClient';
 
 // =============================================================================
 // INTERFACES
@@ -188,6 +189,7 @@ Personalidad:
     const synthRef = useRef<SpeechSynthesis | null>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const continuousListeningRef = useRef<boolean>(false);
+    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
     // Initialize speech synthesis and load voices
     useEffect(() => {
@@ -320,32 +322,47 @@ Personalidad:
         };
     }, [isLiveMode, isSpeaking]);
 
-    // Text-to-speech function
-    const speak = useCallback((text: string) => {
-        if (!synthRef.current || !config.voice.enabled || !isVoiceMode) return;
+    // Text-to-speech function using Google Cloud TTS
+    const speak = useCallback(async (text: string) => {
+        if (!config.voice.enabled || !isVoiceMode) return;
         
-        // Cancel any ongoing speech
-        synthRef.current.cancel();
-        
-        const cleanText = stripMarkdown(text);
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Set voice based on config
-        const selectedVoice = getVoiceByName(config.voice.voiceName, availableVoices);
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
+        // Stop any current audio
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
         }
         
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        const cleanText = stripMarkdown(text);
+        setIsSpeaking(true);
         
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        
-        synthRef.current.speak(utterance);
-    }, [config.voice.enabled, config.voice.voiceName, isVoiceMode, availableVoices]);
+        try {
+            // Use Google Cloud TTS through our proxy
+            const response = await textToSpeech(cleanText, {
+                voiceName: 'Quibo',
+                speakingRate: 1.0,
+                pitch: 0,
+            });
+            
+            // Play the audio
+            const audioData = `data:${response.mimeType};base64,${response.audio}`;
+            const audio = new Audio(audioData);
+            currentAudioRef.current = audio;
+            
+            audio.onended = () => {
+                setIsSpeaking(false);
+                currentAudioRef.current = null;
+            };
+            audio.onerror = () => {
+                setIsSpeaking(false);
+                currentAudioRef.current = null;
+            };
+            
+            await audio.play();
+        } catch (error) {
+            console.error('[LandingChatbot] TTS Error:', error);
+            setIsSpeaking(false);
+        }
+    }, [config.voice.enabled, isVoiceMode]);
 
     // Start listening function
     const startListening = useCallback(() => {
@@ -373,6 +390,12 @@ Personalidad:
 
     // Stop speaking function
     const stopSpeaking = useCallback(() => {
+        // Stop Google TTS audio
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
+        }
+        // Also stop Web Speech API (fallback)
         if (synthRef.current) {
             synthRef.current.cancel();
         }
@@ -504,25 +527,33 @@ Asistente:`;
 
             setMessages(prev => [...prev, assistantMessage]);
             
-            // Speak the response in live mode
+            // Speak the response in live mode using Google TTS
             if (continuousListeningRef.current && config.voice.enabled) {
-                // Create utterance and resume listening after speaking
-                if (synthRef.current) {
-                    synthRef.current.cancel();
+                try {
+                    // Stop any current audio
+                    if (currentAudioRef.current) {
+                        currentAudioRef.current.pause();
+                        currentAudioRef.current = null;
+                    }
                     
                     const cleanText = stripMarkdown(responseText);
-                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    setIsSpeaking(true);
                     
-                    const selectedVoice = getVoiceByName(config.voice.voiceName, availableVoices);
-                    if (selectedVoice) utterance.voice = selectedVoice;
+                    // Use Google Cloud TTS through our proxy
+                    const ttsResponse = await textToSpeech(cleanText, {
+                        voiceName: 'Quibo',
+                        speakingRate: 1.0,
+                        pitch: 0,
+                    });
                     
-                    utterance.rate = 1.0;
-                    utterance.pitch = 1.0;
-                    utterance.volume = 1.0;
+                    // Play the audio
+                    const audioData = `data:${ttsResponse.mimeType};base64,${ttsResponse.audio}`;
+                    const audio = new Audio(audioData);
+                    currentAudioRef.current = audio;
                     
-                    utterance.onstart = () => setIsSpeaking(true);
-                    utterance.onend = () => {
+                    audio.onended = () => {
                         setIsSpeaking(false);
+                        currentAudioRef.current = null;
                         // Resume listening after speaking
                         if (continuousListeningRef.current && recognitionRef.current) {
                             setTimeout(() => {
@@ -536,12 +567,17 @@ Asistente:`;
                         }
                         onComplete?.();
                     };
-                    utterance.onerror = () => {
+                    audio.onerror = () => {
                         setIsSpeaking(false);
+                        currentAudioRef.current = null;
                         onComplete?.();
                     };
                     
-                    synthRef.current.speak(utterance);
+                    await audio.play();
+                } catch (ttsError) {
+                    console.error('[LandingChatbot] TTS Error in live mode:', ttsError);
+                    setIsSpeaking(false);
+                    onComplete?.();
                 }
             } else {
                 onComplete?.();

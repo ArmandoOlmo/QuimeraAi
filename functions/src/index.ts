@@ -13,6 +13,7 @@ if (!admin.apps.length) {
 
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
 import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
+import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
 import { 
     createPaymentIntent, 
     createCheckoutSession, 
@@ -157,6 +158,13 @@ export const gemini = {
     stream: streamContent,
     usage: getUsageStats,
     image: generateImage
+};
+
+// Export Voice proxy functions (Google Cloud TTS)
+export const voice = {
+    tts: textToSpeech,
+    voices: getVoices,
+    chat: voiceChat
 };
 
 // Export Stripe/Ecommerce functions
@@ -402,6 +410,10 @@ export {
     // Stripe Billing exports (Super Admin)
     getBillingMetrics,
     createOrUpdatePlan,
-    archivePlan
+    archivePlan,
+    // Voice proxy exports (Google Cloud TTS)
+    textToSpeech,
+    getVoices,
+    voiceChat
 };
 
