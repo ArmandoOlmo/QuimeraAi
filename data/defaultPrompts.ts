@@ -1142,7 +1142,7 @@ REMEMBER: ALWAYS respond with structured markdown. Use headers, lists, and bold 
 SPECIAL CASE: If NO project loaded and user wants to edit content → ask which project to load first.
 
 OTHERWISE: JUST USE THE TOOLS IMMEDIATELY.`,
-    model: 'gemini-2.5-pro',
+    model: 'gemini-3-pro-preview',
     version: 8,
   },
 

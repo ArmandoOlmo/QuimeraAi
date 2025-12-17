@@ -107,6 +107,9 @@ const ALLOWED_MODELS = [
     'gemini-2.0-flash',
     'gemini-2.0-flash-lite',
     'gemini-2.0-flash-exp',
+    // Gemini 3.0 preview models (experimental)
+    'gemini-3-pro-preview',
+    'gemini-3-pro-image-preview',
     // Legacy models (for backwards compatibility)
     'gemini-1.5-flash',
     'gemini-1.5-pro',
@@ -301,6 +304,9 @@ const AI_CREDIT_COSTS = {
     'gemini-2.0-flash': 1,              // ~$0.01 per request
     'gemini-2.0-flash-lite': 1,         // ~$0.01 per request
     'gemini-2.0-flash-exp': 1,          // ~$0.01 per request
+    // Gemini 3.0 preview models (experimental)
+    'gemini-3-pro-preview': 3,          // ~$0.03 per request
+    'gemini-3-pro-image-preview': 4,    // ~$0.04 per request
     // Legacy models
     'gemini-1.5-flash': 1,              // ~$0.01 per request
     'gemini-1.5-pro': 2,                // ~$0.02 per request
