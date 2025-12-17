@@ -1050,29 +1050,6 @@ Asistente:`;
                     </div>
                 </div>
                 <div className="flex gap-1 items-center">
-                    {/* Live Voice toggle in header */}
-                    {config.voice.enabled && (
-                        <button
-                            onClick={() => {
-                                if (isLiveMode) {
-                                    stopLiveSession();
-                                } else {
-                                    startLiveSession();
-                                }
-                            }}
-                            disabled={isLiveConnecting}
-                            className={`p-1.5 rounded-md transition-colors ${isLiveMode ? 'bg-red-500/30' : 'hover:bg-white/20'}`}
-                            title={isLiveMode ? 'Terminar Live Voice' : 'Iniciar Live Voice'}
-                        >
-                            {isLiveConnecting ? (
-                                <Loader2 size={18} style={{ color: colors.headerText }} className="animate-spin" />
-                            ) : isLiveMode ? (
-                                <PhoneOff size={18} style={{ color: '#f87171' }} />
-                            ) : (
-                                <Mic size={18} style={{ color: colors.headerText }} />
-                            )}
-                        </button>
-                    )}
                     <button 
                         onClick={() => setIsOpen(false)} 
                         className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
