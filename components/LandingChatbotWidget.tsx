@@ -386,10 +386,16 @@ Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, una plataforma de c
                             processor.connect(inputCtx.destination);
                             setIsListening(true);
                             
-                        } catch (micErr) {
+                        } catch (micErr: any) {
                             console.error('[Quibo Live] Microphone error:', micErr);
                             stopLiveSession();
-                            alert("No se pudo acceder al micrófono.");
+                            if (micErr.name === 'NotAllowedError') {
+                                alert("Permiso de micrófono denegado. Por favor permite el acceso al micrófono en tu navegador.");
+                            } else if (micErr.name === 'NotFoundError') {
+                                alert("No se encontró ningún micrófono. Conecta un micrófono e intenta de nuevo.");
+                            } else {
+                                alert(`Error de micrófono: ${micErr.message || 'desconocido'}`);
+                            }
                         }
                     },
                     onmessage: async (message: LiveServerMessage) => {
@@ -423,14 +429,20 @@ Tu objetivo es ayudar a los visitantes a conocer Quimera.ai, una plataforma de c
                             };
                         }
                     },
-                    onclose: () => {
-                        console.log('[Quibo Live] Connection closed');
+                    onclose: (event: any) => {
+                        console.log('[Quibo Live] Connection closed:', event);
+                        if (isConnectedRef.current) {
+                            console.log('[Quibo Live] Unexpected close, reason:', event?.reason || 'unknown');
+                        }
                         stopLiveSession();
                     },
-                    onerror: (error) => {
+                    onerror: (error: any) => {
                         console.error('[Quibo Live] Error:', error);
+                        const errorMsg = error?.message || error?.error?.message || JSON.stringify(error);
+                        console.error('[Quibo Live] Error details:', errorMsg);
                         if (isConnectedRef.current) {
                             stopLiveSession();
+                            alert(`Error en Live Voice: ${errorMsg}`);
                         }
                     }
                 }
