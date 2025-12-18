@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../../hooks/useCreditsUsage';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import {
     SUBSCRIPTION_PLANS,
     SubscriptionPlanId,
@@ -36,14 +37,15 @@ const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
 
 const SubscriptionSettings: React.FC = () => {
     const { t } = useTranslation();
+    const { isUserOwner } = useAuth();
     const upgradeContext = useSafeUpgrade();
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
-    
+
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
     const currentPlan = SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
     const PlanIcon = PLAN_ICONS[currentPlanId] || Sparkles;
-    
+
     const handleUpgradeClick = (trigger: 'generic' | 'credits' = 'generic') => {
         if (upgradeContext) {
             if (trigger === 'credits' && usage) {
@@ -53,16 +55,16 @@ const SubscriptionSettings: React.FC = () => {
             }
         }
     };
-    
+
     const handleRefresh = () => {
         refresh();
     };
-    
+
     // Get list of plans for comparison
     const allPlans = Object.values(SUBSCRIPTION_PLANS);
     const currentPlanIndex = allPlans.findIndex(p => p.id === currentPlanId);
     const upgradePlans = allPlans.filter((_, index) => index > currentPlanIndex);
-    
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -74,17 +76,17 @@ const SubscriptionSettings: React.FC = () => {
                     {t('settings.subscription.description')}
                 </p>
             </div>
-            
+
             {/* Current Plan Card */}
             <div className="bg-card rounded-xl border border-border overflow-hidden">
                 {/* Plan Header */}
-                <div 
+                <div
                     className="p-6 border-b border-border"
                     style={{ background: `linear-gradient(135deg, ${currentPlan.color}15 0%, transparent 100%)` }}
                 >
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            <div 
+                            <div
                                 className="w-14 h-14 rounded-xl flex items-center justify-center"
                                 style={{ backgroundColor: `${currentPlan.color}20` }}
                             >
@@ -95,11 +97,11 @@ const SubscriptionSettings: React.FC = () => {
                                     <h3 className="text-xl font-bold text-foreground">
                                         {currentPlan.name}
                                     </h3>
-                                    <span 
+                                    <span
                                         className="px-2 py-0.5 text-xs font-medium rounded-full"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: `${currentPlan.color}20`,
-                                            color: currentPlan.color 
+                                            color: currentPlan.color
                                         }}
                                     >
                                         {t('settings.subscription.currentPlan')}
@@ -110,8 +112,8 @@ const SubscriptionSettings: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                        
-                        {currentPlanId !== 'enterprise' && (
+
+                        {currentPlanId !== 'enterprise' && !isUserOwner && (
                             <button
                                 onClick={() => handleUpgradeClick('generic')}
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
@@ -122,7 +124,7 @@ const SubscriptionSettings: React.FC = () => {
                         )}
                     </div>
                 </div>
-                
+
                 {/* Usage Stats */}
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -138,7 +140,7 @@ const SubscriptionSettings: React.FC = () => {
                             <RefreshCw className={`w-4 h-4 ${isLoadingUsage ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
-                    
+
                     {isLoadingUsage ? (
                         <div className="animate-pulse space-y-3">
                             <div className="h-3 bg-secondary rounded-full" />
@@ -156,7 +158,7 @@ const SubscriptionSettings: React.FC = () => {
                                     }}
                                 />
                             </div>
-                            
+
                             {/* Stats */}
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">
@@ -166,14 +168,14 @@ const SubscriptionSettings: React.FC = () => {
                                     {t('settings.subscription.limit')}: <span className="font-medium text-foreground">{usage?.limit || 0}</span>
                                 </span>
                             </div>
-                            
+
                             {/* Remaining */}
                             <div className="mt-4 p-3 rounded-lg bg-secondary/50">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">
                                         {t('settings.subscription.remaining')}
                                     </span>
-                                    <span 
+                                    <span
                                         className="text-lg font-bold"
                                         style={{ color: usage?.color || 'hsl(var(--primary))' }}
                                     >
@@ -181,9 +183,9 @@ const SubscriptionSettings: React.FC = () => {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             {/* Warning if near limit */}
-                            {usage?.isNearLimit && (
+                            {usage?.isNearLimit && !isUserOwner && (
                                 <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                                     <div className="flex items-start gap-2">
                                         <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
@@ -198,9 +200,9 @@ const SubscriptionSettings: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Warning if exceeded */}
-                            {usage?.hasExceededLimit && (
+                            {usage?.hasExceededLimit && !isUserOwner && (
                                 <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                                     <div className="flex items-start gap-2">
                                         <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
@@ -226,53 +228,53 @@ const SubscriptionSettings: React.FC = () => {
                     )}
                 </div>
             </div>
-            
+
             {/* Plan Features */}
             <div className="bg-card rounded-xl border border-border p-6">
                 <h4 className="font-medium text-foreground mb-4 flex items-center gap-2">
                     <Gift className="w-4 h-4 text-primary" />
                     {t('settings.subscription.includedFeatures')}
                 </h4>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.projects')}
                         value={currentPlan.limits.maxProjects === -1 ? t('common.unlimited', 'Unlimited') : currentPlan.limits.maxProjects.toString()}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.users')}
                         value={currentPlan.limits.maxUsers === -1 ? t('common.unlimited', 'Unlimited') : currentPlan.limits.maxUsers.toString()}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.storage')}
                         value={`${currentPlan.limits.maxStorageGB} GB`}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.domains')}
                         value={currentPlan.limits.maxDomains === -1 ? t('common.unlimited', 'Unlimited') : currentPlan.limits.maxDomains.toString()}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.aiCreditsMonth')}
                         value={currentPlan.limits.maxAiCredits.toLocaleString()}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.ecommerce')}
                         value={currentPlan.features.ecommerceEnabled ? t('settings.subscription.included') : t('settings.subscription.notIncluded')}
                         included={currentPlan.features.ecommerceEnabled}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.chatbot')}
                         value={currentPlan.features.chatbotEnabled ? t('settings.subscription.included') : t('settings.subscription.notIncluded')}
                         included={currentPlan.features.chatbotEnabled}
                     />
-                    <FeatureItem 
+                    <FeatureItem
                         label={t('settings.subscription.customDomains')}
                         value={currentPlan.features.customDomains ? t('settings.subscription.included') : t('settings.subscription.notIncluded')}
                         included={currentPlan.features.customDomains}
                     />
                 </div>
             </div>
-            
+
             {/* Available Upgrades */}
             {upgradePlans.length > 0 && (
                 <div className="bg-card rounded-xl border border-border p-6">
@@ -280,7 +282,7 @@ const SubscriptionSettings: React.FC = () => {
                         <TrendingUp className="w-4 h-4 text-primary" />
                         {t('settings.subscription.availableUpgrades')}
                     </h4>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {upgradePlans.slice(0, 3).map((plan) => {
                             const Icon = PLAN_ICONS[plan.id];
@@ -291,7 +293,7 @@ const SubscriptionSettings: React.FC = () => {
                                     onClick={() => handleUpgradeClick('generic')}
                                 >
                                     <div className="flex items-center gap-3 mb-3">
-                                        <div 
+                                        <div
                                             className="w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform"
                                             style={{ backgroundColor: `${plan.color}20` }}
                                         >
@@ -304,7 +306,7 @@ const SubscriptionSettings: React.FC = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    
+
                                     <ul className="space-y-1.5">
                                         <li className="text-xs text-muted-foreground flex items-center gap-1.5">
                                             <Check className="w-3 h-3 text-green-500" />
@@ -321,7 +323,7 @@ const SubscriptionSettings: React.FC = () => {
                                             </li>
                                         )}
                                     </ul>
-                                    
+
                                     <button className="mt-3 w-full py-2 rounded-lg bg-secondary text-sm font-medium text-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex items-center justify-center gap-2">
                                         {t('settings.subscription.selectPlan')}
                                         <ArrowRight className="w-4 h-4" />
@@ -337,20 +339,19 @@ const SubscriptionSettings: React.FC = () => {
 };
 
 // Helper component for feature items
-const FeatureItem: React.FC<{ label: string; value: string; included?: boolean }> = ({ 
-    label, 
-    value, 
-    included 
+const FeatureItem: React.FC<{ label: string; value: string; included?: boolean }> = ({
+    label,
+    value,
+    included
 }) => (
     <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30">
         <span className="text-sm text-muted-foreground">{label}</span>
-        <span className={`text-sm font-medium ${
-            included === false 
-                ? 'text-muted-foreground/50' 
-                : included === true 
-                    ? 'text-green-600 dark:text-green-400' 
+        <span className={`text-sm font-medium ${included === false
+                ? 'text-muted-foreground/50'
+                : included === true
+                    ? 'text-green-600 dark:text-green-400'
                     : 'text-foreground'
-        }`}>
+            }`}>
             {value}
         </span>
     </div>

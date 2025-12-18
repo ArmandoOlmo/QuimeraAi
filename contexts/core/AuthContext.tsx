@@ -14,25 +14,25 @@ interface AuthContextType {
     loadingAuth: boolean;
     userDocument: UserDocument | null;
     setUserDocument: React.Dispatch<React.SetStateAction<UserDocument | null>>;
-    
+
     // Verification
     verificationEmail: string | null;
     setVerificationEmail: React.Dispatch<React.SetStateAction<string | null>>;
-    
+
     // Profile Modal
     isProfileModalOpen: boolean;
     openProfileModal: () => void;
     closeProfileModal: () => void;
-    
+
     // Permissions
     userPermissions: RolePermissions;
     canPerform: (permission: keyof RolePermissions) => boolean;
     isUserOwner: boolean;
-    
+
     // Tenant
     currentTenant: string | null;
     currentTenantRole: IndividualRole | AgencyRole | null;
-    
+
     // Admin Access
     canAccessSuperAdmin: boolean;
 }
@@ -46,19 +46,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    
+
     // Auth State Observer
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
-            
+
             if (firebaseUser) {
                 try {
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     const userSnap = await getDoc(userDocRef);
-                    
+
                     let finalUserDoc: Omit<UserDocument, 'id'>;
-                    
+
                     if (userSnap.exists()) {
                         finalUserDoc = userSnap.data() as Omit<UserDocument, 'id'>;
                     } else {
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         await setDoc(userDocRef, newUserDocData);
                         finalUserDoc = newUserDocData;
                     }
-                    
+
                     // Auto-promote owner
                     if (isOwner(firebaseUser.email!) && finalUserDoc.role !== 'owner') {
                         try {
@@ -81,9 +81,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                             console.warn("Failed to auto-promote owner:", e);
                         }
                     }
-                    
+
                     setUserDocument({ ...finalUserDoc, id: firebaseUser.uid });
-                    setUserPermissions(getPermissions(finalUserDoc.role || 'user'));
+                    const effectiveRole = determineRole(firebaseUser.email!, finalUserDoc.role || 'user');
+                    setUserPermissions(getPermissions(effectiveRole));
                 } catch (error) {
                     console.error('Error fetching user document:', error);
                     // Fallback user document
@@ -100,28 +101,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUserDocument(null);
                 setUserPermissions(getPermissions('user'));
             }
-            
+
             setLoadingAuth(false);
         });
-        
+
         return () => {
             unsubscribe();
         };
     }, []);
-    
-    // Functions
-    const canPerform = (permission: keyof RolePermissions): boolean => {
-        return userPermissions[permission] || false;
-    };
-    
-    const openProfileModal = () => setIsProfileModalOpen(true);
-    const closeProfileModal = () => setIsProfileModalOpen(false);
-    
+
+    const isUserOwner = isOwner(user?.email || '');
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
     const canAccessSuperAdmin = ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
-    const isUserOwner = isOwner(user?.email || '');
-    
+
+    // Functions
+    const canPerform = (permission: keyof RolePermissions): boolean => {
+        if (isUserOwner) return true;
+        return (userPermissions as any)[permission] === true;
+    };
+
+    const openProfileModal = () => setIsProfileModalOpen(true);
+    const closeProfileModal = () => setIsProfileModalOpen(false);
+
     const value: AuthContextType = {
         user,
         loadingAuth,
@@ -139,7 +141,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentTenantRole,
         canAccessSuperAdmin,
     };
-    
+
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

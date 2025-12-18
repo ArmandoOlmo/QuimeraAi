@@ -634,6 +634,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { domains, addDomain } = useDomains();
+    const { isUserOwner } = useAuth();
     const { setView } = useUI();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
@@ -644,7 +645,7 @@ const DomainsDashboard: React.FC = () => {
 
     // Check if custom domains are allowed by the current plan
     const subscriptionPlan = tenantContext?.currentTenant?.subscriptionPlan || 'free';
-    const customDomainsAllowed = subscriptionPlan !== 'free'; // Free plan doesn't allow custom domains
+    const customDomainsAllowed = isUserOwner || subscriptionPlan !== 'free'; // Owner always allowed, others need non-free plan
 
     // Handler to show upgrade modal for domains feature
     const handleDomainUpgrade = () => {

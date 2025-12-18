@@ -20,6 +20,7 @@ import {
     Upload,
 } from 'lucide-react';
 import { useTenant } from '../../../contexts/tenant';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import { TenantBranding } from '../../../types/multiTenant';
 import { functions, httpsCallable } from '../../../firebase';
 
@@ -55,11 +56,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         }
     }, [currentTenant]);
 
+    const { isUserOwner } = useAuth();
     const canManageSettings = canPerformInTenant('canManageSettings');
 
     // Check if tenant has agency plan for custom domains
-    const hasCustomDomainFeature = currentTenant?.subscriptionPlan && 
-        ['agency', 'agency_plus', 'enterprise'].includes(currentTenant.subscriptionPlan);
+    const hasCustomDomainFeature = isUserOwner || (currentTenant?.subscriptionPlan &&
+        ['agency', 'agency_plus', 'enterprise'].includes(currentTenant.subscriptionPlan));
 
     const handleSaveBranding = async () => {
         if (!currentTenant) return;
@@ -144,7 +146,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         try {
             const removePortalDomain = httpsCallable(functions, 'portalDomains-remove');
             await removePortalDomain({ tenantId: currentTenant.id });
-            
+
             setCustomDomain('');
             setDnsRecords(null);
             setVerificationResult(null);
@@ -446,7 +448,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                     <h4 className="font-medium text-foreground">
                                         Configura estos registros DNS:
                                     </h4>
-                                    
+
                                     {/* CNAME Record */}
                                     <div className="bg-background p-4 rounded-lg border border-border">
                                         <div className="flex items-center justify-between mb-2">
@@ -505,7 +507,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                         </span>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                        CNAME: {verificationResult.cnameVerified ? '✓' : '✗'} | 
+                                        CNAME: {verificationResult.cnameVerified ? '✓' : '✗'} |
                                         TXT: {verificationResult.txtVerified ? '✓' : '✗'}
                                     </p>
                                     {verificationResult.errors && (

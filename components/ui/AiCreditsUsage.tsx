@@ -256,14 +256,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 </div>
 
                 {/* Warning */}
-                {isNearLimit && !hasExceededLimit && (
+                {isNearLimit && !hasExceededLimit && !isOwner && (
                     <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         Te quedan pocos credits
                     </p>
                 )}
 
-                {hasExceededLimit && (
+                {hasExceededLimit && !isOwner && (
                     <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         Has excedido tu límite
@@ -345,7 +345,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 </div>
 
                 {/* Warnings */}
-                {isNearLimit && !hasExceededLimit && (
+                {isNearLimit && !hasExceededLimit && !isOwner && (
                     <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                         <div className="flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5" />
@@ -361,7 +361,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     </div>
                 )}
 
-                {hasExceededLimit && (
+                {hasExceededLimit && !isOwner && (
                     <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5" />
