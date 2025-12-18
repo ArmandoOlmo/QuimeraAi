@@ -1,6 +1,7 @@
 /**
  * UpgradeBanner
  * Banner prominente para mostrar el plan actual y opciones de upgrade
+ * Solo se muestra para usuarios regulares, NO para Super Administradores
  */
 
 import React from 'react';
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { useAuth } from '../../contexts/core/AuthContext';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 
 interface UpgradeBannerProps {
@@ -29,6 +31,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
     const { t } = useTranslation();
     const upgradeContext = useSafeUpgrade();
     const { usage, isLoading } = useCreditsUsage();
+    const { canAccessSuperAdmin } = useAuth();
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -39,6 +42,11 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
             }
         }
     };
+
+    // No mostrar para Super Administradores (owner, superadmin, admin, manager)
+    if (canAccessSuperAdmin) {
+        return null;
+    }
 
     // Si ya está en el plan más alto, no mostrar el banner
     if (usage?.planId === 'enterprise') {

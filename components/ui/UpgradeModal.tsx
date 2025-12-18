@@ -151,8 +151,14 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
     };
 
     const handleUpgrade = async () => {
-        if (!selectedPlanId || !tenantContext?.currentTenantId) {
-            setError(t('common.error'));
+        if (!selectedPlanId) {
+            setError('Por favor selecciona un plan');
+            return;
+        }
+        
+        if (!tenantContext?.currentTenantId) {
+            setError('Error: No se encontró el workspace. Por favor recarga la página.');
+            console.error('No tenantId available for upgrade');
             return;
         }
 
@@ -163,6 +169,12 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
             // Try to create a Stripe checkout session first
             const functions = getFunctions();
             const createCheckout = httpsCallable(functions, 'createSubscriptionCheckout');
+            
+            console.log('Creating checkout session...', {
+                tenantId: tenantContext.currentTenantId,
+                planId: selectedPlanId,
+                billingCycle,
+            });
             
             const result = await createCheckout({
                 tenantId: tenantContext.currentTenantId,
@@ -176,32 +188,46 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
             
             if (data.url) {
                 // Redirect to Stripe Checkout
+                console.log('Redirecting to Stripe Checkout:', data.url);
                 window.location.href = data.url;
                 return;
+            } else {
+                throw new Error('No se recibió URL de checkout');
             }
-        } catch (stripeError) {
-            console.log('Stripe checkout not available, using direct upgrade:', stripeError);
+        } catch (stripeError: any) {
+            console.error('Stripe checkout error:', stripeError);
             
-            // Fallback: Update subscription directly (for development/testing)
-            try {
-                const updateResult = await updateSubscriptionPlan(
-                    tenantContext.currentTenantId,
-                    selectedPlanId as SubscriptionPlanId,
-                    billingCycle
-                );
+            // Show specific error message from Stripe/Firebase
+            const errorMessage = stripeError?.message || stripeError?.code || 'Error desconocido';
+            
+            // If it's a Firebase Functions error, try to extract the message
+            if (stripeError?.details) {
+                setError(`Error de pago: ${stripeError.details}`);
+            } else if (errorMessage.includes('not-found')) {
+                setError('El plan seleccionado no está configurado en Stripe. Contacta soporte.');
+            } else if (errorMessage.includes('unauthenticated')) {
+                setError('Debes iniciar sesión para continuar.');
+            } else {
+                // Try fallback to direct update (for testing/demo)
+                console.log('Trying direct subscription update as fallback...');
+                try {
+                    const updateResult = await updateSubscriptionPlan(
+                        tenantContext.currentTenantId,
+                        selectedPlanId as SubscriptionPlanId,
+                        billingCycle
+                    );
 
-                if (updateResult.success) {
-                    // Close modal and show success
-                    onClose();
-                    // Reload to reflect changes
-                    window.location.reload();
-                    return;
-                } else {
-                    setError(updateResult.error || t('common.error'));
+                    if (updateResult.success) {
+                        onClose();
+                        window.location.reload();
+                        return;
+                    } else {
+                        setError(updateResult.error || 'Error al actualizar el plan');
+                    }
+                } catch (updateError: any) {
+                    console.error('Error updating subscription:', updateError);
+                    setError(`Error: ${updateError?.message || 'No se pudo procesar el pago'}`);
                 }
-            } catch (updateError) {
-                console.error('Error updating subscription:', updateError);
-                setError(t('common.error'));
             }
         } finally {
             setIsProcessing(false);
