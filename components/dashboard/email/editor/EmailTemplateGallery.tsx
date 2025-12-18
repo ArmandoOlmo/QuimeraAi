@@ -200,3 +200,4 @@ const EmailTemplateGallery: React.FC<EmailTemplateGalleryProps> = ({
 export default EmailTemplateGallery;
 
 
+

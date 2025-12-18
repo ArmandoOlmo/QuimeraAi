@@ -162,3 +162,4 @@ export function useSafeUpgrade(): UpgradeContextType | null {
 export type { UpgradeTrigger } from '../components/ui/UpgradeModal';
 export type { UpgradeMetadata };
 export default UpgradeContext;
+

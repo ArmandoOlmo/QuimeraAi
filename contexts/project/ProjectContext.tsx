@@ -36,7 +36,7 @@ import { useSafeUpgrade } from '../UpgradeContext';
 const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
     // Personal tenants (format: tenant_{userId}) should use user path
     const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-    
+
     if (tenantId && !isPersonalTenant) {
         return ['tenants', tenantId, 'projects'];
     }
@@ -93,7 +93,7 @@ interface ProjectContextType {
     isLoadingProjects: boolean;
     activeProjectId: string | null;
     activeProject: Project | null;
-    
+
     // Active Project Data
     data: PageData | null;
     setData: React.Dispatch<React.SetStateAction<PageData | null>>;
@@ -105,7 +105,7 @@ interface ProjectContextType {
     setComponentOrder: React.Dispatch<React.SetStateAction<PageSection[]>>;
     sectionVisibility: Record<PageSection, boolean>;
     setSectionVisibility: React.Dispatch<React.SetStateAction<Record<PageSection, boolean>>>;
-    
+
     // Project Operations
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean) => void;
     saveProject: () => Promise<void>;
@@ -116,7 +116,7 @@ interface ProjectContextType {
     exportProjectAsHtml: () => void;
     updateProjectThumbnail: (projectId: string, file: File) => Promise<void>;
     updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
-    
+
     // Template Management
     isEditingTemplate: boolean;
     exitTemplateEditor: () => void;
@@ -124,7 +124,7 @@ interface ProjectContextType {
     archiveTemplate: (templateId: string, isArchived: boolean) => Promise<void>;
     duplicateTemplate: (templateId: string) => Promise<void>;
     updateTemplateInState: (templateId: string, updates: Partial<Project>) => void;
-    
+
     // Refresh
     refreshProjects: () => Promise<void>;
 }
@@ -132,22 +132,22 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, userDocument } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
-    
+
     // Get current tenant ID (null if not using multi-tenant or no tenant selected)
     const currentTenantId = tenantContext?.currentTenant?.id || null;
-    
+
     // Get project limits from tenant
     const maxProjects = tenantContext?.currentTenant?.limits?.maxProjects || 1;
-    
+
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
-    
+
     // Active Project Data
     const [data, setData] = useState<PageData | null>(null);
     const [theme, setTheme] = useState<ThemeData>(initialData.theme);
@@ -156,15 +156,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [sectionVisibility, setSectionVisibility] = useState<Record<PageSection, boolean>>(
         initialData.sectionVisibility as Record<PageSection, boolean>
     );
-    
+
     // Template State
     const [isEditingTemplate, setIsEditingTemplate] = useState(false);
-    
+
     // Auto-save refs
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]);
-    
+
     // Track deleted template IDs
     const getDeletedTemplateIds = (): Set<string> => {
         try {
@@ -224,25 +224,25 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setIsLoadingProjects(true);
         try {
             let allUserProjects: Project[] = [];
-            
+
             // Check if this is a personal tenant (format: tenant_{userId})
             const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-            
+
             // Always load from user's personal path first
             try {
                 const userPathSegments = ['users', userId, 'projects'];
                 const userProjectsCol = collection(db, ...userPathSegments);
                 const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
                 const userSnapshot = await getDocs(userQuery);
-                const personalProjects = userSnapshot.docs.map(docSnap => ({ 
-                    id: docSnap.id, 
+                const personalProjects = userSnapshot.docs.map(docSnap => ({
+                    id: docSnap.id,
                     ...docSnap.data()
                 } as Project));
                 allUserProjects = [...personalProjects];
             } catch (err) {
                 console.warn("Could not load personal projects:", err);
             }
-            
+
             // If there's a tenant (and it's not personal), also load from tenant path
             if (tenantId && !isPersonalTenant) {
                 try {
@@ -250,8 +250,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const tenantProjectsCol = collection(db, ...tenantPathSegments);
                     const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
                     const tenantSnapshot = await getDocs(tenantQuery);
-                    const tenantProjects = tenantSnapshot.docs.map(docSnap => ({ 
-                        id: docSnap.id, 
+                    const tenantProjects = tenantSnapshot.docs.map(docSnap => ({
+                        id: docSnap.id,
                         ...docSnap.data()
                     } as Project));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
@@ -259,12 +259,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     console.warn("Could not load tenant projects:", err);
                 }
             }
-            
+
             // Remove duplicates by ID (in case same project exists in both)
             const uniqueProjects = allUserProjects.filter((project, index, self) =>
                 index === self.findIndex(p => p.id === project.id)
             );
-            
+
             // Sort by lastUpdated
             uniqueProjects.sort((a, b) => {
                 const dateA = new Date(a.lastUpdated || 0).getTime();
@@ -408,9 +408,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Count current user projects (excluding templates)
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
-        
-        // Check project limit (-1 means unlimited)
-        if (maxProjects !== -1 && currentProjectCount >= maxProjects) {
+
+        // Check project limit (-1 means unlimited, owner has no limits)
+        const isOwner = userDocument?.role === 'owner';
+        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
             if (upgradeContext) {
                 upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
@@ -467,9 +468,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Count current user projects (excluding templates)
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
-        
-        // Check project limit (-1 means unlimited)
-        if (maxProjects !== -1 && currentProjectCount >= maxProjects) {
+
+        // Check project limit (-1 means unlimited, owner has no limits)
+        const isOwner = userDocument?.role === 'owner';
+        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
             if (upgradeContext) {
                 upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);

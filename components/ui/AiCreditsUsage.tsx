@@ -28,6 +28,7 @@ import {
     getUsageColor,
 } from '../../types/subscription';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
+import { useAuth } from '../../contexts/core/AuthContext';
 
 // =============================================================================
 // TYPES
@@ -60,7 +61,7 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
     showCost = true,
 }) => {
     const cost = AI_CREDIT_COSTS[operation];
-    
+
     const operationIcons: Record<AiCreditOperation, React.ReactNode> = {
         onboarding_complete: <Sparkles className="w-3 h-3" />,
         design_plan: <FileText className="w-3 h-3" />,
@@ -76,7 +77,7 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
         email_generation: <FileText className="w-3 h-3" />,
         translation: <FileText className="w-3 h-3" />,
     };
-    
+
     const operationLabels: Record<AiCreditOperation, string> = {
         onboarding_complete: 'Nuevo sitio',
         design_plan: 'Design Plan',
@@ -92,7 +93,7 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
         email_generation: 'Email',
         translation: 'Traducción',
     };
-    
+
     return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs">
             {operationIcons[operation]}
@@ -116,7 +117,7 @@ const CircularProgress: React.FC<{
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const offset = circumference - (percentage / 100) * circumference;
-    
+
     return (
         <svg width={size} height={size} className="transform -rotate-90">
             {/* Background circle */}
@@ -175,22 +176,24 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
         formatCredits,
         getUsageByOperation,
     } = useAiCredits({ tenantId, userId });
-    
+
     // Use global upgrade context if available
     const upgradeContext = useSafeUpgrade();
-    
+    const { isUserOwner, userDocument } = useAuth();
+    const isOwner = isUserOwner || userDocument?.role === 'owner';
+
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
-    
+
     // Handler for upgrade click - uses context if available, or prop callback
     const handleUpgradeClick = () => {
         if (onUpgradeClick) {
             onUpgradeClick();
-        } else if (upgradeContext) {
+        } else if (upgradeContext && !isOwner) {
             upgradeContext.showCreditsUpgrade(creditsRemaining, creditsIncluded);
         }
     };
-    
+
     // Cargar uso por operación
     useEffect(() => {
         const loadOperationUsage = async () => {
@@ -199,13 +202,13 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
         };
         loadOperationUsage();
     }, [getUsageByOperation, usage]);
-    
+
     const handleRefresh = async () => {
         setIsRefreshing(true);
         await refresh();
         setIsRefreshing(false);
     };
-    
+
     // Variante minimal - solo el número
     if (variant === 'minimal') {
         return (
@@ -217,7 +220,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
             </div>
         );
     }
-    
+
     // Variante compact - barra pequeña
     if (variant === 'compact') {
         return (
@@ -231,7 +234,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         {formatCredits(creditsRemaining)} restantes
                     </span>
                 </div>
-                
+
                 {/* Progress bar */}
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
@@ -242,7 +245,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         }}
                     />
                 </div>
-                
+
                 {/* Warning */}
                 {isNearLimit && !hasExceededLimit && (
                     <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
@@ -250,7 +253,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         Te quedan pocos credits
                     </p>
                 )}
-                
+
                 {hasExceededLimit && (
                     <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
@@ -260,7 +263,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
             </div>
         );
     }
-    
+
     // Variante full - panel completo
     return (
         <div className={`bg-[#1a1a2e]/80 rounded-xl border border-white/10 overflow-hidden ${className}`}>
@@ -278,7 +281,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             </p>
                         </div>
                     </div>
-                    
+
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
@@ -288,7 +291,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     </button>
                 </div>
             </div>
-            
+
             {/* Usage display */}
             <div className="p-4">
                 <div className="flex items-center gap-6">
@@ -306,7 +309,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             </span>
                         </div>
                     </div>
-                    
+
                     {/* Stats */}
                     <div className="flex-1">
                         <div className="grid grid-cols-2 gap-3">
@@ -318,8 +321,8 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             </div>
                             <div>
                                 <p className="text-xs text-white/60 mb-1">Restantes</p>
-                                <p className="text-lg font-semibold" style={{ color: usageColor }}>
-                                    {formatCredits(creditsRemaining)}
+                                <p className="text-lg font-semibold" style={{ color: isOwner ? '#a855f7' : usageColor }}>
+                                    {isOwner ? '∞' : formatCredits(creditsRemaining)}
                                 </p>
                             </div>
                             <div className="col-span-2">
@@ -331,7 +334,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Warnings */}
                 {isNearLimit && !hasExceededLimit && (
                     <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -348,7 +351,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         </div>
                     </div>
                 )}
-                
+
                 {hasExceededLimit && (
                     <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="flex items-start gap-2">
@@ -365,7 +368,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     </div>
                 )}
             </div>
-            
+
             {/* Usage breakdown */}
             {Object.keys(usageByOperation).length > 0 && (
                 <div className="px-4 pb-4">
@@ -393,7 +396,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Action buttons */}
             {showUpgradeButton && (
                 <div className="p-4 border-t border-white/10 bg-white/5">
@@ -407,9 +410,9 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                                 Comprar Credits
                             </button>
                         )}
-                        
-                        {/* Show upgrade button if callback provided OR if upgrade context available */}
-                        {(onUpgradeClick || upgradeContext) && (
+
+                        {/* Show upgrade button if callback provided OR if upgrade context available (and NOT owner) */}
+                        {(onUpgradeClick || (upgradeContext && !isOwner)) && (
                             <button
                                 onClick={handleUpgradeClick}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-sm font-medium transition-colors"
@@ -458,23 +461,23 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
                             Popular
                         </span>
                     )}
-                    
+
                     <div className="flex items-center gap-2 mb-2">
                         <Sparkles className="w-4 h-4 text-purple-400" />
                         <span className="font-semibold text-white">{pkg.credits.toLocaleString()}</span>
                     </div>
-                    
+
                     <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-bold text-white">${pkg.price}</span>
                         <span className="text-xs text-white/60">USD</span>
                     </div>
-                    
+
                     {pkg.discount > 0 && (
                         <span className="text-xs text-green-400 mt-1 block">
                             {pkg.discount}% de descuento
                         </span>
                     )}
-                    
+
                     <p className="text-xs text-white/40 mt-2">
                         ${pkg.pricePerCredit.toFixed(3)}/credit
                     </p>
@@ -500,13 +503,13 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
     className = '',
 }) => {
     const { percentage, color, label, isLoading } = useCreditsProgress(tenantId);
-    
+
     if (isLoading) {
         return (
             <div className={`animate-pulse bg-white/10 rounded h-4 w-20 ${className}`} />
         );
     }
-    
+
     return (
         <div className={`flex items-center gap-2 ${className}`}>
             <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden min-w-[60px]">
@@ -526,5 +529,6 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 };
 
 export default AiCreditsUsage;
+
 
 

@@ -790,3 +790,4 @@ export const getTemplatesByCategory = (category: EmailTemplatePreset['category']
 export default emailTemplates;
 
 
+

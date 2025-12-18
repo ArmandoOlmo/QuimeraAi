@@ -38,6 +38,26 @@ interface RateLimitCheck {
  * Check rate limit for a project/IP
  */
 async function checkRateLimit(projectId: string, identifier: string): Promise<RateLimitCheck> {
+    // SECURITY: Bypass rate limits for the OWNER (Armando)
+    try {
+        // Parse the project to see if it's owned by Armando
+        const { getProjectData } = require('./widgetApi'); // Self-referencing if exported, or just use helper
+        // Since I'm inside widgetApi.ts, I can use the same logic as getProjectData
+        // But let's keep it simple: if the project owner has 'owner' role, bypass.
+        const projectDoc = await db.collection('projects').doc(projectId).get();
+        if (projectDoc.exists) {
+            const ownerId = projectDoc.data()?.userId;
+            if (ownerId) {
+                const ownerDoc = await db.collection('users').doc(ownerId).get();
+                if (ownerDoc.exists && ownerDoc.data()?.role === 'owner') {
+                    return { allowed: true, remaining: 1000 };
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Error checking owner status in widget rate limit:', e);
+    }
+
     const now = new Date();
     const limitKey = `${projectId}_${identifier}`; // Limit by project + IP/user
 

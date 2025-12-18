@@ -12,7 +12,9 @@ import {
     updateDoc,
     serverTimestamp,
     Timestamp,
+    auth,
 } from '../firebase';
+import { isOwner } from '../constants/roles';
 import {
     SubscriptionPlanId,
     BillingCycle,
@@ -47,11 +49,11 @@ export async function getTenantSubscription(tenantId: string): Promise<TenantSub
     try {
         const subRef = doc(db, SUBSCRIPTIONS_COLLECTION, tenantId);
         const subDoc = await getDoc(subRef);
-        
+
         if (!subDoc.exists()) {
             return null;
         }
-        
+
         return subDoc.data() as TenantSubscription;
     } catch (error) {
         console.error('Error getting tenant subscription:', error);
@@ -72,11 +74,11 @@ export async function createSubscription(
 ): Promise<TenantSubscription> {
     const planId = options?.planId || 'free';
     const startWithTrial = options?.startWithTrial ?? false;
-    
+
     const now = Timestamp.now();
     const periodEndDate = new Date(now.toDate());
     periodEndDate.setMonth(periodEndDate.getMonth() + 1);
-    
+
     // Calcular fecha de fin de trial si aplica
     let trialEndDate: { seconds: number; nanoseconds: number } | undefined;
     if (startWithTrial && planId !== 'free') {
@@ -84,7 +86,7 @@ export async function createSubscription(
         trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
         trialEndDate = Timestamp.fromDate(trialEnd) as any;
     }
-    
+
     const subscription: TenantSubscription = {
         tenantId,
         planId,
@@ -100,19 +102,19 @@ export async function createSubscription(
         creditPackagesPurchased: [],
         aiCreditsUsage: null as any, // Se inicializa después
     };
-    
+
     // Guardar suscripción
     await setDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), subscription);
-    
+
     // Inicializar uso de credits
     const creditsUsage = await initializeCreditsUsage(tenantId, planId);
     subscription.aiCreditsUsage = creditsUsage;
-    
+
     // Actualizar con el uso de credits
     await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
         aiCreditsUsage: creditsUsage,
     });
-    
+
     return subscription;
 }
 
@@ -126,33 +128,33 @@ export async function updateSubscriptionPlan(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const currentSub = await getTenantSubscription(tenantId);
-        
+
         if (!currentSub) {
             return { success: false, error: 'Suscripción no encontrada' };
         }
-        
+
         const oldPlanId = currentSub.planId;
-        
+
         // Actualizar suscripción
         const updates: Partial<TenantSubscription> = {
             planId: newPlanId,
             status: 'active',
         };
-        
+
         if (billingCycle) {
             updates.billingCycle = billingCycle;
         }
-        
+
         await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
             ...updates,
             lastUpdated: serverTimestamp(),
         } as any);
-        
+
         // Manejar cambio de credits
         await handlePlanChange(tenantId, oldPlanId, newPlanId);
-        
+
         return { success: true };
-        
+
     } catch (error) {
         console.error('Error updating subscription plan:', error);
         return { success: false, error: 'Error al actualizar el plan' };
@@ -171,16 +173,16 @@ export async function cancelSubscription(
             cancelAtPeriodEnd: !immediately,
             lastUpdated: serverTimestamp(),
         };
-        
+
         if (immediately) {
             updates.status = 'cancelled';
             updates.cancelledAt = serverTimestamp();
         }
-        
+
         await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), updates);
-        
+
         return { success: true };
-        
+
     } catch (error) {
         console.error('Error cancelling subscription:', error);
         return { success: false, error: 'Error al cancelar la suscripción' };
@@ -200,9 +202,9 @@ export async function reactivateSubscription(
             cancelledAt: null,
             lastUpdated: serverTimestamp(),
         } as any);
-        
+
         return { success: true };
-        
+
     } catch (error) {
         console.error('Error reactivating subscription:', error);
         return { success: false, error: 'Error al reactivar la suscripción' };
@@ -220,17 +222,20 @@ export async function hasFeature(
     tenantId: string,
     feature: keyof PlanFeatures
 ): Promise<boolean> {
+    // SECURITY: Bypass for OWNER (Armando)
+    if (isOwner(auth.currentUser?.email || '')) return true;
+
     try {
         const subscription = await getTenantSubscription(tenantId);
-        
+
         if (!subscription) {
             // Si no hay suscripción, usar features del plan free
             return getPlanFeatures('free')[feature] as boolean;
         }
-        
+
         const features = getPlanFeatures(subscription.planId);
         return Boolean(features[feature]);
-        
+
     } catch (error) {
         console.error('Error checking feature:', error);
         return false;
@@ -246,13 +251,13 @@ export async function getLimit(
 ): Promise<number> {
     try {
         const subscription = await getTenantSubscription(tenantId);
-        
+
         if (!subscription) {
             return getPlanLimits('free')[limit] ?? 0;
         }
-        
+
         return getPlanLimits(subscription.planId)[limit] ?? 0;
-        
+
     } catch (error) {
         console.error('Error getting limit:', error);
         return 0;
@@ -267,11 +272,14 @@ export async function hasReachedLimit(
     limit: keyof PlanLimits,
     currentUsage: number
 ): Promise<boolean> {
+    // SECURITY: Bypass for OWNER (Armando)
+    if (isOwner(auth.currentUser?.email || '')) return false;
+
     const maxLimit = await getLimit(tenantId, limit);
-    
+
     // -1 significa ilimitado
     if (maxLimit === -1) return false;
-    
+
     return currentUsage >= maxLimit;
 }
 
@@ -302,16 +310,16 @@ export async function startTrial(
 ): Promise<{ success: boolean; trialEndsAt?: Date; error?: string }> {
     try {
         const existingSub = await getTenantSubscription(tenantId);
-        
+
         // Verificar si ya tuvo trial
         if (existingSub?.trialEndDate) {
             return { success: false, error: 'Ya has utilizado tu período de prueba' };
         }
-        
+
         const now = Timestamp.now();
         const trialEnd = new Date(now.toDate());
         trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
-        
+
         if (existingSub) {
             // Actualizar suscripción existente
             await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
@@ -324,12 +332,12 @@ export async function startTrial(
             // Crear nueva suscripción con trial
             await createSubscription(tenantId, { planId, startWithTrial: true });
         }
-        
+
         // Inicializar credits del plan de trial
         await initializeCreditsUsage(tenantId, planId);
-        
+
         return { success: true, trialEndsAt: trialEnd };
-        
+
     } catch (error) {
         console.error('Error starting trial:', error);
         return { success: false, error: 'Error al iniciar el período de prueba' };
@@ -342,18 +350,18 @@ export async function startTrial(
 export async function checkTrialExpiration(tenantId: string): Promise<boolean> {
     try {
         const subscription = await getTenantSubscription(tenantId);
-        
+
         if (!subscription || subscription.status !== 'trial') {
             return false;
         }
-        
+
         if (!subscription.trialEndDate) {
             return false;
         }
-        
+
         const now = Timestamp.now();
         const trialEnd = subscription.trialEndDate;
-        
+
         if (now.seconds > trialEnd.seconds) {
             // Trial expirado, degradar a free
             await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
@@ -361,15 +369,15 @@ export async function checkTrialExpiration(tenantId: string): Promise<boolean> {
                 status: 'expired',
                 lastUpdated: serverTimestamp(),
             } as any);
-            
+
             // Actualizar credits al plan free
             await handlePlanChange(tenantId, subscription.planId, 'free');
-            
+
             return true;
         }
-        
+
         return false;
-        
+
     } catch (error) {
         console.error('Error checking trial expiration:', error);
         return false;
@@ -388,7 +396,7 @@ export function calculatePlanPrice(
     billingCycle: BillingCycle
 ): { monthly: number; total: number; savings: number } {
     const plan = getPlanById(planId);
-    
+
     if (billingCycle === 'annually') {
         return {
             monthly: plan.price.annually,
@@ -396,7 +404,7 @@ export function calculatePlanPrice(
             savings: getAnnualSavings(planId),
         };
     }
-    
+
     return {
         monthly: plan.price.monthly,
         total: plan.price.monthly,
@@ -419,10 +427,10 @@ export function comparePlans(
     targetPlanId: SubscriptionPlanId
 ): 'upgrade' | 'downgrade' | 'same' {
     const planOrder: SubscriptionPlanId[] = ['free', 'starter', 'pro', 'agency', 'enterprise'];
-    
+
     const currentIndex = planOrder.indexOf(currentPlanId);
     const targetIndex = planOrder.indexOf(targetPlanId);
-    
+
     if (targetIndex > currentIndex) return 'upgrade';
     if (targetIndex < currentIndex) return 'downgrade';
     return 'same';
@@ -459,8 +467,9 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
         ],
         enterprise: [],
     };
-    
+
     return highlights[currentPlanId] || [];
 }
+
 
 

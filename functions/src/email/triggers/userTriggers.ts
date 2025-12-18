@@ -239,3 +239,4 @@ function formatPlanName(plan: string | undefined): string {
     };
     return planMap[plan || 'free'] || 'Free';
 }
+

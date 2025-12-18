@@ -176,3 +176,4 @@ Los planes se definen en `types/subscription.ts` → `SUBSCRIPTION_PLANS`:
 - [ ] No hay errores de TypeScript en `plansService.ts`
 - [ ] El servidor de desarrollo está corriendo (`npm run dev`)
 - [ ] Las reglas de Firestore están desplegadas (`firebase deploy --only firestore:rules`)
+

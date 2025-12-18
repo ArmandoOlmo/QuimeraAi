@@ -925,3 +925,4 @@ export const getAvailableIndustries = (): string[] => {
 
 
 
+

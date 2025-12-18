@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '../contexts/core/AuthContext';
 import {
     consumeCredits,
     checkCreditsAvailable,
@@ -48,7 +49,7 @@ export interface UseAiCreditsResult {
     // Estado
     isLoading: boolean;
     error: string | null;
-    
+
     // Datos de uso
     usage: AiCreditsUsage | null;
     creditsRemaining: number;
@@ -56,14 +57,14 @@ export interface UseAiCreditsResult {
     creditsIncluded: number;
     usagePercentage: number;
     usageColor: string;
-    
+
     // Estados de alerta
     isNearLimit: boolean;
     hasExceededLimit: boolean;
-    
+
     // Plan actual
     currentPlan: SubscriptionPlan | null;
-    
+
     // Acciones
     consumeCredits: (
         operation: AiCreditOperation,
@@ -80,18 +81,18 @@ export interface UseAiCreditsResult {
         creditsRemaining: number;
         error?: string;
     }>;
-    
+
     checkCredits: (operation: AiCreditOperation) => Promise<CreditCheckResult>;
     canPerformOperation: (operation: AiCreditOperation) => Promise<boolean>;
-    
+
     // Historial
     getTransactionHistory: (limit?: number) => Promise<AiCreditTransaction[]>;
     getUsageByOperation: () => Promise<Record<AiCreditOperation, { count: number; credits: number }>>;
     getDailyUsage: (days?: number) => Promise<Array<{ date: string; credits: number }>>;
-    
+
     // Refresh
     refresh: () => Promise<void>;
-    
+
     // Helpers
     getCreditCost: (operation: AiCreditOperation) => number;
     formatCredits: (credits: number) => string;
@@ -103,29 +104,31 @@ export interface UseAiCreditsResult {
 
 export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     const { tenantId, userId, autoRefresh = true, refreshInterval = 60000 } = options;
-    
+    const { userDocument, isUserOwner } = useAuth();
+    const isOwner = isUserOwner || userDocument?.role === 'owner';
+
     // State
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [usage, setUsage] = useState<AiCreditsUsage | null>(null);
     const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
-    
+
     // Cargar datos iniciales
     const loadData = useCallback(async () => {
         if (!tenantId) return;
-        
+
         try {
             setIsLoading(true);
             setError(null);
-            
+
             const [usageData, planData] = await Promise.all([
                 getCreditsUsage(tenantId),
                 getCurrentPlan(tenantId),
             ]);
-            
+
             setUsage(usageData);
             setCurrentPlan(planData);
-            
+
         } catch (err) {
             console.error('Error loading AI credits data:', err);
             setError('Error al cargar datos de credits');
@@ -133,42 +136,42 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
             setIsLoading(false);
         }
     }, [tenantId]);
-    
+
     // Cargar al montar y cuando cambia tenantId
     useEffect(() => {
         loadData();
     }, [loadData]);
-    
+
     // Auto-refresh
     useEffect(() => {
         if (!autoRefresh || !tenantId) return;
-        
+
         const interval = setInterval(loadData, refreshInterval);
         return () => clearInterval(interval);
     }, [autoRefresh, refreshInterval, loadData, tenantId]);
-    
+
     // Valores calculados
     const creditsRemaining = usage?.creditsRemaining ?? 0;
     const creditsUsed = usage?.creditsUsed ?? 0;
     const creditsIncluded = usage?.creditsIncluded ?? 0;
-    
+
     const usagePercentage = useMemo(() => {
         if (!usage) return 0;
         return calculateCreditsUsagePercentage(creditsUsed, creditsIncluded);
     }, [usage, creditsUsed, creditsIncluded]);
-    
+
     const usageColor = useMemo(() => getUsageColor(usagePercentage), [usagePercentage]);
-    
+
     const isNearLimit = useMemo(() => {
-        if (!usage) return false;
+        if (!usage || isOwner) return false;
         return isNearCreditLimit(usage, 80);
-    }, [usage]);
-    
+    }, [usage, isOwner]);
+
     const hasExceeded = useMemo(() => {
-        if (!usage) return false;
+        if (!usage || isOwner) return false;
         return hasExceededCreditLimit(usage);
-    }, [usage]);
-    
+    }, [usage, isOwner]);
+
     // Consumir credits
     const handleConsumeCredits = useCallback(async (
         operation: AiCreditOperation,
@@ -188,17 +191,17 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
                 error: 'Tenant o usuario no válido',
             };
         }
-        
+
         const result = await consumeCredits(tenantId, userId, operation, consumeOptions);
-        
+
         // Refresh data after consuming
         if (result.success) {
             await loadData();
         }
-        
+
         return result;
     }, [tenantId, userId, loadData]);
-    
+
     // Verificar credits disponibles
     const handleCheckCredits = useCallback(async (
         operation: AiCreditOperation
@@ -212,10 +215,10 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
                 message: 'Tenant no válido',
             };
         }
-        
+
         return canPerformOperation(tenantId, operation);
     }, [tenantId]);
-    
+
     // Puede realizar operación
     const handleCanPerformOperation = useCallback(async (
         operation: AiCreditOperation
@@ -223,7 +226,7 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         const result = await handleCheckCredits(operation);
         return result.hasCredits;
     }, [handleCheckCredits]);
-    
+
     // Obtener historial
     const handleGetTransactionHistory = useCallback(async (
         limit: number = 50
@@ -231,24 +234,24 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         if (!tenantId) return [];
         return getTransactionHistory(tenantId, { limit });
     }, [tenantId]);
-    
+
     // Obtener uso por operación
     const handleGetUsageByOperation = useCallback(async () => {
         if (!tenantId) return {} as Record<AiCreditOperation, { count: number; credits: number }>;
         return getUsageByOperation(tenantId);
     }, [tenantId]);
-    
+
     // Obtener uso diario
     const handleGetDailyUsage = useCallback(async (days: number = 30) => {
         if (!tenantId) return [];
         return getDailyUsage(tenantId, days);
     }, [tenantId]);
-    
+
     // Obtener costo de una operación
     const getCreditCost = useCallback((operation: AiCreditOperation): number => {
         return AI_CREDIT_COSTS[operation];
     }, []);
-    
+
     // Formatear credits
     const formatCredits = useCallback((credits: number): string => {
         if (credits >= 1000) {
@@ -256,12 +259,12 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         }
         return credits.toLocaleString();
     }, []);
-    
+
     return {
         // Estado
         isLoading,
         error,
-        
+
         // Datos de uso
         usage,
         creditsRemaining,
@@ -269,27 +272,27 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         creditsIncluded,
         usagePercentage,
         usageColor,
-        
+
         // Estados de alerta
         isNearLimit,
         hasExceededLimit: hasExceeded,
-        
+
         // Plan actual
         currentPlan,
-        
+
         // Acciones
         consumeCredits: handleConsumeCredits,
         checkCredits: handleCheckCredits,
         canPerformOperation: handleCanPerformOperation,
-        
+
         // Historial
         getTransactionHistory: handleGetTransactionHistory,
         getUsageByOperation: handleGetUsageByOperation,
         getDailyUsage: handleGetDailyUsage,
-        
+
         // Refresh
         refresh: loadData,
-        
+
         // Helpers
         getCreditCost,
         formatCredits,
@@ -309,23 +312,23 @@ export function useCanPerformAiOperation(
 ): { canPerform: boolean; isChecking: boolean; creditCost: number } {
     const [canPerform, setCanPerform] = useState(true);
     const [isChecking, setIsChecking] = useState(true);
-    
+
     useEffect(() => {
         if (!tenantId) {
             setIsChecking(false);
             return;
         }
-        
+
         const check = async () => {
             setIsChecking(true);
             const result = await canPerformOperation(tenantId, operation);
             setCanPerform(result.hasCredits);
             setIsChecking(false);
         };
-        
+
         check();
     }, [tenantId, operation]);
-    
+
     return {
         canPerform,
         isChecking,
@@ -348,19 +351,19 @@ export function useCreditsProgress(tenantId: string): {
         label: '0 / 0',
         isLoading: true,
     });
-    
+
     useEffect(() => {
         if (!tenantId) return;
-        
+
         const load = async () => {
             const usage = await getCreditsUsage(tenantId);
-            
+
             if (usage) {
                 const percentage = calculateCreditsUsagePercentage(
                     usage.creditsUsed,
                     usage.creditsIncluded
                 );
-                
+
                 setData({
                     percentage,
                     color: getUsageColor(percentage),
@@ -376,10 +379,10 @@ export function useCreditsProgress(tenantId: string): {
                 });
             }
         };
-        
+
         load();
     }, [tenantId]);
-    
+
     return data;
 }
 
@@ -402,44 +405,44 @@ export function useConsumeWithConfirmation(
     const [pendingOperation, setPendingOperation] = useState<AiCreditOperation | null>(null);
     const [pendingOptions, setPendingOptions] = useState<any>(null);
     const [isConsuming, setIsConsuming] = useState(false);
-    
+
     const consume = useCallback(async (
         operation: AiCreditOperation,
-        options?: { skipConfirmation?: boolean; [key: string]: any }
+        options?: { skipConfirmation?: boolean;[key: string]: any }
     ) => {
         const { skipConfirmation, ...restOptions } = options || {};
-        
+
         if (!skipConfirmation) {
             // Guardar para confirmación
             setPendingOperation(operation);
             setPendingOptions(restOptions);
             return { success: true };
         }
-        
+
         // Consumir directamente
         setIsConsuming(true);
         const result = await consumeCredits(tenantId, userId, operation, restOptions);
         setIsConsuming(false);
-        
+
         return result;
     }, [tenantId, userId]);
-    
+
     const confirm = useCallback(async () => {
         if (!pendingOperation) return;
-        
+
         setIsConsuming(true);
         await consumeCredits(tenantId, userId, pendingOperation, pendingOptions);
         setIsConsuming(false);
-        
+
         setPendingOperation(null);
         setPendingOptions(null);
     }, [tenantId, userId, pendingOperation, pendingOptions]);
-    
+
     const cancel = useCallback(() => {
         setPendingOperation(null);
         setPendingOptions(null);
     }, []);
-    
+
     return {
         consume,
         pendingOperation,
@@ -450,5 +453,6 @@ export function useConsumeWithConfirmation(
 }
 
 export default useAiCredits;
+
 
 

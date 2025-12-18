@@ -49,11 +49,11 @@ const ALLOWED_ORIGIN_PATTERNS = [
  */
 function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
     const origin = req.headers.origin || '';
-    
+
     // Check if origin is in allowed list
     const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
         ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
-    
+
     if (isAllowed) {
         res.set('Access-Control-Allow-Origin', origin);
     } else {
@@ -61,12 +61,12 @@ function setCorsHeaders(req: functions.https.Request, res: functions.Response): 
         // In production, you might want to log this for monitoring
         console.warn(`CORS: Blocked request from origin: ${origin}`);
     }
-    
+
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');
     res.set('Vary', 'Origin');
-    
+
     return isAllowed;
 }
 
@@ -142,6 +142,18 @@ interface RateLimitCheck {
  * Check rate limit for a project
  */
 async function checkRateLimit(projectId: string, userId: string, planType: string = 'FREE'): Promise<RateLimitCheck> {
+    // SECURITY: Bypass rate limits for the OWNER (Armando)
+    try {
+        if (userId && userId !== 'unknown' && userId !== 'anonymous' && userId !== 'system') {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists && userDoc.data()?.role === 'owner') {
+                return { allowed: true, remaining: 1000 };
+            }
+        }
+    } catch (e) {
+        console.warn('Error checking owner status in rate limit:', e);
+    }
+
     const now = new Date();
     // For templates, we limit by user to prevent one user from exhausting the template quota for everyone
     const limitKey = projectId.startsWith('template-') ? `${projectId}_${userId}` : projectId;
@@ -207,9 +219,9 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
     } catch (error) {
         console.error('Rate limit check error:', error);
         // SECURITY: Fail closed - deny request if rate limit check fails
-        return { 
-            allowed: false, 
-            message: 'Rate limit service unavailable. Please try again later.' 
+        return {
+            allowed: false,
+            message: 'Rate limit service unavailable. Please try again later.'
         };
     }
 }
@@ -231,8 +243,8 @@ async function getProjectData(projectId: string, userId?: string) {
     }
 
     // 2. Handle Global Assistant and special system contexts
-    if (projectId === 'anonymous' || 
-        projectId.startsWith('assistant-') || 
+    if (projectId === 'anonymous' ||
+        projectId.startsWith('assistant-') ||
         projectId.startsWith('global-') ||
         projectId.startsWith('onboarding-') ||
         projectId.startsWith('cms-') ||
@@ -262,14 +274,14 @@ async function getProjectData(projectId: string, userId?: string) {
         if (userProjectDoc.exists) {
             const projectData = userProjectDoc.data() || {};
             // Ensure aiAssistantConfig exists with isActive true for user's own projects
-            return { 
-                exists: true, 
-                data: { 
-                    ...projectData, 
+            return {
+                exists: true,
+                data: {
+                    ...projectData,
                     userId,
                     // Default aiAssistantConfig if not present (allow user's own projects)
                     aiAssistantConfig: projectData.aiAssistantConfig || { isActive: true }
-                } 
+                }
             };
         }
     }
@@ -278,8 +290,8 @@ async function getProjectData(projectId: string, userId?: string) {
     const projectDoc = await db.collection('projects').doc(projectId).get();
     if (projectDoc.exists) {
         const projectData = projectDoc.data() || {};
-        return { 
-            exists: true, 
+        return {
+            exists: true,
             data: {
                 ...projectData,
                 // Default aiAssistantConfig if not present
@@ -328,9 +340,9 @@ function getCreditCostForModel(model: string): number {
  * Track API usage for analytics and consume AI credits
  */
 async function trackUsage(
-    projectId: string, 
-    userId: string, 
-    tokensUsed: number, 
+    projectId: string,
+    userId: string,
+    tokensUsed: number,
     model: string,
     tenantId?: string,
     operationType?: string
@@ -338,7 +350,7 @@ async function trackUsage(
     try {
         // Calculate credits to consume
         const creditsUsed = getCreditCostForModel(model);
-        
+
         // Track in apiUsage collection (existing behavior)
         await db.collection('apiUsage').add({
             projectId,
@@ -349,11 +361,18 @@ async function trackUsage(
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             type: 'gemini-proxy'
         });
-        
+
         // If tenantId is provided, also track in aiCreditsTransactions
         const effectiveTenantId = tenantId || await getTenantIdForUser(userId);
-        
+
         if (effectiveTenantId) {
+            // SECURITY: Skip credit consumption for the OWNER (Armando)
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists && userDoc.data()?.role === 'owner') {
+                console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);
+                return;
+            }
+
             // Record the credit transaction
             await db.collection('aiCreditsTransactions').add({
                 tenantId: effectiveTenantId,
@@ -366,11 +385,11 @@ async function trackUsage(
                 tokensOutput: Math.floor(tokensUsed * 0.7), // Estimate
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
-            
+
             // Update the usage document
             await updateCreditsUsage(effectiveTenantId, creditsUsed, operationType || getOperationTypeFromModel(model));
         }
-        
+
     } catch (error) {
         console.error('Usage tracking error:', error);
     }
@@ -383,25 +402,25 @@ async function getTenantIdForUser(userId: string): Promise<string | null> {
     if (!userId || userId === 'unknown' || userId === 'anonymous' || userId === 'system') {
         return null;
     }
-    
+
     try {
         // First check if there's a tenant membership
         const membershipQuery = await db.collection('tenantMemberships')
             .where('userId', '==', userId)
             .limit(1)
             .get();
-        
+
         if (!membershipQuery.empty) {
             return membershipQuery.docs[0].data().tenantId;
         }
-        
+
         // Fallback: use userId as tenantId for individual users
         const userDoc = await db.collection('users').doc(userId).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
             return userData?.tenantId || userId;
         }
-        
+
         return null;
     } catch (error) {
         console.error('Error getting tenant ID for user:', error);
@@ -426,16 +445,16 @@ function getOperationTypeFromModel(model: string): string {
  * Update the credits usage document for a tenant
  */
 async function updateCreditsUsage(
-    tenantId: string, 
-    creditsUsed: number, 
+    tenantId: string,
+    creditsUsed: number,
     operation: string
 ): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
     const usageRef = db.collection('aiCreditsUsage').doc(tenantId);
-    
+
     try {
         const usageDoc = await usageRef.get();
-        
+
         if (!usageDoc.exists) {
             // Initialize usage document if it doesn't exist
             await usageRef.set({
@@ -452,16 +471,16 @@ async function updateCreditsUsage(
             });
             return;
         }
-        
+
         const currentData = usageDoc.data()!;
         const newCreditsUsed = (currentData.creditsUsed || 0) + creditsUsed;
         const newCreditsRemaining = Math.max(0, (currentData.creditsIncluded || 30) - newCreditsUsed);
         const newCreditsOverage = Math.max(0, newCreditsUsed - (currentData.creditsIncluded || 30));
-        
+
         // Update usage by operation
         const usageByOperation = currentData.usageByOperation || {};
         usageByOperation[operation] = (usageByOperation[operation] || 0) + creditsUsed;
-        
+
         // Update daily usage
         let dailyUsage = currentData.dailyUsage || [];
         const todayEntry = dailyUsage.find((d: any) => d.date === today);
@@ -473,7 +492,7 @@ async function updateCreditsUsage(
                 dailyUsage = dailyUsage.slice(-30);
             }
         }
-        
+
         await usageRef.update({
             creditsUsed: newCreditsUsed,
             creditsRemaining: newCreditsRemaining,
@@ -482,7 +501,7 @@ async function updateCreditsUsage(
             dailyUsage,
             lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         });
-        
+
     } catch (error) {
         console.error('Error updating credits usage:', error);
     }
@@ -584,7 +603,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
         // Make request to Gemini API
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        
+
         console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}`);
 
         const requestBody = {
@@ -822,10 +841,10 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
         const resolution = sanitizeString(req.body.resolution, 10) || '1K';
         const thinkingLevel = sanitizeString(req.body.thinkingLevel, 20) || 'high';
         const personGeneration = sanitizeString(req.body.personGeneration, 20) || 'allow_adult';
-        const temperature = typeof req.body.temperature === 'number' ? 
+        const temperature = typeof req.body.temperature === 'number' ?
             Math.min(Math.max(req.body.temperature, 0), 2) : 1.0;
         const negativePrompt = sanitizeString(req.body.negativePrompt, 2000);
-        const referenceImages = Array.isArray(req.body.referenceImages) ? 
+        const referenceImages = Array.isArray(req.body.referenceImages) ?
             req.body.referenceImages.slice(0, 14) : []; // Max 14 images
         const config = req.body.config || {};
 
@@ -867,7 +886,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
         if (style && style !== 'None') {
             enhancedPrompt = `${prompt}, ${style} style`;
         }
-        
+
         if (aspectRatio && aspectRatio !== '1:1') {
             enhancedPrompt = `${enhancedPrompt}, aspect ratio ${aspectRatio}`;
         }
@@ -932,13 +951,13 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                             if (matches && matches.length === 4) {
                                 const mimeType = matches[1];
                                 const base64Data = matches[3];
-                                
+
                                 // SECURITY: Limit image size (max 10MB base64)
                                 if (base64Data.length > 10 * 1024 * 1024) {
                                     console.warn('Reference image too large, skipping');
                                     continue;
                                 }
-                                
+
                                 contentParts.push({
                                     inlineData: {
                                         mimeType: mimeType,
@@ -978,7 +997,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 
             if (!imageBase64) {
                 console.error('No image in response');
-                res.status(500).json({ 
+                res.status(500).json({
                     error: 'No image generated',
                     details: 'The model did not return an image'
                 });
@@ -1028,7 +1047,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 export const getUsageStats = functions.https.onRequest(async (req, res) => {
     // SECURITY: Set CORS headers
     const isOriginAllowed = setCorsHeaders(req, res);
-    
+
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
 
     if (req.method === 'OPTIONS') {

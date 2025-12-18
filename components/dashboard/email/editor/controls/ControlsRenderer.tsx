@@ -54,3 +54,4 @@ export const renderBlockControls = (block: EmailBlock, activeTab: TabType): Reac
 export default renderBlockControls;
 
 
+
