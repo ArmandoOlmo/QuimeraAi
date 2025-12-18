@@ -475,12 +475,6 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             return;
         }
 
-        const confirmPurchase = window.confirm(
-            `${t('domainsDashboard.buyConfirmMessage', { domain: domainName, price: price.toFixed(2) })}\n\n${t('domainsDashboard.buyConfirmCharge')}`
-        );
-
-        if (!confirmPurchase) return;
-
         setIsPurchasing(domainName);
         setError(null);
 

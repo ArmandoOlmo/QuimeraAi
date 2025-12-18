@@ -104,7 +104,10 @@ import {
     checkDomainAvailability,
     searchDomainSuggestions,
     purchaseDomain,
-    getDomainPricing
+    getDomainPricing,
+    // Stripe Checkout for domains
+    createDomainCheckoutSession,
+    checkDomainOrderStatus
 } from './domains';
 
 // Social Channels functions
@@ -260,7 +263,10 @@ export const domains = {
     checkAvailability: checkDomainAvailability,
     searchSuggestions: searchDomainSuggestions,
     purchase: purchaseDomain,
-    getPricing: getDomainPricing
+    getPricing: getDomainPricing,
+    // Stripe Checkout for domains
+    createDomainCheckoutSession,
+    checkDomainOrderStatus
 };
 
 // Export Social Channels functions
@@ -394,6 +400,9 @@ export {
     searchDomainSuggestions,
     purchaseDomain,
     getDomainPricing,
+    // Stripe Checkout for domains
+    createDomainCheckoutSession,
+    checkDomainOrderStatus,
     // Social Channels exports
     facebookWebhook,
     facebookWebhookVerify,
