@@ -94,7 +94,8 @@ export async function checkAvailability(domains: string[]): Promise<{
 }
 
 /**
- * Purchase a domain
+ * Purchase a domain (Legacy - direct purchase without payment)
+ * @deprecated Use createDomainCheckout instead for paid purchases
  */
 export async function purchaseDomain(
     domainName: string,
@@ -130,6 +131,77 @@ export async function purchaseDomain(
             expiryDate: '',
             error: error.message || 'Failed to purchase domain'
         };
+    }
+}
+
+// =============================================================================
+// STRIPE CHECKOUT FLOW
+// =============================================================================
+
+export interface DomainCheckoutResult {
+    sessionId: string;
+    url: string;
+    orderId: string;
+}
+
+export interface DomainOrderStatus {
+    status: 'pending_payment' | 'registering' | 'completed' | 'failed';
+    domainName: string;
+    error?: string;
+}
+
+/**
+ * Create a Stripe checkout session for domain purchase
+ * This is the recommended method for purchasing domains
+ */
+export async function createDomainCheckout(
+    domainName: string,
+    price: number,
+    years: number = 1
+): Promise<DomainCheckoutResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const checkoutFn = httpsCallable<
+            { domainName: string; price: number; years: number; successUrl: string; cancelUrl: string },
+            DomainCheckoutResult
+        >(functions, 'domains-createDomainCheckoutSession');
+
+        const successUrl = `${window.location.origin}/dashboard?domain_success=true`;
+        const cancelUrl = `${window.location.origin}/dashboard?domain_cancel=true`;
+
+        const result = await checkoutFn({ 
+            domainName, 
+            price, 
+            years,
+            successUrl,
+            cancelUrl
+        });
+
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[NameComService] Checkout error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
+    }
+}
+
+/**
+ * Check the status of a domain order
+ */
+export async function checkDomainOrderStatus(orderId: string): Promise<DomainOrderStatus> {
+    try {
+        const functions = await getFunctionsInstance();
+        const statusFn = httpsCallable<{ orderId: string }, DomainOrderStatus>(
+            functions,
+            'domains-checkDomainOrderStatus'
+        );
+
+        const result = await statusFn({ orderId });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[NameComService] Check status error:', error);
+        throw new Error(error.message || 'Failed to check order status');
     }
 }
 

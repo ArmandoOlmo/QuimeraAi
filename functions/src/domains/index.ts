@@ -17,7 +17,10 @@ export {
     checkDomainAvailability, 
     searchDomainSuggestions, 
     purchaseDomain,
-    getDomainPricing 
+    getDomainPricing,
+    createDomainCheckoutSession,
+    checkDomainOrderStatus,
+    registerDomainAfterPayment
 } from './nameComApi';
 
 

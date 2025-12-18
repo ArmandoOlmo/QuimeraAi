@@ -533,15 +533,45 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
  * Handles completed checkout session
  */
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-    const { userId, storeId: _storeId } = session.metadata || {};
+    const metadata = session.metadata || {};
+    const { userId, type } = metadata;
 
     if (!userId) {
         console.error('Missing userId in checkout session metadata');
         return;
     }
 
-    // The order should have been created before the checkout session
-    // Here we update any additional data if needed
+    // Handle domain purchases
+    if (type === 'domain_purchase') {
+        const { domainName, years, orderId } = metadata;
+        
+        if (!domainName || !orderId) {
+            console.error('Missing domain metadata in checkout session');
+            return;
+        }
+
+        console.log(`[Stripe Webhook] Domain payment completed: ${domainName} for user ${userId}`);
+
+        // Import and call the domain registration function
+        const { registerDomainAfterPayment } = await import('./domains/nameComApi');
+        
+        const result = await registerDomainAfterPayment(
+            orderId,
+            domainName,
+            parseInt(years || '1', 10),
+            userId
+        );
+
+        if (!result.success) {
+            console.error(`[Stripe Webhook] Domain registration failed: ${result.error}`);
+            // The order will be marked as failed in registerDomainAfterPayment
+            // Could send notification to admin here
+        }
+
+        return;
+    }
+
+    // Handle regular e-commerce checkout
     console.log('Checkout session completed for user:', userId);
 }
 

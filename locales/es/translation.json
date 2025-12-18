@@ -3384,11 +3384,15 @@
     "purchaseSuccess": "¡Dominio {{domain}} comprado exitosamente!",
     "searchHint": "Busca tu nombre de negocio o marca para encontrar dominios disponibles",
     "searchingDomains": "Buscando dominios disponibles...",
-    "poweredByNameCom": "Powered by Name.com Reseller API",
+    "poweredByNameCom": "Powered by Name.com",
     "upgradeForDomains": "Actualizar para usar dominios",
     "renewalPrice": "Renovación: ${{price}}/año",
     "perYear": "/año",
-    "viewDeployment": "Ver despliegue"
+    "viewDeployment": "Ver despliegue",
+    "checkoutError": "Error al crear la sesión de pago. Intenta de nuevo.",
+    "paymentProcessing": "Procesando pago...",
+    "domainRegistering": "Registrando dominio...",
+    "purchaseCompleted": "¡Compra completada! Tu dominio está siendo registrado."
   },
   "chatbotWidget": {
     "exitIntentOffer": "🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento",

@@ -485,29 +485,20 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setError(null);
 
         try {
-            const { purchaseDomain } = await import('../../../services/nameComService');
-            const result = await purchaseDomain(domainName, 1);
+            // Use Stripe checkout for secure payment
+            const { createDomainCheckout } = await import('../../../services/nameComService');
+            const result = await createDomainCheckout(domainName, price, 1);
 
-            if (result.success) {
-                // Domain purchased successfully - add to user's domains
-                await addDomain({
-                    id: domainName,
-                    name: domainName,
-                    status: 'active',
-                    provider: 'Quimera',
-                    createdAt: new Date().toISOString(),
-                    expiryDate: result.expiryDate
-                });
-
-                alert(t('domainsDashboard.purchaseSuccess', { domain: domainName }));
-                onClose();
+            // Redirect to Stripe Checkout
+            if (result.url) {
+                window.location.href = result.url;
             } else {
-                setError(result.error || 'Error al comprar el dominio');
+                setError(t('domainsDashboard.checkoutError'));
             }
 
         } catch (e: any) {
-            console.error("Domain purchase failed:", e);
-            setError(e.message || 'Error al procesar la compra. Intenta de nuevo.');
+            console.error("Domain checkout failed:", e);
+            setError(e.message || t('domainsDashboard.checkoutError'));
         } finally {
             setIsPurchasing(null);
         }

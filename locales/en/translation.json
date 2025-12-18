@@ -3244,11 +3244,15 @@
     "purchaseSuccess": "Domain {{domain}} purchased successfully!",
     "searchHint": "Search for your business name or brand to find available domains",
     "searchingDomains": "Searching for available domains...",
-    "poweredByNameCom": "Powered by Name.com Reseller API",
+    "poweredByNameCom": "Powered by Name.com",
     "upgradeForDomains": "Upgrade to use domains",
     "renewalPrice": "Renewal: ${{price}}/year",
     "perYear": "/year",
-    "viewDeployment": "View deployment"
+    "viewDeployment": "View deployment",
+    "checkoutError": "Error creating payment session. Please try again.",
+    "paymentProcessing": "Processing payment...",
+    "domainRegistering": "Registering domain...",
+    "purchaseCompleted": "Purchase completed! Your domain is being registered."
   },
   "onboardingWizard": {
     "businessName": "Business Name",

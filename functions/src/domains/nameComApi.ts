@@ -9,8 +9,20 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import Stripe from 'stripe';
 
 const db = admin.firestore();
+
+// Initialize Stripe
+const getStripe = () => {
+    const secretKey = process.env.STRIPE_SECRET_KEY || functions.config().stripe?.secret_key;
+    if (!secretKey) {
+        throw new Error('Stripe secret key not configured');
+    }
+    return new Stripe(secretKey, {
+        apiVersion: '2024-11-20.acacia' as any,
+    });
+};
 
 // Name.com API Configuration
 const NAME_COM_API_URL = 'https://api.name.com/v4';
@@ -389,6 +401,254 @@ export const getDomainPricing = functions.https.onCall(async (data, context) => 
 
     } catch (error: any) {
         console.error('[Name.com] Get pricing error:', error);
+        throw error instanceof functions.https.HttpsError 
+            ? error 
+            : new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+// =============================================================================
+// STRIPE CHECKOUT FOR DOMAIN PURCHASE
+// =============================================================================
+
+/**
+ * Creates a Stripe Checkout Session for domain purchase
+ * User pays first, then domain is registered via webhook
+ */
+export const createDomainCheckoutSession = functions.https.onCall(async (data, context) => {
+    // Require authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be logged in to purchase domains');
+    }
+
+    const { domainName, years = 1, price, successUrl, cancelUrl } = data;
+    const userId = context.auth.uid;
+
+    if (!domainName || typeof domainName !== 'string') {
+        throw new functions.https.HttpsError('invalid-argument', 'domainName is required');
+    }
+
+    if (!price || typeof price !== 'number' || price <= 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Valid price is required');
+    }
+
+    if (!successUrl || !cancelUrl) {
+        throw new functions.https.HttpsError('invalid-argument', 'successUrl and cancelUrl are required');
+    }
+
+    if (years < 1 || years > 10) {
+        throw new functions.https.HttpsError('invalid-argument', 'years must be between 1 and 10');
+    }
+
+    try {
+        // First verify domain is still available
+        const availabilityResult = await nameComRequest<DomainSearchResult>(
+            '/domains:checkAvailability',
+            'POST',
+            { domainNames: [domainName] }
+        );
+
+        const domainInfo = availabilityResult.results[0];
+        
+        if (!domainInfo || !domainInfo.purchasable) {
+            throw new functions.https.HttpsError('failed-precondition', 'Domain is no longer available for purchase');
+        }
+
+        // Get user info for email
+        const userDoc = await db.collection('users').doc(userId).get();
+        const userData = userDoc.data();
+        const userEmail = userData?.email || context.auth.token?.email || '';
+
+        // Create pending order record
+        const orderRef = db.collection('domainOrders').doc();
+        await orderRef.set({
+            id: orderRef.id,
+            userId,
+            domainName,
+            years,
+            // Store both prices for records
+            customerPrice: price,
+            wholesalePrice: domainInfo.purchasePrice,
+            profit: price - (domainInfo.purchasePrice || 0),
+            status: 'pending_payment',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Create Stripe Checkout Session
+        const stripe = getStripe();
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: `Domain: ${domainName}`,
+                        description: `${years} year${years > 1 ? 's' : ''} registration`,
+                    },
+                    unit_amount: Math.round(price * 100), // Convert to cents
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            customer_email: userEmail,
+            success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}&domain=${encodeURIComponent(domainName)}`,
+            cancel_url: cancelUrl,
+            metadata: {
+                type: 'domain_purchase',
+                userId,
+                domainName,
+                years: years.toString(),
+                orderId: orderRef.id,
+                wholesalePrice: (domainInfo.purchasePrice || 0).toString(),
+            },
+        });
+
+        // Update order with session ID
+        await orderRef.update({
+            stripeSessionId: session.id,
+        });
+
+        console.log(`[Domains] Checkout session created for ${domainName}, user ${userId}`);
+
+        return {
+            sessionId: session.id,
+            url: session.url,
+            orderId: orderRef.id,
+        };
+
+    } catch (error: any) {
+        console.error('[Domains] Checkout session error:', error);
+        throw error instanceof functions.https.HttpsError 
+            ? error 
+            : new functions.https.HttpsError('internal', `Failed to create checkout: ${error.message}`);
+    }
+});
+
+/**
+ * Internal function to register domain after payment (called by webhook)
+ */
+export async function registerDomainAfterPayment(
+    orderId: string,
+    domainName: string,
+    years: number,
+    userId: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Get order details
+        const orderRef = db.collection('domainOrders').doc(orderId);
+        const orderDoc = await orderRef.get();
+
+        if (!orderDoc.exists) {
+            return { success: false, error: 'Order not found' };
+        }
+
+        const orderData = orderDoc.data();
+
+        // Check if already processed
+        if (orderData?.status === 'completed') {
+            console.log(`[Domains] Order ${orderId} already completed, skipping`);
+            return { success: true };
+        }
+
+        // Update status to processing
+        await orderRef.update({
+            status: 'registering',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Register the domain with Name.com
+        const registrationData = {
+            domain: {
+                domainName,
+            },
+            years,
+            purchasePrice: orderData?.wholesalePrice,
+        };
+
+        const result = await nameComRequest<any>(
+            '/domains',
+            'POST',
+            registrationData
+        );
+
+        // Update order as completed
+        await orderRef.update({
+            status: 'completed',
+            nameComResponse: result,
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Add domain to user's domains collection
+        const expiryDate = new Date(Date.now() + (years * 365 * 24 * 60 * 60 * 1000)).toISOString();
+        
+        const userDomainRef = db.collection('users').doc(userId).collection('domains').doc(domainName);
+        await userDomainRef.set({
+            id: domainName,
+            name: domainName,
+            status: 'active',
+            provider: 'Quimera',
+            purchasedVia: 'Name.com',
+            purchasePrice: orderData?.customerPrice,
+            years,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            expiryDate,
+            orderId,
+        });
+
+        console.log(`[Domains] Domain ${domainName} registered successfully for user ${userId}`);
+
+        return { success: true };
+
+    } catch (error: any) {
+        console.error('[Domains] Registration error:', error);
+
+        // Update order with error
+        await db.collection('domainOrders').doc(orderId).update({
+            status: 'failed',
+            error: error.message,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Check order status (for frontend polling after payment)
+ */
+export const checkDomainOrderStatus = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+    }
+
+    const { orderId } = data;
+
+    if (!orderId) {
+        throw new functions.https.HttpsError('invalid-argument', 'orderId is required');
+    }
+
+    try {
+        const orderDoc = await db.collection('domainOrders').doc(orderId).get();
+
+        if (!orderDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Order not found');
+        }
+
+        const orderData = orderDoc.data();
+
+        // Verify user owns this order
+        if (orderData?.userId !== context.auth.uid) {
+            throw new functions.https.HttpsError('permission-denied', 'Not authorized to view this order');
+        }
+
+        return {
+            status: orderData?.status,
+            domainName: orderData?.domainName,
+            error: orderData?.error,
+        };
+
+    } catch (error: any) {
         throw error instanceof functions.https.HttpsError 
             ? error 
             : new functions.https.HttpsError('internal', error.message);
