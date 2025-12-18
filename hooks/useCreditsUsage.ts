@@ -38,11 +38,13 @@ interface UseCreditsUsageReturn {
 }
 
 export function useCreditsUsage(): UseCreditsUsageReturn {
-    const { user } = useAuth();
+    const { user, isUserOwner, userDocument, loadingAuth } = useAuth();
     const tenantContext = useSafeTenant();
     const [usage, setUsage] = useState<CreditsUsageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const isOwner = isUserOwner || userDocument?.role === 'owner';
 
     const tenantId = tenantContext?.currentTenant?.id;
 
@@ -160,7 +162,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId, user]);
+    }, [tenantId, user, isOwner]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {
@@ -218,7 +220,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 
     return {
         usage,
-        isLoading,
+        isLoading: isLoading || loadingAuth,
         error,
         refresh: loadUsage,
     };

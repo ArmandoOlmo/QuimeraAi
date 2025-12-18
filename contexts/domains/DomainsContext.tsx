@@ -36,7 +36,7 @@ const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
 
 export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    
+
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
     const [deploymentLogs, setDeploymentLogs] = useState<DeploymentLog[]>([]);
@@ -47,9 +47,9 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             const domainsCol = collection(db, 'users', userId, 'domains');
             const q = query(domainsCol, orderBy('createdAt', 'desc'));
             const snap = await getDocs(q);
-            const userDomains = snap.docs.map(docSnapshot => ({ 
-                id: docSnapshot.id, 
-                ...docSnapshot.data() 
+            const userDomains = snap.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
             } as Domain));
             setDomains(userDomains);
         } catch (error) {
@@ -157,16 +157,16 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!domain) return false;
 
             // Use deployment service to verify
-            const isVerified = await deploymentService.verifyDomain(domain.domain);
+            const isVerified = await deploymentService.verifyDNS(domain.name);
 
-            if (isVerified) {
-                await updateDomain(id, { 
-                    status: 'verified',
+            if (isVerified.verified) {
+                await updateDomain(id, {
+                    status: 'active',
                     verifiedAt: new Date().toISOString(),
                 });
             }
 
-            return isVerified;
+            return isVerified.verified;
         } catch (error) {
             console.error("Error verifying domain:", error);
             return false;
@@ -175,8 +175,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Deploy domain
     const deployDomain = async (
-        domainId: string, 
-        provider: 'vercel' | 'cloudflare' | 'netlify' = 'vercel'
+        domainId: string,
+        provider: 'vercel' | 'cloudflare' | 'netlify' = 'cloudflare'
     ): Promise<boolean> => {
         if (!user) return false;
 
@@ -196,14 +196,36 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 status: 'in_progress',
             });
 
-            // Use deployment service
-            const result = await deploymentService.deploy(domain.projectId, domain.domain, provider);
+            // Fetch project data (assuming projects are available or we fetch them)
+            // In a real scenario, you might need to fetch the project from Firestore if it's not in state
+            // For now, we'll try to find it in the context's domain or elsewhere if possible
+            // But usually, the editor or dashboard has the project data.
+
+            // For this implementation, we'll need the project object. 
+            // Let's assume we fetch it from Firestore.
+            const projectDoc = await getDocs(query(collection(db, 'users', user.uid, 'projects')));
+            const projectData = projectDoc.docs.find(d => d.id === domain.projectId)?.data() as any;
+
+            if (!projectData) {
+                throw new Error("Project data not found");
+            }
+
+            const project = { id: domain.projectId, ...projectData };
+
+            // Use deployment service with full objects
+            const result = await deploymentService.deployProject(project, domain, provider);
 
             // Update domain status
-            await updateDomain(domainId, { 
-                status: result.success ? 'active' : 'failed',
-                deployedAt: result.success ? new Date().toISOString() : undefined,
-                deploymentUrl: result.url,
+            await updateDomain(domainId, {
+                status: result.success ? 'active' : 'error',
+                deployment: {
+                    provider,
+                    deploymentUrl: result.deploymentUrl,
+                    deploymentId: result.deploymentId,
+                    lastDeployedAt: new Date().toISOString(),
+                    status: result.success ? 'success' : 'failed',
+                    error: result.error
+                }
             });
 
             // Log deployment result
@@ -214,13 +236,13 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 timestamp: new Date().toISOString(),
                 status: result.success ? 'success' : 'failed',
                 error: result.error,
-                url: result.url,
+                url: result.deploymentUrl,
             });
 
             return result.success;
         } catch (error) {
             console.error("Error deploying domain:", error);
-            
+
             // Log error
             await addDoc(collection(db, 'users', user.uid, 'deploymentLogs'), {
                 domainId,
@@ -230,7 +252,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 error: error instanceof Error ? error.message : 'Unknown error',
             });
 
-            await updateDomain(domainId, { status: 'failed' });
+            await updateDomain(domainId, { status: 'error' });
             return false;
         }
     };

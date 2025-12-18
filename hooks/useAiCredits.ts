@@ -104,7 +104,7 @@ export interface UseAiCreditsResult {
 
 export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     const { tenantId, userId, autoRefresh = true, refreshInterval = 60000 } = options;
-    const { userDocument, isUserOwner } = useAuth();
+    const { userDocument, isUserOwner, loadingAuth } = useAuth();
     const isOwner = isUserOwner || userDocument?.role === 'owner';
 
     // State
@@ -262,7 +262,7 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
 
     return {
         // Estado
-        isLoading,
+        isLoading: isLoading || loadingAuth,
         error,
 
         // Datos de uso

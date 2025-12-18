@@ -132,7 +132,7 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, userDocument } = useAuth();
+    const { user, userDocument, loadingAuth } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
 
@@ -411,6 +411,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Check project limit (-1 means unlimited, owner has no limits)
         const isOwner = userDocument?.role === 'owner';
+        if (loadingAuth) return; // Wait for auth to be sure
         if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
             if (upgradeContext) {
@@ -471,6 +472,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Check project limit (-1 means unlimited, owner has no limits)
         const isOwner = userDocument?.role === 'owner';
+        if (loadingAuth) return; // Wait for auth to be sure
         if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
             if (upgradeContext) {

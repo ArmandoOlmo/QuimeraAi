@@ -24,10 +24,10 @@ const StepIndicator: React.FC<{
     <div className="flex flex-col items-center">
         <div className={`
             w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
-            ${completed 
-                ? 'bg-green-500 text-white' 
-                : active 
-                    ? 'bg-primary text-primary-foreground animate-pulse' 
+            ${completed
+                ? 'bg-green-500 text-white'
+                : active
+                    ? 'bg-primary text-primary-foreground animate-pulse'
                     : 'bg-secondary text-muted-foreground'
             }
         `}>
@@ -79,8 +79,8 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div
                             key={index}
                             className={`bg-card border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${record.verified
-                                    ? 'border-green-500/50 bg-green-500/5'
-                                    : 'border-border'
+                                ? 'border-green-500/50 bg-green-500/5'
+                                : 'border-border'
                                 }`}
                         >
                             <div className="flex items-center gap-3 flex-1">
@@ -148,7 +148,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [showDetails, setShowDetails] = useState(false);
     const [isDeploying, setIsDeploying] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
-    const [deployProvider, setDeployProvider] = useState<'vercel' | 'cloudflare' | 'netlify'>('vercel');
+    const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify'>('cloudflare');
 
     const handleVerify = async () => {
         setIsVerifying(true);
@@ -279,33 +279,33 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <Globe size={14} className="mr-2 text-primary" />
                         Estado del Dominio
                     </h4>
-                    
+
                     {/* Status Steps */}
                     <div className="flex items-center gap-2 mb-4">
-                        <StepIndicator 
-                            step={1} 
-                            label="Proyecto" 
+                        <StepIndicator
+                            step={1}
+                            label="Proyecto"
                             completed={!!domain.projectId}
                             active={!domain.projectId}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
-                        <StepIndicator 
-                            step={2} 
-                            label="DNS" 
+                        <StepIndicator
+                            step={2}
+                            label="DNS"
                             completed={domain.status === 'ssl_pending' || domain.status === 'active'}
                             active={domain.status === 'pending' || domain.status === 'verifying'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
-                        <StepIndicator 
-                            step={3} 
-                            label="SSL" 
+                        <StepIndicator
+                            step={3}
+                            label="SSL"
                             completed={domain.sslStatus === 'active'}
                             active={domain.status === 'ssl_pending'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
-                        <StepIndicator 
-                            step={4} 
-                            label="Activo" 
+                        <StepIndicator
+                            step={4}
+                            label="Activo"
                             completed={domain.status === 'active'}
                             active={false}
                         />
@@ -339,7 +339,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                     )}
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-center">
                     <button
                         onClick={() => setShowDetails(!showDetails)}
                         className="text-sm font-medium text-primary hover:underline flex items-center"
@@ -353,6 +353,21 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         >
                             {showLogs ? t('domainsDashboard.hideLogs') : t('domainsDashboard.showLogs')} ({deploymentLogs.length})
                         </button>
+                    )}
+
+                    <div className="flex-1" />
+
+                    {domain.projectId && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleDeploy()}
+                                disabled={isDeploying || isDeploymentInProgress}
+                                className="bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-md hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {isDeploying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                {t('domainsDashboard.deploy')}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
@@ -374,10 +389,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <div
                                 key={log.id}
                                 className={`text-xs p-3 rounded-lg border ${log.status === 'success'
-                                        ? 'bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-400'
-                                        : log.status === 'failed'
-                                            ? 'bg-red-500/5 border-red-500/20 text-red-700 dark:text-red-400'
-                                            : 'bg-blue-500/5 border-blue-500/20 text-blue-700 dark:text-blue-400'
+                                    ? 'bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-400'
+                                    : log.status === 'failed'
+                                        ? 'bg-red-500/5 border-red-500/20 text-red-700 dark:text-red-400'
+                                        : 'bg-blue-500/5 border-blue-500/20 text-blue-700 dark:text-blue-400'
                                     }`}
                             >
                                 <div className="flex justify-between items-start mb-1">
@@ -419,7 +434,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             // Use Name.com API via Cloud Functions
             const { searchDomains } = await import('../../../services/nameComService');
             const searchResults = await searchDomains(query.trim());
-            
+
             // Combine available and unavailable results
             const allResults = [
                 ...searchResults.available.map(d => ({
@@ -463,7 +478,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         const confirmPurchase = window.confirm(
             `¿Comprar ${domainName} por $${price.toFixed(2)}/año?\n\nEsta compra se cargará a tu cuenta.`
         );
-        
+
         if (!confirmPurchase) return;
 
         setIsPurchasing(domainName);
@@ -538,13 +553,12 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             {/* Results */}
             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {results.map((res, idx) => (
-                    <div 
-                        key={idx} 
-                        className={`flex justify-between items-center p-4 bg-card border rounded-lg transition-colors ${
-                            res.available 
-                                ? 'border-border hover:border-primary/30' 
-                                : 'border-border/50 opacity-60'
-                        }`}
+                    <div
+                        key={idx}
+                        className={`flex justify-between items-center p-4 bg-card border rounded-lg transition-colors ${res.available
+                            ? 'border-border hover:border-primary/30'
+                            : 'border-border/50 opacity-60'
+                            }`}
                     >
                         <div>
                             <div className="flex items-center gap-2">
@@ -607,7 +621,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     </div>
                 )}
             </div>
-            
+
             {/* Footer */}
             <div className="mt-4 p-3 bg-secondary/20 rounded-lg text-xs text-muted-foreground flex items-center justify-center">
                 <Globe size={12} className="mr-1" /> Powered by Name.com Reseller API
@@ -627,11 +641,11 @@ const DomainsDashboard: React.FC = () => {
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [connectDomainName, setConnectDomainName] = useState('');
-    
+
     // Check if custom domains are allowed by the current plan
     const subscriptionPlan = tenantContext?.currentTenant?.subscriptionPlan || 'free';
     const customDomainsAllowed = subscriptionPlan !== 'free'; // Free plan doesn't allow custom domains
-    
+
     // Handler to show upgrade modal for domains feature
     const handleDomainUpgrade = () => {
         if (upgradeContext) {
@@ -642,7 +656,7 @@ const DomainsDashboard: React.FC = () => {
     const handleConnectSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!connectDomainName) return;
-        
+
         // Check if custom domains are allowed
         if (!customDomainsAllowed) {
             handleDomainUpgrade();
@@ -659,7 +673,7 @@ const DomainsDashboard: React.FC = () => {
         setIsConnectModalOpen(false);
         setConnectDomainName('');
     };
-    
+
     // Handler for buy/search domain buttons
     const handleBuyDomain = () => {
         if (!customDomainsAllowed) {
@@ -725,8 +739,8 @@ const DomainsDashboard: React.FC = () => {
                                 </p>
                                 <div className="flex justify-center gap-4">
                                     {!customDomainsAllowed ? (
-                                        <button 
-                                            onClick={handleDomainUpgrade} 
+                                        <button
+                                            onClick={handleDomainUpgrade}
                                             className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold flex items-center gap-2 transition-colors"
                                         >
                                             <Crown className="w-5 h-5" /> Actualizar para usar dominios

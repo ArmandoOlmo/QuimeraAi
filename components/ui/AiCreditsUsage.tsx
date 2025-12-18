@@ -179,7 +179,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     // Use global upgrade context if available
     const upgradeContext = useSafeUpgrade();
-    const { isUserOwner, userDocument } = useAuth();
+    const { isUserOwner, userDocument, loadingAuth } = useAuth();
     const isOwner = isUserOwner || userDocument?.role === 'owner';
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
@@ -208,6 +208,15 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
         await refresh();
         setIsRefreshing(false);
     };
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className={`flex items-center justify-center p-4 ${className}`}>
+                <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
+            </div>
+        );
+    }
 
     // Variante minimal - solo el número
     if (variant === 'minimal') {
@@ -328,7 +337,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             <div className="col-span-2">
                                 <p className="text-xs text-white/60 mb-1">Incluidos en plan</p>
                                 <p className="text-sm text-white">
-                                    {formatCredits(creditsIncluded)} credits/mes
+                                    {isOwner ? 'Ilimitados' : `${formatCredits(creditsIncluded)} credits/mes`}
                                 </p>
                             </div>
                         </div>

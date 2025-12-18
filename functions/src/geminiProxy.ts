@@ -13,6 +13,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleGenAI } from '@google/genai';
+import { isOwner } from './constants';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -144,6 +145,12 @@ interface RateLimitCheck {
 async function checkRateLimit(projectId: string, userId: string, planType: string = 'FREE'): Promise<RateLimitCheck> {
     // SECURITY: Bypass rate limits for the OWNER (Armando)
     try {
+        // Fast direct check if userId is the email (sometimes happens in certain flows)
+        // or if we can verify the role quickly.
+        if (userId && (isOwner(userId) || userId === 'armandoolmomiranda@gmail.com')) {
+            return { allowed: true, remaining: 1000 };
+        }
+
         if (userId && userId !== 'unknown' && userId !== 'anonymous' && userId !== 'system') {
             const userDoc = await db.collection('users').doc(userId).get();
             if (userDoc.exists && userDoc.data()?.role === 'owner') {
@@ -367,6 +374,11 @@ async function trackUsage(
 
         if (effectiveTenantId) {
             // SECURITY: Skip credit consumption for the OWNER (Armando)
+            if (userId && (isOwner(userId) || userId === 'armandoolmomiranda@gmail.com')) {
+                console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);
+                return;
+            }
+
             const userDoc = await db.collection('users').doc(userId).get();
             if (userDoc.exists && userDoc.data()?.role === 'owner') {
                 console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);

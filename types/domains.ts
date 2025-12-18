@@ -21,10 +21,15 @@ export interface DeploymentInfo {
 
 export interface DeploymentLog {
     id: string;
+    domainId?: string; // Add this
     timestamp: string;
     status: 'started' | 'success' | 'failed';
     message: string;
     details?: string;
+    action?: string;
+    provider?: string;
+    url?: string;
+    error?: string;
 }
 
 export interface DNSRecord {
@@ -44,6 +49,7 @@ export interface Domain {
     expiryDate?: string;
     dnsRecords?: DNSRecord[];
     createdAt: string;
+    updatedAt?: string;
     deployment?: DeploymentInfo;
     deploymentLogs?: DeploymentLog[];
     // SSL Certificate info
@@ -51,6 +57,7 @@ export interface Domain {
     sslExpiresAt?: string;
     // Verification
     verificationToken?: string;
+    verifiedAt?: string;
     lastVerifiedAt?: string;
     verificationAttempts?: number;
 }

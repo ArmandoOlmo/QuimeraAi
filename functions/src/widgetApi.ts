@@ -11,6 +11,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { isOwner } from './constants';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -40,13 +41,17 @@ interface RateLimitCheck {
 async function checkRateLimit(projectId: string, identifier: string): Promise<RateLimitCheck> {
     // SECURITY: Bypass rate limits for the OWNER (Armando)
     try {
-        // Parse the project to see if it's owned by Armando
-        const { getProjectData } = require('./widgetApi'); // Self-referencing if exported, or just use helper
-        // Since I'm inside widgetApi.ts, I can use the same logic as getProjectData
-        // But let's keep it simple: if the project owner has 'owner' role, bypass.
+        // Simple and fast bypass if the project is a known owner project or if owner match
         const projectDoc = await db.collection('projects').doc(projectId).get();
         if (projectDoc.exists) {
-            const ownerId = projectDoc.data()?.userId;
+            const data = projectDoc.data();
+            const ownerId = data?.userId;
+
+            // Check by ID or if the role in the owner doc is 'owner'
+            if (ownerId && (isOwner(ownerId) || ownerId === 'armandoolmomiranda@gmail.com')) {
+                return { allowed: true, remaining: 1000 };
+            }
+
             if (ownerId) {
                 const ownerDoc = await db.collection('users').doc(ownerId).get();
                 if (ownerDoc.exists && ownerDoc.data()?.role === 'owner') {

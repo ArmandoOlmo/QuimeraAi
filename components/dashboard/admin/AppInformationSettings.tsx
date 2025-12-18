@@ -65,7 +65,7 @@ const getDefaultConfig = (): AppInfoConfig => ({
     metaTitle: 'Quimera.ai | AI Website Builder for High-Converting Experiences',
     metaDescription: 'Build, localize, and scale marketing websites using AI. Templates, CMS, localization, and analytics included. Powered by Quimera.ai.',
     metaKeywords: ['AI website builder', 'no-code', 'marketing sites', 'Quimera'],
-    faviconUrl: '',
+    faviconUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032',
     faviconStoragePath: '',
     socialImageUrl: '',
     socialImageStoragePath: '',
@@ -266,14 +266,14 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         try {
             if (type === 'favicon') {
                 if (faviconStoragePath) {
-                    await deleteObject(ref(storage, faviconStoragePath)).catch(() => {});
+                    await deleteObject(ref(storage, faviconStoragePath)).catch(() => { });
                 }
                 setFaviconUrl('');
                 setFaviconStoragePath('');
                 success(t('superadmin.appInfo.faviconRemoved'));
             } else {
                 if (socialImageStoragePath) {
-                    await deleteObject(ref(storage, socialImageStoragePath)).catch(() => {});
+                    await deleteObject(ref(storage, socialImageStoragePath)).catch(() => { });
                 }
                 setSocialImageUrl('');
                 setSocialImageStoragePath('');

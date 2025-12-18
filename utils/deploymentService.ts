@@ -2,104 +2,447 @@ import { Project, Domain, DeploymentProvider, DeploymentLog } from '../types';
 
 // Helper to generate static HTML from project
 const generateStaticHTML = (project: Project): string => {
-    // This will generate a complete HTML page from the project data
-    // You can expand this based on your project structure
-    const { data, theme, brandIdentity, componentOrder, seoConfig } = project;
-    
-    // Generate SEO meta tags
+    const { data, theme, componentOrder, sectionVisibility, componentStatus, componentStyles, seoConfig, brandIdentity } = project;
+
+    // Derive global colors
+    const pageBg = theme?.pageBackground || theme?.globalColors?.background || '#0f172a';
+    const primaryColor = theme?.primaryColor || theme?.globalColors?.primary || '#4f46e5';
+
+    // UI Helpers
+    const getContrastingText = (bg: string) => {
+        // Simplified luminance check
+        const color = bg.replace('#', '');
+        const r = parseInt(color.substring(0, 2), 16);
+        const g = parseInt(color.substring(2, 4), 16);
+        const b = parseInt(color.substring(4, 6), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+    };
+
+    // Component Renderers
+    const renderers: Record<string, (data: any) => string> = {
+        header: (d) => `
+            <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-opacity-80 border-b border-white/5" style="background-color: ${d.colors?.background || 'transparent'}; border-color: ${d.colors?.border || 'rgba(255,255,255,0.1)'}">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        ${brandIdentity?.logoUrl ? `<img src="${brandIdentity.logoUrl}" class="h-8" alt="Logo">` : `<span class="text-xl font-bold" style="color: ${d.colors?.text || '#fff'}">${project.name}</span>`}
+                    </div>
+                    <nav class="hidden md:flex gap-8">
+                        ${(d.links || []).map((l: any) => `<a href="${l.href}" class="text-sm font-medium hover:opacity-80 transition-opacity" style="color: ${d.colors?.text || '#fff'}">${l.text}</a>`).join('')}
+                    </nav>
+                    ${d.showCta ? `<a href="#" class="px-5 py-2 rounded-lg font-bold text-sm transition-transform hover:scale-105" style="background-color: ${d.colors?.accent || primaryColor}; color: ${getContrastingText(d.colors?.accent || primaryColor)}">${d.ctaText || 'Get Started'}</a>` : ''}
+                </div>
+            </header>
+        `,
+        hero: (d) => `
+            <section class="min-h-screen flex items-center justify-center pt-24 px-6 overflow-hidden relative" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+                    <div class="text-left">
+                        <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6" style="color: ${d.colors?.heading || '#fff'}">${d.headline}</h1>
+                        <p class="text-xl opacity-80 mb-10 leading-relaxed" style="color: ${d.colors?.text || '#fff'}">${d.subheadline}</p>
+                        <div class="flex gap-4">
+                            <button class="px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all" style="background-color: ${d.colors?.primary || primaryColor}; color: ${getContrastingText(d.colors?.primary || primaryColor)}">${d.primaryCta}</button>
+                            ${d.secondaryCta ? `<button class="px-8 py-4 rounded-xl font-bold text-lg bg-white/10 hover:bg-white/20 transition-all" style="color: ${d.colors?.text || '#fff'}">${d.secondaryCta}</button>` : ''}
+                        </div>
+                    </div>
+                    ${d.imageUrl ? `<div class="relative"><img src="${d.imageUrl}" class="w-full rounded-3xl shadow-2xl animate-float" alt="Hero"></div>` : ''}
+                </div>
+            </section>
+        `,
+        features: (d) => `
+            <section id="features" class="py-24 px-6" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto">
+                    <div class="text-center mb-16">
+                        <h2 class="text-4xl font-bold mb-4" style="color: ${d.colors?.heading || '#fff'}">${d.title}</h2>
+                        <p class="opacity-70 max-w-2xl mx-auto" style="color: ${d.colors?.text || '#fff'}">${d.description}</p>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        ${(d.items || []).map((f: any) => `
+                            <div class="p-8 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background-color: ${d.colors?.accent || primaryColor}20; color: ${d.colors?.accent || primaryColor}">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <h3 class="text-xl font-bold mb-3" style="color: ${d.colors?.heading || '#fff'}">${f.title}</h3>
+                                <p class="opacity-60" style="color: ${d.colors?.text || '#fff'}">${f.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `,
+        cta: (d) => `
+            <section class="py-24 px-6">
+                <div class="container mx-auto text-center p-16 rounded-[40px] relative overflow-hidden" style="background: linear-gradient(135deg, ${d.colors?.gradientStart || primaryColor}, ${d.colors?.gradientEnd || '#000'})">
+                    <h2 class="text-4xl md:text-6xl font-black mb-6 text-white">${d.title || d.headline}</h2>
+                    <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">${d.description || d.subheadline}</p>
+                    <button class="px-10 py-5 bg-white text-black font-bold text-lg rounded-2xl hover:scale-105 transition-transform">${d.buttonText}</button>
+                </div>
+            </section>
+        `,
+        footer: (d) => `
+            <footer class="py-16 px-6 border-t border-white/5" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto grid md:grid-cols-4 gap-12">
+                    <div class="col-span-2">
+                        <div class="text-2xl font-bold mb-4" style="color: ${d.colors?.heading || '#fff'}">${project.name}</div>
+                        <p class="opacity-60 max-w-xs" style="color: ${d.colors?.text || '#fff'}">${d.description || ''}</p>
+                    </div>
+                    ${(d.linkColumns || []).map((col: any) => `
+                        <div>
+                            <h4 class="font-bold mb-6" style="color: ${d.colors?.heading || '#fff'}">${col.title}</h4>
+                            <ul class="space-y-4">
+                                ${(col.links || []).map((l: any) => `<li><a href="${l.href}" class="opacity-60 hover:opacity-100 transition-opacity text-sm" style="color: ${d.colors?.text || '#fff'}">${l.text}</a></li>`).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="container mx-auto mt-16 pt-8 border-t border-white/5 text-center text-sm opacity-40">
+                    ${d.copyrightText || `© ${new Date().getFullYear()} ${project.name}. All rights reserved.`}
+                </div>
+            </footer>
+        `,
+        featuredProducts: (d) => `
+            <section id="products" class="py-24 px-6" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h2 class="text-4xl font-bold mb-4" style="color: ${d.colors?.heading || '#fff'}">${d.title || d.headline || 'Featured Products'}</h2>
+                            <p class="opacity-70 max-w-xl" style="color: ${d.colors?.text || '#fff'}">${d.description || d.subheadline || 'Explore our best sellers and new arrivals.'}</p>
+                        </div>
+                        <a href="#" class="text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-opacity" style="color: ${d.colors?.accent || primaryColor}">View All Products →</a>
+                    </div>
+                    <div class="grid md:grid-cols-4 gap-6">
+                        ${(d.products || d.items || []).map((p: any) => `
+                            <div class="group bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+                                <div class="aspect-square relative overflow-hidden bg-white/5">
+                                    <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${p.name}">
+                                    ${p.badge ? `<span class="absolute top-4 left-4 px-3 py-1 bg-white text-black text-[10px] font-bold uppercase rounded-full shadow-lg">${p.badge}</span>` : ''}
+                                </div>
+                                <div class="p-6 flex flex-col flex-grow">
+                                    <h3 class="font-bold text-lg mb-2" style="color: ${d.colors?.heading || '#fff'}">${p.name}</h3>
+                                    <div class="flex items-center justify-between mt-auto">
+                                        <div class="flex flex-col">
+                                            <span class="text-xl font-black" style="color: ${d.colors?.accent || primaryColor}">$${p.price}</span>
+                                            ${p.oldPrice ? `<span class="text-xs opacity-40 line-through">$${p.oldPrice}</span>` : ''}
+                                        </div>
+                                        <button onclick="addToCart('${p.id}', '${p.name}', ${p.price}, '${p.imageUrl}')" class="p-3 bg-white text-black rounded-xl hover:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `,
+        categoryGrid: (d) => `
+            <section class="py-24 px-6" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto">
+                    <h2 class="text-3xl font-bold mb-12 text-center" style="color: ${d.colors?.heading || '#fff'}">${d.title || 'Shop by Category'}</h2>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        ${(d.categories || []).map((c: any) => `
+                            <a href="${c.href || '#'}" class="group relative aspect-[4/5] rounded-[2rem] overflow-hidden">
+                                <img src="${c.imageUrl}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${c.name}">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+                                    <h3 class="text-2xl font-bold text-white mb-2">${c.name}</h3>
+                                    <span class="text-white/60 text-sm font-medium">Explore Collection →</span>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `,
+        productHero: (d) => `
+            <section class="py-24 px-6 bg-black relative overflow-hidden" style="background-color: ${d.colors?.background || '#000'}">
+                <div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_center,${primaryColor}33,transparent_70%)]"></div>
+                <div class="container mx-auto grid md:grid-cols-2 gap-16 items-center relative z-10">
+                    <div class="order-2 md:order-1">
+                        <span class="inline-block px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 mb-6" style="color: ${d.colors?.accent || primaryColor}; border-color: ${d.colors?.accent || primaryColor}40">${d.tagline || 'Limited Edition'}</span>
+                        <h2 class="text-5xl md:text-8xl font-black mb-8 leading-tight text-white">${d.title || 'Master the New Standard'}</h2>
+                        <p class="text-xl text-white/70 mb-12 max-w-lg leading-relaxed">${d.description}</p>
+                        <div class="flex items-center gap-8">
+                            <button onclick="addToCart('hero-item', '${d.title}', ${d.price || 0}, '${d.imageUrl}')" class="px-10 py-5 bg-white text-black font-black rounded-2xl hover:scale-105 transition-transform">Buy Now — $${d.price}</button>
+                            <div class="flex flex-col">
+                                <span class="text-xs uppercase opacity-40 font-bold tracking-widest">Free Shipping</span>
+                                <span class="text-xs uppercase opacity-40 font-bold tracking-widest">Lifetime Warranty</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-1 md:order-2 flex justify-center">
+                        <div class="relative w-4/5">
+                            <div class="absolute inset-0 bg-white/20 rounded-full blur-[100px] animate-pulse"></div>
+                            <img src="${d.imageUrl}" class="relative z-10 w-full drop-shadow-[0_35px_35px_rgba(255,255,255,0.1)] animate-float" alt="Product">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        `,
+        saleCountdown: (d) => `
+            <section class="py-12 px-6" style="background-color: ${d.colors?.background || primaryColor}">
+                <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="flex items-center gap-6">
+                        <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-white italic uppercase">${d.title || d.headline || 'Flash Sale'}</h3>
+                            <p class="text-white/80 font-medium">${d.description || d.subheadline || 'Ends soon, don\'t miss out!'}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        ${['24', '12', '45'].map((num, i) => `
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-black font-black text-2xl shadow-xl">${num}</div>
+                                <span class="text-[10px] font-black uppercase tracking-tighter mt-2 text-white">${i === 0 ? 'Hours' : i === 1 ? 'Mins' : 'Secs'}</span>
+                            </div>
+                        `).join('<span class="text-white font-black text-2xl pt-4">:</span>')}
+                    </div>
+                    <button class="px-8 py-4 bg-black text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-2xl">${d.buttonText || 'Shop the Sale'}</button>
+                </div>
+            </section>
+        `,
+        announcementBar: (d) => `
+            <div class="py-2 text-center text-[11px] font-black uppercase tracking-[0.2em] relative z-[60]" style="background-color: ${d.colors?.background || '#000'}; color: ${d.colors?.text || '#fff'}">
+                ${d.text}
+                ${d.linkText ? `<a href="${d.linkHref || '#'}" class="ml-2 underline underline-offset-4 decoration-white/30 hover:decoration-white transition-all">${d.linkText}</a>` : ''}
+            </div>
+        `,
+        trustBadges: (d) => `
+            <section class="py-16 border-y border-white/5" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto overflow-x-auto">
+                    <div class="flex justify-between items-center min-w-[800px] px-6 gap-12">
+                        ${(d.badges || []).map((b: any) => `
+                            <div class="flex items-center gap-4 opacity-40 hover:opacity-100 transition-all">
+                                ${b.iconUrl ? `<img src="${b.iconUrl}" class="w-8 h-8 grayscale brightness-200">` : `<div class="w-8 h-8 rounded-full border border-white/20"></div>`}
+                                <span class="text-xs font-black uppercase tracking-widest text-white whitespace-nowrap">${b.label}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `
+    };
+
+    // Check for ecommerce
+    const hasEcommerce = componentOrder.some(key =>
+        ['featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown'].includes(key) &&
+        componentStatus?.[key] !== false && sectionVisibility?.[key] !== false
+    );
+
+    // Render static parts
+    const headerData = { ...(componentStyles?.header || {}), ...(data.header || {}), hasEcommerce };
+    const footerData = { ...(componentStyles?.footer || {}), ...(data.footer || {}) };
+
+    // Update header renderer to include cart button if e-commerce is enabled
+    const originalHeaderRenderer = renderers.header;
+    renderers.header = (d) => {
+        let html = originalHeaderRenderer(d);
+        if (d.hasEcommerce) {
+            const cartBtn = `
+                <button onclick="toggleCart()" class="relative p-2 hover:opacity-70 transition-opacity" style="color: ${d.colors?.text || '#fff'}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span id="cart-count" class="absolute -top-1 -right-1 w-4 h-4 bg-white text-black text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
+                </button>
+            `;
+            // Insert before the end of the navigation or before CTA
+            if (html.includes('</nav>')) {
+                html = html.replace('</nav>', `</nav>${cartBtn}`);
+            }
+        }
+        return html;
+    };
+
+    // Generate main content sections
+    const sectionsHtml = componentOrder
+        .filter(key => componentStatus?.[key] !== false && sectionVisibility?.[key] !== false && key !== 'header' && key !== 'footer')
+        .map(key => {
+            const renderer = renderers[key] || ((d) => `<section class="py-20 text-center border-b border-white/5 text-white/20">Component ${key} Placeholder</section>`);
+            const merged = { ...(componentStyles?.[key] || {}), ...(data[key] || {}) };
+            return renderer(merged);
+        })
+        .join('');
+
+    const headerHtml = componentStatus?.header !== false && sectionVisibility?.header !== false ? renderers.header(headerData) : '';
+    const footerHtml = componentStatus?.footer !== false && sectionVisibility?.footer !== false ? renderers.footer(footerData) : '';
+
+    // Cart Drawer HTML
+    const cartDrawerHtml = hasEcommerce ? `
+    <!-- Cart Drawer -->
+    <div id="cart-drawer" class="fixed inset-0 z-[100] transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleCart()"></div>
+        <div class="absolute top-0 right-0 bottom-0 w-full max-w-md bg-[#0f172a] border-l border-white/5 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h2 class="text-xl font-bold">Your Cart</h2>
+                <button onclick="toggleCart()" class="p-2 hover:bg-white/5 rounded-full transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+                <!-- Items will be injected here -->
+                <div id="empty-cart-msg" class="text-center py-12 opacity-40">
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="p-6 border-t border-white/5 space-y-4">
+                <div class="flex justify-between items-center text-lg font-bold">
+                    <span>Total</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+                <button onclick="checkout()" class="w-full py-4 bg-white text-black font-black rounded-xl hover:scale-[1.02] transition-transform">Checkout Now</button>
+                <p class="text-[10px] text-center opacity-40">Taxes and shipping calculated at checkout</p>
+            </div>
+        </div>
+    </div>
+    ` : '';
+
+    // Cart Script
+    const cartScript = hasEcommerce ? `
+    <script>
+        let cart = JSON.parse(localStorage.getItem('quimera_cart_${project.id}') || '[]');
+        
+        function updateCartUI() {
+            const countEl = document.getElementById('cart-count');
+            const itemsContainer = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            
+            // Update count
+            const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+            if(countEl) {
+                countEl.innerText = count;
+                countEl.style.opacity = count > 0 ? '1' : '0';
+            }
+            
+            // Update items
+            if(itemsContainer) {
+                const itemsHtml = cart.map(item => \`
+                    <div class="flex gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                        <img src="\${item.image}" class="w-16 h-16 rounded-lg object-cover">
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-sm">\${item.name}</h4>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs opacity-60">\$\${item.price} x \${item.quantity}</span>
+                                <button onclick="removeFromCart('\${item.id}')" class="text-xs text-red-400 font-bold">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                \`).join('');
+                
+                if (cart.length > 0) {
+                    emptyMsg.style.display = 'none';
+                    itemsContainer.innerHTML = itemsHtml;
+                } else {
+                    emptyMsg.style.display = 'block';
+                    itemsContainer.innerHTML = '<div id="empty-cart-msg" class="text-center py-12 opacity-40"><p>Your cart is empty</p></div>';
+                }
+            }
+            
+            // Update total
+            const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            if(totalEl) totalEl.innerText = \`$\${total.toFixed(2)}\`;
+            
+            localStorage.setItem('quimera_cart_${project.id}', JSON.stringify(cart));
+        }
+        
+        function addToCart(id, name, price, image) {
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ id, name, price, image, quantity: 1 });
+            }
+            updateCartUI();
+            toggleCart(true);
+        }
+        
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+        
+        function toggleCart(forceOpen = false) {
+            const drawer = document.getElementById('cart-drawer');
+            const inner = drawer.querySelector('.shadow-2xl');
+            const isOpen = forceOpen || drawer.classList.contains('pointer-events-none');
+            
+            if (isOpen) {
+                drawer.classList.remove('pointer-events-none', 'opacity-0');
+                inner.classList.remove('translate-x-full');
+            } else {
+                drawer.classList.add('pointer-events-none', 'opacity-0');
+                inner.classList.add('translate-x-full');
+            }
+        }
+        
+        function checkout() {
+            alert('Redirecting to Quimera Secure Checkout...');
+            // In production, this would redirect to:
+            // window.location.href = \`https://checkout.quimera.ai/${project.id}?cart=\${btoa(JSON.stringify(cart))}\`;
+        }
+        
+        // Initial load
+        window.addEventListener('scroll', () => {
+             const header = document.querySelector('header');
+             if(window.scrollY > 50) header.classList.add('bg-[#0f172a]');
+             else header.classList.remove('bg-[#0f172a]');
+        });
+        
+        document.addEventListener('DOMContentLoaded', updateCartUI);
+    </script>
+    ` : '';
+
+    // Meta tags & SEO
     const metaTags = seoConfig ? `
-    <!-- Basic SEO -->
     <meta name="description" content="${seoConfig.description}">
     <meta name="keywords" content="${seoConfig.keywords.join(', ')}">
-    ${seoConfig.author ? `<meta name="author" content="${seoConfig.author}">` : ''}
-    <meta name="robots" content="${seoConfig.robots}">
-    
-    <!-- Open Graph -->
-    <meta property="og:type" content="${seoConfig.ogType}">
     <meta property="og:title" content="${seoConfig.ogTitle || seoConfig.title}">
     <meta property="og:description" content="${seoConfig.ogDescription || seoConfig.description}">
     ${seoConfig.ogImage ? `<meta property="og:image" content="${seoConfig.ogImage}">` : ''}
-    ${seoConfig.ogImageAlt ? `<meta property="og:image:alt" content="${seoConfig.ogImageAlt}">` : ''}
-    ${seoConfig.ogUrl ? `<meta property="og:url" content="${seoConfig.ogUrl}">` : ''}
-    ${seoConfig.ogSiteName ? `<meta property="og:site_name" content="${seoConfig.ogSiteName || project.name}">` : ''}
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="${seoConfig.twitterCard}">
-    <meta name="twitter:title" content="${seoConfig.twitterTitle || seoConfig.title}">
-    <meta name="twitter:description" content="${seoConfig.twitterDescription || seoConfig.description}">
-    ${seoConfig.twitterImage ? `<meta name="twitter:image" content="${seoConfig.twitterImage}">` : ''}
-    ${seoConfig.twitterImageAlt ? `<meta name="twitter:image:alt" content="${seoConfig.twitterImageAlt}">` : ''}
-    ${seoConfig.twitterSite ? `<meta name="twitter:site" content="${seoConfig.twitterSite}">` : ''}
-    ${seoConfig.twitterCreator ? `<meta name="twitter:creator" content="${seoConfig.twitterCreator}">` : ''}
-    
-    <!-- AI Optimization -->
-    ${seoConfig.aiCrawlable ? `<meta name="ai:crawlable" content="true">` : ''}
-    ${seoConfig.aiDescription ? `<meta name="ai:description" content="${seoConfig.aiDescription}">` : ''}
-    ${seoConfig.aiKeyTopics && seoConfig.aiKeyTopics.length > 0 ? `<meta name="ai:topics" content="${seoConfig.aiKeyTopics.join(', ')}">` : ''}
-    
-    <!-- Site Verification -->
-    ${seoConfig.googleSiteVerification ? `<meta name="google-site-verification" content="${seoConfig.googleSiteVerification}">` : ''}
-    ${seoConfig.bingVerification ? `<meta name="msvalidate.01" content="${seoConfig.bingVerification}">` : ''}
-    
-    <!-- Canonical -->
-    ${seoConfig.canonical ? `<link rel="canonical" href="${seoConfig.canonical}">` : ''}
-    ` : `<meta name="description" content="${data.hero?.subheadline || ''}">`;
+    ` : '';
 
-    // Generate Schema.org JSON-LD
-    const schemaMarkup = seoConfig ? JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': seoConfig.schemaType,
-        name: seoConfig.title,
-        description: seoConfig.description,
-        url: seoConfig.canonical,
-        image: seoConfig.ogImage,
-        ...seoConfig.schemaData
-    }) : '';
-    
-    // Basic HTML structure
-    const html = `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="${seoConfig?.language || 'es'}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${seoConfig?.title || project.name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     ${metaTags}
-    ${schemaMarkup ? `<script type="application/ld+json">${schemaMarkup}</script>` : ''}
     <style>
-        :root {
-            --primary-color: ${theme.primaryColor};
-            --secondary-color: ${theme.secondaryColor};
-            --background-color: ${theme.backgroundColor};
-            --text-color: ${theme.textColor};
-            --heading-color: ${theme.headingColor};
-            --font-family: ${theme.fontFamily};
+        body { font-family: 'Inter', sans-serif; background-color: ${pageBg}; color: white; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font-family), sans-serif;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            line-height: 1.6;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        h1, h2, h3 { color: var(--heading-color); }
-        /* Add more styles based on your components */
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .container { max-width: 1200px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
     </style>
 </head>
-<body>
-    <div id="app">
-        <!-- Generated content goes here -->
-        <h1>Website deployed successfully!</h1>
-        <p>Project: ${project.name}</p>
+<body class="antialiased">
+    ${headerHtml}
+    <main>
+        ${sectionsHtml}
+    </main>
+    ${footerHtml}
+    
+    ${cartDrawerHtml}
+    ${cartScript}
+
+    <!-- Powered by Quimera.ai -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <a href="https://quimera.ai" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-full text-xs text-white/70 hover:text-white transition-all shadow-xl">
+            <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+            Made with Quimera.ai
+        </a>
     </div>
-    <script>
-        // Add any client-side JavaScript if needed
-        console.log('Website deployed via Quimera.ai');
-    </script>
 </body>
 </html>`;
-    
-    return html;
 };
 
 // Deployment Service Interface
@@ -131,13 +474,40 @@ interface DNSVerificationResult {
 class DeploymentService {
     private static instance: DeploymentService;
 
-    private constructor() {}
+    private constructor() { }
 
     static getInstance(): DeploymentService {
         if (!DeploymentService.instance) {
             DeploymentService.instance = new DeploymentService();
         }
         return DeploymentService.instance;
+    }
+
+    /**
+     * Generic deploy method for context bridge
+     */
+    async deploy(
+        projectId: string,
+        domainName: string,
+        provider: DeploymentProvider = 'vercel'
+    ): Promise<{ success: boolean; url?: string; error?: string }> {
+        try {
+            // Need to fetch project data - this should be passed in ideally
+            // but for the context bridge we'll handle the routing
+            console.log(`Generic deploy call: project ${projectId}, domain ${domainName}, provider ${provider}`);
+
+            // In a real app, we'd fetch the project from Firestore here if not provided
+            // For now, we'll assume the caller of deployProject provides the full objects
+            return {
+                success: false,
+                error: "Please use deployProject with full project and domain objects"
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
     }
 
     /**
@@ -150,10 +520,10 @@ class DeploymentService {
     ): Promise<DeploymentResult> {
         try {
             console.log(`Starting deployment for ${domain.name} using ${provider}...`);
-            
+
             // Generate static HTML
             const html = generateStaticHTML(project);
-            
+
             // Deploy based on provider
             switch (provider) {
                 case 'vercel':
@@ -182,13 +552,13 @@ class DeploymentService {
             // In a real implementation, this would check actual DNS records
             // For now, we'll simulate the verification
             console.log(`Verifying DNS for ${domainName}...`);
-            
+
             // Simulate API call delay
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
+
             // Simulate verification (70% success rate)
             const verified = Math.random() > 0.3;
-            
+
             if (verified) {
                 return {
                     verified: true,
@@ -239,6 +609,9 @@ class DeploymentService {
     /**
      * Get DNS records for domain setup
      */
+    /**
+     * Get DNS records for domain setup
+     */
     generateDNSRecords(provider: DeploymentProvider = 'vercel') {
         const records = {
             vercel: [
@@ -257,15 +630,9 @@ class DeploymentService {
             ],
             cloudflare: [
                 {
-                    type: 'A' as const,
-                    host: '@',
-                    value: '192.0.2.1',
-                    verified: false
-                },
-                {
                     type: 'CNAME' as const,
-                    host: 'www',
-                    value: 'example.pages.dev',
+                    host: '@',
+                    value: 'quimera.pages.dev', // Default placeholder, will be updated with actual project URL
                     verified: false
                 }
             ],
@@ -287,13 +654,13 @@ class DeploymentService {
                 {
                     type: 'A' as const,
                     host: '@',
-                    value: 'YOUR_SERVER_IP',
+                    value: '172.67.140.40', // Typical Cloud Run / Load Balancer IP if custom
                     verified: false
                 }
             ]
         };
 
-        return records[provider || 'vercel'];
+        return records[provider || 'vercel'] || records.vercel;
     }
 
     /**
@@ -304,23 +671,63 @@ class DeploymentService {
         domain: Domain,
         html: string
     ): Promise<DeploymentResult> {
-        // In production, this would call Vercel API
-        // const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-        // const response = await fetch('https://api.vercel.com/v13/deployments', {...});
-        
-        console.log('Deploying to Vercel...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        // Simulate successful deployment
-        const deploymentId = `dpl_${Date.now()}`;
-        const subdomain = domain.name.replace(/\./g, '-');
-        
-        return {
-            success: true,
-            deploymentUrl: `https://${subdomain}.vercel.app`,
-            deploymentId,
-            dnsRecords: this.generateDNSRecords('vercel')
-        };
+        try {
+            console.log('Deploying to Vercel via API...');
+
+            // Check for API credentials
+            const VERCEL_TOKEN = import.meta.env.VITE_VERCEL_TOKEN;
+            const VERCEL_TEAM_ID = import.meta.env.VITE_VERCEL_TEAM_ID;
+
+            if (!VERCEL_TOKEN) {
+                console.warn('VITE_VERCEL_TOKEN not found. Using simulation mode.');
+                return await this.simulateDeployment(project, domain, html);
+            }
+
+            const projectName = domain.name.replace(/\./g, '-');
+
+            // 2. Create Deployment
+            const deploymentResponse = await fetch(`https://api.vercel.com/v13/deployments${VERCEL_TEAM_ID ? `?teamId=${VERCEL_TEAM_ID}` : ''}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${VERCEL_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: projectName,
+                    projectSettings: {
+                        framework: null,
+                    },
+                    files: [
+                        {
+                            file: 'index.html',
+                            data: html,
+                        }
+                    ],
+                    target: 'production',
+                }),
+            });
+
+            if (!deploymentResponse.ok) {
+                const errorData = await deploymentResponse.json();
+                throw new Error(`Vercel API error: ${errorData.error?.message || deploymentResponse.statusText}`);
+            }
+
+            const deploymentData = await deploymentResponse.json();
+
+            return {
+                success: true,
+                deploymentUrl: `https://${deploymentData.url}`,
+                deploymentId: deploymentData.id,
+                dnsRecords: this.generateDNSRecords('vercel')
+            };
+
+        } catch (error) {
+            console.error('Vercel deployment failed:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Vercel API connection failed'
+            };
+        }
     }
 
     /**
@@ -331,18 +738,86 @@ class DeploymentService {
         domain: Domain,
         html: string
     ): Promise<DeploymentResult> {
-        console.log('Deploying to Cloudflare Pages...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        const deploymentId = `cf_${Date.now()}`;
-        const subdomain = domain.name.replace(/\./g, '-');
-        
-        return {
-            success: true,
-            deploymentUrl: `https://${subdomain}.pages.dev`,
-            deploymentId,
-            dnsRecords: this.generateDNSRecords('cloudflare')
-        };
+        try {
+            console.log('Deploying to Cloudflare Pages via API...');
+
+            const CLOUDFLARE_TOKEN = import.meta.env.VITE_CLOUDFLARE_TOKEN;
+            const CLOUDFLARE_ACCOUNT_ID = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+
+            if (!CLOUDFLARE_TOKEN || !CLOUDFLARE_ACCOUNT_ID) {
+                console.warn('Cloudflare credentials not found. Using simulation mode.');
+                return await this.simulateDeployment(project, domain, html);
+            }
+
+            const projectName = domain.name.replace(/\./g, '-');
+
+            // 1. Create or Get Project
+            const projectCheckResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}`, {
+                headers: {
+                    'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (projectCheckResponse.status === 404) {
+                console.log('Project not found. Creating new Cloudflare Pages project...');
+                const createResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: projectName,
+                        production_branch: 'main'
+                    })
+                });
+
+                if (!createResponse.ok) {
+                    const error = await createResponse.json();
+                    throw new Error(`Failed to create Cloudflare project: ${error.errors?.[0]?.message || 'Unknown error'}`);
+                }
+            }
+
+            // 2. Direct Upload
+            // Cloudflare Direct Upload requires multipart/form-data
+            const formData = new FormData();
+
+            // We need to provide the directory structure
+            // For a single file, we can just name it index.html
+            const file = new Blob([html], { type: 'text/html' });
+            formData.append('file', file, 'index.html');
+            formData.append('branch', 'main');
+
+            const deploymentResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
+                },
+                body: formData
+            });
+
+            if (!deploymentResponse.ok) {
+                const errorData = await deploymentResponse.json();
+                console.error('Cloudflare Deployment Error:', errorData);
+                throw new Error(`Cloudflare API error: ${errorData.errors?.[0]?.message || 'Upload failed'}`);
+            }
+
+            const deploymentData = await deploymentResponse.json();
+
+            return {
+                success: true,
+                deploymentUrl: `https://${projectName}.pages.dev`,
+                deploymentId: deploymentData.result?.id || `cf_${Date.now()}`,
+                dnsRecords: this.generateDNSRecords('cloudflare')
+            };
+        } catch (error) {
+            console.error('Cloudflare deployment failed:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Cloudflare API failed'
+            };
+        }
     }
 
     /**
@@ -355,10 +830,10 @@ class DeploymentService {
     ): Promise<DeploymentResult> {
         console.log('Deploying to Netlify...');
         await new Promise(resolve => setTimeout(resolve, 3000));
-        
+
         const deploymentId = `ntl_${Date.now()}`;
         const subdomain = domain.name.replace(/\./g, '-');
-        
+
         return {
             success: true,
             deploymentUrl: `https://${subdomain}.netlify.app`,
@@ -377,10 +852,10 @@ class DeploymentService {
     ): Promise<DeploymentResult> {
         console.log('Simulating deployment...');
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // 90% success rate for simulation
         const success = Math.random() > 0.1;
-        
+
         if (success) {
             return {
                 success: true,

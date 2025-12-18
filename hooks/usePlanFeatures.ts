@@ -7,11 +7,12 @@
 import { useCallback, useMemo } from 'react';
 import { useCreditsUsage } from './useCreditsUsage';
 import { useSafePlans } from '../contexts/PlansContext';
-import { 
-    SUBSCRIPTION_PLANS, 
-    PlanFeatures, 
+import { useAuth } from '../contexts/core/AuthContext';
+import {
+    SUBSCRIPTION_PLANS,
+    PlanFeatures,
     PlanLimits,
-    SubscriptionPlanId 
+    SubscriptionPlanId
 } from '../types/subscription';
 
 // =============================================================================
@@ -87,7 +88,7 @@ export function usePlanFeatures(): PlanFeaturesData {
                 };
             }
         }
-        
+
         // Fallback to hardcoded plans
         const hardcoded = SUBSCRIPTION_PLANS[planId];
         return {
@@ -112,10 +113,12 @@ export function usePlanFeatures(): PlanFeaturesData {
  * Usa el PlansContext para datos en tiempo real
  */
 export function usePlanAccess(): PlanAccessData {
+    const { user, isUserOwner, userDocument, loadingAuth } = useAuth();
     const { usage, isLoading: isLoadingCredits } = useCreditsUsage();
     const plansContext = useSafePlans();
 
     const planId = (usage?.planId || 'free') as SubscriptionPlanId;
+    const isOwner = isUserOwner || userDocument?.role === 'owner';
 
     // Get plan data from context or fallback
     const planData = useMemo(() => {
@@ -129,7 +132,7 @@ export function usePlanAccess(): PlanAccessData {
                 };
             }
         }
-        
+
         const hardcoded = SUBSCRIPTION_PLANS[planId];
         return {
             name: hardcoded?.name || 'Free',
@@ -141,8 +144,9 @@ export function usePlanAccess(): PlanAccessData {
     // Check if user has access to a feature
     const hasAccess = useCallback((feature?: keyof PlanFeatures): boolean => {
         if (!feature) return true;
+        if (isOwner) return true; // Direct bypass for owner
         return isFeatureEnabled(planData.features[feature]);
-    }, [planData.features]);
+    }, [planData.features, isOwner]);
 
     // Get minimum plan name for a feature
     const getMinPlan = useCallback((feature: keyof PlanFeatures): string => {
@@ -150,7 +154,7 @@ export function usePlanAccess(): PlanAccessData {
             const { planName } = plansContext.getMinPlanForFeature(feature);
             return planName.toUpperCase();
         }
-        
+
         // Fallback to hardcoded
         const planOrder: SubscriptionPlanId[] = ['free', 'starter', 'pro', 'agency', 'enterprise'];
         for (const id of planOrder) {
@@ -169,7 +173,7 @@ export function usePlanAccess(): PlanAccessData {
         limits: planData.limits,
         hasAccess,
         getMinPlan,
-        isLoading: isLoadingCredits || (plansContext?.isLoading ?? false),
+        isLoading: isLoadingCredits || (plansContext?.isLoading ?? false) || loadingAuth,
     };
 }
 

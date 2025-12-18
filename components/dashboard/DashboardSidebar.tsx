@@ -57,16 +57,18 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, userDocument, openProfileModal, canAccessSuperAdmin } = useAuth();
+  const { user, userDocument, openProfileModal, canAccessSuperAdmin, isUserOwner, loadingAuth } = useAuth();
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
+
+  const isOwner = isUserOwner || userDocument?.role === 'owner';
   const { navigate, path } = useRouter();
   const tenantContext = useSafeTenant();
   const upgradeContext = useSafeUpgrade();
-  
+
   // Check if multi-tenant is available (user has tenants)
   const showWorkspaceSwitcher = tenantContext && tenantContext.userTenants.length > 0;
-  
+
   // Handler for upgrade button
   const handleUpgradeClick = () => {
     if (upgradeContext) {
@@ -75,7 +77,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   };
 
   // Get plan access functions from the dynamic hook (reads from Firestore)
-  const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature } = usePlanAccess();
+  const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature, isLoading: isLoadingPlan } = usePlanAccess();
   // Default to expanded on desktop, unless defaultCollapsed is true
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -315,7 +317,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
     // Check if user has access to this feature
     const hasAccess = hasFeatureAccess(item.requiredFeature);
-    const isLocked = !hasAccess && item.requiredFeature;
+    const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
     const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
 
     const handleNavClick = () => {
@@ -666,7 +668,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Footer / User Profile / Theme - Optimized for mobile */}
           <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm relative">
-            
+
             {/* Footer Toggle Button - Small circle at top center */}
             {(!isCollapsed || isMobileOpen) && (
               <button
@@ -675,10 +677,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
               >
-                <ChevronDown 
-                  size={14} 
+                <ChevronDown
+                  size={14}
                   className={`transition-transform duration-200 ${isFooterCollapsed ? 'rotate-180' : 'rotate-0'}`}
-                  aria-hidden="true" 
+                  aria-hidden="true"
                 />
               </button>
             )}
@@ -687,21 +689,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <div className={`p-3 pb-4 lg:p-4 lg:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
 
               {/* Theme + Language (single compact bar) - Collapsible */}
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isFooterCollapsed || (isCollapsed && !isMobileOpen) 
-                  ? 'max-h-0 opacity-0 mb-0' 
-                  : 'max-h-20 opacity-100 mb-3'
-              }`}>
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
+                ? 'max-h-0 opacity-0 mb-0'
+                : 'max-h-20 opacity-100 mb-3'
+                }`}>
                 <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border/60">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setThemeMode('light')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                        themeMode === 'light'
-                          ? 'bg-background text-primary shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                      }`}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'light'
+                        ? 'bg-background text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        }`}
                       title={t('common.lightMode')}
                       aria-label={t('common.lightMode')}
                       aria-pressed={themeMode === 'light'}
@@ -710,11 +710,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     </button>
                     <button
                       onClick={() => setThemeMode('dark')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                        themeMode === 'dark'
-                          ? 'bg-card text-primary shadow-sm border border-border'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                      }`}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'dark'
+                        ? 'bg-card text-primary shadow-sm border border-border'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        }`}
                       title={t('common.darkMode')}
                       aria-label={t('common.darkMode')}
                       aria-pressed={themeMode === 'dark'}
@@ -723,11 +722,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     </button>
                     <button
                       onClick={() => setThemeMode('black')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
-                        themeMode === 'black'
-                          ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-                      }`}
+                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'black'
+                        ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        }`}
                       title={t('common.blackMode')}
                       aria-label={t('common.blackMode')}
                       aria-pressed={themeMode === 'black'}
@@ -742,11 +740,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               </div>
 
               {/* REFINED PRO PLAN WIDGET - Collapsible */}
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isFooterCollapsed || (isCollapsed && !isMobileOpen) 
-                  ? 'max-h-0 opacity-0 mb-0' 
-                  : 'max-h-28 opacity-100 mb-3 lg:mb-4'
-              }`}>
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
+                ? 'max-h-0 opacity-0 mb-0'
+                : 'max-h-28 opacity-100 mb-3 lg:mb-4'
+                }`}>
                 <div className="px-1">
                   <div className="flex justify-between items-end mb-2 px-1">
                     <div className="flex items-center gap-1.5">
@@ -756,28 +753,35 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                      {isLoadingCredits ? '...' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 30}`}
+                      {isLoadingCredits ? '...' : isOwner ? '∞/∞' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 30}`}
                     </span>
                   </div>
 
                   <div className="h-2 lg:h-1.5 w-full bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
-                      style={{ 
-                        width: `${creditsUsage?.percentage || 0}%`,
-                        backgroundColor: creditsUsage?.color || 'hsl(var(--primary))'
+                      style={{
+                        width: `${isOwner ? 100 : (creditsUsage?.percentage || 0)}%`,
+                        backgroundColor: isOwner ? '#a855f7' : (creditsUsage?.color || 'hsl(var(--primary))')
                       }}
                     />
                   </div>
 
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
-                    <button 
-                      onClick={handleUpgradeClick}
-                      className="text-[11px] lg:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
-                    >
-                      {t('common.upgrade')} →
-                    </button>
+                    {!isOwner && (
+                      <button
+                        onClick={handleUpgradeClick}
+                        className="text-[11px] lg:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
+                      >
+                        {t('common.upgrade')} →
+                      </button>
+                    )}
+                    {isOwner && (
+                      <span className="text-[10px] font-bold text-primary px-2">
+                        {t('common.unlimited', 'Ilimitado')}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -820,7 +824,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             </div>
           </div>
         </aside>
-        
+
         {/* Desktop Toggle Button - Outside aside for proper z-index */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
