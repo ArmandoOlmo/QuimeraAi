@@ -45,7 +45,7 @@ const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
     const { t } = useTranslation();
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        alert(`Copied: ${text}`);
+        alert(`${t('common.copy')}: ${text}`);
     };
 
     // Use DNS records from domain or show Cloud Run defaults
@@ -194,7 +194,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             {domain.name}
                             {domain.deployment?.deploymentUrl && (
                                 <a href={domain.deployment.deploymentUrl} target="_blank" rel="noreferrer"
-                                    className="text-muted-foreground hover:text-primary" title="View deployment">
+                                    className="text-muted-foreground hover:text-primary" title={t('domainsDashboard.viewDeployment')}>
                                     <ExternalLink size={14} />
                                 </a>
                             )}
@@ -202,8 +202,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {domain.status === 'active' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.connected')}</span>}
                             {domain.status === 'pending' && <span className="text-xs font-bold text-yellow-500 flex items-center bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20"><Clock size={12} className="mr-1" /> {t('domainsDashboard.status.dnsPending')}</span>}
-                            {domain.status === 'verifying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> Verificando DNS...</span>}
-                            {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> Generando SSL...</span>}
+                            {domain.status === 'verifying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.verifyingDns')}</span>}
+                            {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.generatingSsl')}</span>}
                             {domain.status === 'deploying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.status.deploying')}</span>}
                             {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
                             {domain.status === 'error' && <span className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20"><AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')}</span>}
@@ -277,35 +277,35 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
                     <h4 className="text-sm font-bold text-foreground mb-3 flex items-center">
                         <Globe size={14} className="mr-2 text-primary" />
-                        Estado del Dominio
+                        {t('domainsDashboard.domainStatus')}
                     </h4>
 
                     {/* Status Steps */}
                     <div className="flex items-center gap-2 mb-4">
                         <StepIndicator
                             step={1}
-                            label="Proyecto"
+                            label={t('domainsDashboard.stepProject')}
                             completed={!!domain.projectId}
                             active={!domain.projectId}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
                             step={2}
-                            label="DNS"
+                            label={t('domainsDashboard.stepDns')}
                             completed={domain.status === 'ssl_pending' || domain.status === 'active'}
                             active={domain.status === 'pending' || domain.status === 'verifying'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
                             step={3}
-                            label="SSL"
+                            label={t('domainsDashboard.stepSsl')}
                             completed={domain.sslStatus === 'active'}
                             active={domain.status === 'ssl_pending'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
                             step={4}
-                            label="Activo"
+                            label={t('domainsDashboard.stepActive')}
                             completed={domain.status === 'active'}
                             active={false}
                         />
@@ -314,27 +314,27 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                     {/* Status Messages */}
                     {!domain.projectId && (
                         <p className="text-xs text-yellow-600 bg-yellow-500/10 p-2 rounded">
-                            ⚠️ Selecciona un proyecto para conectar a este dominio
+                            ⚠️ {t('domainsDashboard.selectProjectWarning')}
                         </p>
                     )}
                     {domain.projectId && domain.status === 'pending' && (
                         <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded">
-                            📋 Configura los registros DNS en tu registrador y luego haz clic en "Verificar DNS"
+                            📋 {t('domainsDashboard.configureDnsWarning')}
                         </p>
                     )}
                     {domain.status === 'ssl_pending' && (
                         <p className="text-xs text-purple-600 bg-purple-500/10 p-2 rounded">
-                            🔐 DNS verificado. Generando certificado SSL... (puede tomar unos minutos)
+                            🔐 {t('domainsDashboard.sslGenerating')}
                         </p>
                     )}
                     {domain.status === 'active' && (
                         <p className="text-xs text-green-600 bg-green-500/10 p-2 rounded">
-                            ✅ Tu dominio está activo. Visita <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
+                            ✅ {t('domainsDashboard.domainActiveMessage')} <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
                         </p>
                     )}
                     {domain.status === 'error' && (
                         <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded">
-                            ❌ Error: {domain.deployment?.error || 'Hubo un problema con la configuración'}
+                            ❌ Error: {domain.deployment?.error || t('domainsDashboard.domainErrorMessage')}
                         </p>
                     )}
                 </div>
@@ -463,7 +463,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         } catch (e: any) {
             console.error("Domain search failed:", e);
-            setError(e.message || 'Error al buscar dominios. Intenta de nuevo.');
+            setError(e.message || t('domainsDashboard.searchError'));
         } finally {
             setIsSearching(false);
         }
@@ -471,12 +471,12 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     const handleBuy = async (domainName: string, price: number) => {
         if (!user) {
-            alert('Debes iniciar sesión para comprar dominios');
+            alert(t('domainsDashboard.loginRequired'));
             return;
         }
 
         const confirmPurchase = window.confirm(
-            `¿Comprar ${domainName} por $${price.toFixed(2)}/año?\n\nEsta compra se cargará a tu cuenta.`
+            `${t('domainsDashboard.buyConfirmMessage', { domain: domainName, price: price.toFixed(2) })}\n\n${t('domainsDashboard.buyConfirmCharge')}`
         );
 
         if (!confirmPurchase) return;
@@ -499,7 +499,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     expiryDate: result.expiryDate
                 });
 
-                alert(`¡Dominio ${domainName} comprado exitosamente!`);
+                alert(t('domainsDashboard.purchaseSuccess', { domain: domainName }));
                 onClose();
             } else {
                 setError(result.error || 'Error al comprar el dominio');
@@ -531,7 +531,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                        placeholder="ej: miempresa, tutienda, etc."
+                        placeholder={t('domainsDashboard.searchPlaceholder')}
                     />
                 </div>
                 <button
@@ -586,7 +586,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                     <span className="text-xs font-normal text-muted-foreground">/año</span>
                                     {res.renewalPrice && res.renewalPrice !== res.price && (
                                         <p className="text-xs text-muted-foreground">
-                                            Renovación: ${res.renewalPrice.toFixed(2)}/año
+                                            {t('domainsDashboard.renewalPrice', { price: res.renewalPrice.toFixed(2) })}
                                         </p>
                                     )}
                                 </div>
@@ -611,20 +611,20 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     <div className="text-center py-10 text-muted-foreground">
                         <Globe size={40} className="mx-auto mb-3 opacity-30" />
                         <p>{t('domainsDashboard.enterKeyword')}</p>
-                        <p className="text-xs mt-2">Busca tu nombre de negocio o marca para encontrar dominios disponibles</p>
+                        <p className="text-xs mt-2">{t('domainsDashboard.searchHint')}</p>
                     </div>
                 )}
                 {isSearching && (
                     <div className="text-center py-10">
                         <Loader2 size={32} className="animate-spin mx-auto mb-3 text-primary" />
-                        <p className="text-muted-foreground">Buscando dominios disponibles...</p>
+                        <p className="text-muted-foreground">{t('domainsDashboard.searchingDomains')}</p>
                     </div>
                 )}
             </div>
 
             {/* Footer */}
             <div className="mt-4 p-3 bg-secondary/20 rounded-lg text-xs text-muted-foreground flex items-center justify-center">
-                <Globe size={12} className="mr-1" /> Powered by Name.com Reseller API
+                <Globe size={12} className="mr-1" /> {t('domainsDashboard.poweredByNameCom')}
             </div>
         </div>
     );
@@ -744,7 +744,7 @@ const DomainsDashboard: React.FC = () => {
                                             onClick={handleDomainUpgrade}
                                             className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold flex items-center gap-2 transition-colors"
                                         >
-                                            <Crown className="w-5 h-5" /> Actualizar para usar dominios
+                                            <Crown className="w-5 h-5" /> {t('domainsDashboard.upgradeForDomains')}
                                         </button>
                                     ) : (
                                         <button onClick={() => setIsConnectModalOpen(true)} className="px-6 py-3 rounded-xl border border-border bg-background hover:bg-secondary transition-colors font-bold">{t('domainsDashboard.connectExisting')}</button>
