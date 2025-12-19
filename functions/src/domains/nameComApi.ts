@@ -519,6 +519,10 @@ export const createDomainCheckoutSession = functions.https.onCall(async (data, c
         // Create Stripe Checkout Session
         const stripe = getStripe();
 
+        // Determine the correct separator for URL params (? or &)
+        const successSeparator = successUrl.includes('?') ? '&' : '?';
+        const cancelSeparator = cancelUrl.includes('?') ? '&' : '?';
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
@@ -534,8 +538,8 @@ export const createDomainCheckoutSession = functions.https.onCall(async (data, c
             }],
             mode: 'payment',
             customer_email: userEmail,
-            success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}&domain=${encodeURIComponent(domainName)}`,
-            cancel_url: cancelUrl,
+            success_url: `${successUrl}${successSeparator}session_id={CHECKOUT_SESSION_ID}&domain=${encodeURIComponent(domainName)}`,
+            cancel_url: `${cancelUrl}${cancelSeparator}domain=${encodeURIComponent(domainName)}`,
             metadata: {
                 type: 'domain_purchase',
                 userId,

@@ -147,6 +147,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [isVerifying, setIsVerifying] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [isDeploying, setIsDeploying] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
     const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify'>('cloudflare');
 
@@ -154,6 +155,23 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
         setIsVerifying(true);
         await verifyDomain(domain.id);
         setIsVerifying(false);
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm(t('domainsDashboard.deleteDomainConfirm'))) {
+            return;
+        }
+        
+        setIsDeleting(true);
+        try {
+            await deleteDomain(domain.id);
+            console.log('✅ Domain deleted successfully:', domain.name);
+        } catch (error) {
+            console.error('❌ Error deleting domain:', error);
+            alert(t('domainsDashboard.deleteError', 'Error al eliminar el dominio. Por favor intenta de nuevo.'));
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const handleProjectChange = (projectId: string) => {
@@ -234,18 +252,19 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                     <div className="flex gap-2">
                         <button
                             onClick={handleVerify}
-                            disabled={isVerifying || isDeploymentInProgress}
+                            disabled={isVerifying || isDeploymentInProgress || isDeleting}
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                             title={t('domainsDashboard.verifyDns')}
                         >
                             <RefreshCw size={18} className={isVerifying ? 'animate-spin' : ''} />
                         </button>
                         <button
-                            onClick={() => { if (window.confirm(t('domainsDashboard.deleteDomainConfirm'))) deleteDomain(domain.id) }}
-                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                            disabled={isDeploymentInProgress}
+                            onClick={handleDelete}
+                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                            disabled={isDeploymentInProgress || isDeleting}
+                            title={t('domainsDashboard.deleteDomain', 'Eliminar dominio')}
                         >
-                            <Trash2 size={18} />
+                            {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
                     </div>
                 </div>
@@ -876,6 +895,18 @@ const DomainsDashboard: React.FC = () => {
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [connectDomainName, setConnectDomainName] = useState('');
+
+    // Auto-open modal when returning from Stripe checkout
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const domainSuccess = urlParams.get('domain_success');
+        const domainCancel = urlParams.get('domain_cancel');
+        
+        if (domainSuccess === 'true' || domainCancel === 'true') {
+            // Open the buy modal to show progress/result
+            setIsBuyModalOpen(true);
+        }
+    }, []);
 
     // Check if custom domains are allowed by the current plan
     const subscriptionPlan = tenantContext?.currentTenant?.subscriptionPlan || 'free';

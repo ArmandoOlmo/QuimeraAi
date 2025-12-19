@@ -3199,6 +3199,8 @@
     "lastDeployed": "Last deployed",
     "verifyDns": "Verify DNS",
     "deleteDomainConfirm": "Delete domain?",
+    "deleteError": "Error deleting domain. Please try again.",
+    "deleteDomain": "Delete domain",
     "connectedProject": "Connected Project",
     "noProject": "-- No Project --",
     "expiryDate": "Expiry Date",

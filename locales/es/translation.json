@@ -3337,6 +3337,8 @@
     "lastDeployed": "Último despliegue",
     "verifyDns": "Verificar DNS",
     "deleteDomainConfirm": "¿Eliminar dominio?",
+    "deleteError": "Error al eliminar el dominio. Por favor intenta de nuevo.",
+    "deleteDomain": "Eliminar dominio",
     "connectedProject": "Proyecto Conectado",
     "noProject": "-- Sin Proyecto --",
     "expiryDate": "Fecha de Expiración",

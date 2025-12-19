@@ -30,6 +30,7 @@ interface DomainsContextType {
     verifyDomain: (id: string) => Promise<boolean>;
     deployDomain: (domainId: string, provider?: 'vercel' | 'cloudflare' | 'netlify') => Promise<boolean>;
     getDomainDeploymentLogs: (domainId: string) => DeploymentLog[];
+    refetch: () => Promise<void>;
 }
 
 const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
@@ -44,6 +45,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Fetch domains
     const fetchUserDomains = useCallback(async (userId: string) => {
         try {
+            console.log(`📂 [DomainsContext] Fetching domains for user: ${userId}`);
             const domainsCol = collection(db, 'users', userId, 'domains');
             const q = query(domainsCol, orderBy('createdAt', 'desc'));
             const snap = await getDocs(q);
@@ -51,9 +53,11 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             } as Domain));
+            console.log(`✅ [DomainsContext] Loaded ${userDomains.length} domains from Firestore`);
             setDomains(userDomains);
-        } catch (error) {
-            console.error("Error loading domains:", error);
+        } catch (error: any) {
+            console.error("❌ [DomainsContext] Error loading domains:", error);
+            console.error("❌ [DomainsContext] Error code:", error?.code);
         }
     }, []);
 
@@ -137,16 +141,39 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Delete domain
     const deleteDomain = async (id: string) => {
-        if (!user) return;
+        if (!user) {
+            console.error("❌ [DomainsContext] Cannot delete domain: No user logged in");
+            throw new Error("No user logged in");
+        }
 
+        console.log(`🗑️ [DomainsContext] Attempting to delete domain: ${id}`);
+        
         try {
-            await deleteDoc(doc(db, 'users', user.uid, 'domains', id));
-            setDomains(prev => prev.filter(d => d.id !== id));
-        } catch (error) {
-            console.error("Error deleting domain:", error);
+            const domainRef = doc(db, 'users', user.uid, 'domains', id);
+            await deleteDoc(domainRef);
+            console.log(`✅ [DomainsContext] Domain deleted from Firestore: ${id}`);
+            
+            // Update local state after successful deletion
+            setDomains(prev => {
+                const filtered = prev.filter(d => d.id !== id);
+                console.log(`📝 [DomainsContext] Updated local state: ${prev.length} -> ${filtered.length} domains`);
+                return filtered;
+            });
+        } catch (error: any) {
+            console.error("❌ [DomainsContext] Error deleting domain:", error);
+            console.error("❌ [DomainsContext] Error code:", error?.code);
+            console.error("❌ [DomainsContext] Error message:", error?.message);
             throw error;
         }
     };
+
+    // Refetch domains from Firestore
+    const refetch = useCallback(async () => {
+        if (user) {
+            console.log("🔄 [DomainsContext] Refetching domains...");
+            await fetchUserDomains(user.uid);
+        }
+    }, [user, fetchUserDomains]);
 
     // Verify domain (DNS check)
     const verifyDomain = async (id: string): Promise<boolean> => {
@@ -270,6 +297,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         verifyDomain,
         deployDomain,
         getDomainDeploymentLogs,
+        refetch,
     };
 
     return <DomainsContext.Provider value={value}>{children}</DomainsContext.Provider>;
