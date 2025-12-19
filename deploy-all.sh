@@ -115,11 +115,34 @@ if [ "$DEPLOY_SSR" = true ]; then
     
     # Build and Deploy using Cloud Build with cloudbuild-ssr.yaml
     echo -e "${CYAN}Building and deploying with Cloud Build...${NC}"
-    gcloud builds submit \
-        --project ${PROJECT_ID} \
-        --config cloudbuild-ssr.yaml \
-        --quiet \
-        .
+    echo -e "${YELLOW}   Note: This may take 5-10 minutes for a full build${NC}"
+    
+    # Read .env file if it exists and build substitutions
+    SUBSTITUTIONS=""
+    if [ -f ".env" ]; then
+        echo -e "${CYAN}   Reading API keys from .env file...${NC}"
+        while IFS='=' read -r key value; do
+            # Skip empty lines and comments
+            [[ -z "$key" || "$key" =~ ^# ]] && continue
+            # Convert to Cloud Build substitution format
+            SUBSTITUTIONS="${SUBSTITUTIONS}_${key}=${value},"
+        done < .env
+        # Remove trailing comma
+        SUBSTITUTIONS=${SUBSTITUTIONS%,}
+    fi
+    
+    if [ -n "$SUBSTITUTIONS" ]; then
+        gcloud builds submit \
+            --project ${PROJECT_ID} \
+            --config cloudbuild-ssr.yaml \
+            --substitutions="${SUBSTITUTIONS}" \
+            .
+    else
+        gcloud builds submit \
+            --project ${PROJECT_ID} \
+            --config cloudbuild-ssr.yaml \
+            .
+    fi
     
     # Get service URL
     SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
