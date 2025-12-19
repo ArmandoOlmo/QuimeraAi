@@ -63,7 +63,8 @@
     "daysAgo": "hace {{count}} días",
     "weeksAgo": "hace {{count}} semanas",
     "monthsAgo": "hace {{count}} meses",
-    "yearsAgo": "hace {{count}} años"
+    "yearsAgo": "hace {{count}} años",
+    "of": "de"
   },
   "auth": {
     "login": "Iniciar Sesión",

@@ -64,7 +64,8 @@
     "daysAgo": "{{count}} days ago",
     "weeksAgo": "{{count}} weeks ago",
     "monthsAgo": "{{count}} months ago",
-    "yearsAgo": "{{count}} years ago"
+    "yearsAgo": "{{count}} years ago",
+    "of": "of"
   },
   "auth": {
     "login": "Log In",

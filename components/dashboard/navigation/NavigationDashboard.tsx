@@ -276,7 +276,7 @@ const NavigationDashboard: React.FC = () => {
                                 <h2 className="text-lg font-semibold text-foreground">{t('navigationDashboard.menus')}</h2>
                                 {menus.length > 0 && (
                                     <span className="px-2 py-1 text-xs font-medium bg-secondary rounded-full text-muted-foreground">
-                                        {filteredMenus.length} {t('onboarding.of')} {menus.length}
+                                        {filteredMenus.length} {t('common.of')} {menus.length}
                                     </span>
                                 )}
                             </div>
