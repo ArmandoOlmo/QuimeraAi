@@ -88,16 +88,30 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Onboarding
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
     
-    // Theme - Load from localStorage
+    // Theme - Load from localStorage (with SSR safety check)
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-        const saved = localStorage.getItem('themeMode');
-        return (saved as ThemeMode) || 'dark';
+        if (typeof window === 'undefined') return 'dark';
+        try {
+            const saved = localStorage.getItem('themeMode');
+            if (saved && ['light', 'dark', 'black'].includes(saved)) {
+                return saved as ThemeMode;
+            }
+        } catch (e) {
+            // localStorage not available
+        }
+        return 'dark';
     });
     
-    // Sidebar Order - Load from localStorage
+    // Sidebar Order - Load from localStorage (with SSR safety check)
     const [sidebarOrder, setSidebarOrder] = useState<string[]>(() => {
-        const saved = localStorage.getItem('sidebar-nav-order');
-        return saved ? JSON.parse(saved) : [];
+        if (typeof window === 'undefined') return [];
+        try {
+            const saved = localStorage.getItem('sidebar-nav-order');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            // localStorage not available or invalid JSON
+            return [];
+        }
     });
     
     // Current App Tokens (stored for re-application on theme change)
@@ -182,7 +196,13 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     
     // Persist theme mode to localStorage and apply to document
     React.useEffect(() => {
-        localStorage.setItem('themeMode', themeMode);
+        if (typeof window === 'undefined') return;
+        
+        try {
+            localStorage.setItem('themeMode', themeMode);
+        } catch (e) {
+            // localStorage not available
+        }
         
         // Apply theme class to <html> element
         const root = document.documentElement;

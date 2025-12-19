@@ -1,7 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
+  <!-- Theme initialization script - runs BEFORE any rendering to prevent flash -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('themeMode');
+        var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
+        document.documentElement.classList.add(theme);
+      } catch (e) {
+        // If localStorage fails, default to dark
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <!-- Favicon: SVG fallback, will be replaced dynamically by GlobalSEO from Firestore config -->
   <link rel="icon" type="image/png"
