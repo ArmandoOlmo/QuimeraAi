@@ -7,8 +7,10 @@
 
 import fs from 'fs';
 import path from 'path';
-import { ViteDevServer } from 'vite';
 import { initializeApp, getApps, App } from 'firebase-admin/app';
+
+// Only import vite types - actual usage is dynamic
+type ViteDevServer = import('vite').ViteDevServer;
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
 // Firebase Admin initialization

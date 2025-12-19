@@ -7,11 +7,13 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import compression from 'compression';
-import { createServer as createViteServer, ViteDevServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { resolveDomainToProject, DomainResolutionResult } from './domainResolver';
 import { renderStorefront } from './ssrRenderer';
+
+// Only import vite types - actual import is dynamic in development only
+type ViteDevServer = import('vite').ViteDevServer;
 
 const isProduction = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 8080;
@@ -32,7 +34,8 @@ async function createServer() {
     let vite: ViteDevServer | null = null;
 
     if (!isProduction) {
-        // Development: use Vite's dev server
+        // Development: use Vite's dev server (dynamic import to avoid requiring vite in production)
+        const { createServer: createViteServer } = await import('vite');
         vite = await createViteServer({
             server: { middlewareMode: true },
             appType: 'custom'
