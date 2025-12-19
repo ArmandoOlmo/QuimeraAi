@@ -804,18 +804,18 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       
       <main className="min-h-screen bg-site-base relative">
         {/* Store View */}
-        {isStoreViewActive ? (
+        {isStoreViewActive && storeProjectId ? (
           <Suspense fallback={
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           }>
             <StorefrontApp
-              projectId={storeProjectId || ''}
+              projectId={storeProjectId}
               serverUrl={
                 storeView.type === 'store' ? '/' :
-                storeView.type === 'category' ? `/category/${storeView.slug}` :
-                storeView.type === 'product' ? `/product/${storeView.slug}` : '/'
+                storeView.type === 'category' ? `/category/${(storeView as { type: 'category'; slug: string }).slug}` :
+                storeView.type === 'product' ? `/product/${(storeView as { type: 'product'; slug: string }).slug}` : '/'
               }
             />
           </Suspense>
