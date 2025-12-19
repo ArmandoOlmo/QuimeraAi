@@ -113,30 +113,13 @@ if [ "$DEPLOY_SSR" = true ]; then
     echo "   Region: ${REGION}"
     echo ""
     
-    # Build Docker image with Cloud Build
-    echo -e "${CYAN}Building Docker image...${NC}"
+    # Build and Deploy using Cloud Build with cloudbuild-ssr.yaml
+    echo -e "${CYAN}Building and deploying with Cloud Build...${NC}"
     gcloud builds submit \
         --project ${PROJECT_ID} \
-        --tag ${IMAGE_NAME} \
-        --dockerfile Dockerfile.ssr \
+        --config cloudbuild-ssr.yaml \
         --quiet \
         .
-    
-    # Deploy to Cloud Run
-    echo -e "${CYAN}Deploying to Cloud Run...${NC}"
-    gcloud run deploy ${SERVICE_NAME} \
-        --project ${PROJECT_ID} \
-        --image ${IMAGE_NAME} \
-        --region ${REGION} \
-        --platform managed \
-        --allow-unauthenticated \
-        --port 8080 \
-        --memory 512Mi \
-        --cpu 1 \
-        --min-instances 0 \
-        --max-instances 10 \
-        --set-env-vars "NODE_ENV=production" \
-        --quiet
     
     # Get service URL
     SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
