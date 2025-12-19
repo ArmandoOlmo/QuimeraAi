@@ -427,7 +427,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             storeCategories.map((category) => (
                                 <button
                                     key={category.id}
-                                    onClick={() => handleLinkSelect(item, `#store / category / ${category.slug} `)}
+                                    onClick={() => handleLinkSelect(item, `#store/category/${category.slug}`)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={category.name}
                                 >
@@ -475,7 +475,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             filteredProducts.map((product) => (
                                 <button
                                     key={product.id}
-                                    onClick={() => handleLinkSelect(item, `#store / product / ${product.slug} `)}
+                                    onClick={() => handleLinkSelect(item, `#store/product/${product.slug}`)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={product.name}
                                 >
