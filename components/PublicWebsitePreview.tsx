@@ -2,9 +2,10 @@
  * PublicWebsitePreview Component
  * Renders a website preview independently in the browser without authentication
  * Supports URLs like: /#preview/{userId}/{projectId}
+ * Supports store routing: #store, #store/category/slug, #store/product/slug
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
@@ -37,6 +38,9 @@ import Banner from './Banner';
 import BlogPost from './BlogPost';
 import Products from './Products';
 
+// Lazy load StorefrontApp for store views
+const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
+
 // Ecommerce components (usables en Landing y Ecommerce)
 import {
     FeaturedProducts,
@@ -50,6 +54,13 @@ import {
     ProductBundle,
     AnnouncementBar,
 } from './ecommerce';
+
+// Store view types
+type StoreViewState = 
+    | { type: 'none' }
+    | { type: 'store' }
+    | { type: 'category'; slug: string }
+    | { type: 'product'; slug: string };
 
 // Font stacks for CSS injection
 const fontStacks: Record<FontFamily, string> = {
@@ -117,6 +128,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
+  const [storeView, setStoreView] = useState<StoreViewState>({ type: 'none' });
 
   // Parse URL params from pathname: /preview/userId/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
@@ -264,21 +276,57 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     loadProject();
   }, [propProjectId, propUserId]);
 
-  // Handle hash routing for articles
+  // Handle hash routing for articles and store
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      // Check if navigating to an article within the preview
-      if (hash.includes('#article:')) {
-        const slug = hash.split('#article:')[1];
+      const decodedHash = decodeURIComponent(hash);
+
+      // Reset views first
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+
+      // Article routing: #article:slug
+      if (decodedHash.includes('#article:')) {
+        const slug = decodedHash.split('#article:')[1];
         const post = cmsPosts.find(p => p.slug === slug);
         if (post) {
           setActivePost(post);
           window.scrollTo(0, 0);
         }
-      } else if (!hash.includes('#preview/')) {
-        // Clear article if not in article view (but still in preview)
-        setActivePost(null);
+        return;
+      }
+
+      // Store routing: #store, #store/category/slug, #store/product/slug
+      if (decodedHash === '#store' || decodedHash.endsWith('#store')) {
+        setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash.includes('#store/category/')) {
+        const slug = decodedHash.split('#store/category/')[1];
+        setStoreView({ type: 'category', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash.includes('#store/product/')) {
+        const slug = decodedHash.split('#store/product/')[1];
+        setStoreView({ type: 'product', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // Handle scrolling for section links (e.g. #features)
+      if (hash.length > 1 && !hash.includes('#preview/')) {
+        setTimeout(() => {
+          const id = hash.substring(1);
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
       }
     };
 
@@ -712,12 +760,29 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
   };
 
-  // Handle back to home from article
-  const handleBackToHome = () => {
+  // Handle back to home from article or store
+  const handleBackToHome = useCallback(() => {
     const { userId, projectId } = getIdsFromURL();
     window.location.hash = `preview/${userId}/${projectId}`;
     setActivePost(null);
-  };
+    setStoreView({ type: 'none' });
+  }, []);
+
+  // Store navigation handlers
+  const handleNavigateToStore = useCallback(() => {
+    window.location.hash = 'store';
+  }, []);
+
+  const handleNavigateToCategory = useCallback((categorySlug: string) => {
+    window.location.hash = `store/category/${categorySlug}`;
+  }, []);
+
+  const handleNavigateToProduct = useCallback((productSlug: string) => {
+    window.location.hash = `store/product/${productSlug}`;
+  }, []);
+
+  // Check if we're showing a store view
+  const isStoreViewActive = storeView.type !== 'none';
 
   return (
     <div 
@@ -738,8 +803,24 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       )}
       
       <main className="min-h-screen bg-site-base relative">
-        {/* Article View */}
-        {activePost ? (
+        {/* Store View */}
+        {isStoreViewActive ? (
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          }>
+            <StorefrontApp
+              projectId={storeProjectId || ''}
+              serverUrl={
+                storeView.type === 'store' ? '/' :
+                storeView.type === 'category' ? `/category/${storeView.slug}` :
+                storeView.type === 'product' ? `/product/${storeView.slug}` : '/'
+              }
+            />
+          </Suspense>
+        ) : activePost ? (
+          /* Article View */
           <BlogPost 
             post={activePost} 
             theme={theme} 
