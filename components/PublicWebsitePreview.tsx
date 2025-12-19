@@ -241,14 +241,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             console.log('[PublicWebsitePreview] No CMS posts found or error loading:', e);
           }
 
-          // Load menus
-          try {
-            const menusCol = collection(db, 'users', userId, 'projects', projectId, 'menus');
-            const menusSnap = await getDocs(menusCol);
-            const loadedMenus = menusSnap.docs.map(d => ({ id: d.id, ...d.data() } as Menu));
-            setMenus(loadedMenus);
-          } catch (e) {
-            console.log('[PublicWebsitePreview] No menus found or error loading:', e);
+          // Load menus from project data (menus are stored inside the project document, not as a subcollection)
+          // This works for both publicStores and user project documents
+          if (projectData.menus && Array.isArray(projectData.menus)) {
+            console.log('[PublicWebsitePreview] ✅ Loaded menus from project data:', projectData.menus.length);
+            setMenus(projectData.menus);
+          } else {
+            console.log('[PublicWebsitePreview] No menus found in project data');
+            setMenus([]);
           }
         } else {
           setError('Project not found');

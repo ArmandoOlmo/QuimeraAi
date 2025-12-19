@@ -418,6 +418,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 aiAssistantConfig: latestProjectData.aiAssistantConfig || null,
                 componentStyles: latestProjectData.componentStyles || null,
                 componentStatus: latestProjectData.componentStatus || null,
+                // Include navigation menus (CRITICAL for published site navigation)
+                menus: latestProjectData.menus || [],
                 userId: user.uid,
                 tenantId: currentTenantId || null,
                 publishedAt: new Date().toISOString(),
