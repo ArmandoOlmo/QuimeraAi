@@ -17,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 // Import storefront pages
 import StorefrontHome from './pages/StorefrontHome';
 import StorefrontCategory from './pages/StorefrontCategory';
+import ProductSearchPage from './search/ProductSearchPage';
 
 interface StorefrontAppProps {
     projectId: string;
@@ -189,12 +190,28 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
             case 'home':
             default:
+                // Use ProductSearchPage for full store experience with filters, search, etc.
+                const primaryColor = projectData?.theme?.globalColors?.primary || 
+                                   projectData?.data?.header?.colors?.background || 
+                                   '#6366f1';
                 return (
-                    <StorefrontHome
+                    <ProductSearchPage
                         storeId={projectId}
-                        projectData={projectData}
-                        onNavigateToProduct={navigateToProduct}
-                        onNavigateToCategory={navigateToCategory}
+                        onProductClick={navigateToProduct}
+                        primaryColor={primaryColor}
+                        showFilterSidebar={true}
+                        showSearchBar={true}
+                        showSortOptions={true}
+                        showViewModeToggle={true}
+                        defaultViewMode="grid"
+                        gridColumns={4}
+                        cardStyle="modern"
+                        title="Tienda"
+                        themeColors={{
+                            background: projectData?.theme?.pageBackground || '#ffffff',
+                            text: projectData?.data?.header?.colors?.text || '#374151',
+                            heading: projectData?.data?.header?.colors?.text || '#1f2937',
+                        }}
                     />
                 );
         }
