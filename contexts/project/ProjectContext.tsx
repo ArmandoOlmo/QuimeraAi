@@ -430,6 +430,50 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             console.log(`✅ [ProjectContext] Project ${activeProjectId} published to publicStores with SEO config`);
 
+            // PUBLISH ECOMMERCE DATA (Products & Categories)
+            try {
+                console.log(`🛒 [ProjectContext] Publishing ecommerce data for project ${activeProjectId}...`);
+                
+                // Copy products from private to public
+                const privateProductsRef = collection(db, 'users', user.uid, 'stores', activeProjectId, 'products');
+                const productsSnapshot = await getDocs(privateProductsRef);
+                
+                if (!productsSnapshot.empty) {
+                    console.log(`📦 [ProjectContext] Publishing ${productsSnapshot.size} products...`);
+                    for (const productDoc of productsSnapshot.docs) {
+                        const productData = productDoc.data();
+                        // Only publish active products
+                        if (productData.status === 'active') {
+                            const publicProductRef = doc(db, 'publicStores', activeProjectId, 'products', productDoc.id);
+                            await setDoc(publicProductRef, {
+                                ...productData,
+                                publishedAt: new Date().toISOString(),
+                            }, { merge: true });
+                        }
+                    }
+                    console.log(`✅ [ProjectContext] Products published successfully`);
+                }
+                
+                // Copy categories from private to public
+                const privateCategoriesRef = collection(db, 'users', user.uid, 'stores', activeProjectId, 'categories');
+                const categoriesSnapshot = await getDocs(privateCategoriesRef);
+                
+                if (!categoriesSnapshot.empty) {
+                    console.log(`📂 [ProjectContext] Publishing ${categoriesSnapshot.size} categories...`);
+                    for (const categoryDoc of categoriesSnapshot.docs) {
+                        const categoryData = categoryDoc.data();
+                        const publicCategoryRef = doc(db, 'publicStores', activeProjectId, 'categories', categoryDoc.id);
+                        await setDoc(publicCategoryRef, {
+                            ...categoryData,
+                            publishedAt: new Date().toISOString(),
+                        }, { merge: true });
+                    }
+                    console.log(`✅ [ProjectContext] Categories published successfully`);
+                }
+            } catch (ecommerceError) {
+                console.warn('[ProjectContext] Ecommerce publish warning (non-critical):', ecommerceError);
+            }
+
             // AUTOMATIC DOMAIN SYNC:
             // Fetch domains for this project and sync them directly to customDomains collection
             try {
