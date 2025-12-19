@@ -2,6 +2,7 @@
  * CMSContext
  * Maneja posts del blog y menús de navegación
  * Los posts están organizados por proyecto (cada cliente/proyecto tiene su propio contenido)
+ * Los menús se guardan dentro del documento del proyecto (project.menus)
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
@@ -11,6 +12,7 @@ import {
     doc,
     collection,
     getDocs,
+    getDoc,
     addDoc,
     updateDoc,
     deleteDoc,
@@ -20,6 +22,7 @@ import {
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
+import { useSafeTenant } from '../tenant';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -56,22 +59,68 @@ const defaultMenus: Menu[] = [
     }
 ];
 
+// Helper to get the correct projects collection path
+const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
+    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+    if (tenantId && !isPersonalTenant) {
+        return ['tenants', tenantId, 'projects'];
+    }
+    return ['users', userId, 'projects'];
+};
+
 export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const { activeProject } = useSafeProject();
+    const projectContext = useSafeProject();
+    const activeProject = projectContext?.activeProject || null;
+    const activeProjectId = projectContext?.activeProjectId || null;
+    const tenantContext = useSafeTenant();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
     
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
     const [isLoadingCMS, setIsLoadingCMS] = useState(false);
     
-    // Menus State
-    const [menus, setMenus] = useState<Menu[]>(defaultMenus);
+    // Menus State - Load from active project
+    const [menus, setMenus] = useState<Menu[]>([]);
 
     // Helper to get the posts collection path for the current project
     const getPostsCollectionPath = useCallback(() => {
         if (!user || !activeProject) return null;
         return `users/${user.uid}/projects/${activeProject.id}/posts`;
     }, [user, activeProject]);
+
+    // Load menus from active project
+    useEffect(() => {
+        if (!user || !activeProject) {
+            setMenus([]);
+            return;
+        }
+
+        // Load menus from project document
+        const loadMenus = async () => {
+            try {
+                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                const projectRef = doc(db, ...pathSegments, activeProject.id);
+                const projectSnap = await getDoc(projectRef);
+                
+                if (projectSnap.exists()) {
+                    const projectData = projectSnap.data();
+                    if (projectData.menus && Array.isArray(projectData.menus)) {
+                        console.log('[CMSContext] ✅ Loaded menus from project:', projectData.menus.length);
+                        setMenus(projectData.menus);
+                    } else {
+                        console.log('[CMSContext] No menus found in project, using defaults');
+                        setMenus(defaultMenus);
+                    }
+                }
+            } catch (error) {
+                console.error('[CMSContext] Error loading menus:', error);
+                setMenus(defaultMenus);
+            }
+        };
+
+        loadMenus();
+    }, [user, activeProject, currentTenantId]);
 
     // Load CMS posts with real-time updates (filtered by active project)
     useEffect(() => {
@@ -176,36 +225,61 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    // Save menu
+    // Save menu - persists to Firebase
     const saveMenu = async (menu: Menu) => {
-        if (!user) return;
+        if (!user || !activeProjectId) {
+            console.error('[CMSContext] Cannot save menu: No user or active project');
+            return;
+        }
 
         try {
-            // Update local state
-            setMenus(prev => {
-                const exists = prev.find(m => m.id === menu.id);
-                if (exists) {
-                    return prev.map(m => m.id === menu.id ? menu : m);
-                }
-                return [...prev, menu];
-            });
+            // Calculate updated menus list
+            let updatedMenusList: Menu[];
+            const currentMenus = [...menus];
+            
+            if (currentMenus.some(m => m.id === menu.id)) {
+                updatedMenusList = currentMenus.map(m => m.id === menu.id ? menu : m);
+            } else {
+                updatedMenusList = [...currentMenus, menu];
+            }
 
-            // Note: Menus are typically saved as part of the project
-            // This could be extended to save to a separate collection if needed
+            // 1. Update local state immediately for UI responsiveness
+            setMenus(updatedMenusList);
+
+            // 2. Persist to Firestore
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            const projectDocRef = doc(db, ...pathSegments, activeProjectId);
+            await updateDoc(projectDocRef, { menus: updatedMenusList });
+            
+            console.log('[CMSContext] ✅ Menu saved successfully to Firebase');
         } catch (error) {
-            console.error("Error saving menu:", error);
+            console.error('[CMSContext] Error saving menu:', error);
             throw error;
         }
     };
 
-    // Delete menu
+    // Delete menu - persists to Firebase
     const deleteMenu = async (menuId: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) {
+            console.error('[CMSContext] Cannot delete menu: No user or active project');
+            return;
+        }
 
         try {
-            setMenus(prev => prev.filter(m => m.id !== menuId));
+            // Calculate updated menus list
+            const updatedMenusList = menus.filter(m => m.id !== menuId);
+
+            // 1. Update local state immediately
+            setMenus(updatedMenusList);
+
+            // 2. Persist to Firestore
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            const projectDocRef = doc(db, ...pathSegments, activeProjectId);
+            await updateDoc(projectDocRef, { menus: updatedMenusList });
+            
+            console.log('[CMSContext] ✅ Menu deleted successfully from Firebase');
         } catch (error) {
-            console.error("Error deleting menu:", error);
+            console.error('[CMSContext] Error deleting menu:', error);
             throw error;
         }
     };
