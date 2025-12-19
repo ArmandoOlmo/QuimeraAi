@@ -248,6 +248,24 @@ export const searchDomainSuggestions = functions.https.onCall(async (data, conte
 
         console.log(`[Name.com] Available: ${availableDomains.length}, Unavailable: ${unavailableDomains.length}`);
 
+        // Log search to Firestore for analytics
+        try {
+            const userId = context.auth?.uid || 'anonymous';
+            await db.collection('domainSearchLogs').add({
+                keyword: cleanKeyword,
+                userId,
+                domainsChecked: domainsToCheck.length,
+                availableCount: availableDomains.length,
+                unavailableCount: unavailableDomains.length,
+                availableDomains: availableDomains.map(d => d.name),
+                unavailableDomains: unavailableDomains.map(d => d.name),
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (logError) {
+            console.error('[Name.com] Failed to log search:', logError);
+            // Don't fail the request if logging fails
+        }
+
         return {
             available: availableDomains,
             unavailable: unavailableDomains,

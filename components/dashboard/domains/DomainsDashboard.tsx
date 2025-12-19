@@ -553,62 +553,89 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             )}
 
             {/* Results */}
-            <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
-                {results.map((res, idx) => (
-                    <div
-                        key={idx}
-                        className={`flex justify-between items-center p-4 bg-card border rounded-lg transition-colors ${res.available
-                            ? 'border-border hover:border-primary/30'
-                            : 'border-border/50 opacity-60'
-                            }`}
-                    >
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <p className="font-bold text-lg text-foreground">{res.name}</p>
-                                {res.premium && (
-                                    <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full font-medium">
-                                        Premium
-                                    </span>
-                                )}
-                            </div>
-                            {res.available ? (
-                                <span className="text-xs text-green-500 font-medium flex items-center">
-                                    <CheckCircle size={10} className="mr-1" /> {t('domainsDashboard.available')}
-                                </span>
-                            ) : (
-                                <span className="text-xs text-red-500 font-medium flex items-center">
-                                    <X size={10} className="mr-1" /> {t('domainsDashboard.taken')}
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-4">
-                            {res.price !== null ? (
-                                <div className="text-right">
-                                    <span className="font-bold text-lg">${res.price.toFixed(2)}</span>
-                                    <span className="text-xs font-normal text-muted-foreground">/año</span>
-                                    {res.renewalPrice && res.renewalPrice !== res.price && (
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('domainsDashboard.renewalPrice', { price: res.renewalPrice.toFixed(2) })}
-                                        </p>
-                                    )}
+            <div className="space-y-4 max-h-[450px] overflow-y-auto custom-scrollbar">
+                {/* Available Domains Section */}
+                {results.filter(r => r.available).length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-bold text-green-500 mb-2 flex items-center">
+                            <CheckCircle size={14} className="mr-1" /> {t('domainsDashboard.available')} ({results.filter(r => r.available).length})
+                        </h3>
+                        <div className="space-y-2">
+                            {results.filter(r => r.available).map((res, idx) => (
+                                <div
+                                    key={`available-${idx}`}
+                                    className="flex justify-between items-center p-3 bg-card border border-green-500/20 rounded-lg transition-colors hover:border-green-500/40"
+                                >
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-foreground">{res.name}</p>
+                                            {res.premium && (
+                                                <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full font-medium">
+                                                    Premium
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-green-500 font-medium flex items-center">
+                                            <CheckCircle size={10} className="mr-1" /> {t('domainsDashboard.available')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {res.price !== null && (
+                                            <div className="text-right">
+                                                <span className="font-bold">${res.price.toFixed(2)}</span>
+                                                <span className="text-xs text-muted-foreground">{t('domainsDashboard.perYear')}</span>
+                                                {res.renewalPrice && res.renewalPrice !== res.price && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t('domainsDashboard.renewalPrice', { price: res.renewalPrice.toFixed(2) })}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => res.price && handleBuy(res.name, res.price)}
+                                            disabled={isPurchasing !== null}
+                                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 min-w-[90px]"
+                                        >
+                                            {isPurchasing === res.name ? (
+                                                <Loader2 size={16} className="animate-spin mx-auto" />
+                                            ) : (
+                                                t('domainsDashboard.buy')
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <span className="text-muted-foreground">—</span>
-                            )}
-                            <button
-                                onClick={() => res.price && handleBuy(res.name, res.price)}
-                                disabled={!res.available || isPurchasing !== null}
-                                className="bg-secondary hover:bg-primary hover:text-primary-foreground text-foreground font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
-                            >
-                                {isPurchasing === res.name ? (
-                                    <Loader2 size={16} className="animate-spin mx-auto" />
-                                ) : (
-                                    t('domainsDashboard.buy')
-                                )}
-                            </button>
+                            ))}
                         </div>
                     </div>
-                ))}
+                )}
+
+                {/* Unavailable Domains Section */}
+                {results.filter(r => !r.available).length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-bold text-red-500 mb-2 flex items-center">
+                            <X size={14} className="mr-1" /> {t('domainsDashboard.taken')} ({results.filter(r => !r.available).length})
+                        </h3>
+                        <div className="space-y-2">
+                            {results.filter(r => !r.available).map((res, idx) => (
+                                <div
+                                    key={`unavailable-${idx}`}
+                                    className="flex justify-between items-center p-3 bg-card/50 border border-red-500/20 rounded-lg opacity-70"
+                                >
+                                    <div>
+                                        <p className="font-medium text-foreground line-through">{res.name}</p>
+                                        <span className="text-xs text-red-500 font-medium flex items-center">
+                                            <X size={10} className="mr-1" /> {t('domainsDashboard.taken')}
+                                        </span>
+                                    </div>
+                                    <span className="text-sm text-muted-foreground px-3 py-1 bg-secondary/50 rounded">
+                                        {t('domainsDashboard.notAvailable')}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {results.length === 0 && !isSearching && !error && (
                     <div className="text-center py-10 text-muted-foreground">
                         <Globe size={40} className="mx-auto mb-3 opacity-30" />

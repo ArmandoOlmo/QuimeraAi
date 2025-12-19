@@ -3216,6 +3216,7 @@
     "searchDesc": "Search for your perfect web address. Powered by AI.",
     "available": "Available",
     "taken": "Taken",
+    "notAvailable": "Not available",
     "buy": "Buy",
     "enterKeyword": "Enter a keyword to find available domains.",
     "title": "Domains",
