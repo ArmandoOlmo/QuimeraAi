@@ -300,11 +300,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Load project by ID
     const loadProject = useCallback((projectId: string, fromAdmin = false, navigateToEditor = true) => {
+        console.log('[ProjectContext] loadProject called with:', { projectId, fromAdmin, navigateToEditor });
+        console.log('[ProjectContext] Available projects:', projectsRef.current.map(p => ({ id: p.id, name: p.name })));
+        
         const project = projectsRef.current.find(p => p.id === projectId);
         if (!project) {
-            console.error("Project not found:", projectId);
+            console.error("[ProjectContext] Project not found:", projectId);
+            console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
             return;
         }
+        
+        console.log('[ProjectContext] Loading project:', project.name);
 
         setActiveProjectId(projectId);
         setData(project.data);
@@ -366,20 +372,37 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Publish project to publicStores (makes it accessible via custom domains)
     const publishProject = useCallback(async (): Promise<boolean> => {
+        console.log('[ProjectContext] publishProject called');
+        console.log('[ProjectContext] user:', !!user, 'activeProjectId:', activeProjectId, 'data:', !!data);
+        
         if (!user || !activeProjectId || !data) {
-            console.error('[ProjectContext] Cannot publish: missing user, project, or data');
+            console.error('[ProjectContext] Cannot publish: missing user, project, or data', {
+                hasUser: !!user,
+                activeProjectId,
+                hasData: !!data
+            });
             return false;
         }
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
+        console.log('[ProjectContext] Found project:', project?.name, project?.id);
+        
         if (!project) {
-            console.error('[ProjectContext] Cannot publish: project not found');
+            console.error('[ProjectContext] Cannot publish: project not found in projectsRef');
             return false;
         }
 
         try {
+            console.log('[ProjectContext] Saving project first...');
             // First save the project
             await saveProject();
+            console.log('[ProjectContext] Project saved, now publishing...');
+
+            // Fetch the latest project data including seoConfig from Firestore
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            const projectRef = doc(db, ...pathSegments, activeProjectId);
+            const projectSnap = await getDoc(projectRef);
+            const latestProjectData = projectSnap.exists() ? projectSnap.data() : {};
 
             // Now publish to publicStores
             const publicStoreRef = doc(db, 'publicStores', activeProjectId);
@@ -390,6 +413,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 brandIdentity,
                 componentOrder,
                 sectionVisibility,
+                // Include SEO config and other metadata
+                seoConfig: latestProjectData.seoConfig || null,
+                aiAssistantConfig: latestProjectData.aiAssistantConfig || null,
+                componentStyles: latestProjectData.componentStyles || null,
+                componentStatus: latestProjectData.componentStatus || null,
                 userId: user.uid,
                 tenantId: currentTenantId || null,
                 publishedAt: new Date().toISOString(),
@@ -398,7 +426,42 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             await setDoc(publicStoreRef, publishData, { merge: true });
 
-            console.log(`✅ [ProjectContext] Project ${activeProjectId} published to publicStores`);
+            console.log(`✅ [ProjectContext] Project ${activeProjectId} published to publicStores with SEO config`);
+
+            // AUTOMATIC DOMAIN SYNC:
+            // Fetch domains for this project and sync them directly to customDomains collection
+            try {
+                const domainsCol = collection(db, 'users', user.uid, 'domains');
+                const domainsSnap = await getDocs(domainsCol);
+                const projectDomains = domainsSnap.docs
+                    .map(d => ({ id: d.id, ...d.data() } as any))
+                    .filter(d => d.projectId === activeProjectId);
+
+                if (projectDomains.length > 0) {
+                    console.log(`📡 [ProjectContext] Syncing ${projectDomains.length} domains for project ${activeProjectId}...`);
+                    
+                    for (const domain of projectDomains) {
+                        const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
+                        
+                        // Direct write to customDomains collection (bypass Cloud Function)
+                        await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                            domain: normalizedDomain,
+                            projectId: activeProjectId,
+                            userId: user.uid,
+                            status: 'active',
+                            sslStatus: 'active',
+                            dnsVerified: true,
+                            cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+                        
+                        console.log(`✅ [ProjectContext] Domain synced: ${normalizedDomain}`);
+                    }
+                }
+            } catch (syncError) {
+                console.warn('[ProjectContext] Domain sync warning (non-critical):', syncError);
+            }
+
             return true;
         } catch (error) {
             console.error('[ProjectContext] Error publishing project:', error);

@@ -260,29 +260,35 @@ export const syncDomainMapping = functions.https.onCall(async (data, context) =>
 
     const normalizedDomain = domain.toLowerCase().trim().replace(/^www\./, '');
 
-    // Save to Firestore (Cloud Run SSR server reads from this collection)
-    const domainData = {
-        domain: normalizedDomain,
-        projectId: projectId || null,
-        userId,
-        status: projectId ? 'active' : 'pending',
-        sslStatus: 'active', // Cloudflare handles SSL
-        dnsVerified: true,
-        cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    };
+    try {
+        // Save to Firestore (Cloud Run SSR server reads from this collection)
+        const domainData = {
+            domain: normalizedDomain,
+            projectId: projectId || null,
+            userId,
+            status: projectId ? 'active' : 'pending',
+            sslStatus: 'active', // Cloudflare handles SSL
+            dnsVerified: true,
+            cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
 
-    await db.collection('customDomains').doc(normalizedDomain).set(domainData, { merge: true });
-    console.log(`[DomainManager] Synced ${normalizedDomain} to customDomains collection`);
-    
-    return { 
-        success: true, 
-        message: `Domain ${normalizedDomain} synced for Cloud Run SSR`,
-        domain: normalizedDomain,
-        target: domainData.cloudRunTarget
-    };
+        await admin.firestore().collection('customDomains').doc(normalizedDomain).set(domainData, { merge: true });
+        console.log(`[DomainManager] Synced ${normalizedDomain} to customDomains collection`);
+        
+        return { 
+            success: true, 
+            message: `Domain ${normalizedDomain} synced for Cloud Run SSR`,
+            domain: normalizedDomain,
+            target: domainData.cloudRunTarget
+        };
+    } catch (error: any) {
+        console.error('[DomainManager] Error in syncDomainMapping:', error);
+        throw new functions.https.HttpsError('internal', error.message || 'Error syncing domain mapping');
+    }
 });
+
 
 
 

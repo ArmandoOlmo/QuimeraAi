@@ -22,13 +22,12 @@ import Video from './Video';
 import HowItWorks from './HowItWorks';
 import BlogPost from './BlogPost';
 import ChatbotWidget from './ChatbotWidget';
-import LandingChatbotWidget from './LandingChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
-import { useAuth } from '../contexts/core/AuthContext';
+import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { useCMS } from '../contexts/cms';
@@ -116,7 +115,8 @@ const fontStacks: Record<FontFamily, string> = {
 
 // Inner component that uses the cart context
 const LandingPageContent: React.FC = () => {
-  const { user } = useAuth();
+  const authContext = useSafeAuth();
+  const user = authContext?.user ?? null;
   const { activeSection, onSectionSelect } = useUI();
   const { data, theme, componentOrder, sectionVisibility, activeProjectId } = useProject();
   const { cmsPosts, isLoadingCMS, menus } = useCMS();
@@ -940,9 +940,6 @@ const LandingPageContent: React.FC = () => {
 
       {/* Chatbot Widget - Renders independently outside component order */}
       <ChatbotWidget />
-      
-      {/* Landing Chatbot Widget - For public Quimera.ai landing page visitors */}
-      <LandingChatbotWidget />
     </div>
   );
 };

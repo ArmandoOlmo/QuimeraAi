@@ -1,3 +1,4 @@
+// SimpleEditorHeader - Updated with publish functionality
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../contexts/core/UIContext';
@@ -14,12 +15,13 @@ interface SimpleEditorHeaderProps {
 const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMenu }) => {
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen } = useUI();
-  const { activeProject, renameActiveProject, saveProject, isEditingTemplate, exitTemplateEditor } = useProject();
+  const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
   const { navigate } = useRouter();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
   const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
+  const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -170,8 +172,48 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
         </button>
 
         {/* Publish Button */}
-        <button className="text-primary hover:text-primary/80 font-medium text-sm h-9 px-3 transition-colors">
-          {t('editor.publish')}
+        <button 
+          onClick={async () => {
+            if (!publishProject) {
+              console.error('[SimpleEditorHeader] publishProject not available');
+              return;
+            }
+            
+            setPublishState('publishing');
+            try {
+              const success = await publishProject();
+              setPublishState(success ? 'published' : 'error');
+              setTimeout(() => setPublishState('idle'), 3000);
+            } catch (error) {
+              console.error('[SimpleEditorHeader] Error publishing:', error);
+              setPublishState('error');
+              setTimeout(() => setPublishState('idle'), 3000);
+            }
+          }}
+          disabled={publishState === 'publishing'}
+          className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${
+            publishState === 'published' 
+              ? 'text-green-500' 
+              : publishState === 'error'
+                ? 'text-red-500'
+                : 'text-primary hover:text-primary/80'
+          } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+        >
+          {publishState === 'publishing' ? (
+            <>
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
+            </>
+          ) : publishState === 'published' ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
+            </>
+          ) : publishState === 'error' ? (
+            <span>{t('editor.publishError', 'Error')}</span>
+          ) : (
+            t('editor.publish')
+          )}
         </button>
       </div>
     </header>

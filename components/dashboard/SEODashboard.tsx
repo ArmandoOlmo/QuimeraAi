@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project';
+import { useEditor } from '../../contexts/EditorContext';
 import { SEOConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
@@ -17,14 +18,13 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   const { t } = useTranslation();
   const { setView } = useUI();
   const { 
-    seoConfig, 
-    updateSeoConfig, 
     activeProject, 
     projects,
     activeProjectId,
-    loadProject,
     isLoadingProjects
   } = useProject();
+  // seoConfig y loadProject vienen del EditorContext porque loadProject del Editor carga el seoConfig
+  const { seoConfig, updateSeoConfig, loadProject } = useEditor();
   const [activeTab, setActiveTab] = useState<SeoTab>(initialTab);
   const [localConfig, setLocalConfig] = useState<SEOConfig | null>(seoConfig);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,6 +51,13 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
       setSelectedProjectId(activeProjectId);
     }
   }, [activeProjectId]);
+
+  // Cargar el proyecto en el EditorContext si hay un proyecto seleccionado pero no hay seoConfig
+  useEffect(() => {
+    if (effectiveProjectId && !seoConfig && !isLoadingProjects) {
+      loadProject(effectiveProjectId, false, false);
+    }
+  }, [effectiveProjectId, seoConfig, isLoadingProjects, loadProject]);
 
   const handleUpdate = async () => {
     if (localConfig) {

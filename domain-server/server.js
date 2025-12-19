@@ -198,3 +198,4 @@ function getPendingPage(domain, status) {
 app.listen(PORT, () => {
     console.log(`🚀 Quimera Domain Router running on port ${PORT}`);
 });
+

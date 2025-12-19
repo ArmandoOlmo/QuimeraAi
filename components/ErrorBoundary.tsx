@@ -97,8 +97,8 @@ class ErrorBoundary extends Component<Props, State> {
               We encountered an unexpected error. Don't worry, our team has been notified.
             </p>
 
-            {/* Error Details (Development Only) */}
-            {(import.meta as any).env?.MODE === 'development' && this.state.error && (
+            {/* Error Details */}
+            {this.state.error && (
               <div className="bg-editor-bg border border-editor-border rounded-lg p-4 mb-6 overflow-auto max-h-64">
                 <h3 className="font-bold text-red-400 mb-2">Error Details:</h3>
                 <pre className="text-sm text-editor-text-secondary whitespace-pre-wrap">

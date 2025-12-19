@@ -858,7 +858,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const domainsCol = collection(db, 'users', userId, 'domains');
             const q = query(domainsCol, orderBy('createdAt', 'desc'));
             const snap = await getDocs(q);
-            const userDomains = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Domain));
+            // IMPORTANT: docSnapshot.id must come AFTER ...data to override any "id" field
+            const userDomains = snap.docs.map(docSnapshot => ({ 
+                ...docSnapshot.data(), 
+                id: docSnapshot.id 
+            } as Domain));
             setDomains(userDomains);
         } catch (error) {
             console.error("Error loading user domains:", error);
@@ -3453,9 +3457,27 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         setSeoConfig(newConfig);
 
         try {
+            // Update in user's project
             const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
             await updateDoc(projectDocRef, { seoConfig: newConfig });
-            console.log('SEO configuration updated successfully');
+            console.log('SEO configuration updated in project');
+
+            // Also update in publicStores if the project is published there
+            try {
+                const publicStoreRef = doc(db, 'publicStores', activeProjectId);
+                const publicStoreSnap = await getDoc(publicStoreRef);
+                
+                if (publicStoreSnap.exists()) {
+                    await updateDoc(publicStoreRef, { 
+                        seoConfig: newConfig,
+                        updatedAt: new Date().toISOString()
+                    });
+                    console.log('SEO configuration also updated in publicStores');
+                }
+            } catch (publicErr) {
+                // publicStores might not exist if project was never published - this is OK
+                console.log('Project not in publicStores (not published yet):', publicErr);
+            }
         } catch (error) {
             console.error('Error updating SEO config:', error);
         }
@@ -3739,7 +3761,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deployDomain = async (
         domainId: string,
-        provider: 'vercel' | 'cloudflare' | 'netlify' = 'vercel'
+        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' = 'cloud_run'
     ): Promise<boolean> => {
         if (!user) return false;
 
@@ -3762,22 +3784,43 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 deployment: {
                     provider,
                     status: 'deploying'
-                },
-                deploymentLogs: [
-                    ...(domain.deploymentLogs || []),
-                    deploymentService.createDeploymentLog(
-                        'started',
-                        `Starting deployment to ${provider}...`,
-                        `Project: ${project.name}`
-                    )
-                ]
+                }
             });
 
-            // Perform actual deployment
-            const result = await deploymentService.deployProject(project, domain, provider);
+            // Handle Cloud Run / SSR Mapping (Direct Firestore Write)
+            if (provider === 'cloud_run' || domain.provider === 'Quimera') {
+                const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
+                
+                // Direct write to customDomains collection
+                await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                    domain: normalizedDomain,
+                    projectId: domain.projectId,
+                    userId: user.uid,
+                    status: 'active',
+                    sslStatus: 'active',
+                    dnsVerified: true,
+                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                await updateDomain(domainId, {
+                    status: 'active',
+                    sslStatus: 'active',
+                    deployment: {
+                        provider: 'cloud_run',
+                        deploymentUrl: `https://${domain.name}`,
+                        lastDeployedAt: new Date().toISOString(),
+                        status: 'success'
+                    }
+                });
+
+                return true;
+            }
+
+            // Perform actual static deployment (Vercel/Cloudflare/etc)
+            const result = await deploymentService.deployProject(project, domain, provider as any);
 
             if (result.success) {
-                // Update with success
                 await updateDomain(domainId, {
                     status: 'deployed',
                     deployment: {
@@ -3787,34 +3830,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         lastDeployedAt: new Date().toISOString(),
                         status: 'success'
                     },
-                    dnsRecords: result.dnsRecords,
-                    deploymentLogs: [
-                        ...(domain.deploymentLogs || []),
-                        deploymentService.createDeploymentLog(
-                            'success',
-                            'Deployment completed successfully!',
-                            `URL: ${result.deploymentUrl}`
-                        )
-                    ]
+                    dnsRecords: result.dnsRecords
                 });
                 return true;
             } else {
-                // Update with failure
                 await updateDomain(domainId, {
                     status: 'error',
                     deployment: {
                         provider,
                         status: 'failed',
                         error: result.error
-                    },
-                    deploymentLogs: [
-                        ...(domain.deploymentLogs || []),
-                        deploymentService.createDeploymentLog(
-                            'failed',
-                            'Deployment failed',
-                            result.error
-                        )
-                    ]
+                    }
                 });
                 return false;
             }

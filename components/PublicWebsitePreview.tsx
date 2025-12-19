@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
-import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily } from '../types';
+import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle } from 'lucide-react';
 
@@ -118,19 +118,36 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [menus, setMenus] = useState<Menu[]>([]);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
 
-  // Parse URL params from hash: #preview/userId/projectId
+  // Parse URL params from pathname: /preview/userId/projectId
+  // Also supports hash: #preview/userId/projectId (legacy)
   const getIdsFromURL = () => {
+    // First check pathname (new format): /preview/userId/projectId
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/preview/')) {
+      const parts = pathname.replace('/preview/', '').split('/');
+      if (parts[0] && parts[1]) {
+        console.log('[PublicWebsitePreview] Parsed IDs from pathname:', { userId: parts[0], projectId: parts[1] });
+        return { userId: parts[0], projectId: parts[1] };
+      }
+    }
+    
+    // Also support hash format (legacy): #preview/userId/projectId
     const hash = window.location.hash;
     if (hash.startsWith('#preview/')) {
       const parts = hash.replace('#preview/', '').split('/');
-      return { userId: parts[0], projectId: parts[1] };
+      if (parts[0] && parts[1]) {
+        console.log('[PublicWebsitePreview] Parsed IDs from hash:', { userId: parts[0], projectId: parts[1] });
+        return { userId: parts[0], projectId: parts[1] };
+      }
     }
-    // Also support query params: ?userId=...&projectId=...
+    
+    // Fallback to query params or props: ?userId=...&projectId=...
     const params = new URLSearchParams(window.location.search);
-    return {
-      userId: params.get('userId') || propUserId,
-      projectId: params.get('projectId') || propProjectId
-    };
+    const userId = params.get('userId') || propUserId;
+    const projectId = params.get('projectId') || propProjectId;
+    
+    console.log('[PublicWebsitePreview] Using props/query params:', { userId, projectId });
+    return { userId, projectId };
   };
 
   // Load project data
@@ -147,43 +164,67 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       try {
         let projectData: Project | null = null;
 
-        // Try loading from user's projects collection first
+        // PRIORITY 1: Try publicStores first (public access, contains published data with SEO)
         try {
-          const projectRef = doc(db, 'users', userId, 'projects', projectId);
-          const projectSnap = await getDoc(projectRef);
+          const publicStoreRef = doc(db, 'publicStores', projectId);
+          const publicStoreSnap = await getDoc(publicStoreRef);
           
-          if (projectSnap.exists()) {
-            projectData = { id: projectSnap.id, ...projectSnap.data() } as Project;
-            console.log('[PublicWebsitePreview] Loaded project from user collection');
+          if (publicStoreSnap.exists()) {
+            const rawData = publicStoreSnap.data();
+            projectData = { id: publicStoreSnap.id, ...rawData } as Project;
+            console.log('[PublicWebsitePreview] ✅ Loaded from publicStores', {
+              hasSeoConfig: !!rawData.seoConfig,
+              seoTitle: rawData.seoConfig?.title,
+              seoDescription: rawData.seoConfig?.description?.substring(0, 50),
+              projectName: rawData.name
+            });
           }
-        } catch (userProjectErr) {
-          console.log('[PublicWebsitePreview] Could not load from user collection, trying publicStores:', userProjectErr);
+        } catch (publicErr) {
+          console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
         }
 
-        // If not found in user collection, try publicStores (for custom domains)
+        // PRIORITY 2: Try user's projects collection (requires auth)
         if (!projectData) {
           try {
-            const publicStoreRef = doc(db, 'publicStores', projectId);
-            const publicStoreSnap = await getDoc(publicStoreRef);
+            const projectRef = doc(db, 'users', userId, 'projects', projectId);
+            const projectSnap = await getDoc(projectRef);
             
-            if (publicStoreSnap.exists()) {
-              projectData = { id: publicStoreSnap.id, ...publicStoreSnap.data() } as Project;
-              console.log('[PublicWebsitePreview] Loaded project from publicStores');
+            if (projectSnap.exists()) {
+              const rawData = projectSnap.data();
+              projectData = { id: projectSnap.id, ...rawData } as Project;
+              console.log('[PublicWebsitePreview] ✅ Loaded from user collection', {
+                hasSeoConfig: !!rawData.seoConfig,
+                seoTitle: rawData.seoConfig?.title,
+                projectName: rawData.name
+              });
             }
-          } catch (publicErr) {
-            console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
+          } catch (userProjectErr) {
+            console.log('[PublicWebsitePreview] Could not load from user collection (may require auth):', userProjectErr);
           }
         }
 
-        // Try loading as public template as last resort
+        // PRIORITY 3: Try templates as last resort
         if (!projectData) {
-          const templateRef = doc(db, 'templates', projectId);
-          const templateSnap = await getDoc(templateRef);
-          
-          if (templateSnap.exists()) {
-            projectData = { id: templateSnap.id, ...templateSnap.data() } as Project;
-            console.log('[PublicWebsitePreview] Loaded project from templates');
+          try {
+            const templateRef = doc(db, 'templates', projectId);
+            const templateSnap = await getDoc(templateRef);
+            
+            if (templateSnap.exists()) {
+              const rawData = templateSnap.data();
+              projectData = { id: templateSnap.id, ...rawData } as Project;
+              console.log('[PublicWebsitePreview] ✅ Loaded from templates', {
+                hasSeoConfig: !!rawData.seoConfig,
+                projectName: rawData.name
+              });
+            }
+          } catch (templateErr) {
+            console.log('[PublicWebsitePreview] Could not load from templates:', templateErr);
           }
+        }
+
+        // Log if no data found
+        if (!projectData) {
+          console.error('[PublicWebsitePreview] ❌ Project not found in any collection:', { userId, projectId });
         }
         
         if (projectData) {
@@ -267,6 +308,149 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       root.style.setProperty('--navlinks-spacing', project.theme.navLinksAllCaps ? '0.05em' : 'normal');
     }
   }, [project?.theme]);
+
+  // Apply SEO meta tags from project configuration
+  useEffect(() => {
+    if (!project) return;
+
+    // Access seoConfig from project - it's stored directly on the project object
+    const seoConfig = project.seoConfig as SEOConfig | undefined;
+    const projectName = project.name;
+    const heroData = project.data?.hero;
+
+    console.log('[PublicWebsitePreview] Applying SEO config:', {
+      hasSeoConfig: !!seoConfig,
+      seoTitle: seoConfig?.title,
+      projectName,
+      heroHeadline: heroData?.headline
+    });
+
+    // Helper to create or update meta tag
+    const setMetaTag = (selector: string, content: string, attribute: 'name' | 'property' = 'name') => {
+      if (!content) return;
+      let element = document.querySelector(selector) as HTMLMetaElement;
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attribute, selector.replace(`[${attribute}="`, '').replace('"]', ''));
+        document.head.appendChild(element);
+      }
+      element.content = content;
+    };
+
+    // Helper to set link tag
+    const setLinkTag = (rel: string, href: string) => {
+      if (!href) return;
+      let element = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+      if (!element) {
+        element = document.createElement('link');
+        element.rel = rel;
+        document.head.appendChild(element);
+      }
+      element.href = href;
+    };
+
+    // Helper to strip HTML tags from text
+    const stripHtml = (html: string): string => {
+      if (!html) return '';
+      return html.replace(/<[^>]*>/g, '').trim();
+    };
+
+    // Set document title - prefer seoConfig.title, then projectName, then hero headline
+    const rawTitle = seoConfig?.title || projectName || stripHtml(heroData?.headline) || 'Website';
+    const title = stripHtml(rawTitle);
+    document.title = title;
+    console.log('[PublicWebsitePreview] Document title set to:', title);
+
+    // Basic SEO
+    const description = seoConfig?.description || heroData?.subheadline || '';
+    setMetaTag('[name="description"]', description);
+    
+    if (seoConfig?.keywords?.length) {
+      setMetaTag('[name="keywords"]', seoConfig.keywords.join(', '));
+    }
+    if (seoConfig?.author) {
+      setMetaTag('[name="author"]', seoConfig.author);
+    }
+    if (seoConfig?.robots) {
+      setMetaTag('[name="robots"]', seoConfig.robots);
+    }
+    if (seoConfig?.language) {
+      document.documentElement.lang = seoConfig.language;
+    }
+
+    // Open Graph
+    setMetaTag('[property="og:type"]', seoConfig?.ogType || 'website', 'property');
+    setMetaTag('[property="og:title"]', seoConfig?.ogTitle || title, 'property');
+    setMetaTag('[property="og:description"]', seoConfig?.ogDescription || description, 'property');
+    if (seoConfig?.ogImage || heroData?.imageUrl) {
+      setMetaTag('[property="og:image"]', seoConfig?.ogImage || heroData?.imageUrl, 'property');
+    }
+    if (seoConfig?.ogSiteName) {
+      setMetaTag('[property="og:site_name"]', seoConfig.ogSiteName, 'property');
+    }
+    setMetaTag('[property="og:url"]', window.location.href, 'property');
+
+    // Twitter Card
+    setMetaTag('[name="twitter:card"]', seoConfig?.twitterCard || 'summary_large_image');
+    setMetaTag('[name="twitter:title"]', seoConfig?.twitterTitle || title);
+    setMetaTag('[name="twitter:description"]', seoConfig?.twitterDescription || description);
+    if (seoConfig?.twitterImage || heroData?.imageUrl) {
+      setMetaTag('[name="twitter:image"]', seoConfig?.twitterImage || heroData?.imageUrl);
+    }
+    if (seoConfig?.twitterSite) {
+      setMetaTag('[name="twitter:site"]', seoConfig.twitterSite);
+    }
+    if (seoConfig?.twitterCreator) {
+      setMetaTag('[name="twitter:creator"]', seoConfig.twitterCreator);
+    }
+
+    // Site Verification
+    if (seoConfig?.googleSiteVerification) {
+      setMetaTag('[name="google-site-verification"]', seoConfig.googleSiteVerification);
+    }
+    if (seoConfig?.bingVerification) {
+      setMetaTag('[name="msvalidate.01"]', seoConfig.bingVerification);
+    }
+
+    // Canonical URL
+    if (seoConfig?.canonical) {
+      setLinkTag('canonical', seoConfig.canonical);
+    }
+
+    // AI Bot Optimization
+    if (seoConfig?.aiCrawlable) {
+      setMetaTag('[name="ai:crawlable"]', 'true');
+      if (seoConfig.aiDescription) {
+        setMetaTag('[name="ai:description"]', seoConfig.aiDescription);
+      }
+      if (seoConfig.aiKeyTopics?.length) {
+        setMetaTag('[name="ai:topics"]', seoConfig.aiKeyTopics.join(', '));
+      }
+    }
+
+    // Structured Data (Schema.org JSON-LD)
+    if (seoConfig?.schemaType) {
+      let scriptElement = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
+      if (!scriptElement) {
+        scriptElement = document.createElement('script');
+        scriptElement.type = 'application/ld+json';
+        document.head.appendChild(scriptElement);
+      }
+      
+      const schemaMarkup = {
+        '@context': 'https://schema.org',
+        '@type': seoConfig.schemaType,
+        name: title,
+        description: description,
+        url: window.location.href,
+        ...(seoConfig.schemaData || {}),
+        ...(seoConfig.ogImage ? { image: seoConfig.ogImage } : {}),
+      };
+      scriptElement.textContent = JSON.stringify(schemaMarkup);
+    }
+
+    console.log('[PublicWebsitePreview] SEO meta tags applied:', { title, description, seoConfig: !!seoConfig });
+  }, [project]);
 
   // Loading state
   if (loading) {

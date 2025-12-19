@@ -149,7 +149,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [isDeploying, setIsDeploying] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
-    const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify'>('cloudflare');
+    const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
 
     const handleVerify = async () => {
         setIsVerifying(true);
@@ -158,17 +158,24 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm(t('domainsDashboard.deleteDomainConfirm'))) {
+        // Show domain info before confirming
+        const confirmMsg = `¿Eliminar dominio?\n\nNombre: ${domain.name}\nID: ${domain.id}`;
+        if (!window.confirm(confirmMsg)) {
             return;
         }
         
         setIsDeleting(true);
         try {
+            console.log(`🗑️ [DomainCard] === STARTING DELETE ===`);
+            console.log(`🗑️ [DomainCard] Domain: ${domain.name} (ID: ${domain.id})`);
+            
             await deleteDomain(domain.id);
-            console.log('✅ Domain deleted successfully:', domain.name);
-        } catch (error) {
-            console.error('❌ Error deleting domain:', error);
-            alert(t('domainsDashboard.deleteError', 'Error al eliminar el dominio. Por favor intenta de nuevo.'));
+            
+            console.log(`✅ [DomainCard] Delete completed`);
+            alert(`✅ Dominio "${domain.name}" eliminado del servidor.\n\nHaz hard reload para verificar.`);
+        } catch (error: any) {
+            console.error('❌ [DomainCard] Delete FAILED:', error);
+            alert(`❌ Error:\n\n${error?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`);
         } finally {
             setIsDeleting(false);
         }
@@ -184,7 +191,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
             return;
         }
 
-        if (!window.confirm(`${t('domainsDashboard.deployTo')} ${deployProvider}? ${t('domainsDashboard.deployConfirm')}`)) {
+        if (!window.confirm(`${t('domainsDashboard.deployTo')} ${deployProvider === 'cloud_run' ? 'Quimera Cloud (SSR)' : deployProvider}? ${t('domainsDashboard.deployConfirm')}`)) {
             return;
         }
 
@@ -247,7 +254,14 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.generatingSsl')}</span>}
                             {domain.status === 'deploying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.status.deploying')}</span>}
                             {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
-                            {domain.status === 'error' && <span className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20"><AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')}</span>}
+                            {domain.status === 'error' && (
+                                <button 
+                                    onClick={handleVerify}
+                                    className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                >
+                                    <AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')} - {t('domainsDashboard.retryVerify', 'Reintentar')}
+                                </button>
+                            )}
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
                             {/* SSL Status Badge */}
                             {domain.sslStatus === 'active' && (
@@ -342,21 +356,21 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <StepIndicator
                             step={2}
                             label={t('domainsDashboard.stepDns')}
-                            completed={domain.status === 'ssl_pending' || domain.status === 'active'}
-                            active={domain.status === 'pending' || domain.status === 'verifying'}
+                            completed={domain.status === 'ssl_pending' || domain.status === 'active' || domain.status === 'deployed'}
+                            active={domain.status === 'pending' || domain.status === 'verifying' || domain.status === 'error'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
                             step={3}
                             label={t('domainsDashboard.stepSsl')}
                             completed={domain.sslStatus === 'active'}
-                            active={domain.status === 'ssl_pending'}
+                            active={domain.status === 'ssl_pending' || (domain.status === 'active' && domain.sslStatus !== 'active')}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
                             step={4}
                             label={t('domainsDashboard.stepActive')}
-                            completed={domain.status === 'active'}
+                            completed={domain.status === 'active' || domain.status === 'deployed'}
                             active={false}
                         />
                     </div>

@@ -8,7 +8,7 @@ import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { db, collection, addDoc, getDocs, query, where, orderBy } from '../firebase';
-import { useAuth } from '../contexts/core/AuthContext';
+import { useSafeAuth } from '../contexts/core/AuthContext';
 
 interface ChatbotWidgetProps {
     isPreview?: boolean;
@@ -23,7 +23,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
-    const { user } = useAuth();
+    const authContext = useSafeAuth();
+    const user = authContext?.user ?? null;
     const { t } = useTranslation();
 
     // Use standalone config or editor context values

@@ -145,8 +145,8 @@ const AuthGate: React.FC = () => {
           </>
         )}
       </Router>
-      {/* Landing Chatbot - Always render outside Router when user is NOT authenticated */}
-      {!user && <LandingChatbotWidget />}
+      {/* Landing Chatbot - Only render on public marketing pages (home, login, register, etc.) */}
+      {!user && !isPreviewRoute() && !window.location.pathname.startsWith('/store/') && <LandingChatbotWidget />}
     </>
   );
 };

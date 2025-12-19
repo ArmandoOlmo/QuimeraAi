@@ -194,8 +194,54 @@ const EditorHeader: React.FC = () => {
           </button>
 
           {/* Publish Button */}
-          <button className="text-editor-accent hover:text-editor-accent-hover font-medium text-sm h-9 px-3 transition-colors">
-            {t('editor.publish')}
+          <button 
+            onClick={async () => {
+              console.log('[EditorHeader] Publish button clicked');
+              console.log('[EditorHeader] publishProject function:', typeof publishProject);
+              console.log('[EditorHeader] activeProject:', activeProject?.id, activeProject?.name);
+              
+              if (!publishProject) {
+                console.error('[EditorHeader] publishProject is not available!');
+                return;
+              }
+              
+              setPublishState('publishing');
+              try {
+                console.log('[EditorHeader] Calling publishProject...');
+                const success = await publishProject();
+                console.log('[EditorHeader] publishProject result:', success);
+                setPublishState(success ? 'published' : 'error');
+                setTimeout(() => setPublishState('idle'), 3000);
+              } catch (error) {
+                console.error('[EditorHeader] Error publishing:', error);
+                setPublishState('error');
+                setTimeout(() => setPublishState('idle'), 3000);
+              }
+            }}
+            disabled={publishState === 'publishing'}
+            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${
+              publishState === 'published' 
+                ? 'text-green-500' 
+                : publishState === 'error'
+                  ? 'text-red-500'
+                  : 'text-editor-accent hover:text-editor-accent-hover'
+            } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+          >
+            {publishState === 'publishing' ? (
+              <>
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                {t('editor.publishing', 'Publicando...')}
+              </>
+            ) : publishState === 'published' ? (
+              <>
+                <Check className="w-4 h-4" />
+                {t('editor.published', '¡Publicado!')}
+              </>
+            ) : publishState === 'error' ? (
+              t('editor.publishError', 'Error')
+            ) : (
+              t('editor.publish')
+            )}
           </button>
         </div>
       </div>
