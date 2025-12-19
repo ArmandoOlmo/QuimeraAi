@@ -811,3 +811,4 @@ export const DEFAULT_BLOCK_STYLES: Record<EmailBlockType, EmailBlockStyles> = {
 
 
 
+

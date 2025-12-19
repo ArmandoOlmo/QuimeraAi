@@ -178,3 +178,4 @@ Los planes se definen en `types/subscription.ts` → `SUBSCRIPTION_PLANS`:
 - [ ] Las reglas de Firestore están desplegadas (`firebase deploy --only firestore:rules`)
 
 
+

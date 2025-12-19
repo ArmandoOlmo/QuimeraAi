@@ -55,3 +55,4 @@ echo "📝 Next steps:"
 echo "   1. Update Cloudflare DNS to point domains to this Cloud Run service"
 echo "   2. Configure domain mapping in Cloud Run (optional)"
 
+

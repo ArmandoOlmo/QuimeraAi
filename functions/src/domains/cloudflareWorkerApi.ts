@@ -207,3 +207,4 @@ export const addWorkerDomain = functions.https.onCall(async (data, context) => {
     return { success: true, message: `Domain ${domain} added to Worker` };
 });
 
+
