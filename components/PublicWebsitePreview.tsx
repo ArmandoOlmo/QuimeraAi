@@ -500,6 +500,26 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     console.log('[PublicWebsitePreview] SEO meta tags applied:', { title, description, seoConfig: !!seoConfig });
   }, [project]);
 
+  // Navigation handlers - MUST be before any conditional returns to avoid React hooks error #310
+  const handleBackToHome = useCallback(() => {
+    const { userId, projectId } = getIdsFromURL();
+    window.location.hash = `preview/${userId}/${projectId}`;
+    setActivePost(null);
+    setStoreView({ type: 'none' });
+  }, []);
+
+  const handleNavigateToStore = useCallback(() => {
+    window.location.hash = 'store';
+  }, []);
+
+  const handleNavigateToCategory = useCallback((categorySlug: string) => {
+    window.location.hash = `store/category/${categorySlug}`;
+  }, []);
+
+  const handleNavigateToProduct = useCallback((productSlug: string) => {
+    window.location.hash = `store/product/${productSlug}`;
+  }, []);
+
   // Loading state
   if (loading) {
     return (
@@ -759,27 +779,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return null;
     }
   };
-
-  // Handle back to home from article or store
-  const handleBackToHome = useCallback(() => {
-    const { userId, projectId } = getIdsFromURL();
-    window.location.hash = `preview/${userId}/${projectId}`;
-    setActivePost(null);
-    setStoreView({ type: 'none' });
-  }, []);
-
-  // Store navigation handlers
-  const handleNavigateToStore = useCallback(() => {
-    window.location.hash = 'store';
-  }, []);
-
-  const handleNavigateToCategory = useCallback((categorySlug: string) => {
-    window.location.hash = `store/category/${categorySlug}`;
-  }, []);
-
-  const handleNavigateToProduct = useCallback((productSlug: string) => {
-    window.location.hash = `store/product/${productSlug}`;
-  }, []);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
