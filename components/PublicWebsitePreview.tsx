@@ -625,8 +625,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     announcementBar: mergeComponentData('announcementBar'),
   };
 
-  // Get projectId for store components
-  const { projectId: storeProjectId } = getIdsFromURL();
+  // Get projectId for store components - use the loaded project's ID
+  // This works correctly for both preview URLs and custom domains
+  const storeProjectId = project?.id || propProjectId || getIdsFromURL().projectId;
 
   /**
    * Verifica si un componente de ecommerce debe mostrarse en el landing page público
