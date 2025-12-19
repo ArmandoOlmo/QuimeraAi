@@ -920,6 +920,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { domains, addDomain } = useDomains();
+    const { projects } = useProject();
     const { isUserOwner } = useAuth();
     const { setView } = useUI();
     const tenantContext = useSafeTenant();
@@ -928,6 +929,7 @@ const DomainsDashboard: React.FC = () => {
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [connectDomainName, setConnectDomainName] = useState('');
+    const [connectProjectId, setConnectProjectId] = useState('');
 
     // Auto-open modal when returning from Stripe checkout
     useEffect(() => {
@@ -962,15 +964,23 @@ const DomainsDashboard: React.FC = () => {
             return;
         }
 
+        // Require project selection
+        if (!connectProjectId) {
+            alert(t('domainsDashboard.selectProjectRequired', 'Por favor selecciona un proyecto para conectar con este dominio'));
+            return;
+        }
+
         await addDomain({
             id: `dom_${Date.now()}`,
             name: connectDomainName,
             status: 'pending',
             provider: 'External',
+            projectId: connectProjectId,
             createdAt: new Date().toISOString()
         });
         setIsConnectModalOpen(false);
         setConnectDomainName('');
+        setConnectProjectId('');
     };
 
     // Handler for buy/search domain buttons
@@ -1076,7 +1086,7 @@ const DomainsDashboard: React.FC = () => {
                             <button onClick={() => setIsConnectModalOpen(false)} className="p-1 rounded-full hover:bg-secondary text-muted-foreground"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleConnectSubmit}>
-                            <div className="mb-6">
+                            <div className="mb-4">
                                 <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('domainsDashboard.domainName')}</label>
                                 <input
                                     required
@@ -1088,6 +1098,43 @@ const DomainsDashboard: React.FC = () => {
                                 />
                                 <p className="text-xs text-muted-foreground mt-2">{t('domainsDashboard.enterDomainDesc')}</p>
                             </div>
+                            
+                            {/* Project Selection */}
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                                    {t('domainsDashboard.connectToProject', 'Conectar a Proyecto')} *
+                                </label>
+                                <select
+                                    required
+                                    value={connectProjectId}
+                                    onChange={(e) => setConnectProjectId(e.target.value)}
+                                    className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium"
+                                >
+                                    <option value="">{t('domainsDashboard.selectProject', 'Selecciona un proyecto...')}</option>
+                                    {projects.map(project => (
+                                        <option key={project.id} value={project.id}>
+                                            {project.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    {t('domainsDashboard.projectConnectionDesc', 'El dominio mostrará el contenido de este proyecto cuando los visitantes lo accedan.')}
+                                </p>
+                            </div>
+
+                            {/* DNS Instructions Preview */}
+                            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center">
+                                    <Settings size={14} className="mr-2" /> {t('domainsDashboard.nextSteps', 'Próximos pasos')}
+                                </h4>
+                                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                                    <li>{t('domainsDashboard.step1AddDomain', 'Añade el dominio')}</li>
+                                    <li>{t('domainsDashboard.step2ConfigureDNS', 'Configura los registros DNS en tu proveedor')}</li>
+                                    <li>{t('domainsDashboard.step3Verify', 'Verifica la configuración DNS')}</li>
+                                    <li>{t('domainsDashboard.step4Publish', 'Publica tu proyecto desde el Editor')}</li>
+                                </ol>
+                            </div>
+
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsConnectModalOpen(false)} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground">{t('common.cancel')}</button>
                                 <button type="submit" className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-lg hover:opacity-90 transition-all">{t('common.continue')}</button>
