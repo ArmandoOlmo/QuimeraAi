@@ -9,7 +9,7 @@
  * - Cloudflare DNS API integration
  */
 
-export { addCustomDomain, removeCustomDomain, updateDomainStatus } from './domainManager';
+export { addCustomDomain, removeCustomDomain, updateDomainStatus, syncDomainMapping } from './domainManager';
 export { verifyDomainDNS, checkDomainSSL } from './dnsVerification';
 export { onDomainCreate, onDomainDelete, scheduledDNSCheck } from './domainTriggers';
 
@@ -29,6 +29,9 @@ export {
     setupDomainDNS,
     getDomainDNSStatus
 } from './cloudflareApi';
+
+// Cloudflare Worker API (for automatic domain routing)
+export { addWorkerDomain } from './cloudflareWorkerApi';
 
 
 

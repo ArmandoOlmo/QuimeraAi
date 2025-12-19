@@ -373,6 +373,10 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || functions.config().stripe?.webhook_secret;
 
+    console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `${webhookSecret.substring(0, 10)}...` : 'NOT SET');
+    console.log('[Stripe Webhook] Raw body available:', !!req.rawBody);
+    console.log('[Stripe Webhook] Raw body length:', req.rawBody?.length || 0);
+
     if (!webhookSecret) {
         console.error('Stripe webhook secret not configured');
         res.status(500).send('Webhook secret not configured');
@@ -380,6 +384,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     }
 
     const signature = req.headers['stripe-signature'] as string;
+    console.log('[Stripe Webhook] Signature:', signature ? `${signature.substring(0, 30)}...` : 'NOT SET');
 
     if (!signature) {
         res.status(400).send('Missing stripe-signature header');
@@ -395,8 +400,10 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
             signature,
             webhookSecret
         );
+        console.log('[Stripe Webhook] Event verified successfully:', event.type);
     } catch (error: any) {
         console.error('Webhook signature verification failed:', error.message);
+        console.error('[Stripe Webhook] Debug - Secret first 15 chars:', webhookSecret.substring(0, 15));
         res.status(400).send(`Webhook Error: ${error.message}`);
         return;
     }

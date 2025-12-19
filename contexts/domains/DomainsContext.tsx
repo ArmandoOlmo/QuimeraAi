@@ -13,6 +13,7 @@ import {
     addDoc,
     updateDoc,
     deleteDoc,
+    setDoc,
     query,
     orderBy,
     onSnapshot,
@@ -100,7 +101,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         };
     }, [user]);
 
-    // Add domain
+    // Add domain (syncs to both user collection and global customDomains)
     const addDomain = async (domain: Domain) => {
         if (!user) return;
 
@@ -114,13 +115,27 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             const newDomain = { ...domain, id: docRef.id } as Domain;
             setDomains(prev => [newDomain, ...prev]);
+
+            // Sync to global customDomains collection for domain resolution
+            const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
+            await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                domain: normalizedDomain,
+                projectId: domain.projectId || null,
+                userId: user.uid,
+                status: 'pending',
+                sslStatus: 'pending',
+                dnsVerified: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            }, { merge: true });
+            console.log(`✅ [DomainsContext] Domain synced to customDomains: ${normalizedDomain}`);
         } catch (error) {
             console.error("Error adding domain:", error);
             throw error;
         }
     };
 
-    // Update domain
+    // Update domain (syncs to both user collection and global customDomains)
     const updateDomain = async (id: string, data: Partial<Domain>) => {
         if (!user) return;
 
@@ -130,16 +145,31 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 updatedAt: new Date().toISOString(),
             });
 
+            // Get the domain to sync
+            const domain = domains.find(d => d.id === id);
+            
             setDomains(prev => prev.map(d =>
                 d.id === id ? { ...d, ...data } : d
             ));
+
+            // Sync to global customDomains collection
+            if (domain?.name) {
+                const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
+                await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                    projectId: data.projectId !== undefined ? data.projectId : domain.projectId,
+                    status: data.status || domain.status,
+                    sslStatus: data.sslStatus || domain.sslStatus || 'pending',
+                    updatedAt: new Date().toISOString(),
+                }, { merge: true });
+                console.log(`✅ [DomainsContext] Domain updated in customDomains: ${normalizedDomain} -> projectId: ${data.projectId || domain.projectId}`);
+            }
         } catch (error) {
             console.error("Error updating domain:", error);
             throw error;
         }
     };
 
-    // Delete domain
+    // Delete domain (removes from both user collection and global customDomains)
     const deleteDomain = async (id: string) => {
         if (!user) {
             console.error("❌ [DomainsContext] Cannot delete domain: No user logged in");
@@ -148,10 +178,24 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         console.log(`🗑️ [DomainsContext] Attempting to delete domain: ${id}`);
         
+        // Get domain name before deleting
+        const domain = domains.find(d => d.id === id);
+        
         try {
             const domainRef = doc(db, 'users', user.uid, 'domains', id);
             await deleteDoc(domainRef);
             console.log(`✅ [DomainsContext] Domain deleted from Firestore: ${id}`);
+            
+            // Also delete from global customDomains collection
+            if (domain?.name) {
+                const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
+                try {
+                    await deleteDoc(doc(db, 'customDomains', normalizedDomain));
+                    console.log(`✅ [DomainsContext] Domain deleted from customDomains: ${normalizedDomain}`);
+                } catch (e) {
+                    console.warn(`⚠️ [DomainsContext] Could not delete from customDomains:`, e);
+                }
+            }
             
             // Update local state after successful deletion
             setDomains(prev => {
@@ -175,7 +219,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, fetchUserDomains]);
 
-    // Verify domain (DNS check)
+    // Verify domain (DNS check) - also syncs status to customDomains
     const verifyDomain = async (id: string): Promise<boolean> => {
         if (!user) return false;
 
@@ -189,6 +233,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (isVerified.verified) {
                 await updateDomain(id, {
                     status: 'active',
+                    sslStatus: 'active',
                     verifiedAt: new Date().toISOString(),
                 });
             }
@@ -247,11 +292,11 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 status: result.success ? 'active' : 'error',
                 deployment: {
                     provider,
-                    deploymentUrl: result.deploymentUrl,
-                    deploymentId: result.deploymentId,
+                    deploymentUrl: result.deploymentUrl || '',
+                    deploymentId: result.deploymentId || '',
                     lastDeployedAt: new Date().toISOString(),
                     status: result.success ? 'success' : 'failed',
-                    error: result.error
+                    error: result.error || null
                 }
             });
 
@@ -262,12 +307,12 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 provider,
                 timestamp: new Date().toISOString(),
                 status: result.success ? 'success' : 'failed',
-                error: result.error,
-                url: result.deploymentUrl,
+                error: result.error || null,
+                url: result.deploymentUrl || null,
             });
 
             return result.success;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deploying domain:", error);
 
             // Log error
@@ -276,7 +321,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 action: 'deploy_error',
                 timestamp: new Date().toISOString(),
                 status: 'failed',
-                error: error instanceof Error ? error.message : 'Unknown error',
+                error: error instanceof Error ? error.message : String(error) || 'Unknown error',
             });
 
             await updateDomain(domainId, { status: 'error' });

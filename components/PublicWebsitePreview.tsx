@@ -145,12 +145,48 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
 
       try {
-        // Try loading from user's projects collection
-        const projectRef = doc(db, 'users', userId, 'projects', projectId);
-        const projectSnap = await getDoc(projectRef);
+        let projectData: Project | null = null;
+
+        // Try loading from user's projects collection first
+        try {
+          const projectRef = doc(db, 'users', userId, 'projects', projectId);
+          const projectSnap = await getDoc(projectRef);
+          
+          if (projectSnap.exists()) {
+            projectData = { id: projectSnap.id, ...projectSnap.data() } as Project;
+            console.log('[PublicWebsitePreview] Loaded project from user collection');
+          }
+        } catch (userProjectErr) {
+          console.log('[PublicWebsitePreview] Could not load from user collection, trying publicStores:', userProjectErr);
+        }
+
+        // If not found in user collection, try publicStores (for custom domains)
+        if (!projectData) {
+          try {
+            const publicStoreRef = doc(db, 'publicStores', projectId);
+            const publicStoreSnap = await getDoc(publicStoreRef);
+            
+            if (publicStoreSnap.exists()) {
+              projectData = { id: publicStoreSnap.id, ...publicStoreSnap.data() } as Project;
+              console.log('[PublicWebsitePreview] Loaded project from publicStores');
+            }
+          } catch (publicErr) {
+            console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
+          }
+        }
+
+        // Try loading as public template as last resort
+        if (!projectData) {
+          const templateRef = doc(db, 'templates', projectId);
+          const templateSnap = await getDoc(templateRef);
+          
+          if (templateSnap.exists()) {
+            projectData = { id: templateSnap.id, ...templateSnap.data() } as Project;
+            console.log('[PublicWebsitePreview] Loaded project from templates');
+          }
+        }
         
-        if (projectSnap.exists()) {
-          const projectData = { id: projectSnap.id, ...projectSnap.data() } as Project;
+        if (projectData) {
           setProject(projectData);
           
           // Load CMS posts for this project
@@ -161,7 +197,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             const posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
             setCmsPosts(posts);
           } catch (e) {
-            console.log('No CMS posts found or error loading:', e);
+            console.log('[PublicWebsitePreview] No CMS posts found or error loading:', e);
           }
 
           // Load menus
@@ -171,21 +207,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             const loadedMenus = menusSnap.docs.map(d => ({ id: d.id, ...d.data() } as Menu));
             setMenus(loadedMenus);
           } catch (e) {
-            console.log('No menus found or error loading:', e);
+            console.log('[PublicWebsitePreview] No menus found or error loading:', e);
           }
         } else {
-          // Try loading as public template
-          const templateRef = doc(db, 'templates', projectId);
-          const templateSnap = await getDoc(templateRef);
-          
-          if (templateSnap.exists()) {
-            setProject({ id: templateSnap.id, ...templateSnap.data() } as Project);
-          } else {
-            setError('Project not found');
-          }
+          setError('Project not found');
         }
       } catch (err) {
-        console.error('Error loading project:', err);
+        console.error('[PublicWebsitePreview] Error loading project:', err);
         setError('Failed to load project. Make sure the URL is correct.');
       } finally {
         setLoading(false);

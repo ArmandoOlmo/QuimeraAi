@@ -9,11 +9,10 @@ import * as admin from 'firebase-admin';
 
 const db = admin.firestore();
 
-// Cloud Run DNS configuration
-const CLOUD_RUN_DNS = {
-    aRecords: ['216.239.32.21', '216.239.34.21', '216.239.36.21', '216.239.38.21'],
-    cnameTarget: 'ghs.googlehosted.com',
-    txtPrefix: '_quimera-verify'
+// Cloud Run configuration - domains point directly to Cloud Run SSR server
+const CLOUD_RUN_CONFIG = {
+    url: 'quimera-ssr-575386543550.us-central1.run.app',
+    cnameTarget: 'quimera-ssr-575386543550.us-central1.run.app'
 };
 
 /**
@@ -79,22 +78,18 @@ export const addCustomDomain = functions.https.onCall(async (data, context) => {
             verificationToken,
             dnsRecords: [
                 {
-                    type: 'A',
+                    type: 'CNAME',
                     host: '@',
-                    value: CLOUD_RUN_DNS.aRecords[0],
-                    verified: false
+                    value: CLOUD_RUN_CONFIG.cnameTarget,
+                    verified: false,
+                    description: 'Root domain → Cloud Run SSR'
                 },
                 {
                     type: 'CNAME',
                     host: 'www',
-                    value: CLOUD_RUN_DNS.cnameTarget,
-                    verified: false
-                },
-                {
-                    type: 'TXT',
-                    host: CLOUD_RUN_DNS.txtPrefix,
-                    value: `quimera-verify=${verificationToken}`,
-                    verified: false
+                    value: CLOUD_RUN_CONFIG.cnameTarget,
+                    verified: false,
+                    description: 'www subdomain → Cloud Run SSR'
                 }
             ],
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -249,6 +244,45 @@ function generateVerificationToken(): string {
     }
     return token;
 }
+
+/**
+ * Sync domain mapping to Firestore for Cloud Run SSR resolution
+ * Cloud Run SSR server looks up domains in customDomains collection
+ */
+export const syncDomainMapping = functions.https.onCall(async (data, context) => {
+    console.log('[DomainManager] syncDomainMapping called with data:', JSON.stringify(data));
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+    
+    const { domain, projectId } = data;
+    const userId = context.auth.uid;
+
+    if (!domain) throw new functions.https.HttpsError('invalid-argument', 'Domain is required');
+
+    const normalizedDomain = domain.toLowerCase().trim().replace(/^www\./, '');
+
+    // Save to Firestore (Cloud Run SSR server reads from this collection)
+    const domainData = {
+        domain: normalizedDomain,
+        projectId: projectId || null,
+        userId,
+        status: projectId ? 'active' : 'pending',
+        sslStatus: 'active', // Cloudflare handles SSL
+        dnsVerified: true,
+        cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    await db.collection('customDomains').doc(normalizedDomain).set(domainData, { merge: true });
+    console.log(`[DomainManager] Synced ${normalizedDomain} to customDomains collection`);
+    
+    return { 
+        success: true, 
+        message: `Domain ${normalizedDomain} synced for Cloud Run SSR`,
+        domain: normalizedDomain,
+        target: domainData.cloudRunTarget
+    };
+});
 
 
 

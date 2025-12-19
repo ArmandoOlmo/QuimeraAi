@@ -190,14 +190,12 @@ export async function deleteDNSRecord(zoneId: string, recordId: string): Promise
 // QUIMERA DEFAULT DNS CONFIGURATION
 // =============================================================================
 
-// Firebase Hosting IP addresses for A records
-const FIREBASE_HOSTING_IPS = [
-    '199.36.158.100'
-];
+// Cloud Run URL for custom domains (bypasses Firebase Hosting)
+const CLOUD_RUN_URL = 'quimera-ssr-575386543550.us-central1.run.app';
 
 /**
- * Configure default DNS records for a Quimera-hosted domain
- * This sets up the domain to point to Firebase Hosting
+ * Configure DNS records for a Quimera-hosted domain
+ * Uses CNAME pointing to Cloud Run for automatic domain routing
  */
 export async function configureQuimeraDNS(
     domainName: string,
@@ -208,42 +206,58 @@ export async function configureQuimeraDNS(
     nameservers: string[];
     records: DNSRecord[];
 }> {
-    console.log(`[Cloudflare] Configuring Quimera DNS for ${domainName}`);
+    console.log(`[Cloudflare] Configuring Quimera DNS for ${domainName} -> Cloud Run`);
 
     // 1. Create or get the DNS zone
     const zone = await createDNSZone(domainName);
 
     const records: DNSRecord[] = [];
 
-    // 2. Add A records for root domain (@)
-    for (const ip of FIREBASE_HOSTING_IPS) {
-        try {
-            const record = await addDNSRecord(zone.id, 'A', '@', ip, true);
-            records.push(record);
-        } catch (error: any) {
-            if (!error.message?.includes('already exists')) {
-                console.error(`[Cloudflare] Failed to add A record:`, error);
+    // 2. Delete any existing A records for root domain (clean up old config)
+    try {
+        const existingRecords = await getDNSRecords(zone.id);
+        for (const record of existingRecords) {
+            if (record.type === 'A' && (record.name === domainName || record.name === '@')) {
+                console.log(`[Cloudflare] Deleting old A record: ${record.content}`);
+                await deleteDNSRecord(zone.id, record.id);
             }
+        }
+    } catch (error: any) {
+        console.warn(`[Cloudflare] Could not clean up old records:`, error.message);
+    }
+
+    // 3. Add CNAME for root domain pointing to Cloud Run
+    // Note: Cloudflare supports CNAME flattening for root domains
+    try {
+        const rootRecord = await addDNSRecord(zone.id, 'CNAME', '@', CLOUD_RUN_URL, true);
+        records.push(rootRecord);
+        console.log(`[Cloudflare] Added root CNAME: @ -> ${CLOUD_RUN_URL}`);
+    } catch (error: any) {
+        if (error.message?.includes('already exists')) {
+            console.log(`[Cloudflare] Root CNAME already exists`);
+        } else {
+            console.error(`[Cloudflare] Failed to add root CNAME:`, error);
         }
     }
 
-    // 3. Add CNAME for www subdomain
+    // 4. Add CNAME for www subdomain pointing to Cloud Run
     try {
-        const wwwRecord = await addDNSRecord(zone.id, 'CNAME', 'www', domainName, true);
+        const wwwRecord = await addDNSRecord(zone.id, 'CNAME', 'www', CLOUD_RUN_URL, true);
         records.push(wwwRecord);
+        console.log(`[Cloudflare] Added www CNAME: www -> ${CLOUD_RUN_URL}`);
     } catch (error: any) {
         if (!error.message?.includes('already exists')) {
             console.error(`[Cloudflare] Failed to add www CNAME:`, error);
         }
     }
 
-    // 4. Add TXT record for domain verification (Firebase)
+    // 5. Add TXT record for Quimera verification
     try {
         const txtRecord = await addDNSRecord(
             zone.id,
             'TXT',
             '@',
-            `firebase=quimeraai${projectId ? `-${projectId}` : ''}`,
+            `quimera-project=${projectId || 'pending'}`,
             false
         );
         records.push(txtRecord);
@@ -256,7 +270,8 @@ export async function configureQuimeraDNS(
     console.log(`[Cloudflare] DNS configured for ${domainName}:`, {
         zoneId: zone.id,
         nameservers: zone.name_servers,
-        recordCount: records.length
+        recordCount: records.length,
+        target: CLOUD_RUN_URL
     });
 
     return {

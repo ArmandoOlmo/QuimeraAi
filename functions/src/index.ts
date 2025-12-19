@@ -110,7 +110,11 @@ import {
     checkDomainOrderStatus,
     // Cloudflare DNS API
     setupDomainDNS,
-    getDomainDNSStatus
+    getDomainDNSStatus,
+    // Domain sync for Cloud Run SSR
+    syncDomainMapping,
+    // Cloudflare Worker API
+    addWorkerDomain
 } from './domains';
 
 // Social Channels functions
@@ -412,6 +416,10 @@ export {
     // Cloudflare DNS API
     setupDomainDNS,
     getDomainDNSStatus,
+    // Domain sync for Cloud Run SSR
+    syncDomainMapping,
+    // Cloudflare Worker API
+    addWorkerDomain,
     // Social Channels exports
     facebookWebhook,
     facebookWebhookVerify,

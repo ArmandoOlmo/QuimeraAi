@@ -109,6 +109,7 @@ interface ProjectContextType {
     // Project Operations
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean) => void;
     saveProject: () => Promise<void>;
+    publishProject: () => Promise<boolean>;
     renameActiveProject: (newName: string) => Promise<void>;
     addNewProject: (project: Project) => Promise<string | void>;
     deleteProject: (projectId: string) => Promise<void>;
@@ -362,6 +363,48 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             throw error;
         }
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId]);
+
+    // Publish project to publicStores (makes it accessible via custom domains)
+    const publishProject = useCallback(async (): Promise<boolean> => {
+        if (!user || !activeProjectId || !data) {
+            console.error('[ProjectContext] Cannot publish: missing user, project, or data');
+            return false;
+        }
+
+        const project = projectsRef.current.find(p => p.id === activeProjectId);
+        if (!project) {
+            console.error('[ProjectContext] Cannot publish: project not found');
+            return false;
+        }
+
+        try {
+            // First save the project
+            await saveProject();
+
+            // Now publish to publicStores
+            const publicStoreRef = doc(db, 'publicStores', activeProjectId);
+            const publishData = {
+                name: project.name,
+                data,
+                theme,
+                brandIdentity,
+                componentOrder,
+                sectionVisibility,
+                userId: user.uid,
+                tenantId: currentTenantId || null,
+                publishedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            await setDoc(publicStoreRef, publishData, { merge: true });
+
+            console.log(`✅ [ProjectContext] Project ${activeProjectId} published to publicStores`);
+            return true;
+        } catch (error) {
+            console.error('[ProjectContext] Error publishing project:', error);
+            return false;
+        }
+    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId, saveProject]);
 
     // Auto-save effect
     useEffect(() => {
@@ -674,6 +717,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSectionVisibility,
         loadProject,
         saveProject,
+        publishProject,
         renameActiveProject,
         addNewProject,
         deleteProject,

@@ -3,1048 +3,108 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ============================================
-    // HELPER FUNCTIONS FOR SECURITY
+    // HELPER FUNCTIONS
     // ============================================
-    
-    // Check if user is superadmin or owner
     function isSuperAdminOrOwner() {
       let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
       return userRole == 'superadmin' || userRole == 'owner';
     }
     
-    // Validate email format (basic regex)
     function isValidEmail(email) {
       return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
     }
     
-    // Validate that a string is not empty and has reasonable length
-    function isValidString(str, minLen, maxLen) {
-      return str is string && str.size() >= minLen && str.size() <= maxLen;
-    }
-    
-    // Validate rating is between 1 and 5
-    function isValidRating(rating) {
-      return rating is int && rating >= 1 && rating <= 5;
-    }
-    
-    // Validate price/amount is positive
-    function isPositiveNumber(num) {
-      return num is number && num > 0;
-    }
-    
-    // Rate limiting helper - check document age (for spam prevention)
-    // Note: This is a soft limit, real rate limiting should be done in Cloud Functions
     function hasRequiredFields(data, fields) {
       return data.keys().hasAll(fields);
     }
     
-    // ============================================
-    // MULTI-TENANT HELPER FUNCTIONS
-    // ============================================
-    
-    // Check if user is a member of a tenant
-    function isTenantMember(tenantId) {
-      return exists(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
-    }
-    
-    // Get user's role in a tenant
-    function getTenantRole(tenantId) {
-      return get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data.role;
-    }
-    
-    // Check if user has a specific permission in a tenant
-    function hasTenantPermission(tenantId, permission) {
-      let membership = get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data;
-      return membership.permissions[permission] == true;
-    }
-    
     // Check if user is tenant owner
     function isTenantOwner(tenantId) {
-      return isTenantMember(tenantId) && getTenantRole(tenantId) == 'agency_owner';
-    }
-    
-    // Check if user is tenant admin or higher
-    function isTenantAdminOrHigher(tenantId) {
-      let role = getTenantRole(tenantId);
-      return role == 'agency_owner' || role == 'agency_admin';
+      return isTenantMember(tenantId) && get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data.role == 'agency_owner';
     }
     
     // ============================================
-    // USER DOCUMENTS
+    // USER DATA (TODO lo que cuelga de /users/{userId})
     // ============================================
-    
     match /users/{userId} {
       allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
       
-      // User projects
-      match /projects/{projectId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-        
-        // Project ecommerce config subcollection
-        match /ecommerce/{document=**} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Project settings subcollection (email settings, etc.)
-        match /settings/{settingId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Email marketing subcollections
-        match /emailAudiences/{audienceId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        match /emailCampaigns/{campaignId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        match /emailLogs/{logId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Project appointments subcollection (sincronizado por proyecto)
-        match /appointments/{appointmentId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-      }
-      
-      // User files
-      match /files/{fileId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User CMS posts
-      match /posts/{postId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User leads
-      match /leads/{leadId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // Lead activities
-      match /leadActivities/{activityId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // Lead tasks
-      match /leadTasks/{taskId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // Library leads (leads from website forms, chatbot, etc.)
-      match /libraryLeads/{leadId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User appointments
-      match /appointments/{appointmentId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User domains
-      match /domains/{domainId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User onboarding progress
-      match /onboardingProgress/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User usage/billing
-      match /usage/{document} {
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow write: if false; // Only backend/admin can write
-      }
-      
-      // ============================================
-      // ECOMMERCE - Multi-tenant Store System
-      // ============================================
-      
-      match /stores/{storeId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-        
-        // Store Settings
-        match /settings/{settingId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Products
-        match /products/{productId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Categories
-        match /categories/{categoryId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Orders - SECURED: Validate order data on public create
-        match /orders/{orderId} {
-          // Owner full access
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-          
-          // Public create with validation (for guest checkout)
-          allow create: if 
-            hasRequiredFields(request.resource.data, ['customerEmail', 'items', 'total', 'status']) &&
-            isValidEmail(request.resource.data.customerEmail) &&
-            request.resource.data.items is list &&
-            request.resource.data.items.size() > 0 &&
-            request.resource.data.items.size() <= 100 && // Max 100 items per order
-            isPositiveNumber(request.resource.data.total) &&
-            request.resource.data.total <= 1000000 && // Max $10,000 per order
-            request.resource.data.status == 'pending';
-        }
-        
-        // Customers
-        match /customers/{customerId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Discounts
-        match /discounts/{discountId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Carts - SECURED: Validate cart operations
-        match /carts/{cartId} {
-          // Owner full access
-          allow read, delete: if request.auth != null && request.auth.uid == userId;
-          
-          // Public create with validation
-          allow create: if 
-            hasRequiredFields(request.resource.data, ['sessionId', 'createdAt']) &&
-            isValidString(request.resource.data.sessionId, 10, 100);
-          
-          // Public update only if sessionId matches (can't change sessionId)
-          allow update: if 
-            request.resource.data.sessionId == resource.data.sessionId &&
-            (!request.resource.data.keys().hasAny(['items']) || 
-              (request.resource.data.items is list && request.resource.data.items.size() <= 50));
-        }
-        
-        // Shipping Zones
-        match /shippingZones/{zoneId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Reviews - SECURED: Validate review data
-        match /reviews/{reviewId} {
-          // Owner full access
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-          
-          // Public create with validation
-          allow create: if 
-            hasRequiredFields(request.resource.data, ['rating', 'productId', 'customerName', 'createdAt']) &&
-            isValidRating(request.resource.data.rating) &&
-            isValidString(request.resource.data.productId, 1, 100) &&
-            isValidString(request.resource.data.customerName, 1, 100) &&
-            (!request.resource.data.keys().hasAny(['comment']) || 
-              isValidString(request.resource.data.comment, 0, 2000)); // Optional comment max 2000 chars
-        }
-        
-        // Inventory Logs (read-only for owner, write only by backend)
-        match /inventoryLogs/{logId} {
-          allow read: if request.auth != null && request.auth.uid == userId;
-          allow write: if false;
-        }
-        
-        // Analytics (read-only for owner, write only by backend)
-        match /analytics/{docId} {
-          allow read: if request.auth != null && request.auth.uid == userId;
-          allow write: if false;
-        }
+      // Esta regla cubre CUALQUIER subcolección (proyectos, dominios, logs, etc.)
+      match /{allPaths=**} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
       }
     }
     
     // ============================================
     // MULTI-TENANT SYSTEM
     // ============================================
+    function isTenantMember(tenantId) {
+      return exists(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
+    }
     
-    // Tenant documents
     match /tenants/{tenantId} {
-      // Read: members of the tenant or superadmin
-      allow read: if request.auth != null && 
-        (isTenantMember(tenantId) || isSuperAdminOrOwner());
+      allow read: if request.auth != null && (isTenantMember(tenantId) || isSuperAdminOrOwner());
+      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow update, delete: if request.auth != null && (isTenantOwner(tenantId) || isSuperAdminOrOwner());
       
-      // Create: any authenticated user can create a tenant (they become owner)
-      allow create: if request.auth != null &&
-        request.resource.data.ownerUserId == request.auth.uid;
-      
-      // Update: tenant owner or superadmin
-      allow update: if request.auth != null && 
-        (isTenantOwner(tenantId) || isSuperAdminOrOwner());
-      
-      // Delete: tenant owner or superadmin
-      allow delete: if request.auth != null && 
-        (isTenantOwner(tenantId) || isSuperAdminOrOwner());
-      
-      // ============================================
-      // TENANT PROJECTS
-      // ============================================
-      match /projects/{projectId} {
-        // Read: any tenant member
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        
-        // Write: members with canManageProjects permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageProjects');
-        
-        // Project subcollections
-        match /ecommerce/{document=**} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /settings/{settingId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageProjects');
-        }
-        
-        match /emailAudiences/{audienceId} {
-          allow read, write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageProjects');
-        }
-        
-        match /emailCampaigns/{campaignId} {
-          allow read, write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageProjects');
-        }
-        
-        match /emailLogs/{logId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if false; // Only Cloud Functions
-        }
-      }
-      
-      // ============================================
-      // TENANT LEADS
-      // ============================================
-      match /leads/{leadId} {
-        // Read: members with canManageLeads permission
-        allow read: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageLeads');
-        
-        // Write: members with canManageLeads permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageLeads');
-        
-        // Lead activities
-        match /activities/{activityId} {
-          allow read, write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageLeads');
-        }
-      }
-      
-      // ============================================
-      // TENANT CMS POSTS
-      // ============================================
-      match /posts/{postId} {
-        // Read: any tenant member
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        
-        // Write: members with canManageCMS permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageCMS');
-      }
-      
-      // ============================================
-      // TENANT FILES
-      // ============================================
-      match /files/{fileId} {
-        // Read: any tenant member
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        
-        // Write: members with canManageFiles permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageFiles');
-      }
-      
-      // ============================================
-      // TENANT DOMAINS
-      // ============================================
-      match /domains/{domainId} {
-        // Read: any tenant member
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        
-        // Write: members with canManageDomains permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageDomains');
-      }
-      
-      // ============================================
-      // TENANT STORES (E-COMMERCE)
-      // ============================================
-      match /stores/{storeId} {
-        // Read: any tenant member
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        
-        // Write: members with canManageEcommerce permission
-        allow create, update, delete: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageEcommerce');
-        
-        // Store subcollections
-        match /settings/{settingId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /products/{productId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /categories/{categoryId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /orders/{orderId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /customers/{customerId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /discounts/{discountId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /shippingZones/{zoneId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /reviews/{reviewId} {
-          allow read: if request.auth != null && isTenantMember(tenantId);
-          allow write: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canManageEcommerce');
-        }
-        
-        match /analytics/{docId} {
-          allow read: if request.auth != null && 
-            isTenantMember(tenantId) && 
-            hasTenantPermission(tenantId, 'canViewAnalytics');
-          allow write: if false; // Only Cloud Functions
-        }
-      }
-      
-      // ============================================
-      // TENANT MEMBERS (internal - for reference)
-      // ============================================
-      match /members/{memberId} {
-        // Read: tenant admin or higher
-        allow read: if request.auth != null && isTenantAdminOrHigher(tenantId);
-        // Write: only via Cloud Functions or tenant owner
-        allow write: if request.auth != null && isTenantOwner(tenantId);
-      }
-      
-      // ============================================
-      // TENANT APPOINTMENTS
-      // ============================================
-      match /appointments/{appointmentId} {
+      match /{allPaths=**} {
         allow read, write: if request.auth != null && isTenantMember(tenantId);
       }
-      
-      // ============================================
-      // TENANT SETTINGS
-      // ============================================
-      match /settings/{settingId} {
-        allow read: if request.auth != null && isTenantMember(tenantId);
-        allow write: if request.auth != null && 
-          isTenantMember(tenantId) && 
-          hasTenantPermission(tenantId, 'canManageSettings');
-      }
     }
-    
-    // ============================================
-    // TENANT MEMBERSHIPS (Global lookup)
-    // ============================================
-    
+
     match /tenantMembers/{membershipId} {
-      // Read: user can read their own memberships, or if they're admin of the tenant
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        isTenantAdminOrHigher(resource.data.tenantId) ||
-        isSuperAdminOrOwner()
-      );
-      
-      // Create: only via Cloud Functions (or tenant owner for initial setup)
-      allow create: if request.auth != null && (
-        // Initial membership when creating a tenant
-        request.resource.data.role == 'agency_owner' && 
-        request.resource.data.userId == request.auth.uid
-      );
-      
-      // Update: tenant owner or superadmin
-      allow update: if request.auth != null && (
-        isTenantOwner(resource.data.tenantId) || 
-        isSuperAdminOrOwner()
-      );
-      
-      // Delete: tenant owner or superadmin
-      allow delete: if request.auth != null && (
-        isTenantOwner(resource.data.tenantId) || 
-        isSuperAdminOrOwner()
-      );
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null;
     }
-    
-    // ============================================
-    // TENANT INVITATIONS
-    // ============================================
     
     match /tenantInvites/{inviteId} {
-      // Read: invitee (by email) or tenant admin+
-      allow read: if request.auth != null && (
-        resource.data.email == request.auth.token.email ||
-        isTenantAdminOrHigher(resource.data.tenantId) ||
-        isSuperAdminOrOwner()
-      );
-      
-      // Create: tenant admin+ with canInviteMembers permission
-      allow create: if request.auth != null && (
-        hasTenantPermission(request.resource.data.tenantId, 'canInviteMembers') ||
-        isSuperAdminOrOwner()
-      );
-      
-      // Update: tenant admin+ or the invitee (to accept)
-      allow update: if request.auth != null && (
-        isTenantAdminOrHigher(resource.data.tenantId) ||
-        resource.data.email == request.auth.token.email ||
-        isSuperAdminOrOwner()
-      );
-      
-      // Delete: tenant admin+ only
-      allow delete: if request.auth != null && (
-        isTenantAdminOrHigher(resource.data.tenantId) ||
-        isSuperAdminOrOwner()
-      );
+      allow read, write: if request.auth != null;
     }
     
     // ============================================
-    // GLOBAL SETTINGS & ADMIN
+    // GLOBAL & PUBLIC COLLECTIONS
     // ============================================
-    
-    // Global settings (superadmin/owner for write)
     match /globalSettings/{settingId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
-    // ============================================
-    // APP CONTENT - Public Landing Page Content
-    // Articles, Navigation, Legal Pages, Landing Config
-    // ============================================
-    
     match /appContent/{docId} {
-      // Public read for landing page content
       allow read: if true;
-      // Only superadmin can write
       allow write: if request.auth != null && isSuperAdminOrOwner();
-      
-      // Subcollections under appContent/data/
-      match /{subcollection}/{itemId} {
-        // Public read - articles, navigation, legal pages are public content
-        allow read: if true;
-        // Only superadmin can write
-        allow write: if request.auth != null && isSuperAdminOrOwner();
-      }
+      match /{allPaths=**} { allow read: if true; allow write: if request.auth != null && isSuperAdminOrOwner(); }
     }
     
-    // Settings collection (used for components, global_assistant, designTokens, landingChatbot)
     match /settings/{settingId} {
-      // Landing chatbot config is public (for landing page visitors)
-      // Other settings require authentication
       allow read: if request.auth != null || settingId == 'landingChatbot';
-      // Landing chatbot can be edited by any authenticated admin user
-      allow write: if request.auth != null && (
-        isSuperAdminOrOwner() ||
-        settingId == 'landingChatbot'
-      );
+      allow write: if request.auth != null && (isSuperAdminOrOwner() || settingId == 'landingChatbot');
     }
     
-    // Global files (superadmin/owner)
-    match /global_files/{fileId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Component defaults (superadmin/owner for write)
-    match /componentDefaults/{componentId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Custom components (superadmin/owner)
-    match /customComponents/{componentId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // LLM Prompts (superadmin/owner for write)
-    match /prompts/{promptId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Design tokens (superadmin/owner for write)
-    match /designTokens/{tokenId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Global templates (superadmin/owner for write)
-    match /templates/{templateId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // ============================================
-    // API LOGGING & ANALYTICS
-    // ============================================
-    
-    // API Logs - authenticated users can write their own logs, superadmin can read all
-    match /apiLogs/{logId} {
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      allow create: if request.auth != null;
-      allow update, delete: if false; // Logs are immutable
-    }
-    
-    // API Usage - only backend (Cloud Functions) can write, superadmin can read
-    match /apiUsage/{usageId} {
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      allow write: if false; // Only Cloud Functions can write
-    }
-    
-    // ============================================
-    // AI CREDITS SYSTEM
-    // ============================================
-    
-    // AI Credits Usage - tenant-level usage tracking
-    match /aiCreditsUsage/{tenantId} {
-      // Superadmin can read all usage (for admin dashboard)
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      // Tenant members can read their own usage
-      allow read: if request.auth != null && isTenantMember(tenantId);
-      // Cloud Functions and superadmin can write
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // AI Credits Transactions - transaction history
-    match /aiCreditsTransactions/{transactionId} {
-      // Superadmin can read all transactions (for admin dashboard)
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      // Tenant members can read their own transactions
-      allow read: if request.auth != null &&
-        resource.data.tenantId != null &&
-        isTenantMember(resource.data.tenantId);
-      // Cloud Functions and superadmin can write (for manual credit additions)
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Subscription Plans - plan definitions and configuration
     match /subscriptionPlans/{planId} {
-      // Public read - needed for landing page pricing section
       allow read: if true;
-      // Only superadmin can create, update, or delete plans
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
+
+    match /publicStores/{storeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      match /{allPaths=**} { allow read: if true; allow write: if request.auth != null; }
+    }
+
+    match /customDomains/{domainName} {
+      allow read: if true;
+      // Allow authenticated users to write (DomainsContext syncs here)
+      allow write: if request.auth != null;
+    }
     
-    // Plan Statistics - aggregated stats per plan
-    match /planStats/{planId} {
-      // Superadmin can read stats
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      // Only Cloud Functions can write stats
+    match /domainOrders/{orderId} {
+      allow read: if request.auth != null;
       allow write: if false;
     }
 
-    // Rate Limits - only backend can read/write
-    match /rateLimits/{document=**} {
-      allow read, write: if false; // Only Cloud Functions can access
-    }
-    
-    // Widget Analytics - only backend can write, superadmin can read
-    match /widgetAnalytics/{analyticsId} {
-      allow read: if request.auth != null && isSuperAdminOrOwner();
-      allow write: if false; // Only Cloud Functions can write
-    }
-    
-    // ============================================
-    // WIDGET API - Public Access (with validation)
-    // ============================================
-    
-    // Top-level projects collection (used by widget API)
-    // SECURED: Only expose specific fields needed for widget
-    match /projects/{projectId} {
-      // Public read denied - use Cloud Functions (getWidgetConfig) to access safely
-      allow read: if false;
-      // Only authenticated owner or superadmin can write
-      allow write: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Top-level leads collection (used by widget API)
-    // SECURED: Validate lead data on create
-    match /leads/{leadId} {
-      // Public create with validation
-      allow create: if 
-        hasRequiredFields(request.resource.data, ['email', 'projectId', 'source', 'createdAt']) &&
-        isValidEmail(request.resource.data.email) &&
-        isValidString(request.resource.data.projectId, 1, 100) &&
-        isValidString(request.resource.data.source, 1, 50) &&
-        // Optional fields validation
-        (!request.resource.data.keys().hasAny(['name']) || isValidString(request.resource.data.name, 0, 200)) &&
-        (!request.resource.data.keys().hasAny(['phone']) || isValidString(request.resource.data.phone, 0, 30)) &&
-        (!request.resource.data.keys().hasAny(['message']) || isValidString(request.resource.data.message, 0, 5000));
-      
-      // Authenticated users can read/update their own leads
-      allow read, update, delete: if request.auth != null && isSuperAdminOrOwner();
-      
-      // Lead activities subcollection
-      match /activities/{activityId} {
-        allow read, write: if request.auth != null && isSuperAdminOrOwner();
-      }
-    }
-    
-    // ============================================
-    // ECOMMERCE - Pending Reviews (Customer Submissions)
-    // SECURED: Validate review submissions
-    // ============================================
-    
-    match /pendingReviews/{storeId} {
-      // Store owners can read pending reviews
-      allow read: if request.auth != null;
-      // Don't allow direct writes to parent doc
-      allow write: if false;
-      
-      match /reviews/{reviewId} {
-        // Authenticated users can read
-        allow read: if request.auth != null;
-        
-        // Public create with validation
-        allow create: if 
-          hasRequiredFields(request.resource.data, ['rating', 'productId', 'customerEmail', 'createdAt']) &&
-          isValidRating(request.resource.data.rating) &&
-          isValidString(request.resource.data.productId, 1, 100) &&
-          isValidEmail(request.resource.data.customerEmail) &&
-          // Optional fields validation
-          (!request.resource.data.keys().hasAny(['customerName']) || isValidString(request.resource.data.customerName, 0, 100)) &&
-          (!request.resource.data.keys().hasAny(['comment']) || isValidString(request.resource.data.comment, 0, 2000)) &&
-          // Prevent setting moderation status on create
-          !request.resource.data.keys().hasAny(['approved', 'rejected', 'moderatedAt', 'moderatedBy']);
-        
-        // Owner can moderate (update/delete)
-        allow update, delete: if request.auth != null;
-      }
-    }
-    
-    // ============================================
-    // ECOMMERCE - Public Storefront Access
-    // ============================================
-    
-    match /publicStores/{storeId} {
-      // Anyone can read public store info
-      allow read: if true;
-      // Authenticated users can write to their own public store (for seeding/sync)
-      // The storeId matches the projectId which belongs to the user
-      // Check if user owns the store (created during enableEcommerce)
-      allow write: if request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      
-      // Public products
-      match /products/{productId} {
-        allow read: if true;
-        // Allow write if user owns the store
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Public categories
-      match /categories/{categoryId} {
-        allow read: if true;
-        // Allow write if user owns the store
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Public discounts (read-only for validation)
-      match /discounts/{discountId} {
-        allow read: if true;
-        // Allow write if user owns the store
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Public store settings (for checkout)
-      match /settings/{settingId} {
-        allow read: if true;
-        // Allow write if user owns the store
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Public reviews (read-only for storefront)
-      match /reviews/{reviewId} {
-        allow read: if true;
-        // Allow write if user owns the store
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-        // Allow public vote updates (helpfulVotes increment)
-        allow update: if 
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpfulVotes']) &&
-          request.resource.data.helpfulVotes == resource.data.helpfulVotes + 1;
-      }
-      
-      // Public customer orders (for order confirmation/tracking)
-      match /customerOrders/{orderId} {
-        allow read: if true;
-        // Allow public create for guest checkout
-        allow create: if 
-          hasRequiredFields(request.resource.data, ['customerEmail', 'items', 'total', 'status']) &&
-          isValidEmail(request.resource.data.customerEmail) &&
-          request.resource.data.items is list &&
-          request.resource.data.items.size() > 0 &&
-          request.resource.data.status == 'pending';
-        // Only owner can update/delete
-        allow update, delete: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Stock notifications
-      match /stockNotifications/{notificationId} {
-        allow read: if true;
-        allow create: if 
-          hasRequiredFields(request.resource.data, ['email', 'productId', 'createdAt']) &&
-          isValidEmail(request.resource.data.email) &&
-          isValidString(request.resource.data.productId, 1, 100);
-        allow update, delete: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // Public customers (for linking with store users)
-      match /customers/{customerId} {
-        allow read: if true;
-        allow write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-    }
-    
-    // ============================================
-    // STORE USERS - Multi-tenant Customer Authentication
-    // ============================================
-    
-    match /storeUsers/{storeId} {
-      // Store owner has full access
-      allow read, write: if request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      
-      // Store users collection
-      match /users/{userId} {
-        // Store owner can read/write all users
-        allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-        
-        // Authenticated store users can read their own profile
-        allow read: if request.auth != null && 
-          resource.data.metadata.firebaseUid == request.auth.uid;
-        
-        // Authenticated store users can update their own profile (limited fields)
-        allow update: if request.auth != null && 
-          resource.data.metadata.firebaseUid == request.auth.uid &&
-          // Can only update these specific fields
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'displayName', 'firstName', 'lastName', 'phone', 'photoURL', 
-            'acceptsMarketing', 'preferredLanguage', 'updatedAt'
-          ]);
-      }
-      
-      // User segments (store owner only)
-      match /segments/{segmentId} {
-        allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-      }
-      
-      // User activities (store owner read, Cloud Functions write)
-      match /activities/{activityId} {
-        allow read: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-        // Authenticated users can read their own activities
-        allow read: if request.auth != null;
-        // Only Cloud Functions can write
-        allow write: if false;
-      }
-      
-      // Role configurations (store owner only)
-      match /roleConfigs/{roleId} {
-        allow read, write: if request.auth != null && 
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/stores/$(storeId));
-        // Store users can read role configs
-        allow read: if request.auth != null;
-      }
-    }
-    
-    // ============================================
-    // ECOMMERCE - Guest Carts (Session-based)
-    // SECURED: Validate session ownership
-    // ============================================
-    
-    match /guestCarts/{sessionId} {
-      // Read own cart (sessionId in path must match)
-      allow read: if true;
-      
-      // Create with validation
-      allow create: if 
-        hasRequiredFields(request.resource.data, ['sessionId', 'createdAt', 'storeId']) &&
-        request.resource.data.sessionId == sessionId && // Ensure sessionId matches path
-        isValidString(request.resource.data.sessionId, 20, 100) && // UUID-like length
-        isValidString(request.resource.data.storeId, 1, 100);
-      
-      // Update only own cart
-      allow update: if 
-        resource.data.sessionId == sessionId &&
-        request.resource.data.sessionId == sessionId && // Can't change sessionId
-        (!request.resource.data.keys().hasAny(['items']) || 
-          (request.resource.data.items is list && request.resource.data.items.size() <= 50));
-      
-      // Delete only own cart
-      allow delete: if resource.data.sessionId == sessionId;
-      
-      // Cart items subcollection
-      match /items/{itemId} {
-        allow read: if true;
-        
-        // Create with validation
-        allow create: if 
-          hasRequiredFields(request.resource.data, ['productId', 'quantity', 'price']) &&
-          isValidString(request.resource.data.productId, 1, 100) &&
-          request.resource.data.quantity is int &&
-          request.resource.data.quantity > 0 &&
-          request.resource.data.quantity <= 99 &&
-          isPositiveNumber(request.resource.data.price);
-        
-        // Update with validation
-        allow update: if 
-          request.resource.data.quantity is int &&
-          request.resource.data.quantity > 0 &&
-          request.resource.data.quantity <= 99;
-        
-        allow delete: if true;
-      }
-    }
-    
-    // ============================================
-    // ECOMMERCE - Order Tracking (Read-Only)
-    // ============================================
-    
-    match /orderTracking/{trackingCode} {
-      // Public read for tracking
-      allow read: if true;
-      // Only Cloud Functions can write
-      allow write: if false;
-    }
-    
-    // ============================================
-    // SOCIAL CHAT - Conversations & Messages
-    // Used by Quimera Chat for multi-channel messaging
-    // ============================================
-    
-    // Social Conversations - conversation threads
-    match /socialConversations/{conversationId} {
-      // Authenticated users can read conversations for their projects
-      allow read: if request.auth != null;
-      
-      // Authenticated users can create/update conversations
-      allow create: if request.auth != null &&
-        hasRequiredFields(request.resource.data, ['projectId', 'channel', 'participantId']);
-      
-      allow update: if request.auth != null;
-      
-      // Only owner or superadmin can delete
-      allow delete: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // Social Messages - individual messages
-    match /socialMessages/{messageId} {
-      // Authenticated users can read messages
-      allow read: if request.auth != null;
-      
-      // Authenticated users can create messages
-      allow create: if request.auth != null &&
-        hasRequiredFields(request.resource.data, ['projectId', 'channel', 'message']);
-      
-      allow update: if request.auth != null;
-      
-      // Only owner or superadmin can delete
-      allow delete: if request.auth != null && isSuperAdminOrOwner();
-    }
-    
-    // ============================================
-    // CUSTOM DOMAINS - Global Domain Mappings
-    // Used by SSR server to resolve custom domains to projects
-    // ============================================
-    
-    match /customDomains/{domainName} {
-      // Public read - SSR server needs to resolve domains without auth
-      allow read: if true;
-      
-      // Write only by Cloud Functions (via domain service)
-      // Users manage domains via Cloud Functions that validate ownership
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-      
-      // Note: All writes to this collection should go through Cloud Functions:
-      // - domains-add: Creates new domain mapping (validates user owns the project)
-      // - domains-remove: Removes domain mapping (validates user owns the domain)
-      // - domains-verifyDNS: Updates DNS verification status
-      // The Cloud Functions use Admin SDK which bypasses these rules.
-    }
-    
-    // ============================================
-    // PORTAL DOMAINS - White-Label Portal Mappings
-    // ============================================
-    
-    match /portalDomains/{domainName} {
-      // Public read - SSR server needs to resolve portal domains
-      allow read: if true;
-      
-      // Write only via Cloud Functions
-      allow write: if false;
+    // Default deny
+    match /{document=**} {
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
     }
   }
 }

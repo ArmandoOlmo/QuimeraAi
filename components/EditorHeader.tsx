@@ -10,11 +10,12 @@ import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload,
 const EditorHeader: React.FC = () => {
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice, previewOrientation, setPreviewOrientation, setView } = useUI();
-  const { activeProject, renameActiveProject, saveProject, isEditingTemplate, exitTemplateEditor } = useProject();
+  const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
   const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
+  const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

@@ -538,8 +538,8 @@ export const createDomainCheckoutSession = functions.https.onCall(async (data, c
             }],
             mode: 'payment',
             customer_email: userEmail,
-            success_url: `${successUrl}${successSeparator}session_id={CHECKOUT_SESSION_ID}&domain=${encodeURIComponent(domainName)}`,
-            cancel_url: `${cancelUrl}${cancelSeparator}domain=${encodeURIComponent(domainName)}`,
+            success_url: `${successUrl}${successSeparator}session_id={CHECKOUT_SESSION_ID}&order_id=${orderRef.id}&domain=${encodeURIComponent(domainName)}&domain_success=true`,
+            cancel_url: `${cancelUrl}${cancelSeparator}domain=${encodeURIComponent(domainName)}&domain_cancel=true`,
             metadata: {
                 type: 'domain_purchase',
                 userId,
@@ -618,13 +618,29 @@ export async function registerDomainAfterPayment(
             purchasePrice: orderData?.wholesalePrice,
         };
 
-        const nameComResult = await nameComRequest<any>(
-            '/domains',
-            'POST',
-            registrationData
-        );
+        try {
+            const nameComResult = await nameComRequest<any>(
+                '/domains',
+                'POST',
+                registrationData
+            );
 
-        console.log(`[Domains] Name.com registration successful for ${domainName}`);
+            console.log(`[Domains] Name.com registration successful for ${domainName}`);
+
+            // Update order with Name.com response
+            await orderRef.update({
+                nameComResponse: nameComResult,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (error: any) {
+            // If domain already exists in our account, it's fine - continue to DNS setup
+            if (error.message?.includes('Domain is not available') || error.message?.includes('Domain exists')) {
+                console.log(`[Domains] Domain ${domainName} already exists in Name.com account, continuing to DNS setup...`);
+            } else {
+                console.error(`[Domains] Name.com registration failed: ${error.message}`);
+                throw error;
+            }
+        }
 
         // =====================================================================
         // STEP 2: Setup Cloudflare DNS
@@ -632,7 +648,6 @@ export async function registerDomainAfterPayment(
         await orderRef.update({
             status: 'configuring_dns',
             step: 'cloudflare_dns',
-            nameComResponse: nameComResult,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
@@ -715,6 +730,47 @@ export async function registerDomainAfterPayment(
             nameservers: nameservers.length > 0 ? nameservers : null,
             dnsConfigured: nameservers.length > 0,
         });
+
+        // =====================================================================
+        // STEP 5: Register domain in customDomains collection for Cloud Run SSR
+        // =====================================================================
+        try {
+            console.log(`[Domains] Registering ${domainName} in customDomains for Cloud Run SSR...`);
+            
+            await db.collection('customDomains').doc(domainName).set({
+                domain: domainName,
+                userId,
+                status: 'active',
+                sslStatus: 'active', // Cloudflare handles SSL
+                dnsVerified: true,
+                cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+            console.log(`[Domains] ✅ Domain ${domainName} registered for Cloud Run SSR`);
+        } catch (ssrError: any) {
+            console.warn(`[Domains] ⚠️ Could not register in customDomains:`, ssrError.message);
+            // Don't fail - can be fixed later via syncDomainMapping
+        }
+
+        // =====================================================================
+        // STEP 6: Add domain to Cloudflare Worker for automatic routing
+        // =====================================================================
+        try {
+            console.log(`[Domains] Adding ${domainName} to Cloudflare Worker...`);
+            const { addDomainToWorker } = await import('./cloudflareWorkerApi');
+            const workerResult = await addDomainToWorker(domainName);
+            
+            if (workerResult.success) {
+                console.log(`[Domains] ✅ Domain ${domainName} added to Cloudflare Worker`);
+            } else {
+                console.warn(`[Domains] ⚠️ Could not add to Worker:`, workerResult.error);
+            }
+        } catch (workerError: any) {
+            console.warn(`[Domains] ⚠️ Worker configuration error:`, workerError.message);
+            // Don't fail - domain can still work, just needs manual Worker config
+        }
 
         console.log(`[Domains] ✅ Domain ${domainName} fully configured for user ${userId}`);
 

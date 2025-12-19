@@ -201,14 +201,37 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
     const connectedProject = projects.find(p => p.id === domain.projectId);
     const deploymentLogs = getDomainDeploymentLogs(domain.id);
-    const isDeploymentInProgress = domain.status === 'deploying';
+    const isDeploymentInProgress = false; // Desbloqueado forzosamente para permitir cambios
+
+    const handleDomainClick = async () => {
+        if (domain.status === 'active' && domain.projectId) {
+            try {
+                const { httpsCallable } = await import('firebase/functions');
+                const { getFunctionsInstance } = await import('../../../firebase');
+                const functions = await getFunctionsInstance();
+                
+                // Sync domain mapping for Cloud Run SSR
+                const syncFn = httpsCallable(functions, 'syncDomainMapping');
+                await syncFn({ domain: domain.name, projectId: domain.projectId });
+                
+                alert('✅ Dominio sincronizado. Tu sitio debería cargar en unos segundos.');
+            } catch (e: any) {
+                console.error('Error syncing domain:', e);
+                alert('❌ Error: ' + (e.message || 'No se pudo sincronizar el dominio'));
+            }
+        }
+    };
 
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden transition-all hover:shadow-md">
             <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                        <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                        <h3 
+                            className="text-xl font-bold text-foreground flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                            onClick={handleDomainClick}
+                            title="Click para refrescar vinculación"
+                        >
                             {domain.name}
                             {domain.deployment?.deploymentUrl && (
                                 <a href={domain.deployment.deploymentUrl} target="_blank" rel="noreferrer"
@@ -250,9 +273,18 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         )}
                     </div>
                     <div className="flex gap-2">
+                        {domain.status === 'deploying' && (
+                            <button
+                                onClick={() => updateDomain(domain.id, { status: 'active' })}
+                                className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors"
+                                title={t('common.cancel', 'Cancelar')}
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
                         <button
                             onClick={handleVerify}
-                            disabled={isVerifying || isDeploymentInProgress || isDeleting}
+                            disabled={isVerifying || isDeleting}
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                             title={t('domainsDashboard.verifyDns')}
                         >
@@ -261,7 +293,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <button
                             onClick={handleDelete}
                             className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-                            disabled={isDeploymentInProgress || isDeleting}
+                            disabled={isDeleting}
                             title={t('domainsDashboard.deleteDomain', 'Eliminar dominio')}
                         >
                             {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -276,7 +308,6 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                             value={domain.projectId || ''}
                             onChange={(e) => handleProjectChange(e.target.value)}
-                            disabled={isDeploymentInProgress}
                         >
                             <option value="">{t('domainsDashboard.noProject')}</option>
                             {projects.filter(p => p.status !== 'Template').map(p => (
@@ -380,7 +411,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleDeploy()}
-                                disabled={isDeploying || isDeploymentInProgress}
+                                disabled={isDeploying}
                                 className="bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-md hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
                             >
                                 {isDeploying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
@@ -391,7 +422,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 </div>
             </div>
 
-            {showDetails && (
+            {showDetails && domain.status !== 'active' && (
                 <div className="border-t border-border p-6 bg-background/50">
                     <DNSConfig domain={domain} />
                 </div>
@@ -456,24 +487,26 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     // Check URL params for returning from Stripe checkout
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
         const sessionId = urlParams.get('session_id');
         const domainName = urlParams.get('domain');
         const domainSuccess = urlParams.get('domain_success');
 
         if (domainSuccess === 'true' && domainName) {
-            // Clear URL params
-            window.history.replaceState({}, '', window.location.pathname);
-            
-            // Show success and start polling
+            console.log('[Domains] Detecting success redirect for:', domainName);
+            // Show success and start polling using orderId (preferred) or sessionId (fallback)
             setOrderStatus({
-                orderId: sessionId || '',
+                orderId: orderId || sessionId || '',
                 domainName: decodeURIComponent(domainName),
                 status: 'registering',
                 step: 'Starting domain registration...'
             });
             setIsPolling(true);
+
+            // Do NOT clear URL params immediately, let the user see the progress
+            // We'll clear it when they close the modal or it completes
         }
-    }, []);
+    }, [t]);
 
     // Polling for order status
     const pollOrderStatus = useCallback(async (orderId: string) => {

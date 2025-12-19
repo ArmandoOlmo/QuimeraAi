@@ -13,6 +13,7 @@ import { initializeMonitoring, setUserContext, clearUserContext } from './utils/
 import { auth, signOut } from './firebase';
 import { View, AdminView } from './types/ui';
 import LandingChatbotWidget from './components/LandingChatbotWidget';
+import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
 
 // Lazy-loaded components for code-splitting
 const ProfileModal = lazy(() => import('./components/dashboard/ProfileModal'));
@@ -20,6 +21,7 @@ const GlobalAiAssistant = lazy(() => import('./components/ui/GlobalAiAssistant')
 const OnboardingModal = lazy(() => import('./components/onboarding/OnboardingModal'));
 const ViewRouter = lazy(() => import('./components/ViewRouter'));
 const PublicWebsitePreview = lazy(() => import('./components/PublicWebsitePreview'));
+const StorefrontApp = lazy(() => import('./components/ecommerce/StorefrontApp'));
 
 // Minimal loading fallback for lazy components
 const MinimalLoader = () => (
@@ -155,6 +157,7 @@ const AuthGate: React.FC = () => {
 
 const App: React.FC = () => {
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
+  const customDomain = useCustomDomain();
 
   useEffect(() => {
     initializeMonitoring();
@@ -165,6 +168,30 @@ const App: React.FC = () => {
     window.addEventListener('popstate', handleNavigation);
     return () => window.removeEventListener('popstate', handleNavigation);
   }, []);
+
+  // Handle custom domain detection
+  if (customDomain.isLoading) {
+    return <DomainLoadingPage />;
+  }
+
+  // If it's a custom domain, render the landing page
+  if (customDomain.isCustomDomain) {
+    if (!customDomain.projectId || !customDomain.userId) {
+      return <DomainNotConfiguredPage domain={customDomain.domain || 'unknown'} />;
+    }
+
+    // Render the landing page using PublicWebsitePreview with the resolved project
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicWebsitePreview 
+            userId={customDomain.userId}
+            projectId={customDomain.projectId}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
 
   if (isPreview) {
     return (
