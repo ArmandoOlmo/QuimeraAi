@@ -107,7 +107,10 @@ import {
     getDomainPricing,
     // Stripe Checkout for domains
     createDomainCheckoutSession,
-    checkDomainOrderStatus
+    checkDomainOrderStatus,
+    // Cloudflare DNS API
+    setupDomainDNS,
+    getDomainDNSStatus
 } from './domains';
 
 // Social Channels functions
@@ -266,7 +269,10 @@ export const domains = {
     getPricing: getDomainPricing,
     // Stripe Checkout for domains
     createDomainCheckoutSession,
-    checkDomainOrderStatus
+    checkDomainOrderStatus,
+    // Cloudflare DNS API
+    setupDNS: setupDomainDNS,
+    getDNSStatus: getDomainDNSStatus
 };
 
 // Export Social Channels functions
@@ -403,6 +409,9 @@ export {
     // Stripe Checkout for domains
     createDomainCheckoutSession,
     checkDomainOrderStatus,
+    // Cloudflare DNS API
+    setupDomainDNS,
+    getDomainDNSStatus,
     // Social Channels exports
     facebookWebhook,
     facebookWebhookVerify,

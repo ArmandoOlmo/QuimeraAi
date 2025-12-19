@@ -145,9 +145,11 @@ export interface DomainCheckoutResult {
 }
 
 export interface DomainOrderStatus {
-    status: 'pending_payment' | 'registering' | 'completed' | 'failed';
+    status: 'pending_payment' | 'registering' | 'configuring_dns' | 'updating_nameservers' | 'completed' | 'failed';
+    step?: string;
     domainName: string;
     error?: string;
+    nameservers?: string[];
 }
 
 /**

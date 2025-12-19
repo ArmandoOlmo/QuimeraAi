@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useDomains } from '../../../contexts/domains';
 import { useProject } from '../../../contexts/project';
@@ -417,12 +417,105 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { addDomain } = useDomains();
+    const { addDomain, refetch: refetchDomains } = useDomains();
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
     const [results, setResults] = useState<{ name: string; price: number | null; available: boolean; premium?: boolean; renewalPrice?: number | null }[]>([]);
     const [error, setError] = useState<string | null>(null);
+    
+    // Order tracking state
+    const [orderStatus, setOrderStatus] = useState<{
+        orderId: string;
+        domainName: string;
+        status: string;
+        step?: string;
+        nameservers?: string[];
+    } | null>(null);
+    const [isPolling, setIsPolling] = useState(false);
+
+    // Check URL params for returning from Stripe checkout
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const domainName = urlParams.get('domain');
+        const domainSuccess = urlParams.get('domain_success');
+
+        if (domainSuccess === 'true' && domainName) {
+            // Clear URL params
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            // Show success and start polling
+            setOrderStatus({
+                orderId: sessionId || '',
+                domainName: decodeURIComponent(domainName),
+                status: 'registering',
+                step: 'Starting domain registration...'
+            });
+            setIsPolling(true);
+        }
+    }, []);
+
+    // Polling for order status
+    const pollOrderStatus = useCallback(async (orderId: string) => {
+        try {
+            const { checkDomainOrderStatus } = await import('../../../services/nameComService');
+            const status = await checkDomainOrderStatus(orderId);
+            
+            setOrderStatus(prev => prev ? {
+                ...prev,
+                status: status.status,
+                step: getStepMessage(status.status, t),
+                nameservers: status.nameservers
+            } : null);
+
+            // If completed or failed, stop polling
+            if (status.status === 'completed') {
+                setIsPolling(false);
+                refetchDomains?.();
+                return true;
+            } else if (status.status === 'failed') {
+                setIsPolling(false);
+                setError(status.error || t('domainsDashboard.registrationFailed'));
+                return true;
+            }
+
+            return false;
+        } catch (e) {
+            console.error('Poll status error:', e);
+            return false;
+        }
+    }, [t, refetchDomains]);
+
+    // Polling effect
+    useEffect(() => {
+        if (!isPolling || !orderStatus?.orderId) return;
+
+        const interval = setInterval(async () => {
+            const done = await pollOrderStatus(orderStatus.orderId);
+            if (done) {
+                clearInterval(interval);
+            }
+        }, 3000); // Poll every 3 seconds
+
+        // Initial poll
+        pollOrderStatus(orderStatus.orderId);
+
+        return () => clearInterval(interval);
+    }, [isPolling, orderStatus?.orderId, pollOrderStatus]);
+
+    // Helper function for step messages
+    function getStepMessage(status: string, t: any): string {
+        switch (status) {
+            case 'pending_payment': return t('domainsDashboard.stepPayment');
+            case 'registering': return t('domainsDashboard.stepRegistering');
+            case 'configuring_dns': return t('domainsDashboard.stepDns');
+            case 'updating_nameservers': return t('domainsDashboard.stepNameservers');
+            case 'completed': return t('domainsDashboard.stepCompleted');
+            case 'failed': return t('domainsDashboard.stepFailed');
+            default: return t('domainsDashboard.stepProcessing');
+        }
+    }
 
     const handleSearch = async () => {
         if (!query.trim()) return;
@@ -517,6 +610,118 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     return (
         <div className="p-6">
+            {/* Order Progress Modal */}
+            {orderStatus && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+                    <div className="bg-card border border-border rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+                        <div className="text-center mb-6">
+                            {orderStatus.status === 'completed' ? (
+                                <>
+                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <CheckCircle size={32} className="text-green-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-foreground">{t('domainsDashboard.registrationComplete')}</h3>
+                                    <p className="text-muted-foreground">{t('domainsDashboard.domainReadyToUse')}</p>
+                                </>
+                            ) : orderStatus.status === 'failed' ? (
+                                <>
+                                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <X size={32} className="text-red-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-foreground">{t('domainsDashboard.stepFailed')}</h3>
+                                    <p className="text-red-500">{error}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Loader2 size={48} className="animate-spin text-primary mx-auto mb-4" />
+                                    <h3 className="text-xl font-bold text-foreground">{t('domainsDashboard.domainBeingRegistered')}</h3>
+                                    <p className="text-muted-foreground">{t('domainsDashboard.pleaseWait')}</p>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="bg-secondary/30 rounded-lg p-4 mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-muted-foreground">{t('domainsDashboard.domain')}</span>
+                                <span className="font-bold text-foreground">{orderStatus.domainName}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">{t('domainsDashboard.domainStatus')}</span>
+                                <span className={`text-sm font-medium ${
+                                    orderStatus.status === 'completed' ? 'text-green-500' :
+                                    orderStatus.status === 'failed' ? 'text-red-500' : 'text-primary'
+                                }`}>
+                                    {orderStatus.step}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Progress Steps */}
+                        {orderStatus.status !== 'failed' && (
+                            <div className="flex justify-between mb-6 px-2">
+                                <StepIndicator 
+                                    step={1} 
+                                    label={t('domainsDashboard.stepProject').split(' ')[0]} 
+                                    completed={['registering', 'configuring_dns', 'updating_nameservers', 'completed'].includes(orderStatus.status)} 
+                                    active={orderStatus.status === 'pending_payment'} 
+                                />
+                                <div className="flex-1 h-0.5 bg-border self-center mx-1 mt-[-12px]" />
+                                <StepIndicator 
+                                    step={2} 
+                                    label="DNS" 
+                                    completed={['configuring_dns', 'updating_nameservers', 'completed'].includes(orderStatus.status)} 
+                                    active={orderStatus.status === 'registering'} 
+                                />
+                                <div className="flex-1 h-0.5 bg-border self-center mx-1 mt-[-12px]" />
+                                <StepIndicator 
+                                    step={3} 
+                                    label="SSL" 
+                                    completed={['updating_nameservers', 'completed'].includes(orderStatus.status)} 
+                                    active={orderStatus.status === 'configuring_dns'} 
+                                />
+                                <div className="flex-1 h-0.5 bg-border self-center mx-1 mt-[-12px]" />
+                                <StepIndicator 
+                                    step={4} 
+                                    label={t('domainsDashboard.active')} 
+                                    completed={orderStatus.status === 'completed'} 
+                                    active={orderStatus.status === 'updating_nameservers'} 
+                                />
+                            </div>
+                        )}
+
+                        {/* Nameservers info (if completed) */}
+                        {orderStatus.status === 'completed' && orderStatus.nameservers && orderStatus.nameservers.length > 0 && (
+                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+                                <p className="text-sm font-medium text-blue-500 mb-2">{t('domainsDashboard.nameserversInfo')}</p>
+                                <div className="space-y-1">
+                                    {orderStatus.nameservers.map((ns, i) => (
+                                        <code key={i} className="block text-xs bg-secondary px-2 py-1 rounded font-mono">{ns}</code>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => {
+                                setOrderStatus(null);
+                                if (orderStatus.status === 'completed') {
+                                    onClose();
+                                }
+                            }}
+                            disabled={isPolling && orderStatus.status !== 'failed'}
+                            className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                        >
+                            {orderStatus.status === 'completed' 
+                                ? t('domainsDashboard.viewDomain')
+                                : orderStatus.status === 'failed'
+                                    ? t('common.close')
+                                    : t('domainsDashboard.pleaseWait').replace('...', '')
+                            }
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-bold text-foreground">{t('domainsDashboard.findDomain')}</h2>

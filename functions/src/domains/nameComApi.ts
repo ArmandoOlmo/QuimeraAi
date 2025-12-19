@@ -569,16 +569,18 @@ export const createDomainCheckoutSession = functions.https.onCall(async (data, c
 
 /**
  * Internal function to register domain after payment (called by webhook)
+ * Full flow: Register with Name.com -> Setup Cloudflare DNS -> Update Nameservers
  */
 export async function registerDomainAfterPayment(
     orderId: string,
     domainName: string,
     years: number,
     userId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; nameservers?: string[] }> {
+    const orderRef = db.collection('domainOrders').doc(orderId);
+    
     try {
         // Get order details
-        const orderRef = db.collection('domainOrders').doc(orderId);
         const orderDoc = await orderRef.get();
 
         if (!orderDoc.exists) {
@@ -593,13 +595,17 @@ export async function registerDomainAfterPayment(
             return { success: true };
         }
 
-        // Update status to processing
+        // =====================================================================
+        // STEP 1: Register domain with Name.com
+        // =====================================================================
         await orderRef.update({
             status: 'registering',
+            step: 'name_com_registration',
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Register the domain with Name.com
+        console.log(`[Domains] Step 1: Registering ${domainName} with Name.com...`);
+
         const registrationData = {
             domain: {
                 domainName,
@@ -608,22 +614,86 @@ export async function registerDomainAfterPayment(
             purchasePrice: orderData?.wholesalePrice,
         };
 
-        const result = await nameComRequest<any>(
+        const nameComResult = await nameComRequest<any>(
             '/domains',
             'POST',
             registrationData
         );
 
-        // Update order as completed
+        console.log(`[Domains] Name.com registration successful for ${domainName}`);
+
+        // =====================================================================
+        // STEP 2: Setup Cloudflare DNS
+        // =====================================================================
+        await orderRef.update({
+            status: 'configuring_dns',
+            step: 'cloudflare_dns',
+            nameComResponse: nameComResult,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log(`[Domains] Step 2: Setting up Cloudflare DNS for ${domainName}...`);
+
+        let cloudflareResult = null;
+        let nameservers: string[] = [];
+
+        try {
+            // Import Cloudflare functions
+            const { configureQuimeraDNS, enableStrictSSL } = await import('./cloudflareApi');
+            
+            cloudflareResult = await configureQuimeraDNS(domainName, userId);
+            nameservers = cloudflareResult.nameservers;
+
+            // Enable SSL
+            await enableStrictSSL(cloudflareResult.zoneId);
+
+            console.log(`[Domains] Cloudflare configured. Nameservers: ${nameservers.join(', ')}`);
+
+        } catch (cfError: any) {
+            console.error(`[Domains] Cloudflare setup failed (non-critical): ${cfError.message}`);
+            // Continue - Cloudflare is optional, domain is still usable
+        }
+
+        // =====================================================================
+        // STEP 3: Update nameservers at Name.com (if Cloudflare succeeded)
+        // =====================================================================
+        if (nameservers.length > 0) {
+            await orderRef.update({
+                status: 'updating_nameservers',
+                step: 'nameserver_update',
+                cloudflareZoneId: cloudflareResult?.zoneId,
+                cloudflareNameservers: nameservers,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            console.log(`[Domains] Step 3: Updating nameservers for ${domainName}...`);
+
+            try {
+                await nameComRequest<any>(
+                    `/domains/${domainName}:setNameservers`,
+                    'POST',
+                    { nameservers }
+                );
+                console.log(`[Domains] Nameservers updated successfully`);
+            } catch (nsError: any) {
+                console.error(`[Domains] Nameserver update failed (non-critical): ${nsError.message}`);
+                // Continue - user can update manually
+            }
+        }
+
+        // =====================================================================
+        // STEP 4: Complete the order
+        // =====================================================================
+        const expiryDate = new Date(Date.now() + (years * 365 * 24 * 60 * 60 * 1000)).toISOString();
+        
         await orderRef.update({
             status: 'completed',
-            nameComResponse: result,
+            step: 'completed',
             completedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
         // Add domain to user's domains collection
-        const expiryDate = new Date(Date.now() + (years * 365 * 24 * 60 * 60 * 1000)).toISOString();
-        
         const userDomainRef = db.collection('users').doc(userId).collection('domains').doc(domainName);
         await userDomainRef.set({
             id: domainName,
@@ -636,17 +706,21 @@ export async function registerDomainAfterPayment(
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             expiryDate,
             orderId,
+            // Cloudflare info
+            cloudflareZoneId: cloudflareResult?.zoneId || null,
+            nameservers: nameservers.length > 0 ? nameservers : null,
+            dnsConfigured: nameservers.length > 0,
         });
 
-        console.log(`[Domains] Domain ${domainName} registered successfully for user ${userId}`);
+        console.log(`[Domains] ✅ Domain ${domainName} fully configured for user ${userId}`);
 
-        return { success: true };
+        return { success: true, nameservers };
 
     } catch (error: any) {
         console.error('[Domains] Registration error:', error);
 
         // Update order with error
-        await db.collection('domainOrders').doc(orderId).update({
+        await orderRef.update({
             status: 'failed',
             error: error.message,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),

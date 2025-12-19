@@ -6,6 +6,7 @@
  * - Domain registration/removal
  * - SSL status monitoring
  * - Name.com Reseller API integration
+ * - Cloudflare DNS API integration
  */
 
 export { addCustomDomain, removeCustomDomain, updateDomainStatus } from './domainManager';
@@ -22,6 +23,12 @@ export {
     checkDomainOrderStatus,
     registerDomainAfterPayment
 } from './nameComApi';
+
+// Cloudflare DNS API
+export {
+    setupDomainDNS,
+    getDomainDNSStatus
+} from './cloudflareApi';
 
 
 
