@@ -86,8 +86,9 @@ WORKDIR /app/server
 RUN npm ci --only=production
 WORKDIR /app
 
-# Copy built files
-COPY --from=builder /app/dist ./dist
+# Copy built files - server expects files in dist/client/ and dist/server/
+COPY --from=builder /app/dist ./dist/client
+COPY --from=builder /app/dist/server ./dist/server
 COPY --from=builder /app/server/dist ./server/dist
 COPY --from=builder /app/index.html ./index.html
 
