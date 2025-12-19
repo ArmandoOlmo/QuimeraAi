@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
 import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
+import { useUI } from './core/UIContext';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -479,17 +480,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [libraryLeads, setLibraryLeads] = useState<LibraryLead[]>([]);
     const [isLoadingLibraryLeads, setIsLoadingLibraryLeads] = useState(false);
 
-    // Theme mode - Load from localStorage first, then sync from Firebase
-    const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-        const saved = localStorage.getItem('themeMode');
-        return (saved as ThemeMode) || 'dark';
-    });
-
-    // Sidebar order - Load from localStorage first, then sync from Firebase
-    const [sidebarOrder, setSidebarOrder] = useState<string[]>(() => {
-        const saved = localStorage.getItem('sidebar-nav-order');
-        return saved ? JSON.parse(saved) : [];
-    });
+    // Theme mode and sidebar order - Use UIContext (single source of truth)
+    const { themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
 
     // File Management State
     const [files, setFiles] = useState<FileRecord[]>([]);
@@ -1028,14 +1020,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     setUserDocument({ ...finalUserDoc, id: currentUser.uid });
 
                     // Load user preferences from Firebase (sync across devices)
+                    // setThemeMode and setSidebarOrder from UIContext handle localStorage automatically
                     if (finalUserDoc.preferences) {
                         if (finalUserDoc.preferences.themeMode) {
                             setThemeMode(finalUserDoc.preferences.themeMode);
-                            localStorage.setItem('themeMode', finalUserDoc.preferences.themeMode);
                         }
                         if (finalUserDoc.preferences.sidebarOrder && finalUserDoc.preferences.sidebarOrder.length > 0) {
                             setSidebarOrder(finalUserDoc.preferences.sidebarOrder);
-                            localStorage.setItem('sidebar-nav-order', JSON.stringify(finalUserDoc.preferences.sidebarOrder));
                         }
                     }
 
@@ -1298,16 +1289,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     }, [user]);
 
 
+    // Sync themeMode to Firebase (localStorage sync is handled by UIContext)
     useEffect(() => {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark', 'black'); // Remove all existing theme classes
-        root.classList.add(themeMode); // Add the current one
-    }, [themeMode]);
-
-    // Sync themeMode to localStorage and Firebase
-    useEffect(() => {
-        localStorage.setItem('themeMode', themeMode);
-
         // Save to Firebase if user is authenticated
         if (user && userDocument) {
             const userDocRef = doc(db, 'users', user.uid);
@@ -1317,11 +1300,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     }, [themeMode, user?.uid]); // Only depend on user.uid to avoid infinite loops
 
-    // Sync sidebarOrder to localStorage and Firebase
+    // Sync sidebarOrder to Firebase (localStorage sync is handled by UIContext)
     useEffect(() => {
         if (sidebarOrder.length > 0) {
-            localStorage.setItem('sidebar-nav-order', JSON.stringify(sidebarOrder));
-
             // Save to Firebase if user is authenticated
             if (user && userDocument) {
                 const userDocRef = doc(db, 'users', user.uid);
