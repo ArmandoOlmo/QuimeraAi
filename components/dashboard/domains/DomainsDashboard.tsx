@@ -435,6 +435,15 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             const { searchDomains } = await import('../../../services/nameComService');
             const searchResults = await searchDomains(query.trim());
 
+            // Priority TLDs for sorting (show these first)
+            const priorityTlds = ['.com', '.net', '.org', '.io', '.co'];
+            
+            const getTldPriority = (domain: string) => {
+                const tld = '.' + domain.split('.').slice(1).join('.');
+                const idx = priorityTlds.indexOf(tld);
+                return idx === -1 ? 100 : idx;
+            };
+
             // Combine available and unavailable results
             const allResults = [
                 ...searchResults.available.map(d => ({
@@ -453,9 +462,17 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 }))
             ];
 
-            // Sort: available first, then by price
+            // Sort: priority TLDs first, then available/unavailable, then by price
             allResults.sort((a, b) => {
+                // First sort by TLD priority (show .com, .net, .org first)
+                const priorityA = getTldPriority(a.name);
+                const priorityB = getTldPriority(b.name);
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                
+                // Then by availability
                 if (a.available !== b.available) return a.available ? -1 : 1;
+                
+                // Then by price
                 return (a.price || 999) - (b.price || 999);
             });
 

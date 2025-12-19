@@ -171,23 +171,44 @@ export const searchDomainSuggestions = functions.https.onCall(async (data, conte
     // Clean keyword
     const cleanKeyword = keyword.toLowerCase().replace(/[^a-z0-9-]/g, '');
 
-    // Generate domain variations to check
-    const tlds = ['.com', '.io', '.co', '.app', '.dev', '.net', '.org', '.shop', '.store', '.online'];
-    const prefixes = ['', 'get', 'try', 'use', 'my', 'the'];
+    // Priority TLDs (always check these first for the base keyword)
+    const priorityTlds = ['.com', '.net', '.org', '.io', '.co'];
+    const otherTlds = ['.app', '.dev', '.shop', '.store', '.online', '.site', '.tech', '.xyz'];
+    const prefixes = ['', 'get', 'try', 'my', 'the'];
     
     const domainsToCheck: string[] = [];
     
-    // Add variations
+    // FIRST: Add base keyword with ALL priority TLDs (these are most important)
+    for (const tld of priorityTlds) {
+        const domain = `${cleanKeyword}${tld}`;
+        if (domain.length <= 63 && !domainsToCheck.includes(domain)) {
+            domainsToCheck.push(domain);
+        }
+    }
+    
+    // SECOND: Add base keyword with other TLDs
+    for (const tld of otherTlds) {
+        const domain = `${cleanKeyword}${tld}`;
+        if (domain.length <= 63 && !domainsToCheck.includes(domain)) {
+            domainsToCheck.push(domain);
+        }
+    }
+    
+    // THIRD: Add variations with prefixes (priority TLDs first)
     for (const prefix of prefixes) {
-        for (const tld of tlds) {
+        if (prefix === '') continue; // Already added base keyword
+        for (const tld of [...priorityTlds, ...otherTlds]) {
             const domain = `${prefix}${cleanKeyword}${tld}`;
             if (domain.length <= 63 && !domainsToCheck.includes(domain)) {
                 domainsToCheck.push(domain);
             }
-            if (domainsToCheck.length >= 30) break;
+            if (domainsToCheck.length >= 50) break; // Increased limit
         }
-        if (domainsToCheck.length >= 30) break;
+        if (domainsToCheck.length >= 50) break;
     }
+
+    console.log(`[Name.com] Checking ${domainsToCheck.length} domains for keyword: ${cleanKeyword}`);
+    console.log('[Name.com] Domains to check:', domainsToCheck.slice(0, 10)); // Log first 10
 
     try {
         const result = await nameComRequest<DomainSearchResult>(
@@ -195,6 +216,8 @@ export const searchDomainSuggestions = functions.https.onCall(async (data, conte
             'POST',
             { domainNames: domainsToCheck }
         );
+
+        console.log(`[Name.com] Got ${result.results.length} results from API`);
 
         // Filter and sort results
         const MARGIN_PERCENTAGE = 0.20;
@@ -212,8 +235,7 @@ export const searchDomainSuggestions = functions.https.onCall(async (data, conte
                     : null,
                 premium: domain.premium || false,
                 originalPrice: domain.purchasePrice
-            }))
-            .sort((a, b) => (a.price || 999) - (b.price || 999));
+            }));
 
         const unavailableDomains = result.results
             .filter(d => !d.purchasable)
@@ -223,6 +245,8 @@ export const searchDomainSuggestions = functions.https.onCall(async (data, conte
                 price: null,
                 premium: false
             }));
+
+        console.log(`[Name.com] Available: ${availableDomains.length}, Unavailable: ${unavailableDomains.length}`);
 
         return {
             available: availableDomains,
