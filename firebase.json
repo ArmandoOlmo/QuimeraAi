@@ -20,6 +20,17 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebase.com https://*.firebasestorage.app https://*.stripe.com https://*.stripe.network wss://*.firebaseio.com; img-src 'self' data: blob: https: http:; font-src 'self' https://fonts.gstatic.com data:; frame-src 'self' https://*.stripe.com https://*.stripe.network https://js.stripe.com;"
+          }
+        ]
+      }
+    ],
     "rewrites": [
       {
         "source": "/api/gemini/generate",
