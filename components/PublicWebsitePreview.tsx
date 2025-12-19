@@ -41,6 +41,32 @@ import Products from './Products';
 // Lazy load StorefrontApp for store views
 const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
 
+// Separate component for store view to isolate Suspense and avoid hook count issues
+interface StoreViewWrapperProps {
+  projectId: string;
+  storeView: StoreViewState;
+}
+
+const StoreViewWrapper: React.FC<StoreViewWrapperProps> = ({ projectId, storeView }) => {
+  const serverUrl = 
+    storeView.type === 'store' ? '/' :
+    storeView.type === 'category' ? `/category/${(storeView as { type: 'category'; slug: string }).slug}` :
+    storeView.type === 'product' ? `/product/${(storeView as { type: 'product'; slug: string }).slug}` : '/';
+
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    }>
+      <StorefrontApp
+        projectId={projectId}
+        serverUrl={serverUrl}
+      />
+    </Suspense>
+  );
+};
+
 // Ecommerce components (usables en Landing y Ecommerce)
 import {
     FeaturedProducts,
@@ -501,12 +527,26 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   }, [project]);
 
   // Navigation handlers - MUST be before any conditional returns to avoid React hooks error #310
+  // Note: Using propUserId/propProjectId directly to avoid stale closure issues with getIdsFromURL
   const handleBackToHome = useCallback(() => {
-    const { userId, projectId } = getIdsFromURL();
-    window.location.hash = `preview/${userId}/${projectId}`;
+    // For custom domains, clear hash entirely to go to home
+    // For preview URLs, reconstruct the preview hash
+    if (propUserId && propProjectId) {
+      // Custom domain - just clear the hash
+      window.location.hash = '';
+    } else {
+      // Preview URL - reconstruct from URL
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/preview/')) {
+        const parts = pathname.replace('/preview/', '').split('/');
+        if (parts[0] && parts[1]) {
+          window.location.hash = '';
+        }
+      }
+    }
     setActivePost(null);
     setStoreView({ type: 'none' });
-  }, []);
+  }, [propUserId, propProjectId]);
 
   const handleNavigateToStore = useCallback(() => {
     window.location.hash = 'store';
@@ -805,20 +845,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       <main className="min-h-screen bg-site-base relative">
         {/* Store View */}
         {isStoreViewActive && storeProjectId ? (
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          }>
-            <StorefrontApp
-              projectId={storeProjectId}
-              serverUrl={
-                storeView.type === 'store' ? '/' :
-                storeView.type === 'category' ? `/category/${(storeView as { type: 'category'; slug: string }).slug}` :
-                storeView.type === 'product' ? `/product/${(storeView as { type: 'product'; slug: string }).slug}` : '/'
-              }
-            />
-          </Suspense>
+          <StoreViewWrapper projectId={storeProjectId} storeView={storeView} />
         ) : activePost ? (
           /* Article View */
           <BlogPost 
