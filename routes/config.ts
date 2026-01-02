@@ -47,6 +47,8 @@ export const ROUTES = {
   DATA_DELETION: '/data-deletion',
   TERMS_OF_SERVICE: '/terms-of-service',
   COOKIE_POLICY: '/cookie-policy',
+  HELP_CENTER: '/help-center',
+  CHANGELOG: '/changelog',
   
   // OAuth Callback Routes
   META_OAUTH_ERROR: '/auth/meta/error',
@@ -111,6 +113,7 @@ export const ROUTES = {
   ADMIN_LANDING_NAVIGATION: '/admin/landing-navigation',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
   ADMIN_LANDING_CHATBOT: '/admin/landing-chatbot',
+  ADMIN_CHANGELOG: '/admin/changelog',
 } as const;
 
 // =============================================================================
@@ -167,6 +170,18 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.COOKIE_POLICY,
     type: 'public',
     title: 'Cookie Policy',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.HELP_CENTER,
+    type: 'public',
+    title: 'Help Center',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.CHANGELOG,
+    type: 'public',
+    title: 'Changelog',
     requiresAuth: false,
   },
   {
@@ -645,6 +660,17 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'landing-chatbot',
     type: 'admin',
     title: 'Landing Chatbot',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_CHANGELOG,
+    view: 'superadmin',
+    adminView: 'changelog',
+    type: 'admin',
+    title: 'Changelog Management',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],

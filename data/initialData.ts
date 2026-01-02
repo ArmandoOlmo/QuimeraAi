@@ -635,6 +635,7 @@ const pageData: PageData = {
           { text: 'FAQ', href: '#faq' },
           { text: 'Support', href: '#' },
           { text: 'Blog', href: '#' },
+          { text: 'Changelog', href: '/changelog' },
         ],
       },
       {

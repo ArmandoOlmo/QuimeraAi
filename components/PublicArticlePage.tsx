@@ -19,10 +19,17 @@ import {
   Tag,
   ChevronRight
 } from 'lucide-react';
+import { marked } from 'marked';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import LanguageSelector from './ui/LanguageSelector';
 import { sanitizeHtml } from '../utils/sanitize';
+
+// Configure marked for better rendering
+marked.setOptions({
+  breaks: true, // Convert \n to <br>
+  gfm: true,    // GitHub Flavored Markdown
+});
 
 // --- Brand Assets ---
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -77,9 +84,35 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
       .slice(0, 3);
   }, [articles, article]);
 
-  // Sanitized content
+  // Convert Markdown to HTML and sanitize
   const sanitizedContent = useMemo(() => {
-    return article ? sanitizeHtml(article.content || '') : '';
+    if (!article || !article.content) return '';
+    
+    try {
+      // Detect Markdown by common patterns
+      const isMarkdown = article.content.trim().startsWith('#') || 
+                         article.content.includes('\n##') ||
+                         article.content.includes('\n- ') ||
+                         article.content.includes('\n* ') ||
+                         article.content.includes('```');
+      
+      let htmlContent: string;
+      
+      if (isMarkdown) {
+        // Parse markdown to HTML
+        const parsed = marked.parse(article.content);
+        htmlContent = typeof parsed === 'string' ? parsed : article.content;
+      } else {
+        // Check if it's already HTML
+        const containsHtmlTags = /<[a-z][\s\S]*>/i.test(article.content);
+        htmlContent = containsHtmlTags ? article.content : marked.parse(article.content) as string;
+      }
+      
+      return sanitizeHtml(htmlContent);
+    } catch (error) {
+      console.error('Error parsing article content:', error);
+      return sanitizeHtml(article.content);
+    }
   }, [article]);
 
   // Share functions

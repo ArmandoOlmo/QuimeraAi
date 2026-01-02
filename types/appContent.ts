@@ -35,7 +35,8 @@ export type AppArticleCategory =
   | 'case-study'
   | 'announcement'
   | 'guide'
-  | 'update';
+  | 'update'
+  | 'help';
 
 export interface AppArticleSEO {
   metaTitle?: string;
@@ -288,6 +289,7 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
       { id: '1', label: 'Features', href: '#features', type: 'anchor' },
       { id: '2', label: 'Pricing', href: '#pricing', type: 'anchor' },
       { id: '3', label: 'Blog', href: '/blog', type: 'link' },
+      { id: '4', label: 'Help', href: '/help-center', type: 'link' },
     ],
     cta: {
       loginText: 'Login',
@@ -313,7 +315,7 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
         items: [
           { id: '1', label: 'Blog', href: '/blog', type: 'link' },
           { id: '2', label: 'Documentation', href: '/docs', type: 'link' },
-          { id: '3', label: 'Help Center', href: '/help', type: 'link' },
+          { id: '3', label: 'Help Center', href: '/help-center', type: 'link' },
         ]
       },
       {

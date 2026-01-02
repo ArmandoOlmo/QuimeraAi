@@ -30,6 +30,11 @@ const PrivacyPolicyPage = lazy(() => import('../components/legal/PrivacyPolicyPa
 const DataDeletionPage = lazy(() => import('../components/legal/DataDeletionPage'));
 const TermsOfServicePage = lazy(() => import('../components/legal/TermsOfServicePage'));
 const CookiePolicyPage = lazy(() => import('../components/legal/CookiePolicyPage'));
+const HelpCenterPage = lazy(() => import('../components/legal/HelpCenterPage'));
+const ChangelogPage = lazy(() => import('../components/ChangelogPage'));
+
+// Admin pages
+const SeedArticlesPage = lazy(() => import('../components/admin/SeedArticlesPage'));
 
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazy(() => import('../components/ecommerce/ProductDetailPageWithCart'));
@@ -395,6 +400,39 @@ const Router: React.FC<RouterProps> = ({
           <CookiePolicyPage />
         </Suspense>
       </AppContentProvider>
+    );
+  }
+
+  // Help Center page (public)
+  if (path === '/help-center') {
+    return (
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <HelpCenterPage />
+        </Suspense>
+      </AppContentProvider>
+    );
+  }
+
+  // Changelog page (public)
+  if (path === '/changelog') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <ChangelogPage 
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
+    );
+  }
+
+  // Admin: Seed Help Center Articles (temporary)
+  if (path === '/admin/seed-articles') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <SeedArticlesPage />
+      </Suspense>
     );
   }
 

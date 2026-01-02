@@ -30,6 +30,7 @@ import ContentManagementDashboard from './admin/ContentManagementDashboard';
 import LandingNavigationManagement from './admin/LandingNavigationManagement';
 import SubscriptionManagement from './admin/SubscriptionManagement';
 import LandingChatbotAdmin from './admin/LandingChatbotAdmin';
+import ChangelogManagement from './admin/ChangelogManagement';
 
 // Types
 type AdminFeature = {
@@ -66,6 +67,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'app-info': ROUTES.ADMIN_APP_INFO,
     'subscriptions': ROUTES.ADMIN_SUBSCRIPTIONS,
     'landing-chatbot': ROUTES.ADMIN_LANDING_CHATBOT,
+    'changelog': ROUTES.ADMIN_CHANGELOG,
 };
 
 // Components

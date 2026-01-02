@@ -4762,7 +4762,10 @@
     "noCreditCard": "No requiere tarjeta de crédito",
     "footerPrivacy": "Privacidad",
     "footerTerms": "Términos",
-    "footerContact": "Contacto"
+    "footerContact": "Contacto",
+    "footerHelpCenter": "Centro de Ayuda",
+    "footerCookies": "Cookies",
+    "footerDataDeletion": "Eliminación de Datos"
   },
   "profile": {
     "title": "Configuración y Perfil",
@@ -4903,6 +4906,118 @@
       "customDomains": "Dominios personalizados",
       "included": "Incluido",
       "notIncluded": "No incluido"
+    }
+  },
+  "helpCenter": {
+    "hero": {
+      "badge": "Centro de Ayuda",
+      "title": "¿Cómo podemos ayudarte?",
+      "subtitle": "Encuentra respuestas, tutoriales y recursos para aprovechar al máximo Quimera AI",
+      "searchPlaceholder": "Buscar artículos, tutoriales, preguntas..."
+    },
+    "quickLinks": {
+      "gettingStarted": "Primeros pasos",
+      "billing": "Facturación",
+      "domains": "Dominios"
+    },
+    "sections": {
+      "categories": "Explora por Categoría",
+      "popularArticles": "Artículos Populares",
+      "faqs": "Preguntas Frecuentes"
+    },
+    "categories": {
+      "gettingStarted": {
+        "title": "Primeros Pasos",
+        "description": "Aprende los conceptos básicos y crea tu primer sitio web"
+      },
+      "websiteBuilder": {
+        "title": "Constructor de Sitios",
+        "description": "Domina el editor visual y todas sus herramientas"
+      },
+      "aiAssistant": {
+        "title": "Asistente de IA",
+        "description": "Configura y optimiza tu chatbot inteligente"
+      },
+      "domains": {
+        "title": "Dominios",
+        "description": "Conecta dominios propios y configura DNS"
+      },
+      "billing": {
+        "title": "Facturación",
+        "description": "Gestiona suscripciones, pagos y facturas"
+      },
+      "ecommerce": {
+        "title": "E-commerce",
+        "description": "Crea tu tienda online y gestiona productos"
+      },
+      "leadsCrm": {
+        "title": "Leads y CRM",
+        "description": "Captura leads y gestiona tus clientes"
+      },
+      "integrations": {
+        "title": "Integraciones",
+        "description": "Conecta con Meta, WhatsApp y más"
+      }
+    },
+    "articles": {
+      "label": "artículos",
+      "createFirstWebsite": "Cómo crear tu primer sitio web",
+      "connectDomain": "Conectar tu dominio personalizado",
+      "configureChatbot": "Configurar tu chatbot de IA",
+      "manageSubscription": "Gestionar tu suscripción",
+      "setupEcommerce": "Configurar tu tienda online",
+      "captureLeads": "Cómo capturar y gestionar leads"
+    },
+    "faqs": {
+      "whatIsQuimera": {
+        "question": "¿Qué es Quimera AI?",
+        "answer": "Quimera AI es una plataforma de creación de sitios web potenciada por inteligencia artificial. Te permite crear sitios web profesionales, chatbots inteligentes, tiendas online y gestionar leads sin necesidad de conocimientos técnicos."
+      },
+      "howToStart": {
+        "question": "¿Cómo empiezo a crear mi sitio web?",
+        "answer": "Es muy sencillo: regístrate gratis, elige una plantilla o describe tu negocio a nuestro asistente de IA, y él creará un sitio personalizado para ti en minutos. Luego puedes editarlo visualmente a tu gusto."
+      },
+      "pricing": {
+        "question": "¿Cuáles son los planes y precios?",
+        "answer": "Ofrecemos un plan gratuito para empezar y planes de pago con funcionalidades avanzadas como dominios personalizados, chatbots ilimitados, e-commerce y más. Visita nuestra página de precios para ver todos los detalles."
+      },
+      "customDomain": {
+        "question": "¿Puedo usar mi propio dominio?",
+        "answer": "¡Sí! Con los planes de pago puedes conectar tu dominio personalizado. Te guiamos paso a paso en la configuración de DNS y la conexión es automática."
+      },
+      "aiCredits": {
+        "question": "¿Qué son los créditos de IA?",
+        "answer": "Los créditos de IA se usan para generar contenido, crear secciones, traducir tu sitio y entrenar tu chatbot. Cada plan incluye una cantidad mensual de créditos que se renuevan automáticamente."
+      },
+      "cancelSubscription": {
+        "question": "¿Cómo cancelo mi suscripción?",
+        "answer": "Puedes cancelar tu suscripción en cualquier momento desde Configuración > Suscripción. Mantendrás acceso hasta el final del período de facturación actual. No hay penalizaciones ni cargos ocultos."
+      },
+      "dataPrivacy": {
+        "question": "¿Cómo protegen mis datos?",
+        "answer": "Tu privacidad es nuestra prioridad. Usamos encriptación SSL, almacenamiento seguro en Google Cloud, y nunca vendemos tus datos. Consulta nuestra Política de Privacidad para más detalles."
+      },
+      "multipleWebsites": {
+        "question": "¿Puedo crear múltiples sitios web?",
+        "answer": "¡Por supuesto! Dependiendo de tu plan, puedes crear varios sitios web. El plan gratuito permite 1 sitio, mientras que los planes de pago ofrecen sitios ilimitados."
+      }
+    },
+    "contact": {
+      "title": "¿No encuentras lo que buscas?",
+      "subtitle": "Nuestro equipo de soporte está listo para ayudarte con cualquier pregunta o problema que tengas.",
+      "emailUs": "Enviar Email",
+      "liveChat": "Chat en Vivo",
+      "responseTime": "Tiempo de respuesta promedio: menos de 24 horas"
+    },
+    "noArticlesInCategory": "No hay artículos en esta categoría todavía.",
+    "noArticlesInCategoryHint": "Los artículos aparecerán aquí cuando se creen con los tags correspondientes.",
+    "noArticlesYet": "Aún no hay artículos de ayuda publicados.",
+    "noArticlesYetHint": "Crea artículos con categoría 'help', 'guide' o 'tutorial' desde el panel de administración.",
+    "footer": {
+      "rights": "Todos los derechos reservados.",
+      "privacy": "Privacidad",
+      "terms": "Términos",
+      "cookies": "Cookies"
     }
   }
 }

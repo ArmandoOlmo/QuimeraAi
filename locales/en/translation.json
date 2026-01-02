@@ -2686,7 +2686,10 @@
     "noCreditCard": "No credit card required",
     "footerPrivacy": "Privacy",
     "footerTerms": "Terms",
-    "footerContact": "Contact"
+    "footerContact": "Contact",
+    "footerHelpCenter": "Help Center",
+    "footerCookies": "Cookies",
+    "footerDataDeletion": "Data Deletion"
   },
   "industries": {
     "title": "Industries",
@@ -4350,6 +4353,118 @@
       "customDomains": "Custom domains",
       "included": "Included",
       "notIncluded": "Not included"
+    }
+  },
+  "helpCenter": {
+    "hero": {
+      "badge": "Help Center",
+      "title": "How can we help you?",
+      "subtitle": "Find answers, tutorials, and resources to get the most out of Quimera AI",
+      "searchPlaceholder": "Search articles, tutorials, questions..."
+    },
+    "quickLinks": {
+      "gettingStarted": "Getting started",
+      "billing": "Billing",
+      "domains": "Domains"
+    },
+    "sections": {
+      "categories": "Browse by Category",
+      "popularArticles": "Popular Articles",
+      "faqs": "Frequently Asked Questions"
+    },
+    "categories": {
+      "gettingStarted": {
+        "title": "Getting Started",
+        "description": "Learn the basics and create your first website"
+      },
+      "websiteBuilder": {
+        "title": "Website Builder",
+        "description": "Master the visual editor and all its tools"
+      },
+      "aiAssistant": {
+        "title": "AI Assistant",
+        "description": "Configure and optimize your intelligent chatbot"
+      },
+      "domains": {
+        "title": "Domains",
+        "description": "Connect custom domains and configure DNS"
+      },
+      "billing": {
+        "title": "Billing",
+        "description": "Manage subscriptions, payments and invoices"
+      },
+      "ecommerce": {
+        "title": "E-commerce",
+        "description": "Create your online store and manage products"
+      },
+      "leadsCrm": {
+        "title": "Leads & CRM",
+        "description": "Capture leads and manage your customers"
+      },
+      "integrations": {
+        "title": "Integrations",
+        "description": "Connect with Meta, WhatsApp and more"
+      }
+    },
+    "articles": {
+      "label": "articles",
+      "createFirstWebsite": "How to create your first website",
+      "connectDomain": "Connect your custom domain",
+      "configureChatbot": "Configure your AI chatbot",
+      "manageSubscription": "Manage your subscription",
+      "setupEcommerce": "Set up your online store",
+      "captureLeads": "How to capture and manage leads"
+    },
+    "faqs": {
+      "whatIsQuimera": {
+        "question": "What is Quimera AI?",
+        "answer": "Quimera AI is an AI-powered website building platform. It allows you to create professional websites, intelligent chatbots, online stores, and manage leads without technical knowledge."
+      },
+      "howToStart": {
+        "question": "How do I start creating my website?",
+        "answer": "It's very simple: sign up for free, choose a template or describe your business to our AI assistant, and it will create a customized website for you in minutes. Then you can edit it visually to your liking."
+      },
+      "pricing": {
+        "question": "What are the plans and pricing?",
+        "answer": "We offer a free plan to get started and paid plans with advanced features like custom domains, unlimited chatbots, e-commerce, and more. Visit our pricing page to see all the details."
+      },
+      "customDomain": {
+        "question": "Can I use my own domain?",
+        "answer": "Yes! With paid plans you can connect your custom domain. We guide you step by step through the DNS configuration and the connection is automatic."
+      },
+      "aiCredits": {
+        "question": "What are AI credits?",
+        "answer": "AI credits are used to generate content, create sections, translate your site, and train your chatbot. Each plan includes a monthly amount of credits that are automatically renewed."
+      },
+      "cancelSubscription": {
+        "question": "How do I cancel my subscription?",
+        "answer": "You can cancel your subscription at any time from Settings > Subscription. You'll keep access until the end of the current billing period. There are no penalties or hidden charges."
+      },
+      "dataPrivacy": {
+        "question": "How do you protect my data?",
+        "answer": "Your privacy is our priority. We use SSL encryption, secure storage on Google Cloud, and we never sell your data. Check our Privacy Policy for more details."
+      },
+      "multipleWebsites": {
+        "question": "Can I create multiple websites?",
+        "answer": "Absolutely! Depending on your plan, you can create several websites. The free plan allows 1 site, while paid plans offer unlimited websites."
+      }
+    },
+    "contact": {
+      "title": "Can't find what you're looking for?",
+      "subtitle": "Our support team is ready to help you with any questions or issues you may have.",
+      "emailUs": "Email Us",
+      "liveChat": "Live Chat",
+      "responseTime": "Average response time: less than 24 hours"
+    },
+    "noArticlesInCategory": "No articles in this category yet.",
+    "noArticlesInCategoryHint": "Articles will appear here when created with the corresponding tags.",
+    "noArticlesYet": "No help articles published yet.",
+    "noArticlesYetHint": "Create articles with category 'help', 'guide' or 'tutorial' from the admin panel.",
+    "footer": {
+      "rights": "All rights reserved.",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "cookies": "Cookies"
     }
   }
 }
