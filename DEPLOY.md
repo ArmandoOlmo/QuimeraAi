@@ -1,7 +1,8 @@
 # 🚀 Guía de Deploy - QuimeraAI
 
-## URL de Producción
-**https://quimeraai.web.app**
+## URLs de Producción
+- **Dominio principal**: https://quimera.ai
+- **Dominio Firebase**: https://quimeraai.web.app
 
 ---
 
@@ -74,7 +75,7 @@ Los secrets están configurados en:
 |--------|-------------|
 | `FIREBASE_SERVICE_ACCOUNT` | JSON de service account |
 | `VITE_FIREBASE_API_KEY` | API Key de Firebase |
-| `VITE_FIREBASE_AUTH_DOMAIN` | quimeraai.firebaseapp.com |
+| `VITE_FIREBASE_AUTH_DOMAIN` | quimera.ai |
 | `VITE_FIREBASE_PROJECT_ID` | quimeraai |
 | `VITE_FIREBASE_STORAGE_BUCKET` | quimeraai.firebasestorage.app |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | ID del sender |
@@ -84,12 +85,28 @@ Los secrets están configurados en:
 
 ---
 
+## 🌐 Dominio Personalizado (quimera.ai)
+
+Para usar `quimera.ai` como dominio principal y que aparezca en el login de Google:
+
+```bash
+# Ejecuta el script de configuración
+chmod +x configurar-dominio-quimera.sh
+./configurar-dominio-quimera.sh
+```
+
+O consulta la guía completa: [docs/CONFIGURAR_DOMINIO_QUIMERA.md](docs/CONFIGURAR_DOMINIO_QUIMERA.md)
+
+---
+
 ## 🔗 Links Útiles
 
-- **App en producción**: https://quimeraai.web.app
+- **App en producción**: https://quimera.ai
+- **App Firebase**: https://quimeraai.web.app
 - **GitHub Actions**: https://github.com/ArmandoOlmo/QuimeraAi/actions
 - **Firebase Console**: https://console.firebase.google.com/project/quimeraai
 - **GitHub Secrets**: https://github.com/ArmandoOlmo/QuimeraAi/settings/secrets/actions
+
 
 
 

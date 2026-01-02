@@ -14,6 +14,9 @@ export interface SEOConfig {
     author?: string;
     language: string;
     
+    // Favicon
+    favicon?: string;
+    
     // Open Graph (Facebook, LinkedIn, etc.)
     ogType: 'website' | 'article' | 'product' | 'profile';
     ogTitle?: string;
@@ -52,6 +55,7 @@ export interface ProjectSEO extends SEOConfig {
     projectId: string;
     lastUpdated: string;
 }
+
 
 
 

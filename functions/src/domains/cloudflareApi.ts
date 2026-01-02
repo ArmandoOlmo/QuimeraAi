@@ -6,16 +6,43 @@
  */
 
 import * as functions from 'firebase-functions';
+import { CLOUDFLARE_CONFIG } from '../config';
 
 // Cloudflare API Configuration
 const CLOUDFLARE_API_URL = 'https://api.cloudflare.com/client/v4';
 
-// Get credentials from environment/config
-function getCloudflareCredentials(): { apiToken: string; accountId: string } {
-    const config = functions.config();
+// Credential types
+interface CloudflareCredentials {
+    type: 'token' | 'global_key';
+    apiToken?: string;
+    globalApiKey?: string;
+    email?: string;
+    accountId: string;
+}
+
+// Get credentials from centralized config
+function getCloudflareCredentials(): CloudflareCredentials {
+    // First, check for Global API Key (has full permissions including zone.create)
+    const globalApiKey = CLOUDFLARE_CONFIG.globalApiKey;
+    const email = CLOUDFLARE_CONFIG.email;
+    
+    if (globalApiKey && email) {
+        console.log('[Cloudflare] Using Global API Key authentication');
+        return {
+            type: 'global_key',
+            globalApiKey,
+            email,
+            accountId: CLOUDFLARE_CONFIG.accountId
+        };
+    }
+    
+    // Fallback to API Token
+    const apiToken = CLOUDFLARE_CONFIG.apiToken;
+    
     return {
-        apiToken: config.cloudflare?.api_token || process.env.CLOUDFLARE_API_TOKEN || '',
-        accountId: config.cloudflare?.account_id || process.env.CLOUDFLARE_ACCOUNT_ID || ''
+        type: 'token',
+        apiToken,
+        accountId: CLOUDFLARE_CONFIG.accountId
     };
 }
 
@@ -55,23 +82,39 @@ async function cloudflareRequest<T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
     body?: any
 ): Promise<T> {
-    const { apiToken } = getCloudflareCredentials();
+    const credentials = getCloudflareCredentials();
     
-    if (!apiToken) {
-        throw new functions.https.HttpsError(
-            'failed-precondition',
-            'Cloudflare API token not configured'
-        );
+    // Build headers based on credential type
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    
+    if (credentials.type === 'global_key') {
+        // Global API Key uses X-Auth-Email and X-Auth-Key headers
+        if (!credentials.globalApiKey || !credentials.email) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Cloudflare Global API Key or email not configured'
+            );
+        }
+        headers['X-Auth-Email'] = credentials.email;
+        headers['X-Auth-Key'] = credentials.globalApiKey;
+    } else {
+        // API Token uses Bearer authorization
+        if (!credentials.apiToken) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Cloudflare API token not configured'
+            );
+        }
+        headers['Authorization'] = `Bearer ${credentials.apiToken}`;
     }
 
     const url = `${CLOUDFLARE_API_URL}${endpoint}`;
 
     const response = await fetch(url, {
         method,
-        headers: {
-            'Authorization': `Bearer ${apiToken}`,
-            'Content-Type': 'application/json',
-        },
+        headers,
         body: body ? JSON.stringify(body) : undefined,
     });
 

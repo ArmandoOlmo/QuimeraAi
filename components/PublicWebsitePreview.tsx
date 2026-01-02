@@ -17,6 +17,7 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -491,6 +492,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setLinkTag('canonical', seoConfig.canonical);
     }
 
+    // Favicon
+    if (seoConfig?.favicon) {
+      setLinkTag('icon', seoConfig.favicon);
+      setLinkTag('shortcut icon', seoConfig.favicon);
+      setLinkTag('apple-touch-icon', seoConfig.favicon);
+    }
+
     // AI Bot Optimization
     if (seoConfig?.aiCrawlable) {
       setMetaTag('[name="ai:crawlable"]', 'true');
@@ -560,24 +568,102 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     window.location.hash = `store/product/${productSlug}`;
   }, []);
 
-  // Loading state
+  // Loading state - Generic spinner for public preview (no Quimera branding)
+  // Uses project colors if available from query params (passed by SSR server) or window config
   if (loading) {
+    // Try to get colors from multiple sources:
+    // 1. Query params (pc=primaryColor, bc=backgroundColor) - passed by SSR iframe
+    // 2. window.__DOMAIN_CONFIG__ - injected by SSR for direct access
+    // 3. Default fallback
+    let primaryColor = '#ffffff';
+    let backgroundColor = '#0f172a';
+    
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryPrimary = urlParams.get('pc');
+      const queryBackground = urlParams.get('bc');
+      
+      if (queryPrimary) {
+        primaryColor = decodeURIComponent(queryPrimary);
+      }
+      if (queryBackground) {
+        backgroundColor = decodeURIComponent(queryBackground);
+      }
+      
+      // Fallback to window config if no query params
+      const serverConfig = (window as any).__DOMAIN_CONFIG__;
+      if (!queryPrimary && serverConfig?.primaryColor) {
+        primaryColor = serverConfig.primaryColor;
+      }
+      if (!queryBackground && serverConfig?.backgroundColor) {
+        backgroundColor = serverConfig.backgroundColor;
+      }
+    }
+    
+    const trackColor = `${primaryColor}33`; // 20% opacity
+    
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: backgroundColor }}
+      >
         <div className="text-center">
-          <div className="relative flex items-center justify-center mb-8">
-            <div className="absolute w-32 h-32 rounded-full bg-yellow-400/20 animate-ping" style={{ animationDuration: '2s' }}></div>
-            <div className="absolute w-24 h-24 rounded-full bg-yellow-400/30 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.2s' }}></div>
-            <div className="relative z-10 w-20 h-20 rounded-full bg-slate-800 shadow-2xl flex items-center justify-center border-2 border-yellow-400/30">
-              <img 
-                src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
-                alt="Loading" 
-                className="w-14 h-14 object-contain animate-pulse"
-              />
-            </div>
+          {/* Modern circular loader with project colors */}
+          <div className="relative flex items-center justify-center mb-8" style={{ width: 80, height: 80 }}>
+            {/* Outer pulsing ring */}
+            <div 
+              className="absolute w-20 h-20 rounded-full animate-pulse"
+              style={{ border: `3px solid ${trackColor}` }}
+            />
+            
+            {/* Middle rotating ring */}
+            <div 
+              className="absolute w-16 h-16 rounded-full"
+              style={{
+                border: '3px solid transparent',
+                borderTopColor: primaryColor,
+                borderRightColor: trackColor,
+                animation: 'spin 1s linear infinite'
+              }}
+            />
+            
+            {/* Inner spinning loader (reverse direction) */}
+            <div 
+              className="absolute w-12 h-12 rounded-full"
+              style={{
+                border: '3px solid transparent',
+                borderTopColor: primaryColor,
+                animation: 'spin 0.7s linear infinite reverse'
+              }}
+            />
+            
+            {/* Center dot */}
+            <div 
+              className="absolute w-3 h-3 rounded-full animate-pulse"
+              style={{ backgroundColor: primaryColor }}
+            />
           </div>
-          <p className="text-slate-400 text-lg animate-pulse">Loading preview...</p>
+          
+          {/* Loading text with dots animation */}
+          <div 
+            className="flex items-center justify-center gap-1 text-sm"
+            style={{ color: primaryColor, opacity: 0.8 }}
+          >
+            <span>Loading</span>
+            <span className="flex gap-0.5">
+              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+            </span>
+          </div>
         </div>
+        
+        {/* CSS for spin animation */}
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -634,6 +720,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Merged data for all components
   const mergedData = {
     hero: mergeComponentData('hero'),
+    heroSplit: mergeComponentData('heroSplit'),
     features: mergeComponentData('features'),
     testimonials: mergeComponentData('testimonials'),
     slideshow: mergeComponentData('slideshow'),
@@ -731,6 +818,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             : compData.heroVariant === 'fitness'
               ? <HeroFitness {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />
               : <Hero {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
+      case 'heroSplit':
+        return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
       case 'features':
         return <Features {...compData} borderRadius={borderRadius} />;
       case 'testimonials':
@@ -900,7 +989,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       
       {/* Chatbot Widget (if enabled in project) */}
       {project.aiAssistantConfig?.isActive && (
-        <ChatbotWidget standaloneConfig={project.aiAssistantConfig} />
+        <ChatbotWidget 
+          standaloneConfig={project.aiAssistantConfig} 
+          standaloneProject={{
+            id: project.id || storeProjectId || '',
+            name: project.name || '',
+            data: project.data,
+            theme: project.theme,
+            componentOrder: project.componentOrder,
+            sectionVisibility: project.sectionVisibility,
+          }}
+        />
       )}
 
       {/* Powered by badge */}

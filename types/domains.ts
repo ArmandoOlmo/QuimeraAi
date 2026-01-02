@@ -21,7 +21,8 @@ export interface DeploymentInfo {
 
 export interface DeploymentLog {
     id: string;
-    domainId?: string; // Add this
+    projectId: string; // Required - deployment logs are scoped to a project
+    domainId?: string;
     timestamp: string;
     status: 'started' | 'success' | 'failed';
     message: string;
@@ -93,18 +94,22 @@ export interface CustomDomainMapping {
 
 // =============================================================================
 // DNS CONFIGURATION
-// Cloud Run IP addresses and CNAME targets
+// Cloud Run direct CNAME (works without domain mapping in GCP)
 // =============================================================================
 export const CLOUD_RUN_DNS_CONFIG = {
-    // Cloud Run uses Google's global load balancer IPs
-    // These are the IPs users should point their A records to
+    // Direct Cloud Run URL - works without GCP domain mapping
+    // Users should use CNAME records pointing to this
+    cloudRunUrl: 'quimera-ssr-575386543550.us-central1.run.app',
+    
+    // Legacy: Google's global load balancer IPs (requires GCP domain mapping)
+    // These ONLY work if domain is mapped in Google Cloud Console
     aRecords: [
         '216.239.32.21',
         '216.239.34.21',
         '216.239.36.21',
         '216.239.38.21'
     ],
-    // CNAME target for www subdomain
+    // Legacy CNAME target (requires GCP domain mapping)
     cnameTarget: 'ghs.googlehosted.com',
     // TXT record prefix for verification
     txtPrefix: '_quimera-verify'

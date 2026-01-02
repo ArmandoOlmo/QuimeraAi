@@ -1,5 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 
 export type UpgradeTrigger = 'generic' | 'credits' | 'projects' | 'ecommerce' | 'chatbot' | 'domains' | 'users' | 'storage';
 
@@ -18,7 +20,14 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
     currentPlanId,
     metadata
 }) => {
+    const { navigate } = useRouter();
+    
     if (!isOpen) return null;
+
+    const handleViewPricingPlans = () => {
+        onClose();
+        navigate(ROUTES.SETTINGS_SUBSCRIPTION);
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -38,7 +47,10 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
                     </p>
 
                     <div className="space-y-4">
-                        <button className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+                        <button 
+                            onClick={handleViewPricingPlans}
+                            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
+                        >
                             View Pricing Plans
                         </button>
                         <button

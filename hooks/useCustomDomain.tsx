@@ -56,6 +56,22 @@ function isCustomDomainHostname(hostname: string): boolean {
     return true;
 }
 
+// Global domain config injected by SSR server
+declare global {
+    interface Window {
+        __DOMAIN_CONFIG__?: {
+            domain: string;
+            projectId: string;
+            userId: string;
+            isCustomDomain: boolean;
+            // Project styling for loader
+            primaryColor?: string;
+            backgroundColor?: string;
+            projectName?: string;
+        };
+    }
+}
+
 /**
  * Hook to detect and resolve custom domains
  */
@@ -71,6 +87,25 @@ export function useCustomDomain(): CustomDomainState {
     });
 
     useEffect(() => {
+        // PRIORITY 1: Check for server-injected domain config (from SSR server)
+        // This is the fastest path - no Firestore call needed
+        const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
+        
+        if (serverConfig?.isCustomDomain && serverConfig.projectId && serverConfig.userId) {
+            console.log(`[CustomDomain] Using server-injected config for ${serverConfig.domain}`);
+            setState({
+                isCustomDomain: true,
+                isLoading: false,
+                projectId: serverConfig.projectId,
+                userId: serverConfig.userId,
+                domain: serverConfig.domain,
+                error: null,
+                projectData: null, // Will be loaded by PublicWebsitePreview
+            });
+            return;
+        }
+
+        // PRIORITY 2: Check hostname for custom domain detection
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
         
         if (!hostname || !isCustomDomainHostname(hostname)) {
@@ -86,9 +121,9 @@ export function useCustomDomain(): CustomDomainState {
             return;
         }
 
-        // It's a custom domain - resolve it
+        // It's a custom domain - resolve it via Firestore
         const normalizedDomain = hostname.toLowerCase().replace(/^www\./, '');
-        console.log(`[CustomDomain] Detected custom domain: ${normalizedDomain}`);
+        console.log(`[CustomDomain] Detected custom domain: ${normalizedDomain}, resolving via Firestore...`);
 
         const resolveDomain = async () => {
             try {
@@ -197,14 +232,78 @@ export function DomainNotConfiguredPage({ domain }: { domain: string }) {
 
 /**
  * Component to display while loading domain info
+ * Uses a generic spinner (no Quimera branding) for public domains
+ * Optionally uses project colors if available from SSR config
  */
 export function DomainLoadingPage() {
+    // Try to get colors from SSR-injected config
+    const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
+    const primaryColor = serverConfig?.primaryColor || '#ffffff';
+    const backgroundColor = serverConfig?.backgroundColor || '#0f172a';
+    const trackColor = `${primaryColor}33`; // 20% opacity
+    
     return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
+        <div 
+            className="flex items-center justify-center min-h-screen"
+            style={{ background: backgroundColor }}
+        >
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Cargando...</p>
+                {/* Modern circular loader with project colors */}
+                <div className="relative flex items-center justify-center mb-6" style={{ width: 64, height: 64 }}>
+                    {/* Outer pulsing ring */}
+                    <div 
+                        className="absolute w-16 h-16 rounded-full animate-pulse"
+                        style={{ border: `3px solid ${trackColor}` }}
+                    />
+                    
+                    {/* Middle rotating ring */}
+                    <div 
+                        className="absolute w-14 h-14 rounded-full"
+                        style={{
+                            border: '3px solid transparent',
+                            borderTopColor: primaryColor,
+                            borderRightColor: trackColor,
+                            animation: 'spin 1s linear infinite'
+                        }}
+                    />
+                    
+                    {/* Inner spinning loader */}
+                    <div 
+                        className="absolute w-10 h-10 rounded-full"
+                        style={{
+                            border: '3px solid transparent',
+                            borderTopColor: primaryColor,
+                            animation: 'spin 0.7s linear infinite reverse'
+                        }}
+                    />
+                    
+                    {/* Center dot */}
+                    <div 
+                        className="absolute w-2.5 h-2.5 rounded-full animate-pulse"
+                        style={{ backgroundColor: primaryColor }}
+                    />
+                </div>
+                
+                {/* Loading text with dots animation */}
+                <div 
+                    className="flex items-center justify-center gap-1 text-sm"
+                    style={{ color: primaryColor, opacity: 0.8 }}
+                >
+                    <span>Cargando</span>
+                    <span className="flex gap-0.5">
+                        <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+                        <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+                        <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+                    </span>
+                </div>
             </div>
+            
+            {/* CSS for spin animation */}
+            <style>{`
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 }

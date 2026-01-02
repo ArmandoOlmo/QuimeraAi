@@ -14,6 +14,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleGenAI } from '@google/genai';
 import { isOwner } from './constants';
+import { GEMINI_CONFIG } from './config';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -233,10 +234,20 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
     }
 }
 
+interface ProjectDataResult {
+    exists: boolean;
+    data: {
+        userId: string;
+        planType: string;
+        aiAssistantConfig: { isActive: boolean };
+        [key: string]: any;
+    } | null;
+}
+
 /**
  * Helper to get project data from various locations
  */
-async function getProjectData(projectId: string, userId?: string) {
+async function getProjectData(projectId: string, userId?: string): Promise<ProjectDataResult> {
     // 1. Handle Templates
     if (projectId.startsWith('template-')) {
         return {
@@ -286,6 +297,7 @@ async function getProjectData(projectId: string, userId?: string) {
                 data: {
                     ...projectData,
                     userId,
+                    planType: projectData.planType || 'FREE',
                     // Default aiAssistantConfig if not present (allow user's own projects)
                     aiAssistantConfig: projectData.aiAssistantConfig || { isActive: true }
                 }
@@ -301,8 +313,28 @@ async function getProjectData(projectId: string, userId?: string) {
             exists: true,
             data: {
                 ...projectData,
+                userId: projectData.userId || 'unknown',
+                planType: projectData.planType || 'FREE',
                 // Default aiAssistantConfig if not present
                 aiAssistantConfig: projectData.aiAssistantConfig || { isActive: true }
+            }
+        };
+    }
+
+    // 5. Handle Public Stores (for public preview/custom domains)
+    // This allows chatbots to work on published sites without user authentication
+    const publicStoreDoc = await db.collection('publicStores').doc(projectId).get();
+    if (publicStoreDoc.exists) {
+        const storeData = publicStoreDoc.data() || {};
+        console.log(`[getProjectData] Found project in publicStores: ${projectId}`);
+        return {
+            exists: true,
+            data: {
+                ...storeData,
+                userId: storeData.userId || 'public',
+                planType: storeData.planType || 'FREE',
+                // Public stores should have AI assistant enabled if the project has it configured
+                aiAssistantConfig: storeData.aiAssistantConfig || { isActive: true }
             }
         };
     }
@@ -605,10 +637,10 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         }
 
         // Get API key from environment variable
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = GEMINI_CONFIG.apiKey;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured');
+            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
@@ -756,10 +788,10 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = GEMINI_CONFIG.apiKey;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured');
+            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }
@@ -885,10 +917,10 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = GEMINI_CONFIG.apiKey;
 
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not configured');
+            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
             res.status(500).json({ error: 'API configuration error' });
             return;
         }

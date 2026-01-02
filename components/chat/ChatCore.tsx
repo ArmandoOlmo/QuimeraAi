@@ -4,9 +4,9 @@ import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X, Calendar } from 'lucide-react';
-import { useAuth } from '../../contexts/core/AuthContext';
-import { useAI } from '../../contexts/ai';
-import { useProject } from '../../contexts/project';
+import { useSafeAuth } from '../../contexts/core/AuthContext';
+import { useSafeAI } from '../../contexts/ai';
+import { useSafeProject } from '../../contexts/project';
 import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
@@ -187,9 +187,14 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     isEmbedded = false,
     currentPageContext
 }) => {
-    const { user } = useAuth();
-    const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    const { activeProject } = useProject();
+    const authContext = useSafeAuth();
+    const user = authContext?.user ?? null;
+    const aiContext = useSafeAI();
+    const hasApiKey = aiContext?.hasApiKey ?? null;
+    const promptForKeySelection = aiContext?.promptForKeySelection ?? (() => Promise.resolve());
+    const handleApiError = aiContext?.handleApiError ?? (() => {});
+    const projectContext = useSafeProject();
+    const activeProject = projectContext?.activeProject ?? project; // Use prop project if context not available
     const { t } = useTranslation();
 
     // Ecommerce chat hook for order lookups and product info

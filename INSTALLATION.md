@@ -37,7 +37,7 @@ cp .env.example .env.local
 ```env
 # Firebase (OBLIGATORIO)
 VITE_FIREBASE_API_KEY=tu_api_key
-VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_AUTH_DOMAIN=quimera.ai
 VITE_FIREBASE_PROJECT_ID=tu-proyecto-id
 VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012

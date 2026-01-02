@@ -5,12 +5,13 @@
 
 import * as functions from 'firebase-functions';
 import Stripe from 'stripe';
+import { STRIPE_CONFIG } from './config';
 
-// Initialize Stripe
+// Initialize Stripe with centralized config
 const getStripe = () => {
-    const secretKey = process.env.STRIPE_SECRET_KEY || functions.config().stripe?.secret_key;
+    const secretKey = STRIPE_CONFIG.secretKey;
     if (!secretKey) {
-        throw new Error('Stripe secret key not configured');
+        throw new Error('STRIPE_SECRET_KEY not configured in .env');
     }
     return new Stripe(secretKey, {
         apiVersion: '2024-11-20.acacia' as any,
@@ -422,6 +423,451 @@ export const createSubscriptionCheckout = functions.https.onCall(
 );
 
 /**
+ * Update an existing subscription (upgrade/downgrade)
+ * Handles proration automatically
+ */
+export const updateSubscription = functions.https.onCall(
+    async (data: {
+        tenantId: string;
+        newPlanId: string;
+        billingCycle?: 'monthly' | 'annually';
+    }, context) => {
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const { tenantId, newPlanId, billingCycle } = data;
+
+        if (!tenantId || !newPlanId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+        }
+
+        try {
+            const stripe = getStripe();
+            const admin = await import('firebase-admin');
+            const db = admin.firestore();
+
+            // Get current subscription from Firestore
+            const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
+            
+            if (!subscriptionDoc.exists) {
+                throw new functions.https.HttpsError('not-found', 'No subscription found for this tenant');
+            }
+
+            const currentSub = subscriptionDoc.data();
+            const stripeSubscriptionId = currentSub?.stripeSubscriptionId;
+
+            if (!stripeSubscriptionId) {
+                // No Stripe subscription, create new checkout
+                throw new functions.https.HttpsError(
+                    'failed-precondition', 
+                    'No active Stripe subscription. Please use checkout to subscribe.'
+                );
+            }
+
+            // Get the Stripe subscription
+            const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+            
+            if (stripeSubscription.status !== 'active' && stripeSubscription.status !== 'trialing') {
+                throw new functions.https.HttpsError(
+                    'failed-precondition',
+                    'Subscription is not active'
+                );
+            }
+
+            // Find the new price
+            const products = await stripe.products.list({ active: true, limit: 100 });
+            const product = products.data.find(p => 
+                p.name.toLowerCase().includes(newPlanId.toLowerCase()) ||
+                p.metadata?.planId === newPlanId
+            );
+
+            if (!product) {
+                throw new functions.https.HttpsError('not-found', `Plan ${newPlanId} not found in Stripe`);
+            }
+
+            const prices = await stripe.prices.list({ 
+                product: product.id, 
+                active: true,
+                limit: 10 
+            });
+
+            const interval = billingCycle === 'annually' ? 'year' : 'month';
+            const newPrice = prices.data.find(p => p.recurring?.interval === interval);
+
+            if (!newPrice) {
+                throw new functions.https.HttpsError('not-found', `Price for ${billingCycle || 'monthly'} billing not found`);
+            }
+
+            // Update the subscription with proration and immediate invoice
+            const currentItem = stripeSubscription.items.data[0];
+            
+            const updatedSubscription = await stripe.subscriptions.update(stripeSubscriptionId, {
+                items: [{
+                    id: currentItem.id,
+                    price: newPrice.id,
+                }],
+                proration_behavior: 'always_invoice', // Create and charge invoice immediately
+                payment_behavior: 'error_if_incomplete', // Fail if payment doesn't succeed
+                metadata: {
+                    tenantId,
+                    planId: newPlanId,
+                },
+            });
+
+            // Calculate proration amount
+            const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+                subscription: stripeSubscriptionId,
+            });
+            
+            const prorationAmount = upcomingInvoice.lines.data
+                .filter(line => line.proration)
+                .reduce((sum, line) => sum + line.amount, 0) / 100;
+
+            // Update Firestore
+            const planLimits = await getPlanLimits(newPlanId);
+            
+            await db.doc(`subscriptions/${tenantId}`).update({
+                planId: newPlanId,
+                billingCycle: billingCycle || currentSub?.billingCycle || 'monthly',
+                status: 'active',
+                currentPeriodStart: new Date(updatedSubscription.current_period_start * 1000),
+                currentPeriodEnd: new Date(updatedSubscription.current_period_end * 1000),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Update AI credits with standardized fields
+            await db.doc(`aiCreditsUsage/${tenantId}`).set({
+                tenantId,
+                planId: newPlanId,
+                // Primary fields
+                limit: planLimits.maxAiCredits,
+                used: 0,
+                // Legacy fields for backwards compatibility
+                creditsIncluded: planLimits.maxAiCredits,
+                creditsUsed: 0,
+                creditsRemaining: planLimits.maxAiCredits,
+                // Timestamps
+                lastResetAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+
+            console.log(`[Stripe] Subscription updated for tenant ${tenantId}: ${currentSub?.planId} -> ${newPlanId}`);
+
+            return {
+                success: true,
+                subscription: {
+                    id: updatedSubscription.id,
+                    status: updatedSubscription.status,
+                    currentPeriodEnd: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
+                    planId: newPlanId,
+                },
+                proration: {
+                    amount: prorationAmount,
+                    description: prorationAmount > 0 
+                        ? `You'll be charged $${prorationAmount.toFixed(2)} for the upgrade`
+                        : prorationAmount < 0
+                            ? `You'll receive a credit of $${Math.abs(prorationAmount).toFixed(2)}`
+                            : 'No proration applied',
+                },
+            };
+
+        } catch (error: any) {
+            console.error('Error updating subscription:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to update subscription'
+            );
+        }
+    }
+);
+
+/**
+ * Cancel a subscription
+ * Can cancel immediately or at period end
+ */
+export const cancelSubscription = functions.https.onCall(
+    async (data: {
+        tenantId: string;
+        immediately?: boolean;
+        reason?: string;
+    }, context) => {
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const { tenantId, immediately = false, reason } = data;
+
+        if (!tenantId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Tenant ID is required');
+        }
+
+        try {
+            const stripe = getStripe();
+            const admin = await import('firebase-admin');
+            const db = admin.firestore();
+
+            // Get current subscription
+            const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
+            
+            if (!subscriptionDoc.exists) {
+                throw new functions.https.HttpsError('not-found', 'No subscription found');
+            }
+
+            const currentSub = subscriptionDoc.data();
+            const stripeSubscriptionId = currentSub?.stripeSubscriptionId;
+
+            if (!stripeSubscriptionId) {
+                // No Stripe subscription, just update Firestore
+                await db.doc(`subscriptions/${tenantId}`).update({
+                    planId: 'free',
+                    status: 'cancelled',
+                    cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+                    cancellationReason: reason,
+                });
+
+                return { success: true, message: 'Subscription cancelled' };
+            }
+
+            let cancelledSubscription;
+
+            if (immediately) {
+                // Cancel immediately
+                cancelledSubscription = await stripe.subscriptions.cancel(stripeSubscriptionId, {
+                    cancellation_details: {
+                        comment: reason,
+                    },
+                });
+            } else {
+                // Cancel at period end
+                cancelledSubscription = await stripe.subscriptions.update(stripeSubscriptionId, {
+                    cancel_at_period_end: true,
+                    metadata: {
+                        cancellation_reason: reason || 'User requested cancellation',
+                    },
+                });
+            }
+
+            // Update Firestore
+            const updates: any = {
+                cancelAtPeriodEnd: !immediately,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+
+            if (immediately) {
+                updates.status = 'cancelled';
+                updates.cancelledAt = admin.firestore.FieldValue.serverTimestamp();
+                updates.planId = 'free';
+            }
+
+            if (reason) {
+                updates.cancellationReason = reason;
+            }
+
+            await db.doc(`subscriptions/${tenantId}`).update(updates);
+
+            // If immediately cancelled, reset credits to free plan
+            if (immediately) {
+                await db.doc(`aiCreditsUsage/${tenantId}`).update({
+                    planId: 'free',
+                    // Primary fields
+                    limit: 30,
+                    used: 0,
+                    // Legacy fields
+                    creditsIncluded: 30,
+                    creditsUsed: 0,
+                    creditsRemaining: 30,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+
+            console.log(`[Stripe] Subscription cancelled for tenant ${tenantId}, immediately: ${immediately}`);
+
+            return {
+                success: true,
+                message: immediately 
+                    ? 'Subscription cancelled immediately'
+                    : `Subscription will cancel on ${new Date(cancelledSubscription.current_period_end * 1000).toLocaleDateString()}`,
+                cancelsAt: immediately ? null : new Date(cancelledSubscription.current_period_end * 1000).toISOString(),
+            };
+
+        } catch (error: any) {
+            console.error('Error cancelling subscription:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to cancel subscription'
+            );
+        }
+    }
+);
+
+/**
+ * Reactivate a subscription that was set to cancel
+ */
+export const reactivateSubscription = functions.https.onCall(
+    async (data: { tenantId: string }, context) => {
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const { tenantId } = data;
+
+        if (!tenantId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Tenant ID is required');
+        }
+
+        try {
+            const stripe = getStripe();
+            const admin = await import('firebase-admin');
+            const db = admin.firestore();
+
+            const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
+            
+            if (!subscriptionDoc.exists) {
+                throw new functions.https.HttpsError('not-found', 'No subscription found');
+            }
+
+            const currentSub = subscriptionDoc.data();
+            const stripeSubscriptionId = currentSub?.stripeSubscriptionId;
+
+            if (!stripeSubscriptionId) {
+                throw new functions.https.HttpsError('failed-precondition', 'No Stripe subscription to reactivate');
+            }
+
+            // Remove cancellation
+            const reactivatedSubscription = await stripe.subscriptions.update(stripeSubscriptionId, {
+                cancel_at_period_end: false,
+            });
+
+            // Update Firestore
+            await db.doc(`subscriptions/${tenantId}`).update({
+                cancelAtPeriodEnd: false,
+                status: 'active',
+                cancellationReason: null,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            console.log(`[Stripe] Subscription reactivated for tenant ${tenantId}`);
+
+            return {
+                success: true,
+                message: 'Subscription reactivated successfully',
+                currentPeriodEnd: new Date(reactivatedSubscription.current_period_end * 1000).toISOString(),
+            };
+
+        } catch (error: any) {
+            console.error('Error reactivating subscription:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to reactivate subscription'
+            );
+        }
+    }
+);
+
+/**
+ * Get subscription details including billing history
+ */
+export const getSubscriptionDetails = functions.https.onCall(
+    async (data: { tenantId: string }, context) => {
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const { tenantId } = data;
+
+        try {
+            const stripe = getStripe();
+            const admin = await import('firebase-admin');
+            const db = admin.firestore();
+
+            const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
+            
+            if (!subscriptionDoc.exists) {
+                return { subscription: null, invoices: [] };
+            }
+
+            const currentSub = subscriptionDoc.data();
+            const stripeSubscriptionId = currentSub?.stripeSubscriptionId;
+            const stripeCustomerId = currentSub?.stripeCustomerId;
+
+            let stripeDetails = null;
+            let invoices: any[] = [];
+
+            if (stripeSubscriptionId) {
+                try {
+                    const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+                        expand: ['items.data.price.product'],
+                    });
+                    
+                    stripeDetails = {
+                        status: stripeSub.status,
+                        currentPeriodStart: new Date(stripeSub.current_period_start * 1000).toISOString(),
+                        currentPeriodEnd: new Date(stripeSub.current_period_end * 1000).toISOString(),
+                        cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+                        cancelAt: stripeSub.cancel_at ? new Date(stripeSub.cancel_at * 1000).toISOString() : null,
+                        trialEnd: stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null,
+                    };
+                } catch (e) {
+                    console.error('Error fetching Stripe subscription:', e);
+                }
+            }
+
+            if (stripeCustomerId) {
+                try {
+                    const stripeInvoices = await stripe.invoices.list({
+                        customer: stripeCustomerId,
+                        limit: 10,
+                    });
+
+                    invoices = stripeInvoices.data.map(inv => ({
+                        id: inv.id,
+                        number: inv.number,
+                        amount: (inv.amount_paid || 0) / 100,
+                        status: inv.status,
+                        date: new Date((inv.created || 0) * 1000).toISOString(),
+                        pdfUrl: inv.invoice_pdf,
+                        hostedUrl: inv.hosted_invoice_url,
+                    }));
+                } catch (e) {
+                    console.error('Error fetching invoices:', e);
+                }
+            }
+
+            return {
+                subscription: {
+                    ...currentSub,
+                    stripe: stripeDetails,
+                },
+                invoices,
+            };
+
+        } catch (error: any) {
+            console.error('Error getting subscription details:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to get subscription details'
+            );
+        }
+    }
+);
+
+// Helper function to get plan limits
+async function getPlanLimits(planId: string): Promise<{ maxAiCredits: number }> {
+    const planCredits: Record<string, number> = {
+        free: 30,
+        starter: 300,
+        pro: 1500,
+        agency: 5000,
+        enterprise: 25000,
+    };
+    
+    return {
+        maxAiCredits: planCredits[planId] || 30,
+    };
+}
+
+/**
  * Archive (deactivate) a plan in Stripe
  */
 export const archivePlan = functions.https.onRequest(async (req, res) => {
@@ -458,6 +904,7 @@ export const archivePlan = functions.https.onRequest(async (req, res) => {
         });
     }
 });
+
 
 
 

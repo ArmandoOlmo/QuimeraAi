@@ -364,8 +364,8 @@ interface FileHistoryProps {
 
 const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const { t } = useTranslation();
-    const { files, isFilesLoading, uploadFile, deleteFile } = useFiles();
-    const { projects } = useProject();
+    const { files, isFilesLoading, uploadFile, deleteFile, hasActiveProject } = useFiles();
+    const { projects, activeProject } = useProject();
     const { generateImage, enhancePrompt } = useAI();
     const { success, error: showError } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -678,6 +678,25 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const gridClasses = variant === 'widget'
         ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
         : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6";
+
+    // Show message when no project is active
+    if (!hasActiveProject && variant === 'full') {
+        return (
+            <section className={containerClasses}>
+                <div className="flex flex-col items-center justify-center py-12">
+                    <div className="text-center max-w-md">
+                        <ImageIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
+                            {t('dashboard.assets.noProjectSelected', 'No hay proyecto seleccionado')}
+                        </h2>
+                        <p className="text-muted-foreground mb-6">
+                            {t('dashboard.assets.selectProjectMessage', 'Selecciona un proyecto desde el menú lateral para ver y gestionar los archivos de ese proyecto.')}
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className={containerClasses}>

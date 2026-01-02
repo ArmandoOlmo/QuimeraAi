@@ -2,6 +2,7 @@ import { LeadStatus } from '../types';
 
 export interface LibraryLead {
     id: string;
+    projectId: string; // Required - library leads are scoped to a project
     name: string;
     email: string;
     phone?: string;

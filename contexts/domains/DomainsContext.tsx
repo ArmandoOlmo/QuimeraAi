@@ -1,15 +1,18 @@
 /**
  * DomainsContext
  * Maneja dominios y deployment
+ * Los dominios tienen un campo projectId que los vincula a un proyecto
+ * Los deployment logs están organizados por proyecto
  */
 
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { Domain, DeploymentLog } from '../../types';
 import {
     db,
     doc,
     collection,
     getDocs,
+    getDoc,
     addDoc,
     updateDoc,
     deleteDoc,
@@ -20,11 +23,13 @@ import {
     serverTimestamp,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
+import { useSafeProject } from '../project';
 import { deploymentService } from '../../utils/deploymentService';
 
 interface DomainsContextType {
-    // Domains
+    // Domains (all user domains, with optional filtering by active project)
     domains: Domain[];
+    domainsForActiveProject: Domain[];
     addDomain: (domain: Domain) => Promise<void>;
     updateDomain: (id: string, data: Partial<Domain>) => Promise<void>;
     deleteDomain: (id: string) => Promise<void>;
@@ -32,16 +37,28 @@ interface DomainsContextType {
     deployDomain: (domainId: string, provider?: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom') => Promise<boolean>;
     getDomainDeploymentLogs: (domainId: string) => DeploymentLog[];
     refetch: () => Promise<void>;
+    
+    // Project info
+    hasActiveProject: boolean;
+    activeProjectId: string | null;
 }
 
 const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
 
 export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
+    const projectContext = useSafeProject();
+    const activeProjectId = projectContext?.activeProjectId || null;
 
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
     const [deploymentLogs, setDeploymentLogs] = useState<DeploymentLog[]>([]);
+
+    // Filter domains by active project
+    const domainsForActiveProject = useMemo(() => {
+        if (!activeProjectId) return [];
+        return domains.filter(d => d.projectId === activeProjectId);
+    }, [domains, activeProjectId]);
 
     // Fetch domains
     const fetchUserDomains = useCallback(async (userId: string) => {
@@ -59,7 +76,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 } as Domain;
             });
             console.log(`✅ [DomainsContext] Loaded ${userDomains.length} domains from Firestore`);
-            userDomains.forEach(d => console.log(`   - ${d.name} (docId: ${d.id})`));
+            userDomains.forEach(d => console.log(`   - ${d.name} (docId: ${d.id}, projectId: ${d.projectId})`));
             setDomains(userDomains);
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error loading domains:", error);
@@ -76,35 +93,49 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, fetchUserDomains]);
 
-    // Load deployment logs
+    // Load deployment logs (scoped to active project)
     useEffect(() => {
-        if (!user) {
+        if (!user || !activeProjectId) {
             setDeploymentLogs([]);
             return;
         }
 
+        // Project-scoped deployment logs path
+        const logsPath = `users/${user.uid}/projects/${activeProjectId}/deploymentLogs`;
         const q = query(
-            collection(db, 'users', user.uid, 'deploymentLogs'),
+            collection(db, logsPath),
             orderBy('timestamp', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const logs = snapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
+                projectId: activeProjectId,
                 ...docSnapshot.data()
             })) as DeploymentLog[];
             setDeploymentLogs(logs);
         }, (error: any) => {
             // Silently ignore permission-denied errors (collection may not exist yet)
             if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
-                console.error("Error fetching deployment logs:", error);
+                console.error("[DomainsContext] Error fetching deployment logs:", error);
             }
         });
 
         return () => {
             unsubscribe();
         };
-    }, [user]);
+    }, [user, activeProjectId]);
+
+    // Helper to add deployment log (project-scoped)
+    const addDeploymentLog = useCallback(async (logData: Omit<DeploymentLog, 'id' | 'projectId'>) => {
+        if (!user || !activeProjectId) return;
+        
+        const logsPath = `users/${user.uid}/projects/${activeProjectId}/deploymentLogs`;
+        await addDoc(collection(db, logsPath), {
+            ...logData,
+            projectId: activeProjectId,
+        });
+    }, [user, activeProjectId]);
 
     // Add domain (syncs to both user collection and global customDomains)
     const addDomain = async (domain: Domain) => {
@@ -116,21 +147,25 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Don't save the temporary "id" field - Firestore will generate the real ID
             const { id: _tempId, ...domainDataWithoutId } = domain;
             
+            // Ensure projectId is set (use active project if not specified)
+            const projectIdToUse = domain.projectId || activeProjectId;
+            
             const docRef = await addDoc(domainsCol, {
                 ...domainDataWithoutId,
+                projectId: projectIdToUse,
                 createdAt: new Date().toISOString(),
                 status: 'pending',
             });
 
             // Use Firestore's generated ID
-            const newDomain = { ...domainDataWithoutId, id: docRef.id } as Domain;
+            const newDomain = { ...domainDataWithoutId, id: docRef.id, projectId: projectIdToUse } as Domain;
             setDomains(prev => [newDomain, ...prev]);
 
             // Sync to global customDomains collection for domain resolution
             const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
             await setDoc(doc(db, 'customDomains', normalizedDomain), {
                 domain: normalizedDomain,
-                projectId: domain.projectId || null,
+                projectId: projectIdToUse || null,
                 userId: user.uid,
                 status: 'pending',
                 sslStatus: 'pending',
@@ -138,9 +173,9 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
-            console.log(`✅ [DomainsContext] Domain added with ID: ${docRef.id}`);
+            console.log(`✅ [DomainsContext] Domain added with ID: ${docRef.id}, projectId: ${projectIdToUse}`);
         } catch (error) {
-            console.error("Error adding domain:", error);
+            console.error("[DomainsContext] Error adding domain:", error);
             throw error;
         }
     };
@@ -174,7 +209,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 console.log(`✅ [DomainsContext] Domain updated in customDomains: ${normalizedDomain} -> projectId: ${data.projectId || domain.projectId}`);
             }
         } catch (error) {
-            console.error("Error updating domain:", error);
+            console.error("[DomainsContext] Error updating domain:", error);
             throw error;
         }
     };
@@ -235,7 +270,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, fetchUserDomains]);
 
-    // Verify domain (DNS check) - also syncs status to customDomains
+    // Verify domain (DNS check) - does REAL verification before marking as active
     const verifyDomain = async (id: string): Promise<boolean> => {
         if (!user) return false;
 
@@ -247,12 +282,27 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             
             const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
 
-            // For Quimera domains or domains with a project, mark as active directly
-            // The SSR server will handle the actual serving
-            if (domain.provider === 'Quimera' || domain.projectId) {
-                console.log(`✅ [DomainsContext] Domain ${normalizedDomain} has project, marking as active`);
+            // Update status to verifying
+            await updateDomain(id, { status: 'verifying' });
+
+            // REAL VERIFICATION: Try to fetch the domain
+            // This checks if DNS is configured and SSL is working
+            try {
+                const testUrl = `https://${normalizedDomain}`;
+                console.log(`🔍 [DomainsContext] Testing URL: ${testUrl}`);
                 
-                // Direct write to customDomains collection
+                const response = await fetch(testUrl, { 
+                    method: 'HEAD',
+                    mode: 'no-cors', // Allow cross-origin
+                    cache: 'no-cache'
+                });
+                
+                // If we get here without error, the domain is reachable
+                // Note: no-cors mode always returns opaque response, so we can't check status
+                // But if fetch succeeds, DNS + SSL are working
+                console.log(`✅ [DomainsContext] Domain ${normalizedDomain} is reachable`);
+                
+                // Domain is working - mark as active
                 await setDoc(doc(db, 'customDomains', normalizedDomain), {
                     domain: normalizedDomain,
                     projectId: domain.projectId || null,
@@ -271,16 +321,34 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 });
 
                 return true;
+
+            } catch (fetchError: any) {
+                console.log(`⏳ [DomainsContext] Domain ${normalizedDomain} not ready yet: ${fetchError.message}`);
+                
+                // Domain not ready yet - keep as pending
+                await updateDomain(id, {
+                    status: 'pending',
+                    sslStatus: 'pending',
+                });
+
+                // Still save to customDomains so SSR knows about it
+                await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                    domain: normalizedDomain,
+                    projectId: domain.projectId || null,
+                    userId: user.uid,
+                    status: 'pending',
+                    sslStatus: 'pending',
+                    dnsVerified: false,
+                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                return false;
             }
 
-            // For external domains without a project, just update local status
-            await updateDomain(id, {
-                status: domain.projectId ? 'active' : 'pending',
-            });
-
-            return !!domain.projectId;
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error verifying domain:", error);
+            await updateDomain(id, { status: 'error' });
             return false;
         }
     };
@@ -306,8 +374,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Update status to deploying
             await updateDomain(domainId, { status: 'deploying' });
 
-            // Log deployment start
-            await addDoc(collection(db, 'users', user.uid, 'deploymentLogs'), {
+            // Log deployment start (project-scoped)
+            await addDeploymentLog({
                 domainId,
                 action: 'deploy_start',
                 provider,
@@ -320,10 +388,120 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (provider === 'cloud_run' || provider === 'custom' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
                 
-                console.log(`📡 [DomainsContext] Syncing ${normalizedDomain} to customDomains (direct write)...`);
+                console.log(`📡 [DomainsContext] Publishing project and syncing ${normalizedDomain}...`);
 
-                // DIRECT FIRESTORE WRITE - Bypass Cloud Function
-                // This writes directly to the customDomains collection that the SSR server reads
+                // ============================================
+                // STEP 1: PUBLISH PROJECT TO publicStores
+                // ============================================
+                // This is CRITICAL - the SSR server reads from publicStores
+                
+                const projectRef = doc(db, 'users', user.uid, 'projects', domain.projectId);
+                const projectSnap = await getDoc(projectRef);
+                
+                if (!projectSnap.exists()) {
+                    throw new Error("Proyecto no encontrado. Por favor guarda el proyecto antes de desplegar.");
+                }
+                
+                const projectData = projectSnap.data();
+                console.log(`📝 [DomainsContext] Publishing project "${projectData.name}" to publicStores...`);
+
+                // Publish main document with ALL landing page and ecommerce data
+                const publicStoreRef = doc(db, 'publicStores', domain.projectId);
+                await setDoc(publicStoreRef, {
+                    // Basic info
+                    name: projectData.name,
+                    
+                    // Header/Footer at root level for StorefrontLayout
+                    header: projectData.data?.header,
+                    footer: projectData.data?.footer,
+                    
+                    // AI Assistant config for chatbot
+                    aiAssistantConfig: projectData.aiAssistantConfig || null,
+                    
+                    // ALL component data (landing + ecommerce sections)
+                    data: projectData.data,
+                    
+                    // Theme and styling
+                    theme: projectData.theme,
+                    brandIdentity: projectData.brandIdentity,
+                    
+                    // Component configuration
+                    componentOrder: projectData.componentOrder,
+                    sectionVisibility: projectData.sectionVisibility,
+                    componentStyles: projectData.componentStyles || null,
+                    componentStatus: projectData.componentStatus || null,
+                    
+                    // SEO configuration
+                    seoConfig: projectData.seoConfig || null,
+                    
+                    // Navigation menus (CRITICAL for header/footer links)
+                    menus: projectData.menus || [],
+                    
+                    // Metadata
+                    userId: user.uid,
+                    publishedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                }, { merge: true });
+                
+                console.log(`✅ [DomainsContext] Project published to publicStores`);
+
+                // ============================================
+                // STEP 2: COPY ECOMMERCE PRODUCTS (active only)
+                // ============================================
+                try {
+                    const privateProductsRef = collection(db, 'users', user.uid, 'stores', domain.projectId, 'products');
+                    const productsSnapshot = await getDocs(privateProductsRef);
+                    
+                    if (!productsSnapshot.empty) {
+                        console.log(`📦 [DomainsContext] Publishing ${productsSnapshot.size} products...`);
+                        let publishedCount = 0;
+                        
+                        for (const productDoc of productsSnapshot.docs) {
+                            const productData = productDoc.data();
+                            // Only publish active products
+                            if (productData.status === 'active') {
+                                const publicProductRef = doc(db, 'publicStores', domain.projectId, 'products', productDoc.id);
+                                await setDoc(publicProductRef, {
+                                    ...productData,
+                                    publishedAt: new Date().toISOString(),
+                                }, { merge: true });
+                                publishedCount++;
+                            }
+                        }
+                        console.log(`✅ [DomainsContext] ${publishedCount} products published`);
+                    }
+                } catch (productsError) {
+                    console.warn('[DomainsContext] Products publish warning (non-critical):', productsError);
+                }
+
+                // ============================================
+                // STEP 3: COPY ECOMMERCE CATEGORIES
+                // ============================================
+                try {
+                    const privateCategoriesRef = collection(db, 'users', user.uid, 'stores', domain.projectId, 'categories');
+                    const categoriesSnapshot = await getDocs(privateCategoriesRef);
+                    
+                    if (!categoriesSnapshot.empty) {
+                        console.log(`📂 [DomainsContext] Publishing ${categoriesSnapshot.size} categories...`);
+                        
+                        for (const categoryDoc of categoriesSnapshot.docs) {
+                            const categoryData = categoryDoc.data();
+                            const publicCategoryRef = doc(db, 'publicStores', domain.projectId, 'categories', categoryDoc.id);
+                            await setDoc(publicCategoryRef, {
+                                ...categoryData,
+                                publishedAt: new Date().toISOString(),
+                            }, { merge: true });
+                        }
+                        console.log(`✅ [DomainsContext] Categories published`);
+                    }
+                } catch (categoriesError) {
+                    console.warn('[DomainsContext] Categories publish warning (non-critical):', categoriesError);
+                }
+
+                // ============================================
+                // STEP 4: REGISTER DOMAIN IN customDomains
+                // ============================================
+                // This tells the SSR server which project to render for this domain
                 const domainData = {
                     domain: normalizedDomain,
                     projectId: domain.projectId,
@@ -336,7 +514,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 };
 
                 await setDoc(doc(db, 'customDomains', normalizedDomain), domainData, { merge: true });
-                console.log(`✅ [DomainsContext] Domain synced directly to customDomains: ${normalizedDomain}`);
+                console.log(`✅ [DomainsContext] Domain synced to customDomains: ${normalizedDomain}`);
 
                 // Update domain status to active
                 await updateDomain(domainId, {
@@ -351,17 +529,18 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     }
                 });
 
-                // Log success
-                await addDoc(collection(db, 'users', user.uid, 'deploymentLogs'), {
+                // Log success (project-scoped)
+                await addDeploymentLog({
                     domainId,
                     action: 'deploy_success',
                     provider: 'cloud_run',
                     timestamp: new Date().toISOString(),
                     status: 'success',
-                    message: 'Sitio desplegado correctamente en Quimera Cloud',
+                    message: 'Proyecto publicado y dominio desplegado correctamente en Quimera Cloud',
                     url: `https://${domain.name}`,
                 });
 
+                console.log(`🎉 [DomainsContext] Deploy complete for ${domain.name}`);
                 return true;
             }
 
@@ -392,8 +571,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 }
             });
 
-            // Log deployment result
-            await addDoc(collection(db, 'users', user.uid, 'deploymentLogs'), {
+            // Log deployment result (project-scoped)
+            await addDeploymentLog({
                 domainId,
                 action: result.success ? 'deploy_success' : 'deploy_failed',
                 provider,
@@ -408,8 +587,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error deploying domain:", error);
 
-            // Log error
-            await addDoc(collection(db, 'users', user.uid, 'deploymentLogs'), {
+            // Log error (project-scoped)
+            await addDeploymentLog({
                 domainId,
                 action: 'deploy_error',
                 timestamp: new Date().toISOString(),
@@ -430,6 +609,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const value: DomainsContextType = {
         domains,
+        domainsForActiveProject,
         addDomain,
         updateDomain,
         deleteDomain,
@@ -437,6 +617,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         deployDomain,
         getDomainDeploymentLogs,
         refetch,
+        hasActiveProject: !!activeProjectId,
+        activeProjectId,
     };
 
     return <DomainsContext.Provider value={value}>{children}</DomainsContext.Provider>;
@@ -449,6 +631,3 @@ export const useDomains = (): DomainsContextType => {
     }
     return context;
 };
-
-
-

@@ -411,6 +411,15 @@ export const useAI = (): AIContextType => {
     return context;
 };
 
+/**
+ * Safe version of useAI that returns null if not inside AIProvider
+ * Useful for components that can work both inside and outside the AI context (e.g., public preview)
+ */
+export const useSafeAI = (): AIContextType | null => {
+    const context = useContext(AIContext);
+    return context || null;
+};
+
 
 
 

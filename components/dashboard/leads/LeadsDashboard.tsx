@@ -59,7 +59,7 @@ const cleanJsonResponse = (text: string): string => {
 };
 
 // Moved inside component or memoized hook
-const getLeadStages = (t: any) => [
+const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }[] => [
     { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
     { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-yellow-500' },
     { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-purple-500' },
@@ -272,7 +272,7 @@ const LeadsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
-    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks } = useCRM();
+    const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, hasActiveProject, isLoadingLeads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -650,6 +650,26 @@ const LeadsDashboard: React.FC = () => {
         }
     };
 
+
+    // Show message when no project is active
+    if (!hasActiveProject) {
+        return (
+            <div className="flex h-screen bg-background text-foreground">
+                <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                <div className="flex-1 flex flex-col items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        <LayoutGrid className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
+                            {t('leads.noProjectSelected', 'No hay proyecto seleccionado')}
+                        </h2>
+                        <p className="text-muted-foreground mb-6">
+                            {t('leads.selectProjectMessage', 'Selecciona un proyecto desde el menú lateral para ver y gestionar los leads de ese proyecto.')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen bg-background text-foreground">

@@ -146,6 +146,7 @@ export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'negotiation' | 'wo
 export interface Lead {
     // Basic Info
     id: string;
+    projectId: string; // Required - leads are scoped to a project
     name?: string;
     email?: string;
     phone?: string;
@@ -209,6 +210,7 @@ export type ActivityType = 'call' | 'email' | 'meeting' | 'note' | 'status_chang
 
 export interface LeadActivity {
     id: string;
+    projectId: string; // Required - activities are scoped to a project
     leadId: string;
     type: ActivityType;
     title: string;
@@ -225,6 +227,7 @@ export interface LeadActivity {
 
 export interface LeadTask {
     id: string;
+    projectId: string; // Required - tasks are scoped to a project
     leadId: string;
     title: string;
     description?: string;
@@ -377,16 +380,18 @@ export interface ChurnPrediction {
 // =============================================================================
 export interface FileRecord {
     id: string;
+    projectId?: string; // Optional - user files are project-scoped, global files are not
     name: string;
     storagePath: string;
     downloadURL: string;
     size: number;
     type: string;
-    createdAt: { seconds: number; nanoseconds: number; };
-    notes: string;
-    aiSummary: string;
-    projectId?: string;
+    createdAt: { seconds: number; nanoseconds: number; } | string;
+    notes?: string;
+    aiSummary?: string;
+    summary?: string;
     projectName?: string;
+    uploadedBy?: string;
 }
 
 // =============================================================================
@@ -573,6 +578,7 @@ export interface BrandIdentity {
     coreValues: string;
     language: string;
     logoUrl?: string;
+    tagline?: string;
 }
 
 

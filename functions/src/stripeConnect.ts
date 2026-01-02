@@ -11,12 +11,13 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { STRIPE_CONFIG } from './config';
 
-// Initialize Stripe with secret key from environment
+// Initialize Stripe with centralized config
 const getStripe = () => {
-    const secretKey = process.env.STRIPE_SECRET_KEY || functions.config().stripe?.secret_key;
+    const secretKey = STRIPE_CONFIG.secretKey;
     if (!secretKey) {
-        throw new Error('Stripe secret key not configured');
+        throw new Error('STRIPE_SECRET_KEY not configured in .env');
     }
     return new Stripe(secretKey, {
         apiVersion: '2024-11-20.acacia' as any,
@@ -563,8 +564,8 @@ export const stripeConnectWebhook = functions.https.onRequest(async (req, res) =
     }
 
     const webhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 
-                          process.env.STRIPE_WEBHOOK_SECRET ||
-                          functions.config().stripe?.connect_webhook_secret;
+                          STRIPE_CONFIG.connectWebhookSecret ||
+                          STRIPE_CONFIG.webhookSecret;
 
     if (!webhookSecret) {
         console.error('Stripe Connect webhook secret not configured');
@@ -758,6 +759,7 @@ export const disconnectConnectAccount = functions.https.onCall(
         }
     }
 );
+
 
 
 

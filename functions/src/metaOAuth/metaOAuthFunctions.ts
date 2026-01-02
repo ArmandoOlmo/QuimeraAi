@@ -6,6 +6,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import fetch from 'node-fetch';
+import { META_CONFIG } from '../config';
 
 // Initialize if not already
 if (!admin.apps.length) {
@@ -22,11 +23,11 @@ const META_GRAPH_API_VERSION = 'v18.0';
 const META_GRAPH_API_BASE = `https://graph.facebook.com/${META_GRAPH_API_VERSION}`;
 const META_OAUTH_BASE = 'https://www.facebook.com';
 
-// Get config from Firebase Functions config or environment
+// Get config from centralized config
 const getMetaConfig = () => ({
-    appId: functions.config().meta?.app_id || process.env.META_APP_ID || '',
-    appSecret: functions.config().meta?.app_secret || process.env.META_APP_SECRET || '',
-    redirectUri: functions.config().meta?.redirect_uri || process.env.META_REDIRECT_URI || 'https://quimera.ai/auth/meta/callback',
+    appId: META_CONFIG.appId,
+    appSecret: META_CONFIG.appSecret,
+    redirectUri: META_CONFIG.redirectUri,
 });
 
 // Default scopes for OAuth
@@ -709,6 +710,7 @@ export const scheduledTokenRefresh = functions.pubsub
         // For now, we'll rely on the client-side refresh when needed
         return null;
     });
+
 
 
 

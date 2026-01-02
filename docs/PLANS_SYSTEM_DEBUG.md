@@ -179,3 +179,4 @@ Los planes se definen en `types/subscription.ts` → `SUBSCRIPTION_PLANS`:
 
 
 
+

@@ -7,7 +7,8 @@
 
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import StorefrontApp from './components/ecommerce/StorefrontApp';
+import { PublicWebsitePreviewContent } from './components/PublicWebsitePreview';
+import { StorefrontCartProvider } from './components/ecommerce/context';
 
 export interface ProjectData {
     id: string;
@@ -33,15 +34,17 @@ export async function render(url: string, projectData: ProjectData): Promise<Ren
     // Render the React app to string
     const html = renderToString(
         <React.StrictMode>
-            <StorefrontApp
-                projectId={projectData.id}
-                initialData={projectData}
-                serverUrl={urlPath}
-            />
+            <StorefrontCartProvider storeId={projectData.id}>
+                <PublicWebsitePreviewContent
+                    projectId={projectData.id}
+                    initialData={projectData as any}
+                    serverUrl={urlPath}
+                />
+            </StorefrontCartProvider>
         </React.StrictMode>
     );
 
-    // Collect any head tags (could be extended with react-helmet-async)
+    // Collect any head tags
     const head = generateHeadTags(projectData);
 
     return { html, head };
@@ -70,13 +73,4 @@ function generateHeadTags(project: ProjectData): string {
 
     return tags.join('\n    ');
 }
-
-
-
-
-
-
-
-
-
 

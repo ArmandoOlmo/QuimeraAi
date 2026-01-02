@@ -5,6 +5,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { GEMINI_CONFIG } from '../config';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -301,8 +302,7 @@ async function processMessageInternal(
     // Import Gemini (lazily to avoid cold start issues)
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     
-    // Use environment variable (from .env) or fallback to functions.config()
-    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
+    const apiKey = GEMINI_CONFIG.apiKey;
     if (!apiKey) {
         console.error('[Facebook Webhook] GEMINI_API_KEY not configured');
         return { success: false, error: 'AI not configured' };

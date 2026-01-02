@@ -146,8 +146,30 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-    const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+    
+    // Initialize activeProjectId from localStorage if available
+    const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
+        try {
+            const stored = localStorage.getItem('quimera_activeProjectId');
+            return stored || null;
+        } catch {
+            return null;
+        }
+    });
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
+    
+    // Persist activeProjectId to localStorage when it changes
+    useEffect(() => {
+        try {
+            if (activeProjectId) {
+                localStorage.setItem('quimera_activeProjectId', activeProjectId);
+            } else {
+                localStorage.removeItem('quimera_activeProjectId');
+            }
+        } catch (e) {
+            console.warn('[ProjectContext] Could not persist activeProjectId:', e);
+        }
+    }, [activeProjectId]);
 
     // Active Project Data
     const [data, setData] = useState<PageData | null>(null);
@@ -297,6 +319,27 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             setIsLoadingProjects(false);
         }
     }, [user, currentTenantId, loadUserProjects]);
+    
+    // Restore active project from localStorage after projects load
+    useEffect(() => {
+        if (!isLoadingProjects && projects.length > 0 && activeProjectId && !activeProject) {
+            // We have a stored activeProjectId but the project isn't loaded yet
+            const storedProject = projects.find(p => p.id === activeProjectId);
+            if (storedProject && !data) {
+                // Project exists and we don't have data loaded - restore it
+                console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
+                setData(storedProject.data);
+                setTheme(storedProject.theme);
+                setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
+                setComponentOrder(storedProject.componentOrder || initialData.componentOrder as PageSection[]);
+                setSectionVisibility(storedProject.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
+            } else if (!storedProject) {
+                // Stored project no longer exists - clear it
+                console.log('[ProjectContext] Stored project no longer exists, clearing');
+                setActiveProjectId(null);
+            }
+        }
+    }, [isLoadingProjects, projects, activeProjectId, activeProject, data]);
 
     // Load project by ID
     const loadProject = useCallback((projectId: string, fromAdmin = false, navigateToEditor = true) => {
@@ -404,10 +447,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const projectSnap = await getDoc(projectRef);
             const latestProjectData = projectSnap.exists() ? projectSnap.data() : {};
 
+            // Get AI Assistant Config - check multiple sources
+            const aiConfig = latestProjectData.aiAssistantConfig || project.aiAssistantConfig || null;
+            console.log(`🤖 [ProjectContext] Publishing AI Config:`, {
+                fromFirestore: !!latestProjectData.aiAssistantConfig,
+                fromProjectRef: !!project.aiAssistantConfig,
+                finalConfig: aiConfig ? { isActive: aiConfig.isActive, agentName: aiConfig.agentName } : null
+            });
+
             // Now publish to publicStores
             const publicStoreRef = doc(db, 'publicStores', activeProjectId);
             const publishData = {
                 name: project.name,
+                header: data.header,  // Header en raíz para StorefrontLayout
+                footer: data.footer,  // Footer en raíz para StorefrontLayout
+                aiAssistantConfig: aiConfig, // AI Config en raíz - from project or Firestore
                 data,
                 theme,
                 brandIdentity,
@@ -415,7 +469,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 sectionVisibility,
                 // Include SEO config and other metadata
                 seoConfig: latestProjectData.seoConfig || null,
-                aiAssistantConfig: latestProjectData.aiAssistantConfig || null,
                 componentStyles: latestProjectData.componentStyles || null,
                 componentStatus: latestProjectData.componentStatus || null,
                 // Include navigation menus (CRITICAL for published site navigation)

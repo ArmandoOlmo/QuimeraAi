@@ -41,6 +41,7 @@ export interface ProjectData {
     data?: any;
     seoConfig?: any;
     brandIdentity?: any;
+    aiAssistantConfig?: any;
 }
 
 /**
@@ -62,16 +63,18 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 
     if (isProduction) {
         // Production: use pre-built files
+        // In Docker: __dirname = /app/server/dist, so we need to go up 2 levels to /app
         template = fs.readFileSync(
-            path.resolve(__dirname, '../dist/client/index.html'),
+            path.resolve(__dirname, '../../dist/client/index.html'),
             'utf-8'
         );
         
         // Import the server entry
-        const serverModule = await import(path.resolve(__dirname, '../dist/server/entry-server.js'));
+        const serverModule = await import(path.resolve(__dirname, '../../dist/server/entry-server.js'));
         render = serverModule.render;
     } else {
         // Development: use Vite's transform
+        // In dev: __dirname = /app/server, so we need to go up 1 level to /app
         template = fs.readFileSync(
             path.resolve(__dirname, '../index.html'),
             'utf-8'
@@ -125,7 +128,8 @@ async function fetchProjectData(projectId: string): Promise<ProjectData | null> 
                 theme: data.theme,
                 data: data.data,
                 seoConfig: data.seoConfig,
-                brandIdentity: data.brandIdentity
+                brandIdentity: data.brandIdentity,
+                aiAssistantConfig: data.aiAssistantConfig
             };
         }
 
@@ -217,6 +221,7 @@ function sanitizeForClient(project: ProjectData): Partial<ProjectData> {
         id: project.id,
         name: project.name,
         theme: project.theme,
+        aiAssistantConfig: project.aiAssistantConfig,
         // Don't include full data - client will fetch as needed
         seoConfig: project.seoConfig ? {
             title: project.seoConfig.title,

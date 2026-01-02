@@ -6,13 +6,19 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useSafeTenant } from '../../../contexts/tenant';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import DashboardSidebar from '../DashboardSidebar';
-import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown } from 'lucide-react';
+import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
 
 // --- IMPORTS ---
 import { useTranslation } from 'react-i18next';
 import { CLOUD_RUN_DNS_CONFIG } from '../../../types/domains';
+
+// --- QUIMERA DNS CONFIG (Load Balancer) ---
+const QUIMERA_DNS = {
+    IP: '130.211.43.242',
+    CNAME: 'quimera-ssr-575386543550.us-central1.run.app'
+};
 
 // --- STEP INDICATOR COMPONENT ---
 const StepIndicator: React.FC<{
@@ -41,108 +47,12 @@ const StepIndicator: React.FC<{
 
 // --- DNS CONFIG COMPONENT ---
 
-const DNSConfig: React.FC<{ domain: Domain }> = ({ domain }) => {
-    const { t } = useTranslation();
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert(`${t('common.copy')}: ${text}`);
-    };
-
-    // Use DNS records from domain or show Cloud Run defaults
-    const dnsRecords = domain.dnsRecords || [
-        { type: 'A' as const, host: '@', value: CLOUD_RUN_DNS_CONFIG.aRecords[0], verified: false },
-        { type: 'CNAME' as const, host: 'www', value: CLOUD_RUN_DNS_CONFIG.cnameTarget, verified: false }
-    ];
-
-    const getRecordColor = (type: string) => {
-        switch (type) {
-            case 'A': return 'blue';
-            case 'CNAME': return 'purple';
-            case 'TXT': return 'green';
-            default: return 'gray';
-        }
-    };
-
-    return (
-        <div className="bg-secondary/20 rounded-xl p-6 border border-border">
-            <h4 className="font-bold text-foreground mb-2 flex items-center">
-                <Settings size={16} className="mr-2 text-primary" /> {t('domainsDashboard.dnsConfiguration')}
-            </h4>
-            <p className="text-sm text-muted-foreground mb-6">
-                {t('domainsDashboard.toConnect')} <strong>{domain.name}</strong>, {t('domainsDashboard.dnsInstructions')}
-            </p>
-
-            <div className="space-y-4">
-                {dnsRecords.map((record, index) => {
-                    const color = getRecordColor(record.type);
-                    return (
-                        <div
-                            key={index}
-                            className={`bg-card border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${record.verified
-                                ? 'border-green-500/50 bg-green-500/5'
-                                : 'border-border'
-                                }`}
-                        >
-                            <div className="flex items-center gap-3 flex-1">
-                                <div className={`bg-${color}-500/10 text-${color}-500 font-bold px-2 py-1 rounded text-xs border border-${color}-500/20`}>
-                                    {record.type}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                    {t('domainsDashboard.host')}: <span className="text-foreground font-mono bg-secondary px-1 rounded">{record.host}</span>
-                                </div>
-                                {record.verified && (
-                                    <div className="flex items-center text-green-500 text-xs font-bold">
-                                        <CheckCircle size={14} className="mr-1" /> {t('domainsDashboard.verified')}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                                <code className="flex-1 md:flex-none bg-secondary px-3 py-1.5 rounded text-sm font-mono text-foreground border border-border max-w-xs truncate" title={record.value}>
-                                    {record.value}
-                                </code>
-                                <button
-                                    onClick={() => copyToClipboard(record.value)}
-                                    className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
-                                    title={t('common.copy')}
-                                >
-                                    <Copy size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {domain.deployment?.provider && (
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <p className="text-xs text-blue-700 dark:text-blue-400">
-                        ℹ️ {t('domainsDashboard.dnsConfiguredFor')} <strong>{domain.deployment.provider}</strong> {t('domainsDashboard.deployment')}
-                        {t('domainsDashboard.verifyDnsInstructions')}
-                    </p>
-                </div>
-            )}
-
-            <div className="mt-6 flex justify-between items-center">
-                <p className="text-xs text-muted-foreground">
-                    {t('domainsDashboard.propagationWarning')}
-                </p>
-                <a
-                    href="https://support.google.com/domains/answer/3290350?hl=en"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-muted-foreground hover:text-primary flex items-center underline"
-                >
-                    {t('domainsDashboard.needHelp')} <ExternalLink size={12} className="ml-1" />
-                </a>
-            </div>
-        </div>
-    );
-};
+// No DNSConfig component needed - we use Cloudflare automatically
 
 // --- DOMAIN CARD COMPONENT ---
 const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const { t } = useTranslation();
-    const { deleteDomain, verifyDomain, updateDomain, deployDomain, getDomainDeploymentLogs } = useDomains();
+    const { deleteDomain, verifyDomain, updateDomain, deployDomain, getDomainDeploymentLogs, refetch } = useDomains();
     const { projects } = useProject();
     const [isVerifying, setIsVerifying] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
@@ -150,11 +60,39 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
     const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
+    const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+
+    // Check if domain has Cloudflare nameservers (simplified flow)
+    const hasCloudflareSetup = !!(domain as any).cloudflareNameservers?.length;
+    const cloudflareNameservers = (domain as any).cloudflareNameservers || [];
+    const isPendingNameservers = domain.status === 'pending_nameservers' || (hasCloudflareSetup && domain.status === 'pending');
 
     const handleVerify = async () => {
         setIsVerifying(true);
-        await verifyDomain(domain.id);
-        setIsVerifying(false);
+        setVerificationMessage(null);
+        
+        try {
+            // If domain has Cloudflare setup, use nameserver verification
+            if (hasCloudflareSetup) {
+                const { verifyExternalDomainNameservers } = await import('../../../services/domainService');
+                const result = await verifyExternalDomainNameservers(domain.name);
+                
+                if (result.verified) {
+                    setVerificationMessage('✅ ' + result.message);
+                    await refetch(); // Refresh domain list
+                } else {
+                    setVerificationMessage('⏳ ' + result.message);
+                }
+            } else {
+                // Legacy verification for domains without Cloudflare
+                await verifyDomain(domain.id);
+            }
+        } catch (error: any) {
+            console.error('[DomainCard] Verification error:', error);
+            setVerificationMessage('❌ ' + (error.message || 'Error al verificar'));
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     const handleDelete = async () => {
@@ -357,7 +295,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             step={2}
                             label={t('domainsDashboard.stepDns')}
                             completed={domain.status === 'ssl_pending' || domain.status === 'active' || domain.status === 'deployed'}
-                            active={domain.status === 'pending' || domain.status === 'verifying' || domain.status === 'error'}
+                            active={domain.status === 'pending' || domain.status === 'pending_nameservers' || domain.status === 'verifying' || domain.status === 'error'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
                         <StepIndicator
@@ -381,7 +319,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             ⚠️ {t('domainsDashboard.selectProjectWarning')}
                         </p>
                     )}
-                    {domain.projectId && domain.status === 'pending' && (
+                    {domain.projectId && domain.status === 'pending' && !hasCloudflareSetup && (
                         <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded">
                             📋 {t('domainsDashboard.configureDnsWarning')}
                         </p>
@@ -401,7 +339,147 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             ❌ Error: {domain.deployment?.error || t('domainsDashboard.domainErrorMessage')}
                         </p>
                     )}
+
                 </div>
+
+                {/* SSL PROVISIONING NOTIFICATION */}
+                {(domain.sslStatus === 'pending' || domain.sslStatus === 'provisioning') && domain.status !== 'pending' && (
+                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-5 mb-4">
+                        <div className="flex items-start gap-3 mb-3">
+                            <div className="p-2 bg-purple-500/20 rounded-lg flex-shrink-0 animate-pulse">
+                                <Loader2 size={20} className="text-purple-500 animate-spin" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-foreground text-base mb-1">
+                                    {t('domainsDashboard.sslProvisioningTitle')}
+                                </h4>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    {t('domainsDashboard.sslProvisioningDesc')}
+                                </p>
+                                <p className="text-xs text-purple-600 dark:text-purple-400">
+                                    {t('domainsDashboard.sslProvisioningNote')}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 bg-purple-500/10 rounded-lg">
+                            <Loader2 size={14} className="text-purple-500 animate-spin" />
+                            <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                {t('domainsDashboard.sslProvisioningStatus')}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* DNS INSTRUCTIONS - Show when domain is pending */}
+                {domain.status === 'pending' && domain.projectId && (
+                    <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl p-5 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="p-2 bg-blue-500/20 rounded-lg flex-shrink-0">
+                                <Globe size={20} className="text-blue-500" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-foreground text-base mb-1">
+                                    {t('domainsDashboard.configureDnsTitle')}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                    {t('domainsDashboard.configureDnsDesc')}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* DNS Records */}
+                        <div className="bg-card/80 rounded-lg p-4 mb-4 border border-border space-y-3">
+                            {/* A Record */}
+                            <div className="bg-secondary/30 rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
+                                    <span className="text-xs text-muted-foreground">{t('domainsDashboard.rootDomain')}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span className="text-xs text-muted-foreground">{t('domainsDashboard.hostLabel')}:</span>
+                                        <code className="block font-mono font-bold text-foreground">@</code>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-muted-foreground">{t('domainsDashboard.valueLabel')}:</span>
+                                        <div className="flex items-center gap-2">
+                                            <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(QUIMERA_DNS.IP);
+                                                    alert(t('domainsDashboard.ipCopied'));
+                                                }}
+                                                className="p-1 hover:bg-primary/20 rounded text-primary"
+                                            >
+                                                <Copy size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* CNAME Record */}
+                            <div className="bg-secondary/30 rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
+                                    <span className="text-xs text-muted-foreground">{t('domainsDashboard.subdomain')}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span className="text-xs text-muted-foreground">{t('domainsDashboard.hostLabel')}:</span>
+                                        <code className="block font-mono font-bold text-foreground">www</code>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-muted-foreground">{t('domainsDashboard.valueLabel')}:</span>
+                                        <div className="flex items-center gap-2">
+                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME.substring(0, 25)}...</code>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
+                                                    alert(t('domainsDashboard.cnameCopied'));
+                                                }}
+                                                className="p-1 hover:bg-primary/20 rounded text-primary"
+                                            >
+                                                <Copy size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Verification message */}
+                        {verificationMessage && (
+                            <div className={`p-3 rounded-lg text-sm mb-4 ${
+                                verificationMessage.startsWith('✅') 
+                                    ? 'bg-green-500/10 border border-green-500/20 text-green-600' 
+                                    : verificationMessage.startsWith('❌')
+                                        ? 'bg-red-500/10 border border-red-500/20 text-red-500'
+                                        : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600'
+                            }`}>
+                                {verificationMessage}
+                            </div>
+                        )}
+
+                        {/* Verify button */}
+                        <button
+                            onClick={handleVerify}
+                            disabled={isVerifying}
+                            className="w-full bg-primary text-primary-foreground font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90"
+                        >
+                            {isVerifying ? (
+                                <><Loader2 size={18} className="animate-spin" /> {t('domainsDashboard.verifying')}</>
+                            ) : (
+                                <><RefreshCw size={18} /> {t('domainsDashboard.verifyDns')}</>
+                            )}
+                        </button>
+
+                        <p className="text-xs text-center text-muted-foreground mt-3 flex items-center justify-center gap-1">
+                            <Clock size={12} />
+                            {t('domainsDashboard.propagationNote')}
+                        </p>
+                    </div>
+                )}
 
                 <div className="flex gap-4 items-center">
                     <button
@@ -436,9 +514,68 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 </div>
             </div>
 
-            {showDetails && domain.status !== 'active' && (
+            {showDetails && (
                 <div className="border-t border-border p-6 bg-background/50">
-                    <DNSConfig domain={domain} />
+                    {/* Simple DNS Instructions */}
+                    <div className="bg-secondary/20 rounded-xl p-6 border border-border">
+                        <h4 className="font-bold text-foreground mb-4 flex items-center">
+                            <Globe size={16} className="mr-2 text-primary" />
+                            {t('domainsDashboard.dnsRecordsTitle')}
+                        </h4>
+                        
+                        <div className="space-y-3 mb-4">
+                            {/* A Record */}
+                            <div className="bg-card rounded-lg p-4 border border-border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded mr-2">A</span>
+                                        <span className="text-sm text-muted-foreground">{t('domainsDashboard.hostLabel')}: <code className="font-mono font-bold">@</code></span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(QUIMERA_DNS.IP);
+                                                alert(t('domainsDashboard.ipCopied'));
+                                            }}
+                                            className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            <Copy size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* CNAME Record */}
+                            <div className="bg-card rounded-lg p-4 border border-border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded mr-2">CNAME</span>
+                                        <span className="text-sm text-muted-foreground">{t('domainsDashboard.hostLabel')}: <code className="font-mono font-bold">www</code></span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME.substring(0, 20)}...</code>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
+                                                alert(t('domainsDashboard.cnameCopied'));
+                                            }}
+                                            className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            <Copy size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <Clock size={14} className="text-blue-500 flex-shrink-0" />
+                            <p className="text-xs text-muted-foreground">
+                                {t('domainsDashboard.propagationNote')}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -933,7 +1070,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 // --- MAIN DASHBOARD COMPONENT ---
 const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { domains, addDomain } = useDomains();
+    const { domains, addDomain, refetch } = useDomains();
     const { projects } = useProject();
     const { isUserOwner } = useAuth();
     const { setView } = useUI();
@@ -944,6 +1081,12 @@ const DomainsDashboard: React.FC = () => {
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [connectDomainName, setConnectDomainName] = useState('');
     const [connectProjectId, setConnectProjectId] = useState('');
+    
+    // Cloudflare setup states
+    const [isSettingUpCloudflare, setIsSettingUpCloudflare] = useState(false);
+    const [cloudflareNameservers, setCloudflareNameservers] = useState<string[]>([]);
+    const [cloudflareError, setCloudflareError] = useState<string | null>(null);
+    const [showNameserversModal, setShowNameserversModal] = useState(false);
 
     // Auto-open modal when returning from Stripe checkout
     useEffect(() => {
@@ -984,17 +1127,40 @@ const DomainsDashboard: React.FC = () => {
             return;
         }
 
-        await addDomain({
-            id: `dom_${Date.now()}`,
-            name: connectDomainName,
-            status: 'pending',
-            provider: 'External',
-            projectId: connectProjectId,
-            createdAt: new Date().toISOString()
-        });
-        setIsConnectModalOpen(false);
-        setConnectDomainName('');
-        setConnectProjectId('');
+        setIsSettingUpCloudflare(true);
+        setCloudflareError(null);
+
+        try {
+            // Simple: Just save the domain and let user configure DNS manually
+            // No need for Cloudflare setup - user will add A record pointing to our Load Balancer IP
+            const normalizedDomain = connectDomainName.toLowerCase().trim().replace(/^www\./, '');
+            
+            await addDomain({
+                id: `dom_${Date.now()}`,
+                name: normalizedDomain,
+                status: 'pending',
+                provider: 'External',
+                projectId: connectProjectId,
+                createdAt: new Date().toISOString(),
+                // Store DNS config for reference
+                dnsConfig: {
+                    aRecord: QUIMERA_DNS.IP,
+                    cnameRecord: QUIMERA_DNS.CNAME
+                }
+            });
+            
+            setIsConnectModalOpen(false);
+            alert(`✅ Dominio "${normalizedDomain}" agregado.\n\nAhora configura los registros DNS en tu proveedor:\n\n• Registro A: @ → ${QUIMERA_DNS.IP}\n• Registro CNAME: www → ${QUIMERA_DNS.CNAME}\n\nLuego haz clic en "Verificar" para activarlo.`);
+            await refetch();
+            
+        } catch (error: any) {
+            console.error('[DomainsDashboard] Error adding domain:', error);
+            setCloudflareError(error.message || 'Error al guardar el dominio');
+        } finally {
+            setIsSettingUpCloudflare(false);
+            setConnectDomainName('');
+            setConnectProjectId('');
+        }
     };
 
     // Handler for buy/search domain buttons
@@ -1092,25 +1258,39 @@ const DomainsDashboard: React.FC = () => {
                     <DomainSearch onClose={() => setIsBuyModalOpen(false)} />
                 </Modal>
 
-                {/* Connect Modal */}
-                <Modal isOpen={isConnectModalOpen} onClose={() => setIsConnectModalOpen(false)} maxWidth="max-w-md">
+                {/* Connect Modal - Simple DNS Instructions */}
+                <Modal isOpen={isConnectModalOpen} onClose={() => !isSettingUpCloudflare && setIsConnectModalOpen(false)} maxWidth="max-w-lg">
                     <div className="p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-foreground">{t('domainsDashboard.connectExistingTitle')}</h2>
-                            <button onClick={() => setIsConnectModalOpen(false)} className="p-1 rounded-full hover:bg-secondary text-muted-foreground"><X size={20} /></button>
+                            <button 
+                                onClick={() => setIsConnectModalOpen(false)} 
+                                className="p-1 rounded-full hover:bg-secondary text-muted-foreground disabled:opacity-50"
+                                disabled={isSettingUpCloudflare}
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
+
+                        {/* Error message */}
+                        {cloudflareError && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+                                ❌ {cloudflareError}
+                            </div>
+                        )}
+
                         <form onSubmit={handleConnectSubmit}>
                             <div className="mb-4">
                                 <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('domainsDashboard.domainName')}</label>
                                 <input
                                     required
                                     autoFocus
+                                    disabled={isSettingUpCloudflare}
                                     value={connectDomainName}
                                     onChange={(e) => setConnectDomainName(e.target.value)}
-                                    placeholder="example.com"
-                                    className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium"
+                                    placeholder="tudominio.com"
+                                    className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium disabled:opacity-50"
                                 />
-                                <p className="text-xs text-muted-foreground mt-2">{t('domainsDashboard.enterDomainDesc')}</p>
                             </div>
                             
                             {/* Project Selection */}
@@ -1120,9 +1300,10 @@ const DomainsDashboard: React.FC = () => {
                                 </label>
                                 <select
                                     required
+                                    disabled={isSettingUpCloudflare}
                                     value={connectProjectId}
                                     onChange={(e) => setConnectProjectId(e.target.value)}
-                                    className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium"
+                                    className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium disabled:opacity-50"
                                 >
                                     <option value="">{t('domainsDashboard.selectProject', 'Selecciona un proyecto...')}</option>
                                     {projects.map(project => (
@@ -1131,31 +1312,121 @@ const DomainsDashboard: React.FC = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    {t('domainsDashboard.projectConnectionDesc', 'El dominio mostrará el contenido de este proyecto cuando los visitantes lo accedan.')}
-                                </p>
                             </div>
 
-                            {/* DNS Instructions Preview */}
-                            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center">
-                                    <Settings size={14} className="mr-2" /> {t('domainsDashboard.nextSteps', 'Próximos pasos')}
+                            {/* DNS Instructions - Like Shopify */}
+                            <div className="mb-6 bg-secondary/30 rounded-xl p-4 border border-border">
+                                <h4 className="text-sm font-bold text-foreground mb-4 flex items-center">
+                                    <Globe size={16} className="mr-2 text-primary" />
+                                    {t('domainsDashboard.dnsInstructions', 'Configura estos registros DNS')}:
                                 </h4>
-                                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                                    <li>{t('domainsDashboard.step1AddDomain', 'Añade el dominio')}</li>
-                                    <li>{t('domainsDashboard.step2ConfigureDNS', 'Configura los registros DNS en tu proveedor')}</li>
-                                    <li>{t('domainsDashboard.step3Verify', 'Verifica la configuración DNS')}</li>
-                                    <li>{t('domainsDashboard.step4Publish', 'Publica tu proyecto desde el Editor')}</li>
-                                </ol>
+                                
+                                {/* DNS Records Table */}
+                                <div className="space-y-3">
+                                    {/* A Record */}
+                                    <div className="bg-card rounded-lg p-3 border border-border">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
+                                            <span className="text-xs text-muted-foreground">{t('domainsDashboard.forRootDomain', 'Para el dominio raíz')}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <span className="text-xs text-muted-foreground">Host:</span>
+                                                <code className="block font-mono font-bold">@</code>
+                                            </div>
+                                            <div>
+                                                <span className="text-xs text-muted-foreground">Valor:</span>
+                                                <div className="flex items-center gap-1">
+                                                    <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(QUIMERA_DNS.IP);
+                                                            alert('¡IP copiada!');
+                                                        }}
+                                                        className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary"
+                                                    >
+                                                        <Copy size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* CNAME Record */}
+                                    <div className="bg-card rounded-lg p-3 border border-border">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
+                                            <span className="text-xs text-muted-foreground">{t('domainsDashboard.forWww', 'Para www')}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <span className="text-xs text-muted-foreground">Host:</span>
+                                                <code className="block font-mono font-bold">www</code>
+                                            </div>
+                                            <div>
+                                                <span className="text-xs text-muted-foreground">Valor:</span>
+                                                <div className="flex items-center gap-1">
+                                                    <code className="font-mono font-bold text-primary text-xs break-all">{QUIMERA_DNS.CNAME}</code>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
+                                                            alert('¡CNAME copiado!');
+                                                        }}
+                                                        className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary flex-shrink-0"
+                                                    >
+                                                        <Copy size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quick steps */}
+                                <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
+                                    <p className="font-bold mb-2">📋 Pasos rápidos:</p>
+                                    <ol className="list-decimal list-inside space-y-1">
+                                        <li>Ve a tu proveedor de dominio (Name.com, GoDaddy, etc.)</li>
+                                        <li>Busca "DNS" o "Manage DNS Records"</li>
+                                        <li>Agrega los 2 registros de arriba</li>
+                                        <li>Espera 5-15 minutos y haz clic en "Verificar"</li>
+                                    </ol>
+                                </div>
                             </div>
 
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setIsConnectModalOpen(false)} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground">{t('common.cancel')}</button>
-                                <button type="submit" className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-lg hover:opacity-90 transition-all">{t('common.continue')}</button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsConnectModalOpen(false)} 
+                                    className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                                    disabled={isSettingUpCloudflare}
+                                >
+                                    {t('common.cancel')}
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={isSettingUpCloudflare || !connectDomainName || !connectProjectId}
+                                    className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isSettingUpCloudflare ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            {t('domainsDashboard.configuringDomain', 'Guardando...')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle size={16} />
+                                            {t('domainsDashboard.saveDomain', 'Guardar Dominio')}
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </form>
                     </div>
                 </Modal>
+
             </div>
         </div>
     );

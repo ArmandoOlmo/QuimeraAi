@@ -210,6 +210,121 @@ export function getSSLStatusMessage(status: string): string {
     return messages[status] || status;
 }
 
+// =============================================================================
+// SIMPLIFIED EXTERNAL DOMAIN SETUP (via Cloudflare)
+// =============================================================================
+
+export interface ExternalDomainSetupResult {
+    success: boolean;
+    domain: string;
+    nameservers: string[];
+    zoneId?: string;
+    instructions?: {
+        step1: string;
+        step2: string;
+        step3: string;
+        nameservers: string[];
+        step4: string;
+        step5: string;
+    };
+    error?: string;
+}
+
+export interface NameserverVerificationResult {
+    verified: boolean;
+    status: string;
+    message: string;
+    nameservers?: string[];
+}
+
+/**
+ * Setup external domain with Cloudflare (SIMPLIFIED FLOW)
+ * 
+ * This automatically:
+ * 1. Creates a Cloudflare DNS zone
+ * 2. Configures DNS records to point to Cloud Run
+ * 3. Returns nameservers for the user to update at their registrar
+ */
+export async function setupExternalDomainWithCloudflare(
+    domain: string,
+    projectId?: string
+): Promise<ExternalDomainSetupResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const setupFn = httpsCallable<
+            { domain: string; projectId?: string },
+            ExternalDomainSetupResult
+        >(functions, 'domains-setupExternalWithCloudflare');
+
+        const result = await setupFn({ domain, projectId });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error setting up external domain:', error);
+        return {
+            success: false,
+            domain,
+            nameservers: [],
+            error: error.message || 'Failed to setup external domain'
+        };
+    }
+}
+
+/**
+ * Verify that nameservers have been changed for external domain
+ */
+export async function verifyExternalDomainNameservers(
+    domain: string
+): Promise<NameserverVerificationResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const verifyFn = httpsCallable<
+            { domain: string },
+            NameserverVerificationResult
+        >(functions, 'domains-verifyExternalNameservers');
+
+        const result = await verifyFn({ domain });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error verifying nameservers:', error);
+        return {
+            verified: false,
+            status: 'error',
+            message: error.message || 'Failed to verify nameservers'
+        };
+    }
+}
+
+/**
+ * Migrate existing domain to Cloudflare (simplified flow)
+ * For domains already configured with the old DNS method
+ */
+export async function migrateExistingDomainToCloudflare(
+    domain: string
+): Promise<ExternalDomainSetupResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const migrateFn = httpsCallable<
+            { domain: string },
+            ExternalDomainSetupResult
+        >(functions, 'domains-migrateToCloudflare');
+
+        const result = await migrateFn({ domain });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error migrating domain:', error);
+        return {
+            success: false,
+            domain,
+            nameservers: [],
+            error: error.message || 'Failed to migrate domain'
+        };
+    }
+}
+
+
 
 
 

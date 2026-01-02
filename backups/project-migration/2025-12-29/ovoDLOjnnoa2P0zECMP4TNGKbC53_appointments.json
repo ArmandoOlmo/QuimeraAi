@@ -1,0 +1,255 @@
+[
+  {
+    "id": "1xkuEPQ5QnegO9ZWYgoX",
+    "data": {
+      "title": "Demo",
+      "type": "video_call",
+      "priority": "medium",
+      "startDate": {
+        "seconds": 1764676800,
+        "nanoseconds": 0
+      },
+      "endDate": {
+        "seconds": 1764678600,
+        "nanoseconds": 0
+      },
+      "timezone": "America/New_York",
+      "organizerId": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "participants": [
+        {
+          "id": "participant_1764713494279_bumnlj5op",
+          "type": "lead",
+          "name": "Jose Ventura",
+          "email": "demo@demo.com",
+          "phone": "dsdfsdf",
+          "company": "sdfsdf",
+          "leadId": "2x9O7BVDF8OOLh15doxq",
+          "role": "attendee",
+          "status": "pending"
+        }
+      ],
+      "location": {
+        "type": "virtual"
+      },
+      "reminders": [
+        {
+          "type": "email",
+          "minutesBefore": 1440,
+          "enabled": true,
+          "id": "reminder_1764713466169_f3nsygl32",
+          "sent": false
+        },
+        {
+          "type": "email",
+          "minutesBefore": 60,
+          "enabled": true,
+          "id": "reminder_1764713466169_h5c8p6uuz",
+          "sent": false
+        },
+        {
+          "type": "push",
+          "minutesBefore": 15,
+          "enabled": true,
+          "id": "reminder_1764713466169_ehgd47dcm",
+          "sent": false
+        }
+      ],
+      "attachments": [],
+      "followUpActions": [],
+      "aiPrepEnabled": true,
+      "linkedLeadIds": [
+        "2x9O7BVDF8OOLh15doxq"
+      ],
+      "tags": [],
+      "createdAt": {
+        "seconds": 1764713497,
+        "nanoseconds": 0
+      },
+      "createdBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "description": "demo demo demo",
+      "organizerName": "Armando Olmo",
+      "organizerEmail": "armandoolmomiranda@gmail.com",
+      "updatedBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "notes": [
+        {
+          "createdBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+          "id": "note_1764780828218",
+          "aiGenerated": false,
+          "content": "demo",
+          "createdAt": {
+            "nanoseconds": 0,
+            "seconds": 1764780828.218
+          }
+        },
+        {
+          "id": "note_1764781330483_8ibld6j4l",
+          "content": "demo",
+          "createdAt": {
+            "seconds": 1764781330.483,
+            "nanoseconds": 0
+          },
+          "createdBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+          "aiGenerated": false
+        }
+      ],
+      "status": "in_progress",
+      "updatedAt": {
+        "seconds": 1764781369,
+        "nanoseconds": 0
+      }
+    }
+  },
+  {
+    "id": "OuffxHF4fwkMA2kTD1Ou",
+    "data": {
+      "title": "Demo",
+      "type": "video_call",
+      "status": "scheduled",
+      "priority": "medium",
+      "startDate": {
+        "seconds": 1764716400,
+        "nanoseconds": 0
+      },
+      "endDate": {
+        "seconds": 1764718200,
+        "nanoseconds": 0
+      },
+      "timezone": "America/Puerto_Rico",
+      "organizerId": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "participants": [
+        {
+          "id": "participant_1764713015342_luzycdww2",
+          "type": "lead",
+          "name": "Jose Ventura",
+          "email": "demo@demo.com",
+          "phone": "dsdfsdf",
+          "company": "sdfsdf",
+          "leadId": "2x9O7BVDF8OOLh15doxq",
+          "role": "attendee",
+          "status": "pending"
+        }
+      ],
+      "location": {
+        "type": "virtual"
+      },
+      "reminders": [
+        {
+          "type": "email",
+          "minutesBefore": 1440,
+          "enabled": true,
+          "id": "reminder_1764712990281_3jcvzgn19",
+          "sent": false
+        },
+        {
+          "type": "email",
+          "minutesBefore": 60,
+          "enabled": true,
+          "id": "reminder_1764712990281_x2j755d9z",
+          "sent": false
+        },
+        {
+          "type": "push",
+          "minutesBefore": 15,
+          "enabled": true,
+          "id": "reminder_1764712990281_juvd8w9a3",
+          "sent": false
+        }
+      ],
+      "attachments": [],
+      "notes": [],
+      "followUpActions": [],
+      "aiPrepEnabled": true,
+      "linkedLeadIds": [
+        "2x9O7BVDF8OOLh15doxq"
+      ],
+      "tags": [],
+      "createdAt": {
+        "seconds": 1764713447,
+        "nanoseconds": 0
+      },
+      "createdBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "description": "Demo demo demo",
+      "organizerName": "Armando Olmo",
+      "organizerEmail": "armandoolmomiranda@gmail.com"
+    }
+  },
+  {
+    "id": "mvLNhfXcGT8pPfdfnDeR",
+    "data": {
+      "title": "Demo",
+      "type": "video_call",
+      "status": "scheduled",
+      "priority": "medium",
+      "timezone": "America/New_York",
+      "organizerId": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "participants": [
+        {
+          "id": "participant_1764786806466_4kmyycq3n",
+          "type": "lead",
+          "name": "Jose Ventura",
+          "email": "demo@demo.com",
+          "phone": "dsdfsdf",
+          "company": "sdfsdf",
+          "leadId": "2x9O7BVDF8OOLh15doxq",
+          "role": "attendee",
+          "status": "pending"
+        }
+      ],
+      "location": {
+        "type": "virtual"
+      },
+      "reminders": [
+        {
+          "type": "email",
+          "minutesBefore": 1440,
+          "enabled": true,
+          "id": "reminder_1764786784497_fd7oxv42y",
+          "sent": false
+        },
+        {
+          "type": "email",
+          "minutesBefore": 60,
+          "enabled": true,
+          "id": "reminder_1764786784497_s3apkk6bx",
+          "sent": false
+        },
+        {
+          "type": "push",
+          "minutesBefore": 15,
+          "enabled": true,
+          "id": "reminder_1764786784497_e4uqd7enc",
+          "sent": false
+        }
+      ],
+      "attachments": [],
+      "notes": [],
+      "followUpActions": [],
+      "aiPrepEnabled": true,
+      "linkedLeadIds": [
+        "2x9O7BVDF8OOLh15doxq"
+      ],
+      "tags": [],
+      "createdAt": {
+        "seconds": 1764786819,
+        "nanoseconds": 0
+      },
+      "createdBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "description": "Demo",
+      "organizerName": "Armando Olmo",
+      "organizerEmail": "armandoolmomiranda@gmail.com",
+      "updatedBy": "ovoDLOjnnoa2P0zECMP4TNGKbC53",
+      "endDate": {
+        "seconds": 1764804780,
+        "nanoseconds": 0
+      },
+      "startDate": {
+        "seconds": 1764797580,
+        "nanoseconds": 0
+      },
+      "updatedAt": {
+        "seconds": 1764786852,
+        "nanoseconds": 0
+      }
+    }
+  }
+]

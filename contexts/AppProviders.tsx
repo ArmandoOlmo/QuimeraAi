@@ -42,8 +42,8 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                         <AppContentProvider>
                             <TenantProvider>
                                 <PlansProvider>
-                                    <EditorProvider>
-                                        <ProjectProvider>
+                                    <ProjectProvider>
+                                        <EditorProvider>
                                             <FilesProvider>
                                                 <CRMProvider>
                                                     <CMSProvider>
@@ -59,8 +59,8 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                     </CMSProvider>
                                                 </CRMProvider>
                                             </FilesProvider>
-                                        </ProjectProvider>
-                                    </EditorProvider>
+                                        </EditorProvider>
+                                    </ProjectProvider>
                                 </PlansProvider>
                             </TenantProvider>
                         </AppContentProvider>

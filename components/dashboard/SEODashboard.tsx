@@ -6,6 +6,7 @@ import { useEditor } from '../../contexts/EditorContext';
 import { SEOConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
+import ImagePicker from '../ui/ImagePicker';
 import { Globe, Search, Share2, Code, CheckCircle, ArrowLeft, Menu, Clock, LayoutGrid, Store, ChevronDown, Check, Layers } from 'lucide-react';
 
 type SeoTab = 'basic' | 'social' | 'advanced' | 'ai';
@@ -207,6 +208,18 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="de">Deutsch</option>
                         <option value="pt">Português</option>
                       </select>
+                    </div>
+
+                    {/* Favicon */}
+                    <div>
+                      <ImagePicker
+                        label="Favicon"
+                        value={localConfig.favicon || ''}
+                        onChange={(url) => updateField('favicon', url)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('seo.faviconHelp', 'Sube o selecciona el favicon del proyecto (formato .ico, .png o .svg, 32x32px recomendado)')}
+                      </p>
                     </div>
 
                     <div>

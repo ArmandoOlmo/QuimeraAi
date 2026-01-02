@@ -75,10 +75,24 @@ export const validateFileType = (file: File, allowedTypes: string[]): { valid: b
 };
 
 /**
- * Format date from Firestore timestamp
+ * Format date from Firestore timestamp or ISO string
  */
-export const formatFileDate = (timestamp: { seconds?: number } | null | undefined): string => {
-    if (!timestamp || !timestamp.seconds) return 'Just now';
+export const formatFileDate = (timestamp: { seconds?: number } | string | null | undefined): string => {
+    if (!timestamp) return 'Just now';
+    
+    // Handle ISO string format
+    if (typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        if (isNaN(date.getTime())) return 'Just now';
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
+    
+    // Handle Firestore timestamp format
+    if (!timestamp.seconds) return 'Just now';
     return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',

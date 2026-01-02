@@ -310,3 +310,4 @@ Para cada componente:
 
 
 
+

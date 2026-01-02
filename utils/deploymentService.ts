@@ -36,34 +36,42 @@ const generateStaticHTML = (project: Project): string => {
         `,
         hero: (d) => `
             <section class="min-h-screen flex items-center justify-center pt-24 px-6 overflow-hidden relative" style="background-color: ${d.colors?.background || pageBg}">
-                <div class="container mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
-                    <div class="text-left">
-                        <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6" style="color: ${d.colors?.heading || '#fff'}">${d.headline}</h1>
-                        <p class="text-xl opacity-80 mb-10 leading-relaxed" style="color: ${d.colors?.text || '#fff'}">${d.subheadline}</p>
-                        <div class="flex gap-4">
-                            <button class="px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all" style="background-color: ${d.colors?.primary || primaryColor}; color: ${getContrastingText(d.colors?.primary || primaryColor)}">${d.primaryCta}</button>
-                            ${d.secondaryCta ? `<button class="px-8 py-4 rounded-xl font-bold text-lg bg-white/10 hover:bg-white/20 transition-all" style="color: ${d.colors?.text || '#fff'}">${d.secondaryCta}</button>` : ''}
+                <div class="container mx-auto grid lg:grid-cols-2 gap-12 items-center relative z-10">
+                    <div class="max-w-2xl">
+                        ${d.showBadge ? `<span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold mb-6 tracking-wider uppercase" style="background-color: ${d.badgeBackgroundColor || primaryColor + '20'}; color: ${d.badgeColor || primaryColor}">${d.badgeText || '✨ Premium Experience'}</span>` : ''}
+                        <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight text-white">${d.headline || 'Transforma tu Visión en una <span class="text-yellow-400">Experiencia Digital</span>'}</h1>
+                        <p class="text-xl text-white/60 mb-10 leading-relaxed">${d.subheadline || 'Crea, personaliza y despliega sitios web de alto impacto impulsados por Inteligencia Artificial.'}</p>
+                        <div class="flex flex-wrap gap-4">
+                            <a href="${d.primaryCtaLink || '#'}" class="px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 text-center min-w-[160px]" style="background-color: ${d.colors?.buttonBackground || primaryColor}; color: ${d.colors?.buttonText || getContrastingText(d.colors?.buttonBackground || primaryColor)}">${d.primaryCta || 'Empezar Gratis'}</a>
+                            ${d.secondaryCta ? `<a href="${d.secondaryCtaLink || '#'}" class="px-8 py-4 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all text-center min-w-[160px]" style="color: ${d.colors?.secondaryButtonText || '#fff'}">${d.secondaryCta}</a>` : ''}
                         </div>
                     </div>
-                    ${d.imageUrl ? `<div class="relative"><img src="${d.imageUrl}" class="w-full rounded-3xl shadow-2xl animate-float" alt="Hero"></div>` : ''}
+                    <div class="hidden lg:block relative">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-yellow-400/20 to-transparent rounded-3xl blur-3xl animate-pulse"></div>
+                        <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426'}" class="relative z-10 rounded-2xl border border-white/10 shadow-2xl animate-float" style="width: ${d.imageWidth || 100}%; height: ${d.imageHeight || 500}px; object-fit: ${d.imageObjectFit || 'cover'}">
+                    </div>
                 </div>
             </section>
         `,
         features: (d) => `
-            <section id="features" class="py-24 px-6" style="background-color: ${d.colors?.background || pageBg}">
+            <section id="features" class="py-24 px-6 relative" style="background-color: ${d.colors?.background || pageBg}">
                 <div class="container mx-auto">
-                    <div class="text-center mb-16">
-                        <h2 class="text-4xl font-bold mb-4" style="color: ${d.colors?.heading || '#fff'}">${d.title}</h2>
-                        <p class="opacity-70 max-w-2xl mx-auto" style="color: ${d.colors?.text || '#fff'}">${d.description}</p>
+                    <div class="max-w-3xl mb-16">
+                        <h2 class="text-4xl md:text-5xl font-bold mb-6 text-white">${d.title || 'Nuestras <span class="text-yellow-400">Funciones</span>'}</h2>
+                        <p class="text-lg text-white/50">${d.description || 'Descubre las herramientas inteligentes que tenemos para potenciar tu negocio.'}</p>
                     </div>
-                    <div class="grid md:grid-cols-3 gap-8">
-                        ${(d.items || []).map((f: any) => `
-                            <div class="p-8 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background-color: ${d.colors?.accent || primaryColor}20; color: ${d.colors?.accent || primaryColor}">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <div class="grid md:grid-cols-${d.gridColumns || 3} gap-8">
+                        ${(d.items || [
+                { title: 'Diseño Inteligente', description: 'IA que genera estructuras optimizadas.', imageUrl: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800' },
+                { title: 'SEO Automatizado', description: 'Mejores prácticas integradas nativamente.', imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800' },
+                { title: 'Ecommerce Pro', description: 'Venta fluida de productos digitales y físicos.', imageUrl: 'https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&w=800' }
+            ]).map((item: any) => `
+                            <div class="p-8 rounded-2xl border border-white/5 hover:border-yellow-400/30 transition-all group" style="background-color: ${d.colors?.cardBackground || 'rgba(255,255,255,0.03)'}">
+                                <div class="overflow-hidden rounded-xl mb-6 aspect-video">
+                                    <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 </div>
-                                <h3 class="text-xl font-bold mb-3" style="color: ${d.colors?.heading || '#fff'}">${f.title}</h3>
-                                <p class="opacity-60" style="color: ${d.colors?.text || '#fff'}">${f.description}</p>
+                                <h3 class="text-xl font-bold mb-3 text-white">${item.title}</h3>
+                                <p class="text-white/40 leading-relaxed">${item.description}</p>
                             </div>
                         `).join('')}
                     </div>
@@ -128,6 +136,27 @@ const generateStaticHTML = (project: Project): string => {
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `,
+        slideshow: (d) => `
+            <section class="py-24 px-6 overflow-hidden" style="background-color: ${d.colors?.background || pageBg}">
+                <div class="container mx-auto">
+                    ${d.showTitle ? `<h2 class="text-4xl font-bold mb-12 text-white text-center">${d.title || 'Nuestra <span class="text-yellow-400">Galería</span>'}</h2>` : ''}
+                    <div class="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide">
+                        ${(d.items || [
+                { imageUrl: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200', caption: 'Modern Workspace' },
+                { imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200', caption: 'Innovative Design' },
+                { imageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200', caption: 'Team Collaboration' }
+            ]).map((img: any) => `
+                            <div class="min-w-[80%] md:min-w-[700px] aspect-video rounded-2xl overflow-hidden snap-center border border-white/10 relative group">
+                                <img src="${img.imageUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
+                                    <p class="text-white font-bold text-xl">${img.caption || ''}</p>
                                 </div>
                             </div>
                         `).join('')}
@@ -393,13 +422,31 @@ const generateStaticHTML = (project: Project): string => {
     ` : '';
 
     // Meta tags & SEO
-    const metaTags = seoConfig ? `
-    <meta name="description" content="${seoConfig.description}">
-    <meta name="keywords" content="${seoConfig.keywords.join(', ')}">
-    <meta property="og:title" content="${seoConfig.ogTitle || seoConfig.title}">
-    <meta property="og:description" content="${seoConfig.ogDescription || seoConfig.description}">
-    ${seoConfig.ogImage ? `<meta property="og:image" content="${seoConfig.ogImage}">` : ''}
-    ` : '';
+    const escapeHtml = (str: string) => str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '';
+
+    const title = seoConfig?.title || project.name || 'Tienda Online';
+    const description = seoConfig?.description || brandIdentity?.tagline || `Bienvenido a ${project.name}`;
+    const image = seoConfig?.ogImage || brandIdentity?.logoUrl || '';
+
+    const metaTags = `
+    <meta name="description" content="${escapeHtml(description)}">
+    ${seoConfig?.keywords?.length ? `<meta name="keywords" content="${escapeHtml(seoConfig.keywords.join(', '))}">` : ''}
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="${escapeHtml(seoConfig?.ogTitle || title)}">
+    <meta property="og:description" content="${escapeHtml(seoConfig?.ogDescription || description)}">
+    ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ''}
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeHtml(seoConfig?.twitterTitle || title)}">
+    <meta name="twitter:description" content="${escapeHtml(seoConfig?.twitterDescription || description)}">
+    ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ''}
+    
+    <!-- Robots -->
+    <meta name="robots" content="${seoConfig?.robots || 'index, follow'}">
+    `;
 
     return `<!DOCTYPE html>
 <html lang="${seoConfig?.language || 'es'}">

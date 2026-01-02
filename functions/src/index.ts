@@ -36,7 +36,11 @@ import {
     getBillingMetrics,
     createOrUpdatePlan,
     archivePlan,
-    createSubscriptionCheckout
+    createSubscriptionCheckout,
+    updateSubscription,
+    cancelSubscription,
+    reactivateSubscription,
+    getSubscriptionDetails,
 } from './stripeBilling';
 
 import {
@@ -114,7 +118,11 @@ import {
     // Domain sync for Cloud Run SSR
     syncDomainMapping,
     // Cloudflare Worker API
-    addWorkerDomain
+    addWorkerDomain,
+    // External domain setup (simplified flow via Cloudflare)
+    setupExternalDomainWithCloudflare,
+    verifyExternalDomainNameservers,
+    migrateToCloudflare
 } from './domains';
 
 // Social Channels functions
@@ -276,7 +284,11 @@ export const domains = {
     checkDomainOrderStatus,
     // Cloudflare DNS API
     setupDNS: setupDomainDNS,
-    getDNSStatus: getDomainDNSStatus
+    getDNSStatus: getDomainDNSStatus,
+    // External domain setup (simplified via Cloudflare)
+    setupExternalWithCloudflare: setupExternalDomainWithCloudflare,
+    verifyExternalNameservers: verifyExternalDomainNameservers,
+    migrateToCloudflare
 };
 
 // Export Social Channels functions
@@ -351,6 +363,10 @@ export {
     createOrUpdatePlan,
     archivePlan,
     createSubscriptionCheckout,
+    updateSubscription,
+    cancelSubscription,
+    reactivateSubscription,
+    getSubscriptionDetails,
     // Stripe Connect exports (Multi-tenant)
     createConnectAccount,
     createConnectOnboardingLink,

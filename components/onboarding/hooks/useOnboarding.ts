@@ -963,117 +963,10 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // TEAM members (1:1 square portraits) - INDUSTRY-SPECIFIC
-        if (templateData.team?.items && isEnabled('team')) {
-            // Define team member descriptions based on industry
-            const getTeamPrompt = (industry: string, memberIndex: number): string => {
-                const teamStyles: Record<string, string[]> = {
-                    'beauty-spa': [
-                        'Female hair stylist with elegant makeup, holding scissors, salon setting',
-                        'Female makeup artist with beauty tools, glamorous professional',
-                        'Female esthetician in spa uniform, serene expression',
-                        'Male hair colorist with modern style, creative professional',
-                        'Female nail technician, artistic and friendly',
-                        'Spa therapist in white uniform, calming presence'
-                    ],
-                    'restaurant': [
-                        'Professional chef in white uniform and chef hat, kitchen background',
-                        'Sous chef with cooking utensils, passionate about food',
-                        'Restaurant manager in elegant attire, welcoming smile',
-                        'Sommelier with wine glass, sophisticated',
-                        'Pastry chef with desserts, creative culinary artist',
-                        'Head waiter in formal uniform, professional service'
-                    ],
-                    'cafe': [
-                        'Barista with coffee cup, artistic latte, friendly smile',
-                        'Coffee shop owner, casual professional, warm personality',
-                        'Baker with fresh pastries, artisan style',
-                        'Cafe manager, welcoming and approachable',
-                    ],
-                    'fitness-gym': [
-                        'Athletic personal trainer in sportswear, muscular and fit',
-                        'Female fitness coach with workout gear, energetic',
-                        'Yoga instructor in athletic wear, zen and balanced',
-                        'CrossFit coach, strong and motivating',
-                        'Nutritionist in gym attire, healthy and vibrant',
-                        'Gym manager, athletic and professional'
-                    ],
-                    'healthcare': [
-                        'Doctor in white coat with stethoscope, caring expression',
-                        'Female nurse in medical scrubs, compassionate',
-                        'Medical specialist, professional and trustworthy',
-                        'Healthcare administrator, organized and friendly',
-                    ],
-                    'technology': [
-                        'Software engineer, casual tech attire, modern office',
-                        'Female developer with laptop, innovative and smart',
-                        'Tech lead, confident and knowledgeable',
-                        'UX designer, creative and thoughtful',
-                        'Data scientist, analytical and focused',
-                        'CTO in smart casual, visionary leader'
-                    ],
-                    'legal': [
-                        'Attorney in formal suit, authoritative and trustworthy',
-                        'Female lawyer in business attire, confident professional',
-                        'Senior partner in elegant office, experienced',
-                        'Legal consultant, approachable yet professional',
-                    ],
-                    'real-estate': [
-                        'Real estate agent in business attire, friendly and successful',
-                        'Female realtor with house keys, warm and professional',
-                        'Property manager, organized and reliable',
-                        'Broker in upscale attire, experienced professional',
-                    ],
-                    'photography': [
-                        'Photographer with camera, artistic and creative',
-                        'Female photographer in casual style, passionate',
-                        'Photo editor, creative professional',
-                        'Studio manager, organized and artistic',
-                    ],
-                    'construction': [
-                        'Construction manager with hard hat, experienced leader',
-                        'Architect with blueprints, creative professional',
-                        'Engineer with safety vest, technical expert',
-                        'Project supervisor, reliable and strong',
-                    ],
-                    'education': [
-                        'Teacher with books, friendly and knowledgeable',
-                        'Female professor, approachable educator',
-                        'School administrator, organized and caring',
-                        'Tutor, patient and helpful',
-                    ],
-                    'consulting': [
-                        'Business consultant in formal suit, confident advisor',
-                        'Female consultant with tablet, strategic thinker',
-                        'Senior consultant, experienced mentor',
-                        'Management advisor, professional and insightful',
-                    ],
-                };
-                
-                const industryKey = industry?.toLowerCase().replace(/\s+/g, '-') || 'default';
-                const teamDescriptions = teamStyles[industryKey] || [
-                    'Professional team member, business casual attire, friendly',
-                    'Company employee, approachable and competent',
-                    'Team specialist, dedicated professional',
-                    'Staff member, helpful and skilled',
-                ];
-                
-                return teamDescriptions[memberIndex % teamDescriptions.length];
-            };
-            
-            // Use AI-generated team members if available
-            const teamMembers = aiContent.team || [];
-            const count = Math.min(teamMembers.length > 0 ? teamMembers.length : templateData.team.items.length, 6);
-            for (let i = 0; i < count; i++) {
-                const teamMember = teamMembers[i];
-                // Use AI-generated role if available, otherwise fallback to industry-specific description
-                const memberRole = teamMember?.role ? `${teamMember.role} at ${ind} business` : getTeamPrompt(industry, i);
-                prompts[`team.items[${i}].imageUrl`] = {
-                    prompt: `Professional headshot portrait: ${memberRole}, ${consistency}, neutral studio background, natural lighting, ${noText}`,
-                    aspectRatio: IMAGE_CONFIG['team'].aspectRatio,
-                    style: 'Photorealistic'
-                };
-            }
+        // TEAM members - SKIP image generation for faster onboarding
+        // Team images will use SVG placeholders by default. Users can generate images later if needed.
+        if (templateData.team?.items && isEnabled('team') && isDev) {
+            console.log('📝 Team images: Using SVG placeholders (skipping generation for speed)');
         }
         
         // PORTFOLIO items (4:3 landscape) - Use AI-generated portfolio titles and descriptions
@@ -1094,9 +987,10 @@ TEMPLATE #${t.index}: "${t.name}"
         }
         
         // MENU items (1:1 food photos) - Use AI-generated menu item names and descriptions
+        // Limited to 3 images for faster onboarding (users can generate more later)
         if (templateData.menu?.items && isEnabled('menu')) {
             const menuItems = aiContent.menu || [];
-            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6);
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 3); // Max 3 for faster generation
             for (let i = 0; i < count; i++) {
                 const menuItem = menuItems[i];
                 const dishName = menuItem?.name || 'delicious dish';
@@ -1111,10 +1005,11 @@ TEMPLATE #${t.index}: "${t.name}"
         }
         
         // SLIDESHOW/GALLERY items (16:9 wide) - Use AI-generated slide titles for context
+        // Limited to 1 image for faster onboarding (users can generate more later)
         if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
             const slideshowItems = aiContent.slideshow || [];
             const templateItems = templateData.slideshow.items || templateData.slideshow.slides || [];
-            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 5);
+            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 1); // Max 1 for faster generation
             for (let i = 0; i < count; i++) {
                 const slideItem = slideshowItems[i];
                 const slideTitle = slideItem?.title || `showcase scene ${i + 1}`;
@@ -1197,18 +1092,10 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // TEAM
+        // TEAM - SKIP image generation for faster onboarding
+        // Team images will use SVG placeholders. Users can generate images later if needed.
         if (templateData.team?.items && isEnabled('team')) {
-            const teamMembers = aiContent.team || [];
-            const count = Math.min(teamMembers.length > 0 ? teamMembers.length : templateData.team.items.length, 6);
-            for (let i = 0; i < count; i++) {
-                const member = teamMembers[i];
-                imagesToGenerate.push({ 
-                    key: `team.items[${i}].imageUrl`, 
-                    aspectRatio: '1:1', 
-                    description: `Team member: ${member?.name || 'Team Member'} - ${member?.role || 'Staff'}` 
-                });
-            }
+            if (isDev) console.log('📝 Team images: Using SVG placeholders (skipping generation for speed)');
         }
         
         // PORTFOLIO
@@ -1225,10 +1112,10 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // MENU
+        // MENU - Limited to 3 images for faster onboarding
         if (templateData.menu?.items && isEnabled('menu')) {
             const menuItems = aiContent.menu || [];
-            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6);
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 3); // Max 3 for faster generation
             for (let i = 0; i < count; i++) {
                 const dish = menuItems[i];
                 imagesToGenerate.push({ 
@@ -1239,11 +1126,11 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
         
-        // SLIDESHOW/GALLERY
+        // SLIDESHOW/GALLERY - Limited to 1 image for faster onboarding
         if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
             const slideshowItems = aiContent.slideshow || [];
             const templateItems = templateData.slideshow.items || templateData.slideshow.slides || [];
-            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 5);
+            const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 1); // Max 1 for faster generation
             for (let i = 0; i < count; i++) {
                 const slide = slideshowItems[i];
                 imagesToGenerate.push({ 
@@ -2286,14 +2173,21 @@ TEMPLATE #${t.index}: "${t.name}"
                 generatedProjectId: newProject.id,
             });
 
-            // Clear onboarding progress and load the new project
-            await clearProgress();
-            await loadProject(newProject.id, false, true);  // navigateToEditor = true to open the project
-            setIsOnboardingOpen(false);
-            
             // Unlock generation
             isGeneratingRef.current = false;
 
+            // Wait a bit so the user can see the "Success" state
+            await new Promise(resolve => setTimeout(resolve, 2500));
+
+            // Close onboarding modal first to prevent re-renders when progress is cleared
+            setIsOnboardingOpen(false);
+            
+            // Clear onboarding progress
+            await clearProgress();
+            
+            // The project is already loaded and navigated to by addNewProject()
+            // but we call it again just to be absolutely sure and handle any edge cases
+            await loadProject(newProject.id, false, true);
         } catch (err: any) {
             console.error('Generation failed:', err);
             generationProgress.phase = 'error';

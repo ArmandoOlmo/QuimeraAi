@@ -413,7 +413,7 @@ Return ONLY valid JSON. No markdown.
     }
   },
   "imagePrompts": {
-    "IMPORTANT": "Generate prompts ONLY for sections in componentOrder. Each prompt should use imageStyleDescription from Design Plan.",
+    "IMPORTANT": "Generate prompts ONLY for sections in componentOrder. Each prompt should use imageStyleDescription from Design Plan. SPEED OPTIMIZATION: Team uses SVG placeholders (NO image generation), Menu max 3 images, Slideshow max 1 image.",
     
     "hero.imageUrl": "{{industry}} hero image, {{aesthetic}} style, professional, high quality, {{imageStyleDescription}}",
     
@@ -421,38 +421,28 @@ Return ONLY valid JSON. No markdown.
     "features.items.1.imageUrl": "Image for feature 2, {{industry}} context, {{aesthetic}} aesthetic, professional",
     "features.items.2.imageUrl": "Image for feature 3, {{industry}} context, {{aesthetic}} aesthetic, professional",
     
-    "team.items.0.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
-    "team.items.1.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
-    "team.items.2.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
-    "team.items.3.imageUrl": "Professional headshot portrait, {{industry}} professional, {{aesthetic}} style, studio lighting, neutral background",
-    
     "portfolio.items.0.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, high quality",
     "portfolio.items.1.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, professional",
     "portfolio.items.2.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, premium",
     
     "slideshow.items.0.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, cinematic, high resolution",
-    "slideshow.items.1.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, atmospheric, professional",
-    "slideshow.items.2.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, editorial quality",
     
     "menu.items.0.imageUrl": "Food photography, {{industry}} dish, appetizing, professional lighting, {{aesthetic}} style",
     "menu.items.1.imageUrl": "Food photography, {{industry}} dish, delicious, styled, {{aesthetic}} aesthetic",
-    "menu.items.2.imageUrl": "Food photography, {{industry}} dish, gourmet presentation, {{aesthetic}} style",
-    "menu.items.3.imageUrl": "Food photography, {{industry}} dish, fresh ingredients, {{aesthetic}} aesthetic",
-    "menu.items.4.imageUrl": "Food photography, {{industry}} dish, artfully plated, {{aesthetic}} style",
-    "menu.items.5.imageUrl": "Food photography, {{industry}} dish, inviting, {{aesthetic}} aesthetic"
+    "menu.items.2.imageUrl": "Food photography, {{industry}} dish, gourmet presentation, {{aesthetic}} style"
   }
 }
 
 **IMPORTANT IMAGE PROMPTS RULES:**
 1. ONLY include imagePrompts for sections that are in componentOrder
-2. If "team" is NOT in componentOrder, do NOT include team.items.X.imageUrl prompts
-3. If "menu" is NOT in componentOrder, do NOT include menu.items.X.imageUrl prompts
-4. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
-5. If "slideshow" is NOT in componentOrder, do NOT include slideshow.items.X.imageUrl prompts
+2. NEVER include team.items.X.imageUrl prompts - Team section uses SVG placeholders for faster generation
+3. If "menu" is in componentOrder, include ONLY 3 menu.items prompts (0, 1, 2) - users can add more later
+4. If "slideshow" is in componentOrder, include ONLY 1 slideshow.items prompt (0) - users can add more later
+5. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
 6. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
 7. Use imageStyleDescription from Design Plan for consistent visual style`,
     model: 'gemini-3-pro-preview',
-    version: 4,
+    version: 5,
   },
 
   // Onboarding - Generate Description (Step 2)

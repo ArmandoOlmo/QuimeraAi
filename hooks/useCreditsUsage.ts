@@ -76,19 +76,24 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 
             if (usageDoc.exists()) {
                 const data = usageDoc.data();
-                const used = data.creditsUsed || 0;
-                const limit = data.creditsIncluded || SUBSCRIPTION_PLANS.free.limits.maxAiCredits;
+                const used = data.creditsUsed || data.used || 0;
+                // Support both "creditsIncluded" and "limit" field names
+                const limit = data.creditsIncluded || data.limit || SUBSCRIPTION_PLANS.free.limits.maxAiCredits;
                 const remaining = Math.max(0, limit - used);
                 const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
 
-                // Determinar el plan basado en los créditos incluidos
-                let planId: SubscriptionPlanId = 'free';
-                let planName = 'Free';
-                for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-                    if (plan.limits.maxAiCredits === limit) {
-                        planId = id as SubscriptionPlanId;
-                        planName = plan.name;
-                        break;
+                // Use planId directly if available, otherwise determine from credits
+                let planId: SubscriptionPlanId = (data.planId as SubscriptionPlanId) || 'free';
+                let planName = SUBSCRIPTION_PLANS[planId]?.name || 'Free';
+                
+                // If no direct planId, try to determine from credits limit
+                if (!data.planId) {
+                    for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+                        if (plan.limits.maxAiCredits === limit) {
+                            planId = id as SubscriptionPlanId;
+                            planName = plan.name;
+                            break;
+                        }
                     }
                 }
 
@@ -179,18 +184,24 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
             (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const data = docSnapshot.data();
-                    const used = data.creditsUsed || 0;
-                    const limit = data.creditsIncluded || SUBSCRIPTION_PLANS.free.limits.maxAiCredits;
+                    const used = data.creditsUsed || data.used || 0;
+                    // Support both "creditsIncluded" and "limit" field names
+                    const limit = data.creditsIncluded || data.limit || SUBSCRIPTION_PLANS.free.limits.maxAiCredits;
                     const remaining = Math.max(0, limit - used);
                     const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
 
-                    let planId: SubscriptionPlanId = 'free';
-                    let planName = 'Free';
-                    for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-                        if (plan.limits.maxAiCredits === limit) {
-                            planId = id as SubscriptionPlanId;
-                            planName = plan.name;
-                            break;
+                    // Use planId directly if available, otherwise determine from credits
+                    let planId: SubscriptionPlanId = (data.planId as SubscriptionPlanId) || 'free';
+                    let planName = SUBSCRIPTION_PLANS[planId]?.name || 'Free';
+                    
+                    // If no direct planId, try to determine from credits limit
+                    if (!data.planId) {
+                        for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+                            if (plan.limits.maxAiCredits === limit) {
+                                planId = id as SubscriptionPlanId;
+                                planName = plan.name;
+                                break;
+                            }
                         }
                     }
 
@@ -227,6 +238,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 }
 
 export default useCreditsUsage;
+
 
 
 

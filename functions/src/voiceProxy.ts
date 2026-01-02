@@ -8,6 +8,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
+import { GEMINI_CONFIG } from './config';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -217,8 +218,8 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
         // Import Gemini functions dynamically to avoid circular deps
         const { GoogleGenAI } = await import('@google/genai');
         
-        // Get API key from environment
-        const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+        // Get API key from centralized config
+        const apiKey = GEMINI_CONFIG.apiKey;
         
         if (!apiKey) {
             res.status(500).json({ error: 'API key not configured' });

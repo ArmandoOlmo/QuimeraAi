@@ -187,9 +187,11 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                     const data = publicStoreDoc.data();
                     
                     // If the public store has header data, use it
-                    if (data.header) {
+                    // Check both root level (new) and nested in data (legacy fallback)
+                    const headerData = data.header || data.data?.header;
+                    if (headerData) {
                         setProjectData({
-                            header: data.header,
+                            header: headerData,
                             theme: data.theme || {},
                             name: data.name || 'Store',
                         });

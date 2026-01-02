@@ -42,7 +42,7 @@ Edita `.env` con tus credenciales de Firebase:
 
 ```env
 VITE_FIREBASE_API_KEY=AIza...
-VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_AUTH_DOMAIN=quimera.ai
 VITE_FIREBASE_PROJECT_ID=tu-proyecto
 VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789

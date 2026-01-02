@@ -6,6 +6,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GEMINI_CONFIG } from '../config';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -190,8 +191,7 @@ async function generateAIResponse(
     message: IncomingMessage,
     conversationHistory: Array<{ role: string; content: string }>
 ): Promise<ProcessedResponse> {
-    // Use environment variable (from .env) or fallback to functions.config()
-    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
+    const apiKey = GEMINI_CONFIG.apiKey;
     
     if (!apiKey) {
         console.error('Gemini API key not configured');

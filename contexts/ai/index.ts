@@ -1,4 +1,5 @@
-export { AIProvider, useAI } from './AIContext';
+export { AIProvider, useAI, useSafeAI } from './AIContext';
+
 
 
 

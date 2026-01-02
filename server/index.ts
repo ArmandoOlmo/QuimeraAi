@@ -43,11 +43,18 @@ async function createServer() {
         app.use(vite.middlewares);
     } else {
         // Production: serve static files
-        app.use('/assets', express.static(path.resolve(__dirname, '../dist/client/assets'), {
+        // In Docker: __dirname = /app/server/dist, so we need to go up 2 levels to /app
+        const clientDistPath = path.resolve(__dirname, '../../dist/client');
+        const assetsPath = path.join(clientDistPath, 'assets');
+        
+        console.log(`[SSR] Serving assets from: ${assetsPath}`);
+        console.log(`[SSR] Serving client from: ${clientDistPath}`);
+        
+        app.use('/assets', express.static(assetsPath, {
             maxAge: '1y',
             immutable: true
         }));
-        app.use(express.static(path.resolve(__dirname, '../dist/client'), {
+        app.use(express.static(clientDistPath, {
             index: false, // Don't serve index.html for root
             maxAge: '1h'
         }));
@@ -118,7 +125,7 @@ async function createServer() {
             } else {
                 // Serve the main app (dashboard, etc.)
                 if (isProduction) {
-                    const indexPath = path.resolve(__dirname, '../dist/client/index.html');
+                    const indexPath = path.resolve(__dirname, '../../dist/client/index.html');
                     const html = fs.readFileSync(indexPath, 'utf-8');
                     res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
                 } else {

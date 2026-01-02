@@ -9,7 +9,15 @@
  * - Cloudflare DNS API integration
  */
 
-export { addCustomDomain, removeCustomDomain, updateDomainStatus, syncDomainMapping } from './domainManager';
+export { 
+    addCustomDomain, 
+    removeCustomDomain, 
+    updateDomainStatus, 
+    syncDomainMapping,
+    setupExternalDomainWithCloudflare,
+    verifyExternalDomainNameservers,
+    migrateToCloudflare
+} from './domainManager';
 export { verifyDomainDNS, checkDomainSSL } from './dnsVerification';
 export { onDomainCreate, onDomainDelete, scheduledDNSCheck } from './domainTriggers';
 

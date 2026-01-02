@@ -54,10 +54,13 @@ app.get('/health', (req, res) => {
 
 // Main handler - catches ALL requests
 app.get('*', async (req, res) => {
-    const hostname = req.hostname || req.headers.host?.split(':')[0];
+    // Priority: X-Forwarded-Host (from Load Balancer) > hostname > host header
+    const hostname = req.headers['x-forwarded-host']?.split(',')[0]?.trim() || 
+                     req.hostname || 
+                     req.headers.host?.split(':')[0];
     const path = req.path;
     
-    console.log(`[Router] ${hostname}${path}`);
+    console.log(`[Router] ${hostname}${path} (X-Forwarded-Host: ${req.headers['x-forwarded-host']})`);
     
     // Get project for this domain
     const domainData = await getProjectForDomain(hostname);
@@ -198,5 +201,7 @@ function getPendingPage(domain, status) {
 app.listen(PORT, () => {
     console.log(`🚀 Quimera Domain Router running on port ${PORT}`);
 });
+
+
 
 

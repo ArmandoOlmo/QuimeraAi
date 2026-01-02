@@ -6,12 +6,13 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { STRIPE_CONFIG } from './config';
 
-// Initialize Stripe with secret key from environment
+// Initialize Stripe with secret key from centralized config
 const getStripe = () => {
-    const secretKey = process.env.STRIPE_SECRET_KEY || functions.config().stripe?.secret_key;
+    const secretKey = STRIPE_CONFIG.secretKey;
     if (!secretKey) {
-        throw new Error('Stripe secret key not configured');
+        throw new Error('STRIPE_SECRET_KEY not configured in .env');
     }
     return new Stripe(secretKey, {
         apiVersion: '2024-11-20.acacia' as any,
@@ -371,7 +372,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || functions.config().stripe?.webhook_secret;
+    const webhookSecret = STRIPE_CONFIG.webhookSecret;
 
     console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `${webhookSecret.substring(0, 10)}...` : 'NOT SET');
     console.log('[Stripe Webhook] Raw body available:', !!req.rawBody);
@@ -421,6 +422,23 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
             case 'checkout.session.completed':
                 await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+                break;
+
+            case 'customer.subscription.created':
+            case 'customer.subscription.updated':
+                await handleSubscriptionChange(event.data.object as Stripe.Subscription);
+                break;
+
+            case 'customer.subscription.deleted':
+                await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+                break;
+
+            case 'invoice.paid':
+                await handleInvoicePaid(event.data.object as Stripe.Invoice);
+                break;
+
+            case 'invoice.payment_failed':
+                await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
                 break;
 
             case 'charge.refunded':
@@ -541,7 +559,20 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
  */
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
     const metadata = session.metadata || {};
-    const { userId, type } = metadata;
+    const { userId, type, tenantId, planId } = metadata;
+
+    // Handle subscription checkout completion
+    if (session.mode === 'subscription' && tenantId && planId) {
+        console.log(`[Stripe Webhook] Subscription checkout completed for tenant: ${tenantId}, plan: ${planId}`);
+        
+        await updateTenantSubscription(tenantId, planId, {
+            stripeCustomerId: session.customer as string,
+            stripeSubscriptionId: session.subscription as string,
+            status: 'active',
+        });
+        
+        return;
+    }
 
     if (!userId) {
         console.error('Missing userId in checkout session metadata');
@@ -580,6 +611,431 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     // Handle regular e-commerce checkout
     console.log('Checkout session completed for user:', userId);
+}
+
+/**
+ * Handles subscription created or updated events
+ */
+async function handleSubscriptionChange(subscription: Stripe.Subscription) {
+    const { tenantId, planId } = subscription.metadata || {};
+
+    if (!tenantId) {
+        console.log('[Stripe Webhook] No tenantId in subscription metadata, skipping');
+        return;
+    }
+
+    const status = subscription.status === 'active' || subscription.status === 'trialing' 
+        ? 'active' 
+        : subscription.status;
+
+    console.log(`[Stripe Webhook] Subscription ${subscription.id} changed for tenant: ${tenantId}, status: ${status}`);
+
+    await updateTenantSubscription(tenantId, planId || 'free', {
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        status,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    });
+}
+
+/**
+ * Handles subscription deleted (cancelled) events
+ */
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+    const { tenantId } = subscription.metadata || {};
+
+    if (!tenantId) {
+        console.log('[Stripe Webhook] No tenantId in subscription metadata, skipping');
+        return;
+    }
+
+    console.log(`[Stripe Webhook] Subscription ${subscription.id} deleted for tenant: ${tenantId}`);
+
+    // Downgrade to free plan
+    await updateTenantSubscription(tenantId, 'free', {
+        status: 'cancelled',
+        stripeSubscriptionId: null,
+        cancelledAt: new Date(),
+    });
+}
+
+/**
+ * Handles successful invoice payment (recurring billing)
+ */
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+    // Only process subscription invoices
+    if (!invoice.subscription) {
+        console.log('[Stripe Webhook] Invoice not related to subscription, skipping');
+        return;
+    }
+
+    const subscriptionId = typeof invoice.subscription === 'string' 
+        ? invoice.subscription 
+        : invoice.subscription.id;
+
+    console.log(`[Stripe Webhook] Invoice paid for subscription: ${subscriptionId}`);
+
+    // Get the subscription to find tenant
+    try {
+        const stripe = getStripe();
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const { tenantId, planId } = subscription.metadata || {};
+
+        if (!tenantId) {
+            console.log('[Stripe Webhook] No tenantId in subscription metadata');
+            return;
+        }
+
+        // Update subscription period dates
+        await db.doc(`subscriptions/${tenantId}`).update({
+            status: 'active',
+            currentPeriodStart: admin.firestore.Timestamp.fromDate(
+                new Date(subscription.current_period_start * 1000)
+            ),
+            currentPeriodEnd: admin.firestore.Timestamp.fromDate(
+                new Date(subscription.current_period_end * 1000)
+            ),
+            lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastInvoiceId: invoice.id,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Reset AI credits for new billing period
+        if (planId) {
+            await updateAiCreditsForPlan(tenantId, planId);
+        }
+
+        console.log(`[Stripe Webhook] Updated subscription for tenant ${tenantId} after invoice payment`);
+    } catch (error) {
+        console.error('[Stripe Webhook] Error handling invoice.paid:', error);
+    }
+}
+
+/**
+ * Handles failed invoice payment
+ */
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+    if (!invoice.subscription) {
+        return;
+    }
+
+    const subscriptionId = typeof invoice.subscription === 'string' 
+        ? invoice.subscription 
+        : invoice.subscription.id;
+
+    console.log(`[Stripe Webhook] Invoice payment FAILED for subscription: ${subscriptionId}`);
+
+    try {
+        const stripe = getStripe();
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const { tenantId } = subscription.metadata || {};
+
+        if (!tenantId) {
+            return;
+        }
+
+        // Update subscription status to past_due
+        await db.doc(`subscriptions/${tenantId}`).update({
+            status: 'past_due',
+            paymentFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Send payment failed notification email
+        await sendPaymentFailedEmail(tenantId, invoice);
+
+        console.log(`[Stripe Webhook] Marked subscription as past_due for tenant ${tenantId}`);
+    } catch (error) {
+        console.error('[Stripe Webhook] Error handling invoice.payment_failed:', error);
+    }
+}
+
+/**
+ * Sends payment failed notification email
+ */
+async function sendPaymentFailedEmail(tenantId: string, invoice: Stripe.Invoice) {
+    try {
+        const tenantDoc = await db.doc(`tenants/${tenantId}`).get();
+        if (!tenantDoc.exists) return;
+
+        const tenantData = tenantDoc.data();
+        const ownerId = tenantData?.ownerId || tenantData?.ownerUserId;
+
+        if (!ownerId) return;
+
+        const userDoc = await db.doc(`users/${ownerId}`).get();
+        if (!userDoc.exists) return;
+
+        const userData = userDoc.data();
+        const userEmail = userData?.email;
+
+        if (!userEmail) return;
+
+        const { sendEmail } = await import('./email/emailService');
+
+        await sendEmail({
+            to: userEmail,
+            subject: '⚠️ Tu pago ha fallado - Acción requerida',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #ef4444;">Tu pago no pudo ser procesado</h2>
+                    <p>Hola ${userData?.displayName || 'Usuario'},</p>
+                    <p>No pudimos procesar tu pago de <strong>$${((invoice.amount_due || 0) / 100).toFixed(2)}</strong> para tu suscripción de Quimera.ai.</p>
+                    <p>Por favor actualiza tu método de pago para evitar la interrupción del servicio:</p>
+                    <a href="https://quimera.ai/settings/subscription" 
+                       style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0;">
+                        Actualizar Método de Pago
+                    </a>
+                    <p style="color: #666; font-size: 14px;">Si tienes preguntas, contáctanos en soporte@quimera.ai</p>
+                </div>
+            `,
+            from: 'Quimera AI <noreply@quimera.ai>',
+        });
+
+        console.log(`[Stripe Webhook] Sent payment failed email to ${userEmail}`);
+    } catch (error) {
+        console.error('[Stripe Webhook] Error sending payment failed email:', error);
+    }
+}
+
+/**
+ * Updates tenant subscription in Firestore
+ */
+async function updateTenantSubscription(
+    tenantId: string,
+    planId: string,
+    updates: {
+        stripeCustomerId?: string;
+        stripeSubscriptionId?: string | null;
+        status?: string;
+        currentPeriodStart?: Date;
+        currentPeriodEnd?: Date;
+        cancelAtPeriodEnd?: boolean;
+        cancelledAt?: Date;
+    }
+) {
+    try {
+        const subscriptionRef = db.doc(`subscriptions/${tenantId}`);
+        const subscriptionDoc = await subscriptionRef.get();
+        const previousPlanId = subscriptionDoc.exists ? subscriptionDoc.data()?.planId : 'free';
+
+        const now = admin.firestore.FieldValue.serverTimestamp();
+
+        if (subscriptionDoc.exists) {
+            // Update existing subscription
+            await subscriptionRef.update({
+                planId,
+                ...updates,
+                currentPeriodStart: updates.currentPeriodStart 
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart) 
+                    : undefined,
+                currentPeriodEnd: updates.currentPeriodEnd 
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd) 
+                    : undefined,
+                cancelledAt: updates.cancelledAt 
+                    ? admin.firestore.Timestamp.fromDate(updates.cancelledAt) 
+                    : undefined,
+                lastUpdated: now,
+            });
+        } else {
+            // Create new subscription document
+            const periodEnd = new Date();
+            periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+            await subscriptionRef.set({
+                tenantId,
+                planId,
+                billingCycle: 'monthly',
+                status: updates.status || 'active',
+                stripeCustomerId: updates.stripeCustomerId,
+                stripeSubscriptionId: updates.stripeSubscriptionId,
+                startDate: now,
+                currentPeriodStart: updates.currentPeriodStart 
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart) 
+                    : now,
+                currentPeriodEnd: updates.currentPeriodEnd 
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd) 
+                    : admin.firestore.Timestamp.fromDate(periodEnd),
+                cancelAtPeriodEnd: updates.cancelAtPeriodEnd || false,
+                addOns: [],
+                creditPackagesPurchased: [],
+                createdAt: now,
+                lastUpdated: now,
+            });
+        }
+
+        // Also update the AI credits usage based on the new plan
+        await updateAiCreditsForPlan(tenantId, planId);
+
+        // Send upgrade confirmation email if plan changed to a paid plan
+        if (planId !== 'free' && planId !== previousPlanId && updates.status === 'active') {
+            await sendSubscriptionUpgradeEmail(tenantId, planId);
+        }
+
+        console.log(`[Stripe Webhook] Updated subscription for tenant ${tenantId} to plan ${planId}`);
+    } catch (error) {
+        console.error(`[Stripe Webhook] Error updating subscription for tenant ${tenantId}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Sends subscription upgrade confirmation email
+ */
+async function sendSubscriptionUpgradeEmail(tenantId: string, planId: string) {
+    try {
+        // Get tenant info to find owner email
+        const tenantDoc = await db.doc(`tenants/${tenantId}`).get();
+        if (!tenantDoc.exists) {
+            console.error(`[Stripe Webhook] Tenant ${tenantId} not found for email`);
+            return;
+        }
+
+        const tenantData = tenantDoc.data();
+        // Support both field names for backwards compatibility
+        const ownerId = tenantData?.ownerId || tenantData?.ownerUserId;
+
+        if (!ownerId) {
+            console.error(`[Stripe Webhook] No owner ID for tenant ${tenantId}`);
+            return;
+        }
+
+        // Get user info
+        const userDoc = await db.doc(`users/${ownerId}`).get();
+        if (!userDoc.exists) {
+            console.error(`[Stripe Webhook] User ${ownerId} not found for email`);
+            return;
+        }
+
+        const userData = userDoc.data();
+        const userEmail = userData?.email;
+        const userName = userData?.displayName || userEmail?.split('@')[0] || 'Usuario';
+
+        if (!userEmail) {
+            console.error(`[Stripe Webhook] No email for user ${ownerId}`);
+            return;
+        }
+
+        // Import email service and template
+        const { sendEmail } = await import('./email/emailService');
+        const { 
+            getSubscriptionUpgradeTemplate, 
+            getPlanFeatures, 
+            getPlanPrice, 
+            getPlanCredits 
+        } = await import('./email/templates/subscriptionUpgrade');
+
+        // Get plan details
+        const planNames: Record<string, string> = {
+            starter: 'Starter',
+            pro: 'Pro',
+            agency: 'Agency',
+            enterprise: 'Enterprise',
+        };
+
+        const emailHtml = getSubscriptionUpgradeTemplate({
+            userName,
+            userEmail,
+            planName: planNames[planId] || 'Premium',
+            planPrice: getPlanPrice(planId, 'monthly'),
+            billingCycle: 'monthly',
+            aiCredits: getPlanCredits(planId),
+            features: getPlanFeatures(planId),
+            dashboardUrl: 'https://quimera.ai/dashboard',
+            supportEmail: 'soporte@quimera.ai',
+        });
+
+        const result = await sendEmail({
+            to: userEmail,
+            subject: `🎉 ¡Bienvenido al Plan ${planNames[planId] || 'Premium'}! Tu suscripción está activa`,
+            html: emailHtml,
+            from: 'Quimera AI <noreply@quimera.ai>',
+            tags: [
+                { name: 'type', value: 'subscription-upgrade' },
+                { name: 'plan', value: planId },
+                { name: 'tenant', value: tenantId },
+            ],
+        });
+
+        if (result.success) {
+            console.log(`[Stripe Webhook] Subscription upgrade email sent to ${userEmail}`);
+            
+            // Log the email
+            await db.collection('emailLogs').add({
+                type: 'subscription-upgrade',
+                templateId: 'subscription-upgrade',
+                tenantId,
+                userId: ownerId,
+                recipientEmail: userEmail,
+                subject: `¡Bienvenido al Plan ${planNames[planId]}!`,
+                status: 'sent',
+                providerMessageId: result.messageId,
+                provider: 'resend',
+                planId,
+                sentAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } else {
+            console.error(`[Stripe Webhook] Failed to send upgrade email: ${result.error}`);
+        }
+    } catch (error) {
+        console.error(`[Stripe Webhook] Error sending subscription upgrade email:`, error);
+        // Don't throw - email failure shouldn't fail the subscription update
+    }
+}
+
+/**
+ * Updates AI credits for a tenant based on their plan
+ */
+async function updateAiCreditsForPlan(tenantId: string, planId: string) {
+    // Define credits per plan (must match types/subscription.ts)
+    const PLAN_CREDITS: Record<string, number> = {
+        free: 30,
+        starter: 300,
+        pro: 1500,
+        agency: 5000,
+        enterprise: 25000, // Fixed: matches subscription.ts
+    };
+
+    const credits = PLAN_CREDITS[planId] || PLAN_CREDITS.free;
+
+    try {
+        const creditsRef = db.doc(`aiCreditsUsage/${tenantId}`);
+        const creditsDoc = await creditsRef.get();
+        const now = admin.firestore.FieldValue.serverTimestamp();
+
+        // Standardized field names (supporting both for backwards compatibility)
+        const updateData = {
+            tenantId,
+            planId,
+            // Primary field names (standard)
+            limit: credits,
+            used: 0,
+            // Legacy field names (for backwards compatibility with frontend)
+            creditsIncluded: credits,
+            creditsUsed: 0,
+            creditsRemaining: credits,
+            // Timestamps
+            lastResetAt: now,
+            updatedAt: now,
+        };
+
+        if (creditsDoc.exists) {
+            // Update existing credits - reset to new plan limit
+            await creditsRef.update(updateData);
+        } else {
+            // Create new credits document
+            await creditsRef.set({
+                ...updateData,
+                createdAt: now,
+            });
+        }
+
+        console.log(`[Stripe Webhook] Updated AI credits for tenant ${tenantId}: ${credits} credits (plan: ${planId})`);
+    } catch (error) {
+        console.error(`[Stripe Webhook] Error updating AI credits for tenant ${tenantId}:`, error);
+    }
 }
 
 /**

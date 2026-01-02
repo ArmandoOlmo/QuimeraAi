@@ -4,7 +4,7 @@
  */
 
 import { Resend } from 'resend';
-import * as functions from 'firebase-functions';
+import { RESEND_CONFIG } from '../config';
 
 // =============================================================================
 // TYPES
@@ -49,21 +49,15 @@ const getResendClient = (apiKey: string): Resend => {
 };
 
 /**
- * Get API key from Firebase config/secrets
+ * Get API key from centralized config
  */
 export const getEmailApiKey = (): string | null => {
-    try {
-        // Try to get from defineSecret (recommended for production)
-        const apiKey = process.env.RESEND_API_KEY;
-        if (apiKey) return apiKey;
-
-        // Fallback to Firebase config
-        const config = functions.config();
-        return config.email?.resend_api_key || null;
-    } catch (error) {
-        console.error('Error getting email API key:', error);
+    const apiKey = RESEND_CONFIG.apiKey;
+    if (!apiKey) {
+        console.error('[EmailService] RESEND_API_KEY not configured in .env');
         return null;
     }
+    return apiKey;
 };
 
 // =============================================================================
@@ -310,6 +304,7 @@ export const formatDateTime = (
         minute: '2-digit',
     });
 };
+
 
 
 

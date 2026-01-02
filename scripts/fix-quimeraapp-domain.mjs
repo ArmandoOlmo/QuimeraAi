@@ -1,20 +1,30 @@
 /**
  * Fix quimeraapp.com domain mapping
  * Updates the customDomains collection to point to the correct projectId
+ * 
+ * USAGE: Set environment variables before running:
+ * VITE_FIREBASE_API_KEY=xxx node scripts/fix-quimeraapp-domain.mjs
  */
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// Firebase config (same as in the app)
+// Firebase config from environment variables
 const firebaseConfig = {
-    apiKey: "AIzaSyCzm7K7f8gCXJ0h_qQD8J6_g8vKvY3X3nM",
-    authDomain: "quimeraai.firebaseapp.com",
-    projectId: "quimeraai",
-    storageBucket: "quimeraai.firebasestorage.app",
-    messagingSenderId: "575386543550",
-    appId: "1:575386543550:web:395114b8f43e810a7985ef"
+    apiKey: process.env.VITE_FIREBASE_API_KEY,
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "quimeraai.firebaseapp.com",
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID || "quimeraai",
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "quimeraai.firebasestorage.app",
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "575386543550",
+    appId: process.env.VITE_FIREBASE_APP_ID
 };
+
+// Validate required config
+if (!firebaseConfig.apiKey) {
+    console.error('❌ Error: VITE_FIREBASE_API_KEY environment variable is required');
+    console.error('   Run: VITE_FIREBASE_API_KEY=your_key node scripts/fix-quimeraapp-domain.mjs');
+    process.exit(1);
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);

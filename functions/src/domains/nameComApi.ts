@@ -10,14 +10,15 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { STRIPE_CONFIG, NAMECOM_CONFIG } from '../config';
 
 const db = admin.firestore();
 
-// Initialize Stripe
+// Initialize Stripe with centralized config
 const getStripe = () => {
-    const secretKey = process.env.STRIPE_SECRET_KEY || functions.config().stripe?.secret_key;
+    const secretKey = STRIPE_CONFIG.secretKey;
     if (!secretKey) {
-        throw new Error('Stripe secret key not configured');
+        throw new Error('STRIPE_SECRET_KEY not configured in .env');
     }
     return new Stripe(secretKey, {
         apiVersion: '2024-11-20.acacia' as any,
@@ -28,13 +29,12 @@ const getStripe = () => {
 const NAME_COM_API_URL = 'https://api.name.com/v4';
 const NAME_COM_DEV_API_URL = 'https://api.dev.name.com/v4'; // For testing
 
-// Get credentials from environment/config
+// Get credentials from centralized config
 function getNameComCredentials(): { username: string; token: string; isDev: boolean } {
-    const config = functions.config();
     return {
-        username: config.namecom?.username || process.env.NAME_COM_USERNAME || '',
-        token: config.namecom?.token || process.env.NAME_COM_TOKEN || '',
-        isDev: config.namecom?.environment === 'development' || process.env.NAME_COM_ENV === 'development'
+        username: NAMECOM_CONFIG.username,
+        token: NAMECOM_CONFIG.token,
+        isDev: NAMECOM_CONFIG.environment === 'sandbox'
     };
 }
 

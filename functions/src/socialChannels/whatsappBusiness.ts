@@ -5,6 +5,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { META_CONFIG, GEMINI_CONFIG } from '../config';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -25,7 +26,7 @@ export const whatsappWebhookVerify = functions.https.onRequest((req, res) => {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    const verifyToken = functions.config().whatsapp?.verify_token || 'quimera_wa_verify';
+    const verifyToken = META_CONFIG.verifyToken;
 
     if (mode === 'subscribe' && token === verifyToken) {
         console.log('WhatsApp webhook verified successfully');
@@ -55,7 +56,7 @@ export const whatsappWebhook = functions.https.onRequest(async (req, res) => {
         const challenge = req.query['hub.challenge'];
 
         // Use same verify token as other channels
-        const verifyToken = functions.config().meta?.verify_token || process.env.META_VERIFY_TOKEN || 'quimera_verify_token_2024';
+        const verifyToken = META_CONFIG.verifyToken;
 
         console.log('[WhatsApp Webhook] Verification attempt:', { mode, token: token ? '***' : 'missing' });
 
@@ -279,8 +280,7 @@ async function processMessageInternal(
 ): Promise<{ success: boolean; response?: string }> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     
-    // Use environment variable (from .env) or fallback to functions.config()
-    const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.apikey;
+    const apiKey = GEMINI_CONFIG.apiKey;
     if (!apiKey) {
         return { success: false };
     }

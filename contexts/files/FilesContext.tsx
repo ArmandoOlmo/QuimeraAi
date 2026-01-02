@@ -1,6 +1,7 @@
 /**
  * FilesContext
  * Maneja archivos, storage y uploads
+ * Los archivos de usuario están organizados por proyecto
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
@@ -22,13 +23,10 @@ import {
     getDownloadURL,
     deleteObject,
     listAll,
+    onSnapshot,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
-
-interface UploadFileOptions {
-    projectId?: string;
-    projectName?: string;
-}
+import { useSafeProject } from '../project';
 
 // Admin Asset Categories
 export type AdminAssetCategory = 
@@ -54,15 +52,18 @@ export interface AdminAssetRecord extends FileRecord {
 }
 
 interface FilesContextType {
-    // User Files
+    // User Files (project-scoped)
     files: FileRecord[];
     isFilesLoading: boolean;
-    uploadFile: (file: File, options?: UploadFileOptions) => Promise<string | undefined>;
+    uploadFile: (file: File) => Promise<string | undefined>;
     deleteFile: (fileId: string, storagePath: string) => Promise<void>;
     updateFileNotes: (fileId: string, notes: string) => Promise<void>;
-    updateFileProject: (fileId: string, projectId: string | null, projectName: string | null) => Promise<void>;
     generateFileSummary: (fileId: string, downloadURL: string) => Promise<void>;
     uploadImageAndGetURL: (file: File, path: string) => Promise<string>;
+    
+    // Project info
+    hasActiveProject: boolean;
+    activeProjectId: string | null;
     
     // Global Files (Super Admin - General reuse)
     globalFiles: FileRecord[];
@@ -87,8 +88,10 @@ const FilesContext = createContext<FilesContextType | undefined>(undefined);
 
 export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, userDocument } = useAuth();
+    const projectContext = useSafeProject();
+    const activeProjectId = projectContext?.activeProjectId || null;
     
-    // User Files State
+    // User Files State (project-scoped)
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [isFilesLoading, setIsFilesLoading] = useState(true);
     
@@ -100,49 +103,52 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [adminAssets, setAdminAssets] = useState<AdminAssetRecord[]>([]);
     const [isAdminAssetsLoading, setIsAdminAssetsLoading] = useState(false);
 
-    // Fetch all user files
-    const fetchAllFiles = useCallback(async (userId: string) => {
-        setIsFilesLoading(true);
-        try {
-            const filesCol = collection(db, 'users', userId, 'files');
-            const q = query(filesCol, orderBy('createdAt', 'desc'));
-            const filesSnapshot = await getDocs(q);
-            const userFiles = filesSnapshot.docs.map(docSnapshot => ({ 
-                id: docSnapshot.id, 
-                ...docSnapshot.data() 
-            } as FileRecord));
-            setFiles(userFiles);
-        } catch (error) {
-            console.error("Error loading user files:", error);
-            setFiles([]);
-        } finally {
-            setIsFilesLoading(false);
-        }
-    }, []);
-
-    // Load files when user changes
+    // Load files with real-time updates (scoped to active project)
     useEffect(() => {
-        if (user) {
-            fetchAllFiles(user.uid);
-        } else {
+        if (!user || !activeProjectId) {
             setFiles([]);
             setIsFilesLoading(false);
+            return;
         }
-    }, [user, fetchAllFiles]);
 
-    // Upload file
-    const uploadFile = async (file: File, options?: UploadFileOptions): Promise<string | undefined> => {
-        if (!user) return undefined;
+        setIsFilesLoading(true);
+        const filesPath = `users/${user.uid}/projects/${activeProjectId}/files`;
+        const q = query(
+            collection(db, filesPath),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const filesData = snapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                projectId: activeProjectId,
+                ...docSnapshot.data()
+            })) as FileRecord[];
+            setFiles(filesData);
+            setIsFilesLoading(false);
+        }, (error) => {
+            console.error("[FilesContext] Error fetching files:", error);
+            setIsFilesLoading(false);
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [user, activeProjectId]);
+
+    // Upload file (to active project)
+    const uploadFile = async (file: File): Promise<string | undefined> => {
+        if (!user || !activeProjectId) {
+            console.error("[FilesContext] Cannot upload file: No user or active project");
+            return undefined;
+        }
 
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             
-            // Organize files by project if projectId is provided
-            const storagePath = options?.projectId 
-                ? `users/${user.uid}/projects/${options.projectId}/files/${timestamp}_${safeFileName}`
-                : `users/${user.uid}/files/${timestamp}_${safeFileName}`;
-            
+            // Project-scoped storage path
+            const storagePath = `users/${user.uid}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
             const storageRef = ref(storage, storagePath);
             
             await uploadBytes(storageRef, file);
@@ -154,99 +160,76 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 size: file.size,
                 downloadURL,
                 storagePath,
+                projectId: activeProjectId,
                 createdAt: new Date().toISOString(),
-                ...(options?.projectId && { projectId: options.projectId }),
-                ...(options?.projectName && { projectName: options.projectName }),
             };
 
-            const filesCol = collection(db, 'users', user.uid, 'files');
-            const docRef = await addDoc(filesCol, fileRecord);
+            // Project-scoped Firestore path
+            const filesPath = `users/${user.uid}/projects/${activeProjectId}/files`;
+            const docRef = await addDoc(collection(db, filesPath), fileRecord);
 
             const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
             setFiles(prev => [newFile, ...prev]);
 
             return downloadURL;
         } catch (error) {
-            console.error("Error uploading file:", error);
+            console.error("[FilesContext] Error uploading file:", error);
             throw error;
         }
     };
 
-    // Delete file
+    // Delete file (from active project)
     const deleteFile = async (fileId: string, storagePath: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
 
         try {
             // Delete from Storage
             const storageRef = ref(storage, storagePath);
             await deleteObject(storageRef).catch(() => {
-                console.warn("File not found in storage, continuing with Firestore deletion");
+                console.warn("[FilesContext] File not found in storage, continuing with Firestore deletion");
             });
 
-            // Delete from Firestore
-            await deleteDoc(doc(db, 'users', user.uid, 'files', fileId));
+            // Delete from Firestore (project-scoped)
+            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
+            await deleteDoc(doc(db, filePath));
 
             setFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
-            console.error("Error deleting file:", error);
+            console.error("[FilesContext] Error deleting file:", error);
             throw error;
         }
     };
 
     // Update file notes
     const updateFileNotes = async (fileId: string, notes: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
 
         try {
-            await updateDoc(doc(db, 'users', user.uid, 'files', fileId), { notes });
+            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
+            await updateDoc(doc(db, filePath), { notes });
             setFiles(prev => prev.map(f =>
                 f.id === fileId ? { ...f, notes } : f
             ));
         } catch (error) {
-            console.error("Error updating file notes:", error);
-            throw error;
-        }
-    };
-
-    // Update file project assignment
-    const updateFileProject = async (fileId: string, projectId: string | null, projectName: string | null) => {
-        if (!user) return;
-
-        try {
-            const updates: Record<string, any> = {};
-            
-            if (projectId === null) {
-                // Remove project association
-                updates.projectId = null;
-                updates.projectName = null;
-            } else {
-                updates.projectId = projectId;
-                updates.projectName = projectName;
-            }
-
-            await updateDoc(doc(db, 'users', user.uid, 'files', fileId), updates);
-            setFiles(prev => prev.map(f =>
-                f.id === fileId ? { ...f, projectId: projectId || undefined, projectName: projectName || undefined } : f
-            ));
-        } catch (error) {
-            console.error("Error updating file project:", error);
+            console.error("[FilesContext] Error updating file notes:", error);
             throw error;
         }
     };
 
     // Generate file summary (placeholder - would use AI)
     const generateFileSummary = async (fileId: string, downloadURL: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
 
         try {
             // This would call an AI service to generate a summary
             const summary = "AI-generated summary placeholder";
-            await updateDoc(doc(db, 'users', user.uid, 'files', fileId), { summary });
+            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
+            await updateDoc(doc(db, filePath), { summary });
             setFiles(prev => prev.map(f =>
                 f.id === fileId ? { ...f, summary } : f
             ));
         } catch (error) {
-            console.error("Error generating file summary:", error);
+            console.error("[FilesContext] Error generating file summary:", error);
             throw error;
         }
     };
@@ -271,7 +254,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             } as FileRecord));
             setGlobalFiles(globalFilesList);
         } catch (error) {
-            console.error("Error fetching global files:", error);
+            console.error("[FilesContext] Error fetching global files:", error);
         } finally {
             setIsGlobalFilesLoading(false);
         }
@@ -305,7 +288,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
             setGlobalFiles(prev => [newFile, ...prev]);
         } catch (error) {
-            console.error("Error uploading global file:", error);
+            console.error("[FilesContext] Error uploading global file:", error);
             throw error;
         }
     };
@@ -314,13 +297,13 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             const storageRef = ref(storage, storagePath);
             await deleteObject(storageRef).catch(() => {
-                console.warn("Global file not found in storage");
+                console.warn("[FilesContext] Global file not found in storage");
             });
 
             await deleteDoc(doc(db, 'globalFiles', fileId));
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
-            console.error("Error deleting global file:", error);
+            console.error("[FilesContext] Error deleting global file:", error);
             throw error;
         }
     };
@@ -341,7 +324,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             } as AdminAssetRecord));
             setAdminAssets(assetsList);
         } catch (error) {
-            console.error("Error fetching admin assets:", error);
+            console.error("[FilesContext] Error fetching admin assets:", error);
         } finally {
             setIsAdminAssetsLoading(false);
         }
@@ -387,7 +370,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             return downloadURL;
         } catch (error) {
-            console.error("Error uploading admin asset:", error);
+            console.error("[FilesContext] Error uploading admin asset:", error);
             throw error;
         }
     };
@@ -425,7 +408,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             return url;
         } catch (error) {
-            console.error("Error uploading admin asset from URL:", error);
+            console.error("[FilesContext] Error uploading admin asset from URL:", error);
             throw error;
         }
     };
@@ -441,7 +424,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 asset.id === assetId ? { ...asset, ...updates } : asset
             ));
         } catch (error) {
-            console.error("Error updating admin asset:", error);
+            console.error("[FilesContext] Error updating admin asset:", error);
             throw error;
         }
     };
@@ -452,14 +435,14 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (storagePath) {
                 const storageRef = ref(storage, storagePath);
                 await deleteObject(storageRef).catch(() => {
-                    console.warn("Admin asset not found in storage");
+                    console.warn("[FilesContext] Admin asset not found in storage");
                 });
             }
 
             await deleteDoc(doc(db, 'adminAssets', assetId));
             setAdminAssets(prev => prev.filter(asset => asset.id !== assetId));
         } catch (error) {
-            console.error("Error deleting admin asset:", error);
+            console.error("[FilesContext] Error deleting admin asset:", error);
             throw error;
         }
     };
@@ -475,7 +458,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 await updateAdminAsset(assetId, { usedIn: updatedUsedIn });
             }
         } catch (error) {
-            console.error("Error linking asset to article:", error);
+            console.error("[FilesContext] Error linking asset to article:", error);
             throw error;
         }
     };
@@ -488,7 +471,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const updatedUsedIn = (asset.usedIn || []).filter(id => id !== articleId);
             await updateAdminAsset(assetId, { usedIn: updatedUsedIn });
         } catch (error) {
-            console.error("Error unlinking asset from article:", error);
+            console.error("[FilesContext] Error unlinking asset from article:", error);
             throw error;
         }
     };
@@ -499,9 +482,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         uploadFile,
         deleteFile,
         updateFileNotes,
-        updateFileProject,
         generateFileSummary,
         uploadImageAndGetURL,
+        hasActiveProject: !!activeProjectId,
+        activeProjectId,
         globalFiles,
         isGlobalFilesLoading,
         fetchGlobalFiles,
@@ -529,13 +513,3 @@ export const useFiles = (): FilesContextType => {
     }
     return context;
 };
-
-
-
-
-
-
-
-
-
-

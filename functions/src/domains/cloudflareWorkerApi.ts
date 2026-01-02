@@ -6,19 +6,18 @@
  */
 
 import * as functions from 'firebase-functions';
+import { CLOUDFLARE_CONFIG } from '../config';
 
 // Cloudflare API Configuration
 const CLOUDFLARE_API_URL = 'https://api.cloudflare.com/client/v4';
 const WORKER_NAME = 'quimera-router';
 
-// Get credentials from environment/config
+// Get credentials from centralized config
 function getCloudflareCredentials(): { apiToken: string; accountId: string; zoneId?: string } {
-    const config = functions.config();
     return {
-        // Use workers_token for Workers API, fallback to api_token for DNS
-        apiToken: config.cloudflare?.workers_token || config.cloudflare?.api_token || process.env.CLOUDFLARE_API_TOKEN || '',
-        accountId: config.cloudflare?.account_id || process.env.CLOUDFLARE_ACCOUNT_ID || '',
-        zoneId: config.cloudflare?.zone_id || process.env.CLOUDFLARE_ZONE_ID
+        apiToken: CLOUDFLARE_CONFIG.workersToken,
+        accountId: CLOUDFLARE_CONFIG.accountId,
+        zoneId: CLOUDFLARE_CONFIG.zoneId
     };
 }
 
@@ -206,5 +205,6 @@ export const addWorkerDomain = functions.https.onCall(async (data, context) => {
 
     return { success: true, message: `Domain ${domain} added to Worker` };
 });
+
 
 

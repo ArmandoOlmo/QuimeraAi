@@ -7,7 +7,7 @@ const ACCOUNT_ID = 'ccb57f67da1dab2a06002657d8ea5fb1';
 
 const WORKER_CODE = `
 export default {
-  async fetch(request) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const originalHost = url.hostname;
     
@@ -19,22 +19,42 @@ export default {
     // Redirigir a Firebase Hosting
     url.hostname = "quimeraai.web.app";
     
-    const headers = new Headers(request.headers);
-    headers.set("Host", "quimeraai.web.app");
-    headers.set("X-Forwarded-Host", originalHost);
-    headers.set("X-Original-Host", originalHost);
+    const reqHeaders = new Headers(request.headers);
+    reqHeaders.set("Host", "quimeraai.web.app");
+    reqHeaders.set("X-Forwarded-Host", originalHost);
+    reqHeaders.set("X-Original-Host", originalHost);
+    reqHeaders.delete("If-None-Match");
+    reqHeaders.delete("If-Modified-Since");
     
     const response = await fetch(url.toString(), {
       method: request.method,
-      headers: headers,
+      headers: reqHeaders,
       body: request.body,
-      redirect: 'follow'
+      redirect: 'follow',
+      cf: { 
+        cacheTtl: 0,
+        cacheEverything: false,
+        cacheKey: url.toString() + '-' + Date.now()
+      }
     });
+    
+    // Clone response and modify headers
+    const resHeaders = new Headers(response.headers);
+    const contentType = resHeaders.get('content-type') || '';
+    
+    // Disable caching for HTML and JS files
+    if (contentType.includes('text/html') || contentType.includes('javascript')) {
+      resHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      resHeaders.set('Pragma', 'no-cache');
+      resHeaders.set('Expires', '0');
+      resHeaders.delete('ETag');
+      resHeaders.delete('Last-Modified');
+    }
     
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers
+      headers: resHeaders
     });
   }
 }

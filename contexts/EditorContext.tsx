@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
 import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
 import { useUI } from './core/UIContext';
+import { useSafeProject } from './project/ProjectContext';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -91,7 +92,7 @@ interface EditorContextType {
     activeProject: Project | null;
     projects: Project[];
     isLoadingProjects: boolean;
-    loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean) => void;
+    loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean, projectOverride?: Project) => void;
     data: PageData | null;
     setData: React.Dispatch<React.SetStateAction<PageData | null>>;
     theme: ThemeData;
@@ -252,7 +253,7 @@ interface EditorContextType {
     // Leads & CRM
     leads: Lead[];
     isLoadingLeads: boolean;
-    addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<string | undefined>;
+    addLead: (lead: Omit<Lead, 'id' | 'createdAt' | 'projectId'>) => Promise<string | undefined>;
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
@@ -331,6 +332,10 @@ const defaultComponentStatus = allComponents.reduce((acc, comp) => {
 
 
 export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    // Get project context for project-scoped data operations
+    const projectContext = useSafeProject();
+    const projectActiveId = projectContext?.activeProjectId || null;
+    
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDashboardSidebarCollapsed, setIsDashboardSidebarCollapsed] = useState(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -519,16 +524,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
 
-    // Leads Library Logic
+    // Leads Library Logic - Project-scoped
     useEffect(() => {
-        if (!user) {
+        if (!user || !activeProjectId) {
             setLibraryLeads([]);
             return;
         }
 
         setIsLoadingLibraryLeads(true);
+        // Project-scoped path
         const q = query(
-            collection(db, 'users', user.uid, 'libraryLeads'),
+            collection(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads`),
             orderBy('createdAt', 'desc')
         );
 
@@ -540,46 +546,49 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             setLibraryLeads(leadsData);
             setIsLoadingLibraryLeads(false);
         }, (error) => {
-            console.error("Error fetching library leads:", error);
+            console.error("[EditorContext] Error fetching library leads:", error);
             setIsLoadingLibraryLeads(false);
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, activeProjectId]);
 
     const addLibraryLead = async (leadData: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported'>) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            await addDoc(collection(db, 'users', user.uid, 'libraryLeads'), {
+            // Project-scoped path
+            await addDoc(collection(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads`), {
                 ...leadData,
+                projectId: activeProjectId,
                 isImported: false,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error adding library lead:", error);
+            console.error("[EditorContext] Error adding library lead:", error);
             throw error;
         }
     };
 
     const deleteLibraryLead = async (leadId: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            await deleteDoc(doc(db, 'users', user.uid, 'libraryLeads', leadId));
+            // Project-scoped path
+            await deleteDoc(doc(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`));
         } catch (error) {
-            console.error("Error deleting library lead:", error);
+            console.error("[EditorContext] Error deleting library lead:", error);
             throw error;
         }
     };
 
     const importLibraryLead = async (leadId: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
             const leadToImport = libraryLeads.find(l => l.id === leadId);
             if (!leadToImport) throw new Error("Lead not found");
 
-            // Create in main CRM
-            const newLeadRef = await addDoc(collection(db, 'users', user.uid, 'leads'), {
+            // Create in main CRM - Project-scoped path
+            const newLeadRef = await addDoc(collection(db, `users/${user.uid}/projects/${activeProjectId}/leads`), {
                 name: leadToImport.name,
                 email: leadToImport.email,
                 phone: leadToImport.phone || '',
@@ -589,19 +598,20 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 value: 0,
                 notes: leadToImport.notes || '',
                 tags: [...(leadToImport.tags || []), 'imported'],
+                projectId: activeProjectId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
 
-            // Update library lead status
-            await updateDoc(doc(db, 'users', user.uid, 'libraryLeads', leadId), {
+            // Update library lead status - Project-scoped path
+            await updateDoc(doc(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`), {
                 isImported: true,
                 importedAt: serverTimestamp(),
                 importedLeadId: newLeadRef.id
             });
 
         } catch (error) {
-            console.error("Error importing library lead:", error);
+            console.error("[EditorContext] Error importing library lead:", error);
             throw error;
         }
     };
@@ -829,16 +839,20 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const fetchAllFiles = async (userId: string) => {
+    const fetchAllFiles = async (userId: string, projectId?: string) => {
         setIsFilesLoading(true);
         try {
-            const filesCol = collection(db, 'users', userId, 'files');
+            // Project-scoped path if projectId is provided, otherwise user-level (legacy)
+            const filesPath = projectId 
+                ? `users/${userId}/projects/${projectId}/files`
+                : `users/${userId}/files`;
+            const filesCol = collection(db, filesPath);
             const q = query(filesCol, orderBy('createdAt', 'desc'));
             const filesSnapshot = await getDocs(q);
             const userFiles = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
             setFiles(userFiles);
         } catch (error) {
-            console.error("Error loading user files:", error);
+            console.error("[EditorContext] Error loading user files:", error);
             setFiles([]);
         } finally {
             setIsFilesLoading(false);
@@ -1135,14 +1149,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         };
     }, [user]);
 
-    // Leads Real-time Subscription (New)
+    // Leads Real-time Subscription - Project-scoped
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
 
-        if (user) {
+        if (user && activeProjectId) {
             setIsLoadingLeads(true);
             try {
-                const leadsCol = collection(db, 'users', user.uid, 'leads');
+                // Project-scoped leads path
+                const leadsCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leads`);
                 const q = query(leadsCol, orderBy('createdAt', 'desc'));
 
                 unsubscribe = onSnapshot(q,
@@ -1152,12 +1167,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         setIsLoadingLeads(false);
                     },
                     (error) => {
-                        console.error("Leads Snapshot Error:", error);
+                        console.error("[EditorContext] Leads Snapshot Error:", error);
                         setIsLoadingLeads(false);
                     }
                 );
             } catch (e) {
-                console.error("Error setting up Leads subscription:", e);
+                console.error("[EditorContext] Error setting up Leads subscription:", e);
                 setIsLoadingLeads(false);
             }
         } else {
@@ -1168,7 +1183,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [user]);
+    }, [user, activeProjectId]);
 
     // Usage & Billing Real-time Subscription
     useEffect(() => {
@@ -1228,13 +1243,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         };
     }, [user]);
 
-    // Lead Activities Real-time Subscription
+    // Lead Activities Real-time Subscription - Project-scoped
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
 
-        if (user) {
+        if (user && activeProjectId) {
             try {
-                const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+                // Project-scoped path
+                const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
                 const q = query(activitiesCol, orderBy('createdAt', 'desc'));
 
                 unsubscribe = onSnapshot(q,
@@ -1243,11 +1259,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         setLeadActivities(activitiesData);
                     },
                     (error) => {
-                        console.error("Lead Activities Snapshot Error:", error);
+                        console.error("[EditorContext] Lead Activities Snapshot Error:", error);
                     }
                 );
             } catch (e) {
-                console.error("Error setting up Lead Activities subscription:", e);
+                console.error("[EditorContext] Error setting up Lead Activities subscription:", e);
             }
         } else {
             setLeadActivities([]);
@@ -1256,15 +1272,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [user]);
+    }, [user, activeProjectId]);
 
-    // Lead Tasks Real-time Subscription
+    // Lead Tasks Real-time Subscription - Project-scoped
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
 
-        if (user) {
+        if (user && activeProjectId) {
             try {
-                const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+                // Project-scoped path
+                const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
                 const q = query(tasksCol, orderBy('createdAt', 'desc'));
 
                 unsubscribe = onSnapshot(q,
@@ -1273,11 +1290,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                         setLeadTasks(tasksData);
                     },
                     (error) => {
-                        console.error("Lead Tasks Snapshot Error:", error);
+                        console.error("[EditorContext] Lead Tasks Snapshot Error:", error);
                     }
                 );
             } catch (e) {
-                console.error("Error setting up Lead Tasks subscription:", e);
+                console.error("[EditorContext] Error setting up Lead Tasks subscription:", e);
             }
         } else {
             setLeadTasks([]);
@@ -1286,7 +1303,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [user]);
+    }, [user, activeProjectId]);
 
 
     // Sync themeMode to Firebase (localStorage sync is handled by UIContext)
@@ -1483,8 +1500,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const openProfileModal = () => setIsProfileModalOpen(true);
     const closeProfileModal = () => setIsProfileModalOpen(false);
 
-    const loadProject = (projectId: string, fromAdmin: boolean = false, navigateToEditor: boolean = true) => {
-        const projectToLoad = projects.find(p => p.id === projectId);
+    const loadProject = (projectId: string, fromAdmin: boolean = false, navigateToEditor: boolean = true, projectOverride?: Project) => {
+        const projectToLoad = projectOverride || projects.find(p => p.id === projectId);
         if (projectToLoad) {
             setActiveProjectId(projectId);
             // DEEP CLONE data to prevent mutation issues
@@ -2218,7 +2235,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             throw error;
         }
 
-        const { id, ...projectData } = project;
+        const { id: providedId, ...projectData } = project;
         const now = new Date().toISOString();
         const dataToSave = {
             ...projectData,
@@ -2229,18 +2246,26 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         try {
             console.log("💾 [addNewProject] Saving to Firebase...", {
                 userId: user.uid,
-                projectName: project.name
+                projectName: project.name,
+                providedId
             });
 
-            const projectsCol = collection(db, 'users', user.uid, 'projects');
-            const docRef = await addDoc(projectsCol, dataToSave);
+            let finalId = providedId;
+            if (providedId) {
+                const docRef = doc(db, 'users', user.uid, 'projects', providedId);
+                await setDoc(docRef, dataToSave);
+            } else {
+                const projectsCol = collection(db, 'users', user.uid, 'projects');
+                const docRef = await addDoc(projectsCol, dataToSave);
+                finalId = docRef.id;
+            }
 
             console.log("✅ [addNewProject] Saved successfully!", {
-                docId: docRef.id,
+                docId: finalId,
                 projectName: project.name
             });
 
-            const newProjectWithId: Project = { ...dataToSave, id: docRef.id };
+            const newProjectWithId: Project = { ...dataToSave, id: finalId as string };
 
             setProjects(prev => {
                 console.log("📋 [addNewProject] Updating projects state...", {
@@ -2251,7 +2276,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             });
 
             console.log("🔄 [addNewProject] Loading project into editor...");
-            loadProject(newProjectWithId.id);
+            // Use the object directly to avoid race condition with state update
+            loadProject(newProjectWithId.id, false, true, newProjectWithId);
 
             // Trigger Image Auto-Generation for Wizard-created projects
             if (newProjectWithId.imagePrompts && Object.keys(newProjectWithId.imagePrompts).length > 0) {
@@ -2261,8 +2287,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 hydrateProjectImages(newProjectWithId);
             }
 
-            console.log("🎉 [addNewProject] Complete! Project ID:", docRef.id);
-            return docRef.id;
+            console.log("🎉 [addNewProject] Complete! Project ID:", finalId);
+            return finalId as string;
 
         } catch (error) {
             console.error("❌ [addNewProject] CRITICAL ERROR:", error);
@@ -2499,9 +2525,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const uploadFile = async (file: File): Promise<string | undefined> => {
         if (!user) throw new Error("Authentication required to upload files.");
+        if (!activeProjectId) throw new Error("No active project to upload file to.");
         setIsFilesLoading(true);
         try {
-            const storageRef = ref(storage, `user_uploads/${user.uid}/${file.name}`);
+            // Project-scoped storage path
+            const storageRef = ref(storage, `users/${user.uid}/projects/${activeProjectId}/files/${file.name}`);
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
@@ -2514,11 +2542,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 createdAt: serverTimestamp() as any,
                 notes: '',
                 aiSummary: '',
-                projectId: activeProject?.id,
+                projectId: activeProjectId,
                 projectName: activeProject?.name
             };
 
-            const filesCol = collection(db, 'users', user.uid, 'files');
+            // Project-scoped Firestore path
+            const filesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/files`);
             const docRef = await addDoc(filesCol, newFileRecord);
 
             setFiles(prev => [{ id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord, ...prev]);
@@ -2526,7 +2555,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             return downloadURL;
 
         } catch (error) {
-            console.error("Error uploading file:", error);
+            console.error("[EditorContext] Error uploading file:", error);
             throw error;
         } finally {
             setIsFilesLoading(false);
@@ -2534,28 +2563,30 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const deleteFile = async (fileId: string, storagePath: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
             const fileRef = ref(storage, storagePath);
             await deleteObject(fileRef);
 
-            const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
+            // Project-scoped Firestore path
+            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
             await deleteDoc(fileDocRef);
 
             setFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
-            console.error("Error deleting file:", error);
+            console.error("[EditorContext] Error deleting file:", error);
         }
     };
 
     const updateFileNotes = async (fileId: string, notes: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         setFiles(prev => prev.map(f => f.id === fileId ? { ...f, notes } : f));
         try {
-            const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
+            // Project-scoped Firestore path
+            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
             await updateDoc(fileDocRef, { notes });
         } catch (error) {
-            console.error("Error updating file notes:", error);
+            console.error("[EditorContext] Error updating file notes:", error);
         }
     };
 
@@ -2651,7 +2682,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const generateFileSummary = async (fileId: string, downloadURL: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         if (hasApiKey === false) {
             await promptForKeySelection();
             return;
@@ -2671,8 +2702,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             const populatedPrompt = summaryPrompt.template.replace('{{fileContent}}', fileContent);
 
-            const projectId = activeProject?.id || 'file-summary';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, summaryPrompt.model, {}, user.uid);
+            const projectIdForApi = activeProject?.id || 'file-summary';
+            const response = await generateContentViaProxy(projectIdForApi, populatedPrompt, summaryPrompt.model, {}, user.uid);
 
             // Log API call
             if (user) {
@@ -2686,7 +2717,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             const summary = extractTextFromResponse(response).trim();
 
-            const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
+            // Project-scoped Firestore path
+            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
             await updateDoc(fileDocRef, { aiSummary: summary });
 
             setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: summary } : f));
@@ -2702,9 +2734,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 });
             }
             handleApiError(error);
-            console.error("Error generating file summary:", error);
+            console.error("[EditorContext] Error generating file summary:", error);
             const errorMessage = 'Error generating summary.';
-            const fileDocRef = doc(db, 'users', user.uid, 'files', fileId);
+            // Project-scoped Firestore path
+            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
             await updateDoc(fileDocRef, { aiSummary: errorMessage });
             setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: errorMessage } : f));
         }
@@ -2897,7 +2930,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 if (destination === 'global') {
                     storagePath = `global_assets/generated/${fileName}`;
                     firestoreCol = collection(db, 'global_files');
+                } else if (activeProjectId) {
+                    // Project-scoped path
+                    storagePath = `users/${user.uid}/projects/${activeProjectId}/files/generated/${fileName}`;
+                    firestoreCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/files`);
                 } else {
+                    // Fallback to user-level if no project (legacy)
                     storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
                     firestoreCol = collection(db, 'users', user.uid, 'files');
                 }
@@ -2915,7 +2953,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     type: proxyResponse.mimeType || 'image/png',
                     createdAt: serverTimestamp() as any,
                     notes: prompt,
-                    aiSummary: ''
+                    aiSummary: '',
+                    projectId: activeProjectId || undefined
                 };
 
                 const docRef = await addDoc(firestoreCol, newFileRecord);
@@ -3264,7 +3303,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             if (destination === 'global') {
                 storagePath = `global_assets/generated/${fileName}`;
                 firestoreCol = collection(db, 'global_files');
+            } else if (activeProjectId) {
+                // Project-scoped path
+                storagePath = `users/${user.uid}/projects/${activeProjectId}/files/generated/${fileName}`;
+                firestoreCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/files`);
             } else {
+                // Fallback to user-level if no project (legacy)
                 storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
                 firestoreCol = collection(db, 'users', user.uid, 'files');
             }
@@ -3465,54 +3509,67 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     // Leads & CRM Logic
-    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<string | undefined> => {
+    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt' | 'projectId'>): Promise<string | undefined> => {
         if (!user) return undefined;
+        if (!activeProjectId) {
+            console.error("[EditorContext] Cannot add lead: No active project");
+            return undefined;
+        }
         try {
-            const leadsCol = collection(db, 'users', user.uid, 'leads');
+            // Project-scoped leads path
+            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
+            const leadsCol = collection(db, leadsPath);
             const now = serverTimestamp();
-            const docRef = await addDoc(leadsCol, { ...leadData, createdAt: now });
+            const docRef = await addDoc(leadsCol, { 
+                ...leadData, 
+                projectId: activeProjectId,
+                createdAt: now 
+            });
             // Optimistic update via listener
             return docRef.id;
         } catch (error) {
-            console.error("Error adding lead:", error);
+            console.error("[EditorContext] Error adding lead:", error);
             return undefined;
         }
     };
 
     const updateLeadStatus = async (leadId: string, status: LeadStatus) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const leadRef = doc(db, 'users', user.uid, 'leads', leadId);
+            // Project-scoped leads path
+            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
             await updateDoc(leadRef, { status });
         } catch (error) {
-            console.error("Error updating lead status:", error);
+            console.error("[EditorContext] Error updating lead status:", error);
         }
     };
 
     const updateLead = async (leadId: string, data: Partial<Lead>) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const leadRef = doc(db, 'users', user.uid, 'leads', leadId);
+            // Project-scoped leads path
+            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
             await updateDoc(leadRef, data);
         } catch (error) {
-            console.error("Error updating lead:", error);
+            console.error("[EditorContext] Error updating lead:", error);
         }
     };
 
     const deleteLead = async (leadId: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const leadRef = doc(db, 'users', user.uid, 'leads', leadId);
+            // Project-scoped paths
+            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
             await deleteDoc(leadRef);
 
             // Also delete all activities and tasks associated with this lead
-            const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+            const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
             const activitiesSnapshot = await getDocs(query(activitiesCol));
             const deleteActivitiesPromises = activitiesSnapshot.docs
                 .filter(doc => doc.data().leadId === leadId)
                 .map(doc => deleteDoc(doc.ref));
 
-            const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+            const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
             const tasksSnapshot = await getDocs(query(tasksCol));
             const deleteTasksPromises = tasksSnapshot.docs
                 .filter(doc => doc.data().leadId === leadId)
@@ -3520,25 +3577,27 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             await Promise.all([...deleteActivitiesPromises, ...deleteTasksPromises]);
         } catch (error) {
-            console.error("Error deleting lead:", error);
+            console.error("[EditorContext] Error deleting lead:", error);
         }
     };
 
     // Lead Activities
     const addLeadActivity = async (leadId: string, activityData: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const activitiesCol = collection(db, 'users', user.uid, 'leadActivities');
+            // Project-scoped path
+            const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
             const now = serverTimestamp();
             await addDoc(activitiesCol, {
                 ...activityData,
                 leadId,
+                projectId: activeProjectId,
                 createdAt: now,
                 createdBy: user.uid
             });
             // Will be updated via listener
         } catch (error) {
-            console.error("Error adding lead activity:", error);
+            console.error("[EditorContext] Error adding lead activity:", error);
         }
     };
 
@@ -3550,38 +3609,42 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     // Lead Tasks
     const addLeadTask = async (leadId: string, taskData: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const tasksCol = collection(db, 'users', user.uid, 'leadTasks');
+            // Project-scoped path
+            const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
             const now = serverTimestamp();
             await addDoc(tasksCol, {
                 ...taskData,
                 leadId,
+                projectId: activeProjectId,
                 createdAt: now
             });
             // Will be updated via listener
         } catch (error) {
-            console.error("Error adding lead task:", error);
+            console.error("[EditorContext] Error adding lead task:", error);
         }
     };
 
     const updateLeadTask = async (taskId: string, data: Partial<LeadTask>) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const taskRef = doc(db, 'users', user.uid, 'leadTasks', taskId);
+            // Project-scoped path
+            const taskRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`);
             await updateDoc(taskRef, data);
         } catch (error) {
-            console.error("Error updating lead task:", error);
+            console.error("[EditorContext] Error updating lead task:", error);
         }
     };
 
     const deleteLeadTask = async (taskId: string) => {
-        if (!user) return;
+        if (!user || !activeProjectId) return;
         try {
-            const taskRef = doc(db, 'users', user.uid, 'leadTasks', taskId);
+            // Project-scoped path
+            const taskRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`);
             await deleteDoc(taskRef);
         } catch (error) {
-            console.error("Error deleting lead task:", error);
+            console.error("[EditorContext] Error deleting lead task:", error);
         }
     };
 

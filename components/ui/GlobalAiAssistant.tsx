@@ -1969,6 +1969,8 @@ const GlobalAiAssistant: React.FC = () => {
             else if (name === 'manage_appointment') {
                 if (!user?.uid) return { error: "Not authenticated." };
                 const action = args?.action as string;
+                const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
+                if (!projectId) return { error: "No active project. Load a project first." };
                 const id = args?.id as string | undefined;
                 const title = args?.title as string | undefined;
                 const description = args?.description as string | undefined;
@@ -1976,7 +1978,9 @@ const GlobalAiAssistant: React.FC = () => {
                 const startIso = args?.startDate as string | undefined;
                 const endIso = args?.endDate as string | undefined;
 
-                const appointmentsCol = collection(db, 'users', user.uid, 'appointments');
+                // Project-scoped appointments path
+                const appointmentsPath = `users/${user.uid}/projects/${projectId}/appointments`;
+                const appointmentsCol = collection(db, appointmentsPath);
 
                 const parseDate = (iso?: string) => {
                     if (!iso) return undefined;
@@ -1994,6 +1998,7 @@ const GlobalAiAssistant: React.FC = () => {
                         status: status || 'scheduled',
                         startDate,
                         endDate,
+                        projectId,
                         createdAt: now,
                         createdBy: user.uid,
                         organizerId: user.uid,
@@ -2013,14 +2018,14 @@ const GlobalAiAssistant: React.FC = () => {
                     if (parsedStart) updatePayload.startDate = parsedStart;
                     if (parsedEnd) updatePayload.endDate = parsedEnd;
                     if (status) updatePayload.status = status;
-                    await updateDoc(doc(db, 'users', user.uid, 'appointments', id), updatePayload);
+                    await updateDoc(doc(db, appointmentsPath, id), updatePayload);
                     return { result: "Appointment updated." };
                 }
 
                 if (action === 'status') {
                     if (!id) return { error: "id required for status." };
                     if (!status) return { error: "status required." };
-                    await updateDoc(doc(db, 'users', user.uid, 'appointments', id), {
+                    await updateDoc(doc(db, appointmentsPath, id), {
                         status,
                         updatedAt: dateToTimestamp(new Date()),
                         updatedBy: user.uid,
@@ -2030,7 +2035,7 @@ const GlobalAiAssistant: React.FC = () => {
 
                 if (action === 'delete') {
                     if (!id) return { error: "id required for delete." };
-                    await deleteDoc(doc(db, 'users', user.uid, 'appointments', id));
+                    await deleteDoc(doc(db, appointmentsPath, id));
                     return { result: "Appointment deleted." };
                 }
 
