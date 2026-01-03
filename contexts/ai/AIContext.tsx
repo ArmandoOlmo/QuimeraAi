@@ -286,7 +286,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } catch (error) {
             await logApiCall({
                 endpoint: 'imagen/generate',
-                model: 'imagen-3.0-generate-002',
+                model: 'gemini-3-pro-image-preview',
                 promptTokens: prompt.length,
                 completionTokens: 0,
                 totalTokens: prompt.length,

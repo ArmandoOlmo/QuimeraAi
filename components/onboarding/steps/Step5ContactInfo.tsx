@@ -65,7 +65,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
     };
 
     const getTranslatedDay = (day: string) => {
-        return t(`days.${day}`, DAY_LABELS[day] || day);
+        return t(`onboarding.days.${day}`, DAY_LABELS[day] || day);
     };
 
     return (

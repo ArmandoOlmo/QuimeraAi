@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import { useEditor } from '../../../contexts/EditorContext';
+import { useUI } from '../../../contexts/core/UIContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
@@ -201,10 +202,12 @@ export const useOnboarding = () => {
         addNewProject,
         loadProject,
         generateImage,
-        setIsOnboardingOpen,
     } = useEditor();
+    
+    // Get setIsOnboardingOpen from UIContext (same context that OnboardingModal uses)
+    const { setIsOnboardingOpen } = useUI();
 
-    // State (isOpen is managed by EditorContext, not here)
+    // State
     const [progress, setProgress] = useState<OnboardingProgress | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -219,6 +222,9 @@ export const useOnboarding = () => {
 
     // Ref to track if we've loaded progress
     const hasLoadedProgress = useRef(false);
+    
+    // Ref to prevent duplicate generation (declared here so resetOnboarding can access it)
+    const isGeneratingRef = useRef(false);
 
     // =============================================================================
     // PERSISTENCE
@@ -295,6 +301,17 @@ export const useOnboarding = () => {
         }
     }, [user, loadProgress]);
 
+    // Sync progress.language with current i18n.language when system language changes
+    // This ensures AI-generated content uses the current UI language
+    useEffect(() => {
+        if (progress && progress.language !== i18n.language) {
+            const updatedProgress = { ...progress, language: i18n.language };
+            setProgress(updatedProgress);
+            // Don't auto-save here to avoid unnecessary writes
+            // Language will be saved when user navigates steps
+        }
+    }, [i18n.language, progress?.language]);
+
     // =============================================================================
     // MODAL CONTROL
     // =============================================================================
@@ -306,6 +323,8 @@ export const useOnboarding = () => {
     }, [progress, i18n.language]);
 
     const resetOnboarding = useCallback(async () => {
+        // Reset the generation lock to allow new generation after cancel
+        isGeneratingRef.current = false;
         await clearProgress();
         setProgress(createInitialProgress(i18n.language));
     }, [clearProgress, i18n.language]);
@@ -1691,9 +1710,6 @@ TEMPLATE #${t.index}: "${t.name}"
     // FINAL GENERATION
     // =============================================================================
 
-    // Ref to prevent duplicate generation
-    const isGeneratingRef = useRef(false);
-
     const startGeneration = useCallback(async () => {
         // Prevent duplicate calls
         if (isGeneratingRef.current) {
@@ -1828,13 +1844,16 @@ TEMPLATE #${t.index}: "${t.name}"
                 while (!success && attempts < 2) {
                     attempts++;
                     try {
-                        if (isDev) console.log(`🎨 [${i + 1}/${imageItems.length}] ${item.promptKey} (${item.aspectRatio})`);
+                        console.log(`🎨 [Onboarding] [${i + 1}/${imageItems.length}] Generating: ${item.promptKey} (${item.aspectRatio})`);
                         
-                        // Use the correct aspect ratio for this component
+                        // Use Imagen 3.0 for onboarding - it's more reliable for pure image generation
+                        // Also specify model explicitly to avoid issues with default model
                         const imageUrl = await generateImage(item.prompt, {
                             aspectRatio: item.aspectRatio,
                             style: item.style,
                             resolution: '1K',
+                            model: 'gemini-3-pro-image-preview', // Use dedicated image model for reliability
+                            personGeneration: 'allow_adult', // Allow people in generated images
                         });
 
                         if (imageUrl) {
@@ -1842,26 +1861,28 @@ TEMPLATE #${t.index}: "${t.name}"
                             item.imageUrl = imageUrl;
                             item.completedAt = Date.now();
                             generatedImages[item.promptKey] = imageUrl;
-                            if (isDev) console.log(`✅ [${i + 1}/${imageItems.length}] Done: ${item.promptKey}`);
+                            console.log(`✅ [Onboarding] [${i + 1}/${imageItems.length}] Done: ${item.promptKey}`);
                             success = true;
                         } else {
-                            throw new Error('No URL');
+                            throw new Error('No image URL returned from generation');
                         }
                     } catch (err: any) {
                         const msg = err.message || String(err);
-                        console.error(`❌ Attempt ${attempts} failed:`, msg);
+                        console.error(`❌ [Onboarding] Attempt ${attempts} failed for ${item.promptKey}:`, msg);
                         
-                        if (msg.includes('429') || msg.includes('exceeded') || msg.includes('rate')) {
+                        if (msg.includes('429') || msg.includes('exceeded') || msg.includes('rate') || msg.includes('quota')) {
                             if (attempts < 2) {
-                                if (isDev) console.log(`⏳ Rate limited. Waiting ${RATE_LIMIT_WAIT/1000}s...`);
+                                console.log(`⏳ [Onboarding] Rate limited. Waiting ${RATE_LIMIT_WAIT/1000}s before retry...`);
                                 await delay(RATE_LIMIT_WAIT);
                             } else {
                                 item.status = 'failed';
-                                item.error = 'Rate limited';
+                                item.error = 'Rate limit exceeded - please try again later';
+                                console.warn(`⚠️ [Onboarding] ${item.promptKey} failed after rate limit retries`);
                             }
                         } else {
                             item.status = 'failed';
                             item.error = msg;
+                            console.warn(`⚠️ [Onboarding] ${item.promptKey} failed: ${msg}`);
                             break;
                         }
                     }

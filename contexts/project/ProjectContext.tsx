@@ -107,7 +107,7 @@ interface ProjectContextType {
     setSectionVisibility: React.Dispatch<React.SetStateAction<Record<PageSection, boolean>>>;
 
     // Project Operations
-    loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean) => void;
+    loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean, projectOverride?: Project) => Promise<void>;
     saveProject: () => Promise<void>;
     publishProject: () => Promise<boolean>;
     renameActiveProject: (newName: string) => Promise<void>;
@@ -342,15 +342,58 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [isLoadingProjects, projects, activeProjectId, activeProject, data]);
 
     // Load project by ID
-    const loadProject = useCallback((projectId: string, fromAdmin = false, navigateToEditor = true) => {
-        console.log('[ProjectContext] loadProject called with:', { projectId, fromAdmin, navigateToEditor });
+    const loadProject = useCallback(async (projectId: string, fromAdmin = false, navigateToEditor = true, projectOverride?: Project) => {
+        console.log('[ProjectContext] loadProject called with:', { projectId, fromAdmin, navigateToEditor, hasOverride: !!projectOverride });
         console.log('[ProjectContext] Available projects:', projectsRef.current.map(p => ({ id: p.id, name: p.name })));
         
-        const project = projectsRef.current.find(p => p.id === projectId);
+        // Use projectOverride if provided (useful for newly created projects not yet in state)
+        let project = projectOverride || projectsRef.current.find(p => p.id === projectId);
+        
+        // If project not found locally, try to load it from Firebase
+        if (!project && user) {
+            console.log('[ProjectContext] Project not in state, attempting to load from Firebase...');
+            try {
+                // Try loading from user's projects
+                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                const projectRef = doc(db, ...pathSegments, projectId);
+                const projectSnap = await getDoc(projectRef);
+                
+                if (projectSnap.exists()) {
+                    project = { id: projectSnap.id, ...projectSnap.data() } as Project;
+                    console.log('[ProjectContext] Loaded project from Firebase:', project.name);
+                    // Add to local state
+                    setProjects(prev => {
+                        if (prev.find(p => p.id === projectId)) return prev;
+                        return [project!, ...prev];
+                    });
+                } else {
+                    // Try loading from templates
+                    const templateRef = doc(db, 'templates', projectId);
+                    const templateSnap = await getDoc(templateRef);
+                    if (templateSnap.exists()) {
+                        project = { id: templateSnap.id, ...templateSnap.data() } as Project;
+                        console.log('[ProjectContext] Loaded template from Firebase:', project.name);
+                        setProjects(prev => {
+                            if (prev.find(p => p.id === projectId)) return prev;
+                            return [project!, ...prev];
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('[ProjectContext] Error loading project from Firebase:', error);
+            }
+        }
+        
         if (!project) {
             console.error("[ProjectContext] Project not found:", projectId);
             console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
             return;
+        }
+        
+        // If using projectOverride, add it to projects list if not already there
+        if (projectOverride && !projectsRef.current.find(p => p.id === projectId)) {
+            console.log('[ProjectContext] Adding projectOverride to projects list');
+            setProjects(prev => [projectOverride, ...prev]);
         }
         
         console.log('[ProjectContext] Loading project:', project.name);
@@ -373,7 +416,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (navigateToEditor) {
             router.navigate(`/editor/${projectId}`);
         }
-    }, []);
+    }, [user, currentTenantId]);
 
     // Save current project
     const saveProject = useCallback(async () => {

@@ -114,29 +114,23 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         { label: t('editor.tiltShift'), value: 'Tilt-Shift Effect' }
     ];
 
-    // Quimera AI Model Controls
+    // Quimera AI Model Controls - Using stable, available models
     const MODELS = [
         {
-            label: 'Quimera Vision Pro',
-            value: 'gemini-3-pro-image-preview',
-            description: t('editor.quimeraVisionProDesc'),
-            icon: 'vision'
-        },
-        {
             label: 'Quimera Ultra',
-            value: 'imagen-4.0-ultra-generate-001',
+            value: 'gemini-3-pro-image-preview',
             description: t('editor.quimeraUltraDesc'),
             icon: 'ultra'
         },
         {
-            label: 'Quimera Standard',
-            value: 'imagen-4.0-generate-001',
-            description: t('editor.quimeraStandardDesc'),
-            icon: 'standard'
+            label: 'Quimera Vision',
+            value: 'gemini-2.0-flash-exp',
+            description: t('editor.quimeraVisionProDesc'),
+            icon: 'vision'
         },
         {
             label: 'Quimera Fast',
-            value: 'imagen-4.0-fast-generate-001',
+            value: 'imagen-3.0-fast-generate-001',
             description: t('editor.quimeraFastDesc'),
             icon: 'fast'
         },

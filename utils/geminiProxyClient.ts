@@ -236,7 +236,7 @@ export async function generateImageViaProxy(
             body: JSON.stringify({
                 userId,
                 prompt,
-                // Model selection (defaults to Quimera Vision Pro)
+                // Model selection (defaults to Imagen 3.0 which is more stable)
                 model: config.model || 'gemini-3-pro-image-preview',
                 aspectRatio: config.aspectRatio || '1:1',
                 style: config.style,

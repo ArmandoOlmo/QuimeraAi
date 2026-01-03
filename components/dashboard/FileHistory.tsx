@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useFiles } from '../../contexts/files';
-import { useAI } from '../../contexts/ai';
+import { useEditor } from '../../contexts/EditorContext';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { useAssetLibrary } from '../../hooks/useAssetLibrary';
@@ -366,13 +366,17 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const { t } = useTranslation();
     const { files, isFilesLoading, uploadFile, deleteFile, hasActiveProject } = useFiles();
     const { projects, activeProject } = useProject();
-    const { generateImage, enhancePrompt } = useAI();
+    const editorContext = useEditor();
+    const { generateImage, enhancePrompt } = editorContext;
     const { success, error: showError } = useToast();
+    
+    // Debug: Log if generateImage is available
+    console.log('🎨 [FileHistory] Render - generateImage available:', typeof generateImage === 'function', 'variant:', variant);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
     // State for integrated generator
-    const [prompt, setPrompt] = useState('');
+    const [prompt, setPrompt] = useState('A beautiful sunset over mountains'); // DEBUG: Initial prompt for testing
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [style, setStyle] = useState('None');
     const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
@@ -544,7 +548,15 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     };
 
     const handleGenerate = async () => {
-        if (!prompt.trim()) return;
+        console.log('🎨 [FileHistory] handleGenerate called');
+        console.log('🎨 [FileHistory] prompt:', prompt);
+        console.log('🎨 [FileHistory] generateImage function:', typeof generateImage);
+        
+        if (!prompt.trim()) {
+            console.log('🎨 [FileHistory] Prompt is empty, returning');
+            return;
+        }
+        
         setIsGenerating(true);
         try {
             const options = {
@@ -559,13 +571,16 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             };
 
-
-            await generateImage(prompt, options);
+            console.log('🎨 [FileHistory] Calling generateImage with options:', options);
+            const result = await generateImage(prompt, options);
+            console.log('🎨 [FileHistory] generateImage result:', result);
+            
             success(t('dashboard.assets.generator.generated'));
             setPrompt('');
             setReferenceImages([]);
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            console.error('🎨 [FileHistory] Error generating image:', error);
+            console.error('🎨 [FileHistory] Error details:', error?.message, error?.stack);
             showError(t('dashboard.assets.generator.generationFailed'));
         } finally {
             setIsGenerating(false);

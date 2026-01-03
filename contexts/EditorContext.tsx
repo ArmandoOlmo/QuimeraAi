@@ -140,6 +140,13 @@ interface EditorContextType {
         style?: string,
         destination?: 'user' | 'global',
         resolution?: '1K' | '2K' | '4K',
+        // Quimera AI model options
+        model?: string,
+        thinkingLevel?: string,
+        personGeneration?: string,
+        temperature?: number,
+        negativePrompt?: string,
+        // Visual controls
         lighting?: string,
         cameraAngle?: string,
         colorGrading?: string,
@@ -1112,6 +1119,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             setIsUserOwner(false);
         }
     }, [userDocument]);
+
+    // Reload files when activeProjectId changes
+    useEffect(() => {
+        if (user && activeProjectId) {
+            fetchAllFiles(user.uid, activeProjectId);
+        }
+    }, [user, activeProjectId]);
 
     // CMS Real-time Subscription
     useEffect(() => {
@@ -2954,7 +2968,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     createdAt: serverTimestamp() as any,
                     notes: prompt,
                     aiSummary: '',
-                    projectId: activeProjectId || undefined
+                    // Only include projectId if it exists (Firestore doesn't accept undefined)
+                    ...(activeProjectId ? { projectId: activeProjectId } : {})
                 };
 
                 const docRef = await addDoc(firestoreCol, newFileRecord);
@@ -3233,7 +3248,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // intentamos usar la API de imagen dedicada (generateImages) con un modelo SEGURO
                     if (error.message && (error.message.includes('not found') || error.message.includes('404') || error.message.includes('not supported'))) {
                         // Try Fast model which is widely available
-                        const fallbackModel = 'imagen-3.0-fast-generate-001';
+                        const fallbackModel = 'imagen-3.0-generate-001';
                         console.log(`🔄 Switching to fallback model: ${fallbackModel}`);
 
                         const generateRequest: any = {

@@ -85,89 +85,153 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   const tone = getTemplateTone(template);
   const tags = getTemplateTags(template);
 
+  // Determine if background is dark to adjust text colors
+  const isDarkBg = (color: string) => {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
+  };
+
+  const textColor = isDarkBg(colors.background) ? '#ffffff' : '#1a1a1a';
+  const subtextColor = isDarkBg(colors.background) ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+
   return (
     <div
       onClick={onSelect}
-      className={`
-        relative flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer
-        transition-all duration-200 hover:bg-white/5 group
-        ${isSuggested
-          ? 'border-green-500/50 bg-green-500/5'
-          : 'border-white/10 hover:border-white/20'
-        }
-      `}
+      className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+      style={{
+        border: isSuggested ? '2px solid #22c55e' : `2px solid ${colors.primary}40`,
+      }}
     >
-      {/* Badge sugerido */}
-      {isSuggested && (
-        <div className="absolute -top-2 left-3 bg-green-500 text-white text-[10px] 
-                        font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 z-10">
-          <Star size={8} />
-          Recomendado
-        </div>
-      )}
+      {/* Background with template colors */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.primary}20 50%, ${colors.secondary}30 100%)`,
+        }}
+      />
+      
+      {/* Decorative color accent bar */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary}, ${colors.accent})`,
+        }}
+      />
 
-      {/* Thumbnail cuadrado pequeño */}
-      <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
-        {template.thumbnailUrl ? (
-          <img
-            src={template.thumbnailUrl}
-            alt={template.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-blue-600/30">
-            <Layout size={20} className="text-white/50" />
+      {/* Content wrapper */}
+      <div className="relative flex items-center gap-3 p-3">
+        {/* Badge sugerido */}
+        {isSuggested && (
+          <div className="absolute -top-0.5 right-3 bg-green-500 text-white text-[10px] 
+                          font-bold px-2 py-0.5 rounded-b-lg flex items-center gap-0.5 z-10 shadow-lg">
+            <Star size={8} />
+            Recomendado
           </div>
         )}
-        {/* Botón preview en hover */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onPreview(); }}
-          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 
-                     flex items-center justify-center transition-opacity"
-        >
-          <Eye size={16} className="text-white" />
-        </button>
-      </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        {/* Nombre */}
-        <h3 className="font-semibold text-white text-sm truncate">
-          {template.name}
-        </h3>
-        
-        {/* Categoría + Tono */}
-        <p className="text-xs text-gray-500 truncate">
-          {template.category || 'General'} · {tone}
-        </p>
-        
-        {/* Colores + Tags en una línea */}
-        <div className="flex items-center gap-2 mt-1.5">
-          {/* Colores */}
-          <div className="flex gap-0.5">
-            <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: colors.primary }} />
-            <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: colors.secondary }} />
-            <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: colors.accent }} />
-            <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: colors.background }} />
-          </div>
+        {/* Thumbnail con borde del color primario */}
+        <div 
+          className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-lg"
+          style={{ 
+            border: `2px solid ${colors.primary}`,
+            boxShadow: `0 4px 20px ${colors.primary}40`
+          }}
+        >
+          {template.thumbnailUrl ? (
+            <img
+              src={template.thumbnailUrl}
+              alt={template.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)` 
+              }}
+            >
+              <Layout size={24} style={{ color: textColor, opacity: 0.7 }} />
+            </div>
+          )}
+          {/* Botón preview en hover */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onPreview(); }}
+            className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 
+                       flex items-center justify-center transition-opacity backdrop-blur-sm"
+          >
+            <Eye size={18} className="text-white" />
+          </button>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          {/* Nombre */}
+          <h3 
+            className="font-bold text-base truncate"
+            style={{ color: textColor }}
+          >
+            {template.name}
+          </h3>
           
-          {/* Tags (máximo 2) */}
-          <div className="flex gap-1 overflow-hidden">
-            {tags.slice(0, 2).map(tag => (
-              <span key={tag} className="text-[10px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded whitespace-nowrap">
-                {tag}
-              </span>
-            ))}
-            {tags.length > 2 && (
-              <span className="text-[10px] text-gray-500">+{tags.length - 2}</span>
-            )}
+          {/* Categoría + Tono */}
+          <p 
+            className="text-xs truncate mt-0.5"
+            style={{ color: subtextColor }}
+          >
+            {template.category || 'General'} · {tone}
+          </p>
+          
+          {/* Color swatches */}
+          <div className="flex items-center gap-2 mt-2">
+            <div className="flex -space-x-1">
+              {[colors.primary, colors.secondary, colors.accent, colors.text].map((color, idx) => (
+                <div 
+                  key={idx}
+                  className="w-5 h-5 rounded-full shadow-md"
+                  style={{ 
+                    backgroundColor: color,
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    zIndex: 4 - idx
+                  }} 
+                />
+              ))}
+            </div>
+            
+            {/* Tags (máximo 2) */}
+            <div className="flex gap-1 overflow-hidden ml-1">
+              {tags.slice(0, 2).map(tag => (
+                <span 
+                  key={tag} 
+                  className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium"
+                  style={{ 
+                    backgroundColor: `${colors.primary}30`,
+                    color: textColor,
+                    border: `1px solid ${colors.primary}50`
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 2 && (
+                <span className="text-[10px]" style={{ color: subtextColor }}>+{tags.length - 2}</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Flecha indicador */}
-      <ArrowRight size={14} className="text-gray-500 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Flecha indicador con color del template */}
+        <div 
+          className="flex-shrink-0 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+          style={{ backgroundColor: colors.primary }}
+        >
+          <ArrowRight size={14} style={{ color: isDarkBg(colors.primary) ? '#ffffff' : '#1a1a1a' }} />
+        </div>
+      </div>
     </div>
   );
 };

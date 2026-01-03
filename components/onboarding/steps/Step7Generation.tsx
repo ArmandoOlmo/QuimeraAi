@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Rocket, FileText, Image, Loader2, Check, AlertCircle, Sparkles, ExternalLink, ShoppingBag } from 'lucide-react';
+import { Rocket, FileText, Image, Loader2, Check, AlertCircle, Sparkles, ExternalLink, ShoppingBag, RotateCcw, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { OnboardingProgress, GenerationProgress } from '../../../types/onboarding';
 import { INDUSTRIES } from '../../../data/industries';
@@ -25,6 +25,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 }) => {
     const { t } = useTranslation();
     const [hasStarted, setHasStarted] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
 
     const industryLabel = React.useMemo(() => {
         const ind = INDUSTRIES.find(i => i.id === progress.industry);
@@ -41,6 +42,27 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             onStartGeneration();
         }
     }, [hasStarted, phase, onStartGeneration]);
+
+    // Track elapsed time during generation
+    useEffect(() => {
+        const isInProgress = phase !== 'idle' && phase !== 'completed' && phase !== 'error';
+        if (isInProgress && generationProgress?.startedAt) {
+            const startTime = generationProgress.startedAt;
+            const interval = setInterval(() => {
+                setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+            }, 1000);
+            return () => clearInterval(interval);
+        } else {
+            setElapsedTime(0);
+        }
+    }, [phase, generationProgress?.startedAt]);
+
+    // Format elapsed time as MM:SS
+    const formatTime = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+    };
 
     const getPhaseStatus = (targetPhase: string) => {
         const phases = ['idle', 'content', 'images', 'finalizing', 'completed'];
@@ -281,6 +303,34 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     {t('onboarding.generationTip', 'Our AI is analyzing your business and generating personalized content. Each image is created specifically for your brand.')}
                 </p>
             </div>
+
+            {/* Elapsed time and emergency reset option - shown after 60 seconds */}
+            {elapsedTime >= 60 && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Clock size={16} className="text-amber-500" />
+                            <span className="text-sm text-amber-500">
+                                {t('onboarding.elapsedTime', 'Elapsed')}: {formatTime(elapsedTime)}
+                            </span>
+                        </div>
+                        {onReset && elapsedTime >= 120 && (
+                            <button
+                                onClick={onReset}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 rounded-lg transition-colors"
+                            >
+                                <RotateCcw size={14} />
+                                {t('onboarding.startOver', 'Start Over')}
+                            </button>
+                        )}
+                    </div>
+                    {elapsedTime >= 120 && (
+                        <p className="text-xs text-amber-500/80 mt-2">
+                            {t('onboarding.generationStuck', 'Generation is taking longer than expected. You can start over if it appears stuck.')}
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

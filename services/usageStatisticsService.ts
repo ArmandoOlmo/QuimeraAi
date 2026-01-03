@@ -269,7 +269,7 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 'imagen-4.0-generate-001': '#9333ea',
                 'imagen-4.0-ultra-generate-001': '#8b5cf6',
                 'imagen-4.0-fast-generate-001': '#c084fc',
-                'imagen-3.0-generate-002': '#ec4899',
+                'gemini-3-pro-image-preview': '#ec4899',
                 'imagen-3.0-fast-generate-001': '#f472b6',
                 'proxy-image-generation': '#db2777',
             };

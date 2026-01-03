@@ -10,6 +10,18 @@ import { Project, PageSection } from '../../../types';
 import { TemplateRecommendation, getIndustryComponentDefaults } from '../../../types/onboarding';
 import AIAssistButton from '../components/AIAssistButton';
 
+// Helper to get template colors safely
+const getTemplateColors = (template: Project) => {
+    const gc = template.theme?.globalColors;
+    return {
+        primary: gc?.primary || '#6366f1',
+        secondary: gc?.secondary || '#8b5cf6',
+        accent: gc?.accent || '#f59e0b',
+        background: gc?.background || '#0d0514',
+        text: gc?.text || '#ffffff'
+    };
+};
+
 interface Step4TemplateSelectProps {
     templates: Project[];
     selectedTemplateId?: string;
@@ -253,6 +265,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                     {templates.map((template) => {
                         const isSelected = selectedTemplateId === template.id;
                         const isRecommended = recommendation?.templateId === template.id;
+                        const colors = getTemplateColors(template);
 
                         return (
                             <button
@@ -262,12 +275,23 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                     relative group rounded-xl overflow-hidden border-2 transition-all
                                     ${isSelected
                                         ? 'border-yellow-500 ring-2 ring-yellow-500/30'
-                                        : 'border-editor-border hover:border-editor-border-hover'
+                                        : 'hover:scale-[1.02] hover:shadow-lg'
                                     }
                                 `}
+                                style={{
+                                    borderColor: isSelected ? undefined : `${colors.primary}50`,
+                                }}
                             >
+                                {/* Color accent bar at top */}
+                                <div 
+                                    className="absolute top-0 left-0 right-0 h-1 z-10"
+                                    style={{
+                                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary}, ${colors.accent})`,
+                                    }}
+                                />
+
                                 {/* Thumbnail */}
-                                <div className="aspect-video bg-editor-sidebar overflow-hidden">
+                                <div className="aspect-video overflow-hidden relative">
                                     {template.thumbnailUrl ? (
                                         <img
                                             src={template.thumbnailUrl}
@@ -275,29 +299,52 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-editor-text-secondary">
-                                            <Layout size={32} />
+                                        <div 
+                                            className="w-full h-full flex items-center justify-center"
+                                            style={{
+                                                background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.primary}30 50%, ${colors.secondary}40 100%)`,
+                                            }}
+                                        >
+                                            <Layout size={32} style={{ color: colors.text, opacity: 0.5 }} />
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Name */}
-                                <div className="p-2 bg-editor-sidebar">
-                                    <p className="text-sm font-medium text-editor-text-primary truncate">
+                                {/* Name & Colors */}
+                                <div 
+                                    className="p-2"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${colors.background}ee 0%, ${colors.primary}20 100%)`,
+                                    }}
+                                >
+                                    <p className="text-sm font-medium text-editor-text-primary truncate mb-1.5">
                                         {template.name}
                                     </p>
+                                    {/* Color swatches */}
+                                    <div className="flex items-center gap-1">
+                                        {[colors.primary, colors.secondary, colors.accent, colors.text].map((color, idx) => (
+                                            <div 
+                                                key={idx}
+                                                className="w-4 h-4 rounded-full shadow-sm"
+                                                style={{ 
+                                                    backgroundColor: color,
+                                                    border: '1.5px solid rgba(255,255,255,0.2)',
+                                                }} 
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* Selected indicator */}
                                 {isSelected && (
-                                    <div className="absolute top-2 right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                                    <div className="absolute top-3 right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center shadow-lg">
                                         <Check size={14} className="text-slate-900" />
                                     </div>
                                 )}
 
                                 {/* AI Recommended badge */}
                                 {isRecommended && (
-                                    <div className="absolute top-2 left-2 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                                    <div className="absolute top-3 left-2 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full flex items-center gap-1 shadow-lg">
                                         <Star size={10} />
                                         AI
                                     </div>

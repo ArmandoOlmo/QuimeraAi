@@ -3596,6 +3596,10 @@
       "step4Title": "Plantilla",
       "step5Title": "Contacto",
       "step6Title": "Generando",
+      "step6StoreTitle": "Tienda",
+      "step7Title": "Generar",
+      "step6Heading": "Configuración de Tienda",
+      "step6Subheading": "Configura los detalles básicos de tu tienda online",
       "step1Heading": "Comencemos con tu negocio",
       "step1Subheading": "Cuéntanos sobre tu negocio para crear el website perfecto.",
       "step2Heading": "Describe tu negocio",
@@ -3753,7 +3757,14 @@
       "phaseContent": "Generando Contenido",
       "phaseImages": "Generando Imágenes",
       "phaseFinalizing": "Creando Sitio Web",
-      "generationTip": "Nuestra IA está analizando tu negocio y generando contenido personalizado. Cada imagen se crea específicamente para tu marca."
+      "generationTip": "Nuestra IA está analizando tu negocio y generando contenido personalizado. Cada imagen se crea específicamente para tu marca.",
+      "cancelGeneration": "Cancelar Generación",
+      "cancelGenerationTitle": "¿Cancelar Generación?",
+      "cancelGenerationMessage": "Esto detendrá la generación del sitio web y reiniciará el proceso. Necesitarás comenzar de nuevo.",
+      "elapsedTime": "Transcurrido",
+      "generationStuck": "La generación está tardando más de lo esperado. Puedes reiniciar si parece estar atascada.",
+      "errorSaving": "Error al guardar el progreso. Intenta de nuevo.",
+      "errorGeneration": "Error al generar tu sitio web. Por favor intenta de nuevo."
     },
     "industryCategories": {
       "technology": "Tecnología y Digital",

@@ -43,6 +43,7 @@ const SEODashboard = lazy(() => import('./dashboard/SEODashboard'));
 const FinanceDashboard = lazy(() => import('./dashboard/finance/FinanceDashboard'));
 const EcommerceDashboard = lazy(() => import('./dashboard/ecommerce/EcommerceDashboard'));
 const EmailDashboard = lazy(() => import('./dashboard/email/EmailDashboard'));
+const AssetsDashboard = lazy(() => import('./dashboard/assets/AssetsDashboard'));
 const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
 
 // Editor components
@@ -83,6 +84,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'finance': FinanceDashboard,
     'ecommerce': EcommerceDashboard,
     'email': EmailDashboard,
+    'assets': AssetsDashboard,
     'templates': UserTemplates,
     'settings': SettingsPage,
 };
@@ -121,8 +123,8 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
         );
     }
 
-    // Dashboard Views (websites, assets, dashboard)
-    if (view === 'dashboard' || view === 'websites' || view === 'assets' || !activeProjectId || !data) {
+    // Dashboard Views (websites, dashboard)
+    if (view === 'dashboard' || view === 'websites' || !activeProjectId || !data) {
         return (
             <Suspense fallback={<ViewLoading />}>
                 <Dashboard />

@@ -3,8 +3,8 @@
  * Main modal container for the onboarding flow
  */
 
-import React, { useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, ChevronLeft, ChevronRight, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
 import { useOnboarding } from './hooks/useOnboarding';
@@ -53,6 +53,10 @@ const OnboardingModal: React.FC = () => {
         isLoadingCategories,
     } = useOnboarding();
 
+    // State for emergency cancel confirmation
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [generationDuration, setGenerationDuration] = useState(0);
+
     // Initialize progress when modal opens
     useEffect(() => {
         if (isOnboardingOpen && !progress) {
@@ -90,6 +94,32 @@ const OnboardingModal: React.FC = () => {
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
     }, [isOnboardingOpen, progress?.step, progress?.hasEcommerce]);
+
+    // Track generation duration for emergency cancel option
+    useEffect(() => {
+        const generationStep = progress?.hasEcommerce ? 7 : 6;
+        const isCurrentlyGenerating = progress?.step === generationStep && 
+            progress?.generationProgress?.phase !== 'idle' && 
+            progress?.generationProgress?.phase !== 'completed' &&
+            progress?.generationProgress?.phase !== 'error';
+        
+        if (isCurrentlyGenerating && progress?.generationProgress?.startedAt) {
+            const startTime = progress.generationProgress.startedAt;
+            const interval = setInterval(() => {
+                setGenerationDuration(Math.floor((Date.now() - startTime) / 1000));
+            }, 1000);
+            return () => clearInterval(interval);
+        } else {
+            setGenerationDuration(0);
+            setShowCancelConfirm(false);
+        }
+    }, [progress?.step, progress?.hasEcommerce, progress?.generationProgress?.phase, progress?.generationProgress?.startedAt]);
+
+    // Handle emergency cancel
+    const handleEmergencyCancel = async () => {
+        setShowCancelConfirm(false);
+        await resetOnboarding();
+    };
 
     if (!isOnboardingOpen) return null;
 
@@ -242,6 +272,16 @@ const OnboardingModal: React.FC = () => {
                                 <RotateCcw size={18} />
                             </button>
                         )}
+                        {/* Emergency cancel button - visible during generation after 30 seconds */}
+                        {isGenerating && generationDuration >= 30 && (
+                            <button
+                                onClick={() => setShowCancelConfirm(true)}
+                                className="p-2 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                                title={t('onboarding.cancelGeneration', 'Cancel Generation')}
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
                         {/* Close button */}
                         {!isGenerating && (
                             <button
@@ -322,6 +362,43 @@ const OnboardingModal: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Emergency Cancel Confirmation Dialog */}
+            {showCancelConfirm && (
+                <div className="absolute inset-0 z-[60] flex items-center justify-center">
+                    <div 
+                        className="absolute inset-0 bg-black/50" 
+                        onClick={() => setShowCancelConfirm(false)} 
+                    />
+                    <div className="relative bg-card border border-border rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                <AlertTriangle size={20} className="text-amber-500" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground">
+                                {t('onboarding.cancelGenerationTitle', 'Cancel Generation?')}
+                            </h3>
+                        </div>
+                        <p className="text-muted-foreground text-sm mb-6">
+                            {t('onboarding.cancelGenerationMessage', 'This will stop the website generation and reset the process. You will need to start over.')}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCancelConfirm(false)}
+                                className="flex-1 px-4 py-2.5 bg-muted text-foreground font-medium rounded-xl hover:bg-accent transition-colors"
+                            >
+                                {t('common.cancel', 'Continue')}
+                            </button>
+                            <button
+                                onClick={handleEmergencyCancel}
+                                className="flex-1 px-4 py-2.5 bg-amber-500 text-white font-medium rounded-xl hover:bg-amber-600 transition-colors"
+                            >
+                                {t('onboarding.startOver', 'Start Over')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

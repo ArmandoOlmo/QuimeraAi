@@ -31,13 +31,20 @@ const ALLOWED_ORIGINS = [
     'https://www.quimera.ai',
     'https://quimeraai.web.app',
     'https://quimeraai.firebaseapp.com',
-    // Development origins
+    // Development origins - include multiple ports for flexibility
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:4173',
+    'http://localhost:4174',
+    'http://localhost:5174',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002',
+    'http://127.0.0.1:3003',
 ];
 
 // Pattern for dynamic subdomains
@@ -115,11 +122,17 @@ const ALLOWED_MODELS = [
     // Legacy models (for backwards compatibility)
     'gemini-1.5-flash',
     'gemini-1.5-pro',
-    // Image generation models
+    // Native Gemini image generation models
+    'gemini-2.0-flash-exp-image-generation',
+    'gemini-2.0-flash-preview-image-generation',
     'gemini-2.5-flash-image',
     'gemini-2.0-flash-image',
-    'imagen-3.0-generate-002',
+    // Image generation models - Imagen (may require Vertex AI)
+    'imagen-3.0-generate-001',
     'imagen-3.0-fast-generate-001',
+    'imagen-4.0-generate-001',
+    'imagen-4.0-ultra-generate-001',
+    'imagen-4.0-fast-generate-001',
 ];
 
 function isValidModel(model: string): boolean {
@@ -361,11 +374,15 @@ const AI_CREDIT_COSTS = {
     // Legacy models
     'gemini-1.5-flash': 1,              // ~$0.01 per request
     'gemini-1.5-pro': 2,                // ~$0.02 per request
-    // Image generation
+    // Image generation - Imagen 3.0
     'gemini-2.5-flash-image': 4,        // ~$0.04 per image
     'gemini-2.0-flash-image': 4,        // ~$0.04 per image
-    'imagen-3.0-generate-002': 4,       // ~$0.04 per image
+    'imagen-3.0-generate-001': 4,       // ~$0.04 per image
     'imagen-3.0-fast-generate-001': 2,  // ~$0.02 per image
+    // Image generation - Imagen 4.0
+    'imagen-4.0-generate-001': 4,       // ~$0.04 per image
+    'imagen-4.0-ultra-generate-001': 6, // ~$0.06 per image (highest quality)
+    'imagen-4.0-fast-generate-001': 2,  // ~$0.02 per image
 };
 
 /**
