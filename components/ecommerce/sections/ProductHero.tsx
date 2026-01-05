@@ -1,12 +1,16 @@
 /**
  * ProductHero Component
- * Hero banner for featuring products, collections, or sales
+ * Hero banner for featuring products with multiple layout options
  * 
- * Uses unified storefront colors system
+ * Layouts:
+ * - split: Split layout with image on the left
+ * - split-right: Split layout with image on the right
+ * - full: Full width background with overlay
+ * - centered: Centered content with product card
  */
 
 import React from 'react';
-import { ArrowRight, ShoppingCart } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Star, Check } from 'lucide-react';
 import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeEditor } from '../../../contexts/EditorContext';
@@ -47,54 +51,63 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Style helpers
     const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
+        const map: Record<string, string> = { none: 'py-0', sm: 'py-8', md: 'py-12', lg: 'py-16', xl: 'py-20' };
         return map[data.paddingY] || 'py-12';
     };
 
     const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
+        const map: Record<string, string> = { none: 'px-0', sm: 'px-4', md: 'px-6', lg: 'px-8', xl: 'px-12' };
         return map[data.paddingX] || 'px-6';
     };
 
-    const getHeadlineSize = () => {
-        const map = { sm: 'text-2xl', md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl md:text-6xl' };
-        return map[data.headlineFontSize || 'xl'] || 'text-5xl';
-    };
-
-    const getSubheadlineSize = () => {
-        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
-        return map[data.subheadlineFontSize || 'md'] || 'text-base';
-    };
-
     const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
+        const map: Record<string, string> = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
         return map[data.buttonBorderRadius || 'xl'] || 'rounded-xl';
     };
 
-    const getContentPosition = () => {
-        const map = {
-            left: 'items-start text-left',
-            center: 'items-center text-center',
-            right: 'items-end text-right',
+    const getImageSize = () => {
+        const map: Record<string, string> = { 
+            small: 'max-w-xs', 
+            medium: 'max-w-md', 
+            large: 'max-w-lg' 
         };
-        return map[data.contentPosition] || 'items-start text-left';
+        return map[data.imageSize || 'medium'] || 'max-w-md';
     };
 
-    const getOverlayStyle = () => {
-        if (data.overlayStyle === 'none') return 'transparent';
-        if (data.overlayStyle === 'solid') {
-            return `${colors.overlayEnd}${Math.round((data.overlayOpacity / 100) * 255).toString(16).padStart(2, '0')}`;
+    const getImageSizeGrid = () => {
+        // For split layouts: image column proportions
+        const map: Record<string, { image: string, content: string }> = { 
+            small: { image: 'lg:col-span-4', content: 'lg:col-span-8' },
+            medium: { image: 'lg:col-span-5', content: 'lg:col-span-7' },
+            large: { image: 'lg:col-span-6', content: 'lg:col-span-6' },
+        };
+        return map[data.imageSize || 'medium'] || map.medium;
+    };
+
+    // Helper to navigate to product - uses callback if available, otherwise direct hash navigation
+    const navigateToProduct = (slugOrId: string) => {
+        if (onProductClick) {
+            onProductClick(slugOrId);
+        } else {
+            // Fallback: Direct hash navigation for editor preview or when callback not provided
+            window.location.hash = `store/product/${slugOrId}`;
         }
-        // Gradient
-        const opacity = data.overlayOpacity / 100;
-        return `linear-gradient(to right, ${colors.overlayEnd}${Math.round(opacity * 255).toString(16).padStart(2, '0')}, transparent)`;
     };
 
     const handleButtonClick = () => {
-        if (data.buttonUrl) {
-            window.location.href = data.buttonUrl;
-        } else if (data.productId && featuredProduct?.slug) {
-            onProductClick?.(featuredProduct.slug);
+        // Check if buttonUrl is a custom URL (not a generic store link)
+        // Generic links like '#products', '#store', '' are treated as "navigate to product"
+        const isCustomUrl = data.buttonUrl && 
+            !['#products', '#store', '#tienda', ''].includes(data.buttonUrl.toLowerCase());
+        
+        if (isCustomUrl) {
+            window.location.href = data.buttonUrl!;
+        } else if (featuredProduct?.slug) {
+            // Navigate to the featured product (whether explicitly set via productId or default first product)
+            navigateToProduct(featuredProduct.slug);
+        } else if (featuredProduct?.id) {
+            // Fallback: use product ID if no slug available
+            navigateToProduct(featuredProduct.id);
         } else if (data.collectionId) {
             onCollectionClick?.(data.collectionId);
         }
@@ -107,347 +120,382 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         }
     };
 
-    // Render single layout
-    const renderSingle = () => (
-        <div
-            className="relative overflow-hidden"
-            style={{
-                height: `${data.height || 500}px`,
-                backgroundColor: colors.background,
-            }}
-        >
-            {/* Background Image */}
-            {data.backgroundImageUrl && (
-                <img
-                    src={data.backgroundImageUrl}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-            )}
+    const handleProductClick = () => {
+        if (featuredProduct?.slug) {
+            navigateToProduct(featuredProduct.slug);
+        } else if (featuredProduct?.id) {
+            navigateToProduct(featuredProduct.id);
+        }
+    };
 
-            {/* Overlay */}
-            {data.overlayStyle !== 'none' && (
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        background: getOverlayStyle(),
-                    }}
-                />
-            )}
+    // Shared product info component
+    const renderProductInfo = (showImage = true) => {
+        if (!featuredProduct) return null;
 
-            {/* Content */}
-            <div className={`relative h-full ${getPaddingX()} ${getPaddingY()}`}>
-                <div className={`max-w-7xl mx-auto h-full flex flex-col justify-center ${getContentPosition()}`}>
-                    {/* Badge */}
-                    {data.showBadge && data.badgeText && (
-                        <span
-                            className={`inline-block px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
-                            style={{
-                                backgroundColor: colors.badgeBackground,
-                                color: colors.badgeText,
-                            }}
-                        >
-                            {data.badgeText}
-                        </span>
-                    )}
+        const showPrice = data.showPrice !== false;
+        const showDescription = data.showDescription !== false;
 
-                    {/* Headline */}
-                    <h1
-                        className={`${getHeadlineSize()} font-bold mb-4 max-w-3xl`}
-                        style={{ color: colors.heading }}
+        return (
+            <div 
+                className={`flex flex-col cursor-pointer ${showImage ? '' : 'items-center text-center'}`}
+                onClick={handleProductClick}
+            >
+                {/* Badge */}
+                {data.showBadge && data.badgeText && (
+                    <span
+                        className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
+                        style={{
+                            backgroundColor: colors.badgeBackground || '#ef4444',
+                            color: colors.badgeText || '#ffffff',
+                        }}
                     >
-                        {data.headline}
-                    </h1>
+                        {data.badgeText}
+                    </span>
+                )}
 
-                    {/* Subheadline */}
-                    {data.subheadline && (
-                        <p
-                            className={`${getSubheadlineSize()} mb-6 max-w-2xl`}
-                            style={{ color: colors.text }}
-                        >
-                            {data.subheadline}
-                        </p>
-                    )}
+                {/* Product Name as Headline */}
+                <h1
+                    className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                    style={{ color: colors.heading }}
+                >
+                    {data.headline || featuredProduct.name}
+                </h1>
 
-                    {/* Buttons */}
-                    <div className="flex flex-wrap gap-3">
-                        {data.buttonText && (
-                            <button
-                                onClick={handleButtonClick}
-                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                                style={{
-                                    backgroundColor: colors.buttonBackground,
-                                    color: colors.buttonText,
-                                }}
-                            >
-                                {data.buttonText}
-                                <ArrowRight size={20} />
-                            </button>
-                        )}
-
-                        {/* Add to Cart Button */}
-                        {data.showAddToCartButton && featuredProduct && (
-                            <button
-                                onClick={handleAddToCart}
-                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
-                                style={{
-                                    backgroundColor: colors.success,
-                                    color: colors.buttonText,
-                                }}
-                            >
-                                <ShoppingCart size={20} />
-                                {data.addToCartButtonText || 'Añadir al carrito'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    // Render split layout
-    const renderSplit = () => (
-        <div
-            className="relative overflow-hidden"
-            style={{
-                height: `${data.height || 500}px`,
-                backgroundColor: colors.background,
-            }}
-        >
-            <div className="h-full grid grid-cols-1 lg:grid-cols-2">
-                {/* Content Side */}
-                <div className={`flex flex-col justify-center ${getPaddingX()} ${getPaddingY()}`}>
-                    {/* Badge */}
-                    {data.showBadge && data.badgeText && (
-                        <span
-                            className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
-                            style={{
-                                backgroundColor: colors.badgeBackground,
-                                color: colors.badgeText,
-                            }}
-                        >
-                            {data.badgeText}
-                        </span>
-                    )}
-
-                    <h1
-                        className={`${getHeadlineSize()} font-bold mb-4`}
-                        style={{ color: colors.heading }}
+                {/* Description */}
+                {showDescription && (data.subheadline || featuredProduct.description) && (
+                    <p
+                        className="text-base md:text-lg mb-4 max-w-2xl opacity-90"
+                        style={{ color: colors.text }}
                     >
-                        {data.headline}
-                    </h1>
+                        {data.subheadline || featuredProduct.description}
+                    </p>
+                )}
 
-                    {data.subheadline && (
-                        <p
-                            className={`${getSubheadlineSize()} mb-6`}
-                            style={{ color: colors.text }}
-                        >
-                            {data.subheadline}
-                        </p>
-                    )}
+                {/* Features */}
+                {data.showFeatures !== false && featuredProduct.features && featuredProduct.features.length > 0 && (
+                    <ul className="mb-6 space-y-2">
+                        {featuredProduct.features.slice(0, 4).map((feature, idx) => (
+                            <li key={idx} className="flex items-center gap-2" style={{ color: colors.text }}>
+                                <Check size={16} style={{ color: colors.accent || colors.buttonBackground }} />
+                                <span className="text-sm">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
 
-                    {/* Buttons */}
-                    <div className="flex flex-wrap gap-3">
-                        {data.buttonText && (
-                            <button
-                                onClick={handleButtonClick}
-                                className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                                style={{
-                                    backgroundColor: colors.buttonBackground,
-                                    color: colors.buttonText,
-                                }}
-                            >
-                                {data.buttonText}
-                                <ArrowRight size={20} />
-                            </button>
-                        )}
-
-                        {/* Add to Cart Button */}
-                        {data.showAddToCartButton && featuredProduct && (
-                            <button
-                                onClick={handleAddToCart}
-                                className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
-                                style={{
-                                    backgroundColor: colors.success,
-                                    color: colors.buttonText,
-                                }}
-                            >
-                                <ShoppingCart size={20} />
-                                {data.addToCartButtonText || 'Añadir al carrito'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Image Side */}
-                <div className="relative hidden lg:block">
-                    {data.backgroundImageUrl && (
-                        <img
-                            src={data.backgroundImageUrl}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover"
-                        />
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-
-    // Render carousel layout (with featured product info)
-    const renderCarousel = () => (
-        <div
-            className="relative overflow-hidden"
-            style={{
-                height: `${data.height || 500}px`,
-                backgroundColor: colors.background,
-            }}
-        >
-            {/* Background Image */}
-            {data.backgroundImageUrl && (
-                <img
-                    src={data.backgroundImageUrl}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-            )}
-
-            {/* Overlay */}
-            {data.overlayStyle !== 'none' && (
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        background: getOverlayStyle(),
-                    }}
-                />
-            )}
-
-            {/* Content */}
-            <div className={`relative h-full ${getPaddingX()} ${getPaddingY()}`}>
-                <div className="max-w-7xl mx-auto h-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                    {/* Text Content */}
-                    <div className={`flex flex-col ${getContentPosition()}`}>
-                        {data.showBadge && data.badgeText && (
-                            <span
-                                className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
-                                style={{
-                                    backgroundColor: colors.badgeBackground,
-                                    color: colors.badgeText,
-                                }}
-                            >
-                                {data.badgeText}
+                {/* Price */}
+                {showPrice && (
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="text-3xl font-bold" style={{ color: colors.heading }}>
+                            ${featuredProduct.price.toFixed(2)}
+                        </span>
+                        {featuredProduct.compareAtPrice && featuredProduct.compareAtPrice > featuredProduct.price && (
+                            <span className="text-xl line-through opacity-60" style={{ color: colors.text }}>
+                                ${featuredProduct.compareAtPrice.toFixed(2)}
                             </span>
                         )}
+                    </div>
+                )}
 
-                        <h1
-                            className={`${getHeadlineSize()} font-bold mb-4`}
-                            style={{ color: colors.heading }}
+                {/* Buttons */}
+                <div className="flex flex-wrap gap-3">
+                    {data.buttonText && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleButtonClick(); }}
+                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                            style={{
+                                backgroundColor: colors.buttonBackground || '#6366f1',
+                                color: colors.buttonText || '#ffffff',
+                            }}
                         >
-                            {data.headline}
-                        </h1>
+                            {data.buttonText}
+                            <ArrowRight size={20} />
+                        </button>
+                    )}
 
-                        {data.subheadline && (
-                            <p
-                                className={`${getSubheadlineSize()} mb-6`}
-                                style={{ color: colors.text }}
-                            >
-                                {data.subheadline}
-                            </p>
-                        )}
+                    {data.showAddToCartButton && (
+                        <button
+                            onClick={handleAddToCart}
+                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                            style={{
+                                backgroundColor: colors.addToCartBackground || colors.accent || '#10B981',
+                                color: colors.addToCartText || colors.buttonText || '#ffffff',
+                            }}
+                        >
+                            <ShoppingCart size={20} />
+                            {data.addToCartButtonText || 'Añadir al carrito'}
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
-                        {/* Buttons */}
-                        <div className="flex flex-wrap gap-3">
-                            {data.buttonText && (
-                                <button
-                                    onClick={handleButtonClick}
-                                    className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                                    style={{
-                                        backgroundColor: colors.buttonBackground,
-                                        color: colors.buttonText,
-                                    }}
-                                >
-                                    {data.buttonText}
-                                    <ArrowRight size={20} />
-                                </button>
-                            )}
+    // Render product image
+    const renderProductImage = (className = '') => {
+        const imageUrl = featuredProduct?.image || data.backgroundImageUrl;
+        if (!imageUrl) {
+            // Placeholder
+            return (
+                <div 
+                    className={`bg-gray-200 rounded-2xl flex items-center justify-center ${className}`}
+                    style={{ aspectRatio: '1' }}
+                >
+                    <span className="text-gray-400 text-sm">1200 × 600</span>
+                </div>
+            );
+        }
+        
+        return (
+            <img
+                src={imageUrl}
+                alt={featuredProduct?.name || 'Product'}
+                className={`w-full h-full object-cover rounded-2xl shadow-lg ${className}`}
+                onClick={handleProductClick}
+                style={{ cursor: 'pointer' }}
+            />
+        );
+    };
 
-                            {/* Add to Cart Button */}
-                            {data.showAddToCartButton && featuredProduct && (
-                                <button
-                                    onClick={handleAddToCart}
-                                    className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
-                                    style={{
-                                        backgroundColor: colors.success || '#10B981',
-                                        color: colors.buttonText || '#FFFFFF',
-                                    }}
-                                >
-                                    <ShoppingCart size={20} />
-                                    {data.addToCartButtonText || 'Añadir al carrito'}
-                                </button>
-                            )}
+    // Layout: Split (Image Left)
+    const renderSplit = () => {
+        const gridCols = getImageSizeGrid();
+        
+        return (
+            <div
+                className={`${getPaddingY()} ${getPaddingX()}`}
+                style={{ backgroundColor: colors.background }}
+            >
+                <div className="max-w-7xl mx-auto">
+                    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
+                        {/* Image Side (Left) */}
+                        <div className={`${gridCols.image} order-1`}>
+                            <div className={`${getImageSize()} mx-auto lg:mx-0`}>
+                                {renderProductImage()}
+                            </div>
+                        </div>
+
+                        {/* Content Side (Right) */}
+                        <div className={`${gridCols.content} order-2`}>
+                            {renderProductInfo(true)}
                         </div>
                     </div>
+                </div>
+            </div>
+        );
+    };
 
-                    {/* Featured Product Card */}
-                    {featuredProduct && (
-                        <div
-                            className="hidden lg:block backdrop-blur-sm rounded-2xl p-6 cursor-pointer transition-colors"
-                            style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-                            onClick={() => featuredProduct.slug && onProductClick?.(featuredProduct.slug)}
-                        >
-                            {featuredProduct.image && (
-                                <img
-                                    src={featuredProduct.image}
-                                    alt={featuredProduct.name}
-                                    className="w-full aspect-square object-cover rounded-xl mb-4"
-                                />
+    // Layout: Split Right (Image Right)
+    const renderSplitRight = () => {
+        const gridCols = getImageSizeGrid();
+        
+        return (
+            <div
+                className={`${getPaddingY()} ${getPaddingX()}`}
+                style={{ backgroundColor: colors.background }}
+            >
+                <div className="max-w-7xl mx-auto">
+                    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
+                        {/* Content Side (Left) */}
+                        <div className={`${gridCols.content} order-2 lg:order-1`}>
+                            {renderProductInfo(true)}
+                        </div>
+
+                        {/* Image Side (Right) */}
+                        <div className={`${gridCols.image} order-1 lg:order-2`}>
+                            <div className={`${getImageSize()} mx-auto lg:ml-auto lg:mr-0`}>
+                                {renderProductImage()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Layout: Full Width
+    const renderFull = () => {
+        const imageUrl = featuredProduct?.image || data.backgroundImageUrl;
+        
+        return (
+            <div
+                className="relative overflow-hidden"
+                style={{
+                    minHeight: '400px',
+                    backgroundColor: colors.background,
+                }}
+            >
+                {/* Background Image */}
+                {imageUrl && (
+                    <img
+                        src={imageUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                )}
+
+                {/* Overlay */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: `linear-gradient(to right, ${colors.overlayColor || colors.background}dd, ${colors.overlayColor || colors.background}66)`,
+                    }}
+                />
+
+                {/* Content */}
+                <div className={`relative ${getPaddingY()} ${getPaddingX()}`}>
+                    <div className="max-w-7xl mx-auto">
+                        <div className="max-w-2xl">
+                            {renderProductInfo(false)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Layout: Centered
+    const renderCentered = () => {
+        return (
+            <div
+                className={`${getPaddingY()} ${getPaddingX()}`}
+                style={{ backgroundColor: colors.background }}
+            >
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex flex-col items-center text-center">
+                        {/* Product Image */}
+                        <div className={`${getImageSize()} w-full mb-8`}>
+                            {renderProductImage()}
+                        </div>
+
+                        {/* Product Info - Centered */}
+                        <div className="flex flex-col items-center">
+                            {/* Badge */}
+                            {data.showBadge && data.badgeText && (
+                                <span
+                                    className={`inline-block px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
+                                    style={{
+                                        backgroundColor: colors.badgeBackground || '#ef4444',
+                                        color: colors.badgeText || '#ffffff',
+                                    }}
+                                >
+                                    {data.badgeText}
+                                </span>
                             )}
-                            <h3 className="text-xl font-semibold mb-2" style={{ color: colors.buttonText }}>{featuredProduct.name}</h3>
-                            <div className="flex items-center justify-between">
-                                <p className="text-2xl font-bold" style={{ color: colors.buttonText }}>${featuredProduct.price.toFixed(2)}</p>
-                                {data.showAddToCartButton && (
+
+                            {/* Headline */}
+                            <h1
+                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                                style={{ color: colors.heading }}
+                            >
+                                {data.headline || featuredProduct?.name || 'Featured Product'}
+                            </h1>
+
+                            {/* Description */}
+                            {data.showDescription !== false && (data.subheadline || featuredProduct?.description) && (
+                                <p
+                                    className="text-base md:text-lg mb-6 max-w-xl opacity-90"
+                                    style={{ color: colors.text }}
+                                >
+                                    {data.subheadline || featuredProduct?.description}
+                                </p>
+                            )}
+
+                            {/* Price */}
+                            {data.showPrice !== false && featuredProduct && (
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-3xl font-bold" style={{ color: colors.heading }}>
+                                        ${featuredProduct.price.toFixed(2)}
+                                    </span>
+                                    {featuredProduct.compareAtPrice && featuredProduct.compareAtPrice > featuredProduct.price && (
+                                        <span className="text-xl line-through opacity-60" style={{ color: colors.text }}>
+                                            ${featuredProduct.compareAtPrice.toFixed(2)}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Buttons */}
+                            <div className="flex flex-wrap justify-center gap-3">
+                                {data.buttonText && (
+                                    <button
+                                        onClick={handleButtonClick}
+                                        className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                        style={{
+                                            backgroundColor: colors.buttonBackground || '#6366f1',
+                                            color: colors.buttonText || '#ffffff',
+                                        }}
+                                    >
+                                        {data.buttonText}
+                                        <ArrowRight size={20} />
+                                    </button>
+                                )}
+
+                                {data.showAddToCartButton && featuredProduct && (
                                     <button
                                         onClick={handleAddToCart}
-                                        className="p-3 rounded-full transition-colors"
-                                        style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: colors.buttonText }}
-                                        title={data.addToCartButtonText || 'Añadir al carrito'}
+                                        className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                                        style={{
+                                            backgroundColor: colors.addToCartBackground || colors.accent || '#10B981',
+                                            color: colors.addToCartText || colors.buttonText || '#ffffff',
+                                        }}
                                     >
                                         <ShoppingCart size={20} />
+                                        {data.addToCartButtonText || 'Añadir al carrito'}
                                     </button>
                                 )}
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     if (isLoading) {
         return (
             <div
-                className="animate-pulse"
-                style={{
-                    height: `${data.height || 500}px`,
-                    backgroundColor: colors.background,
-                }}
+                className={`animate-pulse ${getPaddingY()} ${getPaddingX()}`}
+                style={{ backgroundColor: colors.background }}
             >
-                <div className="h-full flex flex-col justify-center items-center">
-                    <div className="h-8 w-32 rounded mb-4" style={{ backgroundColor: colors.border }} />
-                    <div className="h-12 w-96 rounded mb-4" style={{ backgroundColor: colors.border }} />
-                    <div className="h-6 w-64 rounded mb-6" style={{ backgroundColor: colors.border }} />
-                    <div className="h-12 w-40 rounded" style={{ backgroundColor: colors.border }} />
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div className="aspect-square bg-gray-200 rounded-2xl" />
+                        <div className="space-y-4">
+                            <div className="h-6 w-24 bg-gray-200 rounded" />
+                            <div className="h-12 w-3/4 bg-gray-200 rounded" />
+                            <div className="h-6 w-full bg-gray-200 rounded" />
+                            <div className="h-10 w-32 bg-gray-200 rounded" />
+                            <div className="h-12 w-48 bg-gray-200 rounded" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    return (
-        <>
-            {data.layout === 'single' && renderSingle()}
-            {data.layout === 'split' && renderSplit()}
-            {data.layout === 'carousel' && renderCarousel()}
-        </>
-    );
+    // Default to 'split' if layout is not defined
+    const layout = data.layout || 'split';
+    
+    // Debug log - remove after testing
+    console.log('[ProductHero] Layout value:', layout, '| data.layout:', data.layout);
+    
+    switch (layout) {
+        case 'split':
+            return renderSplit();
+        case 'split-right':
+            return renderSplitRight();
+        case 'full':
+            return renderFull();
+        case 'centered':
+            return renderCentered();
+        default:
+            // Fallback for legacy layouts
+            if (layout === 'single' || layout === 'carousel') {
+                return renderFull();
+            }
+            return renderSplit();
+    }
 };
 
 export default ProductHero;

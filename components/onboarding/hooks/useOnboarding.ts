@@ -26,8 +26,9 @@ import {
     getIndustryComponentDefaults,
     ONBOARDING_STEPS,
 } from '../../../types/onboarding';
-import { PageSection, Project } from '../../../types';
+import { PageSection, Project, SitePage } from '../../../types';
 import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotConfigGenerator';
+import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 
 // Alias for backward compatibility
 type OnboardingStep = OnboardingWizardStep;
@@ -1996,6 +1997,14 @@ TEMPLATE #${t.index}: "${t.name}"
             const aiAssistantConfig = generateAiAssistantConfig(progress, chatbotGlobalColors);
             if (isDev) console.log('✅ AI Assistant config generated:', aiAssistantConfig.agentName);
 
+            // Generate pages for multi-page architecture
+            const projectPages: SitePage[] = generatePagesFromLegacyProject(
+                selectedTemplate.componentOrder,
+                sectionVisibility,
+                mergedData
+            );
+            if (isDev) console.log('📄 Generated pages for multi-page architecture:', projectPages.length);
+
             // Create the new project
             const newProject = {
                 id: `proj_${Date.now()}`,
@@ -2015,6 +2024,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 },
                 componentOrder: selectedTemplate.componentOrder,
                 sectionVisibility,
+                pages: projectPages, // Multi-page architecture
                 sourceTemplateId: selectedTemplate.id,
                 imagePrompts: simpleImagePrompts,
                 menus: projectMenus,

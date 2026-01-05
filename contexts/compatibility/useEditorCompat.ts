@@ -121,6 +121,20 @@ export const useEditorCompat = () => {
         duplicateTemplate: project.duplicateTemplate,
         updateTemplateInState: project.updateTemplateInState,
 
+        // Multi-page architecture
+        pages: project.pages,
+        setPages: project.setPages,
+        activePage: project.activePage,
+        setActivePage: project.setActivePage,
+        addPage: project.addPage,
+        updatePage: project.updatePage,
+        deletePage: project.deletePage,
+        reorderPages: project.reorderPages,
+        duplicatePage: project.duplicatePage,
+        getPageBySlug: project.getPageBySlug,
+        isMultiPage: project.isMultiPage,
+        migrateToMultiPage: project.migrateToMultiPage,
+
         // Files
         files: files.files,
         isFilesLoading: files.isFilesLoading,

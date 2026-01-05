@@ -1,13 +1,16 @@
 /**
- * Simple SSR Server for Custom Domains
+ * SSR Server for Custom Domains (Multi-Page Architecture)
  * 
- * This minimal server handles custom domain routing:
+ * This server provides real Server-Side Rendering for custom domains:
  * 1. Receives request with custom domain Host header
  * 2. Looks up domain in Firestore (customDomains collection)
- * 3. Serves HTML that renders the full website (landing + ecommerce)
+ * 3. Loads project data from publicStores including pages array
+ * 4. Matches URL path to a SitePage
+ * 5. Renders the page to HTML string using React
+ * 6. Returns complete HTML with SEO meta tags and hydration data
  * 
- * The HTML served loads the project data from publicStores and renders
- * all components (hero, features, testimonials, products, etc.)
+ * For dynamic pages (products, categories, articles), it loads the
+ * dynamic data and generates appropriate meta tags.
  */
 
 import express, { Request, Response } from 'express';
@@ -23,31 +26,91 @@ if (getApps().length === 0) {
 }
 const db = getFirestore();
 
-// Domain resolution result with more data
+// =============================================================================
+// TYPES
+// =============================================================================
+
 interface DomainData {
     projectId: string;
     userId: string;
     status: string;
-    // Project theme colors for loader styling
-    primaryColor?: string;
-    backgroundColor?: string;
-    projectName?: string;
-    // SEO data
-    favicon?: string;
-    seoTitle?: string;
-    seoDescription?: string;
 }
 
-// Domain cache (1 minute TTL for faster updates)
+interface ProjectData {
+    id: string;
+    name: string;
+    pages?: SitePage[];
+    data: any;
+    theme: any;
+    brandIdentity: any;
+    componentOrder: string[];
+    sectionVisibility: Record<string, boolean>;
+    seoConfig?: any;
+    aiAssistantConfig?: any;
+    menus?: any[];
+}
+
+interface SitePage {
+    id: string;
+    title: string;
+    slug: string;
+    type: 'static' | 'dynamic';
+    dynamicSource?: 'products' | 'categories' | 'blogPosts';
+    sections: string[];
+    sectionData: any;
+    seo: {
+        title?: string;
+        description?: string;
+        image?: string;
+        keywords?: string[];
+    };
+    isHomePage?: boolean;
+    showInNavigation?: boolean;
+    navigationOrder?: number;
+}
+
+interface PageMatch {
+    page: SitePage;
+    params: Record<string, string>;
+}
+
+interface DynamicData {
+    product?: any;
+    category?: any;
+    article?: any;
+}
+
+interface MetaTags {
+    title: string;
+    description: string;
+    canonicalUrl: string;
+    ogImage?: string;
+    ogType: string;
+    jsonLd?: string;
+}
+
+// =============================================================================
+// CACHES
+// =============================================================================
+
+// Domain cache (1 minute TTL)
 const domainCache = new Map<string, { data: DomainData | null; timestamp: number }>();
-const CACHE_TTL = 1 * 60 * 1000;
+const DOMAIN_CACHE_TTL = 1 * 60 * 1000;
+
+// Project cache (5 minute TTL)
+const projectCache = new Map<string, { data: ProjectData | null; timestamp: number }>();
+const PROJECT_CACHE_TTL = 5 * 60 * 1000;
+
+// =============================================================================
+// DOMAIN RESOLUTION
+// =============================================================================
 
 async function resolveDomain(hostname: string): Promise<DomainData | null> {
     const normalizedDomain = hostname.toLowerCase().replace(/^www\./, '');
     
     // Check cache
     const cached = domainCache.get(normalizedDomain);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    if (cached && Date.now() - cached.timestamp < DOMAIN_CACHE_TTL) {
         return cached.data;
     }
     
@@ -64,61 +127,10 @@ async function resolveDomain(hostname: string): Promise<DomainData | null> {
             return null;
         }
         
-        // Get project colors from publicStores for loader styling
-        let primaryColor = '#ffffff'; // Default white
-        let backgroundColor = '#0f172a'; // Default dark
-        let projectName = normalizedDomain;
-        
-        // SEO data
-        let favicon: string | undefined;
-        let seoTitle: string | undefined;
-        let seoDescription: string | undefined;
-        
-        try {
-            const projectDoc = await db.collection('publicStores').doc(docData.projectId).get();
-            if (projectDoc.exists) {
-                const projectData = projectDoc.data()!;
-                projectName = projectData.name || normalizedDomain;
-                
-                // Try to get primary color from various sources
-                const theme = projectData.theme || {};
-                const heroColors = projectData.data?.hero?.colors || {};
-                const heroSplitColors = projectData.data?.heroSplit?.colors || {};
-                const globalColors = theme.globalColors || {};
-                
-                // Priority: globalColors.primary > hero button color > heroSplit button color > default
-                primaryColor = globalColors.primary || 
-                              heroColors.buttonBackground || 
-                              heroSplitColors.buttonBackground ||
-                              heroColors.primary ||
-                              '#ffffff';
-                
-                // Background color
-                backgroundColor = globalColors.background || 
-                                 heroColors.background ||
-                                 theme.colors?.background ||
-                                 '#0f172a';
-                
-                // SEO configuration
-                const seoConfig = projectData.seoConfig || {};
-                favicon = seoConfig.favicon;
-                seoTitle = seoConfig.title || projectName;
-                seoDescription = seoConfig.description || '';
-            }
-        } catch (err) {
-            console.warn(`[SSR] Could not fetch project colors for ${docData.projectId}:`, err);
-        }
-        
         const data: DomainData = {
             projectId: docData.projectId,
             userId: docData.userId,
             status: docData.status,
-            primaryColor,
-            backgroundColor,
-            projectName,
-            favicon,
-            seoTitle,
-            seoDescription
         };
         
         domainCache.set(normalizedDomain, { data, timestamp: Date.now() });
@@ -129,6 +141,542 @@ async function resolveDomain(hostname: string): Promise<DomainData | null> {
     }
 }
 
+// =============================================================================
+// PROJECT LOADING
+// =============================================================================
+
+async function loadProject(projectId: string): Promise<ProjectData | null> {
+    // Check cache
+    const cached = projectCache.get(projectId);
+    if (cached && Date.now() - cached.timestamp < PROJECT_CACHE_TTL) {
+        return cached.data;
+    }
+    
+    try {
+        const doc = await db.collection('publicStores').doc(projectId).get();
+        
+        if (!doc.exists) {
+            projectCache.set(projectId, { data: null, timestamp: Date.now() });
+            return null;
+        }
+        
+        const data = { id: doc.id, ...doc.data() } as ProjectData;
+        projectCache.set(projectId, { data, timestamp: Date.now() });
+        return data;
+    } catch (error) {
+        console.error(`[SSR] Error loading project ${projectId}:`, error);
+        return null;
+    }
+}
+
+// =============================================================================
+// PAGE MATCHING
+// =============================================================================
+
+function matchPage(pages: SitePage[], path: string): PageMatch | null {
+    // Normalize path
+    let normalizedPath = path.replace(/\/+$/, '') || '/';
+    if (!normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+    }
+    
+    // First try exact match
+    const exactMatch = pages.find(p => p.slug === normalizedPath);
+    if (exactMatch) {
+        return { page: exactMatch, params: {} };
+    }
+    
+    // Then try dynamic routes
+    for (const page of pages) {
+        if (page.slug.includes(':')) {
+            const match = matchDynamicSlug(page.slug, normalizedPath);
+            if (match) {
+                return { page, params: match };
+            }
+        }
+    }
+    
+    return null;
+}
+
+function matchDynamicSlug(pattern: string, path: string): Record<string, string> | null {
+    // Convert pattern like /producto/:slug to regex
+    const regexPattern = pattern.replace(/:[^/]+/g, '([^/]+)');
+    const regex = new RegExp(`^${regexPattern}$`);
+    const matches = path.match(regex);
+    
+    if (!matches) return null;
+    
+    // Extract param names
+    const paramNames = (pattern.match(/:([^/]+)/g) || []).map(m => m.slice(1));
+    const params: Record<string, string> = {};
+    
+    paramNames.forEach((name, i) => {
+        params[name] = matches[i + 1];
+    });
+    
+    return params;
+}
+
+// =============================================================================
+// DYNAMIC DATA LOADING
+// =============================================================================
+
+async function loadDynamicData(
+    projectId: string, 
+    page: SitePage,
+    params: Record<string, string>
+): Promise<DynamicData | null> {
+    const slug = params.slug;
+    if (!slug || !page.dynamicSource) return null;
+    
+    try {
+        switch (page.dynamicSource) {
+            case 'products': {
+                const productsSnap = await db.collection('publicStores')
+                    .doc(projectId)
+                    .collection('products')
+                    .where('slug', '==', slug)
+                    .limit(1)
+                    .get();
+                
+                if (productsSnap.empty) return null;
+                return { product: { id: productsSnap.docs[0].id, ...productsSnap.docs[0].data() } };
+            }
+            
+            case 'categories': {
+                const categoriesSnap = await db.collection('publicStores')
+                    .doc(projectId)
+                    .collection('categories')
+                    .where('slug', '==', slug)
+                    .limit(1)
+                    .get();
+                
+                if (categoriesSnap.empty) return null;
+                return { category: { id: categoriesSnap.docs[0].id, ...categoriesSnap.docs[0].data() } };
+            }
+            
+            case 'blogPosts': {
+                const postsSnap = await db.collection('publicStores')
+                    .doc(projectId)
+                    .collection('posts')
+                    .where('slug', '==', slug)
+                    .limit(1)
+                    .get();
+                
+                if (postsSnap.empty) return null;
+                return { article: { id: postsSnap.docs[0].id, ...postsSnap.docs[0].data() } };
+            }
+            
+            default:
+                return null;
+        }
+    } catch (error) {
+        console.error(`[SSR] Error loading dynamic data:`, error);
+        return null;
+    }
+}
+
+// =============================================================================
+// META TAG GENERATION
+// =============================================================================
+
+function generateMetaTags(
+    project: ProjectData,
+    page: SitePage,
+    dynamicData: DynamicData | null,
+    hostname: string,
+    path: string
+): MetaTags {
+    const siteName = project.brandIdentity?.name || project.name;
+    const siteUrl = `https://${hostname}`;
+    const pageUrl = `${siteUrl}${path}`;
+    
+    // For dynamic pages, use dynamic data for meta
+    if (page.type === 'dynamic' && dynamicData) {
+        if (dynamicData.product) {
+            const p = dynamicData.product;
+            return {
+                title: `${p.name} | ${siteName}`,
+                description: p.description || `Compra ${p.name} en ${siteName}`,
+                canonicalUrl: pageUrl,
+                ogImage: p.image || p.images?.[0],
+                ogType: 'product',
+                jsonLd: JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'Product',
+                    name: p.name,
+                    description: p.description,
+                    image: p.image ? [p.image] : undefined,
+                    sku: p.sku,
+                    offers: {
+                        '@type': 'Offer',
+                        price: p.price,
+                        priceCurrency: 'USD',
+                        availability: p.inStock 
+                            ? 'https://schema.org/InStock' 
+                            : 'https://schema.org/OutOfStock',
+                    },
+                }),
+            };
+        }
+        
+        if (dynamicData.category) {
+            const c = dynamicData.category;
+            return {
+                title: `${c.name} | ${siteName}`,
+                description: c.description || `Explora productos de ${c.name}`,
+                canonicalUrl: pageUrl,
+                ogImage: c.imageUrl,
+                ogType: 'website',
+            };
+        }
+        
+        if (dynamicData.article) {
+            const a = dynamicData.article;
+            return {
+                title: `${a.title} | ${siteName}`,
+                description: a.excerpt || a.content?.substring(0, 160),
+                canonicalUrl: pageUrl,
+                ogImage: a.featuredImage,
+                ogType: 'article',
+                jsonLd: JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'Article',
+                    headline: a.title,
+                    description: a.excerpt,
+                    image: a.featuredImage ? [a.featuredImage] : undefined,
+                    datePublished: a.publishedAt,
+                    author: a.author ? { '@type': 'Person', name: a.author } : undefined,
+                }),
+            };
+        }
+    }
+    
+    // Static page meta
+    const seo = page.seo || {};
+    return {
+        title: seo.title || `${page.title} | ${siteName}`,
+        description: seo.description || project.seoConfig?.siteDescription || '',
+        canonicalUrl: pageUrl,
+        ogImage: seo.image || project.seoConfig?.defaultOGImage,
+        ogType: 'website',
+    };
+}
+
+// =============================================================================
+// HTML GENERATION
+// =============================================================================
+
+function generateFullHtml(
+    project: ProjectData,
+    page: SitePage,
+    dynamicData: DynamicData | null,
+    meta: MetaTags,
+    hostname: string,
+    path: string,
+    products: any[] = [],
+    categories: any[] = []
+): string {
+    const theme = project.theme || {};
+    const globalColors = theme.globalColors || {};
+    const primaryColor = globalColors.primary || '#4f46e5';
+    const backgroundColor = globalColors.background || theme.pageBackground || '#0f172a';
+    const textColor = globalColors.text || '#94a3b8';
+    const headingColor = globalColors.heading || '#f8fafc';
+    
+    // Get favicon
+    const favicon = project.seoConfig?.favicon || '';
+    
+    // Build navigation links from pages
+    const navLinks = (project.pages || [])
+        .filter((p: SitePage) => p.showInNavigation)
+        .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0))
+        .map((p: SitePage) => `<a href="${p.slug}" style="color: ${headingColor}; text-decoration: none; padding: 0.5rem 1rem;">${p.title}</a>`)
+        .join('');
+    
+    // Build page content
+    let pageContent = '';
+    
+    // Hero section if present
+    const heroData = page.sectionData?.hero || project.data?.hero;
+    if (page.sections.includes('hero') && heroData) {
+        pageContent += `
+        <section style="padding: 4rem 1rem; text-align: center; background: ${heroData.colors?.background || backgroundColor};">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <h1 style="font-size: 2.5rem; font-weight: bold; color: ${heroData.colors?.heading || headingColor}; margin-bottom: 1rem;">
+                    ${stripHtml(heroData.headline || '')}
+                </h1>
+                <p style="font-size: 1.125rem; color: ${heroData.colors?.text || textColor}; margin-bottom: 2rem;">
+                    ${heroData.subheadline || ''}
+                </p>
+                ${heroData.primaryCta ? `
+                <a href="${heroData.primaryCtaLink || '#'}" 
+                   style="display: inline-block; padding: 0.75rem 2rem; background: ${heroData.colors?.buttonBackground || primaryColor}; 
+                          color: ${heroData.colors?.buttonText || '#fff'}; border-radius: 0.5rem; text-decoration: none; font-weight: 500;">
+                    ${heroData.primaryCta}
+                </a>
+                ` : ''}
+            </div>
+        </section>`;
+    }
+    
+    // Dynamic content for product/category/article pages
+    if (page.type === 'dynamic' && dynamicData) {
+        if (dynamicData.product) {
+            const p = dynamicData.product;
+            pageContent += `
+            <section style="padding: 4rem 1rem; background: ${backgroundColor};">
+                <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div>
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}" style="width: 100%; border-radius: 0.5rem;">` : ''}
+                    </div>
+                    <div>
+                        <h1 style="font-size: 2rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${p.name}</h1>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: ${primaryColor}; margin-bottom: 1rem;">$${(p.price || 0).toFixed(2)}</p>
+                        <p style="color: ${textColor}; margin-bottom: 2rem;">${p.description || ''}</p>
+                        <button style="padding: 0.75rem 2rem; background: ${primaryColor}; color: #fff; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </section>`;
+        }
+        
+        if (dynamicData.category) {
+            const c = dynamicData.category;
+            pageContent += `
+            <section style="padding: 4rem 1rem; background: ${backgroundColor};">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <h1 style="font-size: 2rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${c.name}</h1>
+                    <p style="color: ${textColor}; margin-bottom: 2rem;">${c.description || ''}</p>
+                    <div id="category-products" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <!-- Products will be loaded client-side -->
+                        <p style="color: ${textColor};">Cargando productos...</p>
+                    </div>
+                </div>
+            </section>`;
+        }
+        
+        if (dynamicData.article) {
+            const a = dynamicData.article;
+            pageContent += `
+            <article style="padding: 4rem 1rem; background: ${backgroundColor};">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    ${a.featuredImage ? `<img src="${a.featuredImage}" alt="${a.title}" style="width: 100%; border-radius: 0.5rem; margin-bottom: 2rem;">` : ''}
+                    <h1 style="font-size: 2.5rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${a.title}</h1>
+                    ${a.author ? `<p style="color: ${textColor}; margin-bottom: 2rem;">Por ${a.author}</p>` : ''}
+                    <div style="color: ${textColor}; line-height: 1.8;">
+                        ${a.content || ''}
+                    </div>
+                </div>
+            </article>`;
+        }
+    }
+    
+    // Features section if present
+    const featuresData = page.sectionData?.features || project.data?.features;
+    if (page.sections.includes('features') && featuresData) {
+        const items = featuresData.items || [];
+        pageContent += `
+        <section style="padding: 4rem 1rem; background: ${featuresData.colors?.background || backgroundColor};">
+            <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+                <h2 style="font-size: 2rem; font-weight: bold; color: ${featuresData.colors?.heading || headingColor}; margin-bottom: 1rem;">
+                    ${featuresData.title || ''}
+                </h2>
+                <p style="color: ${featuresData.colors?.text || textColor}; margin-bottom: 3rem;">
+                    ${featuresData.description || ''}
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    ${items.map((item: any) => `
+                    <div style="padding: 1.5rem; background: ${featuresData.colors?.cardBackground || globalColors.surface || '#1e293b'}; border-radius: 0.75rem;">
+                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1rem;">` : ''}
+                        <h3 style="color: ${headingColor}; margin-bottom: 0.5rem;">${item.title}</h3>
+                        <p style="color: ${textColor}; font-size: 0.875rem;">${item.description}</p>
+                    </div>
+                    `).join('')}
+                </div>
+            </div>
+        </section>`;
+    }
+    
+    // CTA section if present
+    const ctaData = page.sectionData?.cta || project.data?.cta;
+    if (page.sections.includes('cta') && ctaData) {
+        pageContent += `
+        <section style="padding: 4rem 1rem; background: linear-gradient(135deg, ${ctaData.colors?.gradientStart || primaryColor}, ${ctaData.colors?.gradientEnd || '#10b981'});">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="font-size: 2rem; font-weight: bold; color: ${ctaData.colors?.heading || '#fff'}; margin-bottom: 1rem;">
+                    ${ctaData.title || ''}
+                </h2>
+                <p style="color: ${ctaData.colors?.text || 'rgba(255,255,255,0.9)'}; margin-bottom: 2rem;">
+                    ${ctaData.description || ''}
+                </p>
+                <a href="${ctaData.buttonUrl || '#'}" 
+                   style="display: inline-block; padding: 0.75rem 2rem; background: ${ctaData.colors?.buttonBackground || '#fff'}; 
+                          color: ${ctaData.colors?.buttonText || primaryColor}; border-radius: 0.5rem; text-decoration: none; font-weight: 500;">
+                    ${ctaData.buttonText || 'Get Started'}
+                </a>
+            </div>
+        </section>`;
+    }
+    
+    // Footer if present
+    const footerData = page.sectionData?.footer || project.data?.footer;
+    if (page.sections.includes('footer') && footerData) {
+        pageContent += `
+        <footer style="padding: 3rem 1rem; background: ${footerData.colors?.background || primaryColor}; color: ${footerData.colors?.text || '#fff'};">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                    <div>
+                        <h3 style="font-weight: bold; margin-bottom: 1rem; color: ${footerData.colors?.heading || '#fff'};">
+                            ${footerData.title || project.name}
+                        </h3>
+                        <p style="font-size: 0.875rem; opacity: 0.9;">${footerData.description || ''}</p>
+                    </div>
+                    ${(footerData.linkColumns || []).map((col: any) => `
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 0.75rem;">${col.title}</h4>
+                        ${(col.links || []).map((link: any) => `
+                        <a href="${link.href}" style="display: block; color: inherit; opacity: 0.9; margin-bottom: 0.5rem; text-decoration: none; font-size: 0.875rem;">${link.text}</a>
+                        `).join('')}
+                    </div>
+                    `).join('')}
+                </div>
+                <div style="border-top: 1px solid ${footerData.colors?.border || 'rgba(255,255,255,0.2)'}; padding-top: 1.5rem; text-align: center; font-size: 0.875rem; opacity: 0.8;">
+                    ${footerData.copyrightText?.replace('{YEAR}', new Date().getFullYear().toString()) || `© ${new Date().getFullYear()} ${project.name}`}
+                </div>
+            </div>
+        </footer>`;
+    }
+    
+    // Full HTML document
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(meta.title)}</title>
+    <meta name="description" content="${escapeHtml(meta.description)}">
+    <link rel="canonical" href="${meta.canonicalUrl}">
+    <meta name="robots" content="index, follow">
+    
+    ${favicon ? `
+    <link rel="icon" href="${favicon}">
+    <link rel="shortcut icon" href="${favicon}">
+    ` : ''}
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="${escapeHtml(meta.title)}">
+    <meta property="og:description" content="${escapeHtml(meta.description)}">
+    <meta property="og:type" content="${meta.ogType}">
+    <meta property="og:url" content="${meta.canonicalUrl}">
+    <meta property="og:site_name" content="${escapeHtml(project.brandIdentity?.name || project.name)}">
+    ${meta.ogImage ? `<meta property="og:image" content="${meta.ogImage}">` : ''}
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeHtml(meta.title)}">
+    <meta name="twitter:description" content="${escapeHtml(meta.description)}">
+    ${meta.ogImage ? `<meta name="twitter:image" content="${meta.ogImage}">` : ''}
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="${primaryColor}">
+    
+    <!-- JSON-LD Structured Data -->
+    ${meta.jsonLd ? `<script type="application/ld+json">${meta.jsonLd}</script>` : ''}
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(theme.fontFamilyHeader || 'Poppins')}:wght@400;500;600;700&family=${encodeURIComponent(theme.fontFamilyBody || 'Mulish')}:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: '${theme.fontFamilyBody || 'Mulish'}', system-ui, sans-serif;
+            background: ${backgroundColor};
+            color: ${textColor};
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4, h5, h6 { 
+            font-family: '${theme.fontFamilyHeader || 'Poppins'}', system-ui, sans-serif;
+        }
+        a { transition: opacity 0.2s; }
+        a:hover { opacity: 0.8; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header style="position: sticky; top: 0; z-index: 100; background: ${project.data?.header?.colors?.background || primaryColor}; padding: 1rem;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <a href="/" style="font-size: 1.25rem; font-weight: bold; color: ${project.data?.header?.colors?.text || '#fff'}; text-decoration: none;">
+                ${project.data?.header?.logoText || project.name}
+            </a>
+            <nav style="display: flex; gap: 0.5rem;">
+                ${navLinks}
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        ${pageContent || `
+        <section style="padding: 4rem 1rem; text-align: center;">
+            <h1 style="color: ${headingColor};">${page.title}</h1>
+        </section>
+        `}
+    </main>
+    
+    <!-- Hydration Script -->
+    <script>
+        window.__INITIAL_DATA__ = ${JSON.stringify({
+            projectId: project.id,
+            path,
+            pageId: page.id,
+            dynamicData: dynamicData || null,
+            // Full project data for client-side hydration with PageRenderer
+            project: {
+                id: project.id,
+                name: project.name,
+                pages: project.pages || [],
+                data: project.data,
+                theme: project.theme,
+                brandIdentity: project.brandIdentity,
+                componentOrder: project.componentOrder,
+                sectionVisibility: project.sectionVisibility,
+                menus: project.menus || [],
+            },
+            // Pre-loaded products and categories for ecommerce pages
+            products: products || [],
+            categories: categories || [],
+        })};
+    </script>
+    
+    <!-- Client-side hydration will happen here -->
+    <script src="${APP_URL}/assets/hydrate.js" async></script>
+</body>
+</html>`;
+}
+
+function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '');
+}
+
+function escapeHtml(str: string): string {
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// =============================================================================
+// EXPRESS APP
+// =============================================================================
+
 const app = express();
 
 // Health check
@@ -136,19 +684,25 @@ app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Debug endpoint to see headers
+// Debug endpoint
 app.get('/__debug', (req: Request, res: Response) => {
     res.json({
         headers: req.headers,
         hostname: req.hostname,
-        host: req.headers.host
+        host: req.headers.host,
+        path: req.path,
     });
 });
 
-// Main handler - Serve full website HTML
+// Clear cache endpoint (for debugging/deployment)
+app.post('/__clear-cache', (req: Request, res: Response) => {
+    domainCache.clear();
+    projectCache.clear();
+    res.json({ success: true, message: 'Cache cleared' });
+});
+
+// Main SSR handler
 app.get('*', async (req: Request, res: Response) => {
-    // Get the original hostname from various sources
-    // Cloudflare/Load Balancer may send the original host in different headers
     const hostname = (req.headers['cf-connecting-host'] as string) ||
                      (req.headers['x-forwarded-host'] as string) || 
                      (req.headers['x-original-host'] as string) ||
@@ -156,263 +710,112 @@ app.get('*', async (req: Request, res: Response) => {
                      req.hostname;
     const path = req.path;
     
-    console.log(`[SSR] Request: ${hostname}${path} (host header: ${req.headers.host})`);
+    console.log(`[SSR] Request: ${hostname}${path}`);
     
-    // Resolve domain to project data
-    const domainData = await resolveDomain(hostname);
-    
-    if (!domainData) {
-        return res.status(404).send(getNotFoundPage(hostname));
-    }
-    
-    const { projectId, userId, primaryColor, backgroundColor, projectName, favicon, seoTitle, seoDescription } = domainData;
-    
-    // Serve the full website HTML
-    // This HTML loads the app which renders ALL components (landing + ecommerce)
-    // The domain stays in the browser URL bar (no redirect!)
-    console.log(`[SSR] Serving full website for ${hostname} -> Project ${projectId} (primary: ${primaryColor})`);
-    
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cache for testing
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.send(getFullWebsitePage(
-        hostname, 
-        projectId, 
-        userId, 
-        path, 
-        primaryColor || '#ffffff', 
-        backgroundColor || '#0f172a', 
-        projectName || hostname,
-        favicon,
-        seoTitle,
-        seoDescription
-    ));
-});
-
-/**
- * Generate the full website HTML page with embedded iframe
- * Uses an invisible iframe that loads the preview URL,
- * then seamlessly replaces the content
- */
-function getFullWebsitePage(
-    domain: string, 
-    projectId: string, 
-    userId: string, 
-    path: string,
-    primaryColor: string,
-    backgroundColor: string,
-    projectName: string,
-    favicon?: string,
-    seoTitle?: string,
-    seoDescription?: string
-): string {
-    // Build the preview URL - this is the full landing page
-    // Include colors as query params so the iframe can use them for its loader
-    const colorParams = `?pc=${encodeURIComponent(primaryColor)}&bc=${encodeURIComponent(backgroundColor)}`;
-    const previewUrl = `${APP_URL}/preview/${userId}/${projectId}${colorParams}`;
-    
-    // Handle store-specific paths
-    let hashSuffix = '';
-    if (path.startsWith('/store') || path === '/tienda') {
-        hashSuffix = '#store';
-    } else if (path.startsWith('/product/')) {
-        hashSuffix = `#store/product/${path.replace('/product/', '')}`;
-    } else if (path.startsWith('/category/')) {
-        hashSuffix = `#store/category/${path.replace('/category/', '')}`;
-    }
-    
-    // Calculate complementary colors for the loader
-    // Use primary color for the spinner, with slightly transparent version for the track
-    const spinnerColor = primaryColor;
-    const trackColor = `${primaryColor}33`; // 20% opacity version
-    
-    // Use SEO title or project name
-    const pageTitle = seoTitle || projectName;
-    const pageDescription = seoDescription || '';
-    
-    // Favicon tags
-    const faviconTags = favicon ? `
-    <link rel="icon" href="${favicon}">
-    <link rel="shortcut icon" href="${favicon}">
-    <link rel="apple-touch-icon" href="${favicon}">` : '';
-
-    return `<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle}</title>
-    <meta name="description" content="${pageDescription}">
-    <meta name="robots" content="index, follow">
-    ${faviconTags}
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="${pageTitle}">
-    <meta property="og:description" content="${pageDescription}">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://${domain}">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="${pageTitle}">
-    <meta name="twitter:description" content="${pageDescription}">
-    
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://firebasestorage.googleapis.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden;
-            background: ${backgroundColor};
+    try {
+        // 1. Resolve domain to project
+        const domainData = await resolveDomain(hostname);
+        if (!domainData) {
+            return res.status(404).send(getNotFoundPage(hostname));
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-        .loading-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: ${backgroundColor};
-            z-index: 1000;
-            transition: opacity 0.3s ease;
-        }
-        .loading-container.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        /* Modern concentric spinner with project colors */
-        .loader-wrapper {
-            position: relative;
-            width: 64px;
-            height: 64px;
-        }
-        .loader-outer {
-            position: absolute;
-            inset: 0;
-            border: 3px solid ${trackColor};
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        .loader-middle {
-            position: absolute;
-            inset: 6px;
-            border: 3px solid transparent;
-            border-top-color: ${spinnerColor};
-            border-right-color: ${trackColor};
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        .loader-inner {
-            position: absolute;
-            inset: 14px;
-            border: 3px solid transparent;
-            border-top-color: ${spinnerColor};
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite reverse;
-        }
-        .loader-dot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background: ${spinnerColor};
-            border-radius: 50%;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        .loading-text {
-            margin-top: 20px;
-            color: ${spinnerColor};
-            font-size: 14px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            opacity: 0.8;
-        }
-        .loading-dots {
-            display: inline-flex;
-            gap: 2px;
-        }
-        .loading-dots span {
-            animation: bounce 1s ease-in-out infinite;
-        }
-        .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-4px); }
-        }
-    </style>
-</head>
-<body>
-    <div id="loading" class="loading-container">
-        <div class="loader-wrapper">
-            <div class="loader-outer"></div>
-            <div class="loader-middle"></div>
-            <div class="loader-inner"></div>
-            <div class="loader-dot"></div>
-        </div>
-        <p class="loading-text">Cargando<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
-    </div>
-    
-    <iframe 
-        id="site-frame"
-        src="${previewUrl}${hashSuffix}"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; payment"
-        loading="eager"
-        onload="document.getElementById('loading').classList.add('hidden');"
-    ></iframe>
-    
-    <script>
-        // Sync hash changes from parent to iframe
-        window.addEventListener('hashchange', function() {
-            var iframe = document.getElementById('site-frame');
-            var hash = window.location.hash;
-            if (iframe && hash) {
-                iframe.contentWindow.location.hash = hash;
-            }
-        });
         
-        // Listen for messages from iframe (e.g., navigation)
-        window.addEventListener('message', function(event) {
-            // Only accept messages from our app
-            if (event.origin !== '${APP_URL}') return;
+        const { projectId } = domainData;
+        
+        // 2. Load project data
+        const project = await loadProject(projectId);
+        if (!project) {
+            return res.status(404).send(getNotFoundPage(hostname));
+        }
+        
+        // 3. Match URL to page
+        const pages = project.pages || [];
+        let pageMatch: PageMatch | null = null;
+        
+        if (pages.length > 0) {
+            // Multi-page architecture
+            pageMatch = matchPage(pages, path);
             
-            if (event.data.type === 'navigation') {
-                // Update parent URL if needed
-                if (event.data.hash) {
-                    window.location.hash = event.data.hash;
+            // If no match and path is /, try to find home page
+            if (!pageMatch && (path === '/' || path === '')) {
+                const homePage = pages.find((p: SitePage) => p.isHomePage) || pages[0];
+                if (homePage) {
+                    pageMatch = { page: homePage, params: {} };
                 }
             }
-            if (event.data.type === 'title') {
-                document.title = event.data.title;
+        } else {
+            // Legacy single-page project - create virtual home page
+            pageMatch = {
+                page: {
+                    id: 'legacy-home',
+                    title: project.name,
+                    slug: '/',
+                    type: 'static',
+                    sections: project.componentOrder || [],
+                    sectionData: project.data,
+                    seo: {
+                        title: project.seoConfig?.title || project.name,
+                        description: project.seoConfig?.description,
+                    },
+                    isHomePage: true,
+                    showInNavigation: true,
+                },
+                params: {},
+            };
+        }
+        
+        if (!pageMatch) {
+            // 404 - page not found
+            return res.status(404).send(get404Page(project, hostname));
+        }
+        
+        const { page, params } = pageMatch;
+        
+        // 4. Load dynamic data if needed
+        let dynamicData: DynamicData | null = null;
+        if (page.type === 'dynamic' && params.slug) {
+            dynamicData = await loadDynamicData(projectId, page, params);
+            
+            // If dynamic data not found, show 404
+            if (!dynamicData) {
+                return res.status(404).send(get404Page(project, hostname));
             }
-        });
-    </script>
-</body>
-</html>`;
-}
+        }
+        
+        // 5. Load products and categories for hydration (for ecommerce sections)
+        let products: any[] = [];
+        let categories: any[] = [];
+        try {
+            const [productsSnap, categoriesSnap] = await Promise.all([
+                db.collection('publicStores').doc(projectId).collection('products').limit(50).get(),
+                db.collection('publicStores').doc(projectId).collection('categories').get(),
+            ]);
+            products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            categories = categoriesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            console.log('[SSR] Could not load products/categories:', e);
+        }
+        
+        // 6. Generate meta tags
+        const meta = generateMetaTags(project, page, dynamicData, hostname, path);
+        
+        // 7. Generate and send HTML
+        const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories);
+        
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300'); // 1min browser, 5min CDN
+        res.send(html);
+        
+        console.log(`[SSR] Served: ${hostname}${path} -> ${page.title}`);
+        
+    } catch (error) {
+        console.error(`[SSR] Error handling request:`, error);
+        res.status(500).send(getErrorPage());
+    }
+});
+
+// =============================================================================
+// ERROR PAGES
+// =============================================================================
 
 function getNotFoundPage(domain: string): string {
     return `<!DOCTYPE html>
@@ -429,13 +832,11 @@ function getNotFoundPage(domain: string): string {
         code { background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.875rem; color: #4f46e5; }
         a { color: #4f46e5; text-decoration: none; font-weight: 500; }
         a:hover { text-decoration: underline; }
-        .icon { font-size: 3rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">🌐</div>
-        <h1>Dominio no configurado</h1>
+        <h1>🌐 Dominio no configurado</h1>
         <p>El dominio <code>${domain}</code> no está asociado a ningún proyecto activo.</p>
         <p style="margin-top: 1.5rem;">Si eres el propietario, configura este dominio en tu <a href="https://quimera.ai/dashboard">panel de control</a>.</p>
     </div>
@@ -443,11 +844,82 @@ function getNotFoundPage(domain: string): string {
 </html>`;
 }
 
+function get404Page(project: ProjectData, hostname: string): string {
+    const theme = project.theme || {};
+    const globalColors = theme.globalColors || {};
+    
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada | ${project.name}</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            background: ${globalColors.background || '#0f172a'}; 
+            color: ${globalColors.text || '#94a3b8'};
+        }
+        .container { text-align: center; padding: 3rem; }
+        h1 { font-size: 6rem; margin: 0; color: ${globalColors.primary || '#4f46e5'}; }
+        p { margin: 1rem 0; }
+        a { 
+            display: inline-block; 
+            padding: 0.75rem 2rem; 
+            background: ${globalColors.primary || '#4f46e5'}; 
+            color: #fff; 
+            text-decoration: none; 
+            border-radius: 0.5rem; 
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <p style="color: ${globalColors.heading || '#f8fafc'}; font-size: 1.5rem;">Página no encontrada</p>
+        <p>La página que buscas no existe o ha sido movida.</p>
+        <a href="/">Volver al inicio</a>
+    </div>
+</body>
+</html>`;
+}
+
+function getErrorPage(): string {
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error</title>
+    <style>
+        body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #1f2937; color: #9ca3af; }
+        .container { text-align: center; padding: 3rem; }
+        h1 { color: #f87171; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Error del servidor</h1>
+        <p>Ocurrió un error al procesar tu solicitud. Por favor, intenta de nuevo.</p>
+    </div>
+</body>
+</html>`;
+}
+
+// =============================================================================
+// START SERVER
+// =============================================================================
+
 app.listen(PORT, () => {
-    console.log(`🚀 SSR Server running on port ${PORT}`);
+    console.log(`🚀 SSR Server (Multi-Page) running on port ${PORT}`);
     console.log(`   App URL: ${APP_URL}`);
 });
-
 
 
 

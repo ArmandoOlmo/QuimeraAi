@@ -49,10 +49,17 @@ export type PageSection =
     | 'menu' | 'banner' | 'products'
     // Store settings
     | 'storeSettings'
-    // Ecommerce sections
+    // Ecommerce sections (for landing/store pages)
     | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' 
     | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' 
-    | 'productBundle' | 'announcementBar';
+    | 'productBundle' | 'announcementBar'
+    // Dynamic page sections (new multi-page architecture)
+    | 'productDetail'      // Section for product detail page (/producto/:slug)
+    | 'categoryProducts'   // Section for category page (/categoria/:slug)
+    | 'articleContent'     // Section for blog article page (/blog/:slug)
+    | 'productGrid'        // Configurable product grid section
+    | 'cart'               // Cart section for cart page
+    | 'checkout';          // Checkout section for checkout page
 
 // Global Color Palette
 export interface GlobalColors {

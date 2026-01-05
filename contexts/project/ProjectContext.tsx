@@ -5,8 +5,10 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
-import { Project, PageData, ThemeData, PageSection, BrandIdentity } from '../../types';
+import { Project, PageData, ThemeData, PageSection, BrandIdentity, SitePage } from '../../types';
 import { initialData } from '../../data/initialData';
+import { createDefaultPages, createPageFromTemplate } from '../../data/defaultPages';
+import { PageTemplateId } from '../../types/onboarding';
 import {
     db,
     doc,
@@ -94,7 +96,7 @@ interface ProjectContextType {
     activeProjectId: string | null;
     activeProject: Project | null;
 
-    // Active Project Data
+    // Active Project Data (legacy single-page)
     data: PageData | null;
     setData: React.Dispatch<React.SetStateAction<PageData | null>>;
     theme: ThemeData;
@@ -105,6 +107,33 @@ interface ProjectContextType {
     setComponentOrder: React.Dispatch<React.SetStateAction<PageSection[]>>;
     sectionVisibility: Record<PageSection, boolean>;
     setSectionVisibility: React.Dispatch<React.SetStateAction<Record<PageSection, boolean>>>;
+
+    // ==========================================================================
+    // MULTI-PAGE ARCHITECTURE
+    // ==========================================================================
+    /** All pages in the active project */
+    pages: SitePage[];
+    setPages: React.Dispatch<React.SetStateAction<SitePage[]>>;
+    /** Currently active/editing page */
+    activePage: SitePage | null;
+    /** Set the active page by ID */
+    setActivePage: (pageId: string | null) => void;
+    /** Add a new page to the project */
+    addPage: (page: Partial<SitePage> | PageTemplateId) => Promise<string>;
+    /** Update an existing page */
+    updatePage: (pageId: string, updates: Partial<SitePage>) => Promise<void>;
+    /** Delete a page */
+    deletePage: (pageId: string) => Promise<void>;
+    /** Reorder pages */
+    reorderPages: (pageIds: string[]) => Promise<void>;
+    /** Duplicate a page */
+    duplicatePage: (pageId: string) => Promise<string>;
+    /** Get page by slug (for routing) */
+    getPageBySlug: (slug: string) => SitePage | null;
+    /** Check if project uses multi-page architecture */
+    isMultiPage: boolean;
+    /** Migrate legacy project to multi-page */
+    migrateToMultiPage: () => Promise<void>;
 
     // Project Operations
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean, projectOverride?: Project) => Promise<void>;
@@ -182,6 +211,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Template State
     const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+
+    // ==========================================================================
+    // MULTI-PAGE STATE
+    // ==========================================================================
+    const [pages, setPages] = useState<SitePage[]>([]);
+    const [activePageId, setActivePageId] = useState<string | null>(null);
+    const activePage = pages.find(p => p.id === activePageId) || null;
+    
+    // Check if project uses multi-page architecture
+    const isMultiPage = pages.length > 0;
 
     // Auto-save refs
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -405,6 +444,27 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setComponentOrder(project.componentOrder || initialData.componentOrder as PageSection[]);
         setSectionVisibility(project.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
 
+        // Load pages if using multi-page architecture
+        if (project.pages && project.pages.length > 0) {
+            setPages(project.pages);
+            // Set home page as active by default
+            const homePage = project.pages.find(p => p.isHomePage) || project.pages[0];
+            setActivePageId(homePage?.id || null);
+        } else {
+            // Legacy project - migrate to multi-page architecture
+            console.log('[ProjectContext] Migrating legacy project to multi-page architecture');
+            const { generatePagesFromLegacyProject } = await import('../../utils/legacyMigration');
+            const migratedPages = generatePagesFromLegacyProject(
+                project.componentOrder || [],
+                project.sectionVisibility || {},
+                project.data || {}
+            );
+            setPages(migratedPages);
+            // Set home page as active by default
+            const homePage = migratedPages.find(p => p.isHomePage) || migratedPages[0];
+            setActivePageId(homePage?.id || null);
+        }
+
         const isTemplate = project.status === 'Template';
         setIsEditingTemplate(isTemplate && fromAdmin);
 
@@ -435,6 +495,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             componentOrder,
             sectionVisibility,
             lastUpdated: now,
+            // Include pages if using multi-page architecture
+            ...(pages.length > 0 && { pages }),
         };
 
         try {
@@ -454,7 +516,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error("Error saving project:", error);
             throw error;
         }
-    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId]);
+    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId, pages]);
 
     // Publish project to publicStores (makes it accessible via custom domains)
     const publishProject = useCallback(async (): Promise<boolean> => {
@@ -516,6 +578,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 componentStatus: latestProjectData.componentStatus || null,
                 // Include navigation menus (CRITICAL for published site navigation)
                 menus: latestProjectData.menus || [],
+                // MULTI-PAGE: Include pages array for SSR
+                pages: pages.length > 0 ? pages : (latestProjectData.pages || []),
                 userId: user.uid,
                 tenantId: currentTenantId || null,
                 publishedAt: new Date().toISOString(),
@@ -628,7 +692,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, activeProjectId, saveProject]);
+    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, activeProjectId, saveProject, pages]);
 
     // Rename project
     const renameActiveProject = async (newName: string) => {
@@ -926,11 +990,216 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
+    // ==========================================================================
+    // MULTI-PAGE FUNCTIONS
+    // ==========================================================================
+
+    /**
+     * Set the active page by ID
+     */
+    const setActivePage = useCallback((pageId: string | null) => {
+        if (!pageId) {
+            setActivePageId(null);
+            return;
+        }
+        const page = pages.find(p => p.id === pageId);
+        if (page) {
+            setActivePageId(pageId);
+            // Update the legacy data/componentOrder/sectionVisibility to match the active page
+            if (page.sectionData) {
+                setData(prev => prev ? { ...prev, ...page.sectionData } : page.sectionData as PageData);
+            }
+            if (page.sections) {
+                setComponentOrder(page.sections);
+                const visibility = page.sections.reduce((acc, section) => {
+                    acc[section] = true;
+                    return acc;
+                }, {} as Record<PageSection, boolean>);
+                setSectionVisibility(prev => ({ ...prev, ...visibility }));
+            }
+        }
+    }, [pages]);
+
+    /**
+     * Add a new page to the project
+     */
+    const addPage = useCallback(async (pageInput: Partial<SitePage> | PageTemplateId): Promise<string> => {
+        let newPage: SitePage;
+        
+        if (typeof pageInput === 'string') {
+            // It's a PageTemplateId, create from template
+            newPage = createPageFromTemplate(pageInput as PageTemplateId, activeProject?.name);
+        } else {
+            // It's a partial page object
+            const now = new Date().toISOString();
+            newPage = {
+                id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: pageInput.title || 'Nueva Página',
+                slug: pageInput.slug || `/pagina-${Date.now()}`,
+                type: pageInput.type || 'static',
+                sections: pageInput.sections || ['header', 'hero', 'footer'],
+                sectionData: pageInput.sectionData || {},
+                seo: pageInput.seo || { title: pageInput.title || 'Nueva Página' },
+                showInNavigation: pageInput.showInNavigation ?? true,
+                navigationOrder: pageInput.navigationOrder ?? (pages.length * 10),
+                createdAt: now,
+                updatedAt: now,
+                ...pageInput,
+            } as SitePage;
+        }
+
+        setPages(prev => [...prev, newPage]);
+        return newPage.id;
+    }, [pages, activeProject]);
+
+    /**
+     * Update an existing page
+     */
+    const updatePage = useCallback(async (pageId: string, updates: Partial<SitePage>): Promise<void> => {
+        setPages(prev => prev.map(p => 
+            p.id === pageId 
+                ? { ...p, ...updates, updatedAt: new Date().toISOString() }
+                : p
+        ));
+        
+        // If this is the active page, also update the legacy state
+        if (pageId === activePageId) {
+            if (updates.sectionData) {
+                setData(prev => prev ? { ...prev, ...updates.sectionData } : updates.sectionData as PageData);
+            }
+            if (updates.sections) {
+                setComponentOrder(updates.sections);
+            }
+        }
+    }, [activePageId]);
+
+    /**
+     * Delete a page
+     */
+    const deletePage = useCallback(async (pageId: string): Promise<void> => {
+        const page = pages.find(p => p.id === pageId);
+        if (!page) return;
+        
+        // Don't allow deleting the home page
+        if (page.isHomePage) {
+            throw new Error('No se puede eliminar la página de inicio');
+        }
+        
+        setPages(prev => prev.filter(p => p.id !== pageId));
+        
+        // If this was the active page, switch to home page
+        if (pageId === activePageId) {
+            const homePage = pages.find(p => p.isHomePage);
+            setActivePageId(homePage?.id || null);
+        }
+    }, [pages, activePageId]);
+
+    /**
+     * Reorder pages
+     */
+    const reorderPages = useCallback(async (pageIds: string[]): Promise<void> => {
+        setPages(prev => {
+            const reordered = pageIds
+                .map((id, index) => {
+                    const page = prev.find(p => p.id === id);
+                    if (page) {
+                        return { ...page, navigationOrder: index * 10 };
+                    }
+                    return null;
+                })
+                .filter(Boolean) as SitePage[];
+            
+            // Add any pages that weren't in the pageIds array
+            const remaining = prev.filter(p => !pageIds.includes(p.id));
+            return [...reordered, ...remaining];
+        });
+    }, []);
+
+    /**
+     * Duplicate a page
+     */
+    const duplicatePage = useCallback(async (pageId: string): Promise<string> => {
+        const page = pages.find(p => p.id === pageId);
+        if (!page) {
+            throw new Error('Página no encontrada');
+        }
+
+        const now = new Date().toISOString();
+        const newPage: SitePage = {
+            ...page,
+            id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: `${page.title} (Copia)`,
+            slug: `${page.slug}-copia`,
+            isHomePage: false, // Can't duplicate as home page
+            createdAt: now,
+            updatedAt: now,
+        };
+
+        setPages(prev => [...prev, newPage]);
+        return newPage.id;
+    }, [pages]);
+
+    /**
+     * Get page by slug (for routing)
+     */
+    const getPageBySlug = useCallback((slug: string): SitePage | null => {
+        // First try exact match
+        const exactMatch = pages.find(p => p.slug === slug);
+        if (exactMatch) return exactMatch;
+
+        // Try matching dynamic routes (e.g., /producto/:slug -> /producto/shoes)
+        for (const page of pages) {
+            if (page.slug.includes(':')) {
+                const pattern = page.slug.replace(/:[^/]+/g, '[^/]+');
+                const regex = new RegExp(`^${pattern}$`);
+                if (regex.test(slug)) {
+                    return page;
+                }
+            }
+        }
+
+        return null;
+    }, [pages]);
+
+    /**
+     * Migrate legacy project to multi-page architecture
+     */
+    const migrateToMultiPage = useCallback(async (): Promise<void> => {
+        if (!activeProject || !data) return;
+        
+        // Create default pages with current project data
+        const defaultPages = createDefaultPages({
+            businessName: activeProject.name,
+            hasEcommerce: componentOrder.some(s => 
+                ['products', 'featuredProducts', 'categoryGrid', 'storeSettings'].includes(s)
+            ),
+        });
+
+        // Update the home page with current data
+        const homePage = defaultPages.find(p => p.isHomePage);
+        if (homePage) {
+            homePage.sections = componentOrder.filter(s => 
+                !['colors', 'typography'].includes(s) && sectionVisibility[s]
+            );
+            homePage.sectionData = data;
+        }
+
+        setPages(defaultPages);
+        
+        // Set home page as active
+        if (homePage) {
+            setActivePageId(homePage.id);
+        }
+    }, [activeProject, data, componentOrder, sectionVisibility]);
+
     const value: ProjectContextType = {
+        // Project State
         projects,
         isLoadingProjects,
         activeProjectId,
         activeProject,
+        
+        // Legacy single-page data
         data,
         setData,
         theme,
@@ -941,6 +1210,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setComponentOrder,
         sectionVisibility,
         setSectionVisibility,
+        
+        // Multi-page architecture
+        pages,
+        setPages,
+        activePage,
+        setActivePage,
+        addPage,
+        updatePage,
+        deletePage,
+        reorderPages,
+        duplicatePage,
+        getPageBySlug,
+        isMultiPage,
+        migrateToMultiPage,
+        
+        // Project Operations
         loadProject,
         saveProject,
         publishProject,
@@ -951,12 +1236,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         exportProjectAsHtml,
         updateProjectThumbnail,
         updateProjectFavicon,
+        
+        // Template Management
         isEditingTemplate,
         exitTemplateEditor,
         createNewTemplate,
         archiveTemplate,
         duplicateTemplate,
         updateTemplateInState,
+        
+        // Refresh
         refreshProjects,
     };
 

@@ -485,6 +485,15 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             priceRange={priceStats}
                             currencySymbol={currencySymbol}
                             primaryColor={primaryColor}
+                            themeColors={embedded && themeColors ? {
+                                background: themeColors.cardBackground,
+                                text: colors.text,
+                                heading: colors.heading,
+                                border: colors.border,
+                                cardBackground: colors.cardBg,
+                                mutedText: colors.mutedText,
+                                inputBackground: colors.cardBg,
+                            } : undefined}
                             searchTerm={searchTerm}
                             onSearchChange={setSearchTerm}
                             onSearch={handleSearch}

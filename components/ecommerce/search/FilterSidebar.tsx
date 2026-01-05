@@ -15,6 +15,16 @@ import {
 import { ProductFilters, PriceRange } from '../hooks/useProductSearch';
 import SearchBar from './SearchBar';
 
+interface ThemeColors {
+    background?: string;
+    text?: string;
+    heading?: string;
+    border?: string;
+    cardBackground?: string;
+    mutedText?: string;
+    inputBackground?: string;
+}
+
 interface FilterSidebarProps {
     isOpen: boolean;
     onClose: () => void;
@@ -26,6 +36,8 @@ interface FilterSidebarProps {
     priceRange: { min: number; max: number };
     currencySymbol?: string;
     primaryColor?: string;
+    /** Theme colors from the parent site for consistent styling */
+    themeColors?: ThemeColors;
     // Search props
     searchTerm?: string;
     onSearchChange?: (term: string) => void;
@@ -44,11 +56,23 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     priceRange,
     currencySymbol = '$',
     primaryColor = '#6366f1',
+    themeColors,
     searchTerm = '',
     onSearchChange,
     onSearch,
     searchSuggestions = [],
 }) => {
+    // Theme colors with fallbacks
+    const colors = {
+        background: themeColors?.background,
+        text: themeColors?.text,
+        heading: themeColors?.heading,
+        border: themeColors?.border,
+        cardBackground: themeColors?.cardBackground,
+        mutedText: themeColors?.mutedText,
+        inputBackground: themeColors?.inputBackground || themeColors?.cardBackground,
+    };
+    const hasThemeColors = Boolean(themeColors);
     const [expandedSections, setExpandedSections] = useState<Set<string>>(
         new Set(['categories', 'price', 'availability'])
     );
@@ -122,7 +146,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             onClick={() => toggleSection(section)}
             className="w-full flex items-center justify-between py-3 text-left"
         >
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span 
+                className={hasThemeColors ? "font-medium" : "font-medium text-gray-900 dark:text-white"}
+                style={colors.heading ? { color: colors.heading } : undefined}
+            >
                 {title}
                 {count !== undefined && count > 0 && (
                     <span
@@ -134,9 +161,17 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 )}
             </span>
             {expandedSections.has(section) ? (
-                <ChevronUp className="text-gray-400" size={18} />
+                <ChevronUp 
+                    size={18} 
+                    className={hasThemeColors ? "" : "text-gray-400"}
+                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                />
             ) : (
-                <ChevronDown className="text-gray-400" size={18} />
+                <ChevronDown 
+                    size={18}
+                    className={hasThemeColors ? "" : "text-gray-400"}
+                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                />
             )}
         </button>
     );
@@ -145,22 +180,38 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <div className="h-full flex flex-col">
             {/* Search Bar */}
             {onSearchChange && onSearch && (
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div 
+                    className={hasThemeColors ? "p-4 border-b" : "p-4 border-b border-gray-200 dark:border-gray-700"}
+                    style={colors.border ? { borderColor: colors.border } : undefined}
+                >
                     <SearchBar
                         value={searchTerm}
                         onChange={onSearchChange}
                         onSearch={onSearch}
                         suggestions={searchSuggestions}
                         primaryColor={primaryColor}
+                        themeColors={hasThemeColors ? {
+                            background: colors.cardBackground || colors.background,
+                            text: colors.text,
+                            border: colors.border,
+                            mutedText: colors.mutedText,
+                            inputBackground: colors.inputBackground,
+                        } : undefined}
                     />
                 </div>
             )}
             
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div 
+                className={hasThemeColors ? "flex items-center justify-between p-4 border-b" : "flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"}
+                style={colors.border ? { borderColor: colors.border } : undefined}
+            >
                 <div className="flex items-center gap-2">
                     <SlidersHorizontal style={{ color: primaryColor }} size={20} />
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    <h2 
+                        className={hasThemeColors ? "text-lg font-bold" : "text-lg font-bold text-gray-900 dark:text-white"}
+                        style={colors.heading ? { color: colors.heading } : undefined}
+                    >
                         Filtros
                     </h2>
                     {activeFiltersCount > 0 && (
@@ -176,7 +227,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     {activeFiltersCount > 0 && (
                         <button
                             onClick={onReset}
-                            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                            className={hasThemeColors ? "p-2 transition-colors hover:opacity-70" : "p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
+                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
                             title="Limpiar filtros"
                         >
                             <RotateCcw size={18} />
@@ -184,7 +236,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     )}
                     <button
                         onClick={onClose}
-                        className="lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                        className={hasThemeColors ? "lg:hidden p-2 transition-colors hover:opacity-70" : "lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
+                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
                     >
                         <X size={20} />
                     </button>
@@ -195,7 +248,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
                 {/* Categories */}
                 {categories.length > 0 && (
-                    <div className="border-b border-gray-200 dark:border-gray-700">
+                    <div 
+                        className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
+                        style={colors.border ? { borderColor: colors.border } : undefined}
+                    >
                         <SectionHeader
                             title="Categorías"
                             section="categories"
@@ -210,12 +266,14 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
                                             isCategorySelected(category)
                                                 ? 'text-white'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                : hasThemeColors 
+                                                    ? 'hover:opacity-80'
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         }`}
                                         style={
                                             isCategorySelected(category)
                                                 ? { backgroundColor: primaryColor }
-                                                : {}
+                                                : { color: colors.text }
                                         }
                                     >
                                         <span>{category.name}</span>
@@ -230,7 +288,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 )}
 
                 {/* Price Range */}
-                <div className="border-b border-gray-200 dark:border-gray-700">
+                <div 
+                    className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
+                    style={colors.border ? { borderColor: colors.border } : undefined}
+                >
                     <SectionHeader
                         title="Precio"
                         section="price"
@@ -240,11 +301,17 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         <div className="pb-4 space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex-1">
-                                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                                    <label 
+                                        className={hasThemeColors ? "text-xs mb-1 block" : "text-xs text-gray-500 dark:text-gray-400 mb-1 block"}
+                                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                    >
                                         Mínimo
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <span 
+                                            className={hasThemeColors ? "absolute left-3 top-1/2 -translate-y-1/2" : "absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"}
+                                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                        >
                                             {currencySymbol}
                                         </span>
                                         <input
@@ -254,18 +321,37 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             onBlur={handlePriceChange}
                                             min={priceRange.min}
                                             max={localPriceMax}
-                                            className="w-full pl-7 pr-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
-                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                            className={hasThemeColors 
+                                                ? "w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                                                : "w-full pl-7 pr-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
+                                            }
+                                            style={{ 
+                                                '--tw-ring-color': primaryColor,
+                                                ...(hasThemeColors ? {
+                                                    backgroundColor: colors.inputBackground,
+                                                    borderColor: colors.border,
+                                                    color: colors.text,
+                                                } : {})
+                                            } as React.CSSProperties}
                                         />
                                     </div>
                                 </div>
-                                <span className="text-gray-400 mt-5">-</span>
+                                <span 
+                                    className={hasThemeColors ? "mt-5" : "text-gray-400 mt-5"}
+                                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                >-</span>
                                 <div className="flex-1">
-                                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                                    <label 
+                                        className={hasThemeColors ? "text-xs mb-1 block" : "text-xs text-gray-500 dark:text-gray-400 mb-1 block"}
+                                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                    >
                                         Máximo
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <span 
+                                            className={hasThemeColors ? "absolute left-3 top-1/2 -translate-y-1/2" : "absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"}
+                                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                        >
                                             {currencySymbol}
                                         </span>
                                         <input
@@ -275,8 +361,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             onBlur={handlePriceChange}
                                             min={localPriceMin}
                                             max={priceRange.max}
-                                            className="w-full pl-7 pr-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
-                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                            className={hasThemeColors 
+                                                ? "w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                                                : "w-full pl-7 pr-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
+                                            }
+                                            style={{ 
+                                                '--tw-ring-color': primaryColor,
+                                                ...(hasThemeColors ? {
+                                                    backgroundColor: colors.inputBackground,
+                                                    borderColor: colors.border,
+                                                    color: colors.text,
+                                                } : {})
+                                            } as React.CSSProperties}
                                         />
                                     </div>
                                 </div>
@@ -299,7 +395,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </div>
 
                 {/* Availability */}
-                <div className="border-b border-gray-200 dark:border-gray-700">
+                <div 
+                    className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
+                    style={colors.border ? { borderColor: colors.border } : undefined}
+                >
                     <SectionHeader title="Disponibilidad" section="availability" />
                     {expandedSections.has('availability') && (
                         <div className="pb-4 space-y-2">
@@ -308,15 +407,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                                     filters.inStock
                                         ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : hasThemeColors 
+                                            ? 'hover:opacity-80'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
+                                style={!filters.inStock && colors.text ? { color: colors.text } : undefined}
                             >
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                                         filters.inStock
                                             ? 'border-green-500 bg-green-500'
-                                            : 'border-gray-300 dark:border-gray-600'
+                                            : hasThemeColors 
+                                                ? ''
+                                                : 'border-gray-300 dark:border-gray-600'
                                     }`}
+                                    style={!filters.inStock && colors.border ? { borderColor: colors.border } : undefined}
                                 >
                                     {filters.inStock && <Check size={14} className="text-white" />}
                                 </div>
@@ -327,15 +432,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                                     filters.onSale
                                         ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : hasThemeColors 
+                                            ? 'hover:opacity-80'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
+                                style={!filters.onSale && colors.text ? { color: colors.text } : undefined}
                             >
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                                         filters.onSale
                                             ? 'border-red-500 bg-red-500'
-                                            : 'border-gray-300 dark:border-gray-600'
+                                            : hasThemeColors 
+                                                ? ''
+                                                : 'border-gray-300 dark:border-gray-600'
                                     }`}
+                                    style={!filters.onSale && colors.border ? { borderColor: colors.border } : undefined}
                                 >
                                     {filters.onSale && <Check size={14} className="text-white" />}
                                 </div>
@@ -346,16 +457,24 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                                     filters.featured
                                         ? 'text-white'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : hasThemeColors 
+                                            ? 'hover:opacity-80'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
-                                style={filters.featured ? { backgroundColor: primaryColor } : {}}
+                                style={filters.featured 
+                                    ? { backgroundColor: primaryColor } 
+                                    : colors.text ? { color: colors.text } : {}
+                                }
                             >
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                                         filters.featured
                                             ? 'border-white bg-white/20'
-                                            : 'border-gray-300 dark:border-gray-600'
+                                            : hasThemeColors 
+                                                ? ''
+                                                : 'border-gray-300 dark:border-gray-600'
                                     }`}
+                                    style={!filters.featured && colors.border ? { borderColor: colors.border } : undefined}
                                 >
                                     {filters.featured && <Check size={14} className="text-white" />}
                                 </div>
@@ -384,12 +503,17 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             className={`px-3 py-1.5 text-sm rounded-full border-2 transition-colors ${
                                                 isSelected
                                                     ? 'text-white'
-                                                    : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                                                    : hasThemeColors
+                                                        ? 'hover:opacity-80'
+                                                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
                                             }`}
                                             style={
                                                 isSelected
                                                     ? { backgroundColor: primaryColor, borderColor: primaryColor }
-                                                    : {}
+                                                    : { 
+                                                        borderColor: colors.border, 
+                                                        color: colors.text 
+                                                    }
                                             }
                                         >
                                             {tag}
@@ -420,12 +544,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     fixed lg:relative lg:translate-x-0
                     left-0 top-0 h-full lg:h-auto
                     w-80 lg:w-64
-                    bg-white dark:bg-gray-800 lg:bg-transparent dark:lg:bg-transparent
+                    ${hasThemeColors ? '' : 'bg-white dark:bg-gray-800 lg:bg-transparent dark:lg:bg-transparent'}
                     shadow-xl lg:shadow-none
                     z-50 lg:z-auto
                     transform transition-transform duration-300
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}
+                style={hasThemeColors ? { backgroundColor: colors.background } : undefined}
             >
                 {content}
             </aside>

@@ -353,7 +353,7 @@ export interface ABTestConfig {
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar';
+export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar' | 'productDetail' | 'categoryProducts' | 'articleContent' | 'productGrid' | 'cart' | 'checkout';
 export type ComponentStyles = Record<EditableComponentID, any>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 

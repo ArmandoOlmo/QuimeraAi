@@ -138,9 +138,13 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
     // Remove item from cart
     const removeItem = useCallback((productId: string, variantId?: string) => {
         setItems((prevItems) =>
-            prevItems.filter(
-                (item) => !(item.productId === productId && item.variantId === variantId)
-            )
+            prevItems.filter((item) => {
+                // Normalize variantId: treat undefined, null, and empty string as equivalent
+                const itemVariantId = item.variantId || undefined;
+                const targetVariantId = variantId || undefined;
+                const shouldRemove = item.productId === productId && itemVariantId === targetVariantId;
+                return !shouldRemove;
+            })
         );
     }, []);
 
@@ -153,7 +157,10 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
 
         setItems((prevItems) =>
             prevItems.map((item) => {
-                if (item.productId === productId && item.variantId === variantId) {
+                // Normalize variantId comparison
+                const itemVariantId = item.variantId || undefined;
+                const targetVariantId = variantId || undefined;
+                if (item.productId === productId && itemVariantId === targetVariantId) {
                     return { ...item, quantity };
                 }
                 return item;

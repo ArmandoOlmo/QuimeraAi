@@ -58,6 +58,18 @@ export {
     AnnouncementBar,
 } from './sections';
 
+// =============================================================================
+// PAGE SECTION COMPONENTS (For multi-page architecture)
+// =============================================================================
+export {
+    ProductDetailSection,
+    CategoryProductsSection,
+    CartSection,
+    CheckoutSection,
+    ProductGridSection,
+    ArticleContentSection,
+} from './sections';
+
 // Reviews
 export { 
     RatingStars, 

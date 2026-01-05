@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -362,8 +363,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </div>
 
-      {/* Thumbnail Editor Modal */}
-      {showThumbnailEditor && (
+      {/* Thumbnail Editor Modal - Using Portal to avoid transform context issues */}
+      {showThumbnailEditor && createPortal(
         <ThumbnailEditor
           project={project}
           onClose={() => setShowThumbnailEditor(false)}
@@ -371,7 +372,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             // Refresh projects to get the updated thumbnail from Firestore
             refreshProjects();
           }}
-        />
+        />,
+        document.body
       )}
     </article>
   );

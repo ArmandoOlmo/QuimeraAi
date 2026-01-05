@@ -4,7 +4,8 @@ import { useFiles } from '../../contexts/files';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
-import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen } from 'lucide-react';
+import { usePublicProducts } from '../../hooks/usePublicProducts';
+import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen, ShoppingBag } from 'lucide-react';
 import DragDropZone from './DragDropZone';
 import { searchFiles, filterFilesByType, FileTypeFilter } from '../../utils/fileHelpers';
 
@@ -12,6 +13,8 @@ interface ImagePickerProps {
     label: string;
     value: string;
     onChange: (url: string) => void;
+    /** Optional store ID to show product images */
+    storeId?: string;
 }
 
 const ASPECT_RATIOS = [
@@ -43,16 +46,33 @@ const THINKING_LEVELS = [
     { label: 'High', value: 'high' },
 ];
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId }) => {
     const { t } = useTranslation();
     const { files, globalFiles, uploadFile } = useFiles();
     const { generateImage, enhancePrompt } = useAI();
     const { projects, activeProjectId, activeProject } = useProject();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'library' | 'generate'>('library');
+    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');
     const [librarySource, setLibrarySource] = useState<'user' | 'global'>('user');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Product images - only fetch if storeId is provided
+    const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
+        storeId || null, 
+        { limitCount: 100 }
+    );
+    
+    // Filter products that have images
+    const productImages = useMemo(() => {
+        return storeProducts
+            .filter(p => p.image && p.image.trim() !== '')
+            .map(p => ({
+                id: p.id,
+                name: p.name,
+                imageUrl: p.image!,
+            }));
+    }, [storeProducts]);
     
     // Library filters - default to current project if available
     const [searchQuery, setSearchQuery] = useState('');
@@ -289,6 +309,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                             >
                                 {t('dashboard.imagePicker.assetLibrary')}
                             </button>
+                            {storeId && (
+                                <button 
+                                    onClick={() => setActiveTab('products')}
+                                    className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'products' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                >
+                                    <ShoppingBag size={14} /> {t('dashboard.imagePicker.productImages', 'Productos')}
+                                </button>
+                            )}
                             <button 
                                 onClick={() => setActiveTab('generate')}
                                 className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'generate' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
@@ -490,6 +518,56 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* PRODUCTS TAB */}
+                        {activeTab === 'products' && storeId && (
+                            <div className="h-full flex flex-col">
+                                <div className="mb-4">
+                                    <p className="text-sm text-editor-text-secondary">
+                                        {t('dashboard.imagePicker.selectFromProducts', 'Selecciona una imagen de tus productos')}
+                                    </p>
+                                </div>
+                                
+                                {isLoadingProducts ? (
+                                    <div className="flex-grow flex items-center justify-center">
+                                        <Loader2 className="animate-spin text-editor-accent" size={32} />
+                                    </div>
+                                ) : productImages.length > 0 ? (
+                                    <div className="flex-grow overflow-y-auto custom-scrollbar">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                            {productImages.map(product => (
+                                                <div 
+                                                    key={product.id} 
+                                                    onClick={() => { onChange(product.imageUrl); setIsLibraryOpen(false); success(t('dashboard.imagePicker.imageSelected')); }}
+                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === product.imageUrl ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
+                                                >
+                                                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                    {value === product.imageUrl ? (
+                                                        <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
+                                                            <div className="bg-editor-accent text-editor-bg rounded-full p-2">
+                                                                <Check size={20} />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                                            <span className="text-white text-xs font-bold text-center line-clamp-2">{product.name}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex-grow flex flex-col items-center justify-center text-editor-text-secondary">
+                                        <ShoppingBag size={48} className="mb-4 opacity-50" />
+                                        <p className="font-medium mb-2">{t('dashboard.imagePicker.noProductImages', 'No hay imágenes de productos')}</p>
+                                        <p className="text-sm text-center max-w-md">
+                                            {t('dashboard.imagePicker.addProductImagesHint', 'Agrega imágenes a tus productos en la sección de Productos para verlas aquí.')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 

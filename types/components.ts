@@ -1039,7 +1039,8 @@ export interface CategoryGridData {
 // ECOMMERCE - PRODUCT HERO
 // =============================================================================
 export type ProductHeroVariant = 'featured' | 'collection' | 'sale' | 'new-arrivals';
-export type ProductHeroLayout = 'single' | 'split' | 'carousel';
+export type ProductHeroLayout = 'split' | 'split-right' | 'full' | 'centered';
+export type ProductHeroImageSize = 'small' | 'medium' | 'large';
 
 export interface ProductHeroData {
     variant: ProductHeroVariant;
@@ -1064,6 +1065,11 @@ export interface ProductHeroData {
     height: number;
     textAlignment: TextAlignment;
     contentPosition: 'left' | 'center' | 'right';
+    // Product Display Options
+    imageSize?: ProductHeroImageSize;
+    showPrice?: boolean;
+    showDescription?: boolean;
+    showFeatures?: boolean;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -1080,6 +1086,7 @@ export interface ProductHeroData {
         overlayColor: string;
         heading: string;
         text: string;
+        accent?: string;
         buttonBackground?: string;
         buttonText?: string;
         badgeBackground?: string;
@@ -1532,6 +1539,223 @@ export interface ProductDetailPageData {
 }
 
 // =============================================================================
+// DYNAMIC PAGE SECTIONS (Multi-page architecture)
+// =============================================================================
+
+/**
+ * ProductDetailSectionData - Configuración para la sección de detalle de producto
+ * Usada en páginas dinámicas de producto (/producto/:slug)
+ */
+export interface ProductDetailSectionData {
+    /** Mostrar galería de imágenes */
+    showGallery?: boolean;
+    /** Mostrar variantes del producto */
+    showVariants?: boolean;
+    /** Mostrar descripción completa */
+    showDescription?: boolean;
+    /** Mostrar especificaciones/atributos */
+    showSpecifications?: boolean;
+    /** Mostrar productos relacionados */
+    showRelatedProducts?: boolean;
+    /** Número de productos relacionados a mostrar */
+    relatedProductsCount?: number;
+    /** Mostrar reseñas */
+    showReviews?: boolean;
+    /** Layout de la galería */
+    galleryLayout?: 'vertical' | 'horizontal' | 'grid';
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        priceColor?: string;
+        salePriceColor?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+}
+
+/**
+ * CategoryProductsSectionData - Configuración para la sección de productos de categoría
+ * Usada en páginas dinámicas de categoría (/categoria/:slug)
+ */
+export interface CategoryProductsSectionData {
+    /** Mostrar descripción de categoría */
+    showCategoryDescription?: boolean;
+    /** Mostrar imagen de cabecera de categoría */
+    showCategoryHero?: boolean;
+    /** Mostrar filtros */
+    showFilters?: boolean;
+    /** Mostrar ordenamiento */
+    showSort?: boolean;
+    /** Productos por página */
+    productsPerPage?: number;
+    /** Columnas en grid */
+    columns?: 2 | 3 | 4 | 5;
+    /** Estilo de tarjeta */
+    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        cardText?: string;
+    };
+}
+
+/**
+ * ArticleContentSectionData - Configuración para la sección de contenido de artículo
+ * Usada en páginas dinámicas de blog (/blog/:slug)
+ */
+export interface ArticleContentSectionData {
+    /** Mostrar imagen destacada */
+    showFeaturedImage?: boolean;
+    /** Mostrar autor */
+    showAuthor?: boolean;
+    /** Mostrar fecha */
+    showDate?: boolean;
+    /** Mostrar categorías/tags */
+    showTags?: boolean;
+    /** Mostrar artículos relacionados */
+    showRelatedArticles?: boolean;
+    /** Número de artículos relacionados */
+    relatedArticlesCount?: number;
+    /** Mostrar compartir en redes */
+    showShareButtons?: boolean;
+    /** Mostrar tabla de contenido */
+    showTableOfContents?: boolean;
+    /** Ancho máximo del contenido */
+    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        linkColor?: string;
+    };
+}
+
+/**
+ * ProductGridSectionData - Configuración para grid de productos configurable
+ * Puede usarse en cualquier página estática
+ */
+export interface ProductGridSectionData {
+    /** Título de la sección */
+    title?: string;
+    /** Descripción */
+    description?: string;
+    /** Tipo de fuente de productos */
+    sourceType?: 'all' | 'category' | 'manual' | 'bestsellers' | 'newest';
+    /** ID de categoría (si sourceType es 'category') */
+    categoryId?: string;
+    /** IDs de productos (si sourceType es 'manual') */
+    productIds?: string[];
+    /** Productos por página */
+    productsPerPage?: number;
+    /** Columnas en grid */
+    columns?: 2 | 3 | 4 | 5;
+    /** Mostrar filtros */
+    showFilters?: boolean;
+    /** Mostrar búsqueda */
+    showSearch?: boolean;
+    /** Mostrar paginación */
+    showPagination?: boolean;
+    /** Estilo de tarjeta */
+    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+}
+
+/**
+ * CartSectionData - Configuración para la sección del carrito
+ */
+export interface CartSectionData {
+    /** Mostrar resumen de totales */
+    showSummary?: boolean;
+    /** Mostrar productos sugeridos */
+    showSuggestions?: boolean;
+    /** Número de sugerencias */
+    suggestionsCount?: number;
+    /** Mostrar cupón */
+    showCouponInput?: boolean;
+    /** Mostrar estimación de envío */
+    showShippingEstimate?: boolean;
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+}
+
+/**
+ * CheckoutSectionData - Configuración para la sección de checkout
+ */
+export interface CheckoutSectionData {
+    /** Mostrar resumen del pedido */
+    showOrderSummary?: boolean;
+    /** Mostrar opciones de envío */
+    showShippingOptions?: boolean;
+    /** Mostrar cupón */
+    showCouponInput?: boolean;
+    /** Campos de dirección requeridos */
+    requiredFields?: ('phone' | 'company' | 'apartment')[];
+    /** Métodos de pago disponibles */
+    paymentMethods?: ('card' | 'paypal' | 'bank_transfer' | 'cash_on_delivery')[];
+    /** Layout */
+    layout?: 'single-column' | 'two-column';
+    /** Styling */
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    /** Colors */
+    colors?: {
+        background?: string;
+        heading?: string;
+        text?: string;
+        accent?: string;
+        cardBackground?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        inputBackground?: string;
+        inputBorder?: string;
+    };
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 
@@ -1573,5 +1797,21 @@ export interface PageData {
     announcementBar?: AnnouncementBarData;
     // Product Detail Page - colors for the product detail view
     productDetailPage?: ProductDetailPageData;
+    
+    // ==========================================================================
+    // DYNAMIC PAGE SECTIONS (Multi-page architecture)
+    // ==========================================================================
+    /** Configuración de sección de detalle de producto */
+    productDetail?: ProductDetailSectionData;
+    /** Configuración de sección de productos de categoría */
+    categoryProducts?: CategoryProductsSectionData;
+    /** Configuración de sección de contenido de artículo */
+    articleContent?: ArticleContentSectionData;
+    /** Configuración de grid de productos */
+    productGrid?: ProductGridSectionData;
+    /** Configuración de sección de carrito */
+    cart?: CartSectionData;
+    /** Configuración de sección de checkout */
+    checkout?: CheckoutSectionData;
 }
 

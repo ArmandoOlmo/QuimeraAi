@@ -260,7 +260,7 @@ const NavigationDashboard: React.FC = () => {
                                     <p className="text-xs text-muted-foreground">
                                         {t('navigationDashboard.connectMenusDesc')}
                                         <button
-                                            onClick={() => setView('editor')}
+                                            onClick={() => loadProject(effectiveProjectId!, false, true)}
                                             className="ml-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                         >
                                             {t('navigationDashboard.goToEditor')}

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../contexts/EditorContext';
 import { useUI } from '../contexts/core/UIContext';
@@ -9,7 +9,10 @@ import { useCMS } from '../contexts/cms';
 import { useAdmin } from '../contexts/admin';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
-import { PageSection, PricingTier, ServiceIcon } from '../types';
+import { PageSection, PricingTier, ServiceIcon, SitePage } from '../types';
+import PageSelector from './dashboard/PageSelector';
+import PageSettings from './dashboard/PageSettings';
+import { PageTemplateId, PAGE_TEMPLATES } from '../types/onboarding';
 import ColorControl from './ui/ColorControl';
 import GlobalStylesControl from './ui/GlobalStylesControl';
 import ImagePicker from './ui/ImagePicker';
@@ -414,9 +417,17 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 const Controls: React.FC = () => {
   const { t } = useTranslation();
   const { activeSection, onSectionSelect, activeSectionItem, isSidebarOpen, setIsSidebarOpen } = useUI();
-  const { data, setData, sectionVisibility, setSectionVisibility, componentOrder, setComponentOrder, activeProject, updateProjectFavicon } = useProject();
+  const { 
+    data, setData, sectionVisibility, setSectionVisibility, 
+    componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
+    // Page management
+    pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage
+  } = useProject();
   const { uploadImageAndGetURL } = useFiles();
   const { menus } = useCMS();
+  
+  // Page settings modal state
+  const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus, componentStyles } = useAdmin();
   const { navigate } = useRouter();
 
@@ -477,8 +488,97 @@ const Controls: React.FC = () => {
   // Close add component dropdown when clicking outside
   useClickOutside(addComponentRef, () => setIsAddComponentOpen(false));
 
+  // Page management handlers
+  const handleSelectPage = (pageId: string) => {
+    const page = pages.find(p => p.id === pageId);
+    if (page) {
+      setActivePage(page);
+      // Clear active section when switching pages
+      onSectionSelect(null as any);
+    }
+  };
+
+  const handleAddPage = (templateId: PageTemplateId) => {
+    const template = PAGE_TEMPLATES[templateId];
+    if (template) {
+      const newPage: SitePage = {
+        id: `page-${Date.now()}`,
+        title: template.title,
+        slug: `/${templateId === 'home' ? '' : templateId}`,
+        type: template.type,
+        dynamicSource: template.dynamicSource,
+        sections: template.sections as PageSection[],
+        sectionData: {},
+        seo: {
+          title: template.title,
+          description: '',
+        },
+        isHomePage: templateId === 'home',
+        showInNavigation: true,
+        navigationOrder: pages.length + 1,
+      };
+      addPage(newPage);
+      setActivePage(newPage);
+    }
+  };
+
+  const handleDuplicatePage = (pageId: string) => {
+    duplicatePage(pageId);
+  };
+
+  const handleDeletePage = (pageId: string) => {
+    const page = pages.find(p => p.id === pageId);
+    if (page && !page.isHomePage) {
+      deletePage(pageId);
+      // If we deleted the active page, switch to home
+      if (activePage?.id === pageId) {
+        const homePage = pages.find(p => p.isHomePage);
+        if (homePage) setActivePage(homePage);
+      }
+    }
+  };
+
+  const handlePageSettings = (pageId: string) => {
+    setShowPageSettings(pageId);
+  };
+
+  const handleSavePageSettings = (pageId: string, updates: Partial<SitePage>) => {
+    updatePage(pageId, updates);
+    setShowPageSettings(null);
+  };
+
+  const isSlugUnique = (slug: string, currentPageId: string): boolean => {
+    return !pages.some(p => p.id !== currentPageId && p.slug === slug);
+  };
+
+  // Use active page's sections if available, otherwise fall back to componentOrder
+  const effectiveComponentOrder = useMemo(() => {
+    if (activePage?.sections?.length) {
+      return activePage.sections;
+    }
+    return componentOrder;
+  }, [activePage, componentOrder]);
+
+  // Update section visibility based on active page
+  const effectiveSectionVisibility = useMemo(() => {
+    if (activePage?.sections?.length) {
+      const visibility: Record<string, boolean> = {};
+      activePage.sections.forEach(s => {
+        visibility[s] = sectionVisibility[s] ?? true;
+      });
+      return visibility;
+    }
+    return sectionVisibility;
+  }, [activePage, sectionVisibility]);
+
   // Helper to update nested data safely with functional updates
+  // Uses a ref to track the last updated section for page sync
+  const lastUpdatedSectionRef = useRef<string | null>(null);
+  
   const setNestedData = (path: string, value: any) => {
+    const sectionKey = path.split('.')[0]; // e.g., 'hero' from 'hero.headline'
+    lastUpdatedSectionRef.current = sectionKey;
+    
     setData(prevData => {
       if (!prevData) return null;
       // Create a deep copy to avoid mutation and ensure React detects changes
@@ -509,6 +609,33 @@ const Controls: React.FC = () => {
       return newData;
     });
   };
+  
+  // Multi-page sync: Sync project data changes to active page's sectionData
+  // This effect runs after data changes and updates the active page
+  useEffect(() => {
+    if (!activePage || !updatePage || !data || !lastUpdatedSectionRef.current) return;
+    
+    const sectionKey = lastUpdatedSectionRef.current;
+    // Only sync if this section is part of the active page
+    if (activePage.sections.includes(sectionKey as any)) {
+      const sectionData = data[sectionKey as keyof typeof data];
+      if (sectionData) {
+        // Debounced update to avoid too many writes
+        const timeoutId = setTimeout(() => {
+          updatePage(activePage.id, {
+            sectionData: {
+              ...activePage.sectionData,
+              [sectionKey]: JSON.parse(JSON.stringify(sectionData)), // Deep copy
+            },
+          });
+          lastUpdatedSectionRef.current = null;
+        }, 500); // 500ms debounce
+        
+        return () => clearTimeout(timeoutId);
+      }
+    }
+    lastUpdatedSectionRef.current = null;
+  }, [data, activePage, updatePage]);
 
   // Call all ecommerce control hooks unconditionally to comply with Rules of Hooks
   // These must be called after setNestedData is defined since they use it
@@ -4530,7 +4657,7 @@ const Controls: React.FC = () => {
 
   if (!data) return null;
 
-  const sortableSections = componentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
+  const sortableSections = effectiveComponentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
 
   // Get available components to add - users can add any component multiple times
   // Only colors, typography and footer are restricted (one instance each)
@@ -4540,8 +4667,14 @@ const Controls: React.FC = () => {
 
   const handleAddComponent = (section: PageSection) => {
     // Add component to the order (before footer)
-    const newOrder = [...componentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
-    setComponentOrder(newOrder as PageSection[]);
+    const newOrder = [...effectiveComponentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
+    
+    // Update active page sections if we have an active page
+    if (activePage) {
+      updatePage(activePage.id, { sections: newOrder });
+    } else {
+      setComponentOrder(newOrder as PageSection[]);
+    }
 
     // Apply global default styles if available (merging on top of existing data to preserve content but update style)
     if (componentStyles && componentStyles[section]) {
@@ -4588,8 +4721,14 @@ const Controls: React.FC = () => {
 
   const handleRemoveComponent = (section: PageSection) => {
     // Remove component from the order
-    const newOrder = componentOrder.filter(k => k !== section);
-    setComponentOrder(newOrder);
+    const newOrder = effectiveComponentOrder.filter(k => k !== section);
+    
+    // Update active page sections if we have an active page
+    if (activePage) {
+      updatePage(activePage.id, { sections: newOrder });
+    } else {
+      setComponentOrder(newOrder);
+    }
 
     // Hide it
     setSectionVisibility(prev => ({
@@ -7980,23 +8119,49 @@ const Controls: React.FC = () => {
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        {/* Left Panel: Component Tree - Siempre visible en desktop, colapsable en mobile cuando hay propiedades */}
+        {/* Left Panel: Page Selector + Component Tree - Siempre visible en desktop, colapsable en mobile cuando hay propiedades */}
         <div className={`
-        w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300
+        w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300 flex flex-col
         ${activeSection && isTreeHiddenMobile ? 'hidden md:block' : ''}
       `}>
-          <ComponentTree
-            componentOrder={componentOrder}
-            activeSection={activeSection}
-            sectionVisibility={sectionVisibility}
-            componentStatus={componentStatus}
-            onSectionSelect={(section) => onSectionSelect(section as any)}
-            onToggleVisibility={toggleVisibility}
-            onReorder={setComponentOrder}
-            onAddComponent={handleAddComponent}
-            onRemoveComponent={handleRemoveComponent}
-            availableComponents={availableComponentsToAdd}
-          />
+          {/* Page Selector - Always visible at top */}
+          {pages.length > 0 && (
+            <div className="p-3 border-b border-editor-border bg-editor-panel-bg/30">
+              <PageSelector
+                pages={pages}
+                activePage={activePage}
+                onSelectPage={handleSelectPage}
+                onAddPage={handleAddPage}
+                onDuplicatePage={handleDuplicatePage}
+                onDeletePage={handleDeletePage}
+                onPageSettings={handlePageSettings}
+                compact={true}
+              />
+            </div>
+          )}
+          
+          {/* Component Tree for active page */}
+          <div className="flex-1 min-h-0">
+            <ComponentTree
+              componentOrder={effectiveComponentOrder}
+              activeSection={activeSection}
+              sectionVisibility={effectiveSectionVisibility}
+              componentStatus={componentStatus}
+              onSectionSelect={(section) => onSectionSelect(section as any)}
+              onToggleVisibility={toggleVisibility}
+              onReorder={(newOrder) => {
+                // Update the active page's sections
+                if (activePage) {
+                  updatePage(activePage.id, { sections: newOrder });
+                } else {
+                  setComponentOrder(newOrder);
+                }
+              }}
+              onAddComponent={handleAddComponent}
+              onRemoveComponent={handleRemoveComponent}
+              availableComponents={availableComponentsToAdd}
+            />
+          </div>
         </div>
 
         {/* Right Panel: Properties - Solo se muestra cuando hay una sección activa */}
@@ -8041,6 +8206,16 @@ const Controls: React.FC = () => {
           contextPrompt={aiAssistField?.context || ''}
         />
       </div>
+
+      {/* Page Settings Modal */}
+      {showPageSettings && (
+        <PageSettings
+          page={pages.find(p => p.id === showPageSettings)!}
+          onSave={handleSavePageSettings}
+          onClose={() => setShowPageSettings(null)}
+          isSlugUnique={isSlugUnique}
+        />
+      )}
     </>
   );
 };

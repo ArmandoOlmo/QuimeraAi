@@ -11,7 +11,7 @@ import ColorControl from './ColorControl';
 import TabbedControls from './TabbedControls';
 import ImagePicker from './ImagePicker';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
-import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List } from 'lucide-react';
+import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus } from 'lucide-react';
 
 // Helper Components (same as in Controls.tsx)
 const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
@@ -128,6 +128,24 @@ const SelectControl = ({ label, value, options, onChange }: { label: string, val
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
         </select>
+    </div>
+);
+
+const SliderControl = ({ label, value, min, max, step, onChange }: { label: string, value: number, min: number, max: number, step: number, onChange: (val: number) => void }) => (
+    <div className="mb-3">
+        <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+            <span className="text-xs text-editor-text-primary">{value}</span>
+        </div>
+        <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={(e) => onChange(parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+        />
     </div>
 );
 
@@ -1681,40 +1699,154 @@ export const AnnouncementMessageEditor = ({ data, setNestedData }: AnnouncementM
 
 export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }: EcommerceControlsProps) => {
     const { t } = useTranslation();
-    if (!data?.announcement) return null;
+    if (!data?.announcementBar) return null;
 
-    const d = data.announcement;
+    const d = data.announcementBar;
+    const messages = d.messages || [];
+
+    // Icon options for announcement bar
+    const iconOptions = [
+        { value: 'megaphone', label: 'Megaphone' },
+        { value: 'tag', label: 'Tag' },
+        { value: 'gift', label: 'Gift' },
+        { value: 'truck', label: 'Truck' },
+        { value: 'percent', label: 'Percent' },
+        { value: 'sparkles', label: 'Sparkles' },
+        { value: 'bell', label: 'Bell' },
+        { value: 'info', label: 'Info' },
+    ];
+
+    // Handle message updates
+    const updateMessage = (index: number, field: string, value: string) => {
+        const newMessages = [...messages];
+        newMessages[index] = { ...newMessages[index], [field]: value };
+        setNestedData('announcementBar.messages', newMessages);
+    };
+
+    // Add new message
+    const addMessage = () => {
+        const newMessages = [...messages, { text: 'New announcement', link: '', linkText: '' }];
+        setNestedData('announcementBar.messages', newMessages);
+    };
+
+    // Remove message
+    const removeMessage = (index: number) => {
+        const newMessages = messages.filter((_, i) => i !== index);
+        setNestedData('announcementBar.messages', newMessages);
+    };
 
     const contentTab = (
         <div className="space-y-4">
-            <ToggleControl
-                label={t('editor.controls.ecommerce.enabled', 'Enabled')}
-                checked={d.enabled}
-                onChange={(v) => setNestedData('announcement.enabled', v)}
+            {/* Variant Selection */}
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'static'}
+                options={[
+                    { value: 'static', label: t('editor.controls.ecommerce.static', 'Static') },
+                    { value: 'scrolling', label: t('editor.controls.ecommerce.scrolling', 'Scrolling (Marquee)') },
+                    { value: 'rotating', label: t('editor.controls.ecommerce.rotating', 'Rotating') },
+                ]}
+                onChange={(v) => setNestedData('announcementBar.variant', v)}
             />
-            {d.enabled && (
-                <>
+
+            <hr className="border-editor-border/50" />
+
+            {/* Messages */}
+            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+                <MessageCircle size={14} />
+                {t('editor.controls.ecommerce.messages', 'Messages')}
+            </h5>
+
+            {messages.map((msg, index) => (
+                <div key={index} className="p-3 bg-editor-bg/50 rounded-lg border border-editor-border/30 space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-editor-text-secondary">
+                            {t('editor.controls.ecommerce.message', 'Message')} {index + 1}
+                        </span>
+                        {messages.length > 1 && (
+                            <button
+                                onClick={() => removeMessage(index)}
+                                className="text-red-400 hover:text-red-300 p-1"
+                                title={t('common.delete', 'Delete')}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        )}
+                    </div>
                     <Input
-                        label={t('editor.controls.ecommerce.message', 'Message')}
-                        value={d.message || ''}
-                        onChange={(e) => setNestedData('announcement.message', e.target.value)}
+                        label={t('editor.controls.ecommerce.text', 'Text')}
+                        value={msg.text || ''}
+                        onChange={(e) => updateMessage(index, 'text', e.target.value)}
                     />
-                    <SelectControl
-                        label={t('editor.controls.ecommerce.linkType', 'Link Type')}
-                        value={d.linkType || 'none'}
-                        options={[
-                            { value: 'none', label: t('common.none', 'None') },
-                            { value: 'url', label: t('editor.controls.ecommerce.customUrl', 'Custom URL') },
-                        ]}
-                        onChange={(v) => setNestedData('announcement.linkType', v)}
+                    <Input
+                        label={t('editor.controls.ecommerce.linkUrl', 'Link URL')}
+                        value={msg.link || ''}
+                        onChange={(e) => updateMessage(index, 'link', e.target.value)}
+                        placeholder="#store"
                     />
-                    {d.linkType === 'url' && (
-                        <Input
-                            label={t('editor.controls.ecommerce.url', 'URL')}
-                            value={d.linkUrl || ''}
-                            onChange={(e) => setNestedData('announcement.linkUrl', e.target.value)}
-                        />
-                    )}
+                    <Input
+                        label={t('editor.controls.ecommerce.linkText', 'Link Text')}
+                        value={msg.linkText || ''}
+                        onChange={(e) => updateMessage(index, 'linkText', e.target.value)}
+                        placeholder="Shop now"
+                    />
+                </div>
+            ))}
+
+            <button
+                onClick={addMessage}
+                className="w-full py-2 px-3 bg-editor-accent/20 hover:bg-editor-accent/30 text-editor-accent rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+            >
+                <Plus size={14} />
+                {t('editor.controls.ecommerce.addMessage', 'Add Message')}
+            </button>
+
+            <hr className="border-editor-border/50" />
+
+            {/* Display Options */}
+            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                {t('editor.controls.ecommerce.displayOptions', 'Display Options')}
+            </h5>
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showIcon', 'Show Icon')}
+                checked={d.showIcon ?? false}
+                onChange={(v) => setNestedData('announcementBar.showIcon', v)}
+            />
+
+            {d.showIcon && (
+                <SelectControl
+                    label={t('editor.controls.ecommerce.icon', 'Icon')}
+                    value={d.icon || 'megaphone'}
+                    options={iconOptions}
+                    onChange={(v) => setNestedData('announcementBar.icon', v)}
+                />
+            )}
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.dismissible', 'Dismissible')}
+                checked={d.dismissible ?? false}
+                onChange={(v) => setNestedData('announcementBar.dismissible', v)}
+            />
+
+            {(d.variant === 'scrolling' || d.variant === 'rotating') && (
+                <>
+                    <ToggleControl
+                        label={t('editor.controls.ecommerce.pauseOnHover', 'Pause on Hover')}
+                        checked={d.pauseOnHover ?? true}
+                        onChange={(v) => setNestedData('announcementBar.pauseOnHover', v)}
+                    />
+                    <SliderControl
+                        label={d.variant === 'scrolling' 
+                            ? t('editor.controls.ecommerce.scrollSpeed', 'Scroll Speed (seconds)')
+                            : t('editor.controls.ecommerce.rotationSpeed', 'Rotation Speed (ms)')
+                        }
+                        value={d.speed || (d.variant === 'scrolling' ? 50 : 4000)}
+                        min={d.variant === 'scrolling' ? 10 : 1000}
+                        max={d.variant === 'scrolling' ? 100 : 10000}
+                        step={d.variant === 'scrolling' ? 5 : 500}
+                        onChange={(v) => setNestedData('announcementBar.speed', v)}
+                    />
                 </>
             )}
         </div>
@@ -1731,25 +1863,73 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
-                    value={d.colors?.background || d.backgroundColor || '#000000'}
-                    onChange={(c) => setNestedData('announcement.colors.background', c)}
+                    value={d.colors?.background || '#4f46e5'}
+                    onChange={(c) => setNestedData('announcementBar.colors.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
-                    value={d.colors?.text || d.textColor || '#FFFFFF'}
-                    onChange={(c) => setNestedData('announcement.colors.text', c)}
+                    value={d.colors?.text || '#ffffff'}
+                    onChange={(c) => setNestedData('announcementBar.colors.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.linkColor', 'Link Color')}
                     value={d.colors?.linkColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcement.colors.linkColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.linkColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.iconColor', 'Icon Color')}
                     value={d.colors?.iconColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcement.colors.iconColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.iconColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
+                    value={d.colors?.borderColor || 'transparent'}
+                    onChange={(c) => setNestedData('announcementBar.colors.borderColor', c)}
                 />
             </div>
+
+            <hr className="border-editor-border/50" />
+
+            {/* Size & Spacing */}
+            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                {t('editor.controls.ecommerce.sizeSpacing', 'Size & Spacing')}
+            </h5>
+
+            <SliderControl
+                label={t('editor.controls.ecommerce.height', 'Height (px)')}
+                value={d.height || 40}
+                min={30}
+                max={80}
+                step={2}
+                onChange={(v) => setNestedData('announcementBar.height', v)}
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+                <PaddingSelector
+                    label={t('editor.controls.ecommerce.paddingY', 'Padding Y')}
+                    value={d.paddingY || 'sm'}
+                    onChange={(v) => setNestedData('announcementBar.paddingY', v)}
+                    showNone
+                />
+                <PaddingSelector
+                    label={t('editor.controls.ecommerce.paddingX', 'Padding X')}
+                    value={d.paddingX || 'md'}
+                    onChange={(v) => setNestedData('announcementBar.paddingX', v)}
+                    showNone
+                />
+            </div>
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.fontSize', 'Font Size')}
+                value={d.fontSize || 'sm'}
+                options={[
+                    { value: 'sm', label: t('editor.controls.ecommerce.small', 'Small') },
+                    { value: 'md', label: t('editor.controls.ecommerce.medium', 'Medium') },
+                    { value: 'lg', label: t('editor.controls.ecommerce.large', 'Large') },
+                    { value: 'xl', label: t('editor.controls.ecommerce.extraLarge', 'Extra Large') },
+                ]}
+                onChange={(v) => setNestedData('announcementBar.fontSize', v)}
+            />
         </div>
     );
 
@@ -1765,9 +1945,20 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
     if (!data?.collectionBanner) return null;
 
     const d = data.collectionBanner;
+    
+    // Get categoryGrid categories for the collection selector
+    const gridCategories = data?.categoryGrid?.categories || [];
 
     const contentTab = (
         <div className="space-y-4">
+            {/* Background Image */}
+            <ImagePicker
+                label={t('editor.controls.ecommerce.backgroundImage', 'Background Image')}
+                value={d.backgroundImageUrl || ''}
+                onChange={(url) => setNestedData('collectionBanner.backgroundImageUrl', url)}
+                storeId={storeId}
+            />
+            
             <Input
                 label={t('editor.controls.ecommerce.title', 'Title')}
                 value={d.title || ''}
@@ -1779,16 +1970,46 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 onChange={(e) => setNestedData('collectionBanner.description', e.target.value)}
                 rows={3}
             />
+            
+            <hr className="border-editor-border/50" />
+            
+            {/* Button Configuration */}
+            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                {t('editor.controls.ecommerce.buttonConfig', 'Configuración del Botón')}
+            </h5>
+            
             <Input
                 label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                 value={d.buttonText || ''}
                 onChange={(e) => setNestedData('collectionBanner.buttonText', e.target.value)}
             />
-            <Input
-                label={t('editor.controls.ecommerce.buttonUrl', 'Button URL')}
-                value={d.buttonUrl || ''}
-                onChange={(e) => setNestedData('collectionBanner.buttonUrl', e.target.value)}
-            />
+            
+            {/* Collection Selector */}
+            {storeId && (
+                <SingleCollectionSelector
+                    selectedCollectionId={d.collectionId}
+                    onSelect={(collectionId) => {
+                        setNestedData('collectionBanner.collectionId', collectionId);
+                        // Clear buttonUrl when selecting a collection
+                        if (collectionId) {
+                            setNestedData('collectionBanner.buttonUrl', '');
+                        }
+                    }}
+                    storeId={storeId}
+                    gridCategories={gridCategories}
+                    label={t('editor.controls.ecommerce.linkToCollection', 'Enlazar a Colección')}
+                />
+            )}
+            
+            {/* Custom URL - only show if no collection selected */}
+            {!d.collectionId && (
+                <Input
+                    label={t('editor.controls.ecommerce.customUrl', 'URL Personalizada (opcional)')}
+                    value={d.buttonUrl || ''}
+                    onChange={(e) => setNestedData('collectionBanner.buttonUrl', e.target.value)}
+                    placeholder="https://..."
+                />
+            )}
         </div>
     );
 

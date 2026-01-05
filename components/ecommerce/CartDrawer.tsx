@@ -174,17 +174,18 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
         <>
             {/* Overlay */}
             <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] transition-opacity"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity"
                 onClick={onClose}
             />
 
-            {/* Drawer */}
+            {/* Drawer - must be higher z-index than overlay */}
             <div 
                 id="cart-drawer-content"
-                className="fixed right-0 top-0 bottom-0 w-full max-w-md shadow-2xl z-[9999] flex flex-col overflow-y-auto"
+                className="fixed right-0 top-0 bottom-0 w-full max-w-md shadow-2xl z-[10000] flex flex-col overflow-y-auto"
                 style={{ 
                     backgroundColor: effectiveColors.background,
                 }}
+                onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div 
@@ -314,8 +315,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                         <div className="flex items-center justify-between mt-2">
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => onUpdateQuantity(item.productId, item.quantity - 1, item.variantId)}
-                                                    className="p-1 rounded-md transition-colors hover:opacity-70"
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onUpdateQuantity(item.productId, item.quantity - 1, item.variantId);
+                                                    }}
+                                                    className="p-1 rounded-md transition-colors hover:opacity-70 cursor-pointer"
                                                     style={{ 
                                                         backgroundColor: effectiveColors.borderColor, 
                                                         color: effectiveColors.cardText 
@@ -330,8 +335,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                                     {item.quantity}
                                                 </span>
                                                 <button
-                                                    onClick={() => onUpdateQuantity(item.productId, item.quantity + 1, item.variantId)}
-                                                    className="p-1 rounded-md transition-colors hover:opacity-70"
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onUpdateQuantity(item.productId, item.quantity + 1, item.variantId);
+                                                    }}
+                                                    className="p-1 rounded-md transition-colors hover:opacity-70 cursor-pointer"
                                                     style={{ 
                                                         backgroundColor: effectiveColors.borderColor, 
                                                         color: effectiveColors.cardText 
@@ -342,8 +351,13 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                             </div>
 
                                             <button
-                                                onClick={() => onRemoveItem(item.productId, item.variantId)}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    onRemoveItem(item.productId, item.variantId);
+                                                }}
+                                                className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors cursor-pointer"
                                             >
                                                 <Trash2 size={18} />
                                             </button>

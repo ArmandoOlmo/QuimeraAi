@@ -364,6 +364,360 @@ export const getIndustryComponentDefaults = (industry: string) => {
     return INDUSTRY_COMPONENT_DEFAULTS[industry] || INDUSTRY_COMPONENT_DEFAULTS['default'];
 };
 
+// =============================================================================
+// MULTI-PAGE ARCHITECTURE: PAGE TEMPLATES BY INDUSTRY
+// =============================================================================
+
+import { SitePage } from './project';
+
+/**
+ * Page template definitions for the multi-page architecture.
+ * Each industry gets a set of default pages with pre-configured sections.
+ */
+
+export type PageTemplateId = 
+    | 'home'
+    | 'store'
+    | 'product-detail'
+    | 'category'
+    | 'blog'
+    | 'article'
+    | 'contact'
+    | 'about'
+    | 'services'
+    | 'portfolio'
+    | 'pricing'
+    | 'faq'
+    | 'cart'
+    | 'checkout';
+
+export interface PageTemplate {
+    id: PageTemplateId;
+    title: string;
+    slug: string;
+    type: 'static' | 'dynamic';
+    dynamicSource?: 'products' | 'categories' | 'blogPosts';
+    sections: PageSection[];
+    isHomePage?: boolean;
+    showInNavigation?: boolean;
+    navigationOrder?: number;
+}
+
+/**
+ * Industry-specific page configurations
+ * Defines which pages each industry should have by default
+ */
+export const INDUSTRY_PAGE_DEFAULTS: Record<string, {
+    pages: PageTemplateId[];
+    ecommercePages?: PageTemplateId[];
+}> = {
+    'restaurant': {
+        pages: ['home', 'contact', 'about'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'cafe': {
+        pages: ['home', 'contact', 'about'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'technology': {
+        pages: ['home', 'services', 'pricing', 'about', 'contact', 'blog', 'article'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'healthcare': {
+        pages: ['home', 'services', 'about', 'contact', 'faq'],
+    },
+    'consulting': {
+        pages: ['home', 'services', 'about', 'contact', 'portfolio'],
+    },
+    'ecommerce': {
+        pages: ['home', 'about', 'contact', 'faq'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'fitness-gym': {
+        pages: ['home', 'services', 'pricing', 'about', 'contact'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'photography': {
+        pages: ['home', 'portfolio', 'pricing', 'about', 'contact'],
+    },
+    'real-estate': {
+        pages: ['home', 'portfolio', 'services', 'about', 'contact'],
+    },
+    'beauty-spa': {
+        pages: ['home', 'services', 'pricing', 'about', 'contact'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'retail': {
+        pages: ['home', 'about', 'contact'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'fashion': {
+        pages: ['home', 'about', 'contact', 'blog', 'article'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+    'default': {
+        pages: ['home', 'about', 'contact'],
+        ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
+    },
+};
+
+/**
+ * Section configurations for each page template
+ */
+export const PAGE_TEMPLATE_SECTIONS: Record<PageTemplateId, PageSection[]> = {
+    'home': ['header', 'hero', 'features', 'testimonials', 'cta', 'footer'],
+    'store': ['header', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges', 'footer'],
+    'product-detail': ['header', 'productDetail', 'recentlyViewed', 'footer'],
+    'category': ['header', 'categoryProducts', 'footer'],
+    'blog': ['header', 'hero', 'footer'], // Blog listing will use dynamic content
+    'article': ['header', 'articleContent', 'footer'],
+    'contact': ['header', 'leads', 'map', 'footer'],
+    'about': ['header', 'hero', 'team', 'testimonials', 'footer'],
+    'services': ['header', 'hero', 'services', 'testimonials', 'cta', 'footer'],
+    'portfolio': ['header', 'hero', 'portfolio', 'testimonials', 'footer'],
+    'pricing': ['header', 'hero', 'pricing', 'faq', 'cta', 'footer'],
+    'faq': ['header', 'faq', 'cta', 'footer'],
+    'cart': ['header', 'cart', 'footer'],
+    'checkout': ['header', 'checkout', 'footer'],
+};
+
+/**
+ * Full page template configurations
+ * Maps each PageTemplateId to a complete PageTemplate object
+ */
+export const PAGE_TEMPLATES: Record<PageTemplateId, PageTemplate> = {
+    'home': {
+        id: 'home',
+        title: 'Inicio',
+        slug: '/',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['home'],
+        isHomePage: true,
+        showInNavigation: true,
+        navigationOrder: 0,
+    },
+    'store': {
+        id: 'store',
+        title: 'Tienda',
+        slug: '/tienda',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['store'],
+        showInNavigation: true,
+        navigationOrder: 10,
+    },
+    'product-detail': {
+        id: 'product-detail',
+        title: 'Detalle de Producto',
+        slug: '/producto/:slug',
+        type: 'dynamic',
+        dynamicSource: 'products',
+        sections: PAGE_TEMPLATE_SECTIONS['product-detail'],
+        showInNavigation: false,
+    },
+    'category': {
+        id: 'category',
+        title: 'Categoría',
+        slug: '/categoria/:slug',
+        type: 'dynamic',
+        dynamicSource: 'categories',
+        sections: PAGE_TEMPLATE_SECTIONS['category'],
+        showInNavigation: false,
+    },
+    'blog': {
+        id: 'blog',
+        title: 'Blog',
+        slug: '/blog',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['blog'],
+        showInNavigation: true,
+        navigationOrder: 50,
+    },
+    'article': {
+        id: 'article',
+        title: 'Artículo',
+        slug: '/blog/:slug',
+        type: 'dynamic',
+        dynamicSource: 'blogPosts',
+        sections: PAGE_TEMPLATE_SECTIONS['article'],
+        showInNavigation: false,
+    },
+    'contact': {
+        id: 'contact',
+        title: 'Contacto',
+        slug: '/contacto',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['contact'],
+        showInNavigation: true,
+        navigationOrder: 80,
+    },
+    'about': {
+        id: 'about',
+        title: 'Nosotros',
+        slug: '/nosotros',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['about'],
+        showInNavigation: true,
+        navigationOrder: 70,
+    },
+    'services': {
+        id: 'services',
+        title: 'Servicios',
+        slug: '/servicios',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['services'],
+        showInNavigation: true,
+        navigationOrder: 20,
+    },
+    'portfolio': {
+        id: 'portfolio',
+        title: 'Portafolio',
+        slug: '/portafolio',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['portfolio'],
+        showInNavigation: true,
+        navigationOrder: 30,
+    },
+    'pricing': {
+        id: 'pricing',
+        title: 'Precios',
+        slug: '/precios',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['pricing'],
+        showInNavigation: true,
+        navigationOrder: 40,
+    },
+    'faq': {
+        id: 'faq',
+        title: 'Preguntas Frecuentes',
+        slug: '/faq',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['faq'],
+        showInNavigation: true,
+        navigationOrder: 60,
+    },
+    'cart': {
+        id: 'cart',
+        title: 'Carrito',
+        slug: '/carrito',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['cart'],
+        showInNavigation: false,
+    },
+    'checkout': {
+        id: 'checkout',
+        title: 'Checkout',
+        slug: '/checkout',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['checkout'],
+        showInNavigation: false,
+    },
+};
+
+/**
+ * Helper to get page defaults for an industry
+ */
+export const getIndustryPageDefaults = (industry: string, hasEcommerce: boolean = false) => {
+    const defaults = INDUSTRY_PAGE_DEFAULTS[industry] || INDUSTRY_PAGE_DEFAULTS['default'];
+    let pages = [...defaults.pages];
+    
+    if (hasEcommerce && defaults.ecommercePages) {
+        pages = [...pages, ...defaults.ecommercePages];
+    }
+    
+    return pages;
+};
+
+/**
+ * Helper to generate SitePage array from page template IDs
+ */
+export const generatePagesFromTemplates = (templateIds: PageTemplateId[]): Partial<SitePage>[] => {
+    return templateIds.map((templateId, index) => {
+        const sections = PAGE_TEMPLATE_SECTIONS[templateId] || PAGE_TEMPLATE_SECTIONS['home'];
+        
+        // Determine page properties based on template
+        const pageConfig: Partial<SitePage> = {
+            id: `page-${templateId}-${Date.now()}-${index}`,
+            title: getPageTitle(templateId),
+            slug: getPageSlug(templateId),
+            type: isDynamicPage(templateId) ? 'dynamic' : 'static',
+            sections,
+            sectionData: {},
+            seo: {
+                title: getPageTitle(templateId),
+            },
+            isHomePage: templateId === 'home',
+            showInNavigation: shouldShowInNav(templateId),
+            navigationOrder: index * 10,
+        };
+        
+        // Add dynamic source for dynamic pages
+        if (isDynamicPage(templateId)) {
+            pageConfig.dynamicSource = getDynamicSource(templateId);
+        }
+        
+        return pageConfig;
+    });
+};
+
+// Helper functions for page generation
+const getPageTitle = (templateId: PageTemplateId): string => {
+    const titles: Record<PageTemplateId, string> = {
+        'home': 'Inicio',
+        'store': 'Tienda',
+        'product-detail': 'Producto',
+        'category': 'Categoría',
+        'blog': 'Blog',
+        'article': 'Artículo',
+        'contact': 'Contacto',
+        'about': 'Nosotros',
+        'services': 'Servicios',
+        'portfolio': 'Portafolio',
+        'pricing': 'Precios',
+        'faq': 'Preguntas Frecuentes',
+        'cart': 'Carrito',
+        'checkout': 'Finalizar Compra',
+    };
+    return titles[templateId];
+};
+
+const getPageSlug = (templateId: PageTemplateId): string => {
+    const slugs: Record<PageTemplateId, string> = {
+        'home': '/',
+        'store': '/tienda',
+        'product-detail': '/producto/:slug',
+        'category': '/categoria/:slug',
+        'blog': '/blog',
+        'article': '/blog/:slug',
+        'contact': '/contacto',
+        'about': '/nosotros',
+        'services': '/servicios',
+        'portfolio': '/portafolio',
+        'pricing': '/precios',
+        'faq': '/preguntas-frecuentes',
+        'cart': '/carrito',
+        'checkout': '/checkout',
+    };
+    return slugs[templateId];
+};
+
+const isDynamicPage = (templateId: PageTemplateId): boolean => {
+    return ['product-detail', 'category', 'article'].includes(templateId);
+};
+
+const getDynamicSource = (templateId: PageTemplateId): 'products' | 'categories' | 'blogPosts' | undefined => {
+    const sources: Partial<Record<PageTemplateId, 'products' | 'categories' | 'blogPosts'>> = {
+        'product-detail': 'products',
+        'category': 'categories',
+        'article': 'blogPosts',
+    };
+    return sources[templateId];
+};
+
+const shouldShowInNav = (templateId: PageTemplateId): boolean => {
+    // Dynamic pages and cart/checkout shouldn't show in main navigation
+    return !['product-detail', 'category', 'article', 'cart', 'checkout'].includes(templateId);
+};
+
 
 
 

@@ -294,13 +294,17 @@ export const COMPONENT_OPTIONS = {
         category: 'ecommerce',
         options: {
             variant: ['featured', 'collection', 'sale', 'new-arrivals'],
-            layout: ['single', 'split', 'carousel'],
+            layout: ['split', 'split-right', 'full', 'centered'],
+            imageSize: ['small', 'medium', 'large'],
             overlayStyle: ['gradient', 'solid', 'none'],
             textAlignment: ['left', 'center', 'right'],
             contentPosition: ['left', 'center', 'right'],
+            showPrice: [true, false],
+            showDescription: [true, false],
+            showFeatures: [true, false],
             showAddToCartButton: [true, false],
         },
-        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'addToCartBackground', 'addToCartText'],
+        colorFields: ['background', 'overlayColor', 'heading', 'text', 'accent', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'addToCartBackground', 'addToCartText'],
     },
     
     saleCountdown: {

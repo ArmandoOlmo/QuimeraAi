@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
-import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig } from '../types';
+import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
@@ -569,6 +569,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     window.location.hash = `store/product/${productSlug}`;
   }, []);
 
+  // Check if project uses multi-page architecture
+  const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
+
   // Loading state - Generic spinner for public preview (no Quimera branding)
   // Uses project colors if available from query params (passed by SSR server) or window config
   if (loading) {
@@ -783,10 +786,34 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     return visibleIn === 'both' || visibleIn === 'landing';
   };
 
-  // Resolve header links from menus
-  const headerLinks = mergedData.header?.menuId 
-    ? menus.find(m => m.id === mergedData.header?.menuId)?.items.map(i => ({ text: i.text, href: i.href })) || []
-    : mergedData.header?.links || [];
+  // Resolve header links - prioritize: CMS Menu > Pages > Manual Links
+  const headerLinks = (() => {
+    // 1. CMS Menu takes priority if configured
+    if (mergedData.header?.menuId) {
+      const menu = menus.find(m => m.id === mergedData.header?.menuId);
+      if (menu) {
+        return menu.items.map(i => ({ text: i.text, href: i.href }));
+      }
+    }
+    
+    // 2. Generate from pages if available (multi-page architecture)
+    if (project?.pages && project.pages.length > 0) {
+      const navPages = project.pages
+        .filter((p: SitePage) => p.showInNavigation)
+        .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
+      
+      if (navPages.length > 0) {
+        return navPages.map((p: SitePage) => ({
+          text: p.title,
+          // Use hash for SPA mode in preview
+          href: p.isHomePage ? '#' : `#${p.slug.replace(/^\//, '')}`,
+        }));
+      }
+    }
+    
+    // 3. Fall back to manual links
+    return mergedData.header?.links || [];
+  })();
 
   // Resolve footer columns from menus
   const resolvedFooterData: FooterData = {

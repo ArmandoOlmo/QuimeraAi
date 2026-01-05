@@ -50,6 +50,7 @@ import {
     ProductBundle,
     AnnouncementBar,
     CartDrawer,
+    CheckoutPageEnhanced,
 } from './ecommerce';
 import { StorefrontCartProvider, useSafeStorefrontCart } from './ecommerce/context';
 
@@ -58,7 +59,8 @@ type StoreView =
   | { type: 'none' }
   | { type: 'store' }
   | { type: 'category'; slug: string }
-  | { type: 'product'; slug: string };
+  | { type: 'product'; slug: string }
+  | { type: 'checkout' };
 
 const fontStacks: Record<FontFamily, string> = {
     roboto: "'Roboto', sans-serif",
@@ -118,7 +120,7 @@ const LandingPageContent: React.FC = () => {
   const authContext = useSafeAuth();
   const user = authContext?.user ?? null;
   const { activeSection, onSectionSelect } = useUI();
-  const { data, theme, componentOrder, sectionVisibility, activeProjectId } = useProject();
+  const { data, theme, componentOrder, sectionVisibility, activeProjectId, pages, activePage } = useProject();
   const { cmsPosts, isLoadingCMS, menus } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
@@ -133,6 +135,26 @@ const LandingPageContent: React.FC = () => {
   // Cart context - available when wrapped in StorefrontCartProvider
   // Uses safe version that returns defaults when not in provider
   const cart = useSafeStorefrontCart();
+
+  // Multi-page architecture: Use active page's sections if available
+  const effectiveComponentOrder = useMemo(() => {
+    if (activePage?.sections?.length) {
+      return activePage.sections;
+    }
+    return componentOrder;
+  }, [activePage, componentOrder]);
+
+  const effectiveSectionVisibility = useMemo(() => {
+    if (activePage?.sections?.length) {
+      // Create visibility based on page sections
+      const visibility: Record<string, boolean> = {};
+      activePage.sections.forEach(s => {
+        visibility[s] = sectionVisibility[s] ?? true;
+      });
+      return visibility;
+    }
+    return sectionVisibility;
+  }, [activePage, sectionVisibility]);
 
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
@@ -207,6 +229,13 @@ const LandingPageContent: React.FC = () => {
               return;
           }
           
+          // Checkout routing: #checkout
+          if (decodedHash === '#checkout') {
+              setStoreView({ type: 'checkout' });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
           // Handle scrolling for section links (e.g. #features)
           if (hash.length > 1) {
               // Allow render cycle to complete before scrolling
@@ -244,6 +273,10 @@ const LandingPageContent: React.FC = () => {
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
       window.location.hash = `store/product/${productSlug}`;
+  }, []);
+
+  const handleNavigateToCheckout = useCallback(() => {
+      window.location.hash = 'checkout';
   }, []);
 
   // Check if we're showing a store view
@@ -557,10 +590,34 @@ const LandingPageContent: React.FC = () => {
   // Font variables are now injected directly into :root via useEffect above
   // This ensures Tailwind's font-header, font-body, and font-button classes work correctly
 
-  // Dynamic Menu Resolution
-  const headerLinks = mergedHeaderData.menuId 
-    ? menus.find(m => m.id === mergedHeaderData.menuId)?.items.map(i => ({ text: i.text, href: i.href })) || []
-    : mergedHeaderData.links;
+  // Dynamic Menu Resolution - prioritize: CMS Menu > Pages > Manual Links
+  const headerLinks = useMemo(() => {
+    // 1. CMS Menu takes priority if configured
+    if (mergedHeaderData.menuId) {
+      const menu = menus.find(m => m.id === mergedHeaderData.menuId);
+      if (menu) {
+        return menu.items.map(i => ({ text: i.text, href: i.href }));
+      }
+    }
+    
+    // 2. Generate from pages if available (multi-page architecture)
+    if (pages && pages.length > 0) {
+      const navPages = pages
+        .filter(p => p.showInNavigation)
+        .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
+      
+      if (navPages.length > 0) {
+        return navPages.map(p => ({
+          text: p.title,
+          // Use hash for SPA mode in editor, real paths in SSR
+          href: p.isHomePage ? '#' : `#${p.slug.replace(/^\//, '')}`,
+        }));
+      }
+    }
+    
+    // 3. Fall back to manual links
+    return mergedHeaderData.links;
+  }, [mergedHeaderData.menuId, mergedHeaderData.links, menus, pages]);
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
@@ -627,8 +684,8 @@ const LandingPageContent: React.FC = () => {
           onApplyDiscount={cart.applyDiscount}
           onRemoveDiscount={cart.removeDiscount}
           onCheckout={() => {
+            handleNavigateToCheckout();
             cart.closeCart();
-            window.location.hash = '#checkout';
           }}
           storeId={activeProjectId || ''}
           primaryColor={theme.globalColors?.primary || '#6366f1'}
@@ -687,12 +744,12 @@ const LandingPageContent: React.FC = () => {
         {storeView.type === 'store' && activeProjectId && (
             <>
                 {/* Ecommerce Section Components (above products) */}
-                {componentOrder
+                {effectiveComponentOrder
                     .filter(key => {
                         const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
                         return ecommerceSections.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection] &&
+                               effectiveSectionVisibility[key as PageSection] &&
                                isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
@@ -743,12 +800,12 @@ const LandingPageContent: React.FC = () => {
                 />
 
                 {/* Ecommerce Section Components (below products) */}
-                {componentOrder
+                {effectiveComponentOrder
                     .filter(key => {
                         const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
                         return ecommerceSectionsBelow.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection] &&
+                               effectiveSectionVisibility[key as PageSection] &&
                                isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
@@ -772,7 +829,7 @@ const LandingPageContent: React.FC = () => {
         {storeView.type === 'category' && activeProjectId && (
             <>
                 {/* Announcement Bar for category view */}
-                {componentStatus['announcementBar' as PageSection] && sectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
+                {componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
                     <div 
                         id="announcementBar" 
                         className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -817,12 +874,12 @@ const LandingPageContent: React.FC = () => {
                 />
 
                 {/* Trust badges and recently viewed for category view */}
-                {componentOrder
+                {effectiveComponentOrder
                     .filter(key => {
                         const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
                         return ecommerceSectionsBelow.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection] &&
+                               effectiveSectionVisibility[key as PageSection] &&
                                isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
@@ -851,16 +908,17 @@ const LandingPageContent: React.FC = () => {
                     onNavigateToStore={handleNavigateToStore}
                     onNavigateToCategory={handleNavigateToCategory}
                     onNavigateToProduct={handleNavigateToProduct}
+                    onAddToCart={(product, quantity, variant) => cart.addItem(product, quantity, variant)}
                     colors={data?.productDetailPage?.colors}
                 />
 
                 {/* Ecommerce components for product detail view */}
-                {componentOrder
+                {effectiveComponentOrder
                     .filter(key => {
                         const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
                         return productDetailSections.includes(key as PageSection) && 
                                componentStatus[key as PageSection] && 
-                               sectionVisibility[key as PageSection] &&
+                               effectiveSectionVisibility[key as PageSection] &&
                                isEcommerceComponentVisibleIn(key as PageSection, 'store');
                     })
                     .map(key => (
@@ -880,10 +938,24 @@ const LandingPageContent: React.FC = () => {
             </>
         )}
 
+        {/* 6.5. Store View - Checkout */}
+        {storeView.type === 'checkout' && activeProjectId && (
+            <CheckoutPageEnhanced
+                storeId={activeProjectId}
+                onSuccess={(orderId) => {
+                    // Navigate to order confirmation or back to store
+                    cart.clearCart();
+                    handleNavigateToStore();
+                }}
+                onBack={handleNavigateToStore}
+                onNavigateToStore={handleNavigateToStore}
+            />
+        )}
+
         {/* 7. Home View (Sections) - Only show when not in article or store view */}
         {!isArticleHash && !activePost && !isStoreViewActive && (
             <>
-                {componentOrder
+                {effectiveComponentOrder
                 .filter(key => {
                     // Lista de componentes de ecommerce que deben verificar visibilidad
                     const ecommerceComponents: PageSection[] = [
@@ -894,7 +966,7 @@ const LandingPageContent: React.FC = () => {
                     
                     const isEcommerce = ecommerceComponents.includes(key as PageSection);
                     const baseVisibility = componentStatus[key as PageSection] && 
-                                           sectionVisibility[key as PageSection] && 
+                                           effectiveSectionVisibility[key as PageSection] && 
                                            key !== 'footer' && 
                                            key !== 'chatbot';
                     
@@ -925,7 +997,7 @@ const LandingPageContent: React.FC = () => {
       </main>
       
       {/* Footer - Always visible on all pages including articles */}
-      {!showArticleLoading && componentStatus.footer && sectionVisibility.footer && (
+      {!showArticleLoading && componentStatus.footer && effectiveSectionVisibility.footer && (
          <div 
             id="footer" 
             className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}

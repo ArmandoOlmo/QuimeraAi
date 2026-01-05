@@ -644,7 +644,7 @@ export const componentStyles: ComponentStyles = {
   
   productHero: {
     variant: 'featured',
-    layout: 'single',
+    layout: 'split',
     headline: 'Descubre nuestra colección',
     subheadline: 'Productos de alta calidad para ti',
     buttonText: 'Ver productos',
@@ -658,6 +658,11 @@ export const componentStyles: ComponentStyles = {
     overlayOpacity: 50,
     textAlignment: 'left',
     contentPosition: 'left',
+    // Product Display Options
+    imageSize: 'medium',
+    showPrice: true,
+    showDescription: true,
+    showFeatures: true,
     showBadge: true,
     badgeText: 'Destacado',
     buttonBorderRadius: 'xl',
@@ -676,6 +681,7 @@ export const componentStyles: ComponentStyles = {
       overlayColor: '#000000',
       heading: '#ffffff',
       text: '#ffffff',
+      accent: '#6366f1',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
       badgeBackground: '#ef4444',
@@ -822,10 +828,10 @@ export const componentStyles: ComponentStyles = {
   
   collectionBanner: {
     variant: 'hero',
-    title: 'Nueva colección',
-    description: 'Descubre lo último en tendencias',
-    backgroundImageUrl: '',
-    buttonText: 'Ver colección',
+    title: 'Nueva Colección',
+    description: 'Descubre lo último en tendencias y estilo',
+    backgroundImageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='1200' height='600'/%3E%3Ccircle cx='200' cy='150' r='100' fill='%23ffffff' opacity='0.1'/%3E%3Ccircle cx='1000' cy='450' r='150' fill='%23ffffff' opacity='0.08'/%3E%3Ccircle cx='600' cy='300' r='200' fill='%23ffffff' opacity='0.05'/%3E%3Crect x='100' y='250' width='60' height='60' fill='%23ffffff' opacity='0.1' rx='10'/%3E%3Crect x='1040' y='120' width='80' height='80' fill='%23ffffff' opacity='0.08' rx='15'/%3E%3C/svg%3E",
+    buttonText: 'Ver Colección',
     paddingY: 'lg',
     paddingX: 'md',
     height: 400,
