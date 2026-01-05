@@ -25,13 +25,16 @@ import {
     Star,
     Image as ImageIcon,
     Building2,
-    Settings2
+    Settings2,
+    ShoppingCart,
+    Loader2
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
+import { migrateTemplatesWithEcommerce } from '../../../scripts/migrateTemplatesEcommerce';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -42,10 +45,11 @@ type SortOption = 'name' | 'usage' | 'recent' | 'category';
 
 const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { error: showError } = useToast();
+    const { error: showError, success: showSuccess } = useToast();
     const { userDocument } = useAuth();
-    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState } = useProject();
+    const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, refreshProjects } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMigrating, setIsMigrating] = useState(false);
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -160,6 +164,32 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         updateTemplateInState(templateId, updatedData);
 
         setEditingTemplate(null);
+    };
+
+    // Migrate templates with ecommerce components
+    const handleMigrateEcommerce = async () => {
+        if (!window.confirm(t('superadmin.templateManagement.migrateEcommerceConfirm', '¿Migrar todos los templates para agregar componentes de ecommerce con los colores del template?'))) {
+            return;
+        }
+
+        setIsMigrating(true);
+        try {
+            const results = await migrateTemplatesWithEcommerce();
+            showSuccess(
+                t('superadmin.templateManagement.migrateEcommerceSuccess', 
+                  `Migración completada: ${results.updated} templates actualizados, ${results.skipped} omitidos`)
+            );
+            // Refresh templates to show updated data
+            await refreshProjects();
+        } catch (error: any) {
+            console.error('Migration error:', error);
+            showError(
+                t('superadmin.templateManagement.migrateEcommerceError', 
+                  `Error en la migración: ${error.message}`)
+            );
+        } finally {
+            setIsMigrating(false);
+        }
     };
 
     // Filter and sort templates
@@ -318,6 +348,25 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <List size={16} />
                             </button>
                         </div>
+
+                        {/* Migrate Ecommerce Button */}
+                        <button
+                            onClick={handleMigrateEcommerce}
+                            disabled={isMigrating}
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-green-500 hover:bg-green-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t('superadmin.templateManagement.migrateEcommerce', 'Add ecommerce components to all templates')}
+                        >
+                            {isMigrating ? (
+                                <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
+                            ) : (
+                                <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
+                            )}
+                            <span className="hidden lg:inline ml-1.5">
+                                {isMigrating 
+                                    ? t('superadmin.templateManagement.migrating', 'Migrating...') 
+                                    : t('superadmin.templateManagement.migrateEcommerce', 'Ecommerce')}
+                            </span>
+                        </button>
 
                         {/* Filter Toggle */}
                         <button
@@ -532,11 +581,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         className="absolute inset-0 cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
-                                        <img
-                                            src={template.thumbnailUrl}
-                                            alt={template.name}
-                                            className="w-full h-full object-cover sm:group-hover:scale-110 transition-transform duration-700"
-                                        />
+                                        {template.thumbnailUrl ? (
+                                            <img
+                                                src={template.thumbnailUrl}
+                                                alt={template.name}
+                                                className="w-full h-full object-cover sm:group-hover:scale-110 transition-transform duration-700"
+                                                onError={(e) => {
+                                                    // Hide broken image and show placeholder
+                                                    e.currentTarget.style.display = 'none';
+                                                    const placeholder = e.currentTarget.nextElementSibling;
+                                                    if (placeholder) placeholder.classList.remove('hidden');
+                                                }}
+                                            />
+                                        ) : null}
+                                        {/* Placeholder when no thumbnail */}
+                                        <div className={`absolute inset-0 bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex flex-col items-center justify-center ${template.thumbnailUrl ? 'hidden' : ''}`}>
+                                            <LayoutTemplate className="w-16 h-16 text-editor-accent/40 mb-3" />
+                                            <span className="text-editor-text-secondary text-sm font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
+                                        </div>
 
                                         {/* Dark Gradient Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
@@ -673,12 +735,26 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <div className="flex items-start gap-3 flex-1 min-w-0">
                                             {/* Thumbnail */}
                                             <div className="relative flex-shrink-0">
-                                                <img
-                                                    src={template.thumbnailUrl}
-                                                    alt={template.name}
-                                                    className="w-20 h-14 sm:w-24 sm:h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                {template.thumbnailUrl ? (
+                                                    <img
+                                                        src={template.thumbnailUrl}
+                                                        alt={template.name}
+                                                        className="w-20 h-14 sm:w-24 sm:h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                        onClick={() => setPreviewTemplate(template)}
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            const placeholder = e.currentTarget.nextElementSibling;
+                                                            if (placeholder) placeholder.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                {/* Placeholder for list view */}
+                                                <div 
+                                                    className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ${template.thumbnailUrl ? 'hidden' : ''}`}
                                                     onClick={() => setPreviewTemplate(template)}
-                                                />
+                                                >
+                                                    <LayoutTemplate className="w-6 h-6 text-editor-accent/40" />
+                                                </div>
                                                 {/* Color Swatches */}
                                                 {getThemeColors(template).length > 0 && (
                                                     <div className="absolute bottom-1 right-1 flex gap-0.5">
@@ -804,6 +880,10 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     key={`thumbnail-${thumbnailEditTemplate.id}`}
                     project={thumbnailEditTemplate}
                     onClose={() => setThumbnailEditTemplate(null)}
+                    onUpdate={() => {
+                        // Refresh projects to get the updated thumbnail from Firestore
+                        refreshProjects();
+                    }}
                 />
             )}
 
@@ -849,11 +929,23 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="p-4 sm:p-6">
                             {/* Large Preview Image with Color Swatches */}
                             <div className="mb-4 sm:mb-6 rounded-xl overflow-hidden relative">
-                                <img
-                                    src={previewTemplate.thumbnailUrl}
-                                    alt={previewTemplate.name}
-                                    className="w-full h-auto"
-                                />
+                                {previewTemplate.thumbnailUrl ? (
+                                    <img
+                                        src={previewTemplate.thumbnailUrl}
+                                        alt={previewTemplate.name}
+                                        className="w-full h-auto"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            const placeholder = e.currentTarget.nextElementSibling;
+                                            if (placeholder) placeholder.classList.remove('hidden');
+                                        }}
+                                    />
+                                ) : null}
+                                {/* Placeholder for preview modal */}
+                                <div className={`w-full aspect-video bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex flex-col items-center justify-center ${previewTemplate.thumbnailUrl ? 'hidden' : ''}`}>
+                                    <LayoutTemplate className="w-20 h-20 text-editor-accent/40 mb-4" />
+                                    <span className="text-editor-text-secondary text-base font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
+                                </div>
                                 {/* Color Swatches */}
                                 {getThemeColors(previewTemplate).length > 0 && (
                                     <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 flex gap-1 sm:gap-1.5">

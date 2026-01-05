@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
+import { useToast } from '../../contexts/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Project } from '../../types';
@@ -34,6 +35,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const { generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { files, globalFiles } = useFiles();
     const { updateProjectThumbnail, activeProject } = useProject();
+    const { success: showSuccess, error: showError } = useToast();
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string>(project.thumbnailUrl || '');
     const [dragActive, setDragActive] = useState(false);
@@ -53,10 +55,20 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     // Library state
     const [librarySource, setLibrarySource] = useState<'user' | 'global'>('global');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectingImageId, setSelectingImageId] = useState<string | null>(null);
 
     // Reset image loaded state when preview URL changes
     useEffect(() => {
         setImageLoaded(false);
+        
+        // Fallback timeout in case image load/error events don't fire
+        if (previewUrl && !previewUrl.includes('data:image/svg+xml')) {
+            const timeout = setTimeout(() => {
+                setImageLoaded(true);
+            }, 5000); // 5 second timeout
+            
+            return () => clearTimeout(timeout);
+        }
     }, [previewUrl]);
 
     // Memoize theme colors to prevent re-renders
@@ -111,23 +123,48 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     }, [sourceFiles, searchQuery]);
 
     // Handle image selection from library
-    const handleSelectFromLibrary = async (imageUrl: string) => {
+    const handleSelectFromLibrary = async (imageUrl: string, fileId: string) => {
+        console.log('[ThumbnailEditor] handleSelectFromLibrary called');
+        console.log('[ThumbnailEditor] imageUrl:', imageUrl);
+        console.log('[ThumbnailEditor] fileId:', fileId);
+        
+        setSelectingImageId(fileId);
         setIsUploading(true);
+        
         try {
             // Fetch the image and convert to file
-            const response = await fetch(imageUrl);
+            console.log('[ThumbnailEditor] Fetching image...');
+            const response = await fetch(imageUrl, { mode: 'cors' });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+            }
+            
+            console.log('[ThumbnailEditor] Fetch response ok, getting blob...');
             const blob = await response.blob();
+            console.log('[ThumbnailEditor] Blob size:', blob.size, 'type:', blob.type);
+            
+            if (blob.size === 0) {
+                throw new Error('Fetched image is empty');
+            }
+            
             const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: blob.type || 'image/png' });
+            console.log('[ThumbnailEditor] Created file:', file.name, file.size);
 
+            console.log('[ThumbnailEditor] Calling updateProjectThumbnail...');
             await updateProjectThumbnail(project.id, file);
+            console.log('[ThumbnailEditor] updateProjectThumbnail completed');
+            
             setPreviewUrl(imageUrl);
+            showSuccess(t('superadmin.templateEditor.thumbnailUpdated', 'Thumbnail updated successfully'));
             onUpdate?.();
             onClose();
         } catch (error) {
-            console.error('Error applying thumbnail from library:', error);
-            alert(t('superadmin.templateEditor.errors.applyFailed', 'Failed to apply thumbnail'));
+            console.error('[ThumbnailEditor] Error applying thumbnail from library:', error);
+            showError(t('superadmin.templateEditor.errors.applyFailed', 'Failed to apply thumbnail. Please try again.'));
         } finally {
             setIsUploading(false);
+            setSelectingImageId(null);
         }
     };
 
@@ -252,25 +289,35 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
     // Generate thumbnail with AI
     const handleGenerateThumbnail = async () => {
-        if (!thumbnailPrompt.trim()) return;
+        console.log('[ThumbnailEditor] handleGenerateThumbnail called');
+        console.log('[ThumbnailEditor] prompt:', thumbnailPrompt);
+        console.log('[ThumbnailEditor] style:', thumbnailStyle);
+        
+        if (!thumbnailPrompt.trim()) {
+            console.log('[ThumbnailEditor] Empty prompt, returning');
+            return;
+        }
 
         if (hasApiKey === false) {
+            console.log('[ThumbnailEditor] No API key, prompting for selection');
             await promptForKeySelection();
             return;
         }
 
         setIsGeneratingThumbnail(true);
         try {
+            console.log('[ThumbnailEditor] Calling generateImage...');
             const url = await generateImage(thumbnailPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
                 destination: 'user',
                 resolution: '2K',
             });
+            console.log('[ThumbnailEditor] Generated image URL:', url);
             setGeneratedThumbnail(url);
             setPreviewUrl(url);
         } catch (error) {
-            console.error('Error generating thumbnail:', error);
+            console.error('[ThumbnailEditor] Error generating thumbnail:', error);
             handleApiError(error);
         } finally {
             setIsGeneratingThumbnail(false);
@@ -279,21 +326,57 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
     // Apply generated thumbnail to the project
     const applyGeneratedThumbnail = async () => {
-        if (!generatedThumbnail) return;
+        console.log('[ThumbnailEditor] applyGeneratedThumbnail called');
+        console.log('[ThumbnailEditor] generatedThumbnail:', generatedThumbnail?.substring(0, 100) + '...');
+        console.log('[ThumbnailEditor] project.id:', project.id);
+        
+        if (!generatedThumbnail) {
+            console.log('[ThumbnailEditor] No generatedThumbnail, returning early');
+            return;
+        }
 
         setIsUploading(true);
         try {
-            // Fetch the generated image and convert to file
-            const response = await fetch(generatedThumbnail);
-            const blob = await response.blob();
-            const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: 'image/png' });
+            let blob: Blob;
+            
+            // Handle data URLs (base64) directly
+            if (generatedThumbnail.startsWith('data:')) {
+                console.log('[ThumbnailEditor] Converting data URL to blob...');
+                // Extract base64 data from data URL
+                const [header, base64Data] = generatedThumbnail.split(',');
+                const mimeMatch = header.match(/data:([^;]+)/);
+                const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+                
+                // Convert base64 to binary
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                blob = new Blob([bytes], { type: mimeType });
+                console.log('[ThumbnailEditor] Created blob from data URL, size:', blob.size, 'type:', blob.type);
+            } else {
+                // Handle regular URLs
+                console.log('[ThumbnailEditor] Fetching image from URL...');
+                const response = await fetch(generatedThumbnail);
+                console.log('[ThumbnailEditor] Fetch response status:', response.status);
+                blob = await response.blob();
+                console.log('[ThumbnailEditor] Blob size:', blob.size, 'type:', blob.type);
+            }
+            
+            const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: blob.type || 'image/png' });
+            console.log('[ThumbnailEditor] Created file:', file.name, file.size);
 
+            console.log('[ThumbnailEditor] Calling updateProjectThumbnail...');
             await updateProjectThumbnail(project.id, file);
+            console.log('[ThumbnailEditor] updateProjectThumbnail completed successfully');
+            
+            showSuccess(t('superadmin.templateEditor.thumbnailUpdated', 'Thumbnail updated successfully'));
             onUpdate?.();
             onClose();
         } catch (error) {
-            console.error('Error applying thumbnail:', error);
-            alert(t('superadmin.templateEditor.errors.applyFailed', 'Failed to apply thumbnail'));
+            console.error('[ThumbnailEditor] Error applying thumbnail:', error);
+            showError(t('superadmin.templateEditor.errors.applyFailed', 'Failed to apply thumbnail'));
         } finally {
             setIsUploading(false);
         }
@@ -301,13 +384,13 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
     const handleFileSelect = async (file: File) => {
         if (!file.type.startsWith('image/')) {
-            alert(t('superadmin.templateEditor.errors.selectImage', 'Please select an image file'));
+            showError(t('superadmin.templateEditor.errors.selectImage', 'Please select an image file'));
             return;
         }
 
         // Max 5MB
         if (file.size > 5 * 1024 * 1024) {
-            alert(t('superadmin.templateEditor.errors.imageSize', 'Image must be less than 5MB'));
+            showError(t('superadmin.templateEditor.errors.imageSize', 'Image must be less than 5MB'));
             return;
         }
 
@@ -324,10 +407,11 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Upload to storage
             await updateProjectThumbnail(project.id, file);
 
+            showSuccess(t('superadmin.templateEditor.thumbnailUpdated', 'Thumbnail updated successfully'));
             onUpdate?.();
         } catch (error) {
             console.error('Error uploading thumbnail:', error);
-            alert(t('superadmin.templateEditor.errors.uploadFailed', 'Failed to upload thumbnail'));
+            showError(t('superadmin.templateEditor.errors.uploadFailed', 'Failed to upload thumbnail'));
             setPreviewUrl(project.thumbnailUrl);
         } finally {
             setIsUploading(false);
@@ -375,21 +459,20 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <ImageIcon className="w-5 h-5 text-primary" />
                         </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-foreground">{t('superadmin.templateEditor.changeThumbnail', 'Change Thumbnail')}</h2>
+                            <p className="text-sm text-muted-foreground">{project.name}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">{t('superadmin.templateEditor.changeThumbnail', 'Change Thumbnail')}</h2>
-                        <p className="text-sm text-muted-foreground">{project.name}</p>
-                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-full hover:bg-secondary transition-colors"
+                    >
+                        <X className="w-5 h-5 text-muted-foreground" />
+                    </button>
                 </div>
-                <button
-                    onClick={onClose}
-                    className="p-2 rounded-full hover:bg-secondary transition-colors"
-                >
-                    <X className="w-5 h-5 text-muted-foreground" />
-                </button>
-            </div>
 
-            {/* Tabs */}
+                {/* Tabs */}
             <div className="flex border-b border-border">
                 <button
                     onClick={() => setActiveTab('library')}
@@ -439,7 +522,11 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                 alt="Thumbnail preview"
                                 className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                                 onLoad={() => setImageLoaded(true)}
-                                onError={() => setImageLoaded(true)}
+                                onError={(e) => {
+                                    console.warn('Thumbnail image failed to load:', previewUrl);
+                                    setImageLoaded(true);
+                                }}
+                                crossOrigin="anonymous"
                             />
                         </>
                     ) : (
@@ -533,33 +620,48 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         <div className="max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
                             {imageFiles.length > 0 ? (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                    {imageFiles.map(file => (
-                                        <div
-                                            key={file.id}
-                                            onClick={() => handleSelectFromLibrary(file.downloadURL)}
-                                            className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all hover:scale-105 ${previewUrl === file.downloadURL
-                                                ? 'border-primary ring-2 ring-primary/50'
-                                                : 'border-transparent hover:border-primary/50'
-                                                }`}
-                                        >
-                                            <img
-                                                src={file.downloadURL}
-                                                alt={file.name}
-                                                className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                                            />
-                                            {previewUrl === file.downloadURL ? (
-                                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                                    <div className="bg-primary text-primary-foreground rounded-full p-1.5">
-                                                        <Check size={16} />
+                                    {imageFiles.map(file => {
+                                        const isSelecting = selectingImageId === file.id;
+                                        const isSelected = previewUrl === file.downloadURL;
+                                        
+                                        return (
+                                            <button
+                                                key={file.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (!isSelecting && !isUploading) {
+                                                        handleSelectFromLibrary(file.downloadURL, file.id);
+                                                    }
+                                                }}
+                                                disabled={isUploading}
+                                                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all hover:scale-105 disabled:cursor-wait ${isSelected
+                                                    ? 'border-primary ring-2 ring-primary/50'
+                                                    : 'border-transparent hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={file.downloadURL}
+                                                    alt={file.name}
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                                />
+                                                {isSelecting ? (
+                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <Loader2 className="w-6 h-6 text-white animate-spin" />
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-white text-xs font-bold">{t('common.select', 'Select')}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                                ) : isSelected ? (
+                                                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                                        <div className="bg-primary text-primary-foreground rounded-full p-1.5">
+                                                            <Check size={16} />
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-white text-xs font-bold">{t('common.select', 'Select')}</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             ) : searchQuery ? (
                                 <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
@@ -773,8 +875,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     </button>
                 )}
             </div>
+            </div>
         </div>
-
     );
 };
 

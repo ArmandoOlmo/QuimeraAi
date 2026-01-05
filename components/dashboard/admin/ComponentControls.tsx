@@ -6,7 +6,7 @@ import { useProject } from '../../../contexts/project';
 import { componentStyles } from '../../../data/componentStyles';
 import ColorControl from '../../ui/ColorControl';
 import IconSelector from '../../ui/IconSelector';
-import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palette } from 'lucide-react';
+import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palette, Clock, MapPin, Phone, Mail } from 'lucide-react';
 import ResponsiveConfigEditor from './ResponsiveConfigEditor';
 import AnimationConfigurator from './AnimationConfigurator';
 
@@ -1141,6 +1141,59 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderFooterControls = () => {
         const s = styles as typeof componentStyles['footer'];
         const colors = (s.colors || {}) as any;
+        const contactInfo = (s as any).contactInfo || {};
+        const businessHours = contactInfo.businessHours || {};
+
+        // Helper to update contact info fields
+        const handleContactInfoChange = (field: string, value: any) => {
+            const newContactInfo = { ...contactInfo, [field]: value };
+            handleStyleChange('contactInfo', newContactInfo);
+        };
+
+        // Helper to update business hours
+        const handleBusinessHoursChange = (day: string, field: string, value: any) => {
+            const newBusinessHours = {
+                ...businessHours,
+                [day]: {
+                    ...(businessHours[day] || { isOpen: false, openTime: '09:00', closeTime: '17:00' }),
+                    [field]: value
+                }
+            };
+            handleContactInfoChange('businessHours', newBusinessHours);
+        };
+
+        // Apply hours to all days
+        const applyToAllDays = (sourceDay: string) => {
+            const sourceHours = businessHours[sourceDay] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+            const newBusinessHours: any = {};
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            days.forEach(day => {
+                newBusinessHours[day] = { ...sourceHours };
+            });
+            handleContactInfoChange('businessHours', newBusinessHours);
+        };
+
+        // Apply hours to weekdays only
+        const applyToWeekdays = (sourceDay: string) => {
+            const sourceHours = businessHours[sourceDay] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+            const newBusinessHours = { ...businessHours };
+            const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+            weekdays.forEach(day => {
+                newBusinessHours[day] = { ...sourceHours };
+            });
+            handleContactInfoChange('businessHours', newBusinessHours);
+        };
+
+        const DAYS = [
+            { key: 'monday', label: 'Monday', short: 'Mon' },
+            { key: 'tuesday', label: 'Tuesday', short: 'Tue' },
+            { key: 'wednesday', label: 'Wednesday', short: 'Wed' },
+            { key: 'thursday', label: 'Thursday', short: 'Thu' },
+            { key: 'friday', label: 'Friday', short: 'Fri' },
+            { key: 'saturday', label: 'Saturday', short: 'Sat' },
+            { key: 'sunday', label: 'Sunday', short: 'Sun' },
+        ];
+
         return (
             <div className="space-y-4">
                 {/* ========== TYPOGRAPHY ========== */}
@@ -1150,6 +1203,163 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'sm'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'sm'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== CONTACT INFORMATION ========== */}
+                <div className="flex items-center space-x-2">
+                    <MapPin size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Contact Information</h4>
+                </div>
+                
+                <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
+                    <div>
+                        <Label>Address</Label>
+                        <input
+                            type="text"
+                            value={contactInfo.address || ''}
+                            onChange={(e) => handleContactInfoChange('address', e.target.value)}
+                            placeholder="123 Main Street"
+                            className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label>City</Label>
+                            <input
+                                type="text"
+                                value={contactInfo.city || ''}
+                                onChange={(e) => handleContactInfoChange('city', e.target.value)}
+                                placeholder="City"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                        <div>
+                            <Label>State</Label>
+                            <input
+                                type="text"
+                                value={contactInfo.state || ''}
+                                onChange={(e) => handleContactInfoChange('state', e.target.value)}
+                                placeholder="State"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label>ZIP Code</Label>
+                            <input
+                                type="text"
+                                value={contactInfo.zipCode || ''}
+                                onChange={(e) => handleContactInfoChange('zipCode', e.target.value)}
+                                placeholder="12345"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                        <div>
+                            <Label>Country</Label>
+                            <input
+                                type="text"
+                                value={contactInfo.country || ''}
+                                onChange={(e) => handleContactInfoChange('country', e.target.value)}
+                                placeholder="Country"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <Label>Phone</Label>
+                        <div className="flex items-center gap-2">
+                            <Phone size={14} className="text-editor-text-secondary flex-shrink-0" />
+                            <input
+                                type="tel"
+                                value={contactInfo.phone || ''}
+                                onChange={(e) => handleContactInfoChange('phone', e.target.value)}
+                                placeholder="+1 (555) 123-4567"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <Label>Email</Label>
+                        <div className="flex items-center gap-2">
+                            <Mail size={14} className="text-editor-text-secondary flex-shrink-0" />
+                            <input
+                                type="email"
+                                value={contactInfo.email || ''}
+                                onChange={(e) => handleContactInfoChange('email', e.target.value)}
+                                placeholder="contact@example.com"
+                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <hr className="border-editor-border/50" />
+
+                {/* ========== BUSINESS HOURS ========== */}
+                <div className="flex items-center space-x-2">
+                    <Clock size={16} className="text-editor-accent" />
+                    <h4 className="font-semibold text-editor-text-primary">Business Hours</h4>
+                </div>
+
+                <div className="space-y-2 p-3 bg-editor-border/20 rounded-md">
+                    {/* Quick actions */}
+                    <div className="flex gap-2 mb-3">
+                        <button
+                            onClick={() => applyToWeekdays('monday')}
+                            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+                        >
+                            Copy Mon → Weekdays
+                        </button>
+                        <button
+                            onClick={() => applyToAllDays('monday')}
+                            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+                        >
+                            Copy Mon → All Days
+                        </button>
+                    </div>
+
+                    {DAYS.map(({ key, label, short }) => {
+                        const dayHours = businessHours[key] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+                        return (
+                            <div key={key} className="flex items-center gap-2 py-1">
+                                <span className="w-10 text-xs font-medium text-editor-text-secondary">{short}</span>
+                                <button
+                                    onClick={() => handleBusinessHoursChange(key, 'isOpen', !dayHours.isOpen)}
+                                    className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                        dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
+                                    }`}
+                                >
+                                    <span
+                                        className={`block w-4 h-4 rounded-full bg-white transform transition-transform mx-1 ${
+                                            dayHours.isOpen ? 'translate-x-6' : 'translate-x-0'
+                                        }`}
+                                    />
+                                </button>
+                                {dayHours.isOpen ? (
+                                    <div className="flex items-center gap-1 flex-1">
+                                        <input
+                                            type="time"
+                                            value={dayHours.openTime || '09:00'}
+                                            onChange={(e) => handleBusinessHoursChange(key, 'openTime', e.target.value)}
+                                            className="w-24 bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary"
+                                        />
+                                        <span className="text-editor-text-secondary text-xs">-</span>
+                                        <input
+                                            type="time"
+                                            value={dayHours.closeTime || '17:00'}
+                                            onChange={(e) => handleBusinessHoursChange(key, 'closeTime', e.target.value)}
+                                            className="w-24 bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary"
+                                        />
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
 
                 <hr className="border-editor-border/50" />
 

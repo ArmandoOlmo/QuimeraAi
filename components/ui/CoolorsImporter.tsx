@@ -166,6 +166,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
     /**
      * Genera una paleta inteligente sin AI como fallback
      * Analiza los colores y los asigna según su luminosidad y saturación
+     * USA LOS COLORES DE LA PALETA para textos en lugar de valores hardcodeados
      */
     const generateFallbackPalette = (colors: string[]): GlobalColors => {
         // Función para calcular luminosidad de un color hex
@@ -187,6 +188,23 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             return (max - min) / max;
         };
 
+        // Función para calcular contraste entre dos colores
+        const getContrast = (hex1: string, hex2: string): number => {
+            const lum1 = getLuminance(hex1);
+            const lum2 = getLuminance(hex2);
+            const brightest = Math.max(lum1, lum2);
+            const darkest = Math.min(lum1, lum2);
+            return (brightest + 0.05) / (darkest + 0.05);
+        };
+
+        // Función para ajustar luminosidad de un color
+        const adjustLuminance = (hex: string, factor: number): string => {
+            const r = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(1, 3), 16) * factor)));
+            const g = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(3, 5), 16) * factor)));
+            const b = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(5, 7), 16) * factor)));
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+        };
+
         // Ordenar colores por luminosidad
         const sortedByLuminance = [...colors].sort((a, b) => getLuminance(a) - getLuminance(b));
         
@@ -197,28 +215,86 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         const avgLuminance = colors.reduce((acc, c) => acc + getLuminance(c), 0) / colors.length;
         const isDarkTheme = avgLuminance < 0.5;
 
-        // Asignar colores
+        // Asignar colores base
         const darkest = sortedByLuminance[0];
         const lightest = sortedByLuminance[sortedByLuminance.length - 1];
         const primary = sortedBySaturation[0]; // Más vibrante
         const secondary = sortedBySaturation[1] || sortedBySaturation[0];
         const accent = sortedBySaturation[2] || sortedBySaturation[1] || primary;
 
-        // Crear superficie intermedia
-        const midIndex = Math.floor(sortedByLuminance.length / 2);
+        // Background y Surface
+        const background = isDarkTheme ? darkest : lightest;
         const surface = sortedByLuminance[isDarkTheme ? 1 : sortedByLuminance.length - 2] || 
-                       (isDarkTheme ? '#1e293b' : '#f8fafc');
+                       (isDarkTheme ? adjustLuminance(darkest, 1.3) : adjustLuminance(lightest, 0.95));
+
+        // ============================================
+        // COLORES DE TEXTO - Derivados de la paleta
+        // ============================================
+        
+        // Para dark theme: buscar colores claros de la paleta
+        // Para light theme: buscar colores oscuros de la paleta
+        let textColor: string;
+        let headingColor: string;
+        let textMutedColor: string;
+
+        if (isDarkTheme) {
+            // Tema oscuro: usar colores claros de la paleta para texto
+            // Heading: el más claro con buen contraste
+            const lightColors = sortedByLuminance.filter(c => getLuminance(c) > 0.6);
+            if (lightColors.length > 0) {
+                headingColor = lightColors[lightColors.length - 1]; // El más claro
+                textColor = lightColors.length > 1 ? lightColors[lightColors.length - 2] : adjustLuminance(headingColor, 0.85);
+            } else {
+                // No hay colores suficientemente claros, aclarar el más claro disponible
+                headingColor = adjustLuminance(lightest, 1.5);
+                textColor = adjustLuminance(lightest, 1.3);
+            }
+            // TextMuted: versión más tenue del texto o color intermedio
+            const midLightColors = sortedByLuminance.filter(c => getLuminance(c) > 0.4 && getLuminance(c) < 0.7);
+            textMutedColor = midLightColors.length > 0 ? midLightColors[0] : adjustLuminance(textColor, 0.7);
+        } else {
+            // Tema claro: usar colores oscuros de la paleta para texto
+            // Heading: el más oscuro con buen contraste
+            const darkColors = sortedByLuminance.filter(c => getLuminance(c) < 0.4);
+            if (darkColors.length > 0) {
+                headingColor = darkColors[0]; // El más oscuro
+                textColor = darkColors.length > 1 ? darkColors[1] : adjustLuminance(headingColor, 1.3);
+            } else {
+                // No hay colores suficientemente oscuros, oscurecer el más oscuro disponible
+                headingColor = adjustLuminance(darkest, 0.5);
+                textColor = adjustLuminance(darkest, 0.7);
+            }
+            // TextMuted: versión más tenue del texto o color intermedio
+            const midDarkColors = sortedByLuminance.filter(c => getLuminance(c) > 0.3 && getLuminance(c) < 0.6);
+            textMutedColor = midDarkColors.length > 0 ? midDarkColors[0] : adjustLuminance(textColor, 1.4);
+        }
+
+        // Verificar contraste mínimo y ajustar si es necesario
+        if (getContrast(headingColor, background) < 4.5) {
+            headingColor = isDarkTheme ? '#F8FAFC' : '#0F172A';
+        }
+        if (getContrast(textColor, background) < 4.5) {
+            textColor = isDarkTheme ? '#E2E8F0' : '#1E293B';
+        }
+        if (getContrast(textMutedColor, background) < 3) {
+            textMutedColor = isDarkTheme ? '#94A3B8' : '#64748B';
+        }
+
+        // Border: derivar del fondo
+        const borderColor = isDarkTheme 
+            ? adjustLuminance(background, 1.8) 
+            : adjustLuminance(background, 0.85);
 
         return {
             primary,
             secondary,
             accent,
-            background: isDarkTheme ? darkest : lightest,
+            background,
             surface,
-            text: isDarkTheme ? '#e2e8f0' : '#1e293b',
-            textMuted: isDarkTheme ? '#94a3b8' : '#64748b',
-            heading: isDarkTheme ? '#f8fafc' : '#0f172a',
-            border: isDarkTheme ? '#334155' : '#e2e8f0',
+            text: textColor,
+            textMuted: textMutedColor,
+            heading: headingColor,
+            border: borderColor,
             success: '#22c55e',
             error: '#ef4444',
         };

@@ -31,6 +31,7 @@ import LandingNavigationManagement from './admin/LandingNavigationManagement';
 import SubscriptionManagement from './admin/SubscriptionManagement';
 import LandingChatbotAdmin from './admin/LandingChatbotAdmin';
 import ChangelogManagement from './admin/ChangelogManagement';
+import GlobalTrackingPixels from './admin/GlobalTrackingPixels';
 
 // Types
 type AdminFeature = {
@@ -68,6 +69,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'subscriptions': ROUTES.ADMIN_SUBSCRIPTIONS,
     'landing-chatbot': ROUTES.ADMIN_LANDING_CHATBOT,
     'changelog': ROUTES.ADMIN_CHANGELOG,
+    'global-tracking-pixels': ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS,
 };
 
 // Components
@@ -237,6 +239,7 @@ const SuperAdminDashboard = () => {
         // Analytics & Testing
         { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
         { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
+        { id: 'global-tracking-pixels', title: t('superadmin.globalTrackingPixels', 'Píxeles de Tracking'), description: t('superadmin.globalTrackingPixelsDesc', 'Analytics y píxeles de ads para toda la app'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // System & AI
         { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -300,6 +303,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
     if (adminView === 'landing-chatbot') return <LandingChatbotAdmin onBack={handleBack} />;
+    if (adminView === 'global-tracking-pixels') return <GlobalTrackingPixels onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 

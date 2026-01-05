@@ -24,7 +24,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { user, userDocument } = useAuth();
-  const { createProjectFromTemplate, loadProject, deleteProject } = useProject();
+  const { createProjectFromTemplate, loadProject, deleteProject, refreshProjects } = useProject();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showThumbnailEditor, setShowThumbnailEditor] = useState(false);
@@ -367,6 +367,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <ThumbnailEditor
           project={project}
           onClose={() => setShowThumbnailEditor(false)}
+          onUpdate={() => {
+            // Refresh projects to get the updated thumbnail from Firestore
+            refreshProjects();
+          }}
         />
       )}
     </article>

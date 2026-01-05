@@ -439,6 +439,17 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             borderColor: colors.border,
             starColor: '#fbbf24',
         },
+        // Products grid component
+        products: {
+            background: colors.background,
+            heading: colors.heading,
+            text: colors.text,
+            accent: colors.primary,
+            cardBackground: colors.surface,
+            cardText: colors.heading,
+            buttonBackground: colors.primary,
+            buttonText: '#ffffff',
+        },
         productDetailPage: {
             background: colors.background,
             heading: colors.heading,
@@ -472,6 +483,22 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
     // Ensure globalColors exists with defaults
     const globalColors = theme.globalColors || getDefaultGlobalColors();
+
+    // Create full array of all palette colors for ColorControl
+    // This ensures users can pick any color from the palette, not just the 4 preview colors
+    const allPaletteColors = [
+        globalColors.primary,
+        globalColors.secondary,
+        globalColors.accent,
+        globalColors.background,
+        globalColors.surface,
+        globalColors.text,
+        globalColors.heading,
+        globalColors.textMuted,
+        globalColors.border,
+        globalColors.success,
+        globalColors.error
+    ].filter((color, index, self) => self.indexOf(color) === index); // Remove duplicates
 
     // Determine which content to show based on mode
     const showColors = mode === 'colors' || mode === 'both';
@@ -512,6 +539,23 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                 const newData = { ...prev };
 
+                // Lista de componentes de ecommerce que deben crearse si no existen
+                const ecommerceComponents = [
+                    'productDetailPage',
+                    'storeSettings',
+                    'featuredProducts',
+                    'categoryGrid',
+                    'productHero',
+                    'trustBadges',
+                    'saleCountdown',
+                    'announcementBar',
+                    'collectionBanner',
+                    'recentlyViewed',
+                    'productReviews',
+                    'productBundle',
+                    'products'
+                ];
+
                 // Actualizar colores de cada componente en data
                 for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
                     const key = componentId as keyof PageData;
@@ -524,9 +568,9 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 ...componentColors
                             }
                         };
-                    } else if (key === 'productDetailPage' || key === 'storeSettings') {
-                        // Para componentes que pueden no existir pero necesitan colores,
-                        // crearlos con solo los colores
+                    } else if (ecommerceComponents.includes(key)) {
+                        // Para componentes de ecommerce que pueden no existir,
+                        // crearlos con los colores
                         (newData as any)[key] = {
                             colors: componentColors
                         };
@@ -706,6 +750,20 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             </p>
                         </div>
 
+                        {/* Re-apply colors button */}
+                        <button
+                            onClick={() => applyPaletteToAllComponents(globalColors)}
+                            disabled={isApplying}
+                            className="w-full mb-3 py-2.5 px-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-300 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                        >
+                            {isApplying ? (
+                                <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                                <Sparkles size={14} />
+                            )}
+                            {t('editor.controls.globalStyles.reapplyColors', 'Re-apply colors to all components')}
+                        </button>
+
                         <div className="grid grid-cols-2 gap-2">
                             {colorPalettes.map((palette) => (
                                 <button
@@ -767,13 +825,13 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         label={t('editor.controls.globalStyles.primary', 'Primary')}
                                         value={globalColors.primary}
                                         onChange={(v) => handleColorChange('primary', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.secondary', 'Secondary')}
                                         value={globalColors.secondary}
                                         onChange={(v) => handleColorChange('secondary', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                                 <div className="mt-3">
@@ -781,7 +839,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         label={t('editor.controls.globalStyles.accent', 'Accent')}
                                         value={globalColors.accent}
                                         onChange={(v) => handleColorChange('accent', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                             </div>
@@ -797,13 +855,13 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                             handleColorChange('background', v);
                                             setTheme(prev => ({ ...prev, pageBackground: v }));
                                         }}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.surfaceBackground', 'Surface')}
                                         value={globalColors.surface}
                                         onChange={(v) => handleColorChange('surface', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                             </div>
@@ -816,13 +874,13 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         label={t('editor.controls.globalStyles.text', 'Text')}
                                         value={globalColors.text}
                                         onChange={(v) => handleColorChange('text', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.headings', 'Headings')}
                                         value={globalColors.heading}
                                         onChange={(v) => handleColorChange('heading', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                                 <div className="mt-3">
@@ -830,7 +888,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         label={t('editor.controls.globalStyles.textSecondary', 'Secondary Text')}
                                         value={globalColors.textMuted}
                                         onChange={(v) => handleColorChange('textMuted', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                             </div>
@@ -843,19 +901,19 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         label={t('editor.controls.globalStyles.borders', 'Borders')}
                                         value={globalColors.border}
                                         onChange={(v) => handleColorChange('border', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.success', 'Success')}
                                         value={globalColors.success}
                                         onChange={(v) => handleColorChange('success', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.error', 'Error')}
                                         value={globalColors.error}
                                         onChange={(v) => handleColorChange('error', v)}
-                                        paletteColors={theme.paletteColors}
+                                        paletteColors={allPaletteColors}
                                     />
                                 </div>
                             </div>

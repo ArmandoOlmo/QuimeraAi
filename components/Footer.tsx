@@ -136,7 +136,7 @@ const Footer: React.FC<FooterData> = ({
 
           {/* Business Hours */}
           {contactInfo?.businessHours && (
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               <BusinessHours 
                 businessHours={contactInfo.businessHours}
                 colors={{

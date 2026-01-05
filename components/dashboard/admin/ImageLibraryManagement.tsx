@@ -5,7 +5,7 @@ import { useFiles } from '../../../contexts/files';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X, Eye, Copy, Calendar, HardDrive, FileType } from 'lucide-react';
 import { FileRecord } from '../../../types';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import DragDropZone from '../../ui/DragDropZone';
@@ -23,6 +23,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [selectedImageForDetail, setSelectedImageForDetail] = useState<FileRecord | null>(null);
 
     // Use the custom hook for asset management
     const library = useAssetLibrary({
@@ -93,6 +94,195 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                 onClose={() => setIsGeneratorOpen(false)}
                 destination="global"
             />
+            
+            {/* Image Detail Modal */}
+            {selectedImageForDetail && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => setSelectedImageForDetail(null)}
+                >
+                    <div 
+                        className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Image Preview */}
+                        <div className="flex-1 min-h-[300px] lg:min-h-0 bg-black/50 flex items-center justify-center p-4">
+                            <img 
+                                src={selectedImageForDetail.downloadURL} 
+                                alt={selectedImageForDetail.name} 
+                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl" 
+                            />
+                        </div>
+
+                        {/* Details Panel */}
+                        <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-editor-border bg-editor-panel-bg/50 overflow-y-auto">
+                            {/* Header */}
+                            <div className="p-4 border-b border-editor-border flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Image size={18} className="text-editor-accent" />
+                                    <h3 className="font-bold text-editor-text-primary">
+                                        {t('superadmin.imageLibraryManagement.imageDetails', 'Image Details')}
+                                    </h3>
+                                </div>
+                                <button 
+                                    onClick={() => setSelectedImageForDetail(null)}
+                                    className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-4 space-y-5">
+                                {/* File Name */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
+                                        <FileType size={12} />
+                                        {t('common.fileName', 'File Name')}
+                                    </label>
+                                    <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                        <p className="text-sm text-editor-text-primary break-all">
+                                            {selectedImageForDetail.name}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(selectedImageForDetail.name);
+                                            success(t('common.copied', 'Copied to clipboard'));
+                                        }}
+                                        className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                    >
+                                        <Copy size={12} />
+                                        {t('common.copyName', 'Copy name')}
+                                    </button>
+                                </div>
+
+                                {/* URL */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
+                                        URL
+                                    </label>
+                                    <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                        <p className="text-xs text-editor-text-secondary break-all font-mono">
+                                            {selectedImageForDetail.downloadURL.substring(0, 80)}...
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(selectedImageForDetail.downloadURL);
+                                            success(t('common.copied', 'Copied to clipboard'));
+                                        }}
+                                        className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                    >
+                                        <Copy size={12} />
+                                        {t('common.copyUrl', 'Copy URL')}
+                                    </button>
+                                </div>
+
+                                {/* File Info */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-3">
+                                        {t('common.fileInfo', 'File Information')}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* Size */}
+                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <HardDrive size={12} className="text-editor-text-secondary" />
+                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                    {t('common.size', 'Size')}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-medium text-editor-text-primary">
+                                                {formatBytes(selectedImageForDetail.size)}
+                                            </p>
+                                        </div>
+
+                                        {/* Type */}
+                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <FileType size={12} className="text-editor-text-secondary" />
+                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                    {t('common.type', 'Type')}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-medium text-editor-text-primary">
+                                                {selectedImageForDetail.type.split('/')[1]?.toUpperCase() || 'Unknown'}
+                                            </p>
+                                        </div>
+
+                                        {/* Created Date */}
+                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3 col-span-2">
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <Calendar size={12} className="text-editor-text-secondary" />
+                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                    {t('common.created', 'Created')}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-medium text-editor-text-primary">
+                                                {selectedImageForDetail.createdAt 
+                                                    ? new Date(selectedImageForDetail.createdAt).toLocaleString()
+                                                    : 'Unknown'
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* AI Generated Info (if available) */}
+                                {(selectedImageForDetail as any).aiPrompt && (
+                                    <div>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-editor-accent uppercase tracking-wide mb-2">
+                                            <Sparkles size={12} />
+                                            {t('common.aiPrompt', 'AI Prompt')}
+                                        </label>
+                                        <div className="bg-editor-bg border border-editor-accent/30 rounded-xl p-3">
+                                            <p className="text-sm text-editor-text-primary leading-relaxed">
+                                                {(selectedImageForDetail as any).aiPrompt}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText((selectedImageForDetail as any).aiPrompt);
+                                                success(t('common.copied', 'Copied to clipboard'));
+                                            }}
+                                            className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                        >
+                                            <Copy size={12} />
+                                            {t('common.copyPrompt', 'Copy prompt')}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="pt-3 border-t border-editor-border space-y-2">
+                                    <a
+                                        href={selectedImageForDetail.downloadURL}
+                                        download={selectedImageForDetail.name}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-editor-accent text-editor-bg rounded-xl text-sm font-bold hover:bg-editor-accent-hover transition-colors"
+                                    >
+                                        <Download size={16} />
+                                        {t('common.downloadImage', 'Download Image')}
+                                    </a>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedImageForDetail(null);
+                                            handleSingleDelete(selectedImageForDetail);
+                                        }}
+                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl text-sm font-medium hover:bg-red-500/20 transition-colors"
+                                    >
+                                        <Trash2 size={16} />
+                                        {t('common.deleteImage', 'Delete Image')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex h-screen bg-editor-bg text-editor-text-primary">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
@@ -359,6 +549,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                         library.toggleSelection(file.id);
                                                     }
                                                 }}
+                                                onDoubleClick={() => {
+                                                    if (!library.isSelectionMode) {
+                                                        setSelectedImageForDetail(file);
+                                                    }
+                                                }}
                                             >
                                                 <img
                                                     src={file.downloadURL}
@@ -374,6 +569,20 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                         <p className="text-white text-xs font-medium truncate">{file.name}</p>
                                                         <p className="text-white/70 text-[10px] mt-0.5">{formatBytes(file.size)}</p>
                                                     </div>
+                                                )}
+
+                                                {/* View details button */}
+                                                {!library.isSelectionMode && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedImageForDetail(file);
+                                                        }}
+                                                        className="absolute top-2 left-2 p-1.5 bg-black/60 text-white rounded-md hover:bg-editor-accent transition-colors opacity-0 group-hover:opacity-100 z-10"
+                                                        title={t('common.viewDetails', 'View details')}
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
                                                 )}
                                             </div>
 

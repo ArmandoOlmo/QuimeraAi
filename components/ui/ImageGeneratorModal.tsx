@@ -10,18 +10,17 @@ interface ImageGeneratorModalProps {
 
 const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-             <div className="bg-transparent w-full max-w-4xl h-[85vh]">
-                 <div className="relative h-full">
-                    <ImageGeneratorPanel destination={destination} />
-                    <button 
-                        onClick={onClose} 
-                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary z-10"
-                    >
-                        {/* Close button styling might need adjustment depending on Panel header */}
-                    </button>
-                 </div>
-             </div>
+        <Modal 
+            isOpen={isOpen} 
+            onClose={onClose} 
+            maxWidth="max-w-5xl"
+            fullScreenMobile
+        >
+            <ImageGeneratorPanel 
+                destination={destination} 
+                onClose={onClose}
+                className="h-[85vh] sm:h-[85vh]"
+            />
         </Modal>
     );
 };

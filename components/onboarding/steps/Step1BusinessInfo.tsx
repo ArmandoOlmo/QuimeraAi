@@ -256,10 +256,10 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         </div>
                         <div className="min-w-0">
                             <p className="font-medium text-foreground text-sm sm:text-base">
-                                {t('onboarding.sellProductsOnline', '¿Vendes productos online?')}
+                                {t('onboarding.sellProductsOnline', 'Sell products online?')}
                             </p>
                             <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                                {t('onboarding.sellProductsOnlineDesc', 'Incluiremos una tienda en tu sitio web')}
+                                {t('onboarding.sellProductsOnlineDesc', 'We will include a store in your website')}
                             </p>
                         </div>
                     </div>
@@ -289,8 +289,8 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 {isEcommerceIndustry && !hasEcommerce && (
                     <div className="p-2.5 sm:p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
                         <p className="text-xs sm:text-sm text-foreground">
-                            <span className="font-semibold">💡 {t('onboarding.suggestion', 'Sugerencia')}:</span>{' '}
-                            {t('onboarding.ecommerceSuggestion', 'Tu industria suele incluir venta de productos. ¿Quieres agregar una tienda online?')}
+                            <span className="font-semibold">💡 {t('onboarding.suggestion', 'Suggestion')}:</span>{' '}
+                            {t('onboarding.ecommerceSuggestion', 'Your industry usually involves selling products. Do you want to add an online store?')}
                         </p>
                     </div>
                 )}
@@ -313,7 +313,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             >
                                 <Package size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'physical' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
                                 <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.physical', 'Físicos')}
+                                    {t('onboarding.physical', 'Physical')}
                                 </span>
                             </button>
                             <button
@@ -327,7 +327,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             >
                                 <FileText size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'digital' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
                                 <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.digital', 'Digitales')}
+                                    {t('onboarding.digital', 'Digital')}
                                 </span>
                             </button>
                             <button
@@ -341,7 +341,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             >
                                 <Layers size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'both' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
                                 <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.both', 'Ambos')}
+                                    {t('onboarding.both', 'Both')}
                                 </span>
                             </button>
                         </div>

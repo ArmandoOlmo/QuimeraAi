@@ -114,6 +114,7 @@ export const ROUTES = {
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
   ADMIN_LANDING_CHATBOT: '/admin/landing-chatbot',
   ADMIN_CHANGELOG: '/admin/changelog',
+  ADMIN_GLOBAL_TRACKING_PIXELS: '/admin/global-tracking-pixels',
 } as const;
 
 // =============================================================================
@@ -674,6 +675,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS,
+    view: 'superadmin',
+    adminView: 'global-tracking-pixels',
+    type: 'admin',
+    title: 'Global Tracking Pixels',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
     parent: ROUTES.SUPERADMIN,
   },
 ];

@@ -21,6 +21,7 @@ import {
     AppTokens,
     LandingChatbotConfig,
     defaultLandingChatbotConfig,
+    AdPixelConfig,
 } from '../../types';
 import { defaultAppTokens, getAppTokensWithDefaults, applyAppTokensToCSS } from '../../utils/appTokenApplier';
 import { ThemeMode } from '../../types';
@@ -85,6 +86,10 @@ interface AdminContextType {
     // Landing Chatbot Config
     landingChatbotConfig: LandingChatbotConfig;
     saveLandingChatbotConfig: (config: LandingChatbotConfig) => Promise<void>;
+    
+    // Global Ad Tracking Pixels (App-wide analytics)
+    globalAdPixels: AdPixelConfig | null;
+    saveGlobalAdPixels: (config: AdPixelConfig) => Promise<void>;
     
     // Component Studio
     componentStyles: ComponentStyles;
@@ -151,6 +156,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Landing Chatbot Config
     const [landingChatbotConfig, setLandingChatbotConfig] = useState<LandingChatbotConfig>(defaultLandingChatbotConfig);
     
+    // Global Ad Tracking Pixels State
+    const [globalAdPixels, setGlobalAdPixels] = useState<AdPixelConfig | null>(null);
+    
     // Component Studio State
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);
     const [customComponents, setCustomComponents] = useState<CustomComponent[]>([]);
@@ -195,6 +203,12 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 const landingChatbotDoc = await getDoc(doc(db, 'settings', 'landingChatbot'));
                 if (landingChatbotDoc.exists()) {
                     setLandingChatbotConfig(prev => ({ ...prev, ...landingChatbotDoc.data() }));
+                }
+
+                // Global Ad Tracking Pixels (for app-wide analytics)
+                const adPixelsDoc = await getDoc(doc(db, 'settings', 'globalAdPixels'));
+                if (adPixelsDoc.exists()) {
+                    setGlobalAdPixels(adPixelsDoc.data() as AdPixelConfig);
                 }
 
                 // Design tokens
@@ -561,6 +575,30 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
+    // Global Ad Tracking Pixels Functions
+    const saveGlobalAdPixels = async (config: AdPixelConfig) => {
+        try {
+            // Clean undefined values
+            const cleanConfig = Object.fromEntries(
+                Object.entries(config).filter(([_, v]) => v !== undefined)
+            );
+            
+            const configToSave = {
+                ...cleanConfig,
+                lastUpdated: serverTimestamp(),
+                updatedBy: user?.uid || '',
+            };
+            
+            console.log('AdminContext: Saving global ad pixels to Firestore:', configToSave);
+            await setDoc(doc(db, 'settings', 'globalAdPixels'), configToSave);
+            console.log('AdminContext: Global ad pixels saved successfully');
+            setGlobalAdPixels(config);
+        } catch (error) {
+            console.error("Error saving global ad pixels:", error);
+            throw error;
+        }
+    };
+
     // Component Studio Functions
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
         if (isCustom) {
@@ -727,6 +765,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         saveGlobalAssistantConfig,
         landingChatbotConfig,
         saveLandingChatbotConfig,
+        globalAdPixels,
+        saveGlobalAdPixels,
         componentStyles,
         customComponents,
         updateComponentStyle,

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
-import ThemeToggle from './ui/ThemeToggle';
 // Replaced non-existent 'Cube' icon with 'Box'.
 import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box } from 'lucide-react';
 
@@ -173,9 +172,6 @@ const EditorHeader: React.FC = () => {
 
         {/* RIGHT SECTION - Actions */}
         <div className="flex items-center gap-1">
-          {/* Theme Toggle */}
-          <ThemeToggle />
-
           {/* Save Button - Subtle */}
           <button
             title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}

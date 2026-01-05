@@ -5,7 +5,6 @@ import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
-import ThemeToggle from './ui/ThemeToggle';
 import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, ArrowLeft } from 'lucide-react';
 
 interface SimpleEditorHeaderProps {
@@ -150,9 +149,6 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">{t('common.back')}</span>
         </button>
-
-        {/* Theme Toggle */}
-        <ThemeToggle />
 
         {/* Save Button */}
         <button

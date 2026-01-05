@@ -354,9 +354,13 @@ Original prompt: ${draftPrompt}
 Enhanced prompt:`;
 
             if (shouldUseProxy()) {
-                const result = await generateContentViaProxy(systemPrompt, {
-                    referenceImages,
-                });
+                const result = await generateContentViaProxy(
+                    'ai-prompt-enhancement',  // projectId
+                    systemPrompt,              // prompt
+                    'gemini-2.5-flash',        // model (using stable version)
+                    {},                        // config
+                    user?.uid                  // userId
+                );
                 return extractTextFromResponse(result);
             }
 

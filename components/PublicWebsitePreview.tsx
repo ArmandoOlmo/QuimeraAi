@@ -10,6 +10,7 @@ import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebas
 import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle } from 'lucide-react';
+import AdPixelsInjector from './AdPixelsInjector';
 
 // Import all website components
 import Header from './Header';
@@ -1000,6 +1001,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             sectionVisibility: project.sectionVisibility,
           }}
         />
+      )}
+
+      {/* Ad Tracking Pixels (if configured in SEO settings) */}
+      {project.seoConfig?.adPixels && (
+        <AdPixelsInjector config={project.seoConfig.adPixels} />
       )}
 
       {/* Powered by badge */}

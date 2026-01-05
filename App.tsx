@@ -3,6 +3,7 @@ import { AppProviders } from './contexts/AppProviders';
 import { useAuth } from './contexts/core/AuthContext';
 import { useUI } from './contexts/core/UIContext';
 import { useProject } from './contexts/project';
+import { useAdmin } from './contexts/admin';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
@@ -14,6 +15,7 @@ import { auth, signOut } from './firebase';
 import { View, AdminView } from './types/ui';
 import LandingChatbotWidget from './components/LandingChatbotWidget';
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
+import AdPixelsInjector from './components/AdPixelsInjector';
 
 // Lazy-loaded components for code-splitting
 const ProfileModal = lazy(() => import('./components/dashboard/ProfileModal'));
@@ -29,6 +31,18 @@ const MinimalLoader = () => (
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
   </div>
 );
+
+// =============================================================================
+// GLOBAL AD PIXELS - App-wide tracking for analytics
+// =============================================================================
+
+const GlobalAdPixels: React.FC = () => {
+  const { globalAdPixels } = useAdmin();
+  
+  if (!globalAdPixels) return null;
+  
+  return <AdPixelsInjector config={globalAdPixels} />;
+};
 
 // =============================================================================
 // PREVIEW ROUTE CHECK (Clean URLs - no hash)
@@ -126,6 +140,9 @@ const AuthGate: React.FC = () => {
 
   return (
     <>
+      {/* Global Ad Tracking Pixels - Always active for app-wide analytics */}
+      <GlobalAdPixels />
+      
       <Router
         user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
         userRole={userDocument?.role}

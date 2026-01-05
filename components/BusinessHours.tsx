@@ -146,23 +146,23 @@ const BusinessHours: React.FC<BusinessHoursProps> = ({
                         {title}
                     </h4>
                 )}
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                     {groups.map((group, idx) => (
                         <div 
                             key={idx}
-                            className="flex justify-between text-sm gap-4"
+                            className="text-sm"
                             style={{ color: textColor }}
                         >
-                            <span className="font-medium" style={{ opacity: 0.9 }}>
+                            <div className="font-medium" style={{ opacity: 0.9 }}>
                                 {group.days.length > 1
                                     ? `${DAY_LABELS[group.days[0]].short} - ${DAY_LABELS[group.days[group.days.length - 1]].short}`
                                     : DAY_LABELS[group.days[0]].short}
-                            </span>
-                            <span style={{ opacity: group.hours.isOpen ? 1 : 0.5 }}>
+                            </div>
+                            <div style={{ opacity: group.hours.isOpen ? 1 : 0.5 }}>
                                 {group.hours.isOpen
                                     ? `${formatTime(group.hours.openTime || '')} - ${formatTime(group.hours.closeTime || '')}`
                                     : 'Closed'}
-                            </span>
+                            </div>
                         </div>
                     ))}
                 </div>

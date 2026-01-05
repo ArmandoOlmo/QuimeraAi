@@ -388,6 +388,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     const sizeClasses = getSizeClasses(appearance.behavior.width);
+    
+    // Extract numeric height values for proper max-height constraint
+    const heightMap: Record<string, number> = {
+        sm: 500,
+        md: 600,
+        lg: 700,
+        xl: 800
+    };
+    const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 600;
+    // Cap at 80% of viewport height or configured height, whichever is smaller
+    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.8 : configuredHeight);
 
     // Widget content
     const widgetContent = (
@@ -402,10 +413,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
                 `}
                 style={{
-                    maxHeight: sizeClasses.height,
-                    height: sizeClasses.height,
+                    maxHeight: `min(${maxHeightValue}px, calc(100vh - 150px))`,
+                    height: `min(${maxHeightValue}px, calc(100vh - 150px))`,
                     backgroundColor: appearance.colors.backgroundColor,
-                    borderColor: appearance.colors.inputBorder
+                    borderColor: appearance.colors.inputBorder,
+                    outline: '3px solid white',
+                    outlineOffset: '0px'
                 }}
             >
                 {isOpen && activeProject && (
@@ -450,12 +463,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     ${getButtonStyleClasses(appearance.button.buttonStyle)}
                     ${getShadowClasses(appearance.button.shadowSize)}
                     ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
-                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative
+                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[15px]
                     ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                 `}
                 style={{
                     backgroundColor: appearance.colors.primaryColor,
-                    color: appearance.colors.headerText
+                    color: appearance.colors.headerText,
+                    outline: '3px solid white',
+                    outlineOffset: '0px'
                 }}
                 title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
             >

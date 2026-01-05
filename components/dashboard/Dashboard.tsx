@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
@@ -15,10 +15,8 @@ import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import UpgradeBanner from './UpgradeBanner';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Upload, Download, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
-import { importProjectFromFile } from '../../utils/projectImporter';
-import { downloadMultipleProjectsAsJSON } from '../../utils/projectExporter';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
 
 const Dashboard: React.FC = () => {
@@ -31,8 +29,6 @@ const Dashboard: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showMobileSearch, setShowMobileSearch] = useState(false);
-    const [isImporting, setIsImporting] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Instructions banner visibility (persisted in localStorage)
     const [showInstructions, setShowInstructions] = useState(() => {
@@ -161,44 +157,6 @@ const Dashboard: React.FC = () => {
         return t('dashboard.goodEvening');
     };
 
-    // Handle project import
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !user) return;
-
-        setIsImporting(true);
-        try {
-            const { projects: importedProjects, warnings } = await importProjectFromFile(file, user.uid);
-
-            // Add all imported projects
-            for (const project of importedProjects) {
-                await addNewProject(project);
-            }
-
-            // Show success message
-            alert(t('messages.importSuccess', { count: importedProjects.length }) + (warnings.length > 0 ? '\n\n' + t('common.warnings') + ':\n' + warnings.join('\n') : ''));
-
-            // Reset file input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        } catch (error) {
-            console.error('Import error:', error);
-            alert(t('messages.importError'));
-        } finally {
-            setIsImporting(false);
-        }
-    };
-
-    // Handle export all projects
-    const handleExportAll = () => {
-        if (!user) return;
-        downloadMultipleProjectsAsJSON(userProjects, user.email || 'unknown');
-    };
 
     // Header Config
     let HeaderIcon = LayoutGrid;
@@ -304,15 +262,6 @@ const Dashboard: React.FC = () => {
                             <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
 
-                        {/* Hidden file input for import */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".json"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                            aria-label="File input for importing projects"
-                        />
                     </div>
                 </header>
 
@@ -688,31 +637,6 @@ const Dashboard: React.FC = () => {
                                                 </span>
                                             </button>
 
-                                            {/* Import/Export buttons */}
-                                            {userProjects.length > 0 && (
-                                                <>
-                                                    <button
-                                                        onClick={handleExportAll}
-                                                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                                                        title={t('common.export')}
-                                                        aria-label={t('dashboard.exportAllProjects')}
-                                                    >
-                                                        <Download className="w-4 h-4" aria-hidden="true" />
-                                                        <span className="hidden lg:inline">{t('common.export')}</span>
-                                                    </button>
-
-                                                    <button
-                                                        onClick={handleImportClick}
-                                                        disabled={isImporting}
-                                                        className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-50"
-                                                        title={t('common.import')}
-                                                        aria-label={t('dashboard.importProjects')}
-                                                    >
-                                                        <Upload className="w-4 h-4" aria-hidden="true" />
-                                                        <span className="hidden lg:inline">{isImporting ? t('common.importing') : t('common.import')}</span>
-                                                    </button>
-                                                </>
-                                            )}
 
                                             {/* View Mode Toggle */}
                                             <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">

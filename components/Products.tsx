@@ -8,7 +8,21 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Eye, Heart, Star, Filter, Search, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { ProductsProps, StorefrontProductItem, StyleType } from '../types/components';
 
-const Products: React.FC<ProductsProps> = ({
+// Extended props to include colors
+interface ProductsWithColorsProps extends ProductsProps {
+    colors?: {
+        background?: string;
+        text?: string;
+        heading?: string;
+        accent?: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+}
+
+const Products: React.FC<ProductsWithColorsProps> = ({
     title = 'Nuestros Productos',
     subtitle = 'Descubre nuestra selección de productos',
     products = [],
@@ -28,6 +42,7 @@ const Products: React.FC<ProductsProps> = ({
     style = 'modern',
     primaryColor = '#6366f1',
     storeUrl,
+    colors,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -105,8 +120,47 @@ const Products: React.FC<ProductsProps> = ({
         onWishlist?.(productId);
     };
 
-    // Style configurations
+    // Use custom colors if available, otherwise fall back to style presets
+    const effectiveColors = useMemo(() => {
+        // Priority: colors prop > primaryColor > defaults based on style
+        const accent = colors?.accent || primaryColor;
+        const background = colors?.background;
+        const heading = colors?.heading;
+        const text = colors?.text;
+        const cardBackground = colors?.cardBackground;
+        const cardText = colors?.cardText;
+        const buttonBackground = colors?.buttonBackground || accent;
+        const buttonText = colors?.buttonText || '#ffffff';
+
+        return {
+            accent,
+            background,
+            heading,
+            text,
+            cardBackground,
+            cardText,
+            buttonBackground,
+            buttonText,
+        };
+    }, [colors, primaryColor]);
+
+    // Style configurations - used for class-based styling when colors not specified
     const getStyleClasses = () => {
+        // If custom colors are provided, use a neutral base
+        if (colors?.background || colors?.heading || colors?.text) {
+            return {
+                container: '',
+                title: '',
+                subtitle: '',
+                card: 'shadow-sm',
+                cardHover: 'hover:shadow-md hover:-translate-y-1',
+                text: '',
+                subtext: '',
+                button: '',
+                input: 'border rounded-lg',
+            };
+        }
+
         switch (style) {
             case 'minimal':
                 return {
@@ -178,16 +232,41 @@ const Products: React.FC<ProductsProps> = ({
         }
     };
 
+    // Calculate input/select background based on section background
+    const getInputBackground = () => {
+        if (!effectiveColors.background) return undefined;
+        // If background is dark, use slightly lighter input; if light, use white
+        const hex = effectiveColors.background.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance < 0.5 
+            ? effectiveColors.cardBackground || 'rgba(255,255,255,0.1)' 
+            : '#ffffff';
+    };
+
+    const inputBg = getInputBackground();
+
     return (
-        <section className={`py-16 ${styles.container}`}>
+        <section 
+            className={`py-16 ${styles.container}`}
+            style={effectiveColors.background ? { backgroundColor: effectiveColors.background } : undefined}
+        >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${styles.title}`}>
+                    <h2 
+                        className={`text-3xl md:text-4xl font-bold mb-4 ${styles.title}`}
+                        style={effectiveColors.heading ? { color: effectiveColors.heading } : undefined}
+                    >
                         {title}
                     </h2>
                     {subtitle && (
-                        <p className={`text-lg max-w-2xl mx-auto ${styles.subtitle}`}>
+                        <p 
+                            className={`text-lg max-w-2xl mx-auto ${styles.subtitle}`}
+                            style={effectiveColors.text ? { color: effectiveColors.text } : undefined}
+                        >
                             {subtitle}
                         </p>
                     )}
@@ -199,15 +278,21 @@ const Products: React.FC<ProductsProps> = ({
                         {showSearch && (
                             <div className="relative flex-1">
                                 <Search
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2"
                                     size={20}
+                                    style={{ color: effectiveColors.text || '#9ca3af' }}
                                 />
                                 <input
                                     type="text"
                                     placeholder="Buscar productos..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${styles.input}`}
+                                    className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
+                                    style={{
+                                        backgroundColor: inputBg,
+                                        color: effectiveColors.cardText || effectiveColors.text,
+                                        borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                                    }}
                                 />
                             </div>
                         )}
@@ -218,7 +303,12 @@ const Products: React.FC<ProductsProps> = ({
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${styles.input}`}
+                                        className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
+                                        style={{
+                                            backgroundColor: inputBg,
+                                            color: effectiveColors.cardText || effectiveColors.text,
+                                            borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                                        }}
                                     >
                                         <option value="">Todas las categorías</option>
                                         {categories.map((cat) => (
@@ -232,7 +322,12 @@ const Products: React.FC<ProductsProps> = ({
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                                    className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${styles.input}`}
+                                    className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
+                                    style={{
+                                        backgroundColor: inputBg,
+                                        color: effectiveColors.cardText || effectiveColors.text,
+                                        borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                                    }}
                                 >
                                     <option value="newest">Más recientes</option>
                                     <option value="name">Nombre</option>
@@ -245,7 +340,10 @@ const Products: React.FC<ProductsProps> = ({
                 )}
 
                 {/* Products Count */}
-                <p className={`mb-6 ${styles.subtext}`}>
+                <p 
+                    className={`mb-6 ${styles.subtext}`}
+                    style={effectiveColors.text ? { color: effectiveColors.text, opacity: 0.7 } : undefined}
+                >
                     {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
                 </p>
 
@@ -266,12 +364,16 @@ const Products: React.FC<ProductsProps> = ({
                                 onWishlistToggle={handleWishlistToggle}
                                 styles={styles}
                                 primaryColor={primaryColor}
+                                effectiveColors={effectiveColors}
                             />
                         ))}
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <p className={`text-lg ${styles.subtext}`}>
+                        <p 
+                            className={`text-lg ${styles.subtext}`}
+                            style={effectiveColors.text ? { color: effectiveColors.text } : undefined}
+                        >
                             No se encontraron productos
                         </p>
                     </div>
@@ -284,6 +386,11 @@ const Products: React.FC<ProductsProps> = ({
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
                             className={`p-2 rounded-lg ${styles.input} disabled:opacity-50`}
+                            style={{
+                                backgroundColor: inputBg,
+                                color: effectiveColors.text,
+                                borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                            }}
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -295,9 +402,16 @@ const Products: React.FC<ProductsProps> = ({
                                 className={`w-10 h-10 rounded-lg font-medium transition-colors ${
                                     currentPage === page
                                         ? `${styles.button}`
-                                        : `${styles.input} hover:bg-gray-100`
+                                        : `${styles.input} hover:opacity-80`
                                 }`}
-                                style={currentPage === page ? { backgroundColor: primaryColor } : {}}
+                                style={currentPage === page 
+                                    ? { backgroundColor: effectiveColors.buttonBackground, color: effectiveColors.buttonText } 
+                                    : { 
+                                        backgroundColor: inputBg, 
+                                        color: effectiveColors.text,
+                                        borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                                    }
+                                }
                             >
                                 {page}
                             </button>
@@ -307,6 +421,11 @@ const Products: React.FC<ProductsProps> = ({
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
                             className={`p-2 rounded-lg ${styles.input} disabled:opacity-50`}
+                            style={{
+                                backgroundColor: inputBg,
+                                color: effectiveColors.text,
+                                borderColor: effectiveColors.accent ? `${effectiveColors.accent}40` : undefined,
+                            }}
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -318,8 +437,11 @@ const Products: React.FC<ProductsProps> = ({
                     <div className="flex justify-center mt-12">
                         <a
                             href={storeUrl}
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 hover:gap-3"
-                            style={{ backgroundColor: primaryColor }}
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all hover:opacity-90 hover:gap-3"
+                            style={{ 
+                                backgroundColor: effectiveColors.buttonBackground,
+                                color: effectiveColors.buttonText 
+                            }}
                         >
                             Ver todos los productos
                             <ArrowRight size={20} />
@@ -344,6 +466,16 @@ interface ProductCardProps {
     onWishlistToggle: (productId: string) => void;
     styles: ReturnType<typeof Object>;
     primaryColor: string;
+    effectiveColors: {
+        accent: string;
+        background?: string;
+        heading?: string;
+        text?: string;
+        cardBackground?: string;
+        cardText?: string;
+        buttonBackground: string;
+        buttonText: string;
+    };
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -358,6 +490,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     onWishlistToggle,
     styles,
     primaryColor,
+    effectiveColors,
 }) => {
     const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
     const discountPercentage = hasDiscount
@@ -482,8 +615,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                     e.stopPropagation();
                                     onAddToCart(product.id);
                                 }}
-                                className="w-full mt-3 py-2.5 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 hover:brightness-110"
-                                style={{ backgroundColor: primaryColor }}
+                                className="w-full mt-3 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 hover:brightness-110"
+                                style={{ 
+                                    backgroundColor: effectiveColors.buttonBackground,
+                                    color: effectiveColors.buttonText 
+                                }}
                             >
                                 <ShoppingCart size={18} />
                                 Agregar al carrito
@@ -499,6 +635,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return (
         <div
             className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${styles.card} ${styles.cardHover}`}
+            style={effectiveColors.cardBackground ? { backgroundColor: effectiveColors.cardBackground } : undefined}
         >
             {/* Image Container */}
             <div className="relative aspect-square overflow-hidden">
@@ -560,8 +697,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     <div className="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => onAddToCart(product.id)}
-                            className="w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-colors"
-                            style={{ backgroundColor: primaryColor }}
+                            className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                            style={{ 
+                                backgroundColor: effectiveColors.buttonBackground,
+                                color: effectiveColors.buttonText 
+                            }}
                         >
                             <ShoppingCart size={18} />
                             Agregar al carrito
@@ -573,12 +713,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {/* Content */}
             <div className="p-4">
                 {product.category && (
-                    <p className={`text-xs uppercase tracking-wide mb-1 ${styles.subtext}`}>
+                    <p 
+                        className={`text-xs uppercase tracking-wide mb-1 ${styles.subtext}`}
+                        style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.7 } : undefined}
+                    >
                         {product.category}
                     </p>
                 )}
 
-                <h3 className={`font-medium mb-2 line-clamp-2 ${styles.text}`}>
+                <h3 
+                    className={`font-medium mb-2 line-clamp-2 ${styles.text}`}
+                    style={effectiveColors.cardText || effectiveColors.heading ? { color: effectiveColors.cardText || effectiveColors.heading } : undefined}
+                >
                     {product.name}
                 </h3>
 
@@ -594,7 +740,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             />
                         ))}
                         {product.reviewCount !== undefined && (
-                            <span className={`text-xs ml-1 ${styles.subtext}`}>
+                            <span 
+                                className={`text-xs ml-1 ${styles.subtext}`}
+                                style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.6 } : undefined}
+                            >
                                 ({product.reviewCount})
                             </span>
                         )}
@@ -603,11 +752,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
                 {/* Price */}
                 <div className="flex items-center gap-2">
-                    <span className={`text-lg font-bold ${styles.text}`}>
+                    <span 
+                        className={`text-lg font-bold ${styles.text}`}
+                        style={effectiveColors.accent ? { color: effectiveColors.accent } : undefined}
+                    >
                         ${product.price.toFixed(2)}
                     </span>
                     {hasDiscount && (
-                        <span className={`text-sm line-through ${styles.subtext}`}>
+                        <span 
+                            className={`text-sm line-through ${styles.subtext}`}
+                            style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.5 } : undefined}
+                        >
                             ${product.compareAtPrice!.toFixed(2)}
                         </span>
                     )}

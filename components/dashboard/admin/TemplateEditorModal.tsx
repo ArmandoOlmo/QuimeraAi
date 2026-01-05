@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap, Wand2, Upload, RefreshCw, ChevronDown } from 'lucide-react';
+import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap, Wand2, Upload, RefreshCw, ChevronDown, Info } from 'lucide-react';
 import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
 import Modal from '../../ui/Modal';
@@ -13,6 +13,7 @@ import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
 import CoolorsImporter from '../../ui/CoolorsImporter';
+import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 interface TemplateEditorModalProps {
@@ -638,14 +639,45 @@ Return ONLY the JSON array, no other text.`;
                     paletteColors: formData.paletteColors || [],
                     pageBackground: formData.globalColors.background,
                 };
+
+                // Apply colors to all components
+                const componentColorMappings = generateComponentColorMappings(formData.globalColors);
+                const ecommerceComponents = [
+                    'productDetailPage', 'storeSettings', 'featuredProducts', 'categoryGrid',
+                    'productHero', 'trustBadges', 'saleCountdown', 'announcementBar',
+                    'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
+                    'products'
+                ];
+
+                updates.data = {
+                    ...template.data,
+                };
+
+                for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
+                    const key = componentId as keyof typeof updates.data;
+                    if (updates.data[key] && typeof updates.data[key] === 'object') {
+                        (updates.data[key] as any) = {
+                            ...(updates.data[key] as any),
+                            colors: {
+                                ...((updates.data[key] as any).colors || {}),
+                                ...componentColors
+                            }
+                        };
+                    } else if (ecommerceComponents.includes(componentId)) {
+                        (updates.data as any)[key] = {
+                            colors: componentColors
+                        };
+                    }
+                }
             }
 
             // Update hero image if a new one was generated
             if (finalHeroImageUrl) {
                 updates.data = {
-                    ...template.data,
+                    ...(updates.data || template.data),
                     hero: {
                         ...template.data?.hero,
+                        ...(updates.data?.hero || {}),
                         imageUrl: finalHeroImageUrl,
                         backgroundImage: finalHeroImageUrl,
                     }
@@ -933,6 +965,16 @@ Name:`;
                                         <p className="text-xs text-editor-text-secondary/50">{t('superadmin.templateEditor.noColors', 'No colors')}</p>
                                     )}
                                 </div>
+
+                                {/* Info about color application */}
+                                {formData.globalColors && (
+                                    <div className="flex items-start gap-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30">
+                                        <Info size={12} className="text-green-400 mt-0.5 shrink-0" />
+                                        <p className="text-[10px] text-green-300 leading-relaxed">
+                                            {t('superadmin.templateEditor.colorsWillApply', 'Colors will be applied to all components when you save. New components you add will also receive these colors.')}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Coolors Importer - Inline */}
                                 {showCoolorsImporter && (

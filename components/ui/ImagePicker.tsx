@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
@@ -33,7 +32,7 @@ const STYLES = [
 const MODELS = [
     { label: 'Vision Pro', value: 'gemini-3-pro-image-preview', description: 'Best quality, text in images', icon: 'vision' },
     { label: 'Ultra', value: 'imagen-4.0-ultra-generate-001', description: 'Highest quality', icon: 'ultra' },
-    { label: 'Standard', value: 'imagen-4.0-generate-001', description: 'Balanced', icon: 'standard' },
+    { label: 'Std', value: 'imagen-4.0-generate-001', description: 'Balanced', icon: 'standard' },
     { label: 'Fast', value: 'imagen-4.0-fast-generate-001', description: 'Fastest', icon: 'fast' },
 ];
 
@@ -85,11 +84,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
 
     const handleFileUpload = async (file: File) => {
         try {
-            // Upload file associated with the current project
-            await uploadFile(file, activeProjectId ? {
-                projectId: activeProjectId,
-                projectName: activeProject?.name
-            } : undefined);
+            // Upload file to active project (project is automatically set by FilesContext)
+            await uploadFile(file);
             success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             setIsLibraryOpen(true);
             setActiveTab('library');
@@ -101,6 +97,20 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
         } catch (err) {
             showError(t('dashboard.imagePicker.uploadError'));
         }
+    };
+
+    // Helper function to convert base64 data URL to File
+    const base64ToFile = (base64: string, filename: string): File => {
+        const arr = base64.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
     };
 
     const handleGenerate = async () => {
@@ -117,10 +127,26 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                 temperature,
                 negativePrompt: negativePrompt.trim() || undefined,
             };
-                            console.log('✨ [ImagePicker] Quimera options:', options);
-            const url = await generateImage(prompt, options);
-            setGeneratedImage(url);
-            success(t('dashboard.imagePicker.generateSuccess'));
+            console.log('✨ [ImagePicker] Quimera options:', options);
+            const imageDataUrl = await generateImage(prompt, options);
+            setGeneratedImage(imageDataUrl);
+            
+            // Save to library if we have an active project
+            if (activeProjectId) {
+                try {
+                    const timestamp = Date.now();
+                    const filename = `quimera-${timestamp}.png`;
+                    const file = base64ToFile(imageDataUrl, filename);
+                    await uploadFile(file);
+                    console.log('✅ [ImagePicker] Image saved to project library');
+                    success(t('dashboard.imagePicker.generateSuccess'));
+                } catch (saveError) {
+                    console.error('Failed to save to library:', saveError);
+                    success(t('dashboard.imagePicker.generateSuccess'));
+                }
+            } else {
+                success(t('dashboard.imagePicker.generateSuccess'));
+            }
         } catch (error) {
             console.error(error);
             showError(t('dashboard.imagePicker.generateError'));
@@ -472,30 +498,35 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                             <div className="h-full flex flex-col">
                                 <div className="flex gap-6 h-full">
                                     {/* Controls Side */}
-                                    <div className="w-1/3 flex flex-col gap-4 border-r border-editor-border pr-6 overflow-y-auto custom-scrollbar">
+                                    <div className="w-1/3 flex flex-col h-full">
+                                        <div className="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-4">
                                         {/* Model Selector */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Sparkles size={12} className="text-editor-accent" />
                                                 <label className="block text-xs font-bold text-editor-text-secondary uppercase">{t('dashboard.imagePicker.quimeraModel')}</label>
                                             </div>
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="grid grid-cols-2 gap-2">
                                                 {MODELS.map(model => (
                                                     <button
                                                         key={model.value}
                                                         onClick={() => setSelectedModel(model.value)}
-                                                        className={`text-xs py-1 px-2 rounded-full transition-all flex items-center gap-1 ${
+                                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
                                                             selectedModel === model.value 
-                                                                ? 'bg-editor-accent text-editor-bg font-medium' 
-                                                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
+                                                                ? 'bg-editor-accent/10 border-editor-accent text-editor-accent shadow-[0_0_8px_rgba(249,115,22,0.1)]' 
+                                                                : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/40'
                                                         }`}
                                                         title={model.description}
                                                     >
-                                                        {model.icon === 'vision' && <Eye size={10} />}
-                                                        {model.icon === 'ultra' && <Flame size={10} />}
-                                                        {model.icon === 'standard' && <Layers size={10} />}
-                                                        {model.icon === 'fast' && <Rocket size={10} />}
-                                                        {model.label}
+                                                        <div className="flex-shrink-0">
+                                                            {model.icon === 'vision' && <Eye size={14} />}
+                                                            {model.icon === 'ultra' && <Flame size={14} />}
+                                                            {model.icon === 'standard' && <Layers size={14} />}
+                                                            {model.icon === 'fast' && <Rocket size={14} />}
+                                                        </div>
+                                                        <span className="text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">
+                                                            {model.label.split(' ')[1] || model.label}
+                                                        </span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -519,7 +550,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 value={prompt}
                                                 onChange={(e) => setPrompt(e.target.value)}
                                                 placeholder={t('dashboard.imagePicker.promptPlaceholder')}
-                                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-editor-accent outline-none resize-none h-24"
+                                                className="w-full bg-editor-panel-bg border-2 border-editor-border rounded-lg p-3 text-sm text-white focus:border-editor-accent outline-none resize-none h-40 transition-colors"
                                             />
                                         </div>
 
@@ -654,8 +685,9 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
 
-                                        <div className="mt-auto pt-3 border-t border-editor-border">
+                                    <div className="pt-3 flex items-center h-[57px] flex-shrink-0">
                                             <button 
                                                 onClick={handleGenerate}
                                                 disabled={isGenerating || !prompt}
@@ -668,8 +700,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                     </div>
 
                                     {/* Preview Side */}
-                                    <div className="w-2/3 flex flex-col">
-                                        <div className="flex-grow flex items-center justify-center bg-black/20 rounded-xl border border-editor-border overflow-hidden relative mb-4">
+                                    <div className="w-2/3 flex flex-col h-full">
+                                        <div className="flex-grow flex items-center justify-center bg-black/20 rounded-xl border border-editor-border overflow-hidden relative">
                                             {isGenerating ? (
                                                 <div className="text-center">
                                                     <div className="w-16 h-16 border-4 border-editor-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -689,7 +721,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange }) => 
                                         </div>
                                         
                                         {generatedImage && (
-                                            <div className="flex justify-end">
+                                            <div className="pt-3 flex justify-end">
                                                 <button 
                                                     onClick={() => { onChange(generatedImage); setIsLibraryOpen(false); success(t('dashboard.imagePicker.generatedImageApplied')); }}
                                                     className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-white"

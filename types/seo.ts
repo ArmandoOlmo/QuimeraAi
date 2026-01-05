@@ -49,6 +49,9 @@ export interface SEOConfig {
     aiCrawlable: boolean;
     aiDescription?: string;
     aiKeyTopics?: string[];
+    
+    // Ad Tracking Pixels
+    adPixels?: AdPixelConfig;
 }
 
 export interface ProjectSEO extends SEOConfig {
@@ -56,9 +59,61 @@ export interface ProjectSEO extends SEOConfig {
     lastUpdated: string;
 }
 
+// =============================================================================
+// AD TRACKING PIXELS CONFIGURATION
+// =============================================================================
 
-
-
+/**
+ * Configuración de píxeles de tracking para plataformas publicitarias
+ * Soporta todas las principales redes sociales y plataformas de ads
+ */
+export interface AdPixelConfig {
+    // Facebook/Meta Pixel
+    facebookPixelId?: string;
+    facebookPixelEnabled?: boolean;
+    
+    // Google Ads / Google Tag Manager
+    googleAdsId?: string;  // AW-XXXXXXXXX
+    googleAdsEnabled?: boolean;
+    googleTagManagerId?: string;  // GTM-XXXXXXX
+    googleTagManagerEnabled?: boolean;
+    
+    // Google Analytics 4
+    googleAnalyticsId?: string;  // G-XXXXXXXXXX
+    googleAnalyticsEnabled?: boolean;
+    
+    // TikTok Pixel
+    tiktokPixelId?: string;
+    tiktokPixelEnabled?: boolean;
+    
+    // Twitter/X Pixel
+    twitterPixelId?: string;
+    twitterPixelEnabled?: boolean;
+    
+    // LinkedIn Insight Tag
+    linkedinPartnerId?: string;
+    linkedinEnabled?: boolean;
+    
+    // Pinterest Tag
+    pinterestTagId?: string;
+    pinterestEnabled?: boolean;
+    
+    // Snapchat Pixel
+    snapchatPixelId?: string;
+    snapchatEnabled?: boolean;
+    
+    // Microsoft/Bing Ads UET Tag
+    microsoftUetId?: string;
+    microsoftUetEnabled?: boolean;
+    
+    // Reddit Pixel
+    redditPixelId?: string;
+    redditPixelEnabled?: boolean;
+    
+    // Custom Scripts (para otros píxeles no listados)
+    customHeadScripts?: string;
+    customBodyScripts?: string;
+}
 
 
 

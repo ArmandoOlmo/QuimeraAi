@@ -61,6 +61,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     // State for selected project (similar to ecommerce)
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+    const [showAllProjects, setShowAllProjects] = useState(false);
     
     // Determine effective project
     const effectiveProjectId = propProjectId || selectedProjectId || activeProjectId || '';
@@ -107,12 +108,22 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
         );
     }
 
-    // No project selected - show full project selector page
-    if (!effectiveProjectId || projects.length === 0) {
+    // No project selected or user wants to see all projects - show full project selector page
+    if (!effectiveProjectId || projects.length === 0 || showAllProjects) {
         return (
             <EmailProjectSelectorPage
-                onProjectSelect={handleProjectSelect}
-                onBack={() => setView('dashboard')}
+                onProjectSelect={(projectId) => {
+                    handleProjectSelect(projectId);
+                    setShowAllProjects(false);
+                }}
+                onBack={() => {
+                    if (showAllProjects && effectiveProjectId) {
+                        // If we were showing all projects but have a selected project, go back to it
+                        setShowAllProjects(false);
+                    } else {
+                        setView('dashboard');
+                    }
+                }}
             />
         );
     }
@@ -226,7 +237,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                             <div className="border-t border-border/50 mt-2 pt-2 px-2">
                                                 <button
                                                     onClick={() => {
-                                                        setSelectedProjectId(null);
+                                                        setShowAllProjects(true);
                                                         setIsProjectSelectorOpen(false);
                                                     }}
                                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"

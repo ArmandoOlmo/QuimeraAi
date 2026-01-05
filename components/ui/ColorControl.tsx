@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Palette, Sparkles, History, ChevronDown } from 'lucide-react';
-import { useSafeEditor } from '../../contexts/EditorContext';
+import { useSafeProject } from '../../contexts/project';
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
     <input
@@ -122,8 +122,8 @@ interface ColorControlProps {
 
 const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors }) => {
     // Obtener los colores de la paleta del tema global si no se pasan como prop
-    const editor = useSafeEditor();
-    const paletteColors = propPaletteColors ?? editor?.theme?.paletteColors;
+    const project = useSafeProject();
+    const paletteColors = propPaletteColors ?? project?.theme?.paletteColors;
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -151,28 +151,35 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             const rect = triggerRef.current.getBoundingClientRect();
 
             const popoverWidth = 256; // Corresponds to w-64
-            const popoverHeight = 340; // Estimated height
+            const popoverHeight = 400; // Estimated height
             const gap = 8;
 
-            let top = rect.bottom + window.scrollY + gap;
-            let left = rect.left + window.scrollX;
+            // Use fixed positioning relative to viewport
+            let top = rect.bottom + gap;
+            let left = rect.left;
 
-            // Adjust vertically if it overflows
-            if (top + popoverHeight > window.innerHeight + window.scrollY) {
-                top = rect.top + window.scrollY - popoverHeight - gap;
+            // Adjust vertically if it overflows bottom
+            if (top + popoverHeight > window.innerHeight) {
+                top = rect.top - popoverHeight - gap;
             }
 
-            // Adjust horizontally if it overflows
-            if (left + popoverWidth > window.innerWidth + window.scrollX) {
-                left = rect.right + window.scrollX - popoverWidth;
+            // If still overflows top, position at top of screen
+            if (top < gap) {
+                top = gap;
             }
 
-            if (left < 0) {
+            // Adjust horizontally if it overflows right
+            if (left + popoverWidth > window.innerWidth) {
+                left = rect.right - popoverWidth;
+            }
+
+            // If overflows left
+            if (left < gap) {
                 left = gap;
             }
 
             setPopoverStyle({
-                position: 'absolute',
+                position: 'fixed',
                 top: `${top}px`,
                 left: `${left}px`,
             });
@@ -326,6 +333,7 @@ return (
         {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <div className="relative">
             <button
+                ref={triggerRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center gap-2 bg-editor-panel-bg border border-editor-border rounded-md px-2 py-1.5 text-sm text-editor-text-primary hover:border-editor-accent transition-colors"
             >

@@ -783,28 +783,49 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Update project thumbnail
     const updateProjectThumbnail = async (projectId: string, file: File) => {
-        if (!user) return;
+        console.log('[ProjectContext] updateProjectThumbnail called for projectId:', projectId);
+        
+        if (!user) {
+            console.error('[ProjectContext] No user, cannot update thumbnail');
+            return;
+        }
 
         const project = projects.find(p => p.id === projectId);
-        if (!project) return;
-
-        const isTemplate = project.status === 'Template';
+        console.log('[ProjectContext] Found project in state:', project?.name, 'status:', project?.status);
+        
+        // Check if it's a template by looking in templates collection directly if not found in projects
+        const isTemplate = project?.status === 'Template' || !project;
+        console.log('[ProjectContext] isTemplate:', isTemplate);
+        
         const storagePath = isTemplate
             ? `templates/${projectId}/thumbnail.png`
             : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/thumbnail.png`;
 
+        console.log('[ProjectContext] Uploading to storage path:', storagePath);
         const storageRef = ref(storage, storagePath);
         await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(storageRef);
+        console.log('[ProjectContext] Got download URL:', downloadURL);
 
         const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
         const docRef = isTemplate
             ? doc(db, 'templates', projectId)
             : doc(db, ...pathSegments, projectId);
 
-        await updateDoc(docRef, { thumbnail: downloadURL });
+        console.log('[ProjectContext] Updating Firestore doc:', isTemplate ? `templates/${projectId}` : pathSegments.join('/') + '/' + projectId);
+        
+        // Templates use 'thumbnailUrl', regular projects use 'thumbnail'
+        const updateField = isTemplate ? 'thumbnailUrl' : 'thumbnailUrl'; // Using thumbnailUrl for consistency
+        const updateData = {
+            [updateField]: downloadURL,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        await updateDoc(docRef, updateData);
+        console.log('[ProjectContext] Firestore updated successfully with field:', updateField);
+        
         setProjects(prev => prev.map(p =>
-            p.id === projectId ? { ...p, thumbnail: downloadURL } : p
+            p.id === projectId ? { ...p, thumbnailUrl: downloadURL, lastUpdated: updateData.lastUpdated } : p
         ));
     };
 

@@ -19,7 +19,7 @@ import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2
+  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -2612,6 +2612,165 @@ const Controls: React.FC = () => {
             <p className="text-xs text-editor-text-secondary">No social links configured</p>
           )}
         </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+            <MapPin size={14} className="text-editor-accent" />
+            Contact Information
+          </h4>
+          <Input 
+            label="Address" 
+            value={data.footer.contactInfo?.address || ''} 
+            onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)} 
+            placeholder="123 Main Street"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input 
+              label="City" 
+              value={data.footer.contactInfo?.city || ''} 
+              onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)} 
+              placeholder="City"
+            />
+            <Input 
+              label="State" 
+              value={data.footer.contactInfo?.state || ''} 
+              onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)} 
+              placeholder="State"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Input 
+              label="ZIP Code" 
+              value={data.footer.contactInfo?.zipCode || ''} 
+              onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)} 
+              placeholder="12345"
+            />
+            <Input 
+              label="Country" 
+              value={data.footer.contactInfo?.country || ''} 
+              onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)} 
+              placeholder="Country"
+            />
+          </div>
+          <Input 
+            label="Phone" 
+            value={data.footer.contactInfo?.phone || ''} 
+            onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)} 
+            placeholder="+1 (555) 123-4567"
+          />
+          <Input 
+            label="Email" 
+            value={data.footer.contactInfo?.email || ''} 
+            onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)} 
+            placeholder="contact@example.com"
+          />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Business Hours */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+            <Clock size={14} className="text-editor-accent" />
+            Business Hours
+          </h4>
+          
+          {/* Quick copy buttons */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                const monHours = data.footer.contactInfo?.businessHours?.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const newHours: any = {};
+                ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                  newHours[day] = { ...monHours };
+                });
+                setNestedData('footer.contactInfo.businessHours', { ...(data.footer.contactInfo?.businessHours || {}), ...newHours });
+              }}
+              className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            >
+              Copy Mon → Weekdays
+            </button>
+            <button
+              onClick={() => {
+                const monHours = data.footer.contactInfo?.businessHours?.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const newHours: any = {};
+                ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
+                  newHours[day] = { ...monHours };
+                });
+                setNestedData('footer.contactInfo.businessHours', newHours);
+              }}
+              className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            >
+              Copy Mon → All Days
+            </button>
+          </div>
+
+          {/* Days */}
+          <div className="space-y-2 bg-editor-bg p-3 rounded-lg border border-editor-border">
+            {[
+              { key: 'monday', label: 'Mon' },
+              { key: 'tuesday', label: 'Tue' },
+              { key: 'wednesday', label: 'Wed' },
+              { key: 'thursday', label: 'Thu' },
+              { key: 'friday', label: 'Fri' },
+              { key: 'saturday', label: 'Sat' },
+              { key: 'sunday', label: 'Sun' },
+            ].map(({ key, label }) => {
+              const dayHours = data.footer.contactInfo?.businessHours?.[key as keyof typeof data.footer.contactInfo.businessHours] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+              return (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
+                  <button
+                    onClick={() => {
+                      // When toggling ON, initialize with default times
+                      if (!dayHours.isOpen) {
+                        setNestedData(`footer.contactInfo.businessHours.${key}`, {
+                          isOpen: true,
+                          openTime: dayHours.openTime || '09:00',
+                          closeTime: dayHours.closeTime || '17:00'
+                        });
+                      } else {
+                        setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
+                      }
+                    }}
+                    className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${
+                      dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                        dayHours.isOpen ? 'left-5' : 'left-0.5'
+                      }`}
+                    />
+                  </button>
+                  {dayHours.isOpen ? (
+                    <div className="flex items-center gap-1 flex-1">
+                      <input
+                        type="time"
+                        value={dayHours.openTime || '09:00'}
+                        onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)}
+                        className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary"
+                      />
+                      <span className="text-editor-text-secondary text-xs">-</span>
+                      <input
+                        type="time"
+                        value={dayHours.closeTime || '17:00'}
+                        onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)}
+                        className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         <hr className="border-editor-border/50" />
         <div className="space-y-2">
           <ColorControl label="Background" value={data.footer.colors.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
@@ -4339,6 +4498,7 @@ const Controls: React.FC = () => {
             <ColorControl label="Text" value={data?.products?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('products.colors.text', v)} />
             <ColorControl label="Accent" value={data?.products?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('products.colors.accent', v)} />
             <ColorControl label="Card Background" value={data?.products?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('products.colors.cardBackground', v)} />
+            <ColorControl label="Card Text" value={data?.products?.colors?.cardText || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.cardText', v)} />
             <ColorControl label="Button Background" value={data?.products?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('products.colors.buttonBackground', v)} />
             <ColorControl label="Button Text" value={data?.products?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('products.colors.buttonText', v)} />
           </div>
