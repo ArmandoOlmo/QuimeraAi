@@ -14,6 +14,25 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Check if user has admin role via Custom Claims
+    // Custom claims are set via Firebase Admin SDK
+    // Roles: owner, superadmin, admin
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'owner' ||
+        request.auth.token.role == 'superadmin' ||
+        request.auth.token.role == 'admin'
+      );
+    }
+    
+    // Check if user is superadmin or owner
+    function isSuperAdminOrOwner() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'owner' ||
+        request.auth.token.role == 'superadmin'
+      );
+    }
+    
     // Validate file size (in bytes)
     function isValidSize(maxSize) {
       return request.resource.size <= maxSize;
@@ -80,34 +99,37 @@ service firebase.storage {
     // ============================================
     // GLOBAL SETTINGS (App information, brand assets)
     // Public read for serving assets
-    // Authenticated users can write (superadmin verified at app level)
+    // SECURED: Only superadmin/owner can write
     // ============================================
     
     match /global_settings/{allPaths=**} {
       allow read: if true;
-      allow write: if isAuthenticated() 
+      // Only superadmin/owner can write global settings
+      allow write: if isSuperAdminOrOwner() 
         && isValidSize(10 * 1024 * 1024); // 10MB max per file
     }
     
     // ============================================
     // GLOBAL FILES
-    // Authenticated users can manage global files
+    // SECURED: Only admin roles can manage global files
     // ============================================
     
     match /global/{allPaths=**} {
       allow read: if true;
-      allow write: if isAuthenticated() 
+      // Only admin roles can write global files
+      allow write: if isAdmin() 
         && isValidSize(50 * 1024 * 1024); // 50MB max per file
     }
     
     // ============================================
     // TEMPLATES & THUMBNAILS
-    // Public read, authenticated write
+    // SECURED: Only superadmin/owner can manage templates
     // ============================================
     
     match /templates/{allPaths=**} {
       allow read: if true;
-      allow write: if isAuthenticated() 
+      // Only superadmin/owner can write templates
+      allow write: if isSuperAdminOrOwner() 
         && isValidSize(10 * 1024 * 1024); // 10MB max
     }
     

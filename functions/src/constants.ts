@@ -1,8 +1,14 @@
 /**
  * Cloud Functions Constants
+ * 
+ * SECURITY: Owner email is loaded from environment variable
+ * Set OWNER_EMAIL in your Cloud Functions environment config
+ * Run: firebase functions:config:set app.owner_email="your-email@example.com"
+ * Or set it in .env file for local development
  */
 
-export const OWNER_EMAIL = 'armandoolmomiranda@gmail.com';
+// Get owner email from environment variable
+export const OWNER_EMAIL = process.env.OWNER_EMAIL || '';
 
 /**
  * Robust check if a UID or Email belongs to the owner.

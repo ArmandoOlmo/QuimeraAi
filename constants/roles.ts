@@ -1,7 +1,11 @@
 import { RolePermissions } from '../types';
 
-// EMAIL DEL SUPER ADMIN OWNER
-export const OWNER_EMAIL = 'armandoolmomiranda@gmail.com';
+// ============================================
+// OWNER EMAIL - FROM ENVIRONMENT VARIABLE
+// Set VITE_OWNER_EMAIL in your .env file
+// This is more secure than hardcoding the email
+// ============================================
+export const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || '';
 
 // Definición de permisos por rol
 export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {

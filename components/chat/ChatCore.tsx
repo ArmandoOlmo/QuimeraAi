@@ -1880,8 +1880,36 @@ ${suggestAvailableSlots()}
                         ))}
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div className="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm">
-                                    <Loader2 size={16} className="animate-spin text-gray-500" />
+                                <div 
+                                    className="p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2"
+                                    style={{
+                                        backgroundColor: appearance.colors.botBubbleColor,
+                                        color: appearance.colors.botTextColor
+                                    }}
+                                >
+                                    <div className="flex gap-1">
+                                        <span 
+                                            className="w-2 h-2 rounded-full animate-bounce" 
+                                            style={{ 
+                                                backgroundColor: appearance.colors.primaryColor,
+                                                animationDelay: '0ms'
+                                            }}
+                                        />
+                                        <span 
+                                            className="w-2 h-2 rounded-full animate-bounce" 
+                                            style={{ 
+                                                backgroundColor: appearance.colors.primaryColor,
+                                                animationDelay: '150ms'
+                                            }}
+                                        />
+                                        <span 
+                                            className="w-2 h-2 rounded-full animate-bounce" 
+                                            style={{ 
+                                                backgroundColor: appearance.colors.primaryColor,
+                                                animationDelay: '300ms'
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}

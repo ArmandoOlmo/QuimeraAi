@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { MessageSquare, X, Send, Loader2, Bot, HelpCircle, Sparkles } from 'lucide-react';
-import { useAdmin } from '../contexts/admin';
+import { useSafeAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { isProxyMode } from '../utils/genAiClient';
@@ -49,7 +49,11 @@ const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(
 
 const LandingChatbotWidget: React.FC = () => {
     const { t } = useTranslation();
-    const { landingChatbotConfig, designTokens } = useAdmin();
+    const adminContext = useSafeAdmin();
+    
+    // Extract values safely with fallbacks
+    const landingChatbotConfig = adminContext?.landingChatbotConfig;
+    const designTokens = adminContext?.designTokens;
     
     // Debug logging
     console.log('[LandingChatbotWidget] Rendering, isActive:', true, 'path:', typeof window !== 'undefined' ? window.location.pathname : 'SSR');

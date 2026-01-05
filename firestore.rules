@@ -23,6 +23,29 @@ service cloud.firestore {
       return isTenantMember(tenantId) && get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data.role == 'agency_owner';
     }
     
+    // Check if user is tenant admin (owner or admin role)
+    function isTenantAdmin(tenantId) {
+      let memberDoc = get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
+      return memberDoc.exists && (memberDoc.data.role == 'agency_owner' || memberDoc.data.role == 'admin');
+    }
+    
+    // Extract tenantId from membershipId (format: tenantId_userId)
+    function getTenantIdFromMembership(membershipId) {
+      return membershipId.split('_')[0];
+    }
+    
+    // Check if user owns a public store (via userId field)
+    function isStoreOwner(storeId) {
+      let storeDoc = get(/databases/$(database)/documents/publicStores/$(storeId));
+      return storeDoc.exists && storeDoc.data.userId == request.auth.uid;
+    }
+    
+    // Check if user owns a custom domain (via userId field)
+    function isDomainOwner(domainName) {
+      let domainDoc = get(/databases/$(database)/documents/customDomains/$(domainName));
+      return !domainDoc.exists || domainDoc.data.userId == request.auth.uid;
+    }
+    
     // ============================================
     // USER DATA (TODO lo que cuelga de /users/{userId})
     // ============================================
@@ -163,13 +186,52 @@ service cloud.firestore {
       }
     }
 
+    // ============================================
+    // TENANT MEMBERS - SECURED
+    // Only tenant owners/admins can manage memberships
+    // Users can read their own memberships
+    // ============================================
     match /tenantMembers/{membershipId} {
+      // Anyone authenticated can read (needed to check membership)
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null;
+      // Only tenant owner/admin or superadmin can create/update/delete memberships
+      // Also allow the user to delete their own membership (leave tenant)
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0])
+      );
+      allow update: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0])
+      );
+      allow delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0]) ||
+        membershipId.split('_')[1] == request.auth.uid  // User can leave (delete own membership)
+      );
     }
     
+    // ============================================
+    // TENANT INVITES - SECURED
+    // Only tenant owners/admins can create/manage invites
+    // Anyone can read to verify invite tokens
+    // ============================================
     match /tenantInvites/{inviteId} {
-      allow read, write: if request.auth != null;
+      // Read allowed for checking invite validity
+      allow read: if request.auth != null;
+      // Only tenant owner/admin or superadmin can create/update invites
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (request.resource.data.tenantId != null && isTenantAdmin(request.resource.data.tenantId))
+      );
+      allow update: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (resource.data.tenantId != null && isTenantAdmin(resource.data.tenantId))
+      );
+      allow delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (resource.data.tenantId != null && isTenantAdmin(resource.data.tenantId))
+      );
     }
     
     // ============================================
@@ -251,16 +313,50 @@ service cloud.firestore {
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
 
+    // ============================================
+    // PUBLIC STORES - SECURED
+    // Public read for customer-facing stores
+    // Write only by store owner or superadmin
+    // ============================================
     match /publicStores/{storeId} {
       allow read: if true;
-      allow write: if request.auth != null;
-      match /{allPaths=**} { allow read: if true; allow write: if request.auth != null; }
+      // Only the store owner or superadmin can write
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        request.resource.data.userId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        resource.data.userId == request.auth.uid
+      );
+      
+      // Subcollections (products, orders, etc.)
+      match /{allPaths=**} { 
+        allow read: if true; 
+        allow write: if request.auth != null && (
+          isSuperAdminOrOwner() || 
+          get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid
+        ); 
+      }
     }
 
+    // ============================================
+    // CUSTOM DOMAINS - SECURED
+    // Public read for domain resolution
+    // Write only by domain owner or superadmin
+    // ============================================
     match /customDomains/{domainName} {
       allow read: if true;
-      // Allow authenticated users to write (DomainsContext syncs here)
-      allow write: if request.auth != null;
+      // Only the domain owner or superadmin can write
+      // On create, the userId must match the authenticated user
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        request.resource.data.userId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        resource.data.userId == request.auth.uid
+      );
     }
     
     match /domainOrders/{orderId} {

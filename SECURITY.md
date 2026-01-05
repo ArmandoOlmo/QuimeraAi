@@ -51,6 +51,32 @@ echo -n "tu_api_key" | gcloud secrets create gemini-api-key \
 # Usar en deployment (ver GOOGLE_CLOUD_DEPLOYMENT.md)
 ```
 
+### Variables de Entorno Requeridas
+
+**Frontend (.env.local):**
+```bash
+# Firebase
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abc123
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# AI
+VITE_GEMINI_API_KEY=your_gemini_api_key
+
+# SECURITY: Owner email (platform administrator)
+VITE_OWNER_EMAIL=your-owner-email@example.com
+```
+
+**Backend Functions (.env):**
+```bash
+# Ver functions/ENV_EXAMPLE.txt para la lista completa
+OWNER_EMAIL=your-owner-email@example.com
+```
+
 ## 🛡️ Firebase Security
 
 ### API Key de Firebase

@@ -801,5 +801,14 @@ export const useAdmin = (): AdminContextType => {
     return context;
 };
 
+/**
+ * Safe version of useAdmin that returns null instead of throwing
+ * Use this in components that might render outside AdminProvider
+ */
+export const useSafeAdmin = (): AdminContextType | null => {
+    const context = useContext(AdminContext);
+    return context || null;
+};
+
 
 

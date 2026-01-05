@@ -1,4 +1,4 @@
-export { AdminProvider, useAdmin } from './AdminContext';
+export { AdminProvider, useAdmin, useSafeAdmin } from './AdminContext';
 
 
 

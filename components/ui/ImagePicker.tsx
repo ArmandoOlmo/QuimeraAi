@@ -1,13 +1,13 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
-import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Globe, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen, ShoppingBag } from 'lucide-react';
+import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen, ShoppingBag } from 'lucide-react';
 import DragDropZone from './DragDropZone';
-import { searchFiles, filterFilesByType, FileTypeFilter } from '../../utils/fileHelpers';
+import { searchFiles } from '../../utils/fileHelpers';
 
 interface ImagePickerProps {
     label: string;
@@ -15,6 +15,11 @@ interface ImagePickerProps {
     onChange: (url: string) => void;
     /** Optional store ID to show product images */
     storeId?: string;
+    /** When true, opens the modal immediately without showing the inline preview. 
+     * Must be used with onClose to properly unmount the component. */
+    defaultOpen?: boolean;
+    /** Callback when the modal is closed. Required when using defaultOpen. */
+    onClose?: () => void;
 }
 
 const ASPECT_RATIOS = [
@@ -46,16 +51,22 @@ const THINKING_LEVELS = [
     { label: 'High', value: 'high' },
 ];
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose }) => {
     const { t } = useTranslation();
-    const { files, globalFiles, uploadFile } = useFiles();
+    const { files, uploadFile } = useFiles();
     const { generateImage, enhancePrompt } = useAI();
-    const { projects, activeProjectId, activeProject } = useProject();
+    const { activeProjectId, activeProject } = useProject();
     const { success, error: showError } = useToast();
-    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');
-    const [librarySource, setLibrarySource] = useState<'user' | 'global'>('user');
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Handle closing the modal
+    const handleClose = () => {
+        setIsLibraryOpen(false);
+        if (onClose) {
+            onClose();
+        }
+    };
     
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
@@ -74,20 +85,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             }));
     }, [storeProducts]);
     
-    // Library filters - default to current project if available
+    // Library filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
-    const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>(activeProjectId || 'all');
-    
-    // Update filter when active project changes
-    useEffect(() => {
-        if (activeProjectId && librarySource === 'user') {
-            setSelectedProjectFilter(activeProjectId);
-        }
-    }, [activeProjectId, librarySource]);
     
     // Generator State
     const [prompt, setPrompt] = useState('');
+    const [isSavingGenerated, setIsSavingGenerated] = useState(false);
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [style, setStyle] = useState('None');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -109,11 +112,6 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             setIsLibraryOpen(true);
             setActiveTab('library');
-            setLibrarySource('user');
-            // Auto-select the current project filter if there's an active project
-            if (activeProjectId) {
-                setSelectedProjectFilter(activeProjectId);
-            }
         } catch (err) {
             showError(t('dashboard.imagePicker.uploadError'));
         }
@@ -190,67 +188,26 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
     };
 
-    // Filter and search image files
-    const sourceFiles = librarySource === 'user' ? files : globalFiles;
+    // Filter and search image files - ONLY from current project
     const imageFiles = useMemo(() => {
-        let result = sourceFiles.filter(f => f.type.startsWith('image/'));
+        let result = files.filter(f => f.type.startsWith('image/'));
+        
+        // Only show images from the current project
+        if (activeProjectId) {
+            result = result.filter(f => f.projectId === activeProjectId);
+        }
         
         if (searchQuery) {
             result = searchFiles(result, searchQuery);
         }
         
         return result;
-    }, [sourceFiles, searchQuery]);
-
-    // Group images by project (only for user files)
-    const imagesByProject = useMemo(() => {
-        if (librarySource === 'global') {
-            return { 'global': imageFiles };
-        }
-
-        const grouped: { [key: string]: typeof imageFiles } = {
-            'no-project': []
-        };
-
-        imageFiles.forEach(file => {
-            const projectKey = file.projectId || 'no-project';
-            if (!grouped[projectKey]) {
-                grouped[projectKey] = [];
-            }
-            grouped[projectKey].push(file);
-        });
-
-        return grouped;
-    }, [imageFiles, librarySource]);
-
-    // Get project names for display
-    const projectNames = useMemo(() => {
-        const names: { [key: string]: string } = {
-            'no-project': t('dashboard.imagePicker.unassignedImages'),
-            'global': t('dashboard.imagePicker.globalLibrary')
-        };
-
-        projects.forEach(project => {
-            names[project.id] = project.name;
-        });
-
-        return names;
-    }, [projects, t]);
-
-    // Filter images by selected project
-    const filteredImagesByProject = useMemo(() => {
-        if (selectedProjectFilter === 'all') {
-            return imagesByProject;
-        }
-        
-        if (imagesByProject[selectedProjectFilter]) {
-            return { [selectedProjectFilter]: imagesByProject[selectedProjectFilter] };
-        }
-        
-        return {};
-    }, [imagesByProject, selectedProjectFilter]);
+    }, [files, searchQuery, activeProjectId]);
 
     return (
+        <>
+        {/* Inline UI - Only show when NOT using defaultOpen */}
+        {!defaultOpen && (
         <div className="mb-3">
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
             <div className="flex gap-2">
@@ -289,12 +246,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                     <Zap size={18} />
                 </button>
             </div>
+        </div>
+        )}
 
-            {/* Main Modal (Combined Library & Generator) */}
-            {isLibraryOpen && (
+        {/* Main Modal (Combined Library & Generator) - Always rendered when isLibraryOpen is true */}
+        {isLibraryOpen && (
                 <div 
                     className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
-                    onClick={() => setIsLibraryOpen(false)}
+                    onClick={handleClose}
                 >
                     <div 
                         className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border"
@@ -324,7 +283,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 <Zap size={14} /> Quimera.ai
                             </button>
                         </div>
-                        <button onClick={() => setIsLibraryOpen(false)} className="p-1 rounded-full hover:bg-editor-border"><X size={20}/></button>
+                        <button onClick={handleClose} className="p-1 rounded-full hover:bg-editor-border"><X size={20}/></button>
                     </div>
 
                     {/* Content */}
@@ -333,169 +292,81 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         {/* LIBRARY TAB */}
                         {activeTab === 'library' && (
                             <div className="h-full flex flex-col">
-                                {/* Library Controls */}
-                                <div className="space-y-3 mb-4">
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                        <div className="flex space-x-2 bg-editor-panel-bg p-1 rounded-lg border border-editor-border">
-                                            <button 
-                                                onClick={() => { setLibrarySource('user'); setSelectedProjectFilter('all'); }}
-                                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                            >
-                                                {t('dashboard.imagePicker.myUploads')}
-                                            </button>
-                                            <button 
-                                                onClick={() => { setLibrarySource('global'); setSelectedProjectFilter('all'); }}
-                                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center ${librarySource === 'global' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                            >
-                                                <Globe size={12} className="mr-1"/> {t('dashboard.imagePicker.globalLibrary')}
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="flex gap-2 w-full sm:w-auto">
-                                            {/* Search */}
-                                            <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
-                                                <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
-                                                <input
-                                                    type="text"
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    placeholder={t('dashboard.imagePicker.searchImages')}
-                                                    className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                                                />
-                                                {searchQuery && (
-                                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                                        <X size={12} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            
-                                            {/* Upload Button */}
-                                            <DragDropZone
-                                                onFileSelect={handleFileUpload}
-                                                accept="image/*"
-                                                maxSizeMB={10}
-                                                variant="compact"
-                                            >
-                                                <button className="flex items-center gap-2 bg-editor-accent text-editor-bg px-4 py-2 rounded-lg text-sm font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
-                                                    <Upload size={16} /> {t('dashboard.imagePicker.upload')}
-                                                </button>
-                                            </DragDropZone>
-                                        </div>
+                                {/* Library Controls - Compact */}
+                                <div className="flex items-center gap-3 mb-4">
+                                    {/* Project indicator */}
+                                    <div className="flex items-center gap-1.5 text-editor-text-secondary">
+                                        <FolderOpen size={14} className="text-editor-accent" />
+                                        <span className="text-xs font-medium text-editor-text-primary">{activeProject?.name}</span>
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-editor-panel-bg rounded">
+                                            {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
+                                        </span>
                                     </div>
 
-                                    {/* Project Filter - Always visible for user library */}
-                                    {librarySource === 'user' && (
-                                        <div className="p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="text-xs font-bold text-editor-text-secondary uppercase">{t('dashboard.imagePicker.filterByProject')}</label>
-                                                {activeProjectId && selectedProjectFilter !== activeProjectId && (
-                                                    <button
-                                                        onClick={() => setSelectedProjectFilter(activeProjectId)}
-                                                        className="text-xs text-editor-accent hover:underline"
-                                                    >
-                                                        {t('dashboard.imagePicker.showCurrentProject')}
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                <button
-                                                    onClick={() => setSelectedProjectFilter('all')}
-                                                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                                                        selectedProjectFilter === 'all' 
-                                                            ? 'bg-editor-accent text-editor-bg font-bold' 
-                                                            : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
-                                                    }`}
-                                                >
-                                                    {t('dashboard.imagePicker.allProjects')}
-                                                </button>
-                                                {projects.filter(p => p.status !== 'Template').map(project => (
-                                                    <button
-                                                        key={project.id}
-                                                        onClick={() => setSelectedProjectFilter(project.id)}
-                                                        className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
-                                                            selectedProjectFilter === project.id 
-                                                                ? 'bg-editor-accent text-editor-bg font-bold' 
-                                                                : project.id === activeProjectId
-                                                                    ? 'bg-editor-accent/20 border border-editor-accent text-editor-accent'
-                                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
-                                                        }`}
-                                                    >
-                                                        {project.id === activeProjectId && (
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                                        )}
-                                                        {project.name}
-                                                    </button>
-                                                ))}
-                                                <button
-                                                    onClick={() => setSelectedProjectFilter('no-project')}
-                                                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                                                        selectedProjectFilter === 'no-project' 
-                                                            ? 'bg-editor-accent text-editor-bg font-bold' 
-                                                            : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:border-editor-accent'
-                                                    }`}
-                                                >
-                                                    {t('dashboard.imagePicker.unassignedImages')}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Spacer */}
+                                    <div className="flex-1" />
+
+                                    {/* Search */}
+                                    <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-lg px-2.5 py-1.5 w-44">
+                                        <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder={t('dashboard.imagePicker.searchImages')}
+                                            className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                        />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <X size={10} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Upload Button */}
+                                    <DragDropZone
+                                        onFileSelect={handleFileUpload}
+                                        accept="image/*"
+                                        maxSizeMB={10}
+                                        variant="compact"
+                                    >
+                                        <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                            <Upload size={14} /> {t('dashboard.imagePicker.upload')}
+                                        </button>
+                                    </DragDropZone>
                                 </div>
                                 
-                                {/* Images Grid - Grouped by Project */}
+                                {/* Images Grid */}
                                 <div className="flex-grow overflow-y-auto custom-scrollbar">
-                                    {Object.keys(filteredImagesByProject).length > 0 && Object.values(filteredImagesByProject).some(arr => arr.length > 0) ? (
-                                        <div className="space-y-6">
-                                            {Object.entries(filteredImagesByProject).map(([projectId, projectImages]) => {
-                                                if (projectImages.length === 0) return null;
-                                                
-                                                return (
-                                                    <div key={projectId} className="space-y-3">
-                                                        {/* Project Header (only show if user library and not filtered to single project) */}
-                                                        {librarySource === 'user' && selectedProjectFilter === 'all' && (
-                                                            <div className="flex items-center gap-2 pb-2 border-b border-editor-border/50">
-                                                                <h3 className="text-sm font-bold text-editor-text-primary">
-                                                                    {projectNames[projectId] || 'Unknown Project'}
-                                                                </h3>
-                                                                <span className="text-xs text-editor-text-secondary bg-editor-panel-bg px-2 py-0.5 rounded-md">
-                                                                    {projectImages.length} {projectImages.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
-                                                                </span>
+                                    {imageFiles.length > 0 ? (
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                            {imageFiles.map(file => (
+                                                <div 
+                                                    key={file.id} 
+                                                    onClick={() => { onChange(file.downloadURL); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
+                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
+                                                >
+                                                    <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                    {value === file.downloadURL ? (
+                                                        <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
+                                                            <div className="bg-editor-accent text-editor-bg rounded-full p-2">
+                                                                <Check size={20} />
                                                             </div>
-                                                        )}
-                                                        
-                                                        {/* Project Images Grid */}
-                                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                                                            {projectImages.map(file => (
-                                                                <div 
-                                                                    key={file.id} 
-                                                                    onClick={() => { onChange(file.downloadURL); setIsLibraryOpen(false); success(t('dashboard.imagePicker.imageSelected')); }}
-                                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
-                                                                >
-                                                                    <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                                                    {value === file.downloadURL ? (
-                                                                        <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
-                                                                            <div className="bg-editor-accent text-editor-bg rounded-full p-2">
-                                                                                <Check size={20} />
-                                                                            </div>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                            <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                    ) : (
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ) : searchQuery || (selectedProjectFilter !== 'all' && librarySource === 'user') ? (
+                                    ) : searchQuery ? (
                                         <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary">
                                             <Search size={48} className="mb-4 opacity-50" />
                                             <p className="font-medium mb-2">{t('dashboard.imagePicker.noImagesFound')}</p>
-                                            <p className="text-sm mb-4">{t('dashboard.imagePicker.tryAdjustingFilters')}</p>
                                             <button 
-                                                onClick={() => { setSearchQuery(''); setSelectedProjectFilter('all'); }}
+                                                onClick={() => setSearchQuery('')}
                                                 className="text-editor-accent hover:underline text-sm"
                                             >
                                                 {t('dashboard.imagePicker.clearFilters')}
@@ -504,17 +375,15 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     ) : (
                                         <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
                                             <Image size={48} className="mb-4 opacity-50" />
-                                            <p className="mb-2">{librarySource === 'user' ? t('dashboard.imagePicker.noImagesInLibrary') : t('dashboard.imagePicker.noGlobalImages')}</p>
-                                            {librarySource === 'user' && (
-                                                <DragDropZone
-                                                    onFileSelect={handleFileUpload}
-                                                    accept="image/*"
-                                                    maxSizeMB={10}
-                                                    variant="compact"
-                                                >
-                                                    <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
-                                                </DragDropZone>
-                                            )}
+                                            <p className="mb-2">{t('dashboard.imagePicker.noImagesInLibrary')}</p>
+                                            <DragDropZone
+                                                onFileSelect={handleFileUpload}
+                                                accept="image/*"
+                                                maxSizeMB={10}
+                                                variant="compact"
+                                            >
+                                                <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
+                                            </DragDropZone>
                                         </div>
                                     )}
                                 </div>
@@ -540,7 +409,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             {productImages.map(product => (
                                                 <div 
                                                     key={product.id} 
-                                                    onClick={() => { onChange(product.imageUrl); setIsLibraryOpen(false); success(t('dashboard.imagePicker.imageSelected')); }}
+                                                    onClick={() => { onChange(product.imageUrl); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
                                                     className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === product.imageUrl ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
                                                 >
                                                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
@@ -801,10 +670,36 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         {generatedImage && (
                                             <div className="pt-3 flex justify-end">
                                                 <button 
-                                                    onClick={() => { onChange(generatedImage); setIsLibraryOpen(false); success(t('dashboard.imagePicker.generatedImageApplied')); }}
-                                                    className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-white"
+                                                    onClick={async () => { 
+                                                        // Upload to Storage first to get a URL (base64 exceeds Firebase field limit)
+                                                        setIsSavingGenerated(true);
+                                                        try {
+                                                            const timestamp = Date.now();
+                                                            const filename = `quimera-featured-${timestamp}.png`;
+                                                            const file = base64ToFile(generatedImage, filename);
+                                                            const downloadURL = await uploadFile(file);
+                                                            
+                                                            if (downloadURL) {
+                                                                onChange(downloadURL);
+                                                                console.log('✅ [ImagePicker] Image saved to project library');
+                                                            } else {
+                                                                // Fallback: use base64 (might fail for large images)
+                                                                console.warn('[ImagePicker] Upload returned no URL, using base64');
+                                                                onChange(generatedImage);
+                                                            }
+                                                            handleClose(); 
+                                                            success(t('dashboard.imagePicker.generatedImageApplied'));
+                                                        } catch (err) {
+                                                            console.error('[ImagePicker] Failed to save generated image:', err);
+                                                            showError(t('dashboard.imagePicker.uploadError'));
+                                                        } finally {
+                                                            setIsSavingGenerated(false);
+                                                        }
+                                                    }}
+                                                    disabled={isSavingGenerated}
+                                                    className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-white disabled:opacity-50"
                                                 >
-                                                    <Check size={18} /> {t('dashboard.imagePicker.useThisImage')}
+                                                    {isSavingGenerated ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} {t('dashboard.imagePicker.useThisImage')}
                                                 </button>
                                             </div>
                                         )}
@@ -817,7 +712,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                 </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

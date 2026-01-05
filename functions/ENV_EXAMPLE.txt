@@ -63,3 +63,9 @@ META_VERIFY_TOKEN=quimera_verify_token_2024
 # =============================================================================
 APP_BASE_URL=https://quimera.ai
 SUPPORT_EMAIL=soporte@quimera.ai
+
+# =============================================================================
+# OWNER/ADMIN CONFIG (SECURITY)
+# The email of the platform owner - has full admin access
+# =============================================================================
+OWNER_EMAIL=your-owner-email@example.com

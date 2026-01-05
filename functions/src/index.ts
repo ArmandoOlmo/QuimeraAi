@@ -170,6 +170,13 @@ import {
     scheduledPortalDNSCheck
 } from './portalDomains';
 
+// User role claims functions (sync roles to Firebase Auth Custom Claims)
+import {
+    onUserRoleChange,
+    syncUserRoleClaims,
+    batchSyncAllUserClaims
+} from './userRoleClaims';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -343,6 +350,13 @@ export const portalDomains = {
     scheduledCheck: scheduledPortalDNSCheck
 };
 
+// Export User Role Claims functions (Security - sync roles to Firebase Auth)
+export const userRoles = {
+    onUserRoleChange,
+    syncClaims: syncUserRoleClaims,
+    batchSyncAll: batchSyncAllUserClaims
+};
+
 // Alternative flat exports for easier routing
 export { 
     getWidgetConfig, 
@@ -471,6 +485,10 @@ export {
     // Voice proxy exports (Google Cloud TTS)
     textToSpeech,
     getVoices,
-    voiceChat
+    voiceChat,
+    // User Role Claims exports (Security)
+    onUserRoleChange,
+    syncUserRoleClaims,
+    batchSyncAllUserClaims
 };
 

@@ -16,6 +16,7 @@ import { Underline } from '@tiptap/extension-underline';
 import { Highlight } from '@tiptap/extension-highlight';
 
 import { useEditor as useEditorContext } from '../../../contexts/EditorContext';
+import { useCMS } from '../../../contexts/cms';
 import { CMSPost } from '../../../types';
 import { 
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
@@ -37,7 +38,10 @@ interface ModernCMSEditorProps {
 }
 
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
-    const { saveCMSPost, handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
+    // Use CMSContext for posts (scoped to active project)
+    const { saveCMSPost } = useCMS();
+    // Use EditorContext for other utilities
+    const { handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
     
     // Form State
     const [title, setTitle] = useState(post?.title || '');
@@ -58,6 +62,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     // Link Modal
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+    
+    // Content Image Picker Modal
+    const [showContentImagePicker, setShowContentImagePicker] = useState(false);
+    const [contentImageUrl, setContentImageUrl] = useState('');
     
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -159,7 +167,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     };
 
     const triggerImageUpload = () => {
-        contentFileInputRef.current?.click();
+        // Open the ImagePicker modal instead of the file input
+        setShowContentImagePicker(true);
+    };
+    
+    // Handle image selection from ImagePicker for content
+    const handleContentImageSelect = (url: string) => {
+        if (url && editor) {
+            editor.chain().focus().setImage({ src: url }).run();
+        }
+        setShowContentImagePicker(false);
+        setContentImageUrl('');
     };
 
     // --- Link Logic ---
@@ -445,6 +463,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* Content Image Picker Modal */}
+                {showContentImagePicker && (
+                    <ImagePicker
+                        value={contentImageUrl}
+                        onChange={handleContentImageSelect}
+                        onClose={() => setShowContentImagePicker(false)}
+                        label="Insert Image"
+                        defaultOpen={true}
+                    />
                 )}
 
                 {/* CMS Editor Toolbar - Just below the main header */}

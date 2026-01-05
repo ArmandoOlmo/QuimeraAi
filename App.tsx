@@ -3,7 +3,7 @@ import { AppProviders } from './contexts/AppProviders';
 import { useAuth } from './contexts/core/AuthContext';
 import { useUI } from './contexts/core/UIContext';
 import { useProject } from './contexts/project';
-import { useAdmin } from './contexts/admin';
+import { useSafeAdmin } from './contexts/admin';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES } from './routes/config';
@@ -37,11 +37,12 @@ const MinimalLoader = () => (
 // =============================================================================
 
 const GlobalAdPixels: React.FC = () => {
-  const { globalAdPixels } = useAdmin();
+  const adminContext = useSafeAdmin();
   
-  if (!globalAdPixels) return null;
+  // Safe fallback if AdminProvider is not available or still initializing
+  if (!adminContext || !adminContext.globalAdPixels) return null;
   
-  return <AdPixelsInjector config={globalAdPixels} />;
+  return <AdPixelsInjector config={adminContext.globalAdPixels} />;
 };
 
 // =============================================================================
