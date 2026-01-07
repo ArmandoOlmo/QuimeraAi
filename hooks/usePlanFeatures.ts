@@ -118,7 +118,8 @@ export function usePlanAccess(): PlanAccessData {
     const plansContext = useSafePlans();
 
     const planId = (usage?.planId || 'free') as SubscriptionPlanId;
-    const isOwner = isUserOwner || userDocument?.role === 'owner';
+    // Owner and superadmin always have full access to all features
+    const isOwner = isUserOwner || userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
 
     // Get plan data from context or fallback
     const planData = useMemo(() => {

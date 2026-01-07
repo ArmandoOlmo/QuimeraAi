@@ -58,7 +58,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
     title, 
     showTitle = true,
     fullWidth = false,
-    items, 
+    items = [], 
     paddingY, 
     paddingX, 
     colors, 
@@ -122,8 +122,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
     // Arrow style classes
     const getArrowClasses = () => {
         const baseClasses = "absolute top-1/2 -translate-y-1/2 p-3 transition-all duration-300 z-20";
-        const bgColor = colors.arrowBackground || 'rgba(0, 0, 0, 0.4)';
-        const textColor = colors.arrowText || '#ffffff';
+        const bgColor = colors?.arrowBackground || 'rgba(0, 0, 0, 0.4)';
+        const textColor = colors?.arrowText || '#ffffff';
         
         const shapes = {
             rounded: 'rounded-full hover:scale-110',
@@ -137,8 +137,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
 
     // Dot style classes
     const getDotClasses = (isActive: boolean) => {
-        const activeColor = colors.dotActive || '#ffffff';
-        const inactiveColor = colors.dotInactive || 'rgba(255, 255, 255, 0.5)';
+        const activeColor = colors?.dotActive || '#ffffff';
+        const inactiveColor = colors?.dotInactive || 'rgba(255, 255, 255, 0.5)';
         
         const shapes = {
             circle: 'w-3 h-3 rounded-full',
@@ -215,8 +215,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                     <div 
                                         className="absolute bottom-0 left-0 right-0 p-4 text-center"
                                         style={{ 
-                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                            color: colors.captionText || '#ffffff'
+                                            backgroundColor: colors?.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors?.captionText || '#ffffff'
                                         }}
                                     >
                                         {item.caption}
@@ -245,8 +245,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                 <div 
                                     className="absolute bottom-0 left-0 right-0 p-4 text-center"
                                     style={{ 
-                                        backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                        color: colors.captionText || '#ffffff'
+                                        backgroundColor: colors?.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                        color: colors?.captionText || '#ffffff'
                                     }}
                                 >
                                     {item.caption}
@@ -296,8 +296,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                 <div 
                                     className="absolute bottom-0 left-0 right-0 p-4 text-center animate-fade-in"
                                     style={{ 
-                                        backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                        color: colors.captionText || '#ffffff'
+                                        backgroundColor: colors?.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                        color: colors?.captionText || '#ffffff'
                                     }}
                                 >
                                     {item.caption}
@@ -348,8 +348,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                     <div 
                                         className="absolute bottom-0 left-0 right-0 p-4 text-center"
                                         style={{ 
-                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                            color: colors.captionText || '#ffffff'
+                                            backgroundColor: colors?.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors?.captionText || '#ffffff'
                                         }}
                                     >
                                         {item.caption}
@@ -390,8 +390,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                     <div 
                                         className="absolute bottom-0 left-0 right-0 p-4 text-center"
                                         style={{ 
-                                            backgroundColor: colors.captionBackground || 'rgba(0, 0, 0, 0.7)',
-                                            color: colors.captionText || '#ffffff'
+                                            backgroundColor: colors?.captionBackground || 'rgba(0, 0, 0, 0.7)',
+                                            color: colors?.captionText || '#ffffff'
                                         }}
                                     >
                                         {item.caption}
@@ -414,20 +414,20 @@ const Slideshow: React.FC<SlideshowProps> = ({
                                 height: `${thumbnailSize}px`,
                                 width: `${thumbnailSize * 1.5}px`,
                                 border: index === currentIndex 
-                                    ? `4px solid ${colors.dotActive || '#ffffff'}` 
-                                    : `2px solid ${colors.dotInactive || 'rgba(255, 255, 255, 0.5)'}`,
+                                    ? `4px solid ${colors?.dotActive || '#ffffff'}` 
+                                    : `2px solid ${colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'}`,
                                 transform: index === currentIndex ? 'scale(1.05)' : 'scale(1)',
                             }}
                             onMouseEnter={(e) => {
                                 if (index !== currentIndex) {
-                                    e.currentTarget.style.borderColor = colors.dotActive || '#ffffff';
+                                    e.currentTarget.style.borderColor = colors?.dotActive || '#ffffff';
                                     e.currentTarget.style.borderWidth = '2px';
                                     e.currentTarget.style.transform = 'scale(1.05)';
                                 }
                             }}
                             onMouseLeave={(e) => {
                                 if (index !== currentIndex) {
-                                    e.currentTarget.style.borderColor = colors.dotInactive || 'rgba(255, 255, 255, 0.5)';
+                                    e.currentTarget.style.borderColor = colors?.dotInactive || 'rgba(255, 255, 255, 0.5)';
                                     e.currentTarget.style.borderWidth = '2px';
                                     e.currentTarget.style.transform = 'scale(1)';
                                 }
@@ -450,8 +450,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                         onClick={goToPrevious} 
                         className={`${getArrowClasses()} left-4`}
                         style={{ 
-                            backgroundColor: colors.arrowBackground || 'rgba(0, 0, 0, 0.4)',
-                            color: colors.arrowText || '#ffffff'
+                            backgroundColor: colors?.arrowBackground || 'rgba(0, 0, 0, 0.4)',
+                            color: colors?.arrowText || '#ffffff'
                         }}
                     >
                         <ChevronLeft />
@@ -460,8 +460,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                         onClick={goToNext} 
                         className={`${getArrowClasses()} right-4`}
                         style={{ 
-                            backgroundColor: colors.arrowBackground || 'rgba(0, 0, 0, 0.4)',
-                            color: colors.arrowText || '#ffffff'
+                            backgroundColor: colors?.arrowBackground || 'rgba(0, 0, 0, 0.4)',
+                            color: colors?.arrowText || '#ffffff'
                         }}
                     >
                         <ChevronRight />
@@ -479,8 +479,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
                             className={getDotClasses(currentIndex === slideIndex)}
                             style={{ 
                                 backgroundColor: currentIndex === slideIndex 
-                                    ? colors.dotActive || '#ffffff'
-                                    : colors.dotInactive || 'rgba(255, 255, 255, 0.5)'
+                                    ? colors?.dotActive || '#ffffff'
+                                    : colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'
                             }}
                         />
                     ))}
@@ -506,13 +506,13 @@ const Slideshow: React.FC<SlideshowProps> = ({
     return (
         <section 
             className="w-full relative overflow-hidden" 
-            style={{ backgroundColor: colors.background }}
+            style={{ backgroundColor: colors?.background }}
         >
             <CornerGradient config={cornerGradient} />
             <div className={`${fullWidth ? '' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]} relative z-10`}>
                 {showTitle && title && (
                     <div className={`text-center max-w-3xl mx-auto mb-16 ${fullWidth ? paddingXClasses[paddingX] : ''}`}>
-                        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading || primaryColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                        <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading || primaryColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
                     </div>
                 )}
                 {hasItems ? (

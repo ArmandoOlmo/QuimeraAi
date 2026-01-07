@@ -1577,8 +1577,8 @@ ${suggestAvailableSlots()}
                 <div
                     className="p-4 flex justify-between items-center transition-colors duration-500"
                     style={{
-                        backgroundColor: isLiveActive ? (appearance.colors.accentColor || '#ef4444') : appearance.colors.headerBackground,
-                        color: appearance.colors.headerText
+                        backgroundColor: isLiveActive ? (appearance.colors?.accentColor || '#ef4444') : appearance.colors?.headerBackground,
+                        color: appearance.colors?.headerText
                     }}
                 >
                     <div className="flex items-center gap-3">
@@ -1610,7 +1610,7 @@ ${suggestAvailableSlots()}
                             <button
                                 onClick={onClose}
                                 className="p-2 rounded-full hover:bg-black/5 transition-colors"
-                                style={{ color: appearance.colors.headerText }}
+                                style={{ color: appearance.colors?.headerText }}
                                 title={t('common.close')}
                             >
                                 <X size={18} />
@@ -1621,18 +1621,18 @@ ${suggestAvailableSlots()}
             )}
 
             {/* Content Area */}
-            <div className="flex-1 relative flex flex-col overflow-hidden" style={{ backgroundColor: appearance.colors.backgroundColor }}>
+            <div className="flex-1 relative flex flex-col overflow-hidden" style={{ backgroundColor: appearance.colors?.backgroundColor }}>
 
                 {/* Pre-Chat Form - Compact */}
                 {showPreChatForm && (
                     <div 
                         className="absolute inset-0 flex flex-col z-20"
-                        style={{ backgroundColor: appearance.colors.backgroundColor }}
+                        style={{ backgroundColor: appearance.colors?.backgroundColor }}
                     >
                         {/* Compact Header */}
                         <div 
                             className="px-4 py-5 text-center"
-                            style={{ background: `linear-gradient(135deg, ${appearance.colors.primaryColor}, ${appearance.colors.accentColor || appearance.colors.primaryColor}dd)` }}
+                            style={{ background: `linear-gradient(135deg, ${appearance.colors?.primaryColor}, ${appearance.colors?.accentColor || appearance.colors?.primaryColor}dd)` }}
                         >
                             <div className="w-12 h-12 mx-auto rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl mb-2">
                                 {appearance.branding.logoEmoji || '👋'}
@@ -1656,9 +1656,9 @@ ${suggestAvailableSlots()}
                                     required
                                     className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
                                     }}
                                 />
                                 <input
@@ -1669,9 +1669,9 @@ ${suggestAvailableSlots()}
                                     required
                                     className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
                                     }}
                                 />
                                 <input
@@ -1681,9 +1681,9 @@ ${suggestAvailableSlots()}
                                     onChange={(e) => setPreChatData({ ...preChatData, phone: e.target.value })}
                                     className="w-full px-3 py-2.5 text-xs rounded-lg border transition-colors focus:outline-none"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
                                     }}
                                 />
                                 
@@ -1691,7 +1691,7 @@ ${suggestAvailableSlots()}
                                     type="submit"
                                     className="w-full py-2.5 px-4 text-xs font-semibold rounded-lg transition-all hover:opacity-90 mt-1"
                                     style={{ 
-                                        backgroundColor: appearance.colors.primaryColor,
+                                        backgroundColor: appearance.colors?.primaryColor,
                                         color: '#ffffff'
                                     }}
                                 >
@@ -1706,7 +1706,7 @@ ${suggestAvailableSlots()}
                                         setMessages([{ role: 'model', text: welcomeMsg }]);
                                     }}
                                     className="w-full py-1.5 text-[10px] opacity-50 hover:opacity-100 transition-opacity"
-                                    style={{ color: appearance.colors.botTextColor }}
+                                    style={{ color: appearance.colors?.botTextColor }}
                                 >
                                     {t('chatbotWidget.preChatSkip', 'Continuar sin registro')}
                                 </button>
@@ -1721,23 +1721,23 @@ ${suggestAvailableSlots()}
                         <div 
                             className="w-full rounded-2xl overflow-hidden border"
                             style={{ 
-                                backgroundColor: appearance.colors.botBubbleColor,
-                                borderColor: appearance.colors.inputBorder 
+                                backgroundColor: appearance.colors?.botBubbleColor,
+                                borderColor: appearance.colors?.inputBorder 
                             }}
                         >
                             {/* Compact Header */}
                             <div className="px-4 pt-4 pb-2 flex items-center gap-3">
                                 <div 
                                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ backgroundColor: appearance.colors.primaryColor + '20' }}
+                                    style={{ backgroundColor: appearance.colors?.primaryColor + '20' }}
                                 >
-                                    <Sparkles size={16} style={{ color: appearance.colors.primaryColor }} />
+                                    <Sparkles size={16} style={{ color: appearance.colors?.primaryColor }} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold" style={{ color: appearance.colors.botTextColor }}>
+                                    <p className="text-xs font-semibold" style={{ color: appearance.colors?.botTextColor }}>
                                         {t('chatbotWidget.leadModalTitle', '¿Te envío más info?')}
                                     </p>
-                                    <p className="text-[10px] opacity-60" style={{ color: appearance.colors.botTextColor }}>
+                                    <p className="text-[10px] opacity-60" style={{ color: appearance.colors?.botTextColor }}>
                                         {t('chatbotWidget.leadModalSubtitle', 'Déjame tu email')}
                                     </p>
                                 </div>
@@ -1745,7 +1745,7 @@ ${suggestAvailableSlots()}
                                     onClick={() => setShowLeadCaptureModal(false)}
                                     className="p-1 rounded-full opacity-40 hover:opacity-100 transition-opacity"
                                 >
-                                    <X size={14} style={{ color: appearance.colors.botTextColor }} />
+                                    <X size={14} style={{ color: appearance.colors?.botTextColor }} />
                                 </button>
                             </div>
                             
@@ -1760,9 +1760,9 @@ ${suggestAvailableSlots()}
                                         required
                                         className="flex-1 min-w-0 px-3 py-2 text-xs rounded-lg border transition-colors focus:outline-none"
                                         style={{
-                                            backgroundColor: appearance.colors.inputBackground,
-                                            borderColor: appearance.colors.inputBorder,
-                                            color: appearance.colors.inputText,
+                                            backgroundColor: appearance.colors?.inputBackground,
+                                            borderColor: appearance.colors?.inputBorder,
+                                            color: appearance.colors?.inputText,
                                         }}
                                         autoFocus
                                     />
@@ -1770,7 +1770,7 @@ ${suggestAvailableSlots()}
                                         type="submit"
                                         className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90 flex-shrink-0"
                                         style={{ 
-                                            backgroundColor: appearance.colors.primaryColor,
+                                            backgroundColor: appearance.colors?.primaryColor,
                                             color: '#ffffff'
                                         }}
                                     >
@@ -1833,12 +1833,12 @@ ${suggestAvailableSlots()}
                                     style={
                                         msg.role === 'user'
                                             ? {
-                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.1)' : appearance.colors.userBubbleColor,
-                                                color: appearance.colors.userTextColor
+                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.1)' : appearance.colors?.userBubbleColor,
+                                                color: appearance.colors?.userTextColor
                                             }
                                             : {
-                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.05)' : appearance.colors.botBubbleColor,
-                                                color: appearance.colors.botTextColor
+                                                backgroundColor: msg.isVoiceMessage ? 'rgba(147, 51, 234, 0.05)' : appearance.colors?.botBubbleColor,
+                                                color: appearance.colors?.botTextColor
                                             }
                                     }
                                 >
@@ -1883,29 +1883,29 @@ ${suggestAvailableSlots()}
                                 <div 
                                     className="p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2"
                                     style={{
-                                        backgroundColor: appearance.colors.botBubbleColor,
-                                        color: appearance.colors.botTextColor
+                                        backgroundColor: appearance.colors?.botBubbleColor,
+                                        color: appearance.colors?.botTextColor
                                     }}
                                 >
                                     <div className="flex gap-1">
                                         <span 
                                             className="w-2 h-2 rounded-full animate-bounce" 
                                             style={{ 
-                                                backgroundColor: appearance.colors.primaryColor,
+                                                backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '0ms'
                                             }}
                                         />
                                         <span 
                                             className="w-2 h-2 rounded-full animate-bounce" 
                                             style={{ 
-                                                backgroundColor: appearance.colors.primaryColor,
+                                                backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '150ms'
                                             }}
                                         />
                                         <span 
                                             className="w-2 h-2 rounded-full animate-bounce" 
                                             style={{ 
-                                                backgroundColor: appearance.colors.primaryColor,
+                                                backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '300ms'
                                             }}
                                         />
@@ -1927,9 +1927,9 @@ ${suggestAvailableSlots()}
                                         }}
                                         className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all hover:shadow-md hover:scale-105"
                                         style={{
-                                            backgroundColor: appearance.colors.primaryColor + '15',
-                                            color: appearance.colors.primaryColor,
-                                            border: `1px solid ${appearance.colors.primaryColor}40`
+                                            backgroundColor: appearance.colors?.primaryColor + '15',
+                                            color: appearance.colors?.primaryColor,
+                                            border: `1px solid ${appearance.colors?.primaryColor}40`
                                         }}
                                     >
                                         {qr.emoji && <span>{qr.emoji}</span>}
@@ -1945,14 +1945,14 @@ ${suggestAvailableSlots()}
             {/* Input Bar */}
             {!isLiveActive && !showPreChatForm && (
                 <>
-                    <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors.inputBorder, color: appearance.colors.inputText }}>
+                    <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors?.inputBorder, color: appearance.colors?.inputText }}>
                         <Sparkles size={8} /> {t('chatbotWidget.poweredBy')}
                     </div>
                     <div 
                         className="px-2 py-2 border-t flex items-center gap-1.5" 
                         style={{ 
-                            backgroundColor: appearance.colors.inputBackground,
-                            borderColor: appearance.colors.inputBorder 
+                            backgroundColor: appearance.colors?.inputBackground,
+                            borderColor: appearance.colors?.inputBorder 
                         }}
                     >
                         {config.enableLiveVoice && (
@@ -1961,9 +1961,9 @@ ${suggestAvailableSlots()}
                                 disabled={isConnecting}
                                 className="p-2 rounded-full transition-all shadow-sm border flex-shrink-0"
                                 style={{
-                                    backgroundColor: isConnecting ? appearance.colors.inputBackground : (appearance.colors.accentColor + '15'),
-                                    color: isConnecting ? appearance.colors.inputText : appearance.colors.accentColor,
-                                    borderColor: isConnecting ? appearance.colors.inputBorder : (appearance.colors.accentColor + '40'),
+                                    backgroundColor: isConnecting ? appearance.colors?.inputBackground : (appearance.colors?.accentColor + '15'),
+                                    color: isConnecting ? appearance.colors?.inputText : appearance.colors?.accentColor,
+                                    borderColor: isConnecting ? appearance.colors?.inputBorder : (appearance.colors?.accentColor + '40'),
                                     opacity: isConnecting ? 0.5 : 1
                                 }}
                                 title="Start Real-time Voice"
@@ -1979,10 +1979,10 @@ ${suggestAvailableSlots()}
                             placeholder={t('chatbotWidget.inputPlaceholder')}
                             className="flex-1 min-w-0 px-3 py-2 rounded-full text-xs outline-none focus:ring-2 transition-all border"
                             style={{
-                                backgroundColor: appearance.colors.inputBackground,
-                                color: appearance.colors.inputText,
-                                borderColor: appearance.colors.inputBorder,
-                                '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                backgroundColor: appearance.colors?.inputBackground,
+                                color: appearance.colors?.inputText,
+                                borderColor: appearance.colors?.inputBorder,
+                                '--tw-ring-color': appearance.colors?.primaryColor + '40'
                             } as React.CSSProperties}
                             disabled={isLoading}
                         />
@@ -1990,7 +1990,7 @@ ${suggestAvailableSlots()}
                             onClick={handleSend}
                             disabled={!input.trim() || isLoading}
                             className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                            style={{ backgroundColor: appearance.colors.primaryColor }}
+                            style={{ backgroundColor: appearance.colors?.primaryColor }}
                         >
                             {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                         </button>
@@ -2003,24 +2003,24 @@ ${suggestAvailableSlots()}
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 flex items-center justify-center p-4">
                     <div 
                         className="w-full max-w-sm rounded-2xl shadow-2xl p-5 animate-fade-in-up"
-                        style={{ backgroundColor: appearance.colors.backgroundColor }}
+                        style={{ backgroundColor: appearance.colors?.backgroundColor }}
                     >
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: appearance.colors.botTextColor }}>
-                                <Calendar size={18} style={{ color: appearance.colors.primaryColor }} />
+                            <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: appearance.colors?.botTextColor }}>
+                                <Calendar size={18} style={{ color: appearance.colors?.primaryColor }} />
                                 Agendar Cita
                             </h3>
                             <button 
                                 onClick={() => setShowAppointmentForm(false)}
                                 className="p-1 rounded-full hover:bg-black/10 transition-colors"
                             >
-                                <X size={16} style={{ color: appearance.colors.botTextColor }} />
+                                <X size={16} style={{ color: appearance.colors?.botTextColor }} />
                             </button>
                         </div>
                         
                         <form onSubmit={handleAppointmentFormSubmit} className="space-y-3">
                             <div>
-                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Nombre *
                                 </label>
                                 <input
@@ -2029,10 +2029,10 @@ ${suggestAvailableSlots()}
                                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, name: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
-                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
+                                        '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
                                     placeholder="Tu nombre"
                                     required
@@ -2040,7 +2040,7 @@ ${suggestAvailableSlots()}
                             </div>
                             
                             <div>
-                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Email *
                                 </label>
                                 <input
@@ -2049,10 +2049,10 @@ ${suggestAvailableSlots()}
                                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, email: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
-                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
+                                        '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
                                     placeholder="tu@email.com"
                                     required
@@ -2060,7 +2060,7 @@ ${suggestAvailableSlots()}
                             </div>
                             
                             <div>
-                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Teléfono
                                 </label>
                                 <input
@@ -2069,10 +2069,10 @@ ${suggestAvailableSlots()}
                                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, phone: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
-                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
+                                        '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
                                     placeholder="(opcional)"
                                 />
@@ -2080,7 +2080,7 @@ ${suggestAvailableSlots()}
                             
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Fecha *
                                     </label>
                                     <input
@@ -2090,16 +2090,16 @@ ${suggestAvailableSlots()}
                                         min={new Date().toISOString().split('T')[0]}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                         style={{
-                                            backgroundColor: appearance.colors.inputBackground,
-                                            borderColor: appearance.colors.inputBorder,
-                                            color: appearance.colors.inputText,
-                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                            backgroundColor: appearance.colors?.inputBackground,
+                                            borderColor: appearance.colors?.inputBorder,
+                                            color: appearance.colors?.inputText,
+                                            '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Hora *
                                     </label>
                                     <input
@@ -2108,10 +2108,10 @@ ${suggestAvailableSlots()}
                                         onChange={(e) => setAppointmentForm(prev => ({ ...prev, time: e.target.value }))}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                         style={{
-                                            backgroundColor: appearance.colors.inputBackground,
-                                            borderColor: appearance.colors.inputBorder,
-                                            color: appearance.colors.inputText,
-                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                            backgroundColor: appearance.colors?.inputBackground,
+                                            borderColor: appearance.colors?.inputBorder,
+                                            color: appearance.colors?.inputText,
+                                            '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                         required
                                     />
@@ -2120,7 +2120,7 @@ ${suggestAvailableSlots()}
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Duración
                                     </label>
                                     <select
@@ -2128,10 +2128,10 @@ ${suggestAvailableSlots()}
                                         onChange={(e) => setAppointmentForm(prev => ({ ...prev, duration: e.target.value }))}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                         style={{
-                                            backgroundColor: appearance.colors.inputBackground,
-                                            borderColor: appearance.colors.inputBorder,
-                                            color: appearance.colors.inputText,
-                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                            backgroundColor: appearance.colors?.inputBackground,
+                                            borderColor: appearance.colors?.inputBorder,
+                                            color: appearance.colors?.inputText,
+                                            '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                     >
                                         <option value="15">15 min</option>
@@ -2143,7 +2143,7 @@ ${suggestAvailableSlots()}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                    <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Tipo
                                     </label>
                                     <select
@@ -2151,10 +2151,10 @@ ${suggestAvailableSlots()}
                                         onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointmentType: e.target.value }))}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
                                         style={{
-                                            backgroundColor: appearance.colors.inputBackground,
-                                            borderColor: appearance.colors.inputBorder,
-                                            color: appearance.colors.inputText,
-                                            '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                            backgroundColor: appearance.colors?.inputBackground,
+                                            borderColor: appearance.colors?.inputBorder,
+                                            color: appearance.colors?.inputText,
+                                            '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                     >
                                         <option value="consultation">Consulta</option>
@@ -2168,7 +2168,7 @@ ${suggestAvailableSlots()}
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors.botTextColor }}>
+                                <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Notas
                                 </label>
                                 <textarea
@@ -2176,10 +2176,10 @@ ${suggestAvailableSlots()}
                                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, notes: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2 resize-none"
                                     style={{
-                                        backgroundColor: appearance.colors.inputBackground,
-                                        borderColor: appearance.colors.inputBorder,
-                                        color: appearance.colors.inputText,
-                                        '--tw-ring-color': appearance.colors.primaryColor + '40'
+                                        backgroundColor: appearance.colors?.inputBackground,
+                                        borderColor: appearance.colors?.inputBorder,
+                                        color: appearance.colors?.inputText,
+                                        '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
                                     placeholder="¿En qué podemos ayudarte?"
                                     rows={2}
@@ -2190,7 +2190,7 @@ ${suggestAvailableSlots()}
                                 type="submit"
                                 disabled={isCreatingAppointment || !appointmentForm.name || !appointmentForm.email || !appointmentForm.date}
                                 className="w-full py-2.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                style={{ backgroundColor: appearance.colors.primaryColor }}
+                                style={{ backgroundColor: appearance.colors?.primaryColor }}
                             >
                                 {isCreatingAppointment ? (
                                     <>

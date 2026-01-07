@@ -116,7 +116,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                 <Star
                     key={i}
                     size={size}
-                    style={{ color: i < Math.round(rating) ? data.colors.starColor : (data.colors.borderColor || '#d1d5db') }}
+                    style={{ color: i < Math.round(rating) ? data.colors?.starColor : (data.colors?.borderColor || '#d1d5db') }}
                     fill={i < Math.round(rating) ? 'currentColor' : 'none'}
                 />
             ))}
@@ -125,14 +125,14 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
 
     // Rating summary
     const RatingSummary = () => (
-        <div className="flex flex-col md:flex-row gap-8 mb-8 p-6 rounded-xl" style={{ backgroundColor: data.colors.cardBackground }}>
+        <div className="flex flex-col md:flex-row gap-8 mb-8 p-6 rounded-xl" style={{ backgroundColor: data.colors?.cardBackground }}>
             {/* Average rating */}
-            <div className="text-center md:text-left md:pr-8 md:border-r" style={{ borderColor: `${data.colors.text}20` }}>
-                <div className="text-5xl font-bold" style={{ color: data.colors.heading }}>
+            <div className="text-center md:text-left md:pr-8 md:border-r" style={{ borderColor: `${data.colors?.text}20` }}>
+                <div className="text-5xl font-bold" style={{ color: data.colors?.heading }}>
                     {averageRating.toFixed(1)}
                 </div>
                 <Stars rating={averageRating} size={20} />
-                <p className="mt-2 text-sm" style={{ color: data.colors.text }}>
+                <p className="mt-2 text-sm" style={{ color: data.colors?.text }}>
                     {totalReviews} reseñas
                 </p>
             </div>
@@ -145,17 +145,17 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                         const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                         return (
                             <div key={star} className="flex items-center gap-3">
-                                <span className="text-sm w-8" style={{ color: data.colors.text }}>{star} ★</span>
-                                <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: `${data.colors.text}20` }}>
+                                <span className="text-sm w-8" style={{ color: data.colors?.text }}>{star} ★</span>
+                                <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: `${data.colors?.text}20` }}>
                                     <div
                                         className="h-full rounded-full transition-all"
                                         style={{
                                             width: `${percent}%`,
-                                            backgroundColor: data.colors.starColor,
+                                            backgroundColor: data.colors?.starColor,
                                         }}
                                     />
                                 </div>
-                                <span className="text-sm w-8 text-right" style={{ color: data.colors.text }}>
+                                <span className="text-sm w-8 text-right" style={{ color: data.colors?.text }}>
                                     {count}
                                 </span>
                             </div>
@@ -177,7 +177,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
         return (
             <div
                 className={`p-5 ${getBorderRadius()}`}
-                style={{ backgroundColor: data.colors.cardBackground }}
+                style={{ backgroundColor: data.colors?.cardBackground }}
             >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -191,22 +191,22 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                         ) : (
                             <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
-                                style={{ backgroundColor: data.colors.accent, color: data.colors.buttonText }}
+                                style={{ backgroundColor: data.colors?.accent, color: data.colors?.buttonText }}
                             >
                                 {review.authorName.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="font-semibold" style={{ color: data.colors.cardText || data.colors.heading }}>
+                                <span className="font-semibold" style={{ color: data.colors?.cardText || data.colors?.heading }}>
                                     {review.authorName}
                                 </span>
                                 {data.showVerifiedBadge && review.verified && (
                                     <span
                                         className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
                                         style={{
-                                            backgroundColor: `${data.colors.verifiedBadgeColor}20`,
-                                            color: data.colors.verifiedBadgeColor,
+                                            backgroundColor: `${data.colors?.verifiedBadgeColor}20`,
+                                            color: data.colors?.verifiedBadgeColor,
                                         }}
                                     >
                                         <CheckCircle size={12} />
@@ -214,7 +214,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                                     </span>
                                 )}
                             </div>
-                            <p className="text-sm" style={{ color: data.colors.text }}>
+                            <p className="text-sm" style={{ color: data.colors?.text }}>
                                 {formattedDate}
                             </p>
                         </div>
@@ -224,19 +224,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
 
                 {/* Title */}
                 {review.title && (
-                    <h4 className="font-semibold mb-2" style={{ color: data.colors.cardText || data.colors.heading }}>
+                    <h4 className="font-semibold mb-2" style={{ color: data.colors?.cardText || data.colors?.heading }}>
                         {review.title}
                     </h4>
                 )}
 
                 {/* Content */}
-                <p className="leading-relaxed" style={{ color: data.colors.text }}>
+                <p className="leading-relaxed" style={{ color: data.colors?.text }}>
                     {review.content}
                 </p>
 
                 {/* Product info */}
                 {data.showProductInfo && review.productName && (
-                    <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: `${data.colors.text}20` }}>
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: `${data.colors?.text}20` }}>
                         {review.productImage && (
                             <img
                                 src={review.productImage}
@@ -244,7 +244,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                                 className="w-12 h-12 rounded object-cover"
                             />
                         )}
-                        <span className="text-sm" style={{ color: data.colors.text }}>
+                        <span className="text-sm" style={{ color: data.colors?.text }}>
                             {review.productName}
                         </span>
                     </div>
@@ -252,7 +252,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
 
                 {/* Helpful */}
                 {review.helpful !== undefined && review.helpful > 0 && (
-                    <div className="flex items-center gap-2 mt-4 text-sm" style={{ color: data.colors.text }}>
+                    <div className="flex items-center gap-2 mt-4 text-sm" style={{ color: data.colors?.text }}>
                         <ThumbsUp size={14} />
                         <span>{review.helpful} personas encontraron esto útil</span>
                     </div>
@@ -301,7 +301,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                 {featuredReview && (
                     <div
                         className={`p-8 ${getBorderRadius()} lg:row-span-2`}
-                        style={{ backgroundColor: data.colors.accent }}
+                        style={{ backgroundColor: data.colors?.accent }}
                     >
                         <div className="flex items-center gap-3 mb-4">
                             {featuredReview.authorImage ? (
@@ -309,35 +309,35 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                                     src={featuredReview.authorImage}
                                     alt={featuredReview.authorName}
                                     className="w-14 h-14 rounded-full object-cover border-2"
-                                    style={{ borderColor: data.colors.buttonText }}
+                                    style={{ borderColor: data.colors?.buttonText }}
                                 />
                             ) : (
                                 <div 
                                     className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
-                                    style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: data.colors.buttonText }}
+                                    style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: data.colors?.buttonText }}
                                 >
                                     {featuredReview.authorName.charAt(0).toUpperCase()}
                                 </div>
                             )}
                             <div>
-                                <p className="font-semibold" style={{ color: data.colors.buttonText }}>{featuredReview.authorName}</p>
+                                <p className="font-semibold" style={{ color: data.colors?.buttonText }}>{featuredReview.authorName}</p>
                                 <div className="flex gap-0.5">
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <Star
                                             key={i}
                                             size={16}
-                                            style={{ color: data.colors.starColor }}
+                                            style={{ color: data.colors?.starColor }}
                                             fill={i < featuredReview.rating ? 'currentColor' : 'none'}
                                         />
                                     ))}
                                 </div>
                             </div>
                         </div>
-                        <blockquote className="text-xl leading-relaxed" style={{ color: data.colors.buttonText, opacity: 0.9 }}>
+                        <blockquote className="text-xl leading-relaxed" style={{ color: data.colors?.buttonText, opacity: 0.9 }}>
                             "{featuredReview.content}"
                         </blockquote>
                         {featuredReview.title && (
-                            <p className="mt-4 font-semibold" style={{ color: data.colors.buttonText }}>— {featuredReview.title}</p>
+                            <p className="mt-4 font-semibold" style={{ color: data.colors?.buttonText }}>— {featuredReview.title}</p>
                         )}
                     </div>
                 )}
@@ -355,7 +355,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: data.colors?.background }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
@@ -364,13 +364,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                         {data.title && (
                             <h2
                                 className={`${getTitleSize()} font-bold`}
-                                style={{ color: data.colors.heading }}
+                                style={{ color: data.colors?.heading }}
                             >
                                 {data.title}
                             </h2>
                         )}
                         {data.description && (
-                            <p className="mt-1" style={{ color: data.colors.text }}>{data.description}</p>
+                            <p className="mt-1" style={{ color: data.colors?.text }}>{data.description}</p>
                         )}
                     </div>
 
@@ -381,9 +381,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                             className={`appearance-none px-4 py-2 pr-10 ${getBorderRadius()} cursor-pointer`}
                             style={{
-                                backgroundColor: data.colors.cardBackground,
-                                color: data.colors.text,
-                                border: `1px solid ${data.colors.text}30`,
+                                backgroundColor: data.colors?.cardBackground,
+                                color: data.colors?.text,
+                                border: `1px solid ${data.colors?.text}30`,
                             }}
                         >
                             <option value="newest">Más recientes</option>
@@ -394,7 +394,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                         <ChevronDown
                             size={16}
                             className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                            style={{ color: data.colors.text }}
+                            style={{ color: data.colors?.text }}
                         />
                     </div>
                 </div>
@@ -404,7 +404,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
 
                 {/* Reviews */}
                 {reviews.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: data.colors.text }}>
+                    <div className="text-center py-12" style={{ color: data.colors?.text }}>
                         Aún no hay reseñas
                     </div>
                 ) : (
@@ -421,8 +421,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data }) => {
                                     onClick={() => setShowAll(true)}
                                     className={`px-6 py-3 ${getBorderRadius()} font-semibold transition-opacity hover:opacity-80`}
                                     style={{
-                                        backgroundColor: data.colors.accent,
-                                        color: data.colors.buttonText || '#ffffff',
+                                        backgroundColor: data.colors?.accent,
+                                        color: data.colors?.buttonText || '#ffffff',
                                     }}
                                 >
                                     Ver todas las reseñas ({sortedReviews.length})

@@ -11,6 +11,10 @@ import { SitePage, PageMatch } from '../types/project';
  * e.g., "/producto/:slug" -> "/producto/([^/]+)"
  */
 export const slugToRegex = (slug: string): RegExp => {
+    // Guard against undefined/null slug
+    if (!slug || typeof slug !== 'string') {
+        return new RegExp('^/$');
+    }
     // Escape special regex characters except :
     const escaped = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Replace :param with named capture group pattern
@@ -23,6 +27,7 @@ export const slugToRegex = (slug: string): RegExp => {
  * e.g., "/producto/:slug" -> ["slug"]
  */
 export const extractParamNames = (slug: string): string[] => {
+    if (!slug || typeof slug !== 'string') return [];
     const matches = slug.match(/:([^/]+)/g);
     if (!matches) return [];
     return matches.map(m => m.slice(1)); // Remove the leading ':'
@@ -32,6 +37,7 @@ export const extractParamNames = (slug: string): string[] => {
  * Match a URL path against a page's slug pattern
  */
 export const matchPageSlug = (slug: string, path: string): { match: boolean; params: Record<string, string> } => {
+    if (!slug || !path) return { match: false, params: {} };
     const regex = slugToRegex(slug);
     const matches = path.match(regex);
     
@@ -55,6 +61,12 @@ export const matchPageSlug = (slug: string, path: string): { match: boolean; par
  * Returns the page and extracted parameters
  */
 export const matchPage = (pages: SitePage[], path: string): PageMatch | null => {
+    // Guard against undefined/null path
+    if (!path || typeof path !== 'string') {
+        console.warn('[matchPage] Invalid path:', path);
+        return null;
+    }
+    
     // Normalize path (remove trailing slash, ensure leading slash)
     let normalizedPath = path.replace(/\/+$/, '') || '/';
     if (!normalizedPath.startsWith('/')) {
@@ -91,11 +103,12 @@ export const matchPage = (pages: SitePage[], path: string): PageMatch | null => 
  * e.g., page with slug "/producto/:slug" + params { slug: "shoes" } -> "/producto/shoes"
  */
 export const generatePageUrl = (page: SitePage, params?: Record<string, string>): string => {
+    if (!page || !page.slug) return '/';
     let url = page.slug;
     
     if (params) {
         for (const [key, value] of Object.entries(params)) {
-            url = url.replace(`:${key}`, encodeURIComponent(value));
+            url = url.replace(`:${key}`, encodeURIComponent(value || ''));
         }
     }
     

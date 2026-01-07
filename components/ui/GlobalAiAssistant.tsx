@@ -611,103 +611,103 @@ THEME (Global):
 
 HEADER:
 - header.logoText, header.style, header.layout, header.logoType
-- header.colors.background, header.colors.text, header.colors.accent
+- header.colors?.background, header.colors?.text, header.colors?.accent
 - header.showCta, header.ctaText, header.showLogin
 
 HERO:
 - hero.headline, hero.subheadline, hero.primaryCta, hero.secondaryCta
 - hero.headlineFontSize, hero.subheadlineFontSize
-- hero.colors.primary, hero.colors.secondary, hero.colors.background, hero.colors.heading, hero.colors.text
-- hero.colors.buttonBackground, hero.colors.buttonText
+- hero.colors?.primary, hero.colors?.secondary, hero.colors?.background, hero.colors?.heading, hero.colors?.text
+- hero.colors?.buttonBackground, hero.colors?.buttonText
 - hero.imageUrl, hero.imageStyle, hero.paddingY, hero.paddingX
 
 FEATURES:
 - features.title, features.description, features.titleFontSize, features.descriptionFontSize
-- features.colors.background, features.colors.accent, features.colors.borderColor, features.colors.text, features.colors.heading
+- features.colors?.background, features.colors?.accent, features.colors?.borderColor, features.colors?.text, features.colors?.heading
 - features.gridColumns, features.paddingY, features.paddingX
 - features.imageHeight, features.imageObjectFit
 
 TESTIMONIALS:
 - testimonials.title, testimonials.description, testimonials.titleFontSize, testimonials.descriptionFontSize
-- testimonials.colors.background, testimonials.colors.accent, testimonials.colors.borderColor, testimonials.colors.text, testimonials.colors.heading
+- testimonials.colors?.background, testimonials.colors?.accent, testimonials.colors?.borderColor, testimonials.colors?.text, testimonials.colors?.heading
 - testimonials.paddingY, testimonials.paddingX
 
 SLIDESHOW:
 - slideshow.title, slideshow.titleFontSize
-- slideshow.colors.background, slideshow.colors.heading
+- slideshow.colors?.background, slideshow.colors?.heading
 - slideshow.paddingY, slideshow.paddingX
 
 PRICING:
 - pricing.title, pricing.description, pricing.titleFontSize, pricing.descriptionFontSize
-- pricing.colors.background, pricing.colors.accent, pricing.colors.borderColor, pricing.colors.text, pricing.colors.heading
-- pricing.colors.buttonBackground, pricing.colors.buttonText
+- pricing.colors?.background, pricing.colors?.accent, pricing.colors?.borderColor, pricing.colors?.text, pricing.colors?.heading
+- pricing.colors?.buttonBackground, pricing.colors?.buttonText
 - pricing.paddingY, pricing.paddingX
 
 FAQ:
 - faq.title, faq.description, faq.titleFontSize, faq.descriptionFontSize
-- faq.colors.background, faq.colors.accent, faq.colors.borderColor, faq.colors.text, faq.colors.heading
+- faq.colors?.background, faq.colors?.accent, faq.colors?.borderColor, faq.colors?.text, faq.colors?.heading
 - faq.paddingY, faq.paddingX
 
 LEADS (Contact Form):
 - leads.title, leads.description, leads.buttonText, leads.titleFontSize, leads.descriptionFontSize
-- leads.colors.background, leads.colors.accent, leads.colors.borderColor, leads.colors.text, leads.colors.heading
-- leads.colors.buttonBackground, leads.colors.buttonText
+- leads.colors?.background, leads.colors?.accent, leads.colors?.borderColor, leads.colors?.text, leads.colors?.heading
+- leads.colors?.buttonBackground, leads.colors?.buttonText
 - leads.paddingY, leads.paddingX
 
 NEWSLETTER:
 - newsletter.title, newsletter.description, newsletter.buttonText, newsletter.placeholderText
 - newsletter.titleFontSize, newsletter.descriptionFontSize
-- newsletter.colors.background, newsletter.colors.accent, newsletter.colors.borderColor, newsletter.colors.text, newsletter.colors.heading
-- newsletter.colors.buttonBackground, newsletter.colors.buttonText
+- newsletter.colors?.background, newsletter.colors?.accent, newsletter.colors?.borderColor, newsletter.colors?.text, newsletter.colors?.heading
+- newsletter.colors?.buttonBackground, newsletter.colors?.buttonText
 - newsletter.paddingY, newsletter.paddingX
 
 CTA (Call to Action):
 - cta.title, cta.description, cta.buttonText, cta.titleFontSize, cta.descriptionFontSize
-- cta.colors.gradientStart, cta.colors.gradientEnd, cta.colors.text, cta.colors.heading
-- cta.colors.buttonBackground, cta.colors.buttonText
+- cta.colors?.gradientStart, cta.colors?.gradientEnd, cta.colors?.text, cta.colors?.heading
+- cta.colors?.buttonBackground, cta.colors?.buttonText
 - cta.paddingY, cta.paddingX
 
 PORTFOLIO:
 - portfolio.title, portfolio.description, portfolio.titleFontSize, portfolio.descriptionFontSize
-- portfolio.colors.background, portfolio.colors.accent, portfolio.colors.borderColor, portfolio.colors.text, portfolio.colors.heading
+- portfolio.colors?.background, portfolio.colors?.accent, portfolio.colors?.borderColor, portfolio.colors?.text, portfolio.colors?.heading
 - portfolio.paddingY, portfolio.paddingX
 
 SERVICES:
 - services.title, services.description, services.titleFontSize, services.descriptionFontSize
-- services.colors.background, services.colors.accent, services.colors.borderColor, services.colors.text, services.colors.heading
+- services.colors?.background, services.colors?.accent, services.colors?.borderColor, services.colors?.text, services.colors?.heading
 - services.paddingY, services.paddingX
 
 TEAM:
 - team.title, team.description, team.titleFontSize, team.descriptionFontSize
-- team.colors.background, team.colors.text, team.colors.heading
+- team.colors?.background, team.colors?.text, team.colors?.heading
 - team.paddingY, team.paddingX
 
 VIDEO:
 - video.title, video.description, video.titleFontSize, video.descriptionFontSize
 - video.source, video.videoId, video.videoUrl, video.autoplay, video.loop, video.showControls
-- video.colors.background, video.colors.text, video.colors.heading
+- video.colors?.background, video.colors?.text, video.colors?.heading
 - video.paddingY, video.paddingX
 
 HOWITWORKS:
 - howItWorks.title, howItWorks.description, howItWorks.steps, howItWorks.titleFontSize, howItWorks.descriptionFontSize
-- howItWorks.colors.background, howItWorks.colors.accent, howItWorks.colors.text, howItWorks.colors.heading
+- howItWorks.colors?.background, howItWorks.colors?.accent, howItWorks.colors?.text, howItWorks.colors?.heading
 - howItWorks.paddingY, howItWorks.paddingX
 
 FOOTER:
 - footer.title, footer.description, footer.copyrightText, footer.titleFontSize, footer.descriptionFontSize
-- footer.colors.background, footer.colors.border, footer.colors.text, footer.colors.linkHover, footer.colors.heading
+- footer.colors?.background, footer.colors?.border, footer.colors?.text, footer.colors?.linkHover, footer.colors?.heading
 
 CHATBOT:
 - chatbot.welcomeMessage, chatbot.placeholderText, chatbot.knowledgeBase, chatbot.position, chatbot.isActive
-- chatbot.colors.primary, chatbot.colors.text, chatbot.colors.background
+- chatbot.colors?.primary, chatbot.colors?.text, chatbot.colors?.background
 
 EXAMPLES:
 - Change hero headline: path="hero.headline", value="Welcome to Our Site!"
 - Change title size: path="hero.headlineFontSize", value="6xl"
-- Change background: path="hero.colors.background", value="#1a1a1a"
+- Change background: path="hero.colors?.background", value="#1a1a1a"
 - Change padding: path="hero.paddingY", value="xl"
 - Change font family: path="theme.fontFamilyHeader", value="playfair-display"
-- Change button color: path="hero.colors.buttonBackground", value="#ff6b6b"
+- Change button color: path="hero.colors?.buttonBackground", value="#ff6b6b"
 - Enable chatbot: path="chatbot.isActive", value="true"
 - Change grid columns: path="features.gridColumns", value="3"
 `;
@@ -765,7 +765,7 @@ EXECUTION PATTERNS:
 PATH EXAMPLES (update_site_content):
 - "Change hero title" → path="hero.headline", value="New Title"
 - "Make hero title bigger" → path="hero.headlineFontSize", value="6xl"
-- "Change hero background to dark" → path="hero.colors.background", value="#1a1a1a"
+- "Change hero background to dark" → path="hero.colors?.background", value="#1a1a1a"
 - "Change main font to Playfair" → path="theme.fontFamilyHeader", value="playfair-display"
 - "Update CTA button text" → path="cta.buttonText", value="Get Started Now"
 - "Enable chatbot" → path="chatbot.isActive", value="true"
@@ -2405,7 +2405,7 @@ User: "cambia el fonfo del heroe a verde"
 → Intent: change background color (fonfo = typo for fondo)
 → Target: hero section
 → New value: green/verde
-→ Execute: update hero.colors.background to green
+→ Execute: update hero.colors?.background to green
 
 WHEN TO ASK vs EXECUTE:
 ❓ ASK if: Truly don't know WHAT to change (e.g., "cambia algo")
@@ -2490,13 +2490,13 @@ You: "✓ Hidden the pricing section"
 Example 10: Spanish - Color change
 User: "hazlo azul oscuro"
 [Context: Discussing hero background]
-You: *calls update_site_content(path="hero.colors.background", value="#1a2a4a")*
+You: *calls update_site_content(path="hero.colors?.background", value="#1a2a4a")*
 You: "✓ Cambié el fondo del hero a azul oscuro"
 
 Example 11: English - Color change
 User: "make it dark blue"
 [Context: Discussing hero background]
-You: *calls update_site_content(path="hero.colors.background", value="#1a2a4a")*
+You: *calls update_site_content(path="hero.colors?.background", value="#1a2a4a")*
 You: "✓ Changed hero background to dark blue"
 
 Example 12: Spanish - Truly ambiguous
@@ -2522,7 +2522,7 @@ You: "✓ Te llevé al editor"
 
 Example 15: English - Complex request
 User: "increase the hero button size and make it green"
-You: *calls update_site_content(path="hero.colors.buttonBackground", value="#22c55e")*
+You: *calls update_site_content(path="hero.colors?.buttonBackground", value="#22c55e")*
 You: *calls update_site_content(path="hero.buttonSize", value="lg")* [if exists]
 You: "✓ Made the hero button green and increased its size"
 `;

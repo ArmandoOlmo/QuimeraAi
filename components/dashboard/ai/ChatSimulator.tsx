@@ -195,8 +195,8 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             <div 
                 className="w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-500 h-[500px]"
                 style={{ 
-                    backgroundColor: appearance.colors.backgroundColor,
-                    borderColor: appearance.colors.inputBorder,
+                    backgroundColor: appearance.colors?.backgroundColor,
+                    borderColor: appearance.colors?.inputBorder,
                     borderWidth: '1px',
                     borderStyle: 'solid'
                 }}

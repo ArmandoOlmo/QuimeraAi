@@ -16,14 +16,16 @@ import { View, AdminView } from './types/ui';
 import LandingChatbotWidget from './components/LandingChatbotWidget';
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
 import AdPixelsInjector from './components/AdPixelsInjector';
+import { lazyWithRetry } from './utils/lazyWithRetry';
 
-// Lazy-loaded components for code-splitting
-const ProfileModal = lazy(() => import('./components/dashboard/ProfileModal'));
-const GlobalAiAssistant = lazy(() => import('./components/ui/GlobalAiAssistant'));
-const OnboardingModal = lazy(() => import('./components/onboarding/OnboardingModal'));
-const ViewRouter = lazy(() => import('./components/ViewRouter'));
-const PublicWebsitePreview = lazy(() => import('./components/PublicWebsitePreview'));
-const StorefrontApp = lazy(() => import('./components/ecommerce/StorefrontApp'));
+// Lazy-loaded components for code-splitting with retry logic
+// Using lazyWithRetry to handle chunk loading failures after deployments
+const ProfileModal = lazyWithRetry(() => import('./components/dashboard/ProfileModal'));
+const GlobalAiAssistant = lazyWithRetry(() => import('./components/ui/GlobalAiAssistant'));
+const OnboardingModal = lazyWithRetry(() => import('./components/onboarding/OnboardingModal'));
+const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
+const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
+const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 
 // Minimal loading fallback for lazy components
 const MinimalLoader = () => (
@@ -177,6 +179,17 @@ const App: React.FC = () => {
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
   const customDomain = useCustomDomain();
 
+  // #region agent log - Hypothesis G: Check customDomain values in App
+  console.log('[DEBUG-G] App render', JSON.stringify({
+    isCustomDomain: customDomain.isCustomDomain,
+    isLoading: customDomain.isLoading,
+    projectId: customDomain.projectId,
+    userId: customDomain.userId,
+    domain: customDomain.domain,
+    error: customDomain.error
+  }));
+  // #endregion
+
   useEffect(() => {
     initializeMonitoring();
   }, []);
@@ -197,6 +210,9 @@ const App: React.FC = () => {
     if (!customDomain.projectId || !customDomain.userId) {
       return <DomainNotConfiguredPage domain={customDomain.domain || 'unknown'} />;
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:204',message:'Rendering PublicWebsitePreview for custom domain',data:{userId:customDomain.userId,projectId:customDomain.projectId,domain:customDomain.domain},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D'})}).catch(()=>{});
+    // #endregion
 
     // Render the landing page using PublicWebsitePreview with the resolved project
     return (
@@ -212,6 +228,9 @@ const App: React.FC = () => {
   }
 
   if (isPreview) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:222',message:'Rendering PublicWebsitePreview for preview route',data:{pathname:window.location.pathname,hash:window.location.hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D'})}).catch(()=>{});
+    // #endregion
     return (
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>

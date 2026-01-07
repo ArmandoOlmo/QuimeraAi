@@ -5,10 +5,11 @@
  * Performance: Uses React.lazy for code-splitting of route components
  */
 
-import React, { useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, Suspense } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 
 // LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
@@ -16,38 +17,38 @@ import LoadingScreen from './LoadingScreen';
 // AppContent Provider for legal pages
 import { AppContentProvider } from '../contexts/appContent';
 
-// Lazy-loaded route components for code-splitting
-const PublicLandingPage = lazy(() => import('../components/PublicLandingPage'));
-const PublicBlogPage = lazy(() => import('../components/PublicBlogPage'));
-const PublicArticlePage = lazy(() => import('../components/PublicArticlePage'));
-const PublicWebsitePreview = lazy(() => import('../components/PublicWebsitePreview'));
-const ModernAuth = lazy(() => import('../components/ModernAuth'));
-const VerificationScreen = lazy(() => import('../components/VerificationScreen'));
-const AcceptInvite = lazy(() => import('../components/auth/AcceptInvite'));
+// Lazy-loaded route components with retry logic for chunk loading failures
+const PublicLandingPage = lazyWithRetry(() => import('../components/PublicLandingPage'));
+const PublicBlogPage = lazyWithRetry(() => import('../components/PublicBlogPage'));
+const PublicArticlePage = lazyWithRetry(() => import('../components/PublicArticlePage'));
+const PublicWebsitePreview = lazyWithRetry(() => import('../components/PublicWebsitePreview'));
+const ModernAuth = lazyWithRetry(() => import('../components/ModernAuth'));
+const VerificationScreen = lazyWithRetry(() => import('../components/VerificationScreen'));
+const AcceptInvite = lazyWithRetry(() => import('../components/auth/AcceptInvite'));
 
 // Lazy-loaded legal pages
-const PrivacyPolicyPage = lazy(() => import('../components/legal/PrivacyPolicyPage'));
-const DataDeletionPage = lazy(() => import('../components/legal/DataDeletionPage'));
-const TermsOfServicePage = lazy(() => import('../components/legal/TermsOfServicePage'));
-const CookiePolicyPage = lazy(() => import('../components/legal/CookiePolicyPage'));
-const HelpCenterPage = lazy(() => import('../components/legal/HelpCenterPage'));
-const ChangelogPage = lazy(() => import('../components/ChangelogPage'));
+const PrivacyPolicyPage = lazyWithRetry(() => import('../components/legal/PrivacyPolicyPage'));
+const DataDeletionPage = lazyWithRetry(() => import('../components/legal/DataDeletionPage'));
+const TermsOfServicePage = lazyWithRetry(() => import('../components/legal/TermsOfServicePage'));
+const CookiePolicyPage = lazyWithRetry(() => import('../components/legal/CookiePolicyPage'));
+const HelpCenterPage = lazyWithRetry(() => import('../components/legal/HelpCenterPage'));
+const ChangelogPage = lazyWithRetry(() => import('../components/ChangelogPage'));
 
 // Admin pages
-const SeedArticlesPage = lazy(() => import('../components/admin/SeedArticlesPage'));
+const SeedArticlesPage = lazyWithRetry(() => import('../components/admin/SeedArticlesPage'));
 
 // Lazy-loaded ecommerce components
-const ProductDetailPageWithCart = lazy(() => import('../components/ecommerce/ProductDetailPageWithCart'));
-const CheckoutPageEnhanced = lazy(() => import('../components/ecommerce/CheckoutPageEnhanced'));
+const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
+const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
 
-// Named exports need to be handled differently with lazy
-const ProductSearchPage = lazy(() => 
+// Named exports need to be handled differently with lazyWithRetry
+const ProductSearchPage = lazyWithRetry(() => 
   import('../components/ecommerce').then(module => ({ default: module.ProductSearchPage }))
 );
-const StorefrontLayout = lazy(() => 
+const StorefrontLayout = lazyWithRetry(() => 
   import('../components/ecommerce').then(module => ({ default: module.StorefrontLayout }))
 );
-const OrderConfirmation = lazy(() => 
+const OrderConfirmation = lazyWithRetry(() => 
   import('../components/ecommerce').then(module => ({ default: module.OrderConfirmation }))
 );
 

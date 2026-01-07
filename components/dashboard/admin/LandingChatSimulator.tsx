@@ -36,19 +36,19 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
     // Derived colors from design tokens or custom
     const colors = colorSource === 'app' && designTokens?.colors
         ? {
-            headerBackground: designTokens.colors.primary || '#6366f1',
+            headerBackground: designTokens.colors?.primary || '#6366f1',
             headerText: '#ffffff',
-            botBubbleBackground: designTokens.colors.muted || '#f4f4f5',
-            botBubbleText: designTokens.colors.foreground || '#09090b',
-            userBubbleBackground: designTokens.colors.primary || '#6366f1',
+            botBubbleBackground: designTokens.colors?.muted || '#f4f4f5',
+            botBubbleText: designTokens.colors?.foreground || '#09090b',
+            userBubbleBackground: designTokens.colors?.primary || '#6366f1',
             userBubbleText: '#ffffff',
-            background: designTokens.colors.background || '#ffffff',
-            inputBackground: designTokens.colors.muted || '#f4f4f5',
-            inputBorder: designTokens.colors.border || '#e4e4e7',
-            inputText: designTokens.colors.foreground || '#09090b',
-            buttonBackground: designTokens.colors.primary || '#6366f1',
+            background: designTokens.colors?.background || '#ffffff',
+            inputBackground: designTokens.colors?.muted || '#f4f4f5',
+            inputBorder: designTokens.colors?.border || '#e4e4e7',
+            inputText: designTokens.colors?.foreground || '#09090b',
+            buttonBackground: designTokens.colors?.primary || '#6366f1',
             buttonIcon: '#ffffff',
-            primary: designTokens.colors.primary || '#6366f1',
+            primary: designTokens.colors?.primary || '#6366f1',
             mutedText: designTokens.colors['muted-foreground'] || '#71717a',
           }
         : customColors;
@@ -56,7 +56,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
     // Get button icon element
     const getButtonIcon = () => {
         const iconSize = 24;
-        const iconColor = colors.buttonIcon;
+        const iconColor = colors?.buttonIcon;
         
         switch (config.appearance.buttonIcon) {
             case 'chat':
@@ -238,7 +238,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                         config.appearance.buttonStyle === 'circle' ? 'rounded-full' : 
                         config.appearance.buttonStyle === 'rounded' ? 'rounded-xl' : 'rounded-lg'
                     } ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
-                    style={{ backgroundColor: colors.buttonBackground }}
+                    style={{ backgroundColor: colors?.buttonBackground }}
                 >
                     {getButtonIcon()}
                     {/* Online indicator */}
@@ -253,12 +253,12 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
             {/* Chat Container - GlobalAiAssistant style */}
             <div 
                 className="w-full h-full flex flex-col overflow-hidden border border-border/50 rounded-t-xl shadow-inner"
-                style={{ backgroundColor: colors.background }}
+                style={{ backgroundColor: colors?.background }}
             >
                 {/* Header - Like GlobalAiAssistant */}
                 <div
                     className="px-3 py-2.5 flex items-center justify-between shrink-0"
-                    style={{ backgroundColor: colors.headerBackground }}
+                    style={{ backgroundColor: colors?.headerBackground }}
                 >
                     <div className="flex items-center gap-2">
                         <div className="relative">
@@ -266,16 +266,16 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                                 {config.appearance.avatarUrl ? (
                                     <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
                                 ) : (
-                                    <Bot size={14} style={{ color: colors.headerText }} />
+                                    <Bot size={14} style={{ color: colors?.headerText }} />
                                 )}
                             </div>
                             <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-white/50"></div>
                         </div>
                         <div>
-                            <h3 className="font-bold text-xs leading-tight" style={{ color: colors.headerText }}>
+                            <h3 className="font-bold text-xs leading-tight" style={{ color: colors?.headerText }}>
                                 {config.agentName}
                             </h3>
-                            <p className="text-[9px] opacity-90 font-medium" style={{ color: colors.headerText }}>
+                            <p className="text-[9px] opacity-90 font-medium" style={{ color: colors?.headerText }}>
                                 {isLoading ? 'Escribiendo...' : 'En línea'}
                             </p>
                         </div>
@@ -283,14 +283,14 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                     <div className="flex items-center gap-0.5">
                         {config.voice.enabled && (
                             <button className="p-1 rounded hover:bg-white/20 transition-colors">
-                                <Volume2 size={12} style={{ color: colors.headerText }} />
+                                <Volume2 size={12} style={{ color: colors?.headerText }} />
                             </button>
                         )}
                         <button
                             onClick={() => setIsOpen(false)}
                             className="p-1 hover:bg-white/20 rounded transition-colors"
                         >
-                            <X size={12} style={{ color: colors.headerText }} />
+                            <X size={12} style={{ color: colors?.headerText }} />
                         </button>
                     </div>
                 </div>
@@ -298,7 +298,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                 {/* Messages - Like GlobalAiAssistant */}
                 <div 
                     className="flex-1 overflow-y-auto p-2.5 space-y-2.5"
-                    style={{ backgroundColor: `${colors.inputBackground}30` }}
+                    style={{ backgroundColor: `${colors?.inputBackground}30` }}
                 >
                     {messages.map((message) => (
                         <div
@@ -309,12 +309,12 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                             {message.role === 'assistant' && (
                                 <div
                                     className="w-6 h-6 rounded-full flex items-center justify-center mr-1.5 shrink-0 border overflow-hidden"
-                                    style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}20` }}
+                                    style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                                 >
                                     {config.appearance.avatarUrl ? (
                                         <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <Bot size={12} style={{ color: colors.primary }} />
+                                        <Bot size={12} style={{ color: colors?.primary }} />
                                     )}
                                 </div>
                             )}
@@ -326,9 +326,9 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                                         : 'rounded-tl-sm border'
                                 }`}
                                 style={{
-                                    backgroundColor: message.role === 'user' ? colors.userBubbleBackground : colors.background,
-                                    color: message.role === 'user' ? colors.userBubbleText : colors.botBubbleText,
-                                    borderColor: message.role === 'user' ? 'transparent' : colors.inputBorder
+                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.background,
+                                    color: message.role === 'user' ? colors?.userBubbleText : colors?.botBubbleText,
+                                    borderColor: message.role === 'user' ? 'transparent' : colors?.inputBorder
                                 }}
                             >
                                 <ReactMarkdown
@@ -347,7 +347,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                             {message.role === 'user' && (
                                 <div 
                                     className="w-6 h-6 rounded-full flex items-center justify-center ml-1.5 shrink-0 border"
-                                    style={{ backgroundColor: `${colors.inputBackground}80`, borderColor: colors.inputBorder }}
+                                    style={{ backgroundColor: `${colors?.inputBackground}80`, borderColor: colors?.inputBorder }}
                                 >
                                     <span className="text-[10px]">👤</span>
                                 </div>
@@ -360,19 +360,19 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                         <div className="flex justify-start">
                             <div
                                 className="w-6 h-6 rounded-full flex items-center justify-center mr-1.5 shrink-0 border overflow-hidden"
-                                style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}20` }}
+                                style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                             >
                                 {config.appearance.avatarUrl ? (
                                     <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover animate-pulse" />
                                 ) : (
-                                    <Bot size={12} style={{ color: colors.primary }} className="animate-pulse" />
+                                    <Bot size={12} style={{ color: colors?.primary }} className="animate-pulse" />
                                 )}
                             </div>
                             <div
                                 className="px-2.5 py-2 rounded-xl rounded-tl-sm shadow-sm flex items-center gap-1.5 text-[10px] border"
-                                style={{ backgroundColor: colors.background, color: colors.mutedText, borderColor: colors.inputBorder }}
+                                style={{ backgroundColor: colors?.background, color: colors?.mutedText, borderColor: colors?.inputBorder }}
                             >
-                                <Loader2 size={10} className="animate-spin" style={{ color: colors.primary }} />
+                                <Loader2 size={10} className="animate-spin" style={{ color: colors?.primary }} />
                                 <span>Pensando...</span>
                             </div>
                         </div>
@@ -384,11 +384,11 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                 {/* Input - Like GlobalAiAssistant */}
                 <div 
                     className="p-2 border-t shrink-0"
-                    style={{ borderColor: colors.inputBorder, backgroundColor: colors.background }}
+                    style={{ borderColor: colors?.inputBorder, backgroundColor: colors?.background }}
                 >
                     <div 
                         className="flex items-center gap-1 p-1 rounded-full border transition-all"
-                        style={{ backgroundColor: `${colors.inputBackground}50`, borderColor: colors.inputBorder }}
+                        style={{ backgroundColor: `${colors?.inputBackground}50`, borderColor: colors?.inputBorder }}
                     >
                         <input
                             type="text"
@@ -398,13 +398,13 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                             placeholder={config.inputPlaceholder}
                             disabled={isLoading}
                             className="flex-1 bg-transparent px-2 outline-none text-[11px]"
-                            style={{ color: colors.inputText }}
+                            style={{ color: colors?.inputText }}
                         />
                         {config.voice.enabled && (
                             <button
                                 type="button"
                                 className="p-1.5 rounded-full transition-colors"
-                                style={{ color: colors.primary }}
+                                style={{ color: colors?.primary }}
                             >
                                 <Mic size={12} />
                             </button>
@@ -413,7 +413,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                             onClick={handleSend}
                             disabled={isLoading || !inputValue.trim()}
                             className="p-1.5 rounded-full shadow-sm transition-all disabled:opacity-50"
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonIcon }}
+                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
                         >
                             {isLoading ? (
                                 <Loader2 size={12} className="animate-spin" />
@@ -423,12 +423,12 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                         </button>
                     </div>
                     <div className="mt-1 flex justify-between items-center px-1">
-                        <p className="text-[8px] flex items-center" style={{ color: colors.mutedText }}>
+                        <p className="text-[8px] flex items-center" style={{ color: colors?.mutedText }}>
                             <span className="w-1 h-1 rounded-full bg-green-500 mr-1"></span>
                             {config.agentRole}
                         </p>
-                        <p className="text-[8px]" style={{ color: colors.mutedText }}>
-                            <span style={{ color: colors.primary }}>Quimera.ai</span>
+                        <p className="text-[8px]" style={{ color: colors?.mutedText }}>
+                            <span style={{ color: colors?.primary }}>Quimera.ai</span>
                         </p>
                     </div>
                 </div>

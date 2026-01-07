@@ -100,8 +100,8 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                 `}
                 style={{ 
                     maxHeight: sizeClasses.height,
-                    backgroundColor: appearance.colors.backgroundColor,
-                    borderColor: appearance.colors.inputBorder
+                    backgroundColor: appearance.colors?.backgroundColor,
+                    borderColor: appearance.colors?.inputBorder
                 }}
             >
                 {isOpen && (
@@ -130,8 +130,8 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                     hover:scale-110 transition-all duration-300 flex items-center justify-center group relative
                 `}
                 style={{ 
-                    backgroundColor: appearance.colors.primaryColor,
-                    color: appearance.colors.headerText
+                    backgroundColor: appearance.colors?.primaryColor,
+                    color: appearance.colors?.headerText
                 }}
                 title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
             >

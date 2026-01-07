@@ -241,7 +241,7 @@ interface TestimonialsProps extends TestimonialsData {
 const Testimonials: React.FC<TestimonialsProps> = ({ 
   title, 
   description, 
-  items, 
+  items = [], 
   paddingY, 
   paddingX, 
   colors, 
@@ -264,13 +264,13 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background,
-    accent: colors.accent || primaryColor,
-    borderColor: colors.borderColor,
-    text: colors.text,
-    heading: colors.heading || primaryColor,
-    description: colors.description || colors.text,
-    cardBackground: colors.cardBackground || primaryColor,
+    background: colors?.background,
+    accent: colors?.accent || primaryColor,
+    borderColor: colors?.borderColor,
+    text: colors?.text,
+    heading: colors?.heading || primaryColor,
+    description: colors?.description || colors?.text,
+    cardBackground: colors?.cardBackground || primaryColor,
   };
   
   // Use component cardBackground color (falls back to primary if not set)

@@ -76,11 +76,11 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
     return (
         <section 
             className="mt-16 pt-12 border-t"
-            style={{ borderColor: colors.border }}
+            style={{ borderColor: colors?.border }}
         >
             <h2 
                 className="text-2xl font-bold mb-8"
-                style={{ color: colors.heading }}
+                style={{ color: colors?.heading }}
             >
                 {title}
             </h2>
@@ -130,7 +130,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
     return (
         <div 
             className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-            style={{ backgroundColor: colors.cardBackground }}
+            style={{ backgroundColor: colors?.cardBackground }}
         >
             {/* Image Container */}
             <div 
@@ -146,9 +146,9 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 ) : (
                     <div 
                         className="w-full h-full flex items-center justify-center"
-                        style={{ backgroundColor: colors.border }}
+                        style={{ backgroundColor: colors?.border }}
                     >
-                        <span style={{ color: colors.mutedText }}>Sin imagen</span>
+                        <span style={{ color: colors?.mutedText }}>Sin imagen</span>
                     </div>
                 )}
 
@@ -156,7 +156,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 {hasDiscount && (
                     <div
                         className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
-                        style={{ backgroundColor: colors.badgeBackground, color: colors.badgeText }}
+                        style={{ backgroundColor: colors?.badgeBackground, color: colors?.badgeText }}
                     >
                         -{discountPercentage}%
                     </div>
@@ -167,7 +167,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span 
                             className="px-4 py-2 rounded-full font-medium text-sm"
-                            style={{ backgroundColor: colors.cardBackground, color: colors.heading }}
+                            style={{ backgroundColor: colors?.cardBackground, color: colors?.heading }}
                         >
                             Agotado
                         </span>
@@ -178,7 +178,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 {product.inStock && product.lowStock && (
                     <div 
                         className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold"
-                        style={{ backgroundColor: colors.warning, color: '#ffffff' }}
+                        style={{ backgroundColor: colors?.warning, color: '#ffffff' }}
                     >
                         Últimas unidades
                     </div>
@@ -193,7 +193,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                                 onQuickView();
                             }}
                             className="flex-1 py-2 backdrop-blur-sm rounded-lg font-medium text-sm flex items-center justify-center gap-1 transition-colors hover:opacity-90"
-                            style={{ backgroundColor: `${colors.cardBackground}e6`, color: colors.heading }}
+                            style={{ backgroundColor: `${colors?.cardBackground}e6`, color: colors?.heading }}
                         >
                             <Eye size={16} />
                             Vista rápida
@@ -206,7 +206,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                                 onAddToCart();
                             }}
                             className="p-2 rounded-lg transition-colors hover:opacity-90"
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
+                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonText }}
                         >
                             <ShoppingCart size={18} />
                         </button>
@@ -219,7 +219,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 <h3 
                     className="font-medium mb-2 line-clamp-2 cursor-pointer hover:underline"
                     onClick={onClick}
-                    style={{ color: colors.heading }}
+                    style={{ color: colors?.heading }}
                 >
                     {product.name}
                 </h3>
@@ -228,14 +228,14 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 <div className="flex items-center gap-2">
                     <span 
                         className="text-lg font-bold"
-                        style={{ color: colors.primary }}
+                        style={{ color: colors?.primary }}
                     >
                         {currencySymbol}{product.price.toFixed(2)}
                     </span>
                     {hasDiscount && (
                         <span 
                             className="text-sm line-through"
-                            style={{ color: colors.originalPrice }}
+                            style={{ color: colors?.originalPrice }}
                         >
                             {currencySymbol}{product.compareAtPrice!.toFixed(2)}
                         </span>

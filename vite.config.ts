@@ -70,13 +70,29 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
-            globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+            // IMPORTANT: Do NOT cache HTML files - they must always come fresh from the server
+            // This prevents stale SSR data issues on custom domains
+            globPatterns: ['**/*.{js,css,ico,png,svg,woff,woff2}'],
             // Force immediate update
             skipWaiting: true,
             clientsClaim: true,
-            // Increase limit for large JS chunks, or use navigateFallback instead
+            // Increase limit for large JS chunks
             maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
+            // CRITICAL: Use NetworkFirst for navigation requests so SSR HTML is always fresh
+            navigateFallback: null, // Disable navigate fallback to force network
             runtimeCaching: [
+              {
+                // HTML documents - ALWAYS go to network first (critical for SSR)
+                urlPattern: ({ request }) => request.mode === 'navigate',
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'pages',
+                  networkTimeoutSeconds: 3,
+                  plugins: [{
+                    cacheWillUpdate: async () => null // Never cache navigation responses
+                  }]
+                }
+              },
               {
                 // Cache Firebase Storage images
                 urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
@@ -151,14 +167,22 @@ export default defineConfig(({ mode }) => {
       build: {
         chunkSizeWarningLimit: 500,
         minify: 'terser',
+        // Generate manifest for SSR server to read asset paths
+        manifest: true,
         terserOptions: {
           compress: {
-            drop_console: mode === 'production',
+            // TEMPORARILY disabled to debug SSR issue - re-enable after fix
+            drop_console: false, // mode === 'production',
             drop_debugger: true
           }
         },
         rollupOptions: {
           output: {
+            // ALL files include hash for proper cache busting (Shopify/Wix strategy)
+            // SSR server reads index.html to get correct hashed filenames
+            entryFileNames: 'assets/[name]-[hash].js',
+            chunkFileNames: 'assets/[name]-[hash].js',
+            assetFileNames: 'assets/[name]-[hash][extname]',
             manualChunks: {
               // Firebase in its own chunk
               firebase: [

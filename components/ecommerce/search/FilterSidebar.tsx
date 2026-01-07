@@ -148,7 +148,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         >
             <span 
                 className={hasThemeColors ? "font-medium" : "font-medium text-gray-900 dark:text-white"}
-                style={colors.heading ? { color: colors.heading } : undefined}
+                style={colors?.heading ? { color: colors?.heading } : undefined}
             >
                 {title}
                 {count !== undefined && count > 0 && (
@@ -164,13 +164,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 <ChevronUp 
                     size={18} 
                     className={hasThemeColors ? "" : "text-gray-400"}
-                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                    style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                 />
             ) : (
                 <ChevronDown 
                     size={18}
                     className={hasThemeColors ? "" : "text-gray-400"}
-                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                    style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                 />
             )}
         </button>
@@ -182,7 +182,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             {onSearchChange && onSearch && (
                 <div 
                     className={hasThemeColors ? "p-4 border-b" : "p-4 border-b border-gray-200 dark:border-gray-700"}
-                    style={colors.border ? { borderColor: colors.border } : undefined}
+                    style={colors?.border ? { borderColor: colors?.border } : undefined}
                 >
                     <SearchBar
                         value={searchTerm}
@@ -191,11 +191,11 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         suggestions={searchSuggestions}
                         primaryColor={primaryColor}
                         themeColors={hasThemeColors ? {
-                            background: colors.cardBackground || colors.background,
-                            text: colors.text,
-                            border: colors.border,
-                            mutedText: colors.mutedText,
-                            inputBackground: colors.inputBackground,
+                            background: colors?.cardBackground || colors?.background,
+                            text: colors?.text,
+                            border: colors?.border,
+                            mutedText: colors?.mutedText,
+                            inputBackground: colors?.inputBackground,
                         } : undefined}
                     />
                 </div>
@@ -204,13 +204,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             {/* Header */}
             <div 
                 className={hasThemeColors ? "flex items-center justify-between p-4 border-b" : "flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"}
-                style={colors.border ? { borderColor: colors.border } : undefined}
+                style={colors?.border ? { borderColor: colors?.border } : undefined}
             >
                 <div className="flex items-center gap-2">
                     <SlidersHorizontal style={{ color: primaryColor }} size={20} />
                     <h2 
                         className={hasThemeColors ? "text-lg font-bold" : "text-lg font-bold text-gray-900 dark:text-white"}
-                        style={colors.heading ? { color: colors.heading } : undefined}
+                        style={colors?.heading ? { color: colors?.heading } : undefined}
                     >
                         Filtros
                     </h2>
@@ -228,7 +228,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         <button
                             onClick={onReset}
                             className={hasThemeColors ? "p-2 transition-colors hover:opacity-70" : "p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
-                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                            style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                             title="Limpiar filtros"
                         >
                             <RotateCcw size={18} />
@@ -237,7 +237,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <button
                         onClick={onClose}
                         className={hasThemeColors ? "lg:hidden p-2 transition-colors hover:opacity-70" : "lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
-                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                        style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                     >
                         <X size={20} />
                     </button>
@@ -250,7 +250,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 {categories.length > 0 && (
                     <div 
                         className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
-                        style={colors.border ? { borderColor: colors.border } : undefined}
+                        style={colors?.border ? { borderColor: colors?.border } : undefined}
                     >
                         <SectionHeader
                             title="Categorías"
@@ -273,7 +273,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                         style={
                                             isCategorySelected(category)
                                                 ? { backgroundColor: primaryColor }
-                                                : { color: colors.text }
+                                                : { color: colors?.text }
                                         }
                                     >
                                         <span>{category.name}</span>
@@ -290,7 +290,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 {/* Price Range */}
                 <div 
                     className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
-                    style={colors.border ? { borderColor: colors.border } : undefined}
+                    style={colors?.border ? { borderColor: colors?.border } : undefined}
                 >
                     <SectionHeader
                         title="Precio"
@@ -303,14 +303,14 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 <div className="flex-1">
                                     <label 
                                         className={hasThemeColors ? "text-xs mb-1 block" : "text-xs text-gray-500 dark:text-gray-400 mb-1 block"}
-                                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                        style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                     >
                                         Mínimo
                                     </label>
                                     <div className="relative">
                                         <span 
                                             className={hasThemeColors ? "absolute left-3 top-1/2 -translate-y-1/2" : "absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"}
-                                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                            style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                         >
                                             {currencySymbol}
                                         </span>
@@ -328,9 +328,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             style={{ 
                                                 '--tw-ring-color': primaryColor,
                                                 ...(hasThemeColors ? {
-                                                    backgroundColor: colors.inputBackground,
-                                                    borderColor: colors.border,
-                                                    color: colors.text,
+                                                    backgroundColor: colors?.inputBackground,
+                                                    borderColor: colors?.border,
+                                                    color: colors?.text,
                                                 } : {})
                                             } as React.CSSProperties}
                                         />
@@ -338,19 +338,19 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 </div>
                                 <span 
                                     className={hasThemeColors ? "mt-5" : "text-gray-400 mt-5"}
-                                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                    style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                 >-</span>
                                 <div className="flex-1">
                                     <label 
                                         className={hasThemeColors ? "text-xs mb-1 block" : "text-xs text-gray-500 dark:text-gray-400 mb-1 block"}
-                                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                        style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                     >
                                         Máximo
                                     </label>
                                     <div className="relative">
                                         <span 
                                             className={hasThemeColors ? "absolute left-3 top-1/2 -translate-y-1/2" : "absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"}
-                                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                            style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                         >
                                             {currencySymbol}
                                         </span>
@@ -368,9 +368,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             style={{ 
                                                 '--tw-ring-color': primaryColor,
                                                 ...(hasThemeColors ? {
-                                                    backgroundColor: colors.inputBackground,
-                                                    borderColor: colors.border,
-                                                    color: colors.text,
+                                                    backgroundColor: colors?.inputBackground,
+                                                    borderColor: colors?.border,
+                                                    color: colors?.text,
                                                 } : {})
                                             } as React.CSSProperties}
                                         />
@@ -397,7 +397,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 {/* Availability */}
                 <div 
                     className={hasThemeColors ? "border-b" : "border-b border-gray-200 dark:border-gray-700"}
-                    style={colors.border ? { borderColor: colors.border } : undefined}
+                    style={colors?.border ? { borderColor: colors?.border } : undefined}
                 >
                     <SectionHeader title="Disponibilidad" section="availability" />
                     {expandedSections.has('availability') && (
@@ -411,7 +411,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             ? 'hover:opacity-80'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
-                                style={!filters.inStock && colors.text ? { color: colors.text } : undefined}
+                                style={!filters.inStock && colors?.text ? { color: colors?.text } : undefined}
                             >
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -421,7 +421,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                                 ? ''
                                                 : 'border-gray-300 dark:border-gray-600'
                                     }`}
-                                    style={!filters.inStock && colors.border ? { borderColor: colors.border } : undefined}
+                                    style={!filters.inStock && colors?.border ? { borderColor: colors?.border } : undefined}
                                 >
                                     {filters.inStock && <Check size={14} className="text-white" />}
                                 </div>
@@ -436,7 +436,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             ? 'hover:opacity-80'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
-                                style={!filters.onSale && colors.text ? { color: colors.text } : undefined}
+                                style={!filters.onSale && colors?.text ? { color: colors?.text } : undefined}
                             >
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -446,7 +446,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                                 ? ''
                                                 : 'border-gray-300 dark:border-gray-600'
                                     }`}
-                                    style={!filters.onSale && colors.border ? { borderColor: colors.border } : undefined}
+                                    style={!filters.onSale && colors?.border ? { borderColor: colors?.border } : undefined}
                                 >
                                     {filters.onSale && <Check size={14} className="text-white" />}
                                 </div>
@@ -463,7 +463,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 }`}
                                 style={filters.featured 
                                     ? { backgroundColor: primaryColor } 
-                                    : colors.text ? { color: colors.text } : {}
+                                    : colors?.text ? { color: colors?.text } : {}
                                 }
                             >
                                 <div
@@ -474,7 +474,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                                 ? ''
                                                 : 'border-gray-300 dark:border-gray-600'
                                     }`}
-                                    style={!filters.featured && colors.border ? { borderColor: colors.border } : undefined}
+                                    style={!filters.featured && colors?.border ? { borderColor: colors?.border } : undefined}
                                 >
                                     {filters.featured && <Check size={14} className="text-white" />}
                                 </div>
@@ -511,8 +511,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                                 isSelected
                                                     ? { backgroundColor: primaryColor, borderColor: primaryColor }
                                                     : { 
-                                                        borderColor: colors.border, 
-                                                        color: colors.text 
+                                                        borderColor: colors?.border, 
+                                                        color: colors?.text 
                                                     }
                                             }
                                         >
@@ -550,7 +550,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     transform transition-transform duration-300
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}
-                style={hasThemeColors ? { backgroundColor: colors.background } : undefined}
+                style={hasThemeColors ? { backgroundColor: colors?.background } : undefined}
             >
                 {content}
             </aside>

@@ -42,6 +42,19 @@ export interface ProjectData {
     seoConfig?: any;
     brandIdentity?: any;
     aiAssistantConfig?: any;
+    // Complete project data for proper rendering
+    componentStyles?: any;
+    componentOrder?: string[];
+    sectionVisibility?: Record<string, boolean>;
+    pages?: any[];
+    menus?: any[];
+    designTokens?: any;
+    responsiveStyles?: any;
+    header?: any;
+    footer?: any;
+    faviconUrl?: string;
+    thumbnailUrl?: string;
+    componentStatus?: any;
 }
 
 /**
@@ -50,8 +63,17 @@ export interface ProjectData {
 export async function renderStorefront(options: SSRRenderOptions): Promise<string> {
     const { projectId, url, hostname, isProduction, vite } = options;
 
+    console.log(`[SSR] renderStorefront called for project: ${projectId}, url: ${url}`);
+
     // Fetch project data for SSR
-    const projectData = await fetchProjectData(projectId);
+    let projectData: ProjectData | null = null;
+    try {
+        projectData = await fetchProjectData(projectId);
+        console.log(`[SSR] Project data fetched: ${projectData ? 'success' : 'null'}`);
+    } catch (fetchError) {
+        console.error(`[SSR] Error fetching project data:`, fetchError);
+        throw fetchError;
+    }
     
     if (!projectData) {
         throw new Error(`Project ${projectId} not found`);
@@ -59,7 +81,7 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 
     // Generate the HTML with injected data
     let template: string;
-    let render: (url: string, projectData: ProjectData) => Promise<{ html: string; head: string }>;
+    let render: (options: { url: string; project: ProjectData }) => Promise<{ html: string; head: string; statusCode?: number }>;
 
     if (isProduction) {
         // Production: use pre-built files
@@ -85,11 +107,44 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
         render = serverModule.render;
     }
 
-    // Render the app
-    const { html: appHtml, head: headTags } = await render(url, projectData);
+    // Render the app - use the new RenderOptions format
+    console.log(`[SSR] Starting React render...`);
+    let renderResult;
+    try {
+        renderResult = await render({ url, project: projectData });
+        console.log(`[SSR] React render completed`);
+    } catch (renderError) {
+        console.error(`[SSR] React render failed:`, renderError);
+        throw renderError;
+    }
+    const { html: appHtml, head: headTags } = renderResult;
 
     // Generate SEO meta tags
     const seoTags = generateSEOTags(projectData, hostname);
+
+    // Sanitize and serialize project data for client
+    console.log(`[SSR] Sanitizing project data for client...`);
+    let sanitizedData;
+    try {
+        sanitizedData = sanitizeForClient(projectData);
+        console.log(`[SSR] Data sanitized, serializing...`);
+    } catch (sanitizeError) {
+        console.error(`[SSR] Sanitization failed:`, sanitizeError);
+        throw sanitizeError;
+    }
+
+    let serializedState;
+    try {
+        serializedState = JSON.stringify({
+            projectId,
+            projectData: sanitizedData,
+            hostname
+        }).replace(/</g, '\\u003c');
+        console.log(`[SSR] Serialization successful`);
+    } catch (serializeError) {
+        console.error(`[SSR] JSON serialization failed:`, serializeError);
+        throw serializeError;
+    }
 
     // Inject the rendered HTML and data into the template
     const finalHtml = template
@@ -100,13 +155,10 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
         // Inject initial state for hydration
         .replace(
             '</body>',
-            `<script>window.__INITIAL_STATE__ = ${JSON.stringify({
-                projectId,
-                projectData: sanitizeForClient(projectData),
-                hostname
-            }).replace(/</g, '\\u003c')}</script>\n</body>`
+            `<script>window.__INITIAL_STATE__ = ${serializedState}</script>\n</body>`
         );
-
+    
+    console.log(`[SSR] HTML generation completed`);
     return finalHtml;
 }
 
@@ -122,6 +174,19 @@ async function fetchProjectData(projectId: string): Promise<ProjectData | null> 
         
         if (publicStoreDoc.exists) {
             const data = publicStoreDoc.data()!;
+            // Log data from publicStores for debugging
+            console.log(`[SSR] publicStores data:`, {
+                hasData: !!data.data,
+                hasTheme: !!data.theme,
+                hasComponentStyles: !!data.componentStyles,
+                componentStylesCount: data.componentStyles ? Object.keys(data.componentStyles).length : 0,
+                hasPages: !!data.pages,
+                pagesCount: data.pages?.length || 0,
+                hasComponentOrder: !!data.componentOrder,
+                componentOrderCount: data.componentOrder?.length || 0,
+                heroVariant: data.data?.hero?.heroVariant,
+                headerLogoText: data.data?.header?.logoText,
+            });
             return {
                 id: projectId,
                 name: data.name || 'Store',
@@ -129,7 +194,20 @@ async function fetchProjectData(projectId: string): Promise<ProjectData | null> 
                 data: data.data,
                 seoConfig: data.seoConfig,
                 brandIdentity: data.brandIdentity,
-                aiAssistantConfig: data.aiAssistantConfig
+                aiAssistantConfig: data.aiAssistantConfig,
+                // Complete project data for proper rendering
+                componentStyles: data.componentStyles || null,
+                componentOrder: data.componentOrder || [],
+                sectionVisibility: data.sectionVisibility || {},
+                pages: data.pages || [],
+                menus: data.menus || [],
+                designTokens: data.designTokens || null,
+                responsiveStyles: data.responsiveStyles || null,
+                header: data.header || null,
+                footer: data.footer || null,
+                faviconUrl: data.faviconUrl || null,
+                thumbnailUrl: data.thumbnailUrl || null,
+                componentStatus: data.componentStatus || null,
             };
         }
 
@@ -145,6 +223,67 @@ async function fetchProjectData(projectId: string): Promise<ProjectData | null> 
 }
 
 /**
+ * Generate Google Fonts link based on project theme
+ */
+function generateFontTags(project: ProjectData): string {
+    const theme = project.theme || {};
+    
+    // Get font families from theme
+    const fonts: string[] = [];
+    if (theme.fontFamilyHeader) fonts.push(theme.fontFamilyHeader);
+    if (theme.fontFamilyBody) fonts.push(theme.fontFamilyBody);
+    if (theme.fontFamilyButton) fonts.push(theme.fontFamilyButton);
+    if (theme.fontFamily) fonts.push(theme.fontFamily);
+    
+    // Remove duplicates and system fonts
+    const systemFonts = ['system-ui', 'sans-serif', 'serif', 'monospace', 'Arial', 'Helvetica', 'Times New Roman'];
+    const uniqueFonts = [...new Set(fonts)]
+        .filter(f => f && !systemFonts.includes(f))
+        .map(f => f.replace(/\s+/g, '+'));
+    
+    if (uniqueFonts.length === 0) {
+        // Default fonts if none specified
+        uniqueFonts.push('Inter', 'Plus+Jakarta+Sans');
+    }
+    
+    // Generate font families string
+    const fontFamilies = uniqueFonts.map(f => `family=${f}:wght@300;400;500;600;700`).join('&');
+    
+    // Generate CSS for font application
+    const fontHeaderFamily = theme.fontFamilyHeader || 'Plus Jakarta Sans';
+    const fontBodyFamily = theme.fontFamilyBody || 'Inter';
+    const fontButtonFamily = theme.fontFamilyButton || fontBodyFamily;
+    const globalColors = theme.globalColors || {};
+    const pageBackground = theme.pageBackground || globalColors.background || '#ffffff';
+    
+    return `
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?${fontFamilies}&display=swap" rel="stylesheet">
+    
+    <!-- Theme Styles -->
+    <style>
+        :root {
+            --font-header: '${fontHeaderFamily}', system-ui, sans-serif;
+            --font-body: '${fontBodyFamily}', system-ui, sans-serif;
+            --font-button: '${fontButtonFamily}', system-ui, sans-serif;
+        }
+        body {
+            font-family: var(--font-body);
+            background-color: ${pageBackground};
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-header);
+        }
+        button, .btn {
+            font-family: var(--font-button);
+        }
+    </style>
+    `;
+}
+
+/**
  * Generate SEO meta tags based on project data
  */
 function generateSEOTags(project: ProjectData, hostname?: string): string {
@@ -155,8 +294,14 @@ function generateSEOTags(project: ProjectData, hostname?: string): string {
     const description = seo.description || brand.tagline || `Bienvenido a ${project.name}`;
     const image = seo.ogImage || brand.logoUrl || '';
     const url = hostname ? `https://${hostname}` : '';
+    
+    // Get font tags first
+    const fontTags = generateFontTags(project);
 
     const tags = [
+        // Fonts
+        fontTags,
+        
         // Basic SEO
         `<title>${escapeHtml(title)}</title>`,
         `<meta name="description" content="${escapeHtml(description)}">`,
@@ -217,17 +362,56 @@ function generateSEOTags(project: ProjectData, hostname?: string): string {
  * Sanitize project data for client-side (remove sensitive info)
  */
 function sanitizeForClient(project: ProjectData): Partial<ProjectData> {
-    return {
-        id: project.id,
-        name: project.name,
-        theme: project.theme,
-        aiAssistantConfig: project.aiAssistantConfig,
-        // Don't include full data - client will fetch as needed
-        seoConfig: project.seoConfig ? {
-            title: project.seoConfig.title,
-            description: project.seoConfig.description
-        } : undefined
-    };
+    // Include ALL necessary fields for client-side rendering
+    // The client needs complete data to render correctly without re-fetching
+    // Use try-catch to handle any serialization issues
+    console.log(`[SSR] sanitizeForClient input:`, {
+        hasData: !!project.data,
+        hasTheme: !!project.theme,
+        hasComponentStyles: !!project.componentStyles,
+        componentStylesCount: project.componentStyles ? Object.keys(project.componentStyles).length : 0,
+        hasPages: !!project.pages,
+        pagesCount: project.pages?.length || 0,
+    });
+    try {
+        const sanitized: Partial<ProjectData> = {
+            id: project.id,
+            name: project.name,
+            theme: project.theme || null,
+            data: project.data || null,
+            componentStyles: project.componentStyles || null,
+            componentOrder: project.componentOrder || [],
+            sectionVisibility: project.sectionVisibility || {},
+            pages: project.pages || [],
+            menus: project.menus || [],
+            header: project.header || null,
+            footer: project.footer || null,
+            aiAssistantConfig: project.aiAssistantConfig || null,
+            brandIdentity: project.brandIdentity || null,
+            designTokens: project.designTokens || null,
+            responsiveStyles: project.responsiveStyles || null,
+            componentStatus: project.componentStatus || null,
+            seoConfig: project.seoConfig || null,
+            faviconUrl: project.faviconUrl,
+            thumbnailUrl: project.thumbnailUrl,
+        };
+        
+        // Verify it can be serialized
+        JSON.stringify(sanitized);
+        return sanitized;
+    } catch (error) {
+        console.error('[SSR] Error sanitizing project data:', error);
+        // Fallback to minimal data if serialization fails
+        return {
+            id: project.id,
+            name: project.name,
+            theme: project.theme,
+            seoConfig: project.seoConfig ? {
+                title: project.seoConfig.title,
+                description: project.seoConfig.description
+            } : undefined
+        };
+    }
 }
 
 /**

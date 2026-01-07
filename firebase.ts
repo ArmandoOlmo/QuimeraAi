@@ -78,7 +78,23 @@ export const app: FirebaseApp = initializeApp(firebaseConfig);
 
 // Core services - initialized synchronously as they're needed immediately
 export const auth = getAuth(app);
-export const storage = getStorage(app);
+
+// Storage is only available in browser environment (not in SSR/Node.js)
+// Use getStorageInstance() for safe access in components that might run on server
+let _storage: ReturnType<typeof getStorage> | null = null;
+export const storage = typeof window !== 'undefined' ? getStorage(app) : (null as any);
+
+/**
+ * Get Firebase Storage instance safely (works in both client and server)
+ * Returns null on server-side rendering
+ */
+export const getStorageInstance = () => {
+    if (typeof window === 'undefined') return null;
+    if (!_storage) {
+        _storage = getStorage(app);
+    }
+    return _storage;
+};
 
 // Initialize Firestore with persistence built-in (modern approach)
 // This replaces the deprecated enableMultiTabIndexedDbPersistence

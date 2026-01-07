@@ -64,12 +64,12 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
         if (data.overlayStyle === 'none') return 'transparent';
         if (data.overlayStyle === 'solid') {
             const opacity = Math.round((data.overlayOpacity / 100) * 255).toString(16).padStart(2, '0');
-            return `${data.colors.overlayColor}${opacity}`;
+            return `${data.colors?.overlayColor}${opacity}`;
         }
         // Gradient
         const opacity = data.overlayOpacity / 100;
         const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
-        return `linear-gradient(to bottom, ${data.colors.overlayColor}${opacityHex}, ${data.colors.overlayColor}${Math.round(opacity * 0.3 * 255).toString(16).padStart(2, '0')})`;
+        return `linear-gradient(to bottom, ${data.colors?.overlayColor}${opacityHex}, ${data.colors?.overlayColor}${Math.round(opacity * 0.3 * 255).toString(16).padStart(2, '0')})`;
     };
 
     const handleButtonClick = () => {
@@ -86,7 +86,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 400}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: data.colors?.background,
             }}
         >
             {/* Background Image */}
@@ -111,14 +111,14 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                 <div className={`max-w-3xl flex flex-col ${getTextAlignment()}`}>
                     <h2
                         className={`${getHeadlineSize()} font-bold mb-4`}
-                        style={{ color: data.colors.heading }}
+                        style={{ color: data.colors?.heading }}
                     >
                         {data.title}
                     </h2>
                     {data.description && (
                         <p
                             className={`${getDescriptionSize()} mb-6 max-w-xl`}
-                            style={{ color: data.colors.text }}
+                            style={{ color: data.colors?.text }}
                         >
                             {data.description}
                         </p>
@@ -128,8 +128,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                             onClick={handleButtonClick}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
+                                backgroundColor: data.colors?.buttonBackground,
+                                color: data.colors?.buttonText,
                             }}
                         >
                             {data.buttonText}
@@ -147,7 +147,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 400}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: data.colors?.background,
             }}
         >
             <div className="h-full grid grid-cols-1 lg:grid-cols-2">
@@ -155,14 +155,14 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                 <div className={`flex flex-col justify-center ${getPaddingX()} ${getPaddingY()} ${getTextAlignment()}`}>
                     <h2
                         className={`${getHeadlineSize()} font-bold mb-4`}
-                        style={{ color: data.colors.heading }}
+                        style={{ color: data.colors?.heading }}
                     >
                         {data.title}
                     </h2>
                     {data.description && (
                         <p
                             className={`${getDescriptionSize()} mb-6`}
-                            style={{ color: data.colors.text }}
+                            style={{ color: data.colors?.text }}
                         >
                             {data.description}
                         </p>
@@ -172,8 +172,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                             onClick={handleButtonClick}
                             className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
+                                backgroundColor: data.colors?.buttonBackground,
+                                color: data.colors?.buttonText,
                             }}
                         >
                             {data.buttonText}
@@ -200,19 +200,19 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     const renderMinimal = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: data.colors?.background }}
         >
             <div className={`max-w-4xl mx-auto flex flex-col ${getTextAlignment()}`}>
                 <h2
                     className={`${getHeadlineSize()} font-bold mb-3`}
-                    style={{ color: data.colors.heading }}
+                    style={{ color: data.colors?.heading }}
                 >
                     {data.title}
                 </h2>
                 {data.description && (
                     <p
                         className={`${getDescriptionSize()} mb-6`}
-                        style={{ color: data.colors.text }}
+                        style={{ color: data.colors?.text }}
                     >
                         {data.description}
                     </p>
@@ -222,8 +222,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                         onClick={handleButtonClick}
                         className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                         style={{
-                            backgroundColor: data.colors.buttonBackground,
-                            color: data.colors.buttonText,
+                            backgroundColor: data.colors?.buttonBackground,
+                            color: data.colors?.buttonText,
                         }}
                     >
                         {data.buttonText}
@@ -240,7 +240,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
             className="relative overflow-hidden"
             style={{
                 height: `${data.height || 400}px`,
-                backgroundColor: data.colors.background,
+                backgroundColor: data.colors?.background,
             }}
         >
             {/* Background Image */}
@@ -260,19 +260,19 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                 <div
                     className={`max-w-lg p-8 rounded-2xl backdrop-blur-md ${getTextAlignment()} flex flex-col`}
                     style={{
-                        backgroundColor: `${data.colors.overlayColor}cc`,
+                        backgroundColor: `${data.colors?.overlayColor}cc`,
                     }}
                 >
                     <h2
                         className={`${getHeadlineSize()} font-bold mb-3`}
-                        style={{ color: data.colors.heading }}
+                        style={{ color: data.colors?.heading }}
                     >
                         {data.title}
                     </h2>
                     {data.description && (
                         <p
                             className={`${getDescriptionSize()} mb-6`}
-                            style={{ color: data.colors.text }}
+                            style={{ color: data.colors?.text }}
                         >
                             {data.description}
                         </p>
@@ -282,8 +282,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                             onClick={handleButtonClick}
                             className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
-                                backgroundColor: data.colors.buttonBackground,
-                                color: data.colors.buttonText,
+                                backgroundColor: data.colors?.buttonBackground,
+                                color: data.colors?.buttonText,
                             }}
                         >
                             {data.buttonText}

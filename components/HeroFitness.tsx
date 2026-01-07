@@ -83,15 +83,15 @@ const HeroFitness: React.FC<HeroProps> = ({
     
     // Component colors take priority over Design Tokens
     const actualColors = {
-        primary: colors.primary || getColor('primary.main', '#4f46e5'),
-        secondary: colors.secondary || getColor('secondary.main', '#10b981'),
-        background: colors.background,
-        text: colors.text,
-        heading: colors.heading,
-        buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
-        buttonText: colors.buttonText || '#ffffff',
-        secondaryButtonBackground: colors.secondaryButtonBackground || '#334155',
-        secondaryButtonText: colors.secondaryButtonText || '#ffffff',
+        primary: colors?.primary || getColor('primary.main', '#4f46e5'),
+        secondary: colors?.secondary || getColor('secondary.main', '#10b981'),
+        background: colors?.background,
+        text: colors?.text,
+        heading: colors?.heading,
+        buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
+        buttonText: colors?.buttonText || '#ffffff',
+        secondaryButtonBackground: colors?.secondaryButtonBackground || '#334155',
+        secondaryButtonText: colors?.secondaryButtonText || '#ffffff',
     };
 
     const safeHeadline = typeof headline === 'string' ? headline : 'Transform Your Body';

@@ -50,10 +50,19 @@ SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
 
 echo ""
 echo "🔗 Service URL: ${SERVICE_URL}"
+
+# Clear SSR server cache to ensure it fetches fresh assets
+echo ""
+echo "🧹 Clearing SSR server cache..."
+curl -X POST "${SERVICE_URL}/__clear-asset-cache" -s || echo "⚠️  Could not clear cache (server may still be starting)"
+
 echo ""
 echo "📝 Next steps:"
 echo "   1. Update Cloudflare DNS to point domains to this Cloud Run service"
 echo "   2. Configure domain mapping in Cloud Run (optional)"
+echo ""
+echo "💡 TIP: After deploying to Firebase Hosting, run:"
+echo "   curl -X POST ${SERVICE_URL}/__clear-asset-cache"
 
 
 

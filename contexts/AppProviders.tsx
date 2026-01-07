@@ -42,12 +42,12 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                         <AppContentProvider>
                             <TenantProvider>
                                 <PlansProvider>
-                                    <ProjectProvider>
-                                        <EditorProvider>
-                                            <FilesProvider>
-                                                <CRMProvider>
-                                                    <CMSProvider>
-                                                        <AdminProvider>
+                                    <AdminProvider>
+                                        <ProjectProvider>
+                                            <EditorProvider>
+                                                <FilesProvider>
+                                                    <CRMProvider>
+                                                        <CMSProvider>
                                                             <DomainsProvider>
                                                                 <AIProvider>
                                                                     <UpgradeProvider>
@@ -55,12 +55,12 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                                     </UpgradeProvider>
                                                                 </AIProvider>
                                                             </DomainsProvider>
-                                                        </AdminProvider>
-                                                    </CMSProvider>
-                                                </CRMProvider>
-                                            </FilesProvider>
-                                        </EditorProvider>
-                                    </ProjectProvider>
+                                                        </CMSProvider>
+                                                    </CRMProvider>
+                                                </FilesProvider>
+                                            </EditorProvider>
+                                        </ProjectProvider>
+                                    </AdminProvider>
                                 </PlansProvider>
                             </TenantProvider>
                         </AppContentProvider>

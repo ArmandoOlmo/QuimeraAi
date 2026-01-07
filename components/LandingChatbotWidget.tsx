@@ -140,19 +140,19 @@ Personalidad:
     // Derived colors from design tokens or custom
     const colors: LandingChatbotColors = colorSource === 'app' && designTokens?.colors
         ? {
-            headerBackground: designTokens.colors.primary || '#6366f1',
+            headerBackground: designTokens.colors?.primary || '#6366f1',
             headerText: '#ffffff',
-            botBubbleBackground: designTokens.colors.muted || '#f4f4f5',
-            botBubbleText: designTokens.colors.foreground || '#09090b',
-            userBubbleBackground: designTokens.colors.primary || '#6366f1',
+            botBubbleBackground: designTokens.colors?.muted || '#f4f4f5',
+            botBubbleText: designTokens.colors?.foreground || '#09090b',
+            userBubbleBackground: designTokens.colors?.primary || '#6366f1',
             userBubbleText: '#ffffff',
-            background: designTokens.colors.background || '#ffffff',
-            inputBackground: designTokens.colors.muted || '#f4f4f5',
-            inputBorder: designTokens.colors.border || '#e4e4e7',
-            inputText: designTokens.colors.foreground || '#09090b',
-            buttonBackground: designTokens.colors.primary || '#6366f1',
+            background: designTokens.colors?.background || '#ffffff',
+            inputBackground: designTokens.colors?.muted || '#f4f4f5',
+            inputBorder: designTokens.colors?.border || '#e4e4e7',
+            inputText: designTokens.colors?.foreground || '#09090b',
+            buttonBackground: designTokens.colors?.primary || '#6366f1',
             buttonIcon: '#ffffff',
-            primary: designTokens.colors.primary || '#6366f1',
+            primary: designTokens.colors?.primary || '#6366f1',
             mutedText: designTokens.colors['muted-foreground'] || '#71717a',
           }
         : customColors;
@@ -160,7 +160,7 @@ Personalidad:
     // Get button icon based on config
     const getButtonIcon = () => {
         const iconSize = 28;
-        const iconColor = colors.buttonIcon;
+        const iconColor = colors?.buttonIcon;
         
         switch (config.appearance.buttonIcon) {
             case 'chat':
@@ -495,16 +495,16 @@ Asistente:`;
     // Get custom button icon for closed state
     const getCustomButtonIcon = () => {
         switch (config.appearance.buttonIcon) {
-            case 'chat': return <MessageSquare size={24} style={{ color: colors.buttonIcon }} />;
-            case 'help': return <HelpCircle size={24} style={{ color: colors.buttonIcon }} />;
-            case 'sparkles': return <Sparkles size={24} style={{ color: colors.buttonIcon }} />;
+            case 'chat': return <MessageSquare size={24} style={{ color: colors?.buttonIcon }} />;
+            case 'help': return <HelpCircle size={24} style={{ color: colors?.buttonIcon }} />;
+            case 'sparkles': return <Sparkles size={24} style={{ color: colors?.buttonIcon }} />;
             case 'custom-emoji': return <span className="text-2xl">{config.appearance.customEmoji || '🦋'}</span>;
             case 'custom-image': return config.appearance.customIconUrl ? (
                 <img src={config.appearance.customIconUrl} alt="Chat" className="w-7 h-7 object-contain" />
             ) : (
-                <Bot size={24} style={{ color: colors.buttonIcon }} />
+                <Bot size={24} style={{ color: colors?.buttonIcon }} />
             );
-            default: return <Bot size={24} style={{ color: colors.buttonIcon }} />;
+            default: return <Bot size={24} style={{ color: colors?.buttonIcon }} />;
         }
     };
 
@@ -518,7 +518,7 @@ Asistente:`;
                 className={`fixed z-[99999] p-3 shadow-2xl hover:scale-110 transition-transform border-4 border-white/20 flex items-center justify-center group ${getButtonStyleClasses()} ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
                 style={{ 
                     ...getPositionStyle(),
-                    backgroundColor: colors.buttonBackground 
+                    backgroundColor: colors?.buttonBackground 
                 }}
                 title={`Chat con ${config.agentName}`}
             >
@@ -543,7 +543,7 @@ Asistente:`;
             {/* Header - Like GlobalAiAssistant */}
             <div 
                 className="p-4 flex justify-between items-center shrink-0 cursor-pointer"
-                style={{ backgroundColor: colors.headerBackground }}
+                style={{ backgroundColor: colors?.headerBackground }}
             >
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -553,17 +553,17 @@ Asistente:`;
                             {config.appearance.avatarUrl ? (
                                 <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
                             ) : (
-                                <Bot size={24} style={{ color: colors.headerText }} />
+                                <Bot size={24} style={{ color: colors?.headerText }} />
                             )}
                         </div>
                         {/* Status indicator */}
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400" style={{ borderColor: colors.headerBackground }}></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400" style={{ borderColor: colors?.headerBackground }}></div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm leading-tight" style={{ color: colors.headerText }}>
+                        <h3 className="font-bold text-sm leading-tight" style={{ color: colors?.headerText }}>
                             {config.agentName}
                         </h3>
-                        <p className="text-[10px] opacity-90 font-medium" style={{ color: colors.headerText }}>
+                        <p className="text-[10px] opacity-90 font-medium" style={{ color: colors?.headerText }}>
                             {isLoading ? 'Escribiendo...' : 'En línea'}
                         </p>
                     </div>
@@ -573,14 +573,14 @@ Asistente:`;
                         onClick={() => setIsOpen(false)} 
                         className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
                     >
-                        <X size={18} style={{ color: colors.headerText }} />
+                        <X size={18} style={{ color: colors?.headerText }} />
                     </button>
                 </div>
             </div>
 
             {/* Messages area - Like GlobalAiAssistant */}
-            <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: colors.background }}>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: `${colors.inputBackground}20` }}>
+            <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: colors?.background }}>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: `${colors?.inputBackground}20` }}>
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -590,12 +590,12 @@ Asistente:`;
                             {message.role === 'assistant' && (
                                 <div
                                     className="w-8 h-8 rounded-full flex items-center justify-center mr-2 shrink-0 overflow-hidden border"
-                                    style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}20` }}
+                                    style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                                 >
                                     {config.appearance.avatarUrl ? (
                                         <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <Bot size={16} style={{ color: colors.primary }} />
+                                        <Bot size={16} style={{ color: colors?.primary }} />
                                     )}
                                 </div>
                             )}
@@ -608,9 +608,9 @@ Asistente:`;
                                         : 'rounded-tl-sm border'
                                 }`}
                                 style={{
-                                    backgroundColor: message.role === 'user' ? colors.userBubbleBackground : colors.background,
-                                    color: message.role === 'user' ? colors.userBubbleText : colors.botBubbleText,
-                                    borderColor: message.role === 'user' ? 'transparent' : colors.inputBorder
+                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.background,
+                                    color: message.role === 'user' ? colors?.userBubbleText : colors?.botBubbleText,
+                                    borderColor: message.role === 'user' ? 'transparent' : colors?.inputBorder
                                 }}
                             >
                                 <ReactMarkdown
@@ -626,7 +626,7 @@ Asistente:`;
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="underline hover:opacity-80"
-                                                style={{ color: message.role === 'user' ? colors.userBubbleText : colors.primary }}
+                                                style={{ color: message.role === 'user' ? colors?.userBubbleText : colors?.primary }}
                                             >
                                                 {children}
                                             </a>
@@ -641,7 +641,7 @@ Asistente:`;
                             {message.role === 'user' && (
                                 <div 
                                     className="w-8 h-8 rounded-full flex items-center justify-center ml-2 shrink-0 overflow-hidden border"
-                                    style={{ backgroundColor: `${colors.inputBackground}80`, borderColor: colors.inputBorder }}
+                                    style={{ backgroundColor: `${colors?.inputBackground}80`, borderColor: colors?.inputBorder }}
                                 >
                                     <span className="text-sm">👤</span>
                                 </div>
@@ -654,19 +654,19 @@ Asistente:`;
                         <div className="flex justify-start">
                             <div
                                 className="w-8 h-8 rounded-full flex items-center justify-center mr-2 shrink-0 overflow-hidden border"
-                                style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}20` }}
+                                style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                             >
                                 {config.appearance.avatarUrl ? (
                                     <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover animate-pulse" />
                                 ) : (
-                                    <Bot size={16} style={{ color: colors.primary }} className="animate-pulse" />
+                                    <Bot size={16} style={{ color: colors?.primary }} className="animate-pulse" />
                                 )}
                             </div>
                             <div
                                 className="px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm border"
-                                style={{ backgroundColor: colors.background, color: colors.mutedText, borderColor: colors.inputBorder }}
+                                style={{ backgroundColor: colors?.background, color: colors?.mutedText, borderColor: colors?.inputBorder }}
                             >
-                                <Loader2 size={14} className="animate-spin" style={{ color: colors.primary }} />
+                                <Loader2 size={14} className="animate-spin" style={{ color: colors?.primary }} />
                                 <span>Pensando...</span>
                             </div>
                         </div>
@@ -676,9 +676,9 @@ Asistente:`;
                     {showLeadForm && (
                         <div 
                             className="p-4 rounded-xl border shadow-sm"
-                            style={{ backgroundColor: colors.background, borderColor: colors.inputBorder }}
+                            style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
                         >
-                            <h4 className="font-semibold mb-3" style={{ color: colors.botBubbleText }}>
+                            <h4 className="font-semibold mb-3" style={{ color: colors?.botBubbleText }}>
                                 {t('landingChatbot.leadForm.title', '¿Te gustaría que te contactemos?')}
                             </h4>
                             <form onSubmit={handleLeadSubmit} className="space-y-3">
@@ -689,9 +689,9 @@ Asistente:`;
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, name: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
                                     style={{ 
-                                        backgroundColor: colors.inputBackground, 
-                                        borderColor: colors.inputBorder,
-                                        color: colors.inputText
+                                        backgroundColor: colors?.inputBackground, 
+                                        borderColor: colors?.inputBorder,
+                                        color: colors?.inputText
                                     }}
                                 />
                                 <input
@@ -702,9 +702,9 @@ Asistente:`;
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, email: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
                                     style={{ 
-                                        backgroundColor: colors.inputBackground, 
-                                        borderColor: colors.inputBorder,
-                                        color: colors.inputText
+                                        backgroundColor: colors?.inputBackground, 
+                                        borderColor: colors?.inputBorder,
+                                        color: colors?.inputText
                                     }}
                                 />
                                 <input
@@ -714,16 +714,16 @@ Asistente:`;
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, phone: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
                                     style={{ 
-                                        backgroundColor: colors.inputBackground, 
-                                        borderColor: colors.inputBorder,
-                                        color: colors.inputText
+                                        backgroundColor: colors?.inputBackground, 
+                                        borderColor: colors?.inputBorder,
+                                        color: colors?.inputText
                                     }}
                                 />
                                 <div className="flex gap-2">
                                     <button
                                         type="submit"
                                         className="flex-1 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90 shadow-md"
-                                        style={{ backgroundColor: colors.buttonBackground, color: colors.buttonIcon }}
+                                        style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
                                     >
                                         {t('landingChatbot.leadForm.submit', 'Enviar')}
                                     </button>
@@ -731,7 +731,7 @@ Asistente:`;
                                         type="button"
                                         onClick={() => setShowLeadForm(false)}
                                         className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors hover:opacity-80"
-                                        style={{ borderColor: colors.inputBorder, color: colors.mutedText }}
+                                        style={{ borderColor: colors?.inputBorder, color: colors?.mutedText }}
                                     >
                                         {t('landingChatbot.leadForm.later', 'Después')}
                                     </button>
@@ -746,20 +746,20 @@ Asistente:`;
                 {/* Input area - Like GlobalAiAssistant */}
                 <div 
                     className="p-4 border-t shrink-0"
-                    style={{ backgroundColor: colors.background, borderColor: colors.inputBorder }}
+                    style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
                 >
                     <div 
                         className="flex items-center gap-2 p-1.5 rounded-full border transition-all focus-within:ring-2"
                         style={{ 
-                            backgroundColor: `${colors.inputBackground}50`, 
-                            borderColor: colors.inputBorder,
+                            backgroundColor: `${colors?.inputBackground}50`, 
+                            borderColor: colors?.inputBorder,
                         }}
                     >
                         {/* Clear chat button */}
                         <button
                             onClick={() => setMessages([])}
                             className="p-2 rounded-full transition-colors hover:bg-red-500/10"
-                            style={{ color: colors.mutedText }}
+                            style={{ color: colors?.mutedText }}
                             title="Limpiar chat"
                         >
                             <X size={18} />
@@ -774,7 +774,7 @@ Asistente:`;
                             placeholder={config.inputPlaceholder}
                             disabled={isLoading}
                             className="flex-1 bg-transparent px-2 text-sm outline-none"
-                            style={{ color: colors.inputText }}
+                            style={{ color: colors?.inputText }}
                         />
                         
                         {/* Send button */}
@@ -782,7 +782,7 @@ Asistente:`;
                             onClick={() => sendMessage(inputValue)}
                             disabled={isLoading || !inputValue.trim()}
                             className="p-2 rounded-full shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonIcon }}
+                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
                         >
                             <Send size={18} />
                         </button>
@@ -790,12 +790,12 @@ Asistente:`;
                     
                     {/* Footer info */}
                     <div className="mt-2 flex justify-between items-center px-2">
-                        <p className="text-[10px] flex items-center" style={{ color: colors.mutedText }}>
+                        <p className="text-[10px] flex items-center" style={{ color: colors?.mutedText }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
                             {config.agentRole}
                         </p>
-                        <p className="text-[10px]" style={{ color: colors.mutedText }}>
-                            Powered by <span style={{ color: colors.primary }} className="font-medium">Quimera.ai</span>
+                        <p className="text-[10px]" style={{ color: colors?.mutedText }}>
+                            Powered by <span style={{ color: colors?.primary }} className="font-medium">Quimera.ai</span>
                         </p>
                     </div>
                 </div>

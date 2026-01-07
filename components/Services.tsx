@@ -304,7 +304,7 @@ interface ServicesProps extends ServicesData {
 const Services: React.FC<ServicesProps> = ({ 
     title, 
     description, 
-    items, 
+    items = [], 
     paddingY, 
     paddingX, 
     colors, 
@@ -318,7 +318,7 @@ const Services: React.FC<ServicesProps> = ({
 }) => {
   // Get design tokens for primary color - use as fallback with 75% opacity
   const { colors: tokenColors } = useDesignTokens();
-  const sectionBackground = colors.background || hexToRgba(tokenColors.primary, 0.75);
+  const sectionBackground = colors?.background || hexToRgba(tokenColors.primary, 0.75);
   
   return (
     <section id="services" className="w-full relative overflow-hidden" style={{ backgroundColor: sectionBackground }}>
@@ -326,12 +326,12 @@ const Services: React.FC<ServicesProps> = ({
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
             {servicesVariant === 'grid' && (
-                <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}>
+                <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors?.accent, 0.125), color: colors?.accent }}>
                     Our Services
                 </span>
             )}
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors.description || colors.text }}>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors?.description || colors?.text }}>
                 {description}
             </p>
         </div>
@@ -347,12 +347,12 @@ const Services: React.FC<ServicesProps> = ({
                     icon={serviceIcons[service.icon]}
                     title={service.title}
                     description={service.description}
-                    accentColor={colors.accent}
-                    headingColor={(colors as any).cardHeading || '#ffffff'}
-                    textColor={(colors as any).cardText || colors.text || '#94a3b8'}
+                    accentColor={colors?.accent}
+                    headingColor={(colors as any)?.cardHeading || '#ffffff'}
+                    textColor={(colors as any)?.cardText || colors?.text || '#94a3b8'}
                     borderRadius={borderRadius}
-                    borderColor={colors.borderColor}
-                    cardBackground={colors.cardBackground || 'rgba(255,255,255,0.05)'}
+                    borderColor={colors?.borderColor}
+                    cardBackground={colors?.cardBackground || 'rgba(255,255,255,0.05)'}
                     variant={servicesVariant}
                     animationType={animationType}
                     enableAnimation={enableCardAnimation}

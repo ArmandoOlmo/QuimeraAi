@@ -52,7 +52,7 @@ const TagBadge: React.FC<{ tag: ChangelogTag; size?: 'sm' | 'md' }> = ({ tag, si
     <span 
       className={`
         inline-flex items-center gap-1 font-bold uppercase tracking-wide rounded-full border
-        ${colors.bg} ${colors.text} ${colors.border}
+        ${colors?.bg} ${colors?.text} ${colors?.border}
         ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}
       `}
     >
@@ -284,7 +284,7 @@ const FilterDropdown: React.FC<{
                     className={`
                       w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg transition-all
                       ${isSelected 
-                        ? `${colors.bg} ${colors.text}` 
+                        ? `${colors?.bg} ${colors?.text}` 
                         : 'text-gray-400 hover:bg-white/5 hover:text-white'
                       }
                     `}
@@ -292,7 +292,7 @@ const FilterDropdown: React.FC<{
                     <div className="flex items-center gap-2">
                       <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
                         isSelected 
-                          ? `${colors.border} ${colors.bg}` 
+                          ? `${colors?.border} ${colors?.bg}` 
                           : 'border-gray-600'
                       }`}>
                         {isSelected && <Check size={10} />}

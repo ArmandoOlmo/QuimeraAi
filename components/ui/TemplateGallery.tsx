@@ -95,22 +95,22 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
     return luminance < 0.5;
   };
 
-  const textColor = isDarkBg(colors.background) ? '#ffffff' : '#1a1a1a';
-  const subtextColor = isDarkBg(colors.background) ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+  const textColor = isDarkBg(colors?.background) ? '#ffffff' : '#1a1a1a';
+  const subtextColor = isDarkBg(colors?.background) ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
 
   return (
     <div
       onClick={onSelect}
       className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
       style={{
-        border: isSuggested ? '2px solid #22c55e' : `2px solid ${colors.primary}40`,
+        border: isSuggested ? '2px solid #22c55e' : `2px solid ${colors?.primary}40`,
       }}
     >
       {/* Background with template colors */}
       <div 
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.primary}20 50%, ${colors.secondary}30 100%)`,
+          background: `linear-gradient(135deg, ${colors?.background} 0%, ${colors?.primary}20 50%, ${colors?.secondary}30 100%)`,
         }}
       />
       
@@ -118,7 +118,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       <div 
         className="absolute top-0 left-0 right-0 h-1"
         style={{
-          background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary}, ${colors.accent})`,
+          background: `linear-gradient(90deg, ${colors?.primary}, ${colors?.secondary}, ${colors?.accent})`,
         }}
       />
 
@@ -137,8 +137,8 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <div 
           className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-lg"
           style={{ 
-            border: `2px solid ${colors.primary}`,
-            boxShadow: `0 4px 20px ${colors.primary}40`
+            border: `2px solid ${colors?.primary}`,
+            boxShadow: `0 4px 20px ${colors?.primary}40`
           }}
         >
           {template.thumbnailUrl ? (
@@ -152,7 +152,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             <div 
               className="w-full h-full flex items-center justify-center"
               style={{ 
-                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)` 
+                background: `linear-gradient(135deg, ${colors?.primary}50, ${colors?.secondary}50)` 
               }}
             >
               <Layout size={24} style={{ color: textColor, opacity: 0.7 }} />
@@ -189,7 +189,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           {/* Color swatches */}
           <div className="flex items-center gap-2 mt-2">
             <div className="flex -space-x-1">
-              {[colors.primary, colors.secondary, colors.accent, colors.text].map((color, idx) => (
+              {[colors?.primary, colors?.secondary, colors?.accent, colors?.text].map((color, idx) => (
                 <div 
                   key={idx}
                   className="w-5 h-5 rounded-full shadow-md"
@@ -209,9 +209,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   key={tag} 
                   className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium"
                   style={{ 
-                    backgroundColor: `${colors.primary}30`,
+                    backgroundColor: `${colors?.primary}30`,
                     color: textColor,
-                    border: `1px solid ${colors.primary}50`
+                    border: `1px solid ${colors?.primary}50`
                   }}
                 >
                   {tag}
@@ -227,9 +227,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         {/* Flecha indicador con color del template */}
         <div 
           className="flex-shrink-0 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all"
-          style={{ backgroundColor: colors.primary }}
+          style={{ backgroundColor: colors?.primary }}
         >
-          <ArrowRight size={14} style={{ color: isDarkBg(colors.primary) ? '#ffffff' : '#1a1a1a' }} />
+          <ArrowRight size={14} style={{ color: isDarkBg(colors?.primary) ? '#ffffff' : '#1a1a1a' }} />
         </div>
       </div>
     </div>
@@ -334,11 +334,11 @@ const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { name: 'Primary', color: colors.primary },
-                    { name: 'Secondary', color: colors.secondary },
-                    { name: 'Background', color: colors.background },
-                    { name: 'Accent', color: colors.accent },
-                    { name: 'Text', color: colors.text },
+                    { name: 'Primary', color: colors?.primary },
+                    { name: 'Secondary', color: colors?.secondary },
+                    { name: 'Background', color: colors?.background },
+                    { name: 'Accent', color: colors?.accent },
+                    { name: 'Text', color: colors?.text },
                   ].map(({ name, color }) => (
                     <div key={name} className="flex items-center gap-2">
                       <div

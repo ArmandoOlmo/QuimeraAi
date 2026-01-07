@@ -253,7 +253,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
                     <h1 
                         className="text-3xl font-bold"
-                        style={{ color: colors.heading || undefined }}
+                        style={{ color: colors?.heading || undefined }}
                     >
                         {title}
                     </h1>
@@ -374,7 +374,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
                     <div 
                         className="flex items-center justify-between gap-4 pb-4 border-b"
-                        style={{ borderColor: colors.border || undefined }}
+                        style={{ borderColor: colors?.border || undefined }}
                     >
                         <div className="flex items-center gap-4">
                             {/* Filter Toggle (Mobile) */}
@@ -382,8 +382,8 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
                                 style={{ 
-                                    backgroundColor: colors.cardBg || undefined,
-                                    color: colors.text || undefined,
+                                    backgroundColor: colors?.cardBg || undefined,
+                                    color: colors?.text || undefined,
                                 }}
                             >
                                 <SlidersHorizontal size={18} />
@@ -401,7 +401,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             {/* Results Count */}
                             <span 
                                 className="text-sm"
-                                style={{ color: colors.text || undefined }}
+                                style={{ color: colors?.text || undefined }}
                             >
                                 {totalCount} producto{totalCount !== 1 ? 's' : ''}
                             </span>
@@ -416,9 +416,9 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                         onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                         className="appearance-none px-3 py-2 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2"
                                         style={{ 
-                                            backgroundColor: colors.cardBg || undefined,
-                                            borderColor: colors.border || undefined,
-                                            color: colors.text || undefined,
+                                            backgroundColor: colors?.cardBg || undefined,
+                                            borderColor: colors?.border || undefined,
+                                            color: colors?.text || undefined,
                                             '--tw-ring-color': primaryColor 
                                         } as React.CSSProperties}
                                     >
@@ -431,7 +431,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                     <ChevronDown
                                         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                                         size={16}
-                                        style={{ color: colors.text || undefined }}
+                                        style={{ color: colors?.text || undefined }}
                                     />
                                 </div>
                             )}
@@ -440,14 +440,14 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             {showViewModeToggle && (
                                 <div 
                                     className="hidden sm:flex items-center rounded-lg p-1"
-                                    style={{ backgroundColor: colors.cardBg || undefined }}
+                                    style={{ backgroundColor: colors?.cardBg || undefined }}
                                 >
                                     <button
                                         onClick={() => setViewMode('grid')}
                                         className="p-2 rounded-md transition-colors"
                                         style={{ 
                                             backgroundColor: viewMode === 'grid' ? primaryColor : 'transparent',
-                                            color: viewMode === 'grid' ? '#ffffff' : colors.text || undefined,
+                                            color: viewMode === 'grid' ? '#ffffff' : colors?.text || undefined,
                                         }}
                                     >
                                         <Grid size={18} />
@@ -457,7 +457,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                         className="p-2 rounded-md transition-colors"
                                         style={{ 
                                             backgroundColor: viewMode === 'list' ? primaryColor : 'transparent',
-                                            color: viewMode === 'list' ? '#ffffff' : colors.text || undefined,
+                                            color: viewMode === 'list' ? '#ffffff' : colors?.text || undefined,
                                         }}
                                     >
                                         <List size={18} />
@@ -487,12 +487,12 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             primaryColor={primaryColor}
                             themeColors={embedded && themeColors ? {
                                 background: themeColors.cardBackground,
-                                text: colors.text,
-                                heading: colors.heading,
-                                border: colors.border,
-                                cardBackground: colors.cardBg,
-                                mutedText: colors.mutedText,
-                                inputBackground: colors.cardBg,
+                                text: colors?.text,
+                                heading: colors?.heading,
+                                border: colors?.border,
+                                cardBackground: colors?.cardBg,
+                                mutedText: colors?.mutedText,
+                                inputBackground: colors?.cardBg,
                             } : undefined}
                             searchTerm={searchTerm}
                             onSearchChange={setSearchTerm}
@@ -546,13 +546,13 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                 borderRadiusClass={borderRadiusClass}
                                                 cardStyle={cardStyle}
                                                 colors={embedded ? {
-                                                    cardBackground: colors.cardBg,
-                                                    cardText: colors.cardText,
-                                                    heading: colors.heading,
-                                                    mutedText: colors.mutedText,
-                                                    border: colors.border,
-                                                    priceColor: colors.priceColor,
-                                                    salePriceColor: colors.salePriceColor,
+                                                    cardBackground: colors?.cardBg,
+                                                    cardText: colors?.cardText,
+                                                    heading: colors?.heading,
+                                                    mutedText: colors?.mutedText,
+                                                    border: colors?.border,
+                                                    priceColor: colors?.priceColor,
+                                                    salePriceColor: colors?.salePriceColor,
                                                 } : undefined}
                                             />
                                         ))}
@@ -572,13 +572,13 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                 primaryColor={primaryColor}
                                                 borderRadiusClass={borderRadiusClass}
                                                 colors={embedded ? {
-                                                    cardBackground: colors.cardBg,
-                                                    cardText: colors.cardText,
-                                                    heading: colors.heading,
-                                                    mutedText: colors.mutedText,
-                                                    border: colors.border,
-                                                    priceColor: colors.priceColor,
-                                                    salePriceColor: colors.salePriceColor,
+                                                    cardBackground: colors?.cardBg,
+                                                    cardText: colors?.cardText,
+                                                    heading: colors?.heading,
+                                                    mutedText: colors?.mutedText,
+                                                    border: colors?.border,
+                                                    priceColor: colors?.priceColor,
+                                                    salePriceColor: colors?.salePriceColor,
                                                 } : undefined}
                                             />
                                         ))}

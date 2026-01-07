@@ -46,8 +46,9 @@ export function generatePagesFromLegacyProject(
     const pages: SitePage[] = [];
     
     // 1. Create Home page with content sections
+    // Filter out header (added separately) and footer (added at end)
     const homeSections = contentSections.filter(s => 
-        s !== 'footer' && sectionVisibility[s] !== false
+        s !== 'footer' && s !== 'header' && sectionVisibility[s] !== false
     );
     // Add footer at the end if visible
     if (sectionVisibility['footer'] !== false) {

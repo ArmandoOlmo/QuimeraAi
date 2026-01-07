@@ -85,14 +85,14 @@ const HeroModern: React.FC<HeroProps> = ({
   
   // Component colors take priority - user colors override defaults
   const actualColors = {
-    primary: colors.primary || getColor('primary.main', '#4f46e5'),
-    secondary: colors.secondary || getColor('secondary.main', '#10b981'),
+    primary: colors?.primary || getColor('primary.main', '#4f46e5'),
+    secondary: colors?.secondary || getColor('secondary.main', '#10b981'),
     text: '#ffffff', 
     heading: '#ffffff',
-    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
-    buttonText: colors.buttonText || '#ffffff',
-    secondaryButtonBackground: colors.secondaryButtonBackground || '#ffffff',
-    secondaryButtonText: colors.secondaryButtonText || '#ffffff',
+    buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
+    buttonText: colors?.buttonText || '#ffffff',
+    secondaryButtonBackground: colors?.secondaryButtonBackground || '#ffffff',
+    secondaryButtonText: colors?.secondaryButtonText || '#ffffff',
   };
 
   // Manejo seguro del headline

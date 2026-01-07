@@ -132,13 +132,13 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: 
     const isWide = index === 0 || index === 3 || index === 6;
     
     return (
-        <div className={`group relative overflow-hidden border p-8 transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground }}>
+        <div className={`group relative overflow-hidden border p-8 transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: colors?.cardBackground }}>
             {/* Efecto Glow sutil */}
             <div className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full bg-gradient-to-br from-white/10 to-transparent blur-[100px] transition-all duration-500 group-hover:bg-white/20" style={{ opacity: 0.5 }} />
             
             <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="mb-8">
-                    <div className={`mb-6 overflow-hidden rounded-2xl border ${isWide ? 'aspect-[21/9]' : 'aspect-[4/3]'}`} style={{ borderColor: colors.borderColor }}>
+                    <div className={`mb-6 overflow-hidden rounded-2xl border ${isWide ? 'aspect-[21/9]' : 'aspect-[4/3]'}`} style={{ borderColor: colors?.borderColor }}>
                         {isPendingImage(feature.imageUrl) ? (
                             <ImagePlaceholder 
                                 aspectRatio="4:3"
@@ -153,8 +153,8 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: 
                             />
                         )}
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 transition-colors" style={{ color: colors.heading }}>{feature.title}</h3>
-                    <p className="leading-relaxed font-light" style={{ color: colors.text }}>{feature.description}</p>
+                    <h3 className="text-2xl font-bold mb-3 transition-colors" style={{ color: colors?.heading }}>{feature.title}</h3>
+                    <p className="leading-relaxed font-light" style={{ color: colors?.text }}>{feature.description}</p>
                 </div>
             </div>
         </div>
@@ -237,7 +237,7 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
             {/* Optional accent indicator */}
             <div 
                 className="absolute top-4 right-4 w-2 h-2 rounded-full"
-                style={{ backgroundColor: colors.accent }}
+                style={{ backgroundColor: colors?.accent }}
             />
         </div>
     );
@@ -274,13 +274,13 @@ const Features: React.FC<FeaturesProps> = ({
   
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background || primaryColor, // Fallback to primary if not set
-    accent: colors.accent || primaryColor,
-    borderColor: colors.borderColor,
-    text: colors.text,
-    heading: colors.heading,
-    description: colors.description || colors.text,
-    cardBackground: colors.cardBackground || primaryColor,
+    background: colors?.background || primaryColor, // Fallback to primary if not set
+    accent: colors?.accent || primaryColor,
+    borderColor: colors?.borderColor,
+    text: colors?.text,
+    heading: colors?.heading,
+    description: colors?.description || colors?.text,
+    cardBackground: colors?.cardBackground || primaryColor,
     // Separate card colors
     cardHeading: (colors as any).cardHeading,
     cardText: (colors as any).cardText,

@@ -8,14 +8,18 @@
  * project theme to each section component.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Project, SitePage } from '../types/project';
 import { PageData, ThemeData, PageSection } from '../types';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
+import { deriveColorsFromPalette } from '../utils/colorUtils';
 
 // Import section components
 import Header from './Header';
 import Hero from './Hero';
+import HeroModern from './HeroModern';
+import HeroGradient from './HeroGradient';
+import HeroFitness from './HeroFitness';
 import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
@@ -84,16 +88,118 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     storefrontProducts = [],
     categories = [],
 }) => {
-    // Merge page section data with project data
-    const mergedData = useMemo((): PageData => {
+    // Get component styles from project (published with the project)
+    const componentStyles = project.componentStyles || {};
+    
+    // Base data from project and page
+    const baseData = useMemo((): PageData => {
         return {
             ...project.data,
             ...page.sectionData,
         } as PageData;
     }, [project.data, page.sectionData]);
     
-    const theme = project.theme;
-    const globalColors = theme.globalColors;
+    // Helper function to merge componentStyles (defaults) with data (user changes)
+    // This replicates the logic from LandingPage.tsx for consistency
+    // User changes in data take priority over componentStyles defaults
+    // Then derive any missing colors from the template palette
+    const mergeComponentData = useCallback((componentKey: string) => {
+        const componentData = (baseData as any)[componentKey];
+        const styles = (componentStyles as any)[componentKey];
+        
+        // If neither exists, return the component data or undefined
+        if (!componentData && !styles) return undefined;
+        // If only styles exist (no user data), use styles as base
+        if (!componentData && styles) return styles;
+        // If only data exists (no default styles), return data
+        if (!styles) return componentData;
+        
+        // First merge the colors: defaults, then user/template colors
+        const mergedColors = {
+            ...styles.colors,           // default colors first
+            ...componentData.colors,    // user/template color changes override
+        };
+        
+        // Derive any missing colors from the template palette
+        // This is CRUCIAL for button colors, card backgrounds, input colors, etc.
+        const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
+        
+        // Merge cornerGradient if it exists in styles (defaults first, then user changes)
+        const mergedCornerGradient = styles.cornerGradient ? {
+            ...styles.cornerGradient,           // default cornerGradient values
+            ...componentData.cornerGradient,    // user cornerGradient changes override
+        } : componentData.cornerGradient;
+        
+        return {
+            ...styles,              // defaults first
+            ...componentData,       // user changes override defaults
+            colors: derivedColors,  // Use derived colors with all missing values filled in
+            ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
+        };
+    }, [baseData, componentStyles]);
+    
+    // Create merged data for all components
+    const mergedData = useMemo((): PageData => {
+        return {
+            ...baseData,
+            hero: mergeComponentData('hero') || baseData.hero,
+            heroSplit: mergeComponentData('heroSplit') || baseData.heroSplit,
+            features: mergeComponentData('features') || baseData.features,
+            testimonials: mergeComponentData('testimonials') || baseData.testimonials,
+            pricing: mergeComponentData('pricing') || baseData.pricing,
+            faq: mergeComponentData('faq') || baseData.faq,
+            cta: mergeComponentData('cta') || baseData.cta,
+            services: mergeComponentData('services') || baseData.services,
+            team: mergeComponentData('team') || baseData.team,
+            video: mergeComponentData('video') || baseData.video,
+            slideshow: mergeComponentData('slideshow') || baseData.slideshow,
+            portfolio: mergeComponentData('portfolio') || baseData.portfolio,
+            leads: mergeComponentData('leads') || baseData.leads,
+            newsletter: mergeComponentData('newsletter') || baseData.newsletter,
+            howItWorks: mergeComponentData('howItWorks') || baseData.howItWorks,
+            footer: mergeComponentData('footer') || baseData.footer,
+            header: mergeComponentData('header') || baseData.header,
+            map: mergeComponentData('map') || baseData.map,
+            menu: mergeComponentData('menu') || baseData.menu,
+            banner: mergeComponentData('banner') || baseData.banner,
+            // Ecommerce sections
+            featuredProducts: mergeComponentData('featuredProducts') || baseData.featuredProducts,
+            categoryGrid: mergeComponentData('categoryGrid') || baseData.categoryGrid,
+            productHero: mergeComponentData('productHero') || baseData.productHero,
+            saleCountdown: mergeComponentData('saleCountdown') || baseData.saleCountdown,
+            trustBadges: mergeComponentData('trustBadges') || baseData.trustBadges,
+            recentlyViewed: mergeComponentData('recentlyViewed') || baseData.recentlyViewed,
+            productReviews: mergeComponentData('productReviews') || baseData.productReviews,
+            collectionBanner: mergeComponentData('collectionBanner') || baseData.collectionBanner,
+            productBundle: mergeComponentData('productBundle') || baseData.productBundle,
+            announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
+        } as PageData;
+    }, [baseData, mergeComponentData]);
+    
+    // Provide default theme values to prevent undefined errors
+    const theme = project.theme || {
+        primaryColor: '#4f46e5',
+        secondaryColor: '#78CDD7',
+        accentColor: '#ffffff',
+        backgroundColor: '#0f172a',
+        textColor: '#ffffff',
+        headingColor: '#ffffff',
+        fontFamily: 'Inter',
+        globalColors: {
+            primary: '#4f46e5',
+            secondary: '#78CDD7',
+            accent: '#ffffff',
+            background: '#0f172a',
+            surface: '#1e293b',
+            text: '#ffffff',
+            textMuted: '#94a3b8',
+            heading: '#ffffff',
+            border: '#334155',
+            success: '#22c55e',
+            error: '#ef4444',
+        }
+    };
+    const globalColors = theme.globalColors || theme;
     
     // Path-based navigation handlers for SSR (real URLs, not hash)
     const handleNavigateToProduct = (slug: string) => {
@@ -143,38 +249,42 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             isPreviewMode: isPreview,
         };
         
+        // Border radius values from theme
+        const cardBorderRadius = theme.cardBorderRadius || 'xl';
+        const buttonBorderRadius = theme.buttonBorderRadius || 'xl';
+        
         switch (section) {
             case 'header':
                 return (
                     <Header
                         key={key}
-                        data={{
-                            ...mergedData.header,
-                            links: navigationLinks,
-                        }}
-                        theme={theme}
-                        storefrontProducts={storefrontProducts}
+                        {...mergedData.header}
+                        links={navigationLinks}
                         isPreviewMode={isPreview}
                     />
                 );
                 
             case 'hero':
-                return (
-                    <Hero
-                        key={key}
-                        data={mergedData.hero}
-                        theme={theme}
-                        globalColors={globalColors}
-                    />
-                );
+                // Render correct hero variant based on heroVariant field
+                const heroData = mergedData.hero;
+                const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
+                
+                if (heroData?.heroVariant === 'modern') {
+                    return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                } else if (heroData?.heroVariant === 'gradient') {
+                    return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                } else if (heroData?.heroVariant === 'fitness') {
+                    return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                } else {
+                    return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                }
                 
             case 'heroSplit':
                 return (
                     <HeroSplit
                         key={key}
-                        data={mergedData.heroSplit}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.heroSplit}
+                        borderRadius={mergedData.heroSplit?.buttonBorderRadius || buttonBorderRadius}
                     />
                 );
                 
@@ -182,9 +292,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Features
                         key={key}
-                        data={mergedData.features}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.features}
+                        borderRadius={mergedData.features?.borderRadius || cardBorderRadius}
                     />
                 );
                 
@@ -192,9 +301,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Testimonials
                         key={key}
-                        data={mergedData.testimonials}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.testimonials}
+                        borderRadius={mergedData.testimonials?.borderRadius || cardBorderRadius}
                     />
                 );
                 
@@ -202,9 +310,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Pricing
                         key={key}
-                        data={mergedData.pricing}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.pricing}
+                        cardBorderRadius={cardBorderRadius}
+                        buttonBorderRadius={buttonBorderRadius}
                     />
                 );
                 
@@ -212,9 +320,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Faq
                         key={key}
-                        data={mergedData.faq}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.faq}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -222,9 +329,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <CTASection
                         key={key}
-                        data={mergedData.cta}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.cta}
+                        cardBorderRadius={cardBorderRadius}
+                        buttonBorderRadius={buttonBorderRadius}
                     />
                 );
                 
@@ -232,9 +339,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Services
                         key={key}
-                        data={mergedData.services}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.services}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -242,9 +348,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Team
                         key={key}
-                        data={mergedData.team}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.team}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -252,9 +357,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Video
                         key={key}
-                        data={mergedData.video}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.video}
                     />
                 );
                 
@@ -262,9 +365,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Slideshow
                         key={key}
-                        data={mergedData.slideshow}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.slideshow}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -272,9 +374,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Portfolio
                         key={key}
-                        data={mergedData.portfolio}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.portfolio}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -282,9 +383,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Leads
                         key={key}
-                        data={mergedData.leads}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.leads}
+                        cardBorderRadius={mergedData.leads?.cardBorderRadius || cardBorderRadius}
+                        buttonBorderRadius={mergedData.leads?.buttonBorderRadius || buttonBorderRadius}
                         projectId={project.id}
                     />
                 );
@@ -293,9 +394,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Newsletter
                         key={key}
-                        data={mergedData.newsletter}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.newsletter}
                     />
                 );
                 
@@ -303,9 +402,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <HowItWorks
                         key={key}
-                        data={mergedData.howItWorks}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.howItWorks}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -313,9 +411,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <BusinessMap
                         key={key}
-                        data={mergedData.map}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.map}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -323,9 +420,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Menu
                         key={key}
-                        data={mergedData.menu}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.menu}
+                        borderRadius={cardBorderRadius}
                     />
                 );
                 
@@ -333,9 +429,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Banner
                         key={key}
-                        data={mergedData.banner}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.banner}
                     />
                 );
                 
@@ -343,9 +437,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return (
                     <Footer
                         key={key}
-                        data={mergedData.footer}
-                        theme={theme}
-                        globalColors={globalColors}
+                        {...mergedData.footer}
                     />
                 );
                 
@@ -594,9 +686,20 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     };
     
     // Filter and render visible sections
+    // Also deduplicate sections (header/footer should only appear once)
+    const seenSections = new Set<string>();
     const visibleSections = page.sections.filter(section => {
         // Filter out non-renderable sections
-        return !['colors', 'typography', 'storeSettings'].includes(section);
+        if (['colors', 'typography', 'storeSettings'].includes(section)) {
+            return false;
+        }
+        // Deduplicate: only allow each section once
+        if (seenSections.has(section)) {
+            console.warn(`[PageRenderer] Duplicate section "${section}" detected and skipped`);
+            return false;
+        }
+        seenSections.add(section);
+        return true;
     });
     
     return (

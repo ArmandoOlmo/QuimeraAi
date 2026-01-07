@@ -279,14 +279,14 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                     }
                                 `}
                                 style={{
-                                    borderColor: isSelected ? undefined : `${colors.primary}50`,
+                                    borderColor: isSelected ? undefined : `${colors?.primary}50`,
                                 }}
                             >
                                 {/* Color accent bar at top */}
                                 <div 
                                     className="absolute top-0 left-0 right-0 h-1 z-10"
                                     style={{
-                                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary}, ${colors.accent})`,
+                                        background: `linear-gradient(90deg, ${colors?.primary}, ${colors?.secondary}, ${colors?.accent})`,
                                     }}
                                 />
 
@@ -302,10 +302,10 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                         <div 
                                             className="w-full h-full flex items-center justify-center"
                                             style={{
-                                                background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.primary}30 50%, ${colors.secondary}40 100%)`,
+                                                background: `linear-gradient(135deg, ${colors?.background} 0%, ${colors?.primary}30 50%, ${colors?.secondary}40 100%)`,
                                             }}
                                         >
-                                            <Layout size={32} style={{ color: colors.text, opacity: 0.5 }} />
+                                            <Layout size={32} style={{ color: colors?.text, opacity: 0.5 }} />
                                         </div>
                                     )}
                                 </div>
@@ -314,7 +314,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 <div 
                                     className="p-2"
                                     style={{
-                                        background: `linear-gradient(135deg, ${colors.background}ee 0%, ${colors.primary}20 100%)`,
+                                        background: `linear-gradient(135deg, ${colors?.background}ee 0%, ${colors?.primary}20 100%)`,
                                     }}
                                 >
                                     <p className="text-sm font-medium text-editor-text-primary truncate mb-1.5">
@@ -322,7 +322,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                     </p>
                                     {/* Color swatches */}
                                     <div className="flex items-center gap-1">
-                                        {[colors.primary, colors.secondary, colors.accent, colors.text].map((color, idx) => (
+                                        {[colors?.primary, colors?.secondary, colors?.accent, colors?.text].map((color, idx) => (
                                             <div 
                                                 key={idx}
                                                 className="w-4 h-4 rounded-full shadow-sm"

@@ -117,18 +117,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             ...baseAppearance.colors,
             // Project colors have priority over chatbot defaults (but chatbot custom colors win)
             primaryColor: chatbotColors.primaryColor || effectivePrimaryColor,
-            secondaryColor: chatbotColors.secondaryColor || globalColors.secondary || heroColors.secondary || baseAppearance.colors.secondaryColor,
-            accentColor: chatbotColors.accentColor || globalColors.accent || heroColors.primary || baseAppearance.colors.accentColor,
+            secondaryColor: chatbotColors.secondaryColor || globalColors.secondary || heroColors.secondary || baseAppearance.colors?.secondaryColor,
+            accentColor: chatbotColors.accentColor || globalColors.accent || heroColors.primary || baseAppearance.colors?.accentColor,
             userBubbleColor: chatbotColors.userBubbleColor || effectivePrimaryColor,
-            userTextColor: chatbotColors.userTextColor || baseAppearance.colors.userTextColor,
-            botBubbleColor: chatbotColors.botBubbleColor || globalColors.surface || baseAppearance.colors.botBubbleColor,
-            botTextColor: chatbotColors.botTextColor || globalColors.text || baseAppearance.colors.botTextColor,
-            backgroundColor: chatbotColors.backgroundColor || globalColors.background || heroColors.background || baseAppearance.colors.backgroundColor,
-            inputBackground: chatbotColors.inputBackground || globalColors.surface || baseAppearance.colors.inputBackground,
-            inputBorder: chatbotColors.inputBorder || globalColors.border || baseAppearance.colors.inputBorder,
-            inputText: chatbotColors.inputText || globalColors.text || baseAppearance.colors.inputText,
+            userTextColor: chatbotColors.userTextColor || baseAppearance.colors?.userTextColor,
+            botBubbleColor: chatbotColors.botBubbleColor || globalColors.surface || baseAppearance.colors?.botBubbleColor,
+            botTextColor: chatbotColors.botTextColor || globalColors.text || baseAppearance.colors?.botTextColor,
+            backgroundColor: chatbotColors.backgroundColor || globalColors.background || heroColors.background || baseAppearance.colors?.backgroundColor,
+            inputBackground: chatbotColors.inputBackground || globalColors.surface || baseAppearance.colors?.inputBackground,
+            inputBorder: chatbotColors.inputBorder || globalColors.border || baseAppearance.colors?.inputBorder,
+            inputText: chatbotColors.inputText || globalColors.text || baseAppearance.colors?.inputText,
             headerBackground: chatbotColors.headerBackground || effectivePrimaryColor,
-            headerText: chatbotColors.headerText || baseAppearance.colors.headerText,
+            headerText: chatbotColors.headerText || baseAppearance.colors?.headerText,
         }
     };
     
@@ -144,7 +144,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             heroColorsRaw: heroColors,
             themePrimaryColor,
             effectivePrimaryColor,
-            finalPrimaryColor: appearance.colors.primaryColor,
+            finalPrimaryColor: appearance.colors?.primaryColor,
             dataKeys: data ? Object.keys(data) : 'no data',
             heroData: data?.hero ? { hasColors: !!data.hero.colors, colors: data.hero.colors } : 'no hero'
         });
@@ -389,16 +389,16 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     const sizeClasses = getSizeClasses(appearance.behavior.width);
     
-    // Extract numeric height values for proper max-height constraint
+    // Extract numeric height values for proper max-height constraint (reduced by 30%)
     const heightMap: Record<string, number> = {
-        sm: 500,
-        md: 600,
-        lg: 700,
-        xl: 800
+        sm: 350,
+        md: 420,
+        lg: 490,
+        xl: 560
     };
-    const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 600;
-    // Cap at 80% of viewport height or configured height, whichever is smaller
-    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.8 : configuredHeight);
+    const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 420;
+    // Cap at 56% of viewport height or configured height, whichever is smaller (reduced 30%)
+    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.56 : configuredHeight);
 
     // Widget content
     const widgetContent = (
@@ -415,8 +415,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 style={{
                     maxHeight: `min(${maxHeightValue}px, calc(100vh - 150px))`,
                     height: `min(${maxHeightValue}px, calc(100vh - 150px))`,
-                    backgroundColor: appearance.colors.backgroundColor,
-                    borderColor: appearance.colors.inputBorder,
+                    backgroundColor: appearance.colors?.backgroundColor,
+                    borderColor: appearance.colors?.inputBorder,
                     outline: '3px solid white',
                     outlineOffset: '0px'
                 }}
@@ -463,12 +463,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     ${getButtonStyleClasses(appearance.button.buttonStyle)}
                     ${getShadowClasses(appearance.button.shadowSize)}
                     ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
-                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[15px]
+                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[55px]
                     ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                 `}
                 style={{
-                    backgroundColor: appearance.colors.primaryColor,
-                    color: appearance.colors.headerText,
+                    backgroundColor: appearance.colors?.primaryColor,
+                    color: appearance.colors?.headerText,
                     outline: '3px solid white',
                     outlineOffset: '0px'
                 }}

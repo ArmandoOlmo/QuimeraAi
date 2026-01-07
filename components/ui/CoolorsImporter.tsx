@@ -44,7 +44,7 @@ const parseCoolorsUrl = (input: string): string[] | null => {
     const colors = colorsString.split('-').map(c => `#${c.toUpperCase()}`);
     
     // Validar que tengamos al menos 3 colores y máximo 10
-    if (colors.length < 3 || colors.length > 10) return null;
+    if (colors?.length < 3 || colors?.length > 10) return null;
     
     return colors;
 };
@@ -53,8 +53,8 @@ const parseCoolorsUrl = (input: string): string[] | null => {
  * Genera el prompt para que AI mapee los colores
  */
 const generateAIPrompt = (colors: string[]): string => {
-    return `You are an expert UI/UX designer. I have a color palette from Coolors.co with ${colors.length} colors:
-${colors.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+    return `You are an expert UI/UX designer. I have a color palette from Coolors.co with ${colors?.length} colors:
+${colors?.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Your task is to intelligently map these colors to a complete design system with the following properties:
 - primary: Main brand color (buttons, links, primary actions)
@@ -105,7 +105,7 @@ const generatePaletteNamePrompt = (colors: string[]): string => {
     return `You are an expert in design and color psychology. Analyze this color palette and generate ONE CREATIVE NAME in English.
 
 Palette colors:
-${colors.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+${colors?.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 The name should:
 - Be evocative and memorable (2-4 words)
@@ -212,7 +212,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         const sortedBySaturation = [...colors].sort((a, b) => getSaturation(b) - getSaturation(a));
 
         // Determinar si es tema oscuro o claro
-        const avgLuminance = colors.reduce((acc, c) => acc + getLuminance(c), 0) / colors.length;
+        const avgLuminance = colors?.reduce((acc, c) => acc + getLuminance(c), 0) / colors?.length;
         const isDarkTheme = avgLuminance < 0.5;
 
         // Asignar colores base
@@ -302,13 +302,13 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
     // Generate simple palette name based on colors (English fallback)
     const generateSimplePaletteName = (colors: string[]): string => {
-        if (!colors || colors.length === 0) return 'Custom Palette';
+        if (!colors || colors?.length === 0) return 'Custom Palette';
         
         // Analyze all colors to determine the theme
         let totalR = 0, totalG = 0, totalB = 0;
         let darkCount = 0, lightCount = 0;
         
-        colors.forEach(color => {
+        colors?.forEach(color => {
             const hex = color.replace('#', '').toLowerCase();
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);
@@ -322,13 +322,13 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             if (luminance > 180) lightCount++;
         });
         
-        const avgR = totalR / colors.length;
-        const avgG = totalG / colors.length;
-        const avgB = totalB / colors.length;
+        const avgR = totalR / colors?.length;
+        const avgG = totalG / colors?.length;
+        const avgB = totalB / colors?.length;
         
         // Determine theme based on averages
-        if (darkCount >= colors.length / 2) return 'Midnight Theme';
-        if (lightCount >= colors.length / 2) return 'Light Breeze';
+        if (darkCount >= colors?.length / 2) return 'Midnight Theme';
+        if (lightCount >= colors?.length / 2) return 'Light Breeze';
         
         // Determine by dominant color
         if (avgR > avgG + 30 && avgR > avgB + 30) {

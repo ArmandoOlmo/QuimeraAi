@@ -138,8 +138,14 @@ async function createServer() {
             }
 
         } catch (error) {
-            console.error('[SSR] Error:', error);
-            res.status(500).send(getErrorPage(error as Error));
+            const err = error as Error;
+            console.error('[SSR] ========== ERROR ==========');
+            console.error('[SSR] Message:', err.message);
+            console.error('[SSR] Stack:', err.stack);
+            console.error('[SSR] Request URL:', req.originalUrl);
+            console.error('[SSR] Hostname:', req.hostname);
+            console.error('[SSR] ========== END ERROR ==========');
+            res.status(500).send(getErrorPage(err));
         }
     });
 

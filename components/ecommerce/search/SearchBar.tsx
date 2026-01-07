@@ -142,14 +142,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
                                 : 'border-gray-200 dark:border-gray-700'
                     } ${hasThemeColors ? '' : 'bg-white dark:bg-gray-800'}`}
                     style={{
-                        ...(isFocused ? { borderColor: primaryColor } : colors.border ? { borderColor: colors.border } : {}),
-                        ...(hasThemeColors ? { backgroundColor: colors.inputBackground } : {}),
+                        ...(isFocused ? { borderColor: primaryColor } : colors?.border ? { borderColor: colors?.border } : {}),
+                        ...(hasThemeColors ? { backgroundColor: colors?.inputBackground } : {}),
                     }}
                 >
                     <Search
                         className={hasThemeColors ? "absolute left-4" : "absolute left-4 text-gray-400"}
                         size={20}
-                        style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                        style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                     />
                     <input
                         ref={inputRef}
@@ -166,20 +166,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             ? "w-full pl-12 pr-12 py-3 bg-transparent focus:outline-none"
                             : "w-full pl-12 pr-12 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
                         }
-                        style={hasThemeColors ? { color: colors.text } : undefined}
+                        style={hasThemeColors ? { color: colors?.text } : undefined}
                     />
                     {isLoading ? (
                         <Loader2
                             className={hasThemeColors ? "absolute right-4 animate-spin" : "absolute right-4 animate-spin text-gray-400"}
                             size={20}
-                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                            style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                         />
                     ) : value ? (
                         <button
                             type="button"
                             onClick={handleClear}
                             className={hasThemeColors ? "absolute right-4 p-1 transition-colors hover:opacity-70" : "absolute right-4 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
-                            style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                            style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                         >
                             <X size={18} />
                         </button>
@@ -196,8 +196,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         : "absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
                     }
                     style={hasThemeColors ? {
-                        backgroundColor: colors.background,
-                        borderColor: colors.border,
+                        backgroundColor: colors?.background,
+                        borderColor: colors?.border,
                     } : undefined}
                 >
                     {/* Recent Searches */}
@@ -206,7 +206,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             <div className="flex items-center justify-between mb-2">
                                 <span 
                                     className={hasThemeColors ? "text-xs font-medium flex items-center gap-1" : "text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1"}
-                                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                    style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                 >
                                     <Clock size={12} />
                                     Búsquedas recientes
@@ -214,7 +214,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                                 <button
                                     onClick={clearRecentSearches}
                                     className={hasThemeColors ? "text-xs hover:opacity-70" : "text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}
-                                    style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                    style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                                 >
                                     Limpiar
                                 </button>
@@ -228,7 +228,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                                             ? "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:opacity-80"
                                             : "w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         }
-                                        style={colors.text ? { color: colors.text } : undefined}
+                                        style={colors?.text ? { color: colors?.text } : undefined}
                                     >
                                         {term}
                                     </button>
@@ -241,11 +241,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {displaySuggestions.length > 0 && (
                         <div 
                             className={hasThemeColors ? "p-3 border-t" : "p-3 border-t border-gray-200 dark:border-gray-700"}
-                            style={colors.border ? { borderColor: colors.border } : undefined}
+                            style={colors?.border ? { borderColor: colors?.border } : undefined}
                         >
                             <span 
                                 className={hasThemeColors ? "text-xs font-medium flex items-center gap-1 mb-2" : "text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-2"}
-                                style={colors.mutedText ? { color: colors.mutedText } : undefined}
+                                style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                             >
                                 <TrendingUp size={12} />
                                 Sugerencias
@@ -259,7 +259,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                                             ? "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:opacity-80"
                                             : "w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         }
-                                        style={colors.text ? { color: colors.text } : undefined}
+                                        style={colors?.text ? { color: colors?.text } : undefined}
                                     >
                                         <span
                                             dangerouslySetInnerHTML={{

@@ -610,7 +610,7 @@ const LandingPageContent: React.FC = () => {
         return navPages.map(p => ({
           text: p.title,
           // Use hash for SPA mode in editor, real paths in SSR
-          href: p.isHomePage ? '#' : `#${p.slug.replace(/^\//, '')}`,
+          href: p.isHomePage ? '#' : `#${(p.slug || '').replace(/^\//, '')}`,
         }));
       }
     }
@@ -968,7 +968,8 @@ const LandingPageContent: React.FC = () => {
                     const baseVisibility = componentStatus[key as PageSection] && 
                                            effectiveSectionVisibility[key as PageSection] && 
                                            key !== 'footer' && 
-                                           key !== 'chatbot';
+                                           key !== 'chatbot' &&
+                                           key !== 'header'; // Header is rendered separately
                     
                     // Para componentes de ecommerce, verificar también visibleIn
                     if (isEcommerce) {

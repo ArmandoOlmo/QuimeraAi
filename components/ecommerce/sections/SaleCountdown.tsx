@@ -108,15 +108,15 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const TimeUnit = ({ value, label }: { value: number; label: string }) => (
         <div
             className={`flex flex-col items-center p-4 ${getBorderRadius()}`}
-            style={{ backgroundColor: data.colors.countdownBackground }}
+            style={{ backgroundColor: data.colors?.countdownBackground }}
         >
             <span
                 className="text-3xl md:text-4xl font-bold tabular-nums"
-                style={{ color: data.colors.countdownText }}
+                style={{ color: data.colors?.countdownText }}
             >
                 {value.toString().padStart(2, '0')}
             </span>
-            <span className="text-xs uppercase tracking-wide mt-1" style={{ color: data.colors.text }}>
+            <span className="text-xs uppercase tracking-wide mt-1" style={{ color: data.colors?.text }}>
                 {label}
             </span>
         </div>
@@ -155,9 +155,9 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         ) : (
                             <div 
                                 className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: data.colors.background }}
+                                style={{ backgroundColor: data.colors?.background }}
                             >
-                                <span style={{ color: data.colors.text, opacity: 0.5 }}>Sin imagen</span>
+                                <span style={{ color: data.colors?.text, opacity: 0.5 }}>Sin imagen</span>
                             </div>
                         )}
                         
@@ -169,8 +169,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                             <span
                                 className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold"
                                 style={{
-                                    backgroundColor: data.colors.badgeBackground,
-                                    color: data.colors.badgeText,
+                                    backgroundColor: data.colors?.badgeBackground,
+                                    color: data.colors?.badgeText,
                                 }}
                             >
                                 -{discount}%
@@ -199,8 +199,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             <div
                 className={`group cursor-pointer ${cardStyles[cardStyle]} overflow-hidden backdrop-blur-sm`}
                 style={{ 
-                    backgroundColor: data.colors.cardBackground || 'rgba(255,255,255,0.1)',
-                    borderColor: cardStyle === 'elegant' ? data.colors.text + '20' : undefined,
+                    backgroundColor: data.colors?.cardBackground || 'rgba(255,255,255,0.1)',
+                    borderColor: cardStyle === 'elegant' ? data.colors?.text + '20' : undefined,
                 }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
@@ -214,17 +214,17 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     ) : (
                         <div 
                             className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: data.colors.background }}
+                            style={{ backgroundColor: data.colors?.background }}
                         >
-                            <span style={{ color: data.colors.text, opacity: 0.5 }}>Sin imagen</span>
+                            <span style={{ color: data.colors?.text, opacity: 0.5 }}>Sin imagen</span>
                         </div>
                     )}
                     {discount > 0 && (
                         <span
                             className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold"
                             style={{
-                                backgroundColor: data.colors.badgeBackground,
-                                color: data.colors.badgeText,
+                                backgroundColor: data.colors?.badgeBackground,
+                                color: data.colors?.badgeText,
                             }}
                         >
                             -{discount}%
@@ -234,16 +234,16 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 <div className="p-3">
                     <h4 
                         className="font-medium text-sm line-clamp-1" 
-                        style={{ color: data.colors.cardText || data.colors.heading }}
+                        style={{ color: data.colors?.cardText || data.colors?.heading }}
                     >
                         {product.name}
                     </h4>
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold" style={{ color: data.colors.cardText || data.colors.heading }}>
+                        <span className="font-bold" style={{ color: data.colors?.cardText || data.colors?.heading }}>
                             ${product.price.toFixed(2)}
                         </span>
                         {product.compareAtPrice && (
-                            <span className="text-sm line-through" style={{ color: data.colors.text, opacity: 0.6 }}>
+                            <span className="text-sm line-through" style={{ color: data.colors?.text, opacity: 0.6 }}>
                                 ${product.compareAtPrice.toFixed(2)}
                             </span>
                         )}
@@ -257,7 +257,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderBanner = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getBorderRadius()}`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: data.colors?.background }}
         >
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -267,8 +267,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                             <span
                                 className={`inline-flex items-center gap-2 px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
                                 style={{
-                                    backgroundColor: data.colors.badgeBackground,
-                                    color: data.colors.badgeText,
+                                    backgroundColor: data.colors?.badgeBackground,
+                                    color: data.colors?.badgeText,
                                 }}
                             >
                                 <Tag size={14} />
@@ -277,17 +277,17 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         )}
                         <h2
                             className={`${getTitleSize()} font-bold mb-2`}
-                            style={{ color: data.colors.heading }}
+                            style={{ color: data.colors?.heading }}
                         >
                             {data.title}
                         </h2>
                         {data.description && (
-                            <p style={{ color: data.colors.text }}>{data.description}</p>
+                            <p style={{ color: data.colors?.text }}>{data.description}</p>
                         )}
                         {data.discountText && (
                             <p
                                 className="text-2xl font-bold mt-2"
-                                style={{ color: data.colors.accent }}
+                                style={{ color: data.colors?.accent }}
                             >
                                 {data.discountText}
                             </p>
@@ -305,9 +305,9 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     ) : (
                         <div
                             className={`px-6 py-4 ${getBorderRadius()}`}
-                            style={{ backgroundColor: data.colors.countdownBackground }}
+                            style={{ backgroundColor: data.colors?.countdownBackground }}
                         >
-                            <p className="text-lg font-semibold" style={{ color: data.colors.countdownText }}>
+                            <p className="text-lg font-semibold" style={{ color: data.colors?.countdownText }}>
                                 ¡Oferta terminada!
                             </p>
                         </div>
@@ -331,7 +331,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
             style={{
-                backgroundColor: data.colors.background,
+                backgroundColor: data.colors?.background,
                 minHeight: data.height || 300,
             }}
         >
@@ -340,8 +340,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     <span
                         className={`inline-flex items-center gap-2 px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
                         style={{
-                            backgroundColor: data.colors.badgeBackground,
-                            color: data.colors.badgeText,
+                            backgroundColor: data.colors?.badgeBackground,
+                            color: data.colors?.badgeText,
                         }}
                     >
                         <Clock size={14} />
@@ -351,7 +351,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 <h2
                     className={`${getTitleSize()} font-bold mb-2`}
-                    style={{ color: data.colors.heading }}
+                    style={{ color: data.colors?.heading }}
                 >
                     {data.title}
                 </h2>
@@ -359,7 +359,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 {data.discountText && (
                     <p
                         className="text-3xl md:text-4xl font-bold mb-6"
-                        style={{ color: data.colors.accent }}
+                        style={{ color: data.colors?.accent }}
                     >
                         {data.discountText}
                     </p>
@@ -374,21 +374,21 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         {data.showSeconds !== false && <TimeUnit value={timeLeft.seconds} label="Seg" />}
                     </div>
                 ) : (
-                    <p className="text-xl mb-8" style={{ color: data.colors.text }}>
+                    <p className="text-xl mb-8" style={{ color: data.colors?.text }}>
                         ¡Esta oferta ha terminado!
                     </p>
                 )}
 
                 {data.description && (
-                    <p className="mb-6" style={{ color: data.colors.text }}>{data.description}</p>
+                    <p className="mb-6" style={{ color: data.colors?.text }}>{data.description}</p>
                 )}
 
                 <a
                     href="#store"
                     className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                     style={{
-                        backgroundColor: data.colors.buttonBackground,
-                        color: data.colors.buttonText,
+                        backgroundColor: data.colors?.buttonBackground,
+                        color: data.colors?.buttonText,
                     }}
                 >
                     Ver ofertas
@@ -411,7 +411,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderInline = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: data.colors?.background }}
         >
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -419,18 +419,18 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         <span
                             className={`px-3 py-1 ${getBorderRadius()} text-sm font-bold`}
                             style={{
-                                backgroundColor: data.colors.badgeBackground,
-                                color: data.colors.badgeText,
+                                backgroundColor: data.colors?.badgeBackground,
+                                color: data.colors?.badgeText,
                             }}
                         >
                             {data.badgeText}
                         </span>
                     )}
-                    <span className="font-semibold" style={{ color: data.colors.heading }}>
+                    <span className="font-semibold" style={{ color: data.colors?.heading }}>
                         {data.title}
                     </span>
                     {data.discountText && (
-                        <span className="font-bold" style={{ color: data.colors.accent }}>
+                        <span className="font-bold" style={{ color: data.colors?.accent }}>
                             {data.discountText}
                         </span>
                     )}
@@ -438,8 +438,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 {!isExpired ? (
                     <div className="flex items-center gap-2 text-sm">
-                        <Clock size={16} style={{ color: data.colors.accent }} />
-                        <span style={{ color: data.colors.text }}>
+                        <Clock size={16} style={{ color: data.colors?.accent }} />
+                        <span style={{ color: data.colors?.text }}>
                             {data.showDays !== false && `${timeLeft.days}d `}
                             {data.showHours !== false && `${timeLeft.hours}h `}
                             {data.showMinutes !== false && `${timeLeft.minutes}m `}
@@ -447,7 +447,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         </span>
                     </div>
                 ) : (
-                    <span style={{ color: data.colors.text }}>Oferta terminada</span>
+                    <span style={{ color: data.colors?.text }}>Oferta terminada</span>
                 )}
             </div>
         </div>
@@ -457,39 +457,39 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderFloating = () => (
         <div
             className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ${getPaddingX()} py-3 ${getBorderRadius()} shadow-2xl`}
-            style={{ backgroundColor: data.colors.background }}
+            style={{ backgroundColor: data.colors?.background }}
         >
             <div className="flex items-center gap-4">
                 {data.badgeText && (
                     <span
                         className="px-3 py-1 rounded-full text-xs font-bold"
                         style={{
-                            backgroundColor: data.colors.badgeBackground,
-                            color: data.colors.badgeText,
+                            backgroundColor: data.colors?.badgeBackground,
+                            color: data.colors?.badgeText,
                         }}
                     >
                         {data.badgeText}
                     </span>
                 )}
-                <span className="font-semibold text-sm" style={{ color: data.colors.heading }}>
+                <span className="font-semibold text-sm" style={{ color: data.colors?.heading }}>
                     {data.title}
                 </span>
                 {!isExpired && (
-                    <div className="flex gap-1 text-sm font-mono" style={{ color: data.colors.countdownText }}>
+                    <div className="flex gap-1 text-sm font-mono" style={{ color: data.colors?.countdownText }}>
                         {data.showHours !== false && (
-                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors.countdownBackground }}>
+                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors?.countdownBackground }}>
                                 {timeLeft.hours.toString().padStart(2, '0')}
                             </span>
                         )}
                         <span>:</span>
                         {data.showMinutes !== false && (
-                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors.countdownBackground }}>
+                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors?.countdownBackground }}>
                                 {timeLeft.minutes.toString().padStart(2, '0')}
                             </span>
                         )}
                         <span>:</span>
                         {data.showSeconds !== false && (
-                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors.countdownBackground }}>
+                            <span className="px-2 py-1 rounded" style={{ backgroundColor: data.colors?.countdownBackground }}>
                                 {timeLeft.seconds.toString().padStart(2, '0')}
                             </span>
                         )}
@@ -499,8 +499,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     href="#store"
                     className="px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
                     style={{
-                        backgroundColor: data.colors.buttonBackground,
-                        color: data.colors.buttonText,
+                        backgroundColor: data.colors?.buttonBackground,
+                        color: data.colors?.buttonText,
                     }}
                 >
                     Ver

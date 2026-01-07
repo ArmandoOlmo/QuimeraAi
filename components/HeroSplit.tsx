@@ -54,12 +54,12 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
 
     // Component colors take priority over Design Tokens
     const actualColors = {
-        textBackground: colors.textBackground || '#ffffff',
-        imageBackground: colors.imageBackground || '#000000',
-        heading: colors.heading || '#000000',
-        text: colors.text || '#374151',
-        buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
-        buttonText: colors.buttonText || '#ffffff',
+        textBackground: colors?.textBackground || '#ffffff',
+        imageBackground: colors?.imageBackground || '#000000',
+        heading: colors?.heading || '#000000',
+        text: colors?.text || '#374151',
+        buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
+        buttonText: colors?.buttonText || '#ffffff',
     };
 
     // Safe headline handling

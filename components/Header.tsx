@@ -120,9 +120,9 @@ const Header: React.FC<HeaderData & {
     /** Callback when search is performed */
     onSearch?: (term: string) => void;
 }> = ({ 
-    style, layout, isSticky, glassEffect, height,
+    style = 'sticky-solid', layout, isSticky, glassEffect, height,
     logoType, logoText, logoImageUrl, logoWidth,
-    links, hoverStyle,
+    links = [], hoverStyle,
     ctaText, showCta, buttonBorderRadius, 
     showLogin, loginText, loginUrl,
     showSearch = false,
@@ -130,7 +130,7 @@ const Header: React.FC<HeaderData & {
     showCart = false,
     cartItemCount = 0,
     onCartClick,
-    colors,
+    colors = {},
     isPreviewMode = false,
     containerRef,
     linkFontSize = 14,
@@ -195,9 +195,9 @@ const Header: React.FC<HeaderData & {
   
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background || defaultBackground,
-    text: colors.text,
-    accent: colors.accent || primaryColor,
+    background: colors?.background || defaultBackground,
+    text: colors?.text,
+    accent: colors?.accent || primaryColor,
   };
 
   useEffect(() => {
@@ -289,7 +289,7 @@ const Header: React.FC<HeaderData & {
       case 'edge-bordered':
         return { 
           backgroundColor: actualColors.background,
-          borderColor: colors.accent 
+          borderColor: colors?.accent 
         };
         
       // --- FLOTANTES ---
@@ -502,7 +502,7 @@ const Header: React.FC<HeaderData & {
             <>
                 <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-center">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                 </div>
                 <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                     {showSearch && (
@@ -511,7 +511,7 @@ const Header: React.FC<HeaderData & {
                             onProductClick={handleProductClick}
                             onContentClick={handleContentClick}
                             placeholder={searchPlaceholder}
-                            primaryColor={colors.accent}
+                            primaryColor={colors?.accent}
                             textColor={finalTextColor}
                             sections={searchableSections}
                         />
@@ -526,7 +526,7 @@ const Header: React.FC<HeaderData & {
         return (
              <>
                  <div className="hidden md:flex flex-1 justify-start items-center">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                  </div>
                  <div className="flex-shrink-0 mx-auto">
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
@@ -538,7 +538,7 @@ const Header: React.FC<HeaderData & {
                              onProductClick={handleProductClick}
                              onContentClick={handleContentClick}
                              placeholder={searchPlaceholder}
-                             primaryColor={colors.accent}
+                             primaryColor={colors?.accent}
                              textColor={finalTextColor}
                              sections={searchableSections}
                          />
@@ -556,7 +556,7 @@ const Header: React.FC<HeaderData & {
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
                  </div>
                  <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="ml-8 flex items-center gap-4">
                         {showSearch && (
                             <GlobalSearch
@@ -564,7 +564,7 @@ const Header: React.FC<HeaderData & {
                                 onProductClick={handleProductClick}
                                 onContentClick={handleContentClick}
                                 placeholder={searchPlaceholder}
-                                primaryColor={colors.accent}
+                                primaryColor={colors?.accent}
                                 textColor={finalTextColor}
                                 sections={searchableSections}
                             />
@@ -581,7 +581,7 @@ const Header: React.FC<HeaderData & {
             <>
                 <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-end items-center gap-8">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
                     <div className="flex items-center ml-4 gap-4">
                         {showSearch && (
                             <GlobalSearch
@@ -589,7 +589,7 @@ const Header: React.FC<HeaderData & {
                                 onProductClick={handleProductClick}
                                 onContentClick={handleContentClick}
                                 placeholder={searchPlaceholder}
-                                primaryColor={colors.accent}
+                                primaryColor={colors?.accent}
                                 textColor={finalTextColor}
                                 sections={searchableSections}
                             />
@@ -660,7 +660,7 @@ const Header: React.FC<HeaderData & {
         className="absolute bottom-0 left-0 h-[2px] z-50 transition-all duration-150"
         style={{ 
           width: `${scrollProgress}%`,
-          background: `linear-gradient(90deg, ${colors.accent}, ${colors.accent})`
+          background: `linear-gradient(90deg, ${colors?.accent}, ${colors?.accent})`
         }}
       />
       
@@ -736,7 +736,7 @@ const Header: React.FC<HeaderData & {
           transform transition-transform duration-300 ease-out md:hidden
           ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
-        style={{ backgroundColor: colors.background }}
+        style={{ backgroundColor: colors?.background }}
       >
         <div className="flex flex-col h-full p-5">
           {/* Close button */}
@@ -744,7 +744,7 @@ const Header: React.FC<HeaderData & {
             <button
               onClick={() => setIsMenuOpen(false)}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-              style={{ color: colors.text }}
+              style={{ color: colors?.text }}
               aria-label="Cerrar menú"
             >
               <X size={24} />
@@ -765,8 +765,8 @@ const Header: React.FC<HeaderData & {
                   setIsMenuOpen(false);
                 }}
                 placeholder={searchPlaceholder}
-                primaryColor={colors.accent}
-                textColor={colors.text}
+                primaryColor={colors?.accent}
+                textColor={colors?.text}
                 sections={searchableSections}
               />
             </div>
@@ -781,7 +781,7 @@ const Header: React.FC<HeaderData & {
                     href={link.href} 
                     onClick={() => setIsMenuOpen(false)}
                     className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors"
-                    style={{ color: colors.text }}
+                    style={{ color: colors?.text }}
                   >
                     {link.text}
                   </a>
@@ -797,7 +797,7 @@ const Header: React.FC<HeaderData & {
                 href={loginUrl || '#'} 
                 onClick={() => setIsMenuOpen(false)}
                 className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors"
-                style={{ color: colors.text }}
+                style={{ color: colors?.text }}
               >
                 {loginText}
               </a>

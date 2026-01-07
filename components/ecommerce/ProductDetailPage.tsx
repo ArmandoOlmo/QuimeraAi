@@ -182,15 +182,15 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         return (
             <div 
                 className="min-h-screen flex items-center justify-center"
-                style={{ backgroundColor: colors.background }}
+                style={{ backgroundColor: colors?.background }}
             >
                 <div className="text-center">
                     <Loader2 
                         className="animate-spin mx-auto mb-4" 
                         size={48} 
-                        style={{ color: colors.primary }} 
+                        style={{ color: colors?.primary }} 
                     />
-                    <p style={{ color: colors.mutedText }}>Cargando producto...</p>
+                    <p style={{ color: colors?.mutedText }}>Cargando producto...</p>
                 </div>
             </div>
         );
@@ -201,24 +201,24 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         return (
             <div 
                 className="min-h-screen flex items-center justify-center"
-                style={{ backgroundColor: colors.background }}
+                style={{ backgroundColor: colors?.background }}
             >
                 <div className="text-center max-w-md mx-auto px-4">
-                    <AlertCircle className="mx-auto mb-4" size={48} style={{ color: colors.error }} />
+                    <AlertCircle className="mx-auto mb-4" size={48} style={{ color: colors?.error }} />
                     <h1 
                         className="text-2xl font-bold mb-2"
-                        style={{ color: colors.heading }}
+                        style={{ color: colors?.heading }}
                     >
                         Producto no encontrado
                     </h1>
-                    <p className="mb-6" style={{ color: colors.mutedText }}>
+                    <p className="mb-6" style={{ color: colors?.mutedText }}>
                         {error || 'El producto que buscas no existe o ya no está disponible.'}
                     </p>
                     {onNavigateToStore && (
                         <button
                             onClick={onNavigateToStore}
                             className="px-6 py-3 rounded-lg font-medium transition-colors"
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
+                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonText }}
                         >
                             Volver a la tienda
                         </button>
@@ -229,11 +229,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     }
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
+        <div className="min-h-screen" style={{ backgroundColor: colors?.background }}>
             {/* Breadcrumbs */}
             <nav 
                 className="border-b"
-                style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+                style={{ backgroundColor: colors?.cardBackground, borderColor: colors?.border }}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <ol className="flex items-center gap-2 text-sm">
@@ -241,7 +241,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             <button
                                 onClick={onNavigateToStore}
                                 className="flex items-center gap-1 transition-colors hover:opacity-80"
-                                style={{ color: colors.mutedText }}
+                                style={{ color: colors?.mutedText }}
                             >
                                 <Home size={16} />
                                 <span>Tienda</span>
@@ -249,22 +249,22 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </li>
                         {category && (
                             <>
-                                <ChevronRightIcon style={{ color: colors.mutedText }} size={16} />
+                                <ChevronRightIcon style={{ color: colors?.mutedText }} size={16} />
                                 <li>
                                     <button
                                         onClick={() => onNavigateToCategory?.(category.slug)}
                                         className="transition-colors hover:opacity-80"
-                                        style={{ color: colors.mutedText }}
+                                        style={{ color: colors?.mutedText }}
                                     >
                                         {category.name}
                                     </button>
                                 </li>
                             </>
                         )}
-                        <ChevronRightIcon style={{ color: colors.mutedText }} size={16} />
+                        <ChevronRightIcon style={{ color: colors?.mutedText }} size={16} />
                         <li 
                             className="font-medium truncate max-w-[200px]"
-                            style={{ color: colors.heading }}
+                            style={{ color: colors?.heading }}
                         >
                             {product.name}
                         </li>
@@ -280,7 +280,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         {/* Main Image */}
                         <div 
                             className="relative aspect-square rounded-2xl overflow-hidden shadow-sm"
-                            style={{ backgroundColor: colors.cardBackground }}
+                            style={{ backgroundColor: colors?.cardBackground }}
                         >
                             {images.length > 0 ? (
                                 <img
@@ -291,7 +291,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             ) : (
                                 <div 
                                     className="w-full h-full flex items-center justify-center"
-                                    style={{ color: colors.mutedText }}
+                                    style={{ color: colors?.mutedText }}
                                 >
                                     <Package size={64} />
                                 </div>
@@ -301,7 +301,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             {hasDiscount && (
                                 <div
                                     className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-sm font-bold"
-                                    style={{ backgroundColor: colors.badgeBackground, color: colors.badgeText }}
+                                    style={{ backgroundColor: colors?.badgeBackground, color: colors?.badgeText }}
                                 >
                                     -{discountPercentage}% OFF
                                 </div>
@@ -313,14 +313,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                     <button
                                         onClick={handlePrevImage}
                                         className="absolute left-4 top-1/2 -translate-y-1/2 p-2 backdrop-blur-sm rounded-full shadow-md transition-colors hover:opacity-80"
-                                        style={{ backgroundColor: `${colors.cardBackground}e6`, color: colors.text }}
+                                        style={{ backgroundColor: `${colors?.cardBackground}e6`, color: colors?.text }}
                                     >
                                         <ChevronLeft size={24} />
                                     </button>
                                     <button
                                         onClick={handleNextImage}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 p-2 backdrop-blur-sm rounded-full shadow-md transition-colors hover:opacity-80"
-                                        style={{ backgroundColor: `${colors.cardBackground}e6`, color: colors.text }}
+                                        style={{ backgroundColor: `${colors?.cardBackground}e6`, color: colors?.text }}
                                     >
                                         <ChevronRight size={24} />
                                     </button>
@@ -342,7 +342,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                         }`}
                                         style={
                                             selectedImageIndex === index
-                                                ? { borderColor: colors.primary, outlineColor: colors.primary }
+                                                ? { borderColor: colors?.primary, outlineColor: colors?.primary }
                                                 : {}
                                         }
                                     >
@@ -364,7 +364,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             <button
                                 onClick={() => onNavigateToCategory?.(category.slug)}
                                 className="text-sm uppercase tracking-wide font-medium hover:underline"
-                                style={{ color: colors.primary }}
+                                style={{ color: colors?.primary }}
                             >
                                 {category.name}
                             </button>
@@ -373,7 +373,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         {/* Title */}
                         <h1 
                             className="text-3xl lg:text-4xl font-bold"
-                            style={{ color: colors.heading }}
+                            style={{ color: colors?.heading }}
                         >
                             {product.name}
                         </h1>
@@ -384,7 +384,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                 rating={reviewStats?.averageRating || 0} 
                                 size="md" 
                             />
-                            <span className="text-sm" style={{ color: colors.mutedText }}>
+                            <span className="text-sm" style={{ color: colors?.mutedText }}>
                                 {reviewStats && reviewStats.totalReviews > 0 ? (
                                     <button 
                                         onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
@@ -402,14 +402,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <div className="flex items-baseline gap-4">
                             <span 
                                 className="text-4xl font-bold"
-                                style={{ color: colors.price }}
+                                style={{ color: colors?.price }}
                             >
                                 {currencySymbol}{currentPrice.toFixed(2)}
                             </span>
                             {hasDiscount && (
                                 <span 
                                     className="text-xl line-through"
-                                    style={{ color: colors.originalPrice }}
+                                    style={{ color: colors?.originalPrice }}
                                 >
                                     {currencySymbol}{product.compareAtPrice!.toFixed(2)}
                                 </span>
@@ -418,7 +418,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                         {/* Short Description */}
                         {product.shortDescription && (
-                            <p className="text-lg" style={{ color: colors.text }}>
+                            <p className="text-lg" style={{ color: colors?.text }}>
                                 {product.shortDescription}
                             </p>
                         )}
@@ -427,18 +427,18 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <div className="flex items-center gap-2">
                             {inStock ? (
                                 <>
-                                    <Check style={{ color: colors.success }} size={20} />
-                                    <span className="font-medium" style={{ color: colors.success }}>
+                                    <Check style={{ color: colors?.success }} size={20} />
+                                    <span className="font-medium" style={{ color: colors?.success }}>
                                         En stock
                                         {product.lowStock && (
-                                            <span className="ml-2" style={{ color: colors.warning }}>
+                                            <span className="ml-2" style={{ color: colors?.warning }}>
                                                 - ¡Últimas unidades!
                                             </span>
                                         )}
                                     </span>
                                 </>
                             ) : (
-                                <span className="font-medium" style={{ color: colors.error }}>Agotado</span>
+                                <span className="font-medium" style={{ color: colors?.error }}>Agotado</span>
                             )}
                         </div>
 
@@ -447,7 +447,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             <div key={optionName}>
                                 <label 
                                     className="block text-sm font-medium mb-3"
-                                    style={{ color: colors.text }}
+                                    style={{ color: colors?.text }}
                                 >
                                     {optionName}
                                 </label>
@@ -467,8 +467,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                                 }}
                                                 className="px-4 py-2 rounded-lg border-2 font-medium transition-all"
                                                 style={isSelected 
-                                                    ? { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground, color: colors.buttonText } 
-                                                    : { borderColor: colors.border, color: colors.text }
+                                                    ? { backgroundColor: colors?.buttonBackground, borderColor: colors?.buttonBackground, color: colors?.buttonText } 
+                                                    : { borderColor: colors?.border, color: colors?.text }
                                                 }
                                             >
                                                 {value}
@@ -483,33 +483,33 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <div>
                             <label 
                                 className="block text-sm font-medium mb-3"
-                                style={{ color: colors.text }}
+                                style={{ color: colors?.text }}
                             >
                                 Cantidad
                             </label>
                             <div className="flex items-center gap-4">
                                 <div 
                                     className="flex items-center border rounded-lg"
-                                    style={{ borderColor: colors.border }}
+                                    style={{ borderColor: colors?.border }}
                                 >
                                     <button
                                         onClick={decrementQuantity}
                                         disabled={quantity <= 1}
                                         className="p-3 disabled:opacity-50 transition-colors rounded-l-lg hover:opacity-80"
-                                        style={{ color: colors.text }}
+                                        style={{ color: colors?.text }}
                                     >
                                         <Minus size={20} />
                                     </button>
                                     <span 
                                         className="w-14 text-center text-lg font-bold"
-                                        style={{ color: colors.heading }}
+                                        style={{ color: colors?.heading }}
                                     >
                                         {quantity}
                                     </span>
                                     <button
                                         onClick={incrementQuantity}
                                         className="p-3 transition-colors rounded-r-lg hover:opacity-80"
-                                        style={{ color: colors.text }}
+                                        style={{ color: colors?.text }}
                                     >
                                         <Plus size={20} />
                                     </button>
@@ -524,8 +524,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                 disabled={!inStock}
                                 className="flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 style={!addedToCart 
-                                    ? { backgroundColor: colors.buttonBackground, color: colors.buttonText } 
-                                    : { backgroundColor: colors.success, color: '#ffffff' }
+                                    ? { backgroundColor: colors?.buttonBackground, color: colors?.buttonText } 
+                                    : { backgroundColor: colors?.success, color: '#ffffff' }
                                 }
                             >
                                 {addedToCart ? (
@@ -545,8 +545,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                     onClick={() => onWishlist(product)}
                                     className="p-4 rounded-xl border-2 transition-colors"
                                     style={isWishlisted 
-                                        ? { backgroundColor: `${colors.error}10`, borderColor: colors.error, color: colors.error }
-                                        : { borderColor: colors.border, color: colors.text }
+                                        ? { backgroundColor: `${colors?.error}10`, borderColor: colors?.error, color: colors?.error }
+                                        : { borderColor: colors?.border, color: colors?.text }
                                     }
                                 >
                                     <Heart size={24} fill={isWishlisted ? 'currentColor' : 'none'} />
@@ -555,7 +555,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             <button
                                 onClick={handleShare}
                                 className="p-4 rounded-xl border-2 transition-colors hover:opacity-80"
-                                style={{ borderColor: colors.border, color: colors.text }}
+                                style={{ borderColor: colors?.border, color: colors?.text }}
                             >
                                 <Share2 size={24} />
                             </button>
@@ -564,32 +564,32 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         {/* Trust Badges */}
                         <div 
                             className="grid grid-cols-3 gap-4 pt-6 border-t"
-                            style={{ borderColor: colors.border }}
+                            style={{ borderColor: colors?.border }}
                         >
                             <div className="text-center">
-                                <Truck className="mx-auto mb-2" size={28} style={{ color: colors.accent }} />
-                                <p className="text-sm font-medium" style={{ color: colors.heading }}>
+                                <Truck className="mx-auto mb-2" size={28} style={{ color: colors?.accent }} />
+                                <p className="text-sm font-medium" style={{ color: colors?.heading }}>
                                     Envío rápido
                                 </p>
-                                <p className="text-xs" style={{ color: colors.mutedText }}>
+                                <p className="text-xs" style={{ color: colors?.mutedText }}>
                                     3-5 días hábiles
                                 </p>
                             </div>
                             <div className="text-center">
-                                <Shield className="mx-auto mb-2" size={28} style={{ color: colors.accent }} />
-                                <p className="text-sm font-medium" style={{ color: colors.heading }}>
+                                <Shield className="mx-auto mb-2" size={28} style={{ color: colors?.accent }} />
+                                <p className="text-sm font-medium" style={{ color: colors?.heading }}>
                                     Pago seguro
                                 </p>
-                                <p className="text-xs" style={{ color: colors.mutedText }}>
+                                <p className="text-xs" style={{ color: colors?.mutedText }}>
                                     Encriptación SSL
                                 </p>
                             </div>
                             <div className="text-center">
-                                <RotateCcw className="mx-auto mb-2" size={28} style={{ color: colors.accent }} />
-                                <p className="text-sm font-medium" style={{ color: colors.heading }}>
+                                <RotateCcw className="mx-auto mb-2" size={28} style={{ color: colors?.accent }} />
+                                <p className="text-sm font-medium" style={{ color: colors?.heading }}>
                                     Devolución fácil
                                 </p>
-                                <p className="text-xs" style={{ color: colors.mutedText }}>
+                                <p className="text-xs" style={{ color: colors?.mutedText }}>
                                     30 días garantía
                                 </p>
                             </div>
@@ -602,7 +602,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     {/* Tab Headers */}
                     <div 
                         className="flex gap-1 border-b"
-                        style={{ borderColor: colors.border }}
+                        style={{ borderColor: colors?.border }}
                     >
                         {[
                             { id: 'description' as TabType, label: 'Descripción' },
@@ -613,13 +613,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className="px-6 py-3 font-medium text-sm transition-colors relative"
-                                style={{ color: activeTab === tab.id ? colors.heading : colors.mutedText }}
+                                style={{ color: activeTab === tab.id ? colors?.heading : colors?.mutedText }}
                             >
                                 {tab.label}
                                 {activeTab === tab.id && (
                                     <div
                                         className="absolute bottom-0 left-0 right-0 h-0.5"
-                                        style={{ backgroundColor: colors.accent }}
+                                        style={{ backgroundColor: colors?.accent }}
                                     />
                                 )}
                             </button>
@@ -633,12 +633,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                 {product.description ? (
                                     <p 
                                         className="whitespace-pre-line leading-relaxed"
-                                        style={{ color: colors.text }}
+                                        style={{ color: colors?.text }}
                                     >
                                         {product.description}
                                     </p>
                                 ) : (
-                                    <p className="italic" style={{ color: colors.mutedText }}>
+                                    <p className="italic" style={{ color: colors?.mutedText }}>
                                         No hay descripción disponible.
                                     </p>
                                 )}
@@ -653,20 +653,20 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                             <div
                                                 key={index}
                                                 className="flex items-center gap-3 p-3 rounded-lg"
-                                                style={{ backgroundColor: colors.cardBackground }}
+                                                style={{ backgroundColor: colors?.cardBackground }}
                                             >
                                                 <Check 
                                                     size={18} 
-                                                    style={{ color: colors.accent }} 
+                                                    style={{ color: colors?.accent }} 
                                                 />
-                                                <span style={{ color: colors.text }}>
+                                                <span style={{ color: colors?.text }}>
                                                     {tag}
                                                 </span>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="italic" style={{ color: colors.mutedText }}>
+                                    <p className="italic" style={{ color: colors?.mutedText }}>
                                         No hay especificaciones disponibles.
                                     </p>
                                 )}
@@ -677,28 +677,28 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             <div className="space-y-6">
                                 <div 
                                     className="flex items-start gap-4 p-4 border rounded-lg"
-                                    style={{ backgroundColor: `${colors.info}10`, borderColor: `${colors.info}30` }}
+                                    style={{ backgroundColor: `${colors?.info}10`, borderColor: `${colors?.info}30` }}
                                 >
-                                    <Truck className="flex-shrink-0 mt-0.5" size={24} style={{ color: colors.info }} />
+                                    <Truck className="flex-shrink-0 mt-0.5" size={24} style={{ color: colors?.info }} />
                                     <div>
-                                        <h4 className="font-medium mb-1" style={{ color: colors.heading }}>
+                                        <h4 className="font-medium mb-1" style={{ color: colors?.heading }}>
                                             Envío estándar
                                         </h4>
-                                        <p className="text-sm" style={{ color: colors.text }}>
+                                        <p className="text-sm" style={{ color: colors?.text }}>
                                             Entrega en 3-5 días hábiles. El costo de envío se calcula en el checkout según tu ubicación.
                                         </p>
                                     </div>
                                 </div>
                                 <div 
                                     className="flex items-start gap-4 p-4 border rounded-lg"
-                                    style={{ backgroundColor: `${colors.success}10`, borderColor: `${colors.success}30` }}
+                                    style={{ backgroundColor: `${colors?.success}10`, borderColor: `${colors?.success}30` }}
                                 >
-                                    <RotateCcw className="flex-shrink-0 mt-0.5" size={24} style={{ color: colors.success }} />
+                                    <RotateCcw className="flex-shrink-0 mt-0.5" size={24} style={{ color: colors?.success }} />
                                     <div>
-                                        <h4 className="font-medium mb-1" style={{ color: colors.heading }}>
+                                        <h4 className="font-medium mb-1" style={{ color: colors?.heading }}>
                                             Política de devolución
                                         </h4>
-                                        <p className="text-sm" style={{ color: colors.text }}>
+                                        <p className="text-sm" style={{ color: colors?.text }}>
                                             Tienes 30 días para devolver el producto si no estás satisfecho. El producto debe estar sin usar y en su empaque original.
                                         </p>
                                     </div>
@@ -712,11 +712,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <section 
                     id="reviews-section" 
                     className="mt-16 pt-12 border-t"
-                    style={{ borderColor: colors.border }}
+                    style={{ borderColor: colors?.border }}
                 >
                     <h2 
                         className="text-2xl font-bold mb-8"
-                        style={{ color: colors.heading }}
+                        style={{ color: colors?.heading }}
                     >
                         Opiniones de clientes
                     </h2>
@@ -726,18 +726,18 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         stats={reviewStats}
                         onWriteReview={() => setShowReviewForm(true)}
                         colors={{
-                            primary: colors.primary,
-                            heading: colors.heading,
-                            text: colors.text,
-                            mutedText: colors.mutedText,
-                            cardBackground: colors.cardBackground,
-                            border: colors.border,
-                            buttonBackground: colors.buttonBackground,
-                            buttonText: colors.buttonText,
+                            primary: colors?.primary,
+                            heading: colors?.heading,
+                            text: colors?.text,
+                            mutedText: colors?.mutedText,
+                            cardBackground: colors?.cardBackground,
+                            border: colors?.border,
+                            buttonBackground: colors?.buttonBackground,
+                            buttonText: colors?.buttonText,
                             starColor: '#facc15', // Yellow for stars
-                            starEmptyColor: colors.border,
-                            progressBackground: colors.border,
-                            verifiedColor: colors.success,
+                            starEmptyColor: colors?.border,
+                            progressBackground: colors?.border,
+                            verifiedColor: colors?.success,
                         }}
                     />
 
@@ -754,14 +754,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             onMarkHelpful={markHelpful}
                             hasVoted={hasVoted}
                             colors={{
-                                primary: colors.primary,
-                                heading: colors.heading,
-                                text: colors.text,
-                                mutedText: colors.mutedText,
-                                cardBackground: colors.cardBackground,
-                                border: colors.border,
+                                primary: colors?.primary,
+                                heading: colors?.heading,
+                                text: colors?.text,
+                                mutedText: colors?.mutedText,
+                                cardBackground: colors?.cardBackground,
+                                border: colors?.border,
                                 starColor: '#facc15',
-                                verifiedColor: colors.success,
+                                verifiedColor: colors?.success,
                             }}
                         />
                     </div>
@@ -781,14 +781,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         return result;
                     }}
                     colors={{
-                        primary: colors.primary,
-                        heading: colors.heading,
-                        text: colors.text,
-                        mutedText: colors.mutedText,
-                        cardBackground: colors.cardBackground,
-                        border: colors.border,
-                        buttonBackground: colors.buttonBackground,
-                        buttonText: colors.buttonText,
+                        primary: colors?.primary,
+                        heading: colors?.heading,
+                        text: colors?.text,
+                        mutedText: colors?.mutedText,
+                        cardBackground: colors?.cardBackground,
+                        border: colors?.border,
+                        buttonBackground: colors?.buttonBackground,
+                        buttonText: colors?.buttonText,
                         starColor: '#facc15',
                     }}
                 />
@@ -800,19 +800,19 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     onAddToCart={onAddToCart ? (p) => onAddToCart(p, 1) : undefined}
                     currencySymbol={currencySymbol}
                     colors={{
-                        primary: colors.primary,
-                        heading: colors.heading,
-                        text: colors.text,
-                        mutedText: colors.mutedText,
-                        cardBackground: colors.cardBackground,
-                        border: colors.border,
-                        badgeBackground: colors.badgeBackground,
-                        badgeText: colors.badgeText,
-                        buttonBackground: colors.buttonBackground,
-                        buttonText: colors.buttonText,
-                        salePrice: colors.salePrice,
-                        originalPrice: colors.originalPrice,
-                        warning: colors.warning,
+                        primary: colors?.primary,
+                        heading: colors?.heading,
+                        text: colors?.text,
+                        mutedText: colors?.mutedText,
+                        cardBackground: colors?.cardBackground,
+                        border: colors?.border,
+                        badgeBackground: colors?.badgeBackground,
+                        badgeText: colors?.badgeText,
+                        buttonBackground: colors?.buttonBackground,
+                        buttonText: colors?.buttonText,
+                        salePrice: colors?.salePrice,
+                        originalPrice: colors?.originalPrice,
+                        warning: colors?.warning,
                     }}
                 />
             </div>

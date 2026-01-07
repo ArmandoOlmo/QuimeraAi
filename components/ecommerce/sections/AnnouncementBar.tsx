@@ -74,11 +74,11 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
     if (!isVisible) return null;
 
     // Get effective colors from data.colors (Web Editor) with fallbacks
-    const bgColor = data.colors.background || colors.primary;
-    const textColor = data.colors.text || colors.buttonText;
-    const linkColor = data.colors.linkColor || textColor;
-    const iconColor = data.colors.iconColor || textColor;
-    const borderColor = data.colors.borderColor;
+    const bgColor = data.colors?.background || colors?.primary;
+    const textColor = data.colors?.text || colors?.buttonText;
+    const linkColor = data.colors?.linkColor || textColor;
+    const iconColor = data.colors?.iconColor || textColor;
+    const borderColor = data.colors?.borderColor;
 
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (

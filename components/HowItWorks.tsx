@@ -48,17 +48,17 @@ interface HowItWorksProps extends HowItWorksData {
     cornerGradient?: CornerGradientConfig;
 }
 
-const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items, paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
-    const visibleItems = items.slice(0, steps);
+const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items = [], paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
+    const visibleItems = (items || []).slice(0, steps);
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
 
     return (
-        <section id="how-it-works" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+        <section id="how-it-works" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-                <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.description || colors?.text }}>
                     {description}
                 </p>
             </div>
@@ -82,12 +82,12 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
                         )}
                         <div
                             className="w-20 h-20 rounded-full flex items-center justify-center mb-6 relative z-10"
-                            style={{ backgroundColor: colors.accent }}
+                            style={{ backgroundColor: colors?.accent }}
                         >
                             <span style={{ color: (colors as any).iconColor || '#ffffff' }}>{howItWorksIcons[item.icon]}</span>
                         </div>
                         <h3 className="text-xl font-bold mb-2 font-header" style={{ color: (colors as any).stepTitle || '#ffffff', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{item.title}</h3>
-                        <p className="font-body" style={{ color: colors.text }}>{item.description}</p>
+                        <p className="font-body" style={{ color: colors?.text }}>{item.description}</p>
                     </div>
                 ))}
             </div>

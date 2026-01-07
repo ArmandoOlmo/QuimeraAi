@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logError } from '../utils/monitoring';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { isChunkLoadError, ChunkLoadError } from '../utils/lazyWithRetry';
+import { AlertTriangle, RefreshCw, Home, Download } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  isChunkError: boolean;
 }
 
 /**
@@ -25,31 +27,44 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      isChunkError: false,
     };
   }
 
   static getDerivedStateFromError(error: Error): State {
+    const isChunk = isChunkLoadError(error) || error instanceof ChunkLoadError;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:34',message:'getDerivedStateFromError called',data:{errorMessage:error.message,isChunkError:isChunk,errorName:error.name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     return {
       hasError: true,
       error,
       errorInfo: null,
+      isChunkError: isChunk,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    const isChunk = isChunkLoadError(error) || error instanceof ChunkLoadError;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:50',message:'componentDidCatch - error boundary caught error',data:{errorMessage:error.message,isChunkError:isChunk,componentStack:errorInfo.componentStack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
     // Log error to console
     console.error('Error caught by boundary:', error, errorInfo);
 
-    // Log to Sentry
+    // Log to Sentry (with extra context for chunk errors)
     logError(error, {
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
+      isChunkLoadError: isChunk,
     });
 
     // Update state with error info
     this.setState({
       error,
       errorInfo,
+      isChunkError: isChunk,
     });
   }
 
@@ -58,11 +73,40 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      isChunkError: false,
     });
   };
 
   handleReload = () => {
     window.location.reload();
+  };
+
+  /**
+   * Hard reload with cache clearing - specifically for chunk loading errors
+   */
+  handleHardReload = async () => {
+    try {
+      // Clear service worker caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // Unregister service workers
+      const registrations = await navigator.serviceWorker?.getRegistrations();
+      if (registrations) {
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+      
+      // Clear session storage flag that prevents reload loops
+      sessionStorage.removeItem('chunk_reload_attempted');
+      
+    } catch (e) {
+      console.warn('Could not clear caches:', e);
+    }
+    
+    // Hard reload bypassing cache
+    window.location.href = window.location.href.split('?')[0] + '?cacheBust=' + Date.now();
   };
 
   handleGoHome = () => {
@@ -76,7 +120,56 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Special UI for chunk loading errors (deployment mismatch)
+      if (this.state.isChunkError) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-6">
+            <div className="max-w-lg w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-8 shadow-2xl backdrop-blur">
+              {/* Update Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-blue-500/20 rounded-full animate-pulse">
+                  <Download size={56} className="text-blue-400" />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-white text-center mb-3">
+                New Version Available
+              </h1>
+
+              {/* Message */}
+              <p className="text-slate-300 text-center mb-6 leading-relaxed">
+                We've deployed a new version of the app. Please refresh to load the latest updates.
+              </p>
+
+              {/* Primary Action */}
+              <button
+                onClick={this.handleHardReload}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25"
+              >
+                <RefreshCw size={20} />
+                Refresh Now
+              </button>
+
+              {/* Secondary Action */}
+              <button
+                onClick={this.handleGoHome}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-3 text-slate-400 hover:text-white transition-colors"
+              >
+                <Home size={18} />
+                Go to Homepage
+              </button>
+
+              {/* Help Text */}
+              <p className="text-xs text-slate-500 text-center mt-6">
+                This happens when we update the app while you're using it. Your data is safe.
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      // Default error UI for other errors
       return (
         <div className="min-h-screen bg-editor-bg flex items-center justify-center p-6">
           <div className="max-w-2xl w-full bg-editor-panel-bg border border-editor-border rounded-lg p-8 shadow-xl">

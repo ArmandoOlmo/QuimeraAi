@@ -80,8 +80,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     // Use component colors - fallback to primary color only if not set
     const mapColors = {
         ...colors,
-        heading: colors.heading || primaryColor,
-        cardBackground: colors.cardBackground || primaryColor,
+        heading: colors?.heading || primaryColor,
+        cardBackground: colors?.cardBackground || primaryColor,
     };
     
     // Only load Google Maps if we have a valid API key
@@ -193,17 +193,17 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     {/* Info Card - Left Side */}
                     <div className="lg:col-span-1 p-8 flex flex-col justify-center" style={{ backgroundColor: mapColors.cardBackground }}>
                         <div className="mb-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors.accent + '20' }}>
-                                <MapPin className="w-6 h-6" style={{ color: colors.accent }} />
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors?.accent + '20' }}>
+                                <MapPin className="w-6 h-6" style={{ color: colors?.accent }} />
                             </div>
                             <h3 className="text-2xl font-bold mb-2" style={{ color: mapColors.heading }}>{title}</h3>
-                            <p className="text-sm mb-6" style={{ color: colors.text }}>{description}</p>
+                            <p className="text-sm mb-6" style={{ color: colors?.text }}>{description}</p>
                         </div>
 
                         <div className="space-y-4">
                             <div className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 mt-0.5 shrink-0" style={{ color: colors.accent }} />
-                                <span className="text-sm" style={{ color: colors.text }}>{address}</span>
+                                <MapPin className="w-5 h-5 mt-0.5 shrink-0" style={{ color: colors?.accent }} />
+                                <span className="text-sm" style={{ color: colors?.text }}>{address}</span>
                             </div>
                             <a 
                                 href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} 
@@ -211,8 +211,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 rel="noreferrer"
                                 className="flex items-center gap-3 group"
                             >
-                                <Navigation className="w-5 h-5 shrink-0" style={{ color: colors.accent }} />
-                                <span className="text-sm font-medium group-hover:underline" style={{ color: colors.accent }}>Get Directions →</span>
+                                <Navigation className="w-5 h-5 shrink-0" style={{ color: colors?.accent }} />
+                                <span className="text-sm font-medium group-hover:underline" style={{ color: colors?.accent }}>Get Directions →</span>
                             </a>
                         </div>
                     </div>
@@ -248,8 +248,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     {/* Floating Badge */}
                     <div className="absolute bottom-6 left-6 bg-white rounded-2xl p-4 max-w-xs backdrop-blur-sm border border-gray-200">
                         <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: colors.accent + '20' }}>
-                                <MapPin className="w-5 h-5" style={{ color: colors.accent }} />
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: colors?.accent + '20' }}>
+                                <MapPin className="w-5 h-5" style={{ color: colors?.accent }} />
                             </div>
                             <div>
                                 <p className="text-xs font-medium text-gray-900 mb-1">{title}</p>
@@ -277,7 +277,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     {/* Tech Overlay Card */}
                     <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-md rounded-xl p-6 max-w-sm border border-gray-700">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.accent }}></div>
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors?.accent }}></div>
                             <span className="text-xs font-mono uppercase tracking-wider text-gray-400">Location</span>
                         </div>
                         <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
@@ -293,7 +293,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 target="_blank" 
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg transition-all hover:translate-x-1"
-                                style={{ backgroundColor: colors.accent, color: '#ffffff' }}
+                                style={{ backgroundColor: colors?.accent, color: '#ffffff' }}
                             >
                                 <Navigation className="w-4 h-4" />
                                 Navigate
@@ -328,7 +328,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                             target="_blank" 
                             rel="noreferrer"
                             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all hover:scale-105 shrink-0"
-                            style={{ backgroundColor: colors.accent, color: '#ffffff' }}
+                            style={{ backgroundColor: colors?.accent, color: '#ffffff' }}
                         >
                             <Navigation className="w-5 h-5" />
                             Get Directions
@@ -342,7 +342,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     return (
         <section 
             className={`w-full ${getPadding(paddingY)} relative overflow-hidden`}
-            style={{ backgroundColor: colors.background }}
+            style={{ backgroundColor: colors?.background }}
         >
             <CornerGradient config={cornerGradient} />
             <div className={`max-w-7xl mx-auto ${paddingX === 'lg' ? 'px-0' : 'px-4'} relative z-10`}>
@@ -357,7 +357,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                         </h2>
                         <p 
                             className={getFontSize(descriptionFontSize || 'md', 'desc')}
-                            style={{ color: colors.text }}
+                            style={{ color: colors?.text }}
                         >
                             {description}
                         </p>

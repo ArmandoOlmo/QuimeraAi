@@ -112,12 +112,12 @@ const Video: React.FC<VideoProps> = ({
     }
 
     return (
-        <section id="video" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+        <section id="video" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-                    <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.text }}>
                         {description}
                     </p>
                 </div>

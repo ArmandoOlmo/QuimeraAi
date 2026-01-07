@@ -78,9 +78,9 @@ const BusinessHours: React.FC<BusinessHoursProps> = ({
     const currentDay = getCurrentDayName();
     const isOpen = isCurrentlyOpen(businessHours);
 
-    const textColor = colors.text || 'inherit';
-    const headingColor = colors.heading || 'inherit';
-    const accentColor = colors.accent || '#06b6d4';
+    const textColor = colors?.text || 'inherit';
+    const headingColor = colors?.heading || 'inherit';
+    const accentColor = colors?.accent || '#06b6d4';
 
     // Group consecutive days with same hours
     const groupHours = () => {

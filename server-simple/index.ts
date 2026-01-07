@@ -20,6 +20,60 @@ import { getFirestore } from 'firebase-admin/firestore';
 const PORT = process.env.PORT || 8080;
 const APP_URL = process.env.APP_URL || 'https://quimeraai.web.app';
 
+// Asset proxy cache (in-memory) - Shopify/Wix strategy
+// Hashed assets (immutable) get long TTL, unhashed get short TTL
+const assetCache = new Map<string, { data: Buffer; contentType: string; timestamp: number }>();
+const ASSET_CACHE_TTL_HASHED = 24 * 60 * 60 * 1000; // 24 hours for immutable assets
+const ASSET_CACHE_TTL_UNHASHED = 60 * 1000; // 1 minute for mutable assets
+
+// Cache for asset references from Firebase Hosting
+let cachedAssetRefs: { indexJs: string; mainCss: string; timestamp: number } | null = null;
+const ASSET_REFS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Fetch and cache asset references from Firebase Hosting index.html
+async function getAssetReferences(): Promise<{ indexJs: string; mainCss: string }> {
+    // Check cache
+    if (cachedAssetRefs && Date.now() - cachedAssetRefs.timestamp < ASSET_REFS_CACHE_TTL) {
+        return { indexJs: cachedAssetRefs.indexJs, mainCss: cachedAssetRefs.mainCss };
+    }
+    
+    try {
+        const response = await fetch(`${APP_URL}/index.html`);
+        if (!response.ok) throw new Error(`Failed to fetch index.html: ${response.status}`);
+        
+        const html = await response.text();
+        
+        // Extract JS and CSS references (could be relative or absolute paths)
+        // Note: After Vite config change, both use "index" prefix with hash
+        const jsMatch = html.match(/src="([^"]*\/assets\/index[^"]*\.js)"/);
+        const cssMatch = html.match(/href="([^"]*\/assets\/index[^"]*\.css)"/);
+        
+        // Convert relative paths to absolute URLs pointing to Firebase Hosting
+        let indexJs = jsMatch ? jsMatch[1] : '/assets/index.js';
+        let mainCss = cssMatch ? cssMatch[1] : '/assets/index.css';
+        
+        // If paths are relative, prepend APP_URL
+        if (indexJs.startsWith('/')) indexJs = `${APP_URL}${indexJs}`;
+        if (mainCss.startsWith('/')) mainCss = `${APP_URL}${mainCss}`;
+        
+        console.log(`[Assets] Fetched asset references: JS=${indexJs}, CSS=${mainCss}`);
+        
+        // Cache the references
+        cachedAssetRefs = { indexJs, mainCss, timestamp: Date.now() };
+        
+        return { indexJs, mainCss };
+    } catch (err) {
+        console.error('[Assets] Failed to fetch asset references:', err);
+        // Fallback to absolute paths
+        return { indexJs: `${APP_URL}/assets/index.js`, mainCss: `${APP_URL}/assets/main.css` };
+    }
+}
+
+// Helper to check if asset has a hash (immutable)
+function isHashedAsset(path: string): boolean {
+    return /[-_][a-zA-Z0-9]{6,}\.(js|css|woff2?|png|jpg|jpeg|svg|webp)(\?.*)?$/.test(path);
+}
+
 // Initialize Firebase Admin
 if (getApps().length === 0) {
     initializeApp(); // Auto-credentials on Cloud Run
@@ -45,6 +99,8 @@ interface ProjectData {
     brandIdentity: any;
     componentOrder: string[];
     sectionVisibility: Record<string, boolean>;
+    componentStatus?: Record<string, boolean>;
+    componentStyles?: Record<string, any>;
     seoConfig?: any;
     aiAssistantConfig?: any;
     menus?: any[];
@@ -376,7 +432,9 @@ function generateFullHtml(
     hostname: string,
     path: string,
     products: any[] = [],
-    categories: any[] = []
+    categories: any[] = [],
+    userId: string = '',
+    assetRefs: { indexJs: string; mainCss: string }
 ): string {
     const theme = project.theme || {};
     const globalColors = theme.globalColors || {};
@@ -388,169 +446,8 @@ function generateFullHtml(
     // Get favicon
     const favicon = project.seoConfig?.favicon || '';
     
-    // Build navigation links from pages
-    const navLinks = (project.pages || [])
-        .filter((p: SitePage) => p.showInNavigation)
-        .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0))
-        .map((p: SitePage) => `<a href="${p.slug}" style="color: ${headingColor}; text-decoration: none; padding: 0.5rem 1rem;">${p.title}</a>`)
-        .join('');
-    
-    // Build page content
-    let pageContent = '';
-    
-    // Hero section if present
-    const heroData = page.sectionData?.hero || project.data?.hero;
-    if (page.sections.includes('hero') && heroData) {
-        pageContent += `
-        <section style="padding: 4rem 1rem; text-align: center; background: ${heroData.colors?.background || backgroundColor};">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <h1 style="font-size: 2.5rem; font-weight: bold; color: ${heroData.colors?.heading || headingColor}; margin-bottom: 1rem;">
-                    ${stripHtml(heroData.headline || '')}
-                </h1>
-                <p style="font-size: 1.125rem; color: ${heroData.colors?.text || textColor}; margin-bottom: 2rem;">
-                    ${heroData.subheadline || ''}
-                </p>
-                ${heroData.primaryCta ? `
-                <a href="${heroData.primaryCtaLink || '#'}" 
-                   style="display: inline-block; padding: 0.75rem 2rem; background: ${heroData.colors?.buttonBackground || primaryColor}; 
-                          color: ${heroData.colors?.buttonText || '#fff'}; border-radius: 0.5rem; text-decoration: none; font-weight: 500;">
-                    ${heroData.primaryCta}
-                </a>
-                ` : ''}
-            </div>
-        </section>`;
-    }
-    
-    // Dynamic content for product/category/article pages
-    if (page.type === 'dynamic' && dynamicData) {
-        if (dynamicData.product) {
-            const p = dynamicData.product;
-            pageContent += `
-            <section style="padding: 4rem 1rem; background: ${backgroundColor};">
-                <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    <div>
-                        ${p.image ? `<img src="${p.image}" alt="${p.name}" style="width: 100%; border-radius: 0.5rem;">` : ''}
-                    </div>
-                    <div>
-                        <h1 style="font-size: 2rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${p.name}</h1>
-                        <p style="font-size: 1.5rem; font-weight: bold; color: ${primaryColor}; margin-bottom: 1rem;">$${(p.price || 0).toFixed(2)}</p>
-                        <p style="color: ${textColor}; margin-bottom: 2rem;">${p.description || ''}</p>
-                        <button style="padding: 0.75rem 2rem; background: ${primaryColor}; color: #fff; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-            </section>`;
-        }
-        
-        if (dynamicData.category) {
-            const c = dynamicData.category;
-            pageContent += `
-            <section style="padding: 4rem 1rem; background: ${backgroundColor};">
-                <div style="max-width: 1200px; margin: 0 auto;">
-                    <h1 style="font-size: 2rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${c.name}</h1>
-                    <p style="color: ${textColor}; margin-bottom: 2rem;">${c.description || ''}</p>
-                    <div id="category-products" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
-                        <!-- Products will be loaded client-side -->
-                        <p style="color: ${textColor};">Cargando productos...</p>
-                    </div>
-                </div>
-            </section>`;
-        }
-        
-        if (dynamicData.article) {
-            const a = dynamicData.article;
-            pageContent += `
-            <article style="padding: 4rem 1rem; background: ${backgroundColor};">
-                <div style="max-width: 800px; margin: 0 auto;">
-                    ${a.featuredImage ? `<img src="${a.featuredImage}" alt="${a.title}" style="width: 100%; border-radius: 0.5rem; margin-bottom: 2rem;">` : ''}
-                    <h1 style="font-size: 2.5rem; font-weight: bold; color: ${headingColor}; margin-bottom: 1rem;">${a.title}</h1>
-                    ${a.author ? `<p style="color: ${textColor}; margin-bottom: 2rem;">Por ${a.author}</p>` : ''}
-                    <div style="color: ${textColor}; line-height: 1.8;">
-                        ${a.content || ''}
-                    </div>
-                </div>
-            </article>`;
-        }
-    }
-    
-    // Features section if present
-    const featuresData = page.sectionData?.features || project.data?.features;
-    if (page.sections.includes('features') && featuresData) {
-        const items = featuresData.items || [];
-        pageContent += `
-        <section style="padding: 4rem 1rem; background: ${featuresData.colors?.background || backgroundColor};">
-            <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
-                <h2 style="font-size: 2rem; font-weight: bold; color: ${featuresData.colors?.heading || headingColor}; margin-bottom: 1rem;">
-                    ${featuresData.title || ''}
-                </h2>
-                <p style="color: ${featuresData.colors?.text || textColor}; margin-bottom: 3rem;">
-                    ${featuresData.description || ''}
-                </p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
-                    ${items.map((item: any) => `
-                    <div style="padding: 1.5rem; background: ${featuresData.colors?.cardBackground || globalColors.surface || '#1e293b'}; border-radius: 0.75rem;">
-                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1rem;">` : ''}
-                        <h3 style="color: ${headingColor}; margin-bottom: 0.5rem;">${item.title}</h3>
-                        <p style="color: ${textColor}; font-size: 0.875rem;">${item.description}</p>
-                    </div>
-                    `).join('')}
-                </div>
-            </div>
-        </section>`;
-    }
-    
-    // CTA section if present
-    const ctaData = page.sectionData?.cta || project.data?.cta;
-    if (page.sections.includes('cta') && ctaData) {
-        pageContent += `
-        <section style="padding: 4rem 1rem; background: linear-gradient(135deg, ${ctaData.colors?.gradientStart || primaryColor}, ${ctaData.colors?.gradientEnd || '#10b981'});">
-            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                <h2 style="font-size: 2rem; font-weight: bold; color: ${ctaData.colors?.heading || '#fff'}; margin-bottom: 1rem;">
-                    ${ctaData.title || ''}
-                </h2>
-                <p style="color: ${ctaData.colors?.text || 'rgba(255,255,255,0.9)'}; margin-bottom: 2rem;">
-                    ${ctaData.description || ''}
-                </p>
-                <a href="${ctaData.buttonUrl || '#'}" 
-                   style="display: inline-block; padding: 0.75rem 2rem; background: ${ctaData.colors?.buttonBackground || '#fff'}; 
-                          color: ${ctaData.colors?.buttonText || primaryColor}; border-radius: 0.5rem; text-decoration: none; font-weight: 500;">
-                    ${ctaData.buttonText || 'Get Started'}
-                </a>
-            </div>
-        </section>`;
-    }
-    
-    // Footer if present
-    const footerData = page.sectionData?.footer || project.data?.footer;
-    if (page.sections.includes('footer') && footerData) {
-        pageContent += `
-        <footer style="padding: 3rem 1rem; background: ${footerData.colors?.background || primaryColor}; color: ${footerData.colors?.text || '#fff'};">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-                    <div>
-                        <h3 style="font-weight: bold; margin-bottom: 1rem; color: ${footerData.colors?.heading || '#fff'};">
-                            ${footerData.title || project.name}
-                        </h3>
-                        <p style="font-size: 0.875rem; opacity: 0.9;">${footerData.description || ''}</p>
-                    </div>
-                    ${(footerData.linkColumns || []).map((col: any) => `
-                    <div>
-                        <h4 style="font-weight: 600; margin-bottom: 0.75rem;">${col.title}</h4>
-                        ${(col.links || []).map((link: any) => `
-                        <a href="${link.href}" style="display: block; color: inherit; opacity: 0.9; margin-bottom: 0.5rem; text-decoration: none; font-size: 0.875rem;">${link.text}</a>
-                        `).join('')}
-                    </div>
-                    `).join('')}
-                </div>
-                <div style="border-top: 1px solid ${footerData.colors?.border || 'rgba(255,255,255,0.2)'}; padding-top: 1.5rem; text-align: center; font-size: 0.875rem; opacity: 0.8;">
-                    ${footerData.copyrightText?.replace('{YEAR}', new Date().getFullYear().toString()) || `© ${new Date().getFullYear()} ${project.name}`}
-                </div>
-            </div>
-        </footer>`;
-    }
-    
-    // Full HTML document
+    // Full HTML document - SEO-optimized with React app for rendering
+    // We only include meta tags and initial data, React handles all rendering
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -586,11 +483,13 @@ function generateFullHtml(
     <!-- JSON-LD Structured Data -->
     ${meta.jsonLd ? `<script type="application/ld+json">${meta.jsonLd}</script>` : ''}
     
-    <!-- Fonts -->
+    <!-- Fonts - same as main app -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(theme.fontFamilyHeader || 'Poppins')}:wght@400;500;600;700&family=${encodeURIComponent(theme.fontFamilyBody || 'Mulish')}:wght@400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Critical CSS - prevent flash of unstyled content -->
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -599,44 +498,56 @@ function generateFullHtml(
             color: ${textColor};
             line-height: 1.6;
         }
-        h1, h2, h3, h4, h5, h6 { 
-            font-family: '${theme.fontFamilyHeader || 'Poppins'}', system-ui, sans-serif;
+        #root:empty::before {
+            content: '';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: ${backgroundColor};
         }
-        a { transition: opacity 0.2s; }
-        a:hover { opacity: 0.8; }
-        img { max-width: 100%; height: auto; }
     </style>
+    
+    <!-- CRITICAL: Unregister Service Worker BEFORE loading any JS to ensure fresh SSR content -->
+    <script>
+    (function(){
+        if('serviceWorker' in navigator){
+            navigator.serviceWorker.getRegistrations().then(function(r){
+                r.forEach(function(reg){reg.unregister();console.log('[SSR] SW unregistered');});
+            });
+        }
+        if('caches' in window){
+            caches.keys().then(function(n){
+                n.forEach(function(name){caches.delete(name);console.log('[SSR] Cache deleted:',name);});
+            });
+        }
+    })();
+    </script>
+    
+    <!-- Main app scripts and styles from Firebase Hosting (with hashed filenames) -->
+    <script type="module" crossorigin src="${assetRefs.indexJs}"></script>
+    <link rel="stylesheet" crossorigin href="${assetRefs.mainCss}">
 </head>
 <body>
-    <!-- Header -->
-    <header style="position: sticky; top: 0; z-index: 100; background: ${project.data?.header?.colors?.background || primaryColor}; padding: 1rem;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <a href="/" style="font-size: 1.25rem; font-weight: bold; color: ${project.data?.header?.colors?.text || '#fff'}; text-decoration: none;">
-                ${project.data?.header?.logoText || project.name}
-            </a>
-            <nav style="display: flex; gap: 0.5rem;">
-                ${navLinks}
-            </nav>
-        </div>
-    </header>
-    
-    <!-- Main Content -->
-    <main>
-        ${pageContent || `
-        <section style="padding: 4rem 1rem; text-align: center;">
-            <h1 style="color: ${headingColor};">${page.title}</h1>
-        </section>
-        `}
-    </main>
-    
-    <!-- Hydration Script -->
+    <!-- Domain Config for useCustomDomain hook (prevents extra Firestore call) -->
     <script>
+        window.__DOMAIN_CONFIG__ = {
+            domain: "${hostname}",
+            projectId: "${project.id}",
+            userId: "${userId}",
+            isCustomDomain: true,
+            primaryColor: "${primaryColor}",
+            backgroundColor: "${backgroundColor}",
+            projectName: "${escapeHtml(project.name || '')}"
+        };
+        window.__SSR_MODE__ = true;
         window.__INITIAL_DATA__ = ${JSON.stringify({
             projectId: project.id,
             path,
             pageId: page.id,
             dynamicData: dynamicData || null,
-            // Full project data for client-side hydration with PageRenderer
+            // Full project data for client-side rendering with PublicWebsitePreview
+            // IMPORTANT: Include ALL fields that PublicWebsitePreview needs
             project: {
                 id: project.id,
                 name: project.name,
@@ -644,9 +555,13 @@ function generateFullHtml(
                 data: project.data,
                 theme: project.theme,
                 brandIdentity: project.brandIdentity,
-                componentOrder: project.componentOrder,
-                sectionVisibility: project.sectionVisibility,
+                componentOrder: project.componentOrder || [],
+                sectionVisibility: project.sectionVisibility || {},
+                componentStatus: project.componentStatus || {},
+                componentStyles: project.componentStyles || {},
                 menus: project.menus || [],
+                seoConfig: project.seoConfig || {},
+                aiAssistantConfig: project.aiAssistantConfig || null,
             },
             // Pre-loaded products and categories for ecommerce pages
             products: products || [],
@@ -654,8 +569,8 @@ function generateFullHtml(
         })};
     </script>
     
-    <!-- Client-side hydration will happen here -->
-    <script src="${APP_URL}/assets/hydrate.js" async></script>
+    <!-- React mounts here -->
+    <div id="root"></div>
 </body>
 </html>`;
 }
@@ -719,7 +634,7 @@ app.get('*', async (req: Request, res: Response) => {
             return res.status(404).send(getNotFoundPage(hostname));
         }
         
-        const { projectId } = domainData;
+        const { projectId, userId } = domainData;
         
         // 2. Load project data
         const project = await loadProject(projectId);
@@ -798,8 +713,11 @@ app.get('*', async (req: Request, res: Response) => {
         // 6. Generate meta tags
         const meta = generateMetaTags(project, page, dynamicData, hostname, path);
         
-        // 7. Generate and send HTML
-        const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories);
+        // 7. Get asset references (with hashed filenames) from Firebase Hosting
+        const assetRefs = await getAssetReferences();
+        
+        // 8. Generate and send HTML
+        const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories, userId, assetRefs);
         
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300'); // 1min browser, 5min CDN
@@ -920,6 +838,15 @@ app.listen(PORT, () => {
     console.log(`🚀 SSR Server (Multi-Page) running on port ${PORT}`);
     console.log(`   App URL: ${APP_URL}`);
 });
+
+
+
+
+
+
+
+
+
 
 
 

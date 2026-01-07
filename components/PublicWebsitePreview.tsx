@@ -195,6 +195,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const loadProject = async () => {
       const { userId, projectId } = getIdsFromURL();
       
+      // #region agent log - Hypothesis A: Check if __INITIAL_DATA__ exists
+      console.log('[DEBUG-A] loadProject called', JSON.stringify({userId,projectId,hasInitialData:!!(window as any).__INITIAL_DATA__,initialDataKeys:Object.keys((window as any).__INITIAL_DATA__||{}),hasProject:!!(window as any).__INITIAL_DATA__?.project}));
+      // #endregion
+      
       if (!userId || !projectId) {
         setError('Missing userId or projectId in URL');
         setLoading(false);
@@ -203,6 +207,44 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       try {
         let projectData: Project | null = null;
+
+        // PRIORITY 0: Check for SSR-injected data (fastest path - no Firestore call needed)
+        // This is set by the SSR server for custom domains
+        const ssrData = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__ : null;
+        
+        // #region agent log - Hypothesis B: Check SSR data completeness
+        console.log('[DEBUG-B] SSR data check', JSON.stringify({ssrDataExists:!!ssrData,projectExists:!!ssrData?.project,menusCount:ssrData?.project?.menus?.length||0,hasComponentStyles:!!ssrData?.project?.componentStyles,projectKeys:Object.keys(ssrData?.project||{})}));
+        // #endregion
+        
+        if (ssrData?.project) {
+          projectData = { id: ssrData.projectId, ...ssrData.project } as Project;
+          
+          // #region agent log - Hypothesis E: SSR path taken
+          console.log('[DEBUG-E] Using SSR data path', JSON.stringify({projectName:projectData.name,menusInProject:(projectData as any).menus?.length||0,componentStylesKeys:Object.keys((projectData as any).componentStyles||{})}));
+          // #endregion
+          
+          console.log('[PublicWebsitePreview] ✅ Using SSR-injected data (no Firestore call)', {
+            projectName: projectData.name,
+            hasMenus: !!(projectData as any).menus?.length,
+            menusCount: (projectData as any).menus?.length || 0,
+          });
+          
+          // Set project immediately from SSR data
+          setProject(projectData);
+          
+          // Load menus from SSR data
+          if ((projectData as any).menus && Array.isArray((projectData as any).menus)) {
+            console.log('[PublicWebsitePreview] ✅ Loaded menus from SSR data:', (projectData as any).menus.length);
+            setMenus((projectData as any).menus);
+          }
+          
+          setLoading(false);
+          return; // Skip Firestore calls entirely
+        }
+        
+        // #region agent log - Hypothesis D: Firestore fallback executed
+        console.log('[DEBUG-D] SSR data NOT found - falling back to Firestore', JSON.stringify({reason:'ssrData.project was falsy',ssrDataType:typeof ssrData}));
+        // #endregion
 
         // PRIORITY 1: Try publicStores first (public access, contains published data with SEO)
         try {
@@ -786,32 +828,42 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     return visibleIn === 'both' || visibleIn === 'landing';
   };
 
-  // Resolve header links - prioritize: CMS Menu > Pages > Manual Links
+  // Resolve header links - prioritize: CMS Menu (by ID or main-menu) > Pages > Manual Links
   const headerLinks = (() => {
-    // 1. CMS Menu takes priority if configured
+    // 1. CMS Menu by ID takes priority if configured
     if (mergedData.header?.menuId) {
       const menu = menus.find(m => m.id === mergedData.header?.menuId);
-      if (menu) {
+      if (menu && menu.items?.length > 0) {
+        console.log('[HeaderLinks] Using menu by ID:', mergedData.header.menuId, menu.items.length, 'items');
         return menu.items.map(i => ({ text: i.text, href: i.href }));
       }
     }
     
-    // 2. Generate from pages if available (multi-page architecture)
+    // 2. Try main-menu from CMS menus (IMPORTANT: This is what the web editor uses!)
+    const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
+    if (mainMenu && mainMenu.items?.length > 0) {
+      console.log('[HeaderLinks] Using main-menu from CMS:', mainMenu.items.length, 'items');
+      return mainMenu.items.map(i => ({ text: i.text, href: i.href }));
+    }
+    
+    // 3. Generate from pages if available (multi-page architecture)
     if (project?.pages && project.pages.length > 0) {
       const navPages = project.pages
         .filter((p: SitePage) => p.showInNavigation)
         .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
       
       if (navPages.length > 0) {
+        console.log('[HeaderLinks] Using pages:', navPages.length, 'items');
         return navPages.map((p: SitePage) => ({
           text: p.title,
           // Use hash for SPA mode in preview
-          href: p.isHomePage ? '#' : `#${p.slug.replace(/^\//, '')}`,
+          href: p.isHomePage ? '#' : `#${(p.slug || '').replace(/^\//, '')}`,
         }));
       }
     }
     
-    // 3. Fall back to manual links
+    // 4. Fall back to manual links
+    console.log('[HeaderLinks] Using manual links fallback');
     return mergedData.header?.links || [];
   })();
 

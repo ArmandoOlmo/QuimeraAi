@@ -5,6 +5,7 @@ import { useProject } from '../../../contexts/project';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useSafeTenant } from '../../../contexts/tenant';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
+import { usePlanAccess } from '../../../hooks/usePlanFeatures';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap } from 'lucide-react';
 import Modal from '../../ui/Modal';
@@ -120,7 +121,14 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     };
 
     const handleProjectChange = (projectId: string) => {
-        updateDomain(domain.id, { projectId });
+        // Find the selected project to get its userId (owner)
+        const selectedProject = projects.find(p => p.id === projectId);
+        const projectUserId = selectedProject?.userId;
+        
+        updateDomain(domain.id, { 
+            projectId,
+            projectUserId: projectUserId || undefined,
+        });
     };
 
     const handleDeploy = async () => {
@@ -1072,10 +1080,13 @@ const DomainsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { domains, addDomain, refetch } = useDomains();
     const { projects } = useProject();
-    const { isUserOwner } = useAuth();
     const { setView } = useUI();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
+    
+    // Use the plan access hook that properly handles owner/superadmin bypass
+    const { hasAccess } = usePlanAccess();
+    
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -1100,9 +1111,8 @@ const DomainsDashboard: React.FC = () => {
         }
     }, []);
 
-    // Check if custom domains are allowed by the current plan
-    const subscriptionPlan = tenantContext?.currentTenant?.subscriptionPlan || 'free';
-    const customDomainsAllowed = isUserOwner || subscriptionPlan !== 'free'; // Owner always allowed, others need non-free plan
+    // Check if custom domains are allowed - usePlanAccess handles owner/superadmin bypass automatically
+    const customDomainsAllowed = hasAccess('customDomains');
 
     // Handler to show upgrade modal for domains feature
     const handleDomainUpgrade = () => {
@@ -1135,12 +1145,17 @@ const DomainsDashboard: React.FC = () => {
             // No need for Cloudflare setup - user will add A record pointing to our Load Balancer IP
             const normalizedDomain = connectDomainName.toLowerCase().trim().replace(/^www\./, '');
             
+            // Find the selected project to get its userId (owner)
+            const selectedProject = projects.find(p => p.id === connectProjectId);
+            const projectUserId = selectedProject?.userId; // Owner of the project
+            
             await addDomain({
                 id: `dom_${Date.now()}`,
                 name: normalizedDomain,
                 status: 'pending',
                 provider: 'External',
                 projectId: connectProjectId,
+                projectUserId: projectUserId, // Store project owner for cross-user deployment
                 createdAt: new Date().toISOString(),
                 // Store DNS config for reference
                 dnsConfig: {

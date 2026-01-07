@@ -613,3 +613,4 @@ export const createIndustryPages = (industry: string, hasEcommerce: boolean = fa
     return createPagesFromTemplates(pageTemplates);
 };
 
+

@@ -224,7 +224,7 @@ interface TeamProps extends TeamData {
 const Team: React.FC<TeamProps> = ({ 
   title, 
   description, 
-  items, 
+  items = [], 
   paddingY, 
   paddingX, 
   colors, 
@@ -237,9 +237,9 @@ const Team: React.FC<TeamProps> = ({
 }) => {
   // Get design tokens for secondary color (for photo border fallback)
   const { colors: tokenColors } = useDesignTokens();
-  const secondaryColor = tokenColors.secondary;
+  const secondaryColor = tokenColors.secondary || '#10b981';
   // Use user-defined photo border color, or fall back to 50% of secondary color
-  const photoBorderColor = (colors as any).photoBorderColor || hexToRgba(secondaryColor, 0.5);
+  const photoBorderColor = (colors as any)?.photoBorderColor || hexToRgba(secondaryColor, 0.5);
   
   // Grid columns based on variant
   const gridClasses = {
@@ -253,20 +253,20 @@ const Team: React.FC<TeamProps> = ({
     <section 
       id="team" 
       className={`w-full relative overflow-hidden`} 
-      style={{ backgroundColor: colors.background || secondaryColor }}
+      style={{ backgroundColor: colors?.background || secondaryColor }}
     >
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 
             className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} 
-            style={{ color: colors.heading }}
+            style={{ color: colors?.heading }}
           >
             {title}
           </h2>
           <p 
             className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} 
-            style={{ color: colors.description || colors.text }}
+            style={{ color: colors?.description || colors?.text }}
           >
             {description}
           </p>
@@ -280,10 +280,10 @@ const Team: React.FC<TeamProps> = ({
                 role={member.role}
                 delay={getAnimationDelay(index, 0.15)}
                 variant={teamVariant}
-                accentColor={colors.accent || '#4f46e5'}
-                nameColor={(colors as any).cardHeading || '#ffffff'}
-                roleColor={(colors as any).cardText || '#94a3b8'}
-                cardBackground={colors.cardBackground || 'rgba(30, 41, 59, 0.5)'}
+                accentColor={colors?.accent || '#4f46e5'}
+                nameColor={(colors as any)?.cardHeading || '#ffffff'}
+                roleColor={(colors as any)?.cardText || '#94a3b8'}
+                cardBackground={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
                 photoBorderColor={photoBorderColor}

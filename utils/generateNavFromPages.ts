@@ -53,7 +53,7 @@ export function generateNavFromPages(
 
     // Transform to NavLink format
     return navPages.map(page => {
-        let href = page.slug;
+        let href = page.slug || '/';
         
         // For home page, use root or #top
         if (page.isHomePage) {
@@ -62,7 +62,7 @@ export function generateNavFromPages(
             // Convert path-based slug to hash-based
             // /tienda -> #tienda
             // /nosotros -> #nosotros
-            href = `#${page.slug.replace(/^\//, '')}`;
+            href = `#${(page.slug || '').replace(/^\//, '')}`;
         } else {
             // Use path-based URLs with optional base
             href = `${baseUrl}${page.slug}`;

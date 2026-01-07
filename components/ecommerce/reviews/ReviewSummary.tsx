@@ -77,24 +77,24 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
     return (
         <div 
             className="rounded-xl p-6 border"
-            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+            style={{ backgroundColor: colors?.cardBackground, borderColor: colors?.border }}
         >
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Left: Average Rating */}
                 <div className="flex flex-col items-center md:w-1/3">
                     <div 
                         className="text-5xl font-bold mb-2"
-                        style={{ color: colors.heading }}
+                        style={{ color: colors?.heading }}
                     >
                         {averageRating.toFixed(1)}
                     </div>
                     <RatingStars 
                         rating={averageRating} 
                         size="md" 
-                        color={colors.starColor}
-                        emptyColor={colors.starEmptyColor}
+                        color={colors?.starColor}
+                        emptyColor={colors?.starEmptyColor}
                     />
-                    <p className="text-sm mt-2" style={{ color: colors.mutedText }}>
+                    <p className="text-sm mt-2" style={{ color: colors?.mutedText }}>
                         {totalReviews} reseña{totalReviews !== 1 ? 's' : ''}
                     </p>
 
@@ -102,7 +102,7 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
                         <button
                             onClick={onWriteReview}
                             className="mt-4 px-6 py-2 rounded-lg font-medium transition-colors hover:opacity-90"
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
+                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonText }}
                         >
                             Escribir reseña
                         </button>
@@ -118,12 +118,12 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
                         return (
                             <div key={stars} className="flex items-center gap-3">
                                 <div className="flex items-center gap-1 w-12 justify-end">
-                                    <span className="text-sm" style={{ color: colors.text }}>
+                                    <span className="text-sm" style={{ color: colors?.text }}>
                                         {stars}
                                     </span>
                                     <Star
                                         size={14}
-                                        style={{ color: colors.starColor }}
+                                        style={{ color: colors?.starColor }}
                                         fill="currentColor"
                                     />
                                 </div>
@@ -131,20 +131,20 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
                                 {/* Progress Bar */}
                                 <div 
                                     className="flex-1 h-3 rounded-full overflow-hidden"
-                                    style={{ backgroundColor: colors.progressBackground }}
+                                    style={{ backgroundColor: colors?.progressBackground }}
                                 >
                                     <div
                                         className="h-full rounded-full transition-all duration-500"
                                         style={{
                                             width: `${percentage}%`,
-                                            backgroundColor: colors.primary,
+                                            backgroundColor: colors?.primary,
                                         }}
                                     />
                                 </div>
 
                                 <span 
                                     className="text-sm w-10 text-right"
-                                    style={{ color: colors.mutedText }}
+                                    style={{ color: colors?.mutedText }}
                                 >
                                     {count}
                                 </span>

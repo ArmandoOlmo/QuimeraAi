@@ -71,7 +71,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 <Loader2 
                     className="animate-spin" 
                     size={32} 
-                    style={{ color: colors.primary }} 
+                    style={{ color: colors?.primary }} 
                 />
             </div>
         );
@@ -84,15 +84,15 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 <MessageSquare 
                     className="mx-auto mb-4" 
                     size={48} 
-                    style={{ color: colors.border }}
+                    style={{ color: colors?.border }}
                 />
                 <h3 
                     className="text-lg font-medium mb-2"
-                    style={{ color: colors.heading }}
+                    style={{ color: colors?.heading }}
                 >
                     Sin reseñas aún
                 </h3>
-                <p style={{ color: colors.mutedText }}>
+                <p style={{ color: colors?.mutedText }}>
                     Sé el primero en compartir tu opinión sobre este producto
                 </p>
             </div>
@@ -103,7 +103,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
         <div className="space-y-6">
             {/* Sort Controls */}
             <div className="flex items-center justify-between">
-                <p className="text-sm" style={{ color: colors.mutedText }}>
+                <p className="text-sm" style={{ color: colors?.mutedText }}>
                     {reviews.length} reseña{reviews.length !== 1 ? 's' : ''}
                 </p>
 
@@ -113,10 +113,10 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         onChange={(e) => onSortChange(e.target.value as ReviewSortBy)}
                         className="appearance-none px-4 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2"
                         style={{ 
-                            borderColor: colors.border, 
-                            backgroundColor: colors.cardBackground,
-                            color: colors.heading,
-                            '--tw-ring-color': colors.primary 
+                            borderColor: colors?.border, 
+                            backgroundColor: colors?.cardBackground,
+                            color: colors?.heading,
+                            '--tw-ring-color': colors?.primary 
                         } as React.CSSProperties}
                     >
                         {sortOptions.map((option) => (
@@ -128,7 +128,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     <ChevronDown
                         className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                         size={16}
-                        style={{ color: colors.mutedText }}
+                        style={{ color: colors?.mutedText }}
                     />
                 </div>
             </div>
@@ -153,7 +153,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         onClick={onLoadMore}
                         disabled={isLoadingMore}
                         className="px-6 py-2 border rounded-lg font-medium disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto hover:opacity-80"
-                        style={{ borderColor: colors.border, color: colors.text }}
+                        style={{ borderColor: colors?.border, color: colors?.text }}
                     >
                         {isLoadingMore ? (
                             <>

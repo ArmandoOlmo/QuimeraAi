@@ -170,11 +170,11 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
 
     // Analyze color palette for AI prompt generation
     const analyzeColorPalette = (colors: { name: string; color: string }[]): string => {
-        if (colors.length === 0) return 'No colors detected';
+        if (colors?.length === 0) return 'No colors detected';
 
         const characteristics: string[] = [];
 
-        colors.forEach(({ color }) => {
+        colors?.forEach(({ color }) => {
             const hex = color.replace('#', '').toLowerCase();
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);

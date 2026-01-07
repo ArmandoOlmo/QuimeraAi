@@ -110,7 +110,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                 <div
                     onClick={handleClick}
                     className={`group cursor-pointer ${getBorderRadius()} overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
-                    style={{ backgroundColor: colors.cardBackground }}
+                    style={{ backgroundColor: colors?.cardBackground }}
                 >
                     <div className={`${getAspectRatio()} overflow-hidden`}>
                         {category.imageUrl ? (
@@ -123,21 +123,21 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         ) : (
                             <div
                                 className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: colors.accent + '20' }}
+                                style={{ backgroundColor: colors?.accent + '20' }}
                             >
-                                <span style={{ color: colors.cardText }}>Sin imagen</span>
+                                <span style={{ color: colors?.cardText }}>Sin imagen</span>
                             </div>
                         )}
                     </div>
                     <div className="p-4">
                         <h3
                             className="font-semibold text-lg mb-1"
-                            style={{ color: colors.cardText || colors.heading }}
+                            style={{ color: colors?.cardText || colors?.heading }}
                         >
                             {category.name}
                         </h3>
                         {data.showProductCount && category.productCount !== undefined && (
-                            <p className="text-sm" style={{ color: colors.text }}>
+                            <p className="text-sm" style={{ color: colors?.text }}>
                                 {category.productCount} productos
                             </p>
                         )}
@@ -163,18 +163,18 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     ) : (
                         <div
                             className="w-full h-full"
-                            style={{ backgroundColor: colors.cardBackground }}
+                            style={{ backgroundColor: colors?.cardBackground }}
                         />
                     )}
                     <div
                         className="absolute inset-0 flex flex-col justify-end p-4 transition-opacity"
                         style={{
-                            background: `linear-gradient(to top, ${colors.overlayEnd}, ${colors.overlayStart})`,
+                            background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`,
                         }}
                     >
-                        <h3 className="font-bold text-xl" style={{ color: colors.buttonText }}>{category.name}</h3>
+                        <h3 className="font-bold text-xl" style={{ color: colors?.buttonText }}>{category.name}</h3>
                         {data.showProductCount && category.productCount !== undefined && (
-                            <p className="text-sm" style={{ color: colors.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
+                            <p className="text-sm" style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
                         )}
                     </div>
                 </div>
@@ -190,7 +190,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                 >
                     <div className={`${getAspectRatio()} ${getBorderRadius()} overflow-hidden mb-3 border-2 border-transparent group-hover:border-current transition-colors`}
                         style={{ borderColor: 'transparent' }}
-                        onMouseEnter={(e) => e.currentTarget.style.borderColor = colors.accent}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = colors?.accent}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
                     >
                         {category.imageUrl ? (
@@ -203,20 +203,20 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         ) : (
                             <div
                                 className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: colors.cardBackground }}
+                                style={{ backgroundColor: colors?.cardBackground }}
                             >
-                                <span style={{ color: colors.text }}>Sin imagen</span>
+                                <span style={{ color: colors?.text }}>Sin imagen</span>
                             </div>
                         )}
                     </div>
                     <h3
                         className="font-medium group-hover:underline"
-                        style={{ color: colors.heading }}
+                        style={{ color: colors?.heading }}
                     >
                         {category.name}
                     </h3>
                     {data.showProductCount && category.productCount !== undefined && (
-                        <p className="text-sm" style={{ color: colors.text }}>
+                        <p className="text-sm" style={{ color: colors?.text }}>
                             {category.productCount} productos
                         </p>
                     )}
@@ -241,19 +241,19 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     ) : (
                         <div
                             className="w-full h-full"
-                            style={{ backgroundColor: colors.cardBackground }}
+                            style={{ backgroundColor: colors?.cardBackground }}
                         />
                     )}
                     <div
                         className="absolute inset-0 flex items-center justify-center"
                         style={{
-                            background: `linear-gradient(to right, ${colors.overlayEnd}, ${colors.overlayStart})`,
+                            background: `linear-gradient(to right, ${colors?.overlayEnd}, ${colors?.overlayStart})`,
                         }}
                     >
                         <div className="text-center">
-                            <h3 className="font-bold text-2xl mb-1" style={{ color: colors.buttonText }}>{category.name}</h3>
+                            <h3 className="font-bold text-2xl mb-1" style={{ color: colors?.buttonText }}>{category.name}</h3>
                             {data.showProductCount && category.productCount !== undefined && (
-                                <p style={{ color: colors.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
+                                <p style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
                             )}
                         </div>
                     </div>
@@ -267,14 +267,14 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors.border }} />
-                        <div className="h-4 rounded w-1/2 mb-8" style={{ backgroundColor: colors.border }} />
+                        <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors?.border }} />
+                        <div className="h-4 rounded w-1/2 mb-8" style={{ backgroundColor: colors?.border }} />
                         <div className={`grid grid-cols-1 ${getGridCols()} gap-6`}>
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: colors.border }} />
+                                <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: colors?.border }} />
                             ))}
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors.background, fontFamily: colors.fontFamily }}
+            style={{ backgroundColor: colors?.background, fontFamily: colors?.fontFamily }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
@@ -295,13 +295,13 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         {data.title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-3`}
-                                style={{ color: colors.heading, fontFamily: colors.headingFontFamily }}
+                                style={{ color: colors?.heading, fontFamily: colors?.headingFontFamily }}
                             >
                                 {data.title}
                             </h2>
                         )}
                         {data.description && (
-                            <p className="text-lg max-w-2xl mx-auto" style={{ color: colors.text }}>
+                            <p className="text-lg max-w-2xl mx-auto" style={{ color: colors?.text }}>
                                 {data.description}
                             </p>
                         )}
@@ -310,7 +310,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
                 {/* Categories Grid */}
                 {categories.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: colors.text }}>
+                    <div className="text-center py-12" style={{ color: colors?.text }}>
                         No hay categorías disponibles
                     </div>
                 ) : (

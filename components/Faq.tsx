@@ -264,7 +264,7 @@ interface FaqProps extends FaqData {
 const Faq: React.FC<FaqProps> = ({ 
   title, 
   description, 
-  items, 
+  items = [], 
   paddingY, 
   paddingX, 
   colors, 
@@ -286,11 +286,11 @@ const Faq: React.FC<FaqProps> = ({
   // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
     // Section-level colors
-    const sectionHeading = colors.heading || '#F9FAFB';
-    const sectionDescription = colors.description || '#94a3b8';
+    const sectionHeading = colors?.heading || '#F9FAFB';
+    const sectionDescription = colors?.description || '#94a3b8';
     // Card/Question-level colors  
-    const questionText = colors.text || '#F9FAFB';
-    const answerText = colors.text || '#94a3b8';
+    const questionText = colors?.text || '#F9FAFB';
+    const answerText = colors?.text || '#94a3b8';
     
     return {
       heading: sectionHeading,
@@ -298,7 +298,7 @@ const Faq: React.FC<FaqProps> = ({
       description: sectionDescription,
       cardHeading: questionText,
       cardText: answerText,
-      border: colors.borderColor || '#334155',
+      border: colors?.borderColor || '#334155',
     };
   }, [colors]);
 
@@ -311,15 +311,15 @@ const Faq: React.FC<FaqProps> = ({
       answer: item.answer,
       isOpen: openIndex === index,
       onClick: () => handleToggle(index),
-      accentColor: colors.accent,
+      accentColor: colors?.accent,
       textColor: isCardVariant ? safeColors.cardText : safeColors.text,
       headingColor: isCardVariant ? safeColors.cardHeading : safeColors.heading,
       variant: faqVariant,
       borderRadius,
-      cardBackground: colors.cardBackground,
+      cardBackground: colors?.cardBackground,
       borderColor: safeColors.border,
-      gradientStart: colors.gradientStart,
-      gradientEnd: colors.gradientEnd,
+      gradientStart: colors?.gradientStart,
+      gradientEnd: colors?.gradientEnd,
     };
 
     switch (faqVariant) {
@@ -335,7 +335,7 @@ const Faq: React.FC<FaqProps> = ({
   };
 
   return (
-    <section id="faq" className="w-full" style={{ backgroundColor: colors.background || primaryColor }}>
+    <section id="faq" className="w-full" style={{ backgroundColor: colors?.background || primaryColor }}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

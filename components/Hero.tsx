@@ -141,7 +141,7 @@ const Hero: React.FC<HeroProps> = ({
     headline, subheadline, primaryCta, secondaryCta, imageUrl, 
     imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
     imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
-    paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors, borderRadius,
+    paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors = {}, borderRadius,
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
     showBadge = true, badgeText = '', badgeIcon = '✨',
     badgeColor, badgeBackgroundColor,
@@ -156,15 +156,15 @@ const Hero: React.FC<HeroProps> = ({
   // Component colors take priority over Design Tokens
   // User changes should always override defaults and design tokens
   const actualColors = {
-    primary: colors.primary || getColor('primary.main', '#4f46e5'),
-    secondary: colors.secondary || getColor('secondary.main', '#10b981'),
-    background: colors.background,
-    text: colors.text,
-    heading: colors.heading,
-    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
-    buttonText: colors.buttonText || '#ffffff',
-    secondaryButtonBackground: colors.secondaryButtonBackground || '#334155',
-    secondaryButtonText: colors.secondaryButtonText || '#ffffff',
+    primary: colors?.primary || getColor('primary.main', '#4f46e5'),
+    secondary: colors?.secondary || getColor('secondary.main', '#10b981'),
+    background: colors?.background,
+    text: colors?.text,
+    heading: colors?.heading,
+    buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
+    buttonText: colors?.buttonText || '#ffffff',
+    secondaryButtonBackground: colors?.secondaryButtonBackground || '#334155',
+    secondaryButtonText: colors?.secondaryButtonText || '#ffffff',
   };
   // Ensure headline is always a string - handle all edge cases
   let safeHeadline: string;

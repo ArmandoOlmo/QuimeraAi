@@ -76,21 +76,21 @@ const TrustedBy: React.FC<TrustedByData> = ({
     <section 
       className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} overflow-hidden relative ${showBorder ? 'border-t border-b' : ''}`}
       style={{ 
-        backgroundColor: colors.background,
-        borderColor: colors.borderColor || 'rgba(255,255,255,0.05)'
+        backgroundColor: colors?.background,
+        borderColor: colors?.borderColor || 'rgba(255,255,255,0.05)'
       }}
     >
       {/* Decorative gradient overlays */}
       <div 
         className="absolute left-0 top-0 bottom-0 w-32 md:w-48 z-10 pointer-events-none"
         style={{ 
-          background: `linear-gradient(to right, ${colors.background}, transparent)`
+          background: `linear-gradient(to right, ${colors?.background}, transparent)`
         }}
       />
       <div 
         className="absolute right-0 top-0 bottom-0 w-32 md:w-48 z-10 pointer-events-none"
         style={{ 
-          background: `linear-gradient(to left, ${colors.background}, transparent)`
+          background: `linear-gradient(to left, ${colors?.background}, transparent)`
         }}
       />
 
@@ -98,7 +98,7 @@ const TrustedBy: React.FC<TrustedByData> = ({
         {/* Title */}
         <p 
           className="text-center text-xs md:text-sm uppercase tracking-[0.25em] md:tracking-[0.3em] mb-8 md:mb-10 font-medium"
-          style={{ color: colors.text, opacity: 0.5 }}
+          style={{ color: colors?.text, opacity: 0.5 }}
         >
           {title}
         </p>

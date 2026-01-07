@@ -145,7 +145,7 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
             {/* Optional accent indicator */}
             <div 
                 className="absolute top-4 right-4 w-2 h-2 rounded-full"
-                style={{ backgroundColor: colors.accent }}
+                style={{ backgroundColor: colors?.accent }}
             />
         </div>
     );
@@ -224,7 +224,7 @@ const gridColsClasses: Record<number, string> = {
 const Portfolio: React.FC<PortfolioProps> = ({ 
   title, 
   description, 
-  items, 
+  items = [], 
   paddingY, 
   paddingX, 
   colors, 
@@ -246,7 +246,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
           <section 
               id="portfolio" 
               className="w-full relative overflow-hidden"
-              style={{ backgroundColor: colors.background }}
+              style={{ backgroundColor: colors?.background }}
           >
               <CornerGradient config={cornerGradient} />
               {/* Optional Section Header */}
@@ -256,7 +256,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
                           <h2 
                               className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} 
                               style={{ 
-                                  color: colors.heading, 
+                                  color: colors?.heading, 
                                   textTransform: 'var(--headings-transform, none)' as any, 
                                   letterSpacing: 'var(--headings-spacing, normal)' 
                               }}
@@ -265,7 +265,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
                           </h2>
                       )}
                       {description && (
-                          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.description || colors.text }}>
+                          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.description || colors?.text }}>
                               {description}
                           </p>
                       )}
@@ -286,7 +286,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
                           item={item}
                           index={index}
                           colors={{
-                              accent: colors.accent
+                              accent: colors?.accent
                           }}
                           imageHeight={imageHeight}
                           textAlignment={overlayTextAlignment}
@@ -301,12 +301,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
 
   // --- RENDERIZADO CLASSIC ---
   return (
-    <section id="portfolio" className="w-full relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+    <section id="portfolio" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors.text }}>
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.text }}>
             {description}
           </p>
         </div>
@@ -318,16 +318,16 @@ const Portfolio: React.FC<PortfolioProps> = ({
                 title={item.title}
                 description={item.description}
                 delay={getAnimationDelay(index)}
-                textColor={colors.text}
+                textColor={colors?.text}
                 borderRadius={borderRadius}
-                borderColor={colors.borderColor}
+                borderColor={colors?.borderColor}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
-                cardBackground={colors.cardBackground}
-                cardTitleColor={colors.cardTitleColor}
-                cardTextColor={colors.cardTextColor}
-                cardOverlayStart={colors.cardOverlayStart}
-                cardOverlayEnd={colors.cardOverlayEnd}
+                cardBackground={colors?.cardBackground}
+                cardTitleColor={colors?.cardTitleColor}
+                cardTextColor={colors?.cardTextColor}
+                cardOverlayStart={colors?.cardOverlayStart}
+                cardOverlayEnd={colors?.cardOverlayEnd}
             />
           ))}
         </div>

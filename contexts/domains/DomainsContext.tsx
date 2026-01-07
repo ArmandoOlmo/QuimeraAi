@@ -20,10 +20,10 @@ import {
     query,
     orderBy,
     onSnapshot,
-    serverTimestamp,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
+import { useSafeTenant } from '../tenant';
 import { deploymentService } from '../../utils/deploymentService';
 
 interface DomainsContextType {
@@ -48,7 +48,9 @@ const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
 export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const projectContext = useSafeProject();
+    const tenantContext = useSafeTenant();
     const activeProjectId = projectContext?.activeProjectId || null;
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
 
     // Domains State
     const [domains, setDomains] = useState<Domain[]>([]);
@@ -150,15 +152,28 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Ensure projectId is set (use active project if not specified)
             const projectIdToUse = domain.projectId || activeProjectId;
             
+            // Store projectUserId and projectTenantId for cross-user deployment support
+            // If not provided, default to current user/tenant
+            const projectUserIdToUse = domain.projectUserId || user.uid;
+            const projectTenantIdToUse = domain.projectTenantId || currentTenantId || null;
+            
             const docRef = await addDoc(domainsCol, {
                 ...domainDataWithoutId,
                 projectId: projectIdToUse,
+                projectUserId: projectUserIdToUse,
+                projectTenantId: projectTenantIdToUse,
                 createdAt: new Date().toISOString(),
                 status: 'pending',
             });
 
             // Use Firestore's generated ID
-            const newDomain = { ...domainDataWithoutId, id: docRef.id, projectId: projectIdToUse } as Domain;
+            const newDomain = { 
+                ...domainDataWithoutId, 
+                id: docRef.id, 
+                projectId: projectIdToUse,
+                projectUserId: projectUserIdToUse,
+                projectTenantId: projectTenantIdToUse,
+            } as Domain;
             setDomains(prev => [newDomain, ...prev]);
 
             // Sync to global customDomains collection for domain resolution
@@ -166,14 +181,16 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             await setDoc(doc(db, 'customDomains', normalizedDomain), {
                 domain: normalizedDomain,
                 projectId: projectIdToUse || null,
-                userId: user.uid,
+                projectUserId: projectUserIdToUse,
+                projectTenantId: projectTenantIdToUse,
+                userId: user.uid, // Who created the domain entry
                 status: 'pending',
                 sslStatus: 'pending',
                 dnsVerified: false,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
-            console.log(`✅ [DomainsContext] Domain added with ID: ${docRef.id}, projectId: ${projectIdToUse}`);
+            console.log(`✅ [DomainsContext] Domain added with ID: ${docRef.id}, projectId: ${projectIdToUse}, projectUserId: ${projectUserIdToUse}`);
         } catch (error) {
             console.error("[DomainsContext] Error adding domain:", error);
             throw error;
@@ -200,12 +217,22 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Sync to global customDomains collection
             if (domain?.name) {
                 const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
-                await setDoc(doc(db, 'customDomains', normalizedDomain), {
+                const syncData: any = {
                     projectId: data.projectId !== undefined ? data.projectId : domain.projectId,
                     status: data.status || domain.status,
                     sslStatus: data.sslStatus || domain.sslStatus || 'pending',
                     updatedAt: new Date().toISOString(),
-                }, { merge: true });
+                };
+                
+                // Also sync projectUserId and projectTenantId if provided
+                if (data.projectUserId !== undefined) {
+                    syncData.projectUserId = data.projectUserId;
+                }
+                if (data.projectTenantId !== undefined) {
+                    syncData.projectTenantId = data.projectTenantId;
+                }
+                
+                await setDoc(doc(db, 'customDomains', normalizedDomain), syncData, { merge: true });
                 console.log(`✅ [DomainsContext] Domain updated in customDomains: ${normalizedDomain} -> projectId: ${data.projectId || domain.projectId}`);
             }
         } catch (error) {
@@ -353,7 +380,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    // Deploy domain
+    // Deploy domain - Uses centralized publish service (like Shopify/Wix)
     const deployDomain = async (
         domainId: string,
         provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom' = 'cloud_run'
@@ -374,7 +401,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Update status to deploying
             await updateDomain(domainId, { status: 'deploying' });
 
-            // Log deployment start (project-scoped)
+            // Log deployment start
             await addDeploymentLog({
                 domainId,
                 action: 'deploy_start',
@@ -388,120 +415,64 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (provider === 'cloud_run' || provider === 'custom' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
                 
-                console.log(`📡 [DomainsContext] Publishing project and syncing ${normalizedDomain}...`);
+                console.log(`📡 [DomainsContext] Publishing project using centralized service...`);
 
                 // ============================================
-                // STEP 1: PUBLISH PROJECT TO publicStores
+                // STEP 1: CHECK IF PROJECT IS LOADED IN EDITOR
+                // If loaded, use snapshot (single source of truth)
+                // Otherwise, publishService will read from Firestore
                 // ============================================
-                // This is CRITICAL - the SSR server reads from publicStores
-                
-                const projectRef = doc(db, 'users', user.uid, 'projects', domain.projectId);
-                const projectSnap = await getDoc(projectRef);
-                
-                if (!projectSnap.exists()) {
-                    throw new Error("Proyecto no encontrado. Por favor guarda el proyecto antes de desplegar.");
-                }
-                
-                const projectData = projectSnap.data();
-                console.log(`📝 [DomainsContext] Publishing project "${projectData.name}" to publicStores...`);
+                let projectSnapshot: any = null;
+                let projectUserId = domain.projectUserId || user.uid;
+                const projectTenantId = domain.projectTenantId || currentTenantId;
 
-                // Publish main document with ALL landing page and ecommerce data
-                const publicStoreRef = doc(db, 'publicStores', domain.projectId);
-                await setDoc(publicStoreRef, {
-                    // Basic info
-                    name: projectData.name,
-                    
-                    // Header/Footer at root level for StorefrontLayout
-                    header: projectData.data?.header,
-                    footer: projectData.data?.footer,
-                    
-                    // AI Assistant config for chatbot
-                    aiAssistantConfig: projectData.aiAssistantConfig || null,
-                    
-                    // ALL component data (landing + ecommerce sections)
-                    data: projectData.data,
-                    
-                    // Theme and styling
-                    theme: projectData.theme,
-                    brandIdentity: projectData.brandIdentity,
-                    
-                    // Component configuration
-                    componentOrder: projectData.componentOrder,
-                    sectionVisibility: projectData.sectionVisibility,
-                    componentStyles: projectData.componentStyles || null,
-                    componentStatus: projectData.componentStatus || null,
-                    
-                    // SEO configuration
-                    seoConfig: projectData.seoConfig || null,
-                    
-                    // Navigation menus (CRITICAL for header/footer links)
-                    menus: projectData.menus || [],
-                    
-                    // Metadata
-                    userId: user.uid,
-                    publishedAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                }, { merge: true });
-                
-                console.log(`✅ [DomainsContext] Project published to publicStores`);
-
-                // ============================================
-                // STEP 2: COPY ECOMMERCE PRODUCTS (active only)
-                // ============================================
-                try {
-                    const privateProductsRef = collection(db, 'users', user.uid, 'stores', domain.projectId, 'products');
-                    const productsSnapshot = await getDocs(privateProductsRef);
-                    
-                    if (!productsSnapshot.empty) {
-                        console.log(`📦 [DomainsContext] Publishing ${productsSnapshot.size} products...`);
-                        let publishedCount = 0;
-                        
-                        for (const productDoc of productsSnapshot.docs) {
-                            const productData = productDoc.data();
-                            // Only publish active products
-                            if (productData.status === 'active') {
-                                const publicProductRef = doc(db, 'publicStores', domain.projectId, 'products', productDoc.id);
-                                await setDoc(publicProductRef, {
-                                    ...productData,
-                                    publishedAt: new Date().toISOString(),
-                                }, { merge: true });
-                                publishedCount++;
-                            }
-                        }
-                        console.log(`✅ [DomainsContext] ${publishedCount} products published`);
+                // Check if project is currently loaded in the editor
+                if (projectContext?.activeProjectId === domain.projectId && projectContext.getProjectSnapshot) {
+                    projectSnapshot = projectContext.getProjectSnapshot();
+                    if (projectSnapshot) {
+                        console.log(`📸 [DomainsContext] Using editor snapshot for project: ${projectSnapshot.name}`);
                     }
-                } catch (productsError) {
-                    console.warn('[DomainsContext] Products publish warning (non-critical):', productsError);
                 }
 
-                // ============================================
-                // STEP 3: COPY ECOMMERCE CATEGORIES
-                // ============================================
-                try {
-                    const privateCategoriesRef = collection(db, 'users', user.uid, 'stores', domain.projectId, 'categories');
-                    const categoriesSnapshot = await getDocs(privateCategoriesRef);
-                    
-                    if (!categoriesSnapshot.empty) {
-                        console.log(`📂 [DomainsContext] Publishing ${categoriesSnapshot.size} categories...`);
-                        
-                        for (const categoryDoc of categoriesSnapshot.docs) {
-                            const categoryData = categoryDoc.data();
-                            const publicCategoryRef = doc(db, 'publicStores', domain.projectId, 'categories', categoryDoc.id);
-                            await setDoc(publicCategoryRef, {
-                                ...categoryData,
-                                publishedAt: new Date().toISOString(),
-                            }, { merge: true });
-                        }
-                        console.log(`✅ [DomainsContext] Categories published`);
+                // If not loaded in editor, try to get userId from loaded projects
+                if (!projectSnapshot && !domain.projectUserId && projectContext?.projects) {
+                    const loadedProject = projectContext.projects.find(p => p.id === domain.projectId);
+                    if (loadedProject?.userId) {
+                        projectUserId = loadedProject.userId;
+                        console.log(`📋 [DomainsContext] Found projectUserId from loaded projects: ${projectUserId}`);
+                        await updateDomain(domainId, { projectUserId });
                     }
-                } catch (categoriesError) {
-                    console.warn('[DomainsContext] Categories publish warning (non-critical):', categoriesError);
                 }
 
                 // ============================================
-                // STEP 4: REGISTER DOMAIN IN customDomains
+                // STEP 2: PUBLISH USING CENTRALIZED SERVICE
                 // ============================================
-                // This tells the SSR server which project to render for this domain
+                const { publishProject: publishToService } = await import('../../services/publishService');
+                
+                const publishResult = await publishToService({
+                    userId: projectUserId,
+                    projectId: domain.projectId,
+                    tenantId: projectTenantId || null,
+                    projectSnapshot: projectSnapshot || undefined, // Use snapshot if available
+                    saveDraftFirst: !!projectSnapshot, // Only save draft if using snapshot
+                    includeEcommerce: true,
+                    includeCMS: true,
+                });
+
+                if (!publishResult.success) {
+                    throw new Error(publishResult.error || 'Error publishing project');
+                }
+
+                console.log(`✅ [DomainsContext] Project published via service at ${publishResult.publishedAt}`);
+                if (publishResult.stats) {
+                    console.log(`   📦 Products: ${publishResult.stats.productsPublished}`);
+                    console.log(`   📂 Categories: ${publishResult.stats.categoriesPublished}`);
+                    console.log(`   📝 Posts: ${publishResult.stats.postsPublished}`);
+                }
+
+                // ============================================
+                // STEP 3: REGISTER DOMAIN IN customDomains
+                // ============================================
                 const domainData = {
                     domain: normalizedDomain,
                     projectId: domain.projectId,
@@ -529,7 +500,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     }
                 });
 
-                // Log success (project-scoped)
+                // Log success
                 await addDeploymentLog({
                     domainId,
                     action: 'deploy_success',
@@ -631,3 +602,4 @@ export const useDomains = (): DomainsContextType => {
     }
     return context;
 };
+

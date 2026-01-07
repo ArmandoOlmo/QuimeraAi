@@ -82,21 +82,21 @@ const Pricing: React.FC<PricingProps> = ({
   
   // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
-    background: colors.background || primaryColor, // Fallback to primary if not set
-    accent: colors.accent || getColor('primary.main', '#4f46e5'),
-    borderColor: colors.borderColor || '#374151',
-    text: colors.text,
-    heading: colors.heading,
-    description: colors.description || colors.text,
-    cardBackground: colors.cardBackground || '#1f2937',
-    cardHeading: colors.cardHeading,
-    cardText: colors.cardText,
-    priceColor: colors.priceColor,
-    buttonBackground: colors.buttonBackground || getColor('primary.main', '#4f46e5'),
-    buttonText: colors.buttonText || '#ffffff',
-    checkmarkColor: colors.checkmarkColor || getColor('success.main', '#10b981'),
-    gradientStart: colors.gradientStart || '#4f46e5',
-    gradientEnd: colors.gradientEnd || '#10b981',
+    background: colors?.background || primaryColor, // Fallback to primary if not set
+    accent: colors?.accent || getColor('primary.main', '#4f46e5'),
+    borderColor: colors?.borderColor || '#374151',
+    text: colors?.text,
+    heading: colors?.heading,
+    description: colors?.description || colors?.text,
+    cardBackground: colors?.cardBackground || '#1f2937',
+    cardHeading: colors?.cardHeading,
+    cardText: colors?.cardText,
+    priceColor: colors?.priceColor,
+    buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
+    buttonText: colors?.buttonText || '#ffffff',
+    checkmarkColor: colors?.checkmarkColor || getColor('success.main', '#10b981'),
+    gradientStart: colors?.gradientStart || '#4f46e5',
+    gradientEnd: colors?.gradientEnd || '#10b981',
   };
 
   // Use user-selected colors directly - respect their choices

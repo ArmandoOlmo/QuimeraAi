@@ -28,7 +28,7 @@ const descriptionSizeClasses: Record<FontSize, string> = {
 };
 
 const Footer: React.FC<FooterData> = ({ 
-  title, description, linkColumns, socialLinks, copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
+  title, description, linkColumns = [], socialLinks = [], copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
   logoType = 'text', logoImageUrl, contactInfo
 }) => {
   // Get design tokens with fallback to component colors
@@ -39,15 +39,15 @@ const Footer: React.FC<FooterData> = ({
   
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
-    background: colors.background || primaryColor, // Fallback to primary if not set
-    border: colors.border,
-    text: colors.text,
-    heading: colors.heading,
-    linkHover: colors.linkHover || primaryColor,
+    background: colors?.background || primaryColor, // Fallback to primary if not set
+    border: colors?.border,
+    text: colors?.text,
+    heading: colors?.heading,
+    linkHover: colors?.linkHover || primaryColor,
   };
 
   const currentYear = new Date().getFullYear();
-  const finalCopyrightText = copyrightText.replace('{YEAR}', currentYear.toString());
+  const finalCopyrightText = (copyrightText || '© {YEAR} All rights reserved.').replace('{YEAR}', currentYear.toString());
 
   return (
     <footer id="contact" className="border-t" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
@@ -119,7 +119,7 @@ const Footer: React.FC<FooterData> = ({
             <div key={index} className="lg:col-span-2">
               <h4 className="font-semibold text-site-heading mb-4 font-header" style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{column.title}</h4>
               <ul className="space-y-2 font-body">
-                {column.links.map((link, linkIndex) => (
+                {(column.links || []).map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <a 
                       href={link.href} 

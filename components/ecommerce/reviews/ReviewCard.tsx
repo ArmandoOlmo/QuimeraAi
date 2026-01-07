@@ -79,7 +79,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     return (
         <div 
             className="rounded-xl p-6 border"
-            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+            style={{ backgroundColor: colors?.cardBackground, borderColor: colors?.border }}
         >
             {/* Header */}
             <div className="flex items-start justify-between gap-4 mb-4">
@@ -87,7 +87,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                     {/* Avatar */}
                     <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm"
-                        style={{ backgroundColor: colors.primary }}
+                        style={{ backgroundColor: colors?.primary }}
                     >
                         {getInitials(review.customerName)}
                     </div>
@@ -96,21 +96,21 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                         <div className="flex items-center gap-2">
                             <span 
                                 className="font-medium"
-                                style={{ color: colors.heading }}
+                                style={{ color: colors?.heading }}
                             >
                                 {review.customerName}
                             </span>
                             {review.verifiedPurchase && (
                                 <span 
                                     className="flex items-center gap-1 text-xs"
-                                    style={{ color: colors.verifiedColor }}
+                                    style={{ color: colors?.verifiedColor }}
                                 >
                                     <Check size={12} />
                                     Compra verificada
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm" style={{ color: colors.mutedText }}>
+                        <p className="text-sm" style={{ color: colors?.mutedText }}>
                             {formatDate(review.createdAt)}
                         </p>
                     </div>
@@ -119,14 +119,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 <RatingStars 
                     rating={review.rating} 
                     size="sm" 
-                    color={colors.starColor}
+                    color={colors?.starColor}
                 />
             </div>
 
             {/* Title */}
             <h4 
                 className="font-semibold mb-2"
-                style={{ color: colors.heading }}
+                style={{ color: colors?.heading }}
             >
                 {review.title}
             </h4>
@@ -134,7 +134,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             {/* Comment */}
             <p 
                 className="whitespace-pre-line mb-4"
-                style={{ color: colors.text }}
+                style={{ color: colors?.text }}
             >
                 {review.comment}
             </p>
@@ -146,7 +146,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                         <button
                             onClick={() => setShowImages(true)}
                             className="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
-                            style={{ color: colors.mutedText }}
+                            style={{ color: colors?.mutedText }}
                         >
                             <ImageIcon size={16} />
                             Ver {review.images.length} imagen{review.images.length !== 1 ? 'es' : ''}
@@ -160,7 +160,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block w-20 h-20 rounded-lg overflow-hidden border hover:opacity-80 transition-opacity"
-                                    style={{ borderColor: colors.border }}
+                                    style={{ borderColor: colors?.border }}
                                 >
                                     <img
                                         src={image}
@@ -179,17 +179,17 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 <div 
                     className="mt-4 p-4 rounded-lg border-l-4"
                     style={{ 
-                        backgroundColor: `${colors.primary}10`, 
-                        borderLeftColor: colors.primary 
+                        backgroundColor: `${colors?.primary}10`, 
+                        borderLeftColor: colors?.primary 
                     }}
                 >
                     <p 
                         className="text-sm font-medium mb-1"
-                        style={{ color: colors.heading }}
+                        style={{ color: colors?.heading }}
                     >
                         Respuesta del vendedor
                     </p>
-                    <p className="text-sm" style={{ color: colors.text }}>
+                    <p className="text-sm" style={{ color: colors?.text }}>
                         {review.adminResponse}
                     </p>
                 </div>
@@ -198,18 +198,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             {/* Footer */}
             <div 
                 className="flex items-center justify-between mt-4 pt-4 border-t"
-                style={{ borderColor: colors.border }}
+                style={{ borderColor: colors?.border }}
             >
                 <button
                     onClick={handleMarkHelpful}
                     disabled={voted || isVoting}
                     className="flex items-center gap-2 text-sm transition-colors disabled:cursor-not-allowed hover:opacity-80"
-                    style={{ color: voted ? colors.verifiedColor : colors.mutedText }}
+                    style={{ color: voted ? colors?.verifiedColor : colors?.mutedText }}
                 >
                     <ThumbsUp size={16} fill={voted ? 'currentColor' : 'none'} />
                     {voted ? 'Útil' : '¿Te resultó útil?'}
                     {helpfulCount > 0 && (
-                        <span style={{ color: colors.mutedText }}>
+                        <span style={{ color: colors?.mutedText }}>
                             ({helpfulCount})
                         </span>
                     )}

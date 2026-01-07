@@ -32,6 +32,7 @@ import { useAuth } from '../core/AuthContext';
 import { router } from '../../hooks/useRouter';
 import { useSafeTenant } from '../tenant';
 import { useSafeUpgrade } from '../UpgradeContext';
+import { useSafeAdmin } from '../admin';
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -139,6 +140,8 @@ interface ProjectContextType {
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean, projectOverride?: Project) => Promise<void>;
     saveProject: () => Promise<void>;
     publishProject: () => Promise<boolean>;
+    /** Get complete snapshot of current editor state (for publishing) */
+    getProjectSnapshot: () => Partial<Project> | null;
     renameActiveProject: (newName: string) => Promise<void>;
     addNewProject: (project: Project) => Promise<string | void>;
     deleteProject: (projectId: string) => Promise<void>;
@@ -165,6 +168,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const { user, userDocument, loadingAuth } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
+    const adminContext = useSafeAdmin();
 
     // Get current tenant ID (null if not using multi-tenant or no tenant selected)
     const currentTenantId = tenantContext?.currentTenant?.id || null;
@@ -478,26 +482,67 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, currentTenantId]);
 
-    // Save current project
+    // Helper to remove undefined values (Firestore doesn't accept undefined)
+    const removeUndefinedValues = <T extends Record<string, any>>(obj: T): Partial<T> => {
+        const result: Partial<T> = {};
+        for (const key of Object.keys(obj) as (keyof T)[]) {
+            if (obj[key] !== undefined) {
+                result[key] = obj[key];
+            }
+        }
+        return result;
+    };
+
+    // Save current project - saves ALL fields to ensure consistency
     const saveProject = useCallback(async () => {
         if (!user || !activeProjectId || !data) return;
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return;
 
+        // #region agent log - H4: Check what is being saved
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:saveProject',message:'H4: Saving project',data:{hasComponentStylesInProject:!!project.componentStyles,componentStylesKeysInProject:project.componentStyles?Object.keys(project.componentStyles):[],dataHeroHeadline:data?.hero?.headline?.substring(0,30),dataHeaderLogoText:data?.header?.logoText,themeFont:theme?.fontFamilyHeader},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+        // #endregion
+
         const isTemplate = project.status === 'Template';
         const now = new Date().toISOString();
 
-        const updatedProject: Partial<Project> = {
+        // Save ALL project fields to ensure Firestore stays in sync with editor
+        // Use removeUndefinedValues to filter out undefined (Firestore doesn't accept undefined)
+        const updatedProject = removeUndefinedValues({
+            // Core page data (from React state)
             data,
             theme,
             brandIdentity,
             componentOrder,
             sectionVisibility,
             lastUpdated: now,
-            // Include pages if using multi-page architecture
+            
+            // Multi-page architecture
             ...(pages.length > 0 && { pages }),
-        };
+            
+            // Navigation menus (only include if exists)
+            ...(project.menus && { menus: project.menus }),
+            
+            // SEO configuration (only include if exists)
+            ...(project.seoConfig && { seoConfig: project.seoConfig }),
+            
+            // Design system (only include if exists)
+            ...(project.designTokens && { designTokens: project.designTokens }),
+            ...(project.responsiveStyles && { responsiveStyles: project.responsiveStyles }),
+            ...(project.componentStyles && { componentStyles: project.componentStyles }),
+            ...(project.componentStatus && { componentStatus: project.componentStatus }),
+            
+            // AI Assistant configuration (only include if exists)
+            ...(project.aiAssistantConfig && { aiAssistantConfig: project.aiAssistantConfig }),
+            
+            // Assets (only include if exists)
+            ...(project.faviconUrl && { faviconUrl: project.faviconUrl }),
+            ...(project.thumbnailUrl && { thumbnailUrl: project.thumbnailUrl }),
+            
+            // A/B Testing (only include if exists)
+            ...(project.abTests && { abTests: project.abTests }),
+        });
 
         try {
             if (isTemplate) {
@@ -518,124 +563,127 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId, pages]);
 
+    // Get complete snapshot of current editor state
+    // This is the SINGLE SOURCE OF TRUTH for publishing
+    const getProjectSnapshot = useCallback((): Partial<Project> | null => {
+        if (!user || !activeProjectId || !data) return null;
+        
+        const project = projectsRef.current.find(p => p.id === activeProjectId);
+        if (!project) return null;
+        
+        // #region agent log - H1 + H6: Check componentStyles and adminContext
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:getProjectSnapshot',message:'H1+H6: componentStyles sources',data:{projectHasComponentStyles:!!project.componentStyles,adminContextExists:!!adminContext,adminContextHasComponentStyles:!!adminContext?.componentStyles,adminComponentStylesKeys:adminContext?.componentStyles?Object.keys(adminContext.componentStyles):[],heroVariantInData:data?.hero?.heroVariant},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H6',runId:'post-fix-2'})}).catch(()=>{});
+        // #endregion
+        
+        // Return complete snapshot of current editor state
+        // This includes ALL fields that should be published
+        // All values must be defined (not undefined) for Firestore compatibility
+        const snapshot: Partial<Project> = {
+            id: activeProjectId,
+            name: project.name,
+            userId: project.userId || user.uid, // Fallback to current user
+            
+            // Core page data (from React state - most up to date)
+            data,
+            theme,
+            brandIdentity,
+            componentOrder,
+            sectionVisibility,
+            
+            // Multi-page architecture
+            pages: pages.length > 0 ? pages : (project.pages || []),
+            
+            // Navigation
+            menus: project.menus || [],
+            
+            // Status
+            status: project.status,
+            lastUpdated: new Date().toISOString(),
+        };
+
+        // Only include optional fields if they have values (avoid undefined)
+        if (project.seoConfig) snapshot.seoConfig = project.seoConfig;
+        if (project.designTokens) snapshot.designTokens = project.designTokens;
+        if (project.responsiveStyles) snapshot.responsiveStyles = project.responsiveStyles;
+        
+        // CRITICAL FIX: Use componentStyles from AdminContext if project doesn't have them
+        // The editor uses AdminContext's componentStyles, so we need to include them in the snapshot
+        const effectiveComponentStyles = project.componentStyles || adminContext?.componentStyles;
+        if (effectiveComponentStyles) snapshot.componentStyles = effectiveComponentStyles;
+        
+        if (project.componentStatus) snapshot.componentStatus = project.componentStatus;
+        if (project.aiAssistantConfig) snapshot.aiAssistantConfig = project.aiAssistantConfig;
+        if (project.faviconUrl) snapshot.faviconUrl = project.faviconUrl;
+        if (project.thumbnailUrl) snapshot.thumbnailUrl = project.thumbnailUrl;
+        if (project.abTests) snapshot.abTests = project.abTests;
+
+        // #region agent log - H1: Final snapshot data
+        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:getProjectSnapshot:end',message:'H1: Final snapshot (with fix)',data:{snapshotHasComponentStyles:!!snapshot.componentStyles,snapshotComponentStylesKeys:snapshot.componentStyles?Object.keys(snapshot.componentStyles):[],usedAdminContextStyles:!project.componentStyles&&!!adminContext?.componentStyles,snapshotHeroData:snapshot.data?.hero?.headline?.substring(0,30),snapshotHeaderData:snapshot.data?.header?.logoText,snapshotTheme:{font:snapshot.theme?.fontFamilyHeader,primary:snapshot.theme?.globalColors?.primary}},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1',runId:'post-fix'})}).catch(()=>{});
+        // #endregion
+
+        return snapshot;
+    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, adminContext]);
+
     // Publish project to publicStores (makes it accessible via custom domains)
+    // Uses centralized publishService with editor snapshot (single source of truth)
     const publishProject = useCallback(async (): Promise<boolean> => {
         console.log('[ProjectContext] publishProject called');
-        console.log('[ProjectContext] user:', !!user, 'activeProjectId:', activeProjectId, 'data:', !!data);
         
         if (!user || !activeProjectId || !data) {
-            console.error('[ProjectContext] Cannot publish: missing user, project, or data', {
-                hasUser: !!user,
-                activeProjectId,
-                hasData: !!data
-            });
-            return false;
-        }
-
-        const project = projectsRef.current.find(p => p.id === activeProjectId);
-        console.log('[ProjectContext] Found project:', project?.name, project?.id);
-        
-        if (!project) {
-            console.error('[ProjectContext] Cannot publish: project not found in projectsRef');
+            console.error('[ProjectContext] Cannot publish: missing user, project, or data');
             return false;
         }
 
         try {
-            console.log('[ProjectContext] Saving project first...');
-            // First save the project
-            await saveProject();
-            console.log('[ProjectContext] Project saved, now publishing...');
-
-            // Fetch the latest project data including seoConfig from Firestore
-            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-            const projectRef = doc(db, ...pathSegments, activeProjectId);
-            const projectSnap = await getDoc(projectRef);
-            const latestProjectData = projectSnap.exists() ? projectSnap.data() : {};
-
-            // Get AI Assistant Config - check multiple sources
-            const aiConfig = latestProjectData.aiAssistantConfig || project.aiAssistantConfig || null;
-            console.log(`🤖 [ProjectContext] Publishing AI Config:`, {
-                fromFirestore: !!latestProjectData.aiAssistantConfig,
-                fromProjectRef: !!project.aiAssistantConfig,
-                finalConfig: aiConfig ? { isActive: aiConfig.isActive, agentName: aiConfig.agentName } : null
-            });
-
-            // Now publish to publicStores
-            const publicStoreRef = doc(db, 'publicStores', activeProjectId);
-            const publishData = {
-                name: project.name,
-                header: data.header,  // Header en raíz para StorefrontLayout
-                footer: data.footer,  // Footer en raíz para StorefrontLayout
-                aiAssistantConfig: aiConfig, // AI Config en raíz - from project or Firestore
-                data,
-                theme,
-                brandIdentity,
-                componentOrder,
-                sectionVisibility,
-                // Include SEO config and other metadata
-                seoConfig: latestProjectData.seoConfig || null,
-                componentStyles: latestProjectData.componentStyles || null,
-                componentStatus: latestProjectData.componentStatus || null,
-                // Include navigation menus (CRITICAL for published site navigation)
-                menus: latestProjectData.menus || [],
-                // MULTI-PAGE: Include pages array for SSR
-                pages: pages.length > 0 ? pages : (latestProjectData.pages || []),
-                userId: user.uid,
-                tenantId: currentTenantId || null,
-                publishedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-
-            await setDoc(publicStoreRef, publishData, { merge: true });
-
-            console.log(`✅ [ProjectContext] Project ${activeProjectId} published to publicStores with SEO config`);
-
-            // PUBLISH ECOMMERCE DATA (Products & Categories)
-            try {
-                console.log(`🛒 [ProjectContext] Publishing ecommerce data for project ${activeProjectId}...`);
-                
-                // Copy products from private to public
-                const privateProductsRef = collection(db, 'users', user.uid, 'stores', activeProjectId, 'products');
-                const productsSnapshot = await getDocs(privateProductsRef);
-                
-                if (!productsSnapshot.empty) {
-                    console.log(`📦 [ProjectContext] Publishing ${productsSnapshot.size} products...`);
-                    for (const productDoc of productsSnapshot.docs) {
-                        const productData = productDoc.data();
-                        // Only publish active products
-                        if (productData.status === 'active') {
-                            const publicProductRef = doc(db, 'publicStores', activeProjectId, 'products', productDoc.id);
-                            await setDoc(publicProductRef, {
-                                ...productData,
-                                publishedAt: new Date().toISOString(),
-                            }, { merge: true });
-                        }
-                    }
-                    console.log(`✅ [ProjectContext] Products published successfully`);
-                }
-                
-                // Copy categories from private to public
-                const privateCategoriesRef = collection(db, 'users', user.uid, 'stores', activeProjectId, 'categories');
-                const categoriesSnapshot = await getDocs(privateCategoriesRef);
-                
-                if (!categoriesSnapshot.empty) {
-                    console.log(`📂 [ProjectContext] Publishing ${categoriesSnapshot.size} categories...`);
-                    for (const categoryDoc of categoriesSnapshot.docs) {
-                        const categoryData = categoryDoc.data();
-                        const publicCategoryRef = doc(db, 'publicStores', activeProjectId, 'categories', categoryDoc.id);
-                        await setDoc(publicCategoryRef, {
-                            ...categoryData,
-                            publishedAt: new Date().toISOString(),
-                        }, { merge: true });
-                    }
-                    console.log(`✅ [ProjectContext] Categories published successfully`);
-                }
-            } catch (ecommerceError) {
-                console.warn('[ProjectContext] Ecommerce publish warning (non-critical):', ecommerceError);
+            // Get snapshot from editor (single source of truth)
+            const snapshot = getProjectSnapshot();
+            if (!snapshot) {
+                console.error('[ProjectContext] Cannot publish: failed to get project snapshot');
+                return false;
             }
 
-            // AUTOMATIC DOMAIN SYNC:
-            // Fetch domains for this project and sync them directly to customDomains collection
+            console.log(`📸 [ProjectContext] Using editor snapshot for project: ${snapshot.name}`);
+            
+            // Debug: Log hero data to verify it's correct
+            console.log(`🔍 [ProjectContext] Hero data in snapshot:`, {
+                heroVariant: snapshot.data?.hero?.heroVariant,
+                headline: snapshot.data?.hero?.headline?.substring(0, 30),
+                hasBackgroundImage: !!snapshot.data?.hero?.backgroundImage,
+                imageUrl: snapshot.data?.hero?.imageUrl?.substring(0, 50),
+            });
+            console.log(`🔍 [ProjectContext] Theme in snapshot:`, {
+                primaryColor: snapshot.theme?.globalColors?.primary,
+                fontHeader: snapshot.theme?.fontFamilyHeader,
+            });
+            console.log(`🔍 [ProjectContext] ComponentOrder:`, snapshot.componentOrder?.slice(0, 5));
+
+            // Import and use the centralized publish service
+            const { publishProject: publishToService } = await import('../../services/publishService');
+            
+            // Publish using the centralized service with the editor snapshot
+            const result = await publishToService({
+                userId: user.uid,
+                projectId: activeProjectId,
+                tenantId: currentTenantId || null,
+                projectSnapshot: snapshot,
+                saveDraftFirst: true, // Save to Firestore first, then publish
+                includeEcommerce: true,
+                includeCMS: true,
+            });
+
+            if (!result.success) {
+                console.error('[ProjectContext] Publish failed:', result.error);
+                return false;
+            }
+
+            console.log(`✅ [ProjectContext] Project published successfully at ${result.publishedAt}`);
+            if (result.stats) {
+                console.log(`   📦 Products: ${result.stats.productsPublished}`);
+                console.log(`   📂 Categories: ${result.stats.categoriesPublished}`);
+                console.log(`   📝 Posts: ${result.stats.postsPublished}`);
+            }
+
+            // AUTOMATIC DOMAIN SYNC (keep this for domain mapping updates)
             try {
                 const domainsCol = collection(db, 'users', user.uid, 'domains');
                 const domainsSnap = await getDocs(domainsCol);
@@ -644,12 +692,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     .filter(d => d.projectId === activeProjectId);
 
                 if (projectDomains.length > 0) {
-                    console.log(`📡 [ProjectContext] Syncing ${projectDomains.length} domains for project ${activeProjectId}...`);
+                    console.log(`📡 [ProjectContext] Syncing ${projectDomains.length} domains...`);
                     
                     for (const domain of projectDomains) {
                         const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
                         
-                        // Direct write to customDomains collection (bypass Cloud Function)
                         await setDoc(doc(db, 'customDomains', normalizedDomain), {
                             domain: normalizedDomain,
                             projectId: activeProjectId,
@@ -660,8 +707,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                             cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
                             updatedAt: new Date().toISOString()
                         }, { merge: true });
-                        
-                        console.log(`✅ [ProjectContext] Domain synced: ${normalizedDomain}`);
                     }
                 }
             } catch (syncError) {
@@ -673,7 +718,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error('[ProjectContext] Error publishing project:', error);
             return false;
         }
-    }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, currentTenantId, saveProject]);
+    }, [user, activeProjectId, data, currentTenantId, getProjectSnapshot]);
 
     // Auto-save effect
     useEffect(() => {
@@ -1229,6 +1274,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         loadProject,
         saveProject,
         publishProject,
+        getProjectSnapshot,
         renameActiveProject,
         addNewProject,
         deleteProject,

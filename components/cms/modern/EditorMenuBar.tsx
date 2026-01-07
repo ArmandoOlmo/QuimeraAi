@@ -140,7 +140,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                     <div className="absolute top-full left-0 mt-1 p-3 bg-card border border-border rounded-lg shadow-xl z-50 w-48">
                         <p className="text-xs font-bold text-muted-foreground mb-2">Text Color</p>
                         <div className="grid grid-cols-5 gap-1.5">
-                            {colors.map(color => (
+                            {colors?.map(color => (
                                 <button
                                     key={color}
                                     onClick={() => { editor.chain().focus().setColor(color).run(); setShowColors(false); }}

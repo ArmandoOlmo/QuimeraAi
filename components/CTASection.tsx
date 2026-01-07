@@ -57,14 +57,14 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   
   // Use component colors directly - respect user's choices
   const actualColors = {
-    background: colors.background || '#0f172a',
-    gradientStart: colors.gradientStart || getColor('primary.main', '#4f46e5'),
-    gradientEnd: colors.gradientEnd || getColor('secondary.main', '#10b981'),
-    text: colors.text || '#ffffff',
-    heading: colors.heading || '#ffffff',
-    description: colors.description || colors.text || '#ffffff',
-    buttonBackground: colors.buttonBackground || '#ffffff',
-    buttonText: colors.buttonText || '#4f46e5',
+    background: colors?.background || '#0f172a',
+    gradientStart: colors?.gradientStart || getColor('primary.main', '#4f46e5'),
+    gradientEnd: colors?.gradientEnd || getColor('secondary.main', '#10b981'),
+    text: colors?.text || '#ffffff',
+    heading: colors?.heading || '#ffffff',
+    description: colors?.description || colors?.text || '#ffffff',
+    buttonBackground: colors?.buttonBackground || '#ffffff',
+    buttonText: colors?.buttonText || '#4f46e5',
   };
   
   return (

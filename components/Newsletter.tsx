@@ -49,12 +49,12 @@ interface NewsletterProps extends NewsletterData {
 
 const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
   // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
-  const headingColor = colors.heading || colors.cardHeading || '#ffffff';
-  const textColor = colors.text || colors.cardText || '#ffffff';
-  const placeholderColor = colors.inputPlaceholder || '#6b7280';
+  const headingColor = colors?.heading || colors?.cardHeading || '#ffffff';
+  const textColor = colors?.text || colors?.cardText || '#ffffff';
+  const placeholderColor = colors?.inputPlaceholder || '#6b7280';
   
   return (
-    <section id="newsletter" className="w-full" style={{ backgroundColor: colors.background }}>
+    <section id="newsletter" className="w-full" style={{ backgroundColor: colors?.background }}>
       <style dangerouslySetInnerHTML={{ __html: `
         #newsletter-email-input::placeholder {
           color: ${placeholderColor};
@@ -62,7 +62,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
         }
       `}} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
+        <div className={`border p-8 md:p-12 text-center ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors?.borderColor, backgroundColor: colors?.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
         <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
         <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: textColor }}>{description}</p>
         <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">
@@ -73,16 +73,16 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
             required
             className={`flex-grow border px-4 py-3 focus:ring-2 focus:outline-none w-full font-body ${borderRadiusClasses[cardBorderRadius]}`}
             style={{
-              backgroundColor: colors.inputBackground || '#111827',
-              color: colors.inputText || '#ffffff',
-              borderColor: colors.inputBorder || '#374151',
-              '--tw-ring-color': colors.accent
+              backgroundColor: colors?.inputBackground || '#111827',
+              color: colors?.inputText || '#ffffff',
+              borderColor: colors?.inputBorder || '#374151',
+              '--tw-ring-color': colors?.accent
             } as React.CSSProperties}
           />
           <button
             type="submit"
             className={`text-white font-bold py-3 px-8 hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-            style={{ backgroundColor: colors.buttonBackground || colors.accent, color: colors.buttonText || '#ffffff', textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
+            style={{ backgroundColor: colors?.buttonBackground || colors?.accent, color: colors?.buttonText || '#ffffff', textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
           >
             {buttonText}
           </button>

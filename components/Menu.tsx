@@ -226,19 +226,19 @@ const ClassicMenuCard: React.FC<{
     enableAnimation?: boolean;
 }> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
-    const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
+    const cardBg = colors?.cardBackground || 'rgba(30, 41, 59, 0.5)';
     const hasLightBackground = isBackgroundLight(cardBg);
     
     // Use specific colors - respect user's choices
-    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    const titleColor = colors.cardTitleColor || '#ffffff';
-    const textColor = colors.cardText || colors.text || '#94a3b8';
+    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.3);
+    const titleColor = colors?.cardTitleColor || '#ffffff';
+    const textColor = colors?.cardText || colors?.text || '#94a3b8';
     
     return (
         <div 
             className={`group bg-white/5 border overflow-hidden transform hover:-translate-y-2 transition-all duration-300 ${animationClass} ${borderRadius}`}
             style={{ 
-                borderColor: colors.borderColor,
+                borderColor: colors?.borderColor,
                 backgroundColor: cardBg,
                 animationDelay: getAnimationDelay(index, 0.1)
             }}
@@ -256,7 +256,7 @@ const ClassicMenuCard: React.FC<{
             {item.isSpecial && (
                 <div 
                     className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"
-                    style={{ backgroundColor: colors.accent, color: '#fff' }}
+                    style={{ backgroundColor: colors?.accent, color: '#fff' }}
                 >
                     <Star size={12} fill="currentColor" />
                     Especial
@@ -283,7 +283,7 @@ const ClassicMenuCard: React.FC<{
                 {item.description}
             </p>
             {item.category && (
-                <div className="mt-4 pt-4 border-t" style={{ borderColor: colors.borderColor }}>
+                <div className="mt-4 pt-4 border-t" style={{ borderColor: colors?.borderColor }}>
                     <span className="text-xs uppercase tracking-wider font-bold opacity-60" style={{ color: textColor }}>
                         {item.category}
                     </span>
@@ -299,25 +299,25 @@ const ClassicMenuCard: React.FC<{
 // =============================================================================
 const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; index: number }> = ({ item, colors, borderRadius, index }) => {
     const isWide = index % 3 === 0;
-    const cardBg = colors.cardBackground || 'rgba(30, 41, 59, 0.5)';
+    const cardBg = colors?.cardBackground || 'rgba(30, 41, 59, 0.5)';
     
     // Use specific colors - respect user's choices
-    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    const titleColor = colors.cardTitleColor || '#ffffff';
-    const textColor = colors.cardText || colors.text || '#94a3b8';
+    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.3);
+    const titleColor = colors?.cardTitleColor || '#ffffff';
+    const textColor = colors?.cardText || colors?.text || '#94a3b8';
     
     return (
         <div 
             className={`group relative border overflow-hidden transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`}
             style={{ 
-                borderColor: colors.borderColor,
+                borderColor: colors?.borderColor,
                 backgroundColor: cardBg,
             }}
         >
             {/* Gradient Glow Effect */}
             <div 
                 className="absolute -right-20 -top-20 h-[250px] w-[250px] rounded-full blur-[100px] transition-all duration-500 group-hover:blur-[120px]" 
-                style={{ backgroundColor: hexToRgba(colors.accent, 0.19), opacity: 0.3 }}
+                style={{ backgroundColor: hexToRgba(colors?.accent, 0.19), opacity: 0.3 }}
             />
             
             <div className={`relative z-10 flex ${isWide ? 'flex-row' : 'flex-col'} h-full`}>
@@ -335,7 +335,7 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                     {item.isSpecial && (
                         <div 
                             className="absolute top-4 left-4 p-2 rounded-full"
-                            style={{ backgroundColor: colors.accent }}
+                            style={{ backgroundColor: colors?.accent }}
                         >
                             <Award size={20} className="text-white" />
                         </div>
@@ -348,25 +348,25 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                         {item.category && (
                             <span 
                                 className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3"
-                                style={{ backgroundColor: hexToRgba(colors.accent, 0.125), color: colors.accent }}
+                                style={{ backgroundColor: hexToRgba(colors?.accent, 0.125), color: colors?.accent }}
                             >
                                 {item.category}
                             </span>
                         )}
-                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: titleColor, '--accent': colors.accent, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
+                        <h3 className="text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: titleColor, '--accent': colors?.accent, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
                             {item.name}
                         </h3>
                         <p className="text-sm leading-relaxed font-body mb-4 opacity-90" style={{ color: textColor }}>
                             {item.description}
                         </p>
                     </div>
-                    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: colors.borderColor }}>
+                    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: colors?.borderColor }}>
                         <span className="text-3xl font-bold font-header" style={{ color: priceColor }}>
                             {item.price}
                         </span>
                         <button 
                             className="px-4 py-2 rounded-lg font-bold text-sm transition-all hover:scale-105"
-                            style={{ backgroundColor: colors.accent, color: '#fff' }}
+                            style={{ backgroundColor: colors?.accent, color: '#fff' }}
                         >
                             Ordenar
                         </button>
@@ -396,9 +396,9 @@ const FullImageMenuCard: React.FC<{
     const animationClass = getAnimationClass(animationType, enableAnimation);
     
     // Use specific colors - respect user's choices
-    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    const titleColor = colors.cardTitleColor || '#ffffff';
-    const textColor = colors.cardText || colors.text || '#ffffff';
+    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.3);
+    const titleColor = colors?.cardTitleColor || '#ffffff';
+    const textColor = colors?.cardText || colors?.text || '#ffffff';
     
     // Text alignment classes
     const alignmentClasses: Record<string, string> = {
@@ -437,7 +437,7 @@ const FullImageMenuCard: React.FC<{
             {item.isSpecial && (
                 <div 
                     className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10"
-                    style={{ backgroundColor: colors.accent, color: '#fff' }}
+                    style={{ backgroundColor: colors?.accent, color: '#fff' }}
                 >
                     <Star size={12} fill="currentColor" />
                     Especial
@@ -448,7 +448,7 @@ const FullImageMenuCard: React.FC<{
             {item.category && (
                 <div 
                     className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider z-10"
-                    style={{ backgroundColor: hexToRgba(colors.accent, 0.2), color: colors.accent, backdropFilter: 'blur(8px)' }}
+                    style={{ backgroundColor: hexToRgba(colors?.accent, 0.2), color: colors?.accent, backdropFilter: 'blur(8px)' }}
                 >
                     {item.category}
                 </div>
@@ -492,18 +492,18 @@ const ElegantListCard: React.FC<{
     enableAnimation?: boolean;
 }> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
-    const cardBg = colors.cardBackground || 'transparent';
+    const cardBg = colors?.cardBackground || 'transparent';
     
     // Use specific colors - respect user's choices
-    const priceColor = colors.priceColor || hexToRgba(colors.accent || '#4f46e5', 0.3);
-    const titleColor = colors.cardTitleColor || '#ffffff';
-    const textColor = colors.cardText || colors.text || '#94a3b8';
+    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.3);
+    const titleColor = colors?.cardTitleColor || '#ffffff';
+    const textColor = colors?.cardText || colors?.text || '#94a3b8';
     
     return (
         <div 
             className={`group flex flex-col md:flex-row gap-6 p-6 border transition-all duration-300 hover:bg-white/5 ${borderRadius} ${animationClass}`}
             style={{ 
-                borderColor: colors.borderColor,
+                borderColor: colors?.borderColor,
                 backgroundColor: cardBg,
                 animationDelay: getAnimationDelay(index, 0.08)
             }}
@@ -522,7 +522,7 @@ const ElegantListCard: React.FC<{
             {item.isSpecial && (
                 <div 
                     className="absolute top-3 left-3 p-2 rounded-full"
-                    style={{ backgroundColor: colors.accent }}
+                    style={{ backgroundColor: colors?.accent }}
                 >
                     <ChefHat size={18} className="text-white" />
                 </div>
@@ -540,7 +540,7 @@ const ElegantListCard: React.FC<{
                         {item.category && (
                             <span 
                                 className="inline-block text-xs font-bold uppercase tracking-widest mb-3 opacity-60"
-                                style={{ color: colors.accent }}
+                                style={{ color: colors?.accent }}
                             >
                                 {item.category}
                             </span>
@@ -558,16 +558,16 @@ const ElegantListCard: React.FC<{
                 </p>
             </div>
             
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: colors.borderColor }}>
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: colors?.borderColor }}>
                 <button 
                     className="px-6 py-2 rounded-lg font-bold text-sm transition-all hover:scale-105"
-                    style={{ backgroundColor: colors.accent, color: '#fff' }}
+                    style={{ backgroundColor: colors?.accent, color: '#fff' }}
                 >
                     Ver Más
                 </button>
                 <button 
                     className="px-4 py-2 rounded-lg font-medium text-sm border transition-all hover:bg-white/5"
-                    style={{ borderColor: colors.accent, color: colors.accent }}
+                    style={{ borderColor: colors?.accent, color: colors?.accent }}
                 >
                     Agregar
                 </button>
@@ -588,7 +588,7 @@ interface MenuProps extends MenuData {
 const Menu: React.FC<MenuProps> = ({ 
     title, 
     description, 
-    items, 
+    items = [], 
     paddingY, 
     paddingX, 
     colors, 
@@ -611,22 +611,22 @@ const Menu: React.FC<MenuProps> = ({
     const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
     
     // Use component colors - respect user's choices
-    const sectionTitleColor = colors.heading || '#ffffff';
-    const sectionTextColor = colors.text || '#94a3b8';
+    const sectionTitleColor = colors?.heading || '#ffffff';
+    const sectionTextColor = colors?.text || '#94a3b8';
     
     // Use component colors with proper fallbacks
     const menuColors = {
         ...colors,
-        cardBackground: colors.cardBackground || primaryColor,
-        cardTitleColor: colors.cardTitleColor || '#ffffff',
-        cardText: colors.cardText || '#94a3b8',
+        cardBackground: colors?.cardBackground || primaryColor,
+        cardTitleColor: colors?.cardTitleColor || '#ffffff',
+        cardText: colors?.cardText || '#94a3b8',
     };
     
     return (
         <section 
             id="menu" 
             className="w-full relative overflow-hidden" 
-            style={{ backgroundColor: colors.background }}
+            style={{ backgroundColor: colors?.background }}
         >
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
@@ -636,9 +636,9 @@ const Menu: React.FC<MenuProps> = ({
                     <div className="flex justify-center mb-6">
                         <div 
                             className="p-4 rounded-2xl"
-                            style={{ backgroundColor: hexToRgba(colors.accent, 0.125) }}
+                            style={{ backgroundColor: hexToRgba(colors?.accent, 0.125) }}
                         >
-                            <div style={{ color: colors.accent }}>
+                            <div style={{ color: colors?.accent }}>
                                 {menuIcons[icon] || menuIcons['utensils-crossed']}
                             </div>
                         </div>

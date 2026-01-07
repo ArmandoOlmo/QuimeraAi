@@ -47,6 +47,8 @@ export interface Domain {
     status: DomainStatus;
     provider: 'Quimera' | 'External';
     projectId?: string;
+    projectUserId?: string; // User ID of the project owner (needed for deployment lookup)
+    projectTenantId?: string; // Tenant ID if project belongs to a tenant
     expiryDate?: string;
     dnsRecords?: DNSRecord[];
     createdAt: string;

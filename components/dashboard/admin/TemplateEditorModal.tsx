@@ -31,40 +31,40 @@ const extractTemplateColors = (template: Project): { colors: string[], colorInfo
     // Global theme colors
     const gc = template.theme?.globalColors;
     if (gc) {
-        if (gc.primary) { colors.add(gc.primary); colorDetails.push(`Primary: ${gc.primary}`); }
-        if (gc.secondary) { colors.add(gc.secondary); colorDetails.push(`Secondary: ${gc.secondary}`); }
-        if (gc.accent) { colors.add(gc.accent); colorDetails.push(`Accent: ${gc.accent}`); }
-        if (gc.background) { colors.add(gc.background); colorDetails.push(`Background: ${gc.background}`); }
-        if (gc.text) { colors.add(gc.text); colorDetails.push(`Text: ${gc.text}`); }
+        if (gc.primary) { colors?.add(gc.primary); colorDetails.push(`Primary: ${gc.primary}`); }
+        if (gc.secondary) { colors?.add(gc.secondary); colorDetails.push(`Secondary: ${gc.secondary}`); }
+        if (gc.accent) { colors?.add(gc.accent); colorDetails.push(`Accent: ${gc.accent}`); }
+        if (gc.background) { colors?.add(gc.background); colorDetails.push(`Background: ${gc.background}`); }
+        if (gc.text) { colors?.add(gc.text); colorDetails.push(`Text: ${gc.text}`); }
     }
 
     // Hero colors
     const hc = template.data?.hero?.colors;
     if (hc) {
-        if (hc.primary) { colors.add(hc.primary); colorDetails.push(`Hero Primary: ${hc.primary}`); }
-        if (hc.secondary) { colors.add(hc.secondary); colorDetails.push(`Hero Secondary: ${hc.secondary}`); }
-        if (hc.background) { colors.add(hc.background); colorDetails.push(`Hero Background: ${hc.background}`); }
+        if (hc.primary) { colors?.add(hc.primary); colorDetails.push(`Hero Primary: ${hc.primary}`); }
+        if (hc.secondary) { colors?.add(hc.secondary); colorDetails.push(`Hero Secondary: ${hc.secondary}`); }
+        if (hc.background) { colors?.add(hc.background); colorDetails.push(`Hero Background: ${hc.background}`); }
     }
 
     // Header colors
     const headerC = template.data?.header?.colors;
     if (headerC) {
-        if (headerC.background) { colors.add(headerC.background); colorDetails.push(`Header Background: ${headerC.background}`); }
-        if (headerC.accent) { colors.add(headerC.accent); colorDetails.push(`Header Accent: ${headerC.accent}`); }
+        if (headerC.background) { colors?.add(headerC.background); colorDetails.push(`Header Background: ${headerC.background}`); }
+        if (headerC.accent) { colors?.add(headerC.accent); colorDetails.push(`Header Accent: ${headerC.accent}`); }
     }
 
     // Features colors
     const featC = template.data?.features?.colors;
     if (featC) {
-        if (featC.background) colors.add(featC.background);
-        if (featC.accent) colors.add(featC.accent);
+        if (featC.background) colors?.add(featC.background);
+        if (featC.accent) colors?.add(featC.accent);
     }
 
     // CTA colors
     const ctaC = template.data?.cta?.colors;
     if (ctaC) {
-        if (ctaC.gradientStart) colors.add(ctaC.gradientStart);
-        if (ctaC.gradientEnd) colors.add(ctaC.gradientEnd);
+        if (ctaC.gradientStart) colors?.add(ctaC.gradientStart);
+        if (ctaC.gradientEnd) colors?.add(ctaC.gradientEnd);
     }
 
     return {
@@ -75,12 +75,12 @@ const extractTemplateColors = (template: Project): { colors: string[], colorInfo
 
 // Analyze color characteristics
 const analyzeColorPalette = (colors: string[]): string => {
-    if (colors.length === 0) return 'No colors detected';
+    if (colors?.length === 0) return 'No colors detected';
 
     const characteristics: string[] = [];
 
     // Check for dark mode
-    const hasDarkBg = colors.some(c => {
+    const hasDarkBg = colors?.some(c => {
         const hex = c.replace('#', '');
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
@@ -93,7 +93,7 @@ const analyzeColorPalette = (colors: string[]): string => {
     else characteristics.push('Light theme');
 
     // Check for specific color families
-    colors.forEach(c => {
+    colors?.forEach(c => {
         const hex = c.replace('#', '').toLowerCase();
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
@@ -217,7 +217,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                     .replace('{{name}}', template.name)
                     .replace('{{category}}', template.category || template.brandIdentity?.industry || 'Not specified')
                     .replace('{{description}}', template.description || 'A professional website template')
-                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors.join(', '))
+                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors?.join(', '))
                     .replace('{{colorAnalysis}}', colorAnalysis);
                 modelToUse = promptTemplate.model;
             } else {
@@ -232,7 +232,7 @@ Generate a detailed, creative prompt for an AI image generator to create a stunn
 - Description: ${template.description || 'A professional website template'}
 
 **Color Palette:**
-${colorInfo || 'Colors: ' + colors.join(', ')}
+${colorInfo || 'Colors: ' + colors?.join(', ')}
 
 **Color Analysis:**
 ${colorAnalysis}
@@ -410,7 +410,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     .replace('{{name}}', template.name)
                     .replace('{{category}}', template.category || template.brandIdentity?.industry || 'Not specified')
                     .replace('{{description}}', template.description || 'Not provided')
-                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors.join(', '))
+                    .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors?.join(', '))
                     .replace('{{colorAnalysis}}', colorAnalysis)
                     .replace('{{components}}', template.componentOrder?.join(', ') || 'Standard layout')
                     .replace('{{industryList}}', industryList);
@@ -427,7 +427,7 @@ Analyze this website template and suggest the most appropriate industries it wou
 - Description: ${template.description || 'Not provided'}
 
 **Color Palette:**
-${colorInfo || 'Colors: ' + colors.join(', ')}
+${colorInfo || 'Colors: ' + colors?.join(', ')}
 
 **Color Analysis:**
 ${colorAnalysis}
@@ -971,7 +971,7 @@ Name:`;
                                     <div className="flex items-start gap-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30">
                                         <Info size={12} className="text-green-400 mt-0.5 shrink-0" />
                                         <p className="text-[10px] text-green-300 leading-relaxed">
-                                            {t('superadmin.templateEditor.colorsWillApply', 'Colors will be applied to all components when you save. New components you add will also receive these colors.')}
+                                            {t('superadmin.templateEditor.colorsWillApply', 'Colors will be applied to all components when you save. New components you add will also receive these colors?.')}
                                         </p>
                                     </div>
                                 )}

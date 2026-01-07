@@ -376,17 +376,17 @@ const DesignTokensEditor: React.FC = () => {
                 <div className="space-y-2">
                   <ColorInput
                     label="Main"
-                    value={localTokens.colors.primary.main}
+                    value={localTokens.colors?.primary.main}
                     onChange={(v) => updateColor('primary', 'main', v)}
                   />
                   <ColorInput
                     label="Light"
-                    value={localTokens.colors.primary.light}
+                    value={localTokens.colors?.primary.light}
                     onChange={(v) => updateColor('primary', 'light', v)}
                   />
                   <ColorInput
                     label="Dark"
-                    value={localTokens.colors.primary.dark}
+                    value={localTokens.colors?.primary.dark}
                     onChange={(v) => updateColor('primary', 'dark', v)}
                   />
                 </div>
@@ -398,17 +398,17 @@ const DesignTokensEditor: React.FC = () => {
                 <div className="space-y-2">
                   <ColorInput
                     label="Main"
-                    value={localTokens.colors.secondary.main}
+                    value={localTokens.colors?.secondary.main}
                     onChange={(v) => updateColor('secondary', 'main', v)}
                   />
                   <ColorInput
                     label="Light"
-                    value={localTokens.colors.secondary.light}
+                    value={localTokens.colors?.secondary.light}
                     onChange={(v) => updateColor('secondary', 'light', v)}
                   />
                   <ColorInput
                     label="Dark"
-                    value={localTokens.colors.secondary.dark}
+                    value={localTokens.colors?.secondary.dark}
                     onChange={(v) => updateColor('secondary', 'dark', v)}
                   />
                 </div>
@@ -422,7 +422,7 @@ const DesignTokensEditor: React.FC = () => {
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
-                      value={localTokens.colors.success.main}
+                      value={localTokens.colors?.success.main}
                       onChange={(v) => updateColor('success', 'main', v)}
                     />
                   </div>
@@ -434,7 +434,7 @@ const DesignTokensEditor: React.FC = () => {
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
-                      value={localTokens.colors.warning.main}
+                      value={localTokens.colors?.warning.main}
                       onChange={(v) => updateColor('warning', 'main', v)}
                     />
                   </div>
@@ -446,7 +446,7 @@ const DesignTokensEditor: React.FC = () => {
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
-                      value={localTokens.colors.error.main}
+                      value={localTokens.colors?.error.main}
                       onChange={(v) => updateColor('error', 'main', v)}
                     />
                   </div>
@@ -458,7 +458,7 @@ const DesignTokensEditor: React.FC = () => {
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
-                      value={localTokens.colors.info.main}
+                      value={localTokens.colors?.info.main}
                       onChange={(v) => updateColor('info', 'main', v)}
                     />
                   </div>

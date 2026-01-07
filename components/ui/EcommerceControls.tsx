@@ -865,22 +865,22 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.background', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.heading', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.text', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.accent', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.accent', c)}
                 />
             </div>
 
@@ -895,12 +895,12 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#f8fafc'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.cardText', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.cardText', c)}
                 />
             </div>
 
@@ -915,12 +915,12 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.buttonText', c)}
                 />
             </div>
 
@@ -935,12 +935,12 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
                     value={d.colors?.badgeBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.badgeBackground', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.badgeBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
                     value={d.colors?.badgeText || '#ffffff'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.badgeText', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.badgeText', c)}
                 />
             </div>
 
@@ -955,12 +955,12 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
                     value={d.colors?.priceColor || '#111827'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.priceColor', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.priceColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.salePriceColor', 'Sale Price')}
                     value={d.colors?.salePriceColor || '#ef4444'}
-                    onChange={(c) => setNestedData('featuredProducts.colors.salePriceColor', c)}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.salePriceColor', c)}
                 />
             </div>
 
@@ -970,7 +970,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <ColorControl
                 label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
                 value={d.colors?.borderColor || '#e5e7eb'}
-                onChange={(c) => setNestedData('featuredProducts.colors.borderColor', c)}
+                onChange={(c) => setNestedData('featuredProducts.colors?.borderColor', c)}
             />
 
             <hr className="border-editor-border/50" />
@@ -1060,22 +1060,22 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.background', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.heading', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.text', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.accent', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.accent', c)}
                 />
             </div>
 
@@ -1090,12 +1090,12 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#f8fafc'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.cardText', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.cardText', c)}
                 />
             </div>
 
@@ -1110,12 +1110,12 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 <ColorControl
                     label={t('editor.controls.ecommerce.overlayStart', 'Overlay Start')}
                     value={d.colors?.overlayStart || 'transparent'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.overlayStart', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.overlayStart', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.overlayEnd', 'Overlay End')}
                     value={d.colors?.overlayEnd || 'rgba(0,0,0,0.7)'}
-                    onChange={(c) => setNestedData('categoryGrid.colors.overlayEnd', c)}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.overlayEnd', c)}
                 />
             </div>
 
@@ -1125,7 +1125,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             <ColorControl
                 label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
                 value={d.colors?.borderColor || '#e5e7eb'}
-                onChange={(c) => setNestedData('categoryGrid.colors.borderColor', c)}
+                onChange={(c) => setNestedData('categoryGrid.colors?.borderColor', c)}
             />
 
             <hr className="border-editor-border/50" />
@@ -1235,12 +1235,12 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('productHero.colors.background', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.overlayColor', 'Overlay')}
                     value={d.colors?.overlayColor || '#000000'}
-                    onChange={(c) => setNestedData('productHero.colors.overlayColor', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.overlayColor', c)}
                 />
             </div>
 
@@ -1255,17 +1255,17 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#ffffff'}
-                    onChange={(c) => setNestedData('productHero.colors.heading', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#ffffff'}
-                    onChange={(c) => setNestedData('productHero.colors.text', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('productHero.colors.accent', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.accent', c)}
                 />
             </div>
 
@@ -1280,12 +1280,12 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('productHero.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('productHero.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.buttonText', c)}
                 />
             </div>
 
@@ -1300,12 +1300,12 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
                     value={d.colors?.badgeBackground || '#ef4444'}
-                    onChange={(c) => setNestedData('productHero.colors.badgeBackground', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.badgeBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
                     value={d.colors?.badgeText || '#ffffff'}
-                    onChange={(c) => setNestedData('productHero.colors.badgeText', c)}
+                    onChange={(c) => setNestedData('productHero.colors?.badgeText', c)}
                 />
             </div>
 
@@ -1385,22 +1385,22 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#f8fafc'}
-                    onChange={(c) => setNestedData('trustBadges.colors.background', c)}
+                    onChange={(c) => setNestedData('trustBadges.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('trustBadges.colors.heading', c)}
+                    onChange={(c) => setNestedData('trustBadges.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('trustBadges.colors.text', c)}
+                    onChange={(c) => setNestedData('trustBadges.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent/Icon')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('trustBadges.colors.accent', c)}
+                    onChange={(c) => setNestedData('trustBadges.colors?.accent', c)}
                 />
             </div>
 
@@ -1410,7 +1410,7 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
             <ColorControl
                 label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
                 value={d.colors?.borderColor || '#e5e7eb'}
-                onChange={(c) => setNestedData('trustBadges.colors.borderColor', c)}
+                onChange={(c) => setNestedData('trustBadges.colors?.borderColor', c)}
             />
 
             <hr className="border-editor-border/50" />
@@ -1521,22 +1521,22 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#f8fafc'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.background', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#ffffff'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.heading', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#94a3b8'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.text', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#ef4444'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.accent', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.accent', c)}
                 />
             </div>
 
@@ -1551,12 +1551,12 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.countdownBackground', 'Countdown BG')}
                     value={d.colors?.countdownBackground || '#0f172a'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.countdownBackground', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.countdownBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.countdownText', 'Countdown Text')}
                     value={d.colors?.countdownText || '#ffffff'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.countdownText', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.countdownText', c)}
                 />
             </div>
 
@@ -1571,12 +1571,12 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#ef4444'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.buttonText', c)}
                 />
             </div>
 
@@ -1591,12 +1591,12 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
                     value={d.colors?.badgeBackground || '#ef4444'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.badgeBackground', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.badgeBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
                     value={d.colors?.badgeText || '#ffffff'}
-                    onChange={(c) => setNestedData('saleCountdown.colors.badgeText', c)}
+                    onChange={(c) => setNestedData('saleCountdown.colors?.badgeText', c)}
                 />
             </div>
 
@@ -1864,27 +1864,27 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#4f46e5'}
-                    onChange={(c) => setNestedData('announcementBar.colors.background', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors.text', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.linkColor', 'Link Color')}
                     value={d.colors?.linkColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors.linkColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors?.linkColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.iconColor', 'Icon Color')}
                     value={d.colors?.iconColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors.iconColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors?.iconColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
                     value={d.colors?.borderColor || 'transparent'}
-                    onChange={(c) => setNestedData('announcementBar.colors.borderColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors?.borderColor', c)}
                 />
             </div>
 
@@ -2025,12 +2025,12 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.background', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.overlayColor', 'Overlay')}
                     value={d.colors?.overlayColor || '#000000'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.overlayColor', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.overlayColor', c)}
                 />
             </div>
 
@@ -2045,17 +2045,17 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#ffffff'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.heading', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#ffffff'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.text', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.accent', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.accent', c)}
                 />
             </div>
 
@@ -2070,12 +2070,12 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('collectionBanner.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('collectionBanner.colors?.buttonText', c)}
                 />
             </div>
 
@@ -2147,22 +2147,22 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.background', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.heading', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.text', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.accent', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.accent', c)}
                 />
             </div>
 
@@ -2177,12 +2177,12 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#f8fafc'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('recentlyViewed.colors.cardText', c)}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.cardText', c)}
                 />
             </div>
 
@@ -2248,22 +2248,22 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('productReviews.colors.background', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('productReviews.colors.heading', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('productReviews.colors.text', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('productReviews.colors.accent', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.accent', c)}
                 />
             </div>
 
@@ -2278,12 +2278,12 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#f8fafc'}
-                    onChange={(c) => setNestedData('productReviews.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('productReviews.colors.cardText', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.cardText', c)}
                 />
             </div>
 
@@ -2298,12 +2298,12 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 <ColorControl
                     label={t('editor.controls.ecommerce.starColor', 'Star Color')}
                     value={d.colors?.starColor || '#fbbf24'}
-                    onChange={(c) => setNestedData('productReviews.colors.starColor', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.starColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.verifiedBadgeColor', 'Verified Badge')}
                     value={d.colors?.verifiedBadgeColor || '#10b981'}
-                    onChange={(c) => setNestedData('productReviews.colors.verifiedBadgeColor', c)}
+                    onChange={(c) => setNestedData('productReviews.colors?.verifiedBadgeColor', c)}
                 />
             </div>
 
@@ -2375,22 +2375,22 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#f8fafc'}
-                    onChange={(c) => setNestedData('productBundle.colors.background', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('productBundle.colors.heading', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('productBundle.colors.text', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('productBundle.colors.accent', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.accent', c)}
                 />
             </div>
 
@@ -2405,12 +2405,12 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#ffffff'}
-                    onChange={(c) => setNestedData('productBundle.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('productBundle.colors.cardText', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.cardText', c)}
                 />
             </div>
 
@@ -2425,12 +2425,12 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
                     value={d.colors?.priceColor || '#111827'}
-                    onChange={(c) => setNestedData('productBundle.colors.priceColor', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.priceColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.savingsColor', 'Savings')}
                     value={d.colors?.savingsColor || '#10b981'}
-                    onChange={(c) => setNestedData('productBundle.colors.savingsColor', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.savingsColor', c)}
                 />
             </div>
 
@@ -2445,12 +2445,12 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('productBundle.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('productBundle.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.buttonText', c)}
                 />
             </div>
 
@@ -2465,12 +2465,12 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
                     value={d.colors?.badgeBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('productBundle.colors.badgeBackground', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.badgeBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
                     value={d.colors?.badgeText || '#ffffff'}
-                    onChange={(c) => setNestedData('productBundle.colors.badgeText', c)}
+                    onChange={(c) => setNestedData('productBundle.colors?.badgeText', c)}
                 />
             </div>
 
@@ -2541,22 +2541,22 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#ffffff'}
-                    onChange={(c) => setNestedData('storeSettings.colors.background', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
                     value={d.colors?.heading || '#111827'}
-                    onChange={(c) => setNestedData('storeSettings.colors.heading', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.heading', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#374151'}
-                    onChange={(c) => setNestedData('storeSettings.colors.text', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
-                    onChange={(c) => setNestedData('storeSettings.colors.accent', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.accent', c)}
                 />
             </div>
 
@@ -2571,12 +2571,12 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
                     value={d.colors?.cardBackground || '#f8fafc'}
-                    onChange={(c) => setNestedData('storeSettings.colors.cardBackground', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.cardBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
-                    onChange={(c) => setNestedData('storeSettings.colors.cardText', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.cardText', c)}
                 />
             </div>
 
@@ -2591,12 +2591,12 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
                     value={d.colors?.buttonBackground || '#6366f1'}
-                    onChange={(c) => setNestedData('storeSettings.colors.buttonBackground', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.buttonBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                     value={d.colors?.buttonText || '#ffffff'}
-                    onChange={(c) => setNestedData('storeSettings.colors.buttonText', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.buttonText', c)}
                 />
             </div>
 
@@ -2611,22 +2611,22 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
                     value={d.colors?.priceColor || '#111827'}
-                    onChange={(c) => setNestedData('storeSettings.colors.priceColor', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.priceColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.salePriceColor', 'Sale Price')}
                     value={d.colors?.salePriceColor || '#ef4444'}
-                    onChange={(c) => setNestedData('storeSettings.colors.salePriceColor', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.salePriceColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
                     value={d.colors?.badgeBackground || '#ef4444'}
-                    onChange={(c) => setNestedData('storeSettings.colors.badgeBackground', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.badgeBackground', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
                     value={d.colors?.badgeText || '#ffffff'}
-                    onChange={(c) => setNestedData('storeSettings.colors.badgeText', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.badgeText', c)}
                 />
             </div>
 
@@ -2637,12 +2637,12 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <ColorControl
                     label={t('editor.controls.ecommerce.borderColor', 'Border')}
                     value={d.colors?.borderColor || '#e5e7eb'}
-                    onChange={(c) => setNestedData('storeSettings.colors.borderColor', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.borderColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.starColor', 'Star Color')}
                     value={d.colors?.starColor || '#fbbf24'}
-                    onChange={(c) => setNestedData('storeSettings.colors.starColor', c)}
+                    onChange={(c) => setNestedData('storeSettings.colors?.starColor', c)}
                 />
             </div>
         </div>
