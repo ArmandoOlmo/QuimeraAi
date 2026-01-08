@@ -32,13 +32,14 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 interface HeroSplitProps extends HeroSplitData {
     borderRadius: BorderRadiusSize;
     cornerGradient?: CornerGradientConfig;
+    onNavigate?: (href: string) => void;
 }
 
 const HeroSplit: React.FC<HeroSplitProps> = ({
     headline,
     subheadline,
     buttonText,
-    buttonUrl = '#cta',
+    buttonUrl = '/#cta',
     imageUrl,
     imagePosition = 'right',
     maxHeight = 500,
@@ -49,6 +50,7 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
     subheadlineFontSize = 'md',
     buttonBorderRadius = 'xl',
     cornerGradient,
+    onNavigate,
 }) => {
     const { getColor } = useDesignTokens();
 
@@ -149,6 +151,12 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                         </p>
                         <a 
                             href={buttonUrl}
+                            onClick={(e) => {
+                                if (onNavigate && buttonUrl && !buttonUrl.startsWith('http://') && !buttonUrl.startsWith('https://')) {
+                                    e.preventDefault();
+                                    onNavigate(buttonUrl);
+                                }
+                            }}
                             className={`inline-block font-bold py-3 px-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg font-button ${borderRadiusClasses[buttonBorderRadius || borderRadius]}`}
                             style={{ 
                                 backgroundColor: actualColors.buttonBackground,

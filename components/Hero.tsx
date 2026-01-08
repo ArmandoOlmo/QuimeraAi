@@ -89,6 +89,7 @@ const objectFitClasses: Record<ObjectFit, string> = {
 
 interface HeroProps extends HeroData {
     borderRadius: BorderRadiusSize;
+    onNavigate?: (href: string) => void;
 }
 
 const getAspectRatioValue = (ratio: AspectRatio): number => {
@@ -147,8 +148,9 @@ const Hero: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
-    primaryCtaLink = '#cta',
-    secondaryCtaLink = '#features',
+    primaryCtaLink = '/#cta',
+    secondaryCtaLink = '/#features',
+    onNavigate,
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -284,7 +286,14 @@ const Hero: React.FC<HeroProps> = ({
         </p>
         <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a 
-            href={primaryCtaLink || '#cta'} 
+            href={primaryCtaLink || '/#cta'} 
+            onClick={(e) => {
+              const href = primaryCtaLink || '/#cta';
+              if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(href);
+              }
+            }}
             style={{ 
               backgroundColor: actualColors.buttonBackground || actualColors.primary, 
               color: actualColors.buttonText || '#ffffff',
@@ -297,7 +306,14 @@ const Hero: React.FC<HeroProps> = ({
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
           <a 
-            href={secondaryCtaLink || '#features'} 
+            href={secondaryCtaLink || '/#features'} 
+            onClick={(e) => {
+              const href = secondaryCtaLink || '/#features';
+              if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(href);
+              }
+            }}
             className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
               secondaryButtonStyle === 'outline' 
                   ? 'border-2 bg-transparent' 

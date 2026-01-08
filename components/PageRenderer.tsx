@@ -222,20 +222,42 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         window.location.href = '/checkout';
     };
     
-    // Build header links from navigation pages
+    // Build header links with priority: CMS Menu > main-menu > Pages > Manual Links
+    // This matches the logic in PublicWebsitePreview.tsx for consistency
     const navigationLinks = useMemo(() => {
-        if (!project.pages || project.pages.length === 0) {
-            return mergedData.header?.links || [];
+        const menus = project.menus || [];
+        
+        // 1. CMS Menu by ID takes priority if configured
+        if (mergedData.header?.menuId) {
+            const menu = menus.find(m => m.id === mergedData.header?.menuId);
+            if (menu && menu.items?.length > 0) {
+                return menu.items.map((i: any) => ({ text: i.text, href: i.href }));
+            }
         }
         
-        return project.pages
-            .filter(p => p.showInNavigation)
-            .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0))
-            .map(p => ({
-                text: p.title,
-                href: p.slug,
-            }));
-    }, [project.pages, mergedData.header?.links]);
+        // 2. Try main-menu from CMS menus
+        const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
+        if (mainMenu && mainMenu.items?.length > 0) {
+            return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href }));
+        }
+        
+        // 3. Generate from pages if available (multi-page architecture)
+        if (project.pages && project.pages.length > 0) {
+            const navPages = project.pages
+                .filter(p => p.showInNavigation)
+                .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
+            
+            if (navPages.length > 0) {
+                return navPages.map(p => ({
+                    text: p.title,
+                    href: p.slug,
+                }));
+            }
+        }
+        
+        // 4. Fall back to manual links
+        return mergedData.header?.links || [];
+    }, [project.pages, project.menus, mergedData.header?.links, mergedData.header?.menuId]);
     
     // Render a single section
     const renderSection = (section: PageSection, index: number): React.ReactNode => {

@@ -1782,7 +1782,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                         label={t('editor.controls.ecommerce.linkUrl', 'Link URL')}
                         value={msg.link || ''}
                         onChange={(e) => updateMessage(index, 'link', e.target.value)}
-                        placeholder="#store"
+                        placeholder="/tienda"
                     />
                     <Input
                         label={t('editor.controls.ecommerce.linkText', 'Link Text')}

@@ -96,9 +96,9 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     const handleButtonClick = () => {
         // Check if buttonUrl is a custom URL (not a generic store link)
-        // Generic links like '#products', '#store', '' are treated as "navigate to product"
+        // Generic links like '/tienda', '#products', '' are treated as "navigate to product"
         const isCustomUrl = data.buttonUrl && 
-            !['#products', '#store', '#tienda', ''].includes(data.buttonUrl.toLowerCase());
+            !['#products', '#store', '#tienda', '/tienda', ''].includes(data.buttonUrl.toLowerCase());
         
         if (isCustomUrl) {
             window.location.href = data.buttonUrl!;

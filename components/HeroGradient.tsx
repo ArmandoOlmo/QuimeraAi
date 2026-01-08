@@ -64,6 +64,7 @@ const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
 
 interface HeroProps extends HeroData {
     borderRadius: BorderRadiusSize;
+    onNavigate?: (href: string) => void;
 }
 
 const HeroGradient: React.FC<HeroProps> = ({ 
@@ -75,8 +76,9 @@ const HeroGradient: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    primaryCtaLink = '#cta',
-    secondaryCtaLink = '#features',
+    primaryCtaLink = '/#cta',
+    secondaryCtaLink = '/#features',
+    onNavigate,
 }) => {
     const { getColor } = useDesignTokens();
     
@@ -188,7 +190,14 @@ const HeroGradient: React.FC<HeroProps> = ({
                         {/* CTAs */}
                         <div className="flex flex-wrap gap-4">
                             <a 
-                                href={primaryCtaLink || '#cta'} 
+                                href={primaryCtaLink || '/#cta'} 
+                                onClick={(e) => {
+                                    const href = primaryCtaLink || '/#cta';
+                                    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                                        e.preventDefault();
+                                        onNavigate(href);
+                                    }
+                                }}
                                 style={{ 
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText,
@@ -202,7 +211,14 @@ const HeroGradient: React.FC<HeroProps> = ({
                             </a>
                             
                             <a 
-                                href={secondaryCtaLink || '#features'} 
+                                href={secondaryCtaLink || '/#features'} 
+                                onClick={(e) => {
+                                    const href = secondaryCtaLink || '/#features';
+                                    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                                        e.preventDefault();
+                                        onNavigate(href);
+                                    }
+                                }}
                                 className={`relative overflow-hidden group px-8 py-4 font-bold backdrop-blur-md hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
                                     secondaryButtonStyle === 'outline' 
                                         ? 'border-2 bg-transparent' 

@@ -501,12 +501,12 @@ const Controls: React.FC = () => {
   const handleAddPage = (templateId: PageTemplateId) => {
     const template = PAGE_TEMPLATES[templateId];
     if (template) {
+      const now = new Date().toISOString();
       const newPage: SitePage = {
         id: `page-${Date.now()}`,
         title: template.title,
         slug: `/${templateId === 'home' ? '' : templateId}`,
-        type: template.type,
-        dynamicSource: template.dynamicSource,
+        type: template.type || 'static',
         sections: template.sections as PageSection[],
         sectionData: {},
         seo: {
@@ -516,7 +516,13 @@ const Controls: React.FC = () => {
         isHomePage: templateId === 'home',
         showInNavigation: true,
         navigationOrder: pages.length + 1,
+        createdAt: now,
+        updatedAt: now,
       };
+      // Solo añadir dynamicSource si está definido (evita undefined en Firebase)
+      if (template.dynamicSource) {
+        newPage.dynamicSource = template.dynamicSource;
+      }
       addPage(newPage);
       setActivePage(newPage);
     }
@@ -4810,20 +4816,20 @@ const Controls: React.FC = () => {
           {(data.hero.primaryCtaLinkType || 'section') === 'section' && (
             <div>
               <select
-                value={data.hero.primaryCtaLink || '#cta'}
+                value={data.hero.primaryCtaLink || '/#cta'}
                 onChange={(e) => setNestedData('hero.primaryCtaLink', e.target.value)}
                 className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
               >
-                <option value="#hero">Hero</option>
-                <option value="#features">Features</option>
-                <option value="#services">Services</option>
-                <option value="#pricing">Pricing</option>
-                <option value="#testimonials">Testimonials</option>
-                <option value="#team">Team</option>
-                <option value="#faq">FAQ</option>
-                <option value="#contact">Contact</option>
-                <option value="#cta">CTA</option>
-                <option value="#store">Tienda</option>
+                <option value="/">Inicio</option>
+                <option value="/#features">Features</option>
+                <option value="/#services">Services</option>
+                <option value="/#pricing">Pricing</option>
+                <option value="/#testimonials">Testimonials</option>
+                <option value="/#team">Team</option>
+                <option value="/#faq">FAQ</option>
+                <option value="/#contact">Contact</option>
+                <option value="/#cta">CTA</option>
+                <option value="/tienda">Tienda</option>
               </select>
             </div>
           )}
@@ -4843,7 +4849,7 @@ const Controls: React.FC = () => {
           {data.hero.primaryCtaLinkType === 'product' && (
             <div className="space-y-2">
               {/* Selected Product Display */}
-              {data.hero.primaryCtaLink && data.hero.primaryCtaLink.includes('#store/product/') && (
+              {data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/producto/') || data.hero.primaryCtaLink.includes('#store/product/')) && (
                 <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
                   <Check size={14} />
                   <span className="flex-1 truncate">
@@ -4897,7 +4903,7 @@ const Controls: React.FC = () => {
                         <button
                           key={product.id}
                           onClick={() => {
-                            const link = product.slug ? `#store/product/${product.slug}` : `#store/product/${product.id}`;
+                            const link = product.slug ? `/tienda/producto/${product.slug}` : `/tienda/producto/${product.id}`;
                             setNestedData('hero.primaryCtaLink', link);
                             setShowHeroPrimaryProductPicker(false);
                           }}
@@ -4927,7 +4933,7 @@ const Controls: React.FC = () => {
           {data.hero.primaryCtaLinkType === 'collection' && (
             <div className="space-y-2">
               {/* Selected Collection Display */}
-              {data.hero.primaryCtaLink && data.hero.primaryCtaLink.includes('#store/category/') && (
+              {data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/categoria/') || data.hero.primaryCtaLink.includes('#store/category/')) && (
                 <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
                   <FolderOpen size={14} />
                   <span className="flex-1 truncate">
@@ -4961,7 +4967,7 @@ const Controls: React.FC = () => {
                       <button
                         key={category.id}
                         onClick={() => {
-                          const link = category.slug ? `#store/category/${category.slug}` : `#store/category/${category.id}`;
+                          const link = category.slug ? `/tienda/categoria/${category.slug}` : `/tienda/categoria/${category.id}`;
                           setNestedData('hero.primaryCtaLink', link);
                           setShowHeroPrimaryCollectionPicker(false);
                         }}
@@ -5023,20 +5029,20 @@ const Controls: React.FC = () => {
           {(data.hero.secondaryCtaLinkType || 'section') === 'section' && (
             <div>
               <select
-                value={data.hero.secondaryCtaLink || '#features'}
+                value={data.hero.secondaryCtaLink || '/#features'}
                 onChange={(e) => setNestedData('hero.secondaryCtaLink', e.target.value)}
                 className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
               >
-                <option value="#hero">Hero</option>
-                <option value="#features">Features</option>
-                <option value="#services">Services</option>
-                <option value="#pricing">Pricing</option>
-                <option value="#testimonials">Testimonials</option>
-                <option value="#team">Team</option>
-                <option value="#faq">FAQ</option>
-                <option value="#contact">Contact</option>
-                <option value="#cta">CTA</option>
-                <option value="#store">Tienda</option>
+                <option value="/">Inicio</option>
+                <option value="/#features">Features</option>
+                <option value="/#services">Services</option>
+                <option value="/#pricing">Pricing</option>
+                <option value="/#testimonials">Testimonials</option>
+                <option value="/#team">Team</option>
+                <option value="/#faq">FAQ</option>
+                <option value="/#contact">Contact</option>
+                <option value="/#cta">CTA</option>
+                <option value="/tienda">Tienda</option>
               </select>
             </div>
           )}
@@ -5056,7 +5062,7 @@ const Controls: React.FC = () => {
           {data.hero.secondaryCtaLinkType === 'product' && (
             <div className="space-y-2">
               {/* Selected Product Display */}
-              {data.hero.secondaryCtaLink && data.hero.secondaryCtaLink.includes('#store/product/') && (
+              {data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/producto/') || data.hero.secondaryCtaLink.includes('#store/product/')) && (
                 <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
                   <Check size={14} />
                   <span className="flex-1 truncate">
@@ -5110,7 +5116,7 @@ const Controls: React.FC = () => {
                         <button
                           key={product.id}
                           onClick={() => {
-                            const link = product.slug ? `#store/product/${product.slug}` : `#store/product/${product.id}`;
+                            const link = product.slug ? `/tienda/producto/${product.slug}` : `/tienda/producto/${product.id}`;
                             setNestedData('hero.secondaryCtaLink', link);
                             setShowHeroSecondaryProductPicker(false);
                           }}
@@ -5140,7 +5146,7 @@ const Controls: React.FC = () => {
           {data.hero.secondaryCtaLinkType === 'collection' && (
             <div className="space-y-2">
               {/* Selected Collection Display */}
-              {data.hero.secondaryCtaLink && data.hero.secondaryCtaLink.includes('#store/category/') && (
+              {data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/categoria/') || data.hero.secondaryCtaLink.includes('#store/category/')) && (
                 <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
                   <FolderOpen size={14} />
                   <span className="flex-1 truncate">
@@ -5174,7 +5180,7 @@ const Controls: React.FC = () => {
                       <button
                         key={category.id}
                         onClick={() => {
-                          const link = category.slug ? `#store/category/${category.slug}` : `#store/category/${category.id}`;
+                          const link = category.slug ? `/tienda/categoria/${category.slug}` : `/tienda/categoria/${category.id}`;
                           setNestedData('hero.secondaryCtaLink', link);
                           setShowHeroSecondaryCollectionPicker(false);
                         }}

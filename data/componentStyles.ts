@@ -906,7 +906,7 @@ export const componentStyles: ComponentStyles = {
   announcementBar: {
     variant: 'static',
     messages: [
-      { id: '1', text: '¡Envío gratis en pedidos superiores a 50€!', linkText: 'Ver productos', linkUrl: '#store' },
+      { id: '1', text: '¡Envío gratis en pedidos superiores a 50€!', linkText: 'Ver productos', linkUrl: '/tienda' },
     ],
     paddingY: 'sm',
     paddingX: 'md',

@@ -49,13 +49,13 @@ const defaultMenus: Menu[] = [
         id: 'main', 
         title: 'Main Menu', 
         handle: 'main-menu', 
-        items: [{ id: '1', text: 'Home', href: '#hero', type: 'section' }] 
+        items: [{ id: '1', text: 'Home', href: '/', type: 'section' }] 
     },
     { 
         id: 'footer', 
         title: 'Footer Menu', 
         handle: 'footer-menu', 
-        items: [{ id: '1', text: 'Contact', href: '#contact', type: 'section' }] 
+        items: [{ id: '1', text: 'Contact', href: '/#contact', type: 'section' }] 
     }
 ];
 

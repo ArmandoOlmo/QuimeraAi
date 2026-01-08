@@ -384,7 +384,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 )}
 
                 <a
-                    href="#store"
+                    href="/tienda"
                     className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                     style={{
                         backgroundColor: data.colors?.buttonBackground,
@@ -496,7 +496,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     </div>
                 )}
                 <a
-                    href="#store"
+                    href="/tienda"
                     className="px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
                     style={{
                         backgroundColor: data.colors?.buttonBackground,

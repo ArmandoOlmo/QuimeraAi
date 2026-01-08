@@ -1399,12 +1399,12 @@ TEMPLATE #${t.index}: "${t.name}"
             // Keep template colors and style - don't override
             // Logo not in onboarding - keep template logo
             
-            // Build simple navigation links
+            // Build simple navigation links (using anchor scroll format /#section)
             data.header.links = [
-                { text: t('Inicio', 'Home'), href: '#hero' },
-                { text: t('Servicios', 'Services'), href: '#services' },
-                { text: t('Nosotros', 'About'), href: '#about' },
-                { text: t('Contacto', 'Contact'), href: '#contact' },
+                { text: t('Inicio', 'Home'), href: '/' },
+                { text: t('Servicios', 'Services'), href: '/#services' },
+                { text: t('Nosotros', 'About'), href: '/#about' },
+                { text: t('Contacto', 'Contact'), href: '/#contact' },
             ];
         }
         
@@ -1968,18 +1968,18 @@ TEMPLATE #${t.index}: "${t.name}"
                 simpleImagePrompts[key] = config.prompt;
             });
 
-            // Build simple navigation menus
+            // Build simple navigation menus (using anchor scroll format /#section)
             const isSpanish = progress.language === 'es';
             const projectMenus = [
                 { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [
-                    { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '#hero', type: 'section' as const },
-                    { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '#services', type: 'section' as const },
-                    { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '#about', type: 'section' as const },
-                    { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '#contact', type: 'section' as const },
+                    { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
+                    { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '/#services', type: 'section' as const },
+                    { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '/#about', type: 'section' as const },
+                    { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
                 ]},
                 { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [
-                    { id: 'f-1', text: isSpanish ? 'Inicio' : 'Home', href: '#hero', type: 'section' as const },
-                    { id: 'f-2', text: isSpanish ? 'Contacto' : 'Contact', href: '#contact', type: 'section' as const },
+                    { id: 'f-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
+                    { id: 'f-2', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
                 ]}
             ];
 

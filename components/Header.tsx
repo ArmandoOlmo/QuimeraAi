@@ -59,10 +59,11 @@ interface NavLinksProps {
   className?: string;
   isMobile?: boolean;
   onLinkClick?: () => void;
+  onNavigate?: (href: string) => void;
   linkFontSize?: number;
 }
 
-const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, linkFontSize = 14 }) => {
+const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, onNavigate, linkFontSize = 14 }) => {
   
     const getHoverClass = () => {
         if (isMobile) return '';
@@ -74,6 +75,18 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
             default: return 'hover:opacity-70';
         }
     }
+
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        // If onNavigate is provided, use internal navigation
+        if (onNavigate) {
+            e.preventDefault();
+            onNavigate(href);
+            onLinkClick?.();
+        } else {
+            // Only call onLinkClick for closing mobile menu
+            onLinkClick?.();
+        }
+    };
 
     return (
       <ul className={className}>
@@ -89,7 +102,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
           >
             <a 
                 href={link.href} 
-                onClick={onLinkClick}
+                onClick={(e) => handleClick(e, link.href)}
                 className={`
                   relative transition-all duration-300 font-header font-medium
                   ${isMobile 
@@ -119,6 +132,8 @@ const Header: React.FC<HeaderData & {
     forceSolid?: boolean;
     /** Callback when search is performed */
     onSearch?: (term: string) => void;
+    /** Callback for internal navigation (prevents page reload in preview mode) */
+    onNavigate?: (href: string) => void;
 }> = ({ 
     style = 'sticky-solid', layout, isSticky, glassEffect, height,
     logoType, logoText, logoImageUrl, logoWidth,
@@ -136,6 +151,7 @@ const Header: React.FC<HeaderData & {
     linkFontSize = 14,
     forceSolid = false,
     onSearch,
+    onNavigate,
 }) => {
   // Use safe versions of hooks that work outside EditorProvider (for public preview)
   const editorContext = useSafeEditor();
@@ -391,7 +407,7 @@ const Header: React.FC<HeaderData & {
           id: 'hero',
           title: pageData.hero.headline,
           description: pageData.hero.subheadline,
-          href: '#hero'
+          href: '/'
         });
       }
       
@@ -480,7 +496,7 @@ const Header: React.FC<HeaderData & {
         id: 'store',
         title: 'Tienda',
         description: 'Ver todos los productos',
-        href: '#store'
+        href: '/tienda'
       });
     }
     
@@ -502,7 +518,7 @@ const Header: React.FC<HeaderData & {
             <>
                 <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-center">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                 </div>
                 <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                     {showSearch && (
@@ -526,7 +542,7 @@ const Header: React.FC<HeaderData & {
         return (
              <>
                  <div className="hidden md:flex flex-1 justify-start items-center">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                  </div>
                  <div className="flex-shrink-0 mx-auto">
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
@@ -556,7 +572,7 @@ const Header: React.FC<HeaderData & {
                     <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} />
                  </div>
                  <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                     <div className="ml-8 flex items-center gap-4">
                         {showSearch && (
                             <GlobalSearch
@@ -581,7 +597,7 @@ const Header: React.FC<HeaderData & {
             <>
                 <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} /></div>
                 <div className="hidden md:flex flex-1 justify-end items-center gap-8">
-                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} />
+                    <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                     <div className="flex items-center ml-4 gap-4">
                         {showSearch && (
                             <GlobalSearch
@@ -779,7 +795,13 @@ const Header: React.FC<HeaderData & {
                 <li key={link.text}>
                   <a 
                     href={link.href} 
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={(e) => {
+                      if (onNavigate) {
+                        e.preventDefault();
+                        onNavigate(link.href);
+                      }
+                      setIsMenuOpen(false);
+                    }}
                     className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors"
                     style={{ color: colors?.text }}
                   >

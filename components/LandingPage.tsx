@@ -176,21 +176,27 @@ const LandingPageContent: React.FC = () => {
     root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
   }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
 
-  // Handle Hash Routing for Articles and Store
+  // Handle routing for Articles, Store and Sections
+  // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
-      const handleHashChange = () => {
+      const handleNavigation = () => {
+          const path = window.location.pathname;
           const hash = window.location.hash;
-          const decodedHash = decodeURIComponent(hash); // Handle %20 spaces
+          const decodedHash = decodeURIComponent(hash);
 
           // Reset all views first
           setActivePost(null);
           setStoreView({ type: 'none' });
           setIsRouting(false);
 
-          // Article routing: #article:slug
-          if (decodedHash.startsWith('#article:')) {
+          // ========================================
+          // REAL PATH ROUTING (Shopify/Wix style)
+          // ========================================
+          
+          // Blog article routing: /blog/slug
+          if (path.startsWith('/blog/') && path !== '/blog/') {
               setIsRouting(true);
-              const slug = decodedHash.replace('#article:', '');
+              const slug = path.replace('/blog/', '');
               const post = cmsPosts.find(p => p.slug === slug);
               
               if (post) {
@@ -198,17 +204,68 @@ const LandingPageContent: React.FC = () => {
                   window.scrollTo(0, 0);
                   setIsRouting(false);
               } else {
-                  // If posts are loading, wait (handled by isLoadingCMS in UI)
-                  // If loaded and not found, stay in routing state or show 404 (handled in UI)
-                   if (!isLoadingCMS && cmsPosts.length > 0) {
-                       console.warn(`Article with slug "${slug}" not found.`);
-                       setIsRouting(false);
-                   }
+                  if (!isLoadingCMS && cmsPosts.length > 0) {
+                      console.warn(`Article with slug "${slug}" not found.`);
+                      setIsRouting(false);
+                  }
               }
               return;
           }
           
-          // Store routing: #store, #store/category/slug, #store/product/slug
+          // Store routing: /tienda
+          if (path === '/tienda' || path === '/tienda/') {
+              setStoreView({ type: 'store' });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          // Store category routing: /tienda/categoria/slug
+          if (path.startsWith('/tienda/categoria/')) {
+              const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
+              setStoreView({ type: 'category', slug });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          // Store product routing: /tienda/producto/slug
+          if (path.startsWith('/tienda/producto/')) {
+              const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
+              setStoreView({ type: 'product', slug });
+              window.scrollTo(0, 0);
+              return;
+          }
+          
+          // Checkout routing: /checkout
+          if (path === '/checkout' || path === '/checkout/') {
+              setStoreView({ type: 'checkout' });
+              window.scrollTo(0, 0);
+              return;
+          }
+
+          // ========================================
+          // LEGACY HASH ROUTING (backward compatibility)
+          // ========================================
+          
+          // Article routing: #article:slug (legacy)
+          if (decodedHash.startsWith('#article:')) {
+              setIsRouting(true);
+              const slug = decodedHash.replace('#article:', '').trim();
+              const post = cmsPosts.find(p => p.slug === slug);
+              
+              if (post) {
+                  setActivePost(post);
+                  window.scrollTo(0, 0);
+                  setIsRouting(false);
+              } else {
+                  if (!isLoadingCMS && cmsPosts.length > 0) {
+                      console.warn(`Article with slug "${slug}" not found.`);
+                      setIsRouting(false);
+                  }
+              }
+              return;
+          }
+          
+          // Store routing: #store (legacy)
           if (decodedHash === '#store') {
               setStoreView({ type: 'store' });
               window.scrollTo(0, 0);
@@ -229,16 +286,16 @@ const LandingPageContent: React.FC = () => {
               return;
           }
           
-          // Checkout routing: #checkout
           if (decodedHash === '#checkout') {
               setStoreView({ type: 'checkout' });
               window.scrollTo(0, 0);
               return;
           }
           
-          // Handle scrolling for section links (e.g. #features)
+          // ========================================
+          // ANCHOR SCROLL (/#section format)
+          // ========================================
           if (hash.length > 1) {
-              // Allow render cycle to complete before scrolling
               setTimeout(() => {
                   const id = hash.substring(1);
                   const element = document.getElementById(id);
@@ -249,35 +306,159 @@ const LandingPageContent: React.FC = () => {
           }
       };
 
-      // Check initial hash
-      handleHashChange();
+      // Check initial path/hash
+      handleNavigation();
 
       // Listen for changes
-      window.addEventListener('hashchange', handleHashChange);
-      return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [cmsPosts, isLoadingCMS]); // Re-run when posts load via subscription
+      window.addEventListener('hashchange', handleNavigation);
+      window.addEventListener('popstate', handleNavigation);
+      return () => {
+          window.removeEventListener('hashchange', handleNavigation);
+          window.removeEventListener('popstate', handleNavigation);
+      };
+  }, [cmsPosts, isLoadingCMS]);
 
   const handleBackToHome = () => {
-      window.location.hash = ''; 
-      // This triggers hashchange, which sets activePost(null) and storeView to none
+      window.history.pushState({}, '', '/');
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      window.scrollTo(0, 0);
   };
 
-  // Store navigation handlers
+  // Store navigation handlers - use real paths
   const handleNavigateToStore = useCallback(() => {
-      window.location.hash = 'store';
+      window.history.pushState({}, '', '/tienda');
+      setStoreView({ type: 'store' });
+      window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
-      window.location.hash = `store/category/${categorySlug}`;
+      window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
+      setStoreView({ type: 'category', slug: categorySlug });
+      window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
-      window.location.hash = `store/product/${productSlug}`;
+      window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
+      setStoreView({ type: 'product', slug: productSlug });
+      window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCheckout = useCallback(() => {
-      window.location.hash = 'checkout';
+      window.history.pushState({}, '', '/checkout');
+      setStoreView({ type: 'checkout' });
+      window.scrollTo(0, 0);
   }, []);
+
+  // Universal navigation handler for Header links
+  const handleLinkNavigation = useCallback((href: string) => {
+      // Reset views
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+
+      // Home page
+      if (href === '/' || href === '') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+      }
+
+      // Anchor scroll (/#section or #section)
+      if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
+          const id = href.replace('/#', '').replace('#', '');
+          setTimeout(() => {
+              const element = document.getElementById(id);
+              if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+          }, 100);
+          return;
+      }
+
+      // Blog article: /blog/slug
+      if (href.startsWith('/blog/')) {
+          const slug = href.replace('/blog/', '').replace(/\/$/, '');
+          const post = cmsPosts.find(p => p.slug === slug);
+          if (post) {
+              setActivePost(post);
+              window.scrollTo(0, 0);
+          }
+          return;
+      }
+
+      // Store: /tienda
+      if (href === '/tienda' || href === '/tienda/') {
+          setStoreView({ type: 'store' });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Store category: /tienda/categoria/slug
+      if (href.startsWith('/tienda/categoria/')) {
+          const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
+          setStoreView({ type: 'category', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Store product: /tienda/producto/slug
+      if (href.startsWith('/tienda/producto/')) {
+          const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
+          setStoreView({ type: 'product', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Checkout
+      if (href === '/checkout' || href === '/checkout/') {
+          setStoreView({ type: 'checkout' });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Legacy hash support
+      if (href.startsWith('#article:')) {
+          const slug = href.replace('#article:', '').trim();
+          const post = cmsPosts.find(p => p.slug === slug);
+          if (post) {
+              setActivePost(post);
+              window.scrollTo(0, 0);
+          }
+          return;
+      }
+
+      if (href === '#store') {
+          setStoreView({ type: 'store' });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      if (href.startsWith('#store/category/')) {
+          const slug = href.replace('#store/category/', '');
+          setStoreView({ type: 'category', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      if (href.startsWith('#store/product/')) {
+          const slug = href.replace('#store/product/', '');
+          setStoreView({ type: 'product', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // External URLs - open in new tab
+      if (href.startsWith('http://') || href.startsWith('https://')) {
+          window.open(href, '_blank');
+          return;
+      }
+
+      // Fallback: try to scroll to element by ID
+      const id = href.replace(/^\//, '').replace(/\/$/, '');
+      const element = document.getElementById(id);
+      if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+  }, [cmsPosts]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
@@ -489,14 +670,14 @@ const LandingPageContent: React.FC = () => {
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
       mergedHeroData.heroVariant === 'modern' 
-        ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+        ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
         : mergedHeroData.heroVariant === 'gradient'
-          ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+          ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
           : mergedHeroData.heroVariant === 'fitness'
-            ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
-            : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} />
+            ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+            : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
     ),
-    heroSplit: <HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} />,
+    heroSplit: <HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />,
     features: <Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} />,
     testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} />,
     slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
@@ -521,7 +702,7 @@ const LandingPageContent: React.FC = () => {
       />
     ),
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
-    footer: <Footer {...mergedFooterData} />,
+    footer: <Footer {...mergedFooterData} onNavigate={handleLinkNavigation} />,
     header: null,
     typography: null,
     colors: null, // Global colors are managed via theme settings
@@ -609,8 +790,8 @@ const LandingPageContent: React.FC = () => {
       if (navPages.length > 0) {
         return navPages.map(p => ({
           text: p.title,
-          // Use hash for SPA mode in editor, real paths in SSR
-          href: p.isHomePage ? '#' : `#${(p.slug || '').replace(/^\//, '')}`,
+          // Use / for home page, real paths for other pages
+          href: p.isHomePage ? '/' : `/${(p.slug || '').replace(/^\//, '')}`,
         }));
       }
     }
@@ -668,6 +849,7 @@ const LandingPageContent: React.FC = () => {
         showCart={storefrontProducts.length > 0}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
+        onNavigate={handleLinkNavigation}
       />
       
       {/* Cart Drawer - only when store has products */}
@@ -1007,7 +1189,7 @@ const LandingPageContent: React.FC = () => {
                  onSectionSelect('footer' as PageSection);
             }}
         >
-            <Footer {...resolvedFooterData} />
+            <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
         </div>
       )}
 

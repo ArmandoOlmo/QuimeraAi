@@ -18,22 +18,24 @@ interface MenuEditorProps {
 
 type LinkCategory = 'root' | 'sections' | 'policies' | 'articles' | 'store' | 'store-categories' | 'store-products';
 
+// Section links use anchor format (/#section) for smooth scroll on same page
+// This is the standard approach used by Shopify, Wix, etc.
 const SECTION_LINKS = [
-    { label: 'Home (Hero)', value: '#hero' },
-    { label: 'Features', value: '#features' },
-    { label: 'Services', value: '#services' },
-    { label: 'Testimonials', value: '#testimonials' },
-    { label: 'Pricing', value: '#pricing' },
-    { label: 'Team', value: '#team' },
-    { label: 'FAQ', value: '#faq' },
-    { label: 'Portfolio', value: '#portfolio' },
-    { label: 'Contact / Leads', value: '#leads' },
-    { label: 'Newsletter', value: '#newsletter' },
-    { label: 'Video', value: '#video' },
-    { label: 'How It Works', value: '#howItWorks' },
-    { label: 'Stats', value: '#stats' },
-    { label: 'CTA Section', value: '#cta' },
-    { label: 'Logo Cloud', value: '#logoCloud' },
+    { label: 'Home (Hero)', value: '/' },
+    { label: 'Features', value: '/#features' },
+    { label: 'Services', value: '/#services' },
+    { label: 'Testimonials', value: '/#testimonials' },
+    { label: 'Pricing', value: '/#pricing' },
+    { label: 'Team', value: '/#team' },
+    { label: 'FAQ', value: '/#faq' },
+    { label: 'Portfolio', value: '/#portfolio' },
+    { label: 'Contact / Leads', value: '/#leads' },
+    { label: 'Newsletter', value: '/#newsletter' },
+    { label: 'Video', value: '/#video' },
+    { label: 'How It Works', value: '/#howItWorks' },
+    { label: 'Stats', value: '/#stats' },
+    { label: 'CTA Section', value: '/#cta' },
+    { label: 'Logo Cloud', value: '/#logoCloud' },
 ];
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
@@ -141,9 +143,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     const addMenuItem = () => {
         const newItem: NavigationMenuItem = {
-            id: `item_${Date.now()} `,
+            id: `item_${Date.now()}`,
             text: '',
-            href: '',
+            href: '/',  // Default to home page
             type: 'custom'
         };
         setItems([...items, newItem]);
@@ -213,7 +215,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
             return (
                 <div className="py-1">
                     <button
-                        onClick={() => handleLinkSelect(item, '#hero')}
+                        onClick={() => handleLinkSelect(item, '/')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
                     >
                         <Globe size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
@@ -320,7 +322,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             filteredPosts.map((post) => (
                                 <button
                                     key={post.id}
-                                    onClick={() => handleLinkSelect(item, `#article:${post.slug} `)}
+                                    onClick={() => handleLinkSelect(item, `/blog/${post.slug}`)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={post.title}
                                 >
@@ -343,9 +345,9 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Policies</span>
                     </div>
                     <div className="py-1">
-                        <button onClick={() => handleLinkSelect(item, '#privacy')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Privacy Policy</button>
-                        <button onClick={() => handleLinkSelect(item, '#terms')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Terms of Service</button>
-                        <button onClick={() => handleLinkSelect(item, '#refund')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Refund Policy</button>
+                        <button onClick={() => handleLinkSelect(item, '/privacidad')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Privacy Policy</button>
+                        <button onClick={() => handleLinkSelect(item, '/terminos')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Terms of Service</button>
+                        <button onClick={() => handleLinkSelect(item, '/reembolsos')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Refund Policy</button>
                     </div>
                 </div>
             );
@@ -374,7 +376,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     )}
                     <div className="py-1">
                         <button
-                            onClick={() => handleLinkSelect(item, '#store')}
+                            onClick={() => handleLinkSelect(item, '/tienda')}
                             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
                         >
                             <ShoppingBag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
@@ -427,7 +429,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             storeCategories.map((category) => (
                                 <button
                                     key={category.id}
-                                    onClick={() => handleLinkSelect(item, `#store/category/${category.slug}`)}
+                                    onClick={() => handleLinkSelect(item, `/tienda/categoria/${category.slug}`)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={category.name}
                                 >
@@ -475,7 +477,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             filteredProducts.map((product) => (
                                 <button
                                     key={product.id}
-                                    onClick={() => handleLinkSelect(item, `#store/product/${product.slug}`)}
+                                    onClick={() => handleLinkSelect(item, `/tienda/producto/${product.slug}`)}
                                     className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 truncate"
                                     title={product.name}
                                 >

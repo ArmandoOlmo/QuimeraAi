@@ -87,29 +87,12 @@ export function useCustomDomain(): CustomDomainState {
     });
 
     useEffect(() => {
-        // #region agent log - Hypothesis F: Check useCustomDomain entry
-        console.log('[DEBUG-F] useCustomDomain useEffect triggered', JSON.stringify({
-            hasDomainConfig: !!window.__DOMAIN_CONFIG__,
-            domainConfigKeys: Object.keys(window.__DOMAIN_CONFIG__ || {}),
-            projectId: window.__DOMAIN_CONFIG__?.projectId,
-            userId: window.__DOMAIN_CONFIG__?.userId,
-            hostname: window.location.hostname
-        }));
-        // #endregion
-        
         // PRIORITY 1: Check for server-injected domain config (from SSR server)
         // This is the fastest path - no Firestore call needed
         const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
         
         if (serverConfig?.isCustomDomain && serverConfig.projectId && serverConfig.userId) {
             console.log(`[CustomDomain] Using server-injected config for ${serverConfig.domain}`);
-            // #region agent log - Hypothesis F: SSR config found
-            console.log('[DEBUG-F] Using SSR domain config', JSON.stringify({
-                domain: serverConfig.domain,
-                projectId: serverConfig.projectId,
-                userId: serverConfig.userId
-            }));
-            // #endregion
             setState({
                 isCustomDomain: true,
                 isLoading: false,
@@ -121,15 +104,6 @@ export function useCustomDomain(): CustomDomainState {
             });
             return;
         }
-        
-        // #region agent log - Hypothesis F: SSR config NOT found
-        console.log('[DEBUG-F] SSR config NOT found, will check hostname', JSON.stringify({
-            serverConfigExists: !!serverConfig,
-            isCustomDomain: serverConfig?.isCustomDomain,
-            hasProjectId: !!serverConfig?.projectId,
-            hasUserId: !!serverConfig?.userId
-        }));
-        // #endregion
 
         // PRIORITY 2: Check hostname for custom domain detection
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';

@@ -33,9 +33,6 @@ class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     const isChunk = isChunkLoadError(error) || error instanceof ChunkLoadError;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:34',message:'getDerivedStateFromError called',data:{errorMessage:error.message,isChunkError:isChunk,errorName:error.name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     return {
       hasError: true,
       error,
@@ -46,9 +43,6 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const isChunk = isChunkLoadError(error) || error instanceof ChunkLoadError;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:50',message:'componentDidCatch - error boundary caught error',data:{errorMessage:error.message,isChunkError:isChunk,componentStack:errorInfo.componentStack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     
     // Log error to console
     console.error('Error caught by boundary:', error, errorInfo);

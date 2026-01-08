@@ -58,9 +58,6 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
 
   return lazy(async () => {
     let lastError: Error | undefined;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:59',message:'lazyWithRetry invoked',data:{retries,interval,reloadAttempts:sessionStorage.getItem('chunk_reload_attempted')||'0'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -70,15 +67,9 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
           await new Promise(resolve => setTimeout(resolve, interval));
           
           console.log(`[lazyWithRetry] Retry attempt ${attempt}/${retries}`);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:71',message:'Retry attempt starting',data:{attempt,retries},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
         }
 
         const component = await componentImport();
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:78',message:'Component loaded successfully',data:{attempt},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         return component;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -87,9 +78,6 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
           `[lazyWithRetry] Failed to load module (attempt ${attempt}/${retries}):`,
           lastError.message
         );
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:89',message:'Module load failed',data:{attempt,retries,errorMessage:lastError.message,isChunkError:isChunkLoadError(lastError)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
-        // #endregion
         
         onError?.(lastError, attempt);
 
@@ -114,9 +102,6 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
     // All retries failed - check if it's a chunk loading error
     if (lastError && isChunkLoadError(lastError)) {
       console.error('[lazyWithRetry] Chunk loading failed after all retries. Triggering page reload...');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:108',message:'All retries failed - chunk error detected',data:{errorMessage:lastError.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
-      // #endregion
       
       // Clear caches before reload
       try {
@@ -132,15 +117,9 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
       // Prevent infinite reload loop by checking sessionStorage
       const reloadKey = 'chunk_reload_attempted';
       const reloadAttempts = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:126',message:'Checking reload attempts',data:{reloadAttempts,willReload:reloadAttempts<2},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       
       if (reloadAttempts < 2) {
         sessionStorage.setItem(reloadKey, String(reloadAttempts + 1));
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:133',message:'Triggering page reload',data:{newReloadAttempts:reloadAttempts+1},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         
         // Hard reload to bypass cache
         window.location.reload();
@@ -150,9 +129,6 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
       } else {
         // Clear the flag so future visits can try again
         sessionStorage.removeItem(reloadKey);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lazyWithRetry.ts:146',message:'Max reload attempts reached - throwing ChunkLoadError',data:{reloadAttempts},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         
         // Show a helpful error to the user
         throw new ChunkLoadError(

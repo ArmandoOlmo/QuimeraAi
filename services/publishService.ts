@@ -101,10 +101,6 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             console.log(`📸 [PublishService] Using snapshot from editor (not reading from Firestore)`);
             project = projectSnapshot as Project;
             
-            // #region agent log - H3: Check snapshot received by publishService
-            fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'publishService.ts:projectSnapshot',message:'H3: Snapshot received',data:{hasData:!!project.data,hasTheme:!!project.theme,hasComponentStyles:!!project.componentStyles,componentStylesKeys:project.componentStyles?Object.keys(project.componentStyles):[],headerLogoText:project.data?.header?.logoText,heroHeadline:project.data?.hero?.headline?.substring(0,30)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
-            
             // Optionally save the snapshot to Firestore first (as draft)
             if (saveDraftFirst) {
                 console.log(`💾 [PublishService] Saving draft to Firestore first...`);
@@ -204,10 +200,6 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             faviconUrl: project.faviconUrl || null,
             thumbnailUrl: project.thumbnailUrl || null,
         };
-        
-        // #region agent log - H3: Check publishData before writing
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'publishService.ts:publishData',message:'H3: PublishData to write',data:{hasData:!!publishData.data,hasTheme:!!publishData.theme,hasComponentStyles:!!publishData.componentStyles,componentStylesKeys:publishData.componentStyles?Object.keys(publishData.componentStyles):[],headerInPublishData:!!publishData.header,headerLogoText:publishData.header?.logoText||publishData.data?.header?.logoText,heroHeadline:publishData.data?.hero?.headline?.substring(0,30),componentOrderLength:publishData.componentOrder?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         
         // =========================================================================
         // PASO 3: Escribir a publicStores (atómico)

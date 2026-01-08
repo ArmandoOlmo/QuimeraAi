@@ -493,7 +493,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 {data.showViewAll && (
                     <div className="flex justify-center mt-10">
                         <a
-                            href={data.viewAllUrl || '#store'}
+                            href={data.viewAllUrl || '/tienda'}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,

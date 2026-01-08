@@ -500,10 +500,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return;
 
-        // #region agent log - H4: Check what is being saved
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:saveProject',message:'H4: Saving project',data:{hasComponentStylesInProject:!!project.componentStyles,componentStylesKeysInProject:project.componentStyles?Object.keys(project.componentStyles):[],dataHeroHeadline:data?.hero?.headline?.substring(0,30),dataHeaderLogoText:data?.header?.logoText,themeFont:theme?.fontFamilyHeader},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-
         const isTemplate = project.status === 'Template';
         const now = new Date().toISOString();
 
@@ -521,8 +517,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Multi-page architecture
             ...(pages.length > 0 && { pages }),
             
-            // Navigation menus (only include if exists)
-            ...(project.menus && { menus: project.menus }),
+            // NOTE: Navigation menus are managed by CMSContext directly
+            // DO NOT include them here to avoid overwriting CMSContext changes
+            // The menus are saved/loaded via CMSContext.saveMenu/loadMenus
             
             // SEO configuration (only include if exists)
             ...(project.seoConfig && { seoConfig: project.seoConfig }),
@@ -571,10 +568,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return null;
         
-        // #region agent log - H1 + H6: Check componentStyles and adminContext
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:getProjectSnapshot',message:'H1+H6: componentStyles sources',data:{projectHasComponentStyles:!!project.componentStyles,adminContextExists:!!adminContext,adminContextHasComponentStyles:!!adminContext?.componentStyles,adminComponentStylesKeys:adminContext?.componentStyles?Object.keys(adminContext.componentStyles):[],heroVariantInData:data?.hero?.heroVariant},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H6',runId:'post-fix-2'})}).catch(()=>{});
-        // #endregion
-        
         // Return complete snapshot of current editor state
         // This includes ALL fields that should be published
         // All values must be defined (not undefined) for Firestore compatibility
@@ -617,10 +610,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (project.thumbnailUrl) snapshot.thumbnailUrl = project.thumbnailUrl;
         if (project.abTests) snapshot.abTests = project.abTests;
 
-        // #region agent log - H1: Final snapshot data
-        fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProjectContext.tsx:getProjectSnapshot:end',message:'H1: Final snapshot (with fix)',data:{snapshotHasComponentStyles:!!snapshot.componentStyles,snapshotComponentStylesKeys:snapshot.componentStyles?Object.keys(snapshot.componentStyles):[],usedAdminContextStyles:!project.componentStyles&&!!adminContext?.componentStyles,snapshotHeroData:snapshot.data?.hero?.headline?.substring(0,30),snapshotHeaderData:snapshot.data?.header?.logoText,snapshotTheme:{font:snapshot.theme?.fontFamilyHeader,primary:snapshot.theme?.globalColors?.primary}},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1',runId:'post-fix'})}).catch(()=>{});
-        // #endregion
-
         return snapshot;
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, adminContext]);
 
@@ -640,6 +629,24 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!snapshot) {
                 console.error('[ProjectContext] Cannot publish: failed to get project snapshot');
                 return false;
+            }
+
+            // CRITICAL: Fetch latest menus from Firebase to ensure we publish the most recent version
+            // This fixes the sync issue where CMSContext saves menus but ProjectContext has stale data
+            try {
+                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                const projectRef = doc(db, ...pathSegments, activeProjectId);
+                const projectSnap = await getDoc(projectRef);
+                
+                if (projectSnap.exists()) {
+                    const projectData = projectSnap.data();
+                    if (projectData.menus && Array.isArray(projectData.menus)) {
+                        snapshot.menus = projectData.menus;
+                        console.log(`🔄 [ProjectContext] Fetched latest menus from Firebase: ${projectData.menus.length} menus`);
+                    }
+                }
+            } catch (menuFetchError) {
+                console.warn('[ProjectContext] Could not fetch latest menus, using snapshot data:', menuFetchError);
             }
 
             console.log(`📸 [ProjectContext] Using editor snapshot for project: ${snapshot.name}`);

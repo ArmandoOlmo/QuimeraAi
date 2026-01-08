@@ -40,7 +40,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
 
     // Default messages if none provided
     const messages: AnnouncementMessage[] = data.messages?.length > 0 ? data.messages : [
-        { text: '¡Envío gratis en pedidos mayores a $50!', link: '#store', linkText: 'Comprar ahora' },
+        { text: '¡Envío gratis en pedidos mayores a $50!', link: '/tienda', linkText: 'Comprar ahora' },
     ];
 
     // Auto rotate for rotating variant

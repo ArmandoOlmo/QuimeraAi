@@ -27,9 +27,9 @@ const descriptionSizeClasses: Record<FontSize, string> = {
     xl: 'text-lg md:text-xl',
 };
 
-const Footer: React.FC<FooterData> = ({ 
+const Footer: React.FC<FooterData & { onNavigate?: (href: string) => void }> = ({ 
   title, description, linkColumns = [], socialLinks = [], copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
-  logoType = 'text', logoImageUrl, contactInfo
+  logoType = 'text', logoImageUrl, contactInfo, onNavigate
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -123,6 +123,12 @@ const Footer: React.FC<FooterData> = ({
                   <li key={linkIndex}>
                     <a 
                       href={link.href} 
+                      onClick={(e) => {
+                        if (onNavigate && !link.href.startsWith('http://') && !link.href.startsWith('https://')) {
+                          e.preventDefault();
+                          onNavigate(link.href);
+                        }
+                      }}
                       className="text-sm" 
                       style={{ color: actualColors.text }}
                     >

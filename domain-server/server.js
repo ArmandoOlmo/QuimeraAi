@@ -73,8 +73,9 @@ app.get('*', async (req, res) => {
         return res.status(503).send(getPendingPage(hostname, domainData.status));
     }
     
-    // Redirect to the project's store page
-    const redirectUrl = `https://quimera.ai/store/${domainData.projectId}${path === '/' ? '' : path}`;
+    // Redirect to the project's preview page (full landing page, not just store)
+    // This shows the complete website including blog, sections, etc.
+    const redirectUrl = `https://quimera.ai/preview/${domainData.projectId}${path === '/' ? '' : path}`;
     console.log(`[Router] Redirecting to ${redirectUrl}`);
     
     res.redirect(302, redirectUrl);

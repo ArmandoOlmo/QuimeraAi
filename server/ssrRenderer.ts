@@ -153,9 +153,10 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
         // Inject SEO tags in head
         .replace('</head>', `${seoTags}\n${headTags}\n</head>`)
         // Inject initial state for hydration
+    // CRITICAL: Use __INITIAL_DATA__ to match what PublicWebsitePreview.tsx expects
         .replace(
             '</body>',
-            `<script>window.__INITIAL_STATE__ = ${serializedState}</script>\n</body>`
+            `<script>window.__INITIAL_DATA__ = { project: ${JSON.stringify(sanitizedData).replace(/</g, '\\u003c')}, projectId: "${projectId}" };</script>\n</body>`
         );
     
     console.log(`[SSR] HTML generation completed`);
@@ -168,6 +169,8 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 async function fetchProjectData(projectId: string): Promise<ProjectData | null> {
     try {
         const firestore = getFirestoreDb();
+        
+        console.log(`[SSR] fetchProjectData called for projectId: ${projectId}`);
         
         // First try publicStores (published stores)
         const publicStoreDoc = await firestore.collection('publicStores').doc(projectId).get();
@@ -364,15 +367,6 @@ function generateSEOTags(project: ProjectData, hostname?: string): string {
 function sanitizeForClient(project: ProjectData): Partial<ProjectData> {
     // Include ALL necessary fields for client-side rendering
     // The client needs complete data to render correctly without re-fetching
-    // Use try-catch to handle any serialization issues
-    console.log(`[SSR] sanitizeForClient input:`, {
-        hasData: !!project.data,
-        hasTheme: !!project.theme,
-        hasComponentStyles: !!project.componentStyles,
-        componentStylesCount: project.componentStyles ? Object.keys(project.componentStyles).length : 0,
-        hasPages: !!project.pages,
-        pagesCount: project.pages?.length || 0,
-    });
     try {
         const sanitized: Partial<ProjectData> = {
             id: project.id,

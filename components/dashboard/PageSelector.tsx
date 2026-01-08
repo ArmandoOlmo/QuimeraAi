@@ -110,6 +110,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
     const addMenuRef = useRef<HTMLDivElement>(null);
 
     // Close dropdowns when clicking outside
+    // Using 'click' instead of 'mousedown' to avoid race condition with button onClick
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -121,8 +122,8 @@ const PageSelector: React.FC<PageSelectorProps> = ({
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
     // Sort pages by navigation order

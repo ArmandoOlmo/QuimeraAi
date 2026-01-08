@@ -158,32 +158,42 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [storeView, setStoreView] = useState<StoreViewState>({ type: 'none' });
 
-  // Parse URL params from pathname: /preview/userId/projectId
+  // Parse URL params from pathname: /preview/userId/projectId or /preview/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
   const getIdsFromURL = () => {
-    // First check pathname (new format): /preview/userId/projectId
+    // First check pathname (new format): /preview/userId/projectId or /preview/projectId
     const pathname = window.location.pathname;
     if (pathname.startsWith('/preview/')) {
-      const parts = pathname.replace('/preview/', '').split('/');
-      if (parts[0] && parts[1]) {
-        console.log('[PublicWebsitePreview] Parsed IDs from pathname:', { userId: parts[0], projectId: parts[1] });
+      const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+      // Two parts: /preview/userId/projectId
+      if (parts.length >= 2) {
+        console.log('[PublicWebsitePreview] Parsed IDs from pathname (full):', { userId: parts[0], projectId: parts[1] });
         return { userId: parts[0], projectId: parts[1] };
+      }
+      // One part: /preview/projectId (for published sites without userId)
+      if (parts.length === 1) {
+        console.log('[PublicWebsitePreview] Parsed projectId only from pathname:', { projectId: parts[0] });
+        return { userId: null, projectId: parts[0] };
       }
     }
     
     // Also support hash format (legacy): #preview/userId/projectId
     const hash = window.location.hash;
     if (hash.startsWith('#preview/')) {
-      const parts = hash.replace('#preview/', '').split('/');
-      if (parts[0] && parts[1]) {
+      const parts = hash.replace('#preview/', '').split('/').filter(Boolean);
+      if (parts.length >= 2) {
         console.log('[PublicWebsitePreview] Parsed IDs from hash:', { userId: parts[0], projectId: parts[1] });
         return { userId: parts[0], projectId: parts[1] };
+      }
+      if (parts.length === 1) {
+        console.log('[PublicWebsitePreview] Parsed projectId only from hash:', { projectId: parts[0] });
+        return { userId: null, projectId: parts[0] };
       }
     }
     
     // Fallback to query params or props: ?userId=...&projectId=...
     const params = new URLSearchParams(window.location.search);
-    const userId = params.get('userId') || propUserId;
+    const userId = params.get('userId') || propUserId || null;
     const projectId = params.get('projectId') || propProjectId;
     
     console.log('[PublicWebsitePreview] Using props/query params:', { userId, projectId });
@@ -195,12 +205,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const loadProject = async () => {
       const { userId, projectId } = getIdsFromURL();
       
-      // #region agent log - Hypothesis A: Check if __INITIAL_DATA__ exists
-      console.log('[DEBUG-A] loadProject called', JSON.stringify({userId,projectId,hasInitialData:!!(window as any).__INITIAL_DATA__,initialDataKeys:Object.keys((window as any).__INITIAL_DATA__||{}),hasProject:!!(window as any).__INITIAL_DATA__?.project}));
-      // #endregion
-      
-      if (!userId || !projectId) {
-        setError('Missing userId or projectId in URL');
+      // projectId is required, userId is optional for published sites
+      if (!projectId) {
+        setError('Missing projectId in URL');
         setLoading(false);
         return;
       }
@@ -212,16 +219,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         // This is set by the SSR server for custom domains
         const ssrData = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__ : null;
         
-        // #region agent log - Hypothesis B: Check SSR data completeness
-        console.log('[DEBUG-B] SSR data check', JSON.stringify({ssrDataExists:!!ssrData,projectExists:!!ssrData?.project,menusCount:ssrData?.project?.menus?.length||0,hasComponentStyles:!!ssrData?.project?.componentStyles,projectKeys:Object.keys(ssrData?.project||{})}));
-        // #endregion
-        
         if (ssrData?.project) {
           projectData = { id: ssrData.projectId, ...ssrData.project } as Project;
-          
-          // #region agent log - Hypothesis E: SSR path taken
-          console.log('[DEBUG-E] Using SSR data path', JSON.stringify({projectName:projectData.name,menusInProject:(projectData as any).menus?.length||0,componentStylesKeys:Object.keys((projectData as any).componentStyles||{})}));
-          // #endregion
           
           console.log('[PublicWebsitePreview] ✅ Using SSR-injected data (no Firestore call)', {
             projectName: projectData.name,
@@ -241,10 +240,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           setLoading(false);
           return; // Skip Firestore calls entirely
         }
-        
-        // #region agent log - Hypothesis D: Firestore fallback executed
-        console.log('[DEBUG-D] SSR data NOT found - falling back to Firestore', JSON.stringify({reason:'ssrData.project was falsy',ssrDataType:typeof ssrData}));
-        // #endregion
 
         // PRIORITY 1: Try publicStores first (public access, contains published data with SEO)
         try {
@@ -265,8 +260,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
         }
 
-        // PRIORITY 2: Try user's projects collection (requires auth)
-        if (!projectData) {
+        // PRIORITY 2: Try user's projects collection (requires userId and auth)
+        if (!projectData && userId) {
           try {
             const projectRef = doc(db, 'users', userId, 'projects', projectId);
             const projectSnap = await getDoc(projectRef);
@@ -313,12 +308,30 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           setProject(projectData);
           
           // Load CMS posts for this project
+          // First try publicStores (published), then fall back to user draft if userId available
           try {
-            const postsCol = collection(db, 'users', userId, 'projects', projectId, 'posts');
-            const postsQuery = query(postsCol, orderBy('publishedAt', 'desc'));
-            const postsSnap = await getDocs(postsQuery);
-            const posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
-            setCmsPosts(posts);
+            // Try publicStores first (published site)
+            const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
+            const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
+            const publicPostsSnap = await getDocs(publicPostsQuery);
+            
+            if (!publicPostsSnap.empty) {
+              const posts = publicPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
+              setCmsPosts(posts);
+              console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from publicStores:', posts.length);
+            } else if (userId) {
+              // Fall back to user draft posts (for preview mode) - only if userId is available
+              console.log('[PublicWebsitePreview] No posts in publicStores, trying user draft...');
+              const draftPostsCol = collection(db, 'users', userId, 'projects', projectId, 'posts');
+              const draftPostsQuery = query(draftPostsCol, orderBy('publishedAt', 'desc'));
+              const draftPostsSnap = await getDocs(draftPostsQuery);
+              const posts = draftPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
+              setCmsPosts(posts);
+              console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from user draft:', posts.length);
+            } else {
+              console.log('[PublicWebsitePreview] No posts in publicStores and no userId for draft fallback');
+              setCmsPosts([]);
+            }
           } catch (e) {
             console.log('[PublicWebsitePreview] No CMS posts found or error loading:', e);
           }
@@ -346,9 +359,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     loadProject();
   }, [propProjectId, propUserId]);
 
-  // Handle hash routing for articles and store
+  // Handle routing for articles, store and sections
+  // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
-    const handleHashChange = () => {
+    const handleNavigation = () => {
+      const path = window.location.pathname;
       const hash = window.location.hash;
       const decodedHash = decodeURIComponent(hash);
 
@@ -356,9 +371,51 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setStoreView({ type: 'none' });
 
-      // Article routing: #article:slug
+      // ========================================
+      // REAL PATH ROUTING (Shopify/Wix style)
+      // ========================================
+      
+      // Blog article routing: /blog/slug
+      if (path.startsWith('/blog/') && path !== '/blog/') {
+        const slug = path.replace('/blog/', '').replace(/\/$/, '');
+        const post = cmsPosts.find(p => p.slug === slug);
+        if (post) {
+          setActivePost(post);
+          window.scrollTo(0, 0);
+        }
+        return;
+      }
+      
+      // Store routing: /tienda
+      if (path === '/tienda' || path === '/tienda/') {
+        setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
+      
+      // Store category routing: /tienda/categoria/slug
+      if (path.startsWith('/tienda/categoria/')) {
+        const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
+        setStoreView({ type: 'category', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+      
+      // Store product routing: /tienda/producto/slug
+      if (path.startsWith('/tienda/producto/')) {
+        const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
+        setStoreView({ type: 'product', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // ========================================
+      // LEGACY HASH ROUTING (backward compatibility)
+      // ========================================
+      
+      // Article routing: #article:slug (legacy)
       if (decodedHash.includes('#article:')) {
-        const slug = decodedHash.split('#article:')[1];
+        const slug = decodedHash.split('#article:')[1].trim();
         const post = cmsPosts.find(p => p.slug === slug);
         if (post) {
           setActivePost(post);
@@ -367,7 +424,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
-      // Store routing: #store, #store/category/slug, #store/product/slug
+      // Store routing: #store (legacy)
       if (decodedHash === '#store' || decodedHash.endsWith('#store')) {
         setStoreView({ type: 'store' });
         window.scrollTo(0, 0);
@@ -388,7 +445,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
-      // Handle scrolling for section links (e.g. #features)
+      // ========================================
+      // ANCHOR SCROLL (/#section format)
+      // ========================================
       if (hash.length > 1 && !hash.includes('#preview/')) {
         setTimeout(() => {
           const id = hash.substring(1);
@@ -400,9 +459,116 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    handleNavigation();
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, [cmsPosts]);
+
+  // Universal navigation handler for Header links
+  const handleLinkNavigation = useCallback((href: string) => {
+      // Reset views
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+
+      // Home page
+      if (href === '/' || href === '') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+      }
+
+      // Anchor scroll (/#section or #section)
+      if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
+          const id = href.replace('/#', '').replace('#', '');
+          setTimeout(() => {
+              const element = document.getElementById(id);
+              if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+          }, 100);
+          return;
+      }
+
+      // Blog article: /blog/slug
+      if (href.startsWith('/blog/')) {
+          const slug = href.replace('/blog/', '').replace(/\/$/, '');
+          const post = cmsPosts.find(p => p.slug === slug);
+          if (post) {
+              setActivePost(post);
+              window.scrollTo(0, 0);
+          }
+          return;
+      }
+
+      // Store: /tienda
+      if (href === '/tienda' || href === '/tienda/') {
+          setStoreView({ type: 'store' });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Store category: /tienda/categoria/slug
+      if (href.startsWith('/tienda/categoria/')) {
+          const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
+          setStoreView({ type: 'category', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Store product: /tienda/producto/slug
+      if (href.startsWith('/tienda/producto/')) {
+          const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
+          setStoreView({ type: 'product', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // Legacy hash support
+      if (href.startsWith('#article:')) {
+          const slug = href.replace('#article:', '').trim();
+          const post = cmsPosts.find(p => p.slug === slug);
+          if (post) {
+              setActivePost(post);
+              window.scrollTo(0, 0);
+          }
+          return;
+      }
+
+      if (href === '#store') {
+          setStoreView({ type: 'store' });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      if (href.startsWith('#store/category/')) {
+          const slug = href.replace('#store/category/', '');
+          setStoreView({ type: 'category', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      if (href.startsWith('#store/product/')) {
+          const slug = href.replace('#store/product/', '');
+          setStoreView({ type: 'product', slug });
+          window.scrollTo(0, 0);
+          return;
+      }
+
+      // External URLs - open in new tab
+      if (href.startsWith('http://') || href.startsWith('https://')) {
+          window.open(href, '_blank');
+          return;
+      }
+
+      // Fallback: try to scroll to element by ID
+      const id = href.replace(/^\//, '').replace(/\/$/, '');
+      const element = document.getElementById(id);
+      if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
   }, [cmsPosts]);
 
   // Inject font CSS variables
@@ -829,21 +995,22 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   };
 
   // Resolve header links - prioritize: CMS Menu (by ID or main-menu) > Pages > Manual Links
+  // CRITICAL: Use menus from state OR directly from project (for SSR hydration timing)
+  const effectiveMenus = menus.length > 0 ? menus : (project?.menus || []);
+  
   const headerLinks = (() => {
     // 1. CMS Menu by ID takes priority if configured
     if (mergedData.header?.menuId) {
-      const menu = menus.find(m => m.id === mergedData.header?.menuId);
+      const menu = effectiveMenus.find((m: Menu) => m.id === mergedData.header?.menuId);
       if (menu && menu.items?.length > 0) {
-        console.log('[HeaderLinks] Using menu by ID:', mergedData.header.menuId, menu.items.length, 'items');
-        return menu.items.map(i => ({ text: i.text, href: i.href }));
+        return menu.items.map((i: any) => ({ text: i.text, href: i.href }));
       }
     }
     
     // 2. Try main-menu from CMS menus (IMPORTANT: This is what the web editor uses!)
-    const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
+    const mainMenu = effectiveMenus.find((m: Menu) => m.id === 'main' || m.handle === 'main-menu');
     if (mainMenu && mainMenu.items?.length > 0) {
-      console.log('[HeaderLinks] Using main-menu from CMS:', mainMenu.items.length, 'items');
-      return mainMenu.items.map(i => ({ text: i.text, href: i.href }));
+      return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href }));
     }
     
     // 3. Generate from pages if available (multi-page architecture)
@@ -853,28 +1020,26 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
       
       if (navPages.length > 0) {
-        console.log('[HeaderLinks] Using pages:', navPages.length, 'items');
         return navPages.map((p: SitePage) => ({
           text: p.title,
-          // Use hash for SPA mode in preview
-          href: p.isHomePage ? '#' : `#${(p.slug || '').replace(/^\//, '')}`,
+          // Use / for home page, real paths for other pages
+          href: p.isHomePage ? '/' : `/${(p.slug || '').replace(/^\//, '')}`,
         }));
       }
     }
     
     // 4. Fall back to manual links
-    console.log('[HeaderLinks] Using manual links fallback');
     return mergedData.header?.links || [];
   })();
 
-  // Resolve footer columns from menus
+  // Resolve footer columns from menus (using effectiveMenus for SSR hydration timing)
   const resolvedFooterData: FooterData = {
     ...mergedData.footer,
     linkColumns: mergedData.footer?.linkColumns?.map((col: any) => {
       if (col.menuId) {
-        const menu = menus.find(m => m.id === col.menuId);
+        const menu = effectiveMenus.find((m: Menu) => m.id === col.menuId);
         if (menu) {
-          return { ...col, links: menu.items.map(i => ({ text: i.text, href: i.href })) };
+          return { ...col, links: menu.items.map((i: any) => ({ text: i.text, href: i.href })) };
         }
       }
       return col;
@@ -1008,7 +1173,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       {/* Header - Always visible */}
       {componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
-        <Header {...mergedData.header} links={headerLinks} />
+        <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} />
       )}
       
       <main className="min-h-screen bg-site-base relative">
@@ -1063,7 +1228,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       {/* Footer - Always visible */}
       {componentStatus?.footer !== false && sectionVisibility?.footer !== false && (
         <div id="footer" className="w-full">
-          <Footer {...resolvedFooterData} />
+          <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
         </div>
       )}
       

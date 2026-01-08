@@ -392,8 +392,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Navigation Menus
     const [menus, setMenus] = useState<Menu[]>([
-        { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{ id: '1', text: 'Home', href: '#hero', type: 'section' }] },
-        { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{ id: '1', text: 'Contact', href: '#contact', type: 'section' }] }
+        { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{ id: '1', text: 'Home', href: '/', type: 'section' }] },
+        { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{ id: '1', text: 'Contact', href: '/#contact', type: 'section' }] }
     ]);
 
     // Auto-save timer ref

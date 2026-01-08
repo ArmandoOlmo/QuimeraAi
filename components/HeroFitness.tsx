@@ -65,6 +65,7 @@ const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
 
 interface HeroProps extends HeroData {
     borderRadius: BorderRadiusSize;
+    onNavigate?: (href: string) => void;
 }
 
 const HeroFitness: React.FC<HeroProps> = ({ 
@@ -76,8 +77,9 @@ const HeroFitness: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    primaryCtaLink = '#cta',
-    secondaryCtaLink = '#features',
+    primaryCtaLink = '/#cta',
+    secondaryCtaLink = '/#features',
+    onNavigate,
 }) => {
     const { getColor } = useDesignTokens();
     
@@ -202,7 +204,14 @@ const HeroFitness: React.FC<HeroProps> = ({
                             style={{ animationDelay: '0.2s' }}
                         >
                             <a 
-                                href={primaryCtaLink || '#cta'} 
+                                href={primaryCtaLink || '/#cta'} 
+                                onClick={(e) => {
+                                    const href = primaryCtaLink || '/#cta';
+                                    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                                        e.preventDefault();
+                                        onNavigate(href);
+                                    }
+                                }}
                                 style={{ 
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary, 
                                     color: actualColors.buttonText 
@@ -220,7 +229,14 @@ const HeroFitness: React.FC<HeroProps> = ({
                             </a>
                             
                             <a 
-                                href={secondaryCtaLink || '#features'} 
+                                href={secondaryCtaLink || '/#features'} 
+                                onClick={(e) => {
+                                    const href = secondaryCtaLink || '/#features';
+                                    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                                        e.preventDefault();
+                                        onNavigate(href);
+                                    }
+                                }}
                                 className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
                                     secondaryButtonStyle === 'outline' 
                                         ? 'border-4 bg-transparent' 

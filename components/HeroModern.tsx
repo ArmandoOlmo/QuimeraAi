@@ -66,6 +66,7 @@ const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
 
 interface HeroProps extends HeroData {
     borderRadius: BorderRadiusSize;
+    onNavigate?: (href: string) => void;
 }
 
 const HeroModern: React.FC<HeroProps> = ({ 
@@ -78,8 +79,9 @@ const HeroModern: React.FC<HeroProps> = ({
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
     gradientOpacity = 70,
-    primaryCtaLink = '#cta',
-    secondaryCtaLink = '#features',
+    primaryCtaLink = '/#cta',
+    secondaryCtaLink = '/#features',
+    onNavigate,
 }) => {
   const { getColor } = useDesignTokens();
   
@@ -180,7 +182,14 @@ const HeroModern: React.FC<HeroProps> = ({
          {/* Botones de Acción Premium */}
          <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
              <a 
-                href={primaryCtaLink || '#cta'}
+                href={primaryCtaLink || '/#cta'}
+                onClick={(e) => {
+                  const href = primaryCtaLink || '/#cta';
+                  if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                    e.preventDefault();
+                    onNavigate(href);
+                  }
+                }}
                 className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                 style={{ 
                   backgroundColor: actualColors.buttonBackground, 
@@ -197,7 +206,14 @@ const HeroModern: React.FC<HeroProps> = ({
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
              </a>
              <a 
-                href={secondaryCtaLink || '#features'}
+                href={secondaryCtaLink || '/#features'}
+                onClick={(e) => {
+                  const href = secondaryCtaLink || '/#features';
+                  if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+                    e.preventDefault();
+                    onNavigate(href);
+                  }
+                }}
                 className={`group py-4 px-10 font-bold text-lg backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${
                   secondaryButtonStyle === 'outline' 
                     ? 'border-2 bg-transparent hover:bg-white/10' 

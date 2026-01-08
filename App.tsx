@@ -179,17 +179,6 @@ const App: React.FC = () => {
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
   const customDomain = useCustomDomain();
 
-  // #region agent log - Hypothesis G: Check customDomain values in App
-  console.log('[DEBUG-G] App render', JSON.stringify({
-    isCustomDomain: customDomain.isCustomDomain,
-    isLoading: customDomain.isLoading,
-    projectId: customDomain.projectId,
-    userId: customDomain.userId,
-    domain: customDomain.domain,
-    error: customDomain.error
-  }));
-  // #endregion
-
   useEffect(() => {
     initializeMonitoring();
   }, []);
@@ -210,9 +199,6 @@ const App: React.FC = () => {
     if (!customDomain.projectId || !customDomain.userId) {
       return <DomainNotConfiguredPage domain={customDomain.domain || 'unknown'} />;
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:204',message:'Rendering PublicWebsitePreview for custom domain',data:{userId:customDomain.userId,projectId:customDomain.projectId,domain:customDomain.domain},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D'})}).catch(()=>{});
-    // #endregion
 
     // Render the landing page using PublicWebsitePreview with the resolved project
     return (
@@ -228,9 +214,6 @@ const App: React.FC = () => {
   }
 
   if (isPreview) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3746d5d4-0d14-4e6f-a56e-45539de64e9d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:222',message:'Rendering PublicWebsitePreview for preview route',data:{pathname:window.location.pathname,hash:window.location.hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D'})}).catch(()=>{});
-    // #endregion
     return (
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>

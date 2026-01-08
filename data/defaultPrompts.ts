@@ -269,7 +269,7 @@ Return ONLY valid JSON. No markdown.
                 "accent": "Secondary or accent color" 
             },
             "logoText": "{{businessName}}",
-            "links": [{"text": "Home", "href": "#hero"}, {"text": "Services", "href": "#services"}, {"text": "Contact", "href": "#leads"}]
+            "links": [{"text": "Home", "href": "/"}, {"text": "Services", "href": "/#services"}, {"text": "Contact", "href": "/#leads"}]
         },
         "hero": { 
             "headline": "USE {{uniqueValueProposition}} or create compelling headline with <span>highlighted text</span>", 
