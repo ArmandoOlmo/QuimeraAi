@@ -13,19 +13,41 @@ import { HeaderData, ThemeData, Project } from '../../types';
 import { Loader2 } from 'lucide-react';
 import { StorefrontCartProvider, useStorefrontCart } from './context';
 import CartDrawer from './CartDrawer';
-import CartButton from './CartButton';
+// import CartButton from './CartButton'; // Removed as we use Header's cart
 
 interface StorefrontLayoutProps {
     storeId: string;
     children: React.ReactNode;
     onNavigateHome?: () => void;
     onNavigateToCheckout?: () => void;
+    projectData?: ProjectPublicData;
+}
+
+interface SitePageNav {
+    id: string;
+    title: string;
+    slug: string;
+    showInNavigation?: boolean;
+    navigationOrder?: number;
+}
+
+interface MenuItemNav {
+    text: string;
+    href: string;
+}
+
+interface MenuNav {
+    id: string;
+    handle?: string;
+    items: MenuItemNav[];
 }
 
 interface ProjectPublicData {
     header: HeaderData;
     theme: ThemeData;
     name: string;
+    pages?: SitePageNav[];
+    menus?: MenuNav[];
 }
 
 const defaultHeaderData: HeaderData = {
@@ -65,19 +87,58 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     const cart = useStorefrontCart();
 
     // Get primary color from theme
-    const primaryColor = projectData?.theme?.globalColors?.primary || 
-                        projectData?.header?.colors?.accent || 
-                        '#6366f1';
+    const primaryColor = projectData?.theme?.globalColors?.primary ||
+        projectData?.header?.colors?.accent ||
+        '#6366f1';
 
     // Background color from theme or default
-    const backgroundColor = projectData?.theme?.pageBackground || 
-                           projectData?.theme?.globalColors?.background || 
-                           '#ffffff';
+    const backgroundColor = projectData?.theme?.pageBackground ||
+        projectData?.theme?.globalColors?.background ||
+        '#ffffff';
 
-    // Prepare header links - add Home link that goes back to landing
+    // Build header links with priority: CMS Menu > main-menu > Pages > Manual Links
+    // This matches the logic in PageRenderer.tsx for consistency
+    const navigationLinks = (() => {
+        const menus = projectData?.menus || [];
+        const header = projectData?.header;
+
+        // 1. CMS Menu by ID takes priority if configured
+        if (header?.menuId) {
+            const menu = menus.find(m => m.id === header.menuId);
+            if (menu && menu.items?.length > 0) {
+                return menu.items.map(i => ({ text: i.text, href: i.href }));
+            }
+        }
+
+        // 2. Try main-menu from CMS menus
+        const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
+        if (mainMenu && mainMenu.items?.length > 0) {
+            return mainMenu.items.map(i => ({ text: i.text, href: i.href }));
+        }
+
+        // 3. Generate from pages if available (multi-page architecture)
+        const pages = projectData?.pages || [];
+        if (pages.length > 0) {
+            const navPages = pages
+                .filter(p => p.showInNavigation)
+                .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
+
+            if (navPages.length > 0) {
+                return navPages.map(p => ({
+                    text: p.title,
+                    href: p.slug,
+                }));
+            }
+        }
+
+        // 4. Fall back to manual links
+        return header?.links || [];
+    })();
+
+    // Prepare final header links - add Home link that goes back to landing
     const headerLinks = [
         { text: 'Inicio', href: onNavigateHome ? '#' : `/preview/${storeId}` },
-        ...(projectData?.header?.links || []),
+        ...navigationLinks,
     ];
 
     const handleCheckout = () => {
@@ -88,7 +149,7 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     };
 
     return (
-        <div 
+        <div
             className="min-h-screen"
             style={{ backgroundColor }}
         >
@@ -99,20 +160,16 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
                         {...projectData.header}
                         links={headerLinks}
                         isPreviewMode={true}
+
+                        // Use Header's built-in cart functionality to prevent mobile layout conflicts
+                        showCart={true}
+                        cartItemCount={cart.itemCount}
+                        onCartClick={cart.toggleCart}
                     />
-                    {/* Cart Button - positioned in header */}
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50" style={{ top: (projectData?.header?.height || 70) / 2 }}>
-                        <CartButton
-                            itemCount={cart.itemCount}
-                            onClick={cart.toggleCart}
-                            primaryColor={primaryColor}
-                        />
-                    </div>
                 </div>
             )}
 
-            {/* Spacer for sticky header */}
-            <div style={{ height: projectData?.header?.height || 70 }} />
+            {/* Spacer for sticky/fixed header - Only render if header is solid/taking space */}
 
             {/* Main Content */}
             <main>
@@ -138,15 +195,15 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
             />
 
             {/* Simple Footer */}
-            <footer 
+            <footer
                 className="py-8 mt-16 border-t"
-                style={{ 
+                style={{
                     backgroundColor: projectData?.header?.colors?.background || '#ffffff',
                     borderColor: 'rgba(0,0,0,0.1)'
                 }}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p 
+                    <p
                         className="text-sm"
                         style={{ color: projectData?.header?.colors?.text || '#6b7280' }}
                     >
@@ -166,14 +223,15 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
     children,
     onNavigateHome,
     onNavigateToCheckout,
+    projectData: initialProjectData,
 }) => {
-    const [projectData, setProjectData] = useState<ProjectPublicData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [projectData, setProjectData] = useState<ProjectPublicData | null>(initialProjectData || null);
+    const [isLoading, setIsLoading] = useState(!initialProjectData);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!storeId) {
-            setIsLoading(false);
+        if (!storeId || initialProjectData) {
+            if (initialProjectData) setIsLoading(false);
             return;
         }
 
@@ -185,7 +243,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
 
                 if (publicStoreDoc.exists()) {
                     const data = publicStoreDoc.data();
-                    
+
                     // If the public store has header data, use it
                     // Check both root level (new) and nested in data (legacy fallback)
                     const headerData = data.header || data.data?.header;
@@ -194,6 +252,8 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                             header: headerData,
                             theme: data.theme || {},
                             name: data.name || 'Store',
+                            pages: data.pages || [],
+                            menus: data.menus || [],
                         });
                         setIsLoading(false);
                         return;
@@ -213,6 +273,8 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                             header: project.data?.header || defaultHeaderData,
                             theme: project.theme || {} as any,
                             name: project.name || 'Store',
+                            pages: project.pages || [],
+                            menus: project.menus || [],
                         });
                         setIsLoading(false);
                         return;
@@ -224,6 +286,8 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                     header: defaultHeaderData,
                     theme: {} as any,
                     name: 'Store',
+                    pages: [],
+                    menus: [],
                 });
             } catch (err: any) {
                 console.error('Error fetching project data for storefront:', err);
@@ -233,6 +297,8 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                     header: defaultHeaderData,
                     theme: {} as any,
                     name: 'Store',
+                    pages: [],
+                    menus: [],
                 });
             } finally {
                 setIsLoading(false);

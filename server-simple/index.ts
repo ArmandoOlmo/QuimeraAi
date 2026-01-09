@@ -36,31 +36,31 @@ async function getAssetReferences(): Promise<{ indexJs: string; mainCss: string 
     if (cachedAssetRefs && Date.now() - cachedAssetRefs.timestamp < ASSET_REFS_CACHE_TTL) {
         return { indexJs: cachedAssetRefs.indexJs, mainCss: cachedAssetRefs.mainCss };
     }
-    
+
     try {
         const response = await fetch(`${APP_URL}/index.html`);
         if (!response.ok) throw new Error(`Failed to fetch index.html: ${response.status}`);
-        
+
         const html = await response.text();
-        
+
         // Extract JS and CSS references (could be relative or absolute paths)
         // Note: After Vite config change, both use "index" prefix with hash
         const jsMatch = html.match(/src="([^"]*\/assets\/index[^"]*\.js)"/);
         const cssMatch = html.match(/href="([^"]*\/assets\/index[^"]*\.css)"/);
-        
+
         // Convert relative paths to absolute URLs pointing to Firebase Hosting
         let indexJs = jsMatch ? jsMatch[1] : '/assets/index.js';
         let mainCss = cssMatch ? cssMatch[1] : '/assets/index.css';
-        
+
         // If paths are relative, prepend APP_URL
         if (indexJs.startsWith('/')) indexJs = `${APP_URL}${indexJs}`;
         if (mainCss.startsWith('/')) mainCss = `${APP_URL}${mainCss}`;
-        
+
         console.log(`[Assets] Fetched asset references: JS=${indexJs}, CSS=${mainCss}`);
-        
+
         // Cache the references
         cachedAssetRefs = { indexJs, mainCss, timestamp: Date.now() };
-        
+
         return { indexJs, mainCss };
     } catch (err) {
         console.error('[Assets] Failed to fetch asset references:', err);
@@ -163,32 +163,32 @@ const PROJECT_CACHE_TTL = 5 * 60 * 1000;
 
 async function resolveDomain(hostname: string): Promise<DomainData | null> {
     const normalizedDomain = hostname.toLowerCase().replace(/^www\./, '');
-    
+
     // Check cache
     const cached = domainCache.get(normalizedDomain);
     if (cached && Date.now() - cached.timestamp < DOMAIN_CACHE_TTL) {
         return cached.data;
     }
-    
+
     try {
         const doc = await db.collection('customDomains').doc(normalizedDomain).get();
-        
+
         if (!doc.exists) {
             domainCache.set(normalizedDomain, { data: null, timestamp: Date.now() });
             return null;
         }
-        
+
         const docData = doc.data()!;
         if (docData.status !== 'active') {
             return null;
         }
-        
+
         const data: DomainData = {
             projectId: docData.projectId,
             userId: docData.userId,
             status: docData.status,
         };
-        
+
         domainCache.set(normalizedDomain, { data, timestamp: Date.now() });
         return data;
     } catch (error) {
@@ -207,15 +207,15 @@ async function loadProject(projectId: string): Promise<ProjectData | null> {
     if (cached && Date.now() - cached.timestamp < PROJECT_CACHE_TTL) {
         return cached.data;
     }
-    
+
     try {
         const doc = await db.collection('publicStores').doc(projectId).get();
-        
+
         if (!doc.exists) {
             projectCache.set(projectId, { data: null, timestamp: Date.now() });
             return null;
         }
-        
+
         const data = { id: doc.id, ...doc.data() } as ProjectData;
         projectCache.set(projectId, { data, timestamp: Date.now() });
         return data;
@@ -235,13 +235,13 @@ function matchPage(pages: SitePage[], path: string): PageMatch | null {
     if (!normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
     }
-    
+
     // First try exact match
     const exactMatch = pages.find(p => p.slug === normalizedPath);
     if (exactMatch) {
         return { page: exactMatch, params: {} };
     }
-    
+
     // Then try dynamic routes
     for (const page of pages) {
         if (page.slug.includes(':')) {
@@ -251,7 +251,7 @@ function matchPage(pages: SitePage[], path: string): PageMatch | null {
             }
         }
     }
-    
+
     return null;
 }
 
@@ -260,17 +260,17 @@ function matchDynamicSlug(pattern: string, path: string): Record<string, string>
     const regexPattern = pattern.replace(/:[^/]+/g, '([^/]+)');
     const regex = new RegExp(`^${regexPattern}$`);
     const matches = path.match(regex);
-    
+
     if (!matches) return null;
-    
+
     // Extract param names
     const paramNames = (pattern.match(/:([^/]+)/g) || []).map(m => m.slice(1));
     const params: Record<string, string> = {};
-    
+
     paramNames.forEach((name, i) => {
         params[name] = matches[i + 1];
     });
-    
+
     return params;
 }
 
@@ -279,13 +279,13 @@ function matchDynamicSlug(pattern: string, path: string): Record<string, string>
 // =============================================================================
 
 async function loadDynamicData(
-    projectId: string, 
+    projectId: string,
     page: SitePage,
     params: Record<string, string>
 ): Promise<DynamicData | null> {
     const slug = params.slug;
     if (!slug || !page.dynamicSource) return null;
-    
+
     try {
         switch (page.dynamicSource) {
             case 'products': {
@@ -295,11 +295,11 @@ async function loadDynamicData(
                     .where('slug', '==', slug)
                     .limit(1)
                     .get();
-                
+
                 if (productsSnap.empty) return null;
                 return { product: { id: productsSnap.docs[0].id, ...productsSnap.docs[0].data() } };
             }
-            
+
             case 'categories': {
                 const categoriesSnap = await db.collection('publicStores')
                     .doc(projectId)
@@ -307,11 +307,11 @@ async function loadDynamicData(
                     .where('slug', '==', slug)
                     .limit(1)
                     .get();
-                
+
                 if (categoriesSnap.empty) return null;
                 return { category: { id: categoriesSnap.docs[0].id, ...categoriesSnap.docs[0].data() } };
             }
-            
+
             case 'blogPosts': {
                 const postsSnap = await db.collection('publicStores')
                     .doc(projectId)
@@ -319,11 +319,11 @@ async function loadDynamicData(
                     .where('slug', '==', slug)
                     .limit(1)
                     .get();
-                
+
                 if (postsSnap.empty) return null;
                 return { article: { id: postsSnap.docs[0].id, ...postsSnap.docs[0].data() } };
             }
-            
+
             default:
                 return null;
         }
@@ -347,7 +347,7 @@ function generateMetaTags(
     const siteName = project.brandIdentity?.name || project.name;
     const siteUrl = `https://${hostname}`;
     const pageUrl = `${siteUrl}${path}`;
-    
+
     // For dynamic pages, use dynamic data for meta
     if (page.type === 'dynamic' && dynamicData) {
         if (dynamicData.product) {
@@ -369,14 +369,14 @@ function generateMetaTags(
                         '@type': 'Offer',
                         price: p.price,
                         priceCurrency: 'USD',
-                        availability: p.inStock 
-                            ? 'https://schema.org/InStock' 
+                        availability: p.inStock
+                            ? 'https://schema.org/InStock'
                             : 'https://schema.org/OutOfStock',
                     },
                 }),
             };
         }
-        
+
         if (dynamicData.category) {
             const c = dynamicData.category;
             return {
@@ -387,7 +387,7 @@ function generateMetaTags(
                 ogType: 'website',
             };
         }
-        
+
         if (dynamicData.article) {
             const a = dynamicData.article;
             return {
@@ -408,7 +408,7 @@ function generateMetaTags(
             };
         }
     }
-    
+
     // Static page meta
     const seo = page.seo || {};
     return {
@@ -433,6 +433,7 @@ function generateFullHtml(
     path: string,
     products: any[] = [],
     categories: any[] = [],
+    posts: any[] = [],
     userId: string = '',
     assetRefs: { indexJs: string; mainCss: string }
 ): string {
@@ -442,10 +443,10 @@ function generateFullHtml(
     const backgroundColor = globalColors.background || theme.pageBackground || '#0f172a';
     const textColor = globalColors.text || '#94a3b8';
     const headingColor = globalColors.heading || '#f8fafc';
-    
+
     // Get favicon
     const favicon = project.seoConfig?.favicon || '';
-    
+
     // Full HTML document - SEO-optimized with React app for rendering
     // We only include meta tags and initial data, React handles all rendering
     return `<!DOCTYPE html>
@@ -542,31 +543,33 @@ function generateFullHtml(
         };
         window.__SSR_MODE__ = true;
         window.__INITIAL_DATA__ = ${JSON.stringify({
-            projectId: project.id,
-            path,
-            pageId: page.id,
-            dynamicData: dynamicData || null,
-            // Full project data for client-side rendering with PublicWebsitePreview
-            // IMPORTANT: Include ALL fields that PublicWebsitePreview needs
-            project: {
-                id: project.id,
-                name: project.name,
-                pages: project.pages || [],
-                data: project.data,
-                theme: project.theme,
-                brandIdentity: project.brandIdentity,
-                componentOrder: project.componentOrder || [],
-                sectionVisibility: project.sectionVisibility || {},
-                componentStatus: project.componentStatus || {},
-                componentStyles: project.componentStyles || {},
-                menus: project.menus || [],
-                seoConfig: project.seoConfig || {},
-                aiAssistantConfig: project.aiAssistantConfig || null,
-            },
-            // Pre-loaded products and categories for ecommerce pages
-            products: products || [],
-            categories: categories || [],
-        })};
+        projectId: project.id,
+        path,
+        pageId: page.id,
+        dynamicData: dynamicData || null,
+        // Full project data for client-side rendering with PublicWebsitePreview
+        // IMPORTANT: Include ALL fields that PublicWebsitePreview needs
+        project: {
+            id: project.id,
+            name: project.name,
+            pages: project.pages || [],
+            data: project.data,
+            theme: project.theme,
+            brandIdentity: project.brandIdentity,
+            componentOrder: project.componentOrder || [],
+            sectionVisibility: project.sectionVisibility || {},
+            componentStatus: project.componentStatus || {},
+            componentStyles: project.componentStyles || {},
+            menus: project.menus || [],
+            seoConfig: project.seoConfig || {},
+            aiAssistantConfig: project.aiAssistantConfig || null,
+        },
+        // Pre-loaded products and categories for ecommerce pages
+        products: products || [],
+        categories: categories || [],
+        // Pre-loaded blog posts for blog navigation
+        posts: posts || [],
+    })};
     </script>
     
     <!-- React mounts here -->
@@ -619,37 +622,37 @@ app.post('/__clear-cache', (req: Request, res: Response) => {
 // Main SSR handler
 app.get('*', async (req: Request, res: Response) => {
     const hostname = (req.headers['cf-connecting-host'] as string) ||
-                     (req.headers['x-forwarded-host'] as string) || 
-                     (req.headers['x-original-host'] as string) ||
-                     (req.headers['host'] as string)?.split(':')[0] ||
-                     req.hostname;
+        (req.headers['x-forwarded-host'] as string) ||
+        (req.headers['x-original-host'] as string) ||
+        (req.headers['host'] as string)?.split(':')[0] ||
+        req.hostname;
     const path = req.path;
-    
+
     console.log(`[SSR] Request: ${hostname}${path}`);
-    
+
     try {
         // 1. Resolve domain to project
         const domainData = await resolveDomain(hostname);
         if (!domainData) {
             return res.status(404).send(getNotFoundPage(hostname));
         }
-        
+
         const { projectId, userId } = domainData;
-        
+
         // 2. Load project data
         const project = await loadProject(projectId);
         if (!project) {
             return res.status(404).send(getNotFoundPage(hostname));
         }
-        
+
         // 3. Match URL to page
         const pages = project.pages || [];
         let pageMatch: PageMatch | null = null;
-        
+
         if (pages.length > 0) {
             // Multi-page architecture
             pageMatch = matchPage(pages, path);
-            
+
             // If no match and path is /, try to find home page
             if (!pageMatch && (path === '/' || path === '')) {
                 const homePage = pages.find((p: SitePage) => p.isHomePage) || pages[0];
@@ -677,54 +680,58 @@ app.get('*', async (req: Request, res: Response) => {
                 params: {},
             };
         }
-        
+
         if (!pageMatch) {
             // 404 - page not found
             return res.status(404).send(get404Page(project, hostname));
         }
-        
+
         const { page, params } = pageMatch;
-        
+
         // 4. Load dynamic data if needed
         let dynamicData: DynamicData | null = null;
         if (page.type === 'dynamic' && params.slug) {
             dynamicData = await loadDynamicData(projectId, page, params);
-            
+
             // If dynamic data not found, show 404
             if (!dynamicData) {
                 return res.status(404).send(get404Page(project, hostname));
             }
         }
-        
-        // 5. Load products and categories for hydration (for ecommerce sections)
+
+        // 5. Load products, categories, and blog posts for hydration (for ecommerce and blog sections)
         let products: any[] = [];
         let categories: any[] = [];
+        let posts: any[] = [];
         try {
-            const [productsSnap, categoriesSnap] = await Promise.all([
+            const [productsSnap, categoriesSnap, postsSnap] = await Promise.all([
                 db.collection('publicStores').doc(projectId).collection('products').limit(50).get(),
                 db.collection('publicStores').doc(projectId).collection('categories').get(),
+                db.collection('publicStores').doc(projectId).collection('posts').orderBy('publishedAt', 'desc').limit(50).get(),
             ]);
             products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             categories = categoriesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            console.log(`[SSR] Loaded ${products.length} products, ${categories.length} categories, ${posts.length} blog posts`);
         } catch (e) {
-            console.log('[SSR] Could not load products/categories:', e);
+            console.log('[SSR] Could not load products/categories/posts:', e);
         }
-        
+
         // 6. Generate meta tags
         const meta = generateMetaTags(project, page, dynamicData, hostname, path);
-        
+
         // 7. Get asset references (with hashed filenames) from Firebase Hosting
         const assetRefs = await getAssetReferences();
-        
+
         // 8. Generate and send HTML
-        const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories, userId, assetRefs);
-        
+        const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories, posts, userId, assetRefs);
+
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300'); // 1min browser, 5min CDN
         res.send(html);
-        
+
         console.log(`[SSR] Served: ${hostname}${path} -> ${page.title}`);
-        
+
     } catch (error) {
         console.error(`[SSR] Error handling request:`, error);
         res.status(500).send(getErrorPage());
@@ -765,7 +772,7 @@ function getNotFoundPage(domain: string): string {
 function get404Page(project: ProjectData, hostname: string): string {
     const theme = project.theme || {};
     const globalColors = theme.globalColors || {};
-    
+
     return `<!DOCTYPE html>
 <html lang="es">
 <head>

@@ -40,10 +40,10 @@ const MinimalLoader = () => (
 
 const GlobalAdPixels: React.FC = () => {
   const adminContext = useSafeAdmin();
-  
+
   // Safe fallback if AdminProvider is not available or still initializing
   if (!adminContext || !adminContext.globalAdPixels) return null;
-  
+
   return <AdPixelsInjector config={adminContext.globalAdPixels} />;
 };
 
@@ -85,11 +85,17 @@ const AppContent: React.FC<AppContentProps> = ({
       const targetAdminView = routeAdminView || 'main';
       setAdminView(targetAdminView);
     }
-    // Only attempt to load project after projects have finished loading
-    if (routeProjectId && routeProjectId !== activeProjectId && !isLoadingProjects) {
+    // Load project when:
+    // 1. Route has a projectId AND
+    // 2. Either the projectId changed OR data is not loaded yet (reload scenario) AND
+    // 3. Projects have finished loading from Firebase
+    const shouldLoadProject = routeProjectId && !isLoadingProjects && (
+      routeProjectId !== activeProjectId || !data
+    );
+    if (shouldLoadProject) {
       loadProject(routeProjectId, false, false);
     }
-  }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects]);
+  }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects, data]);
 
   return (
     <>
@@ -145,7 +151,7 @@ const AuthGate: React.FC = () => {
     <>
       {/* Global Ad Tracking Pixels - Always active for app-wide analytics */}
       <GlobalAdPixels />
-      
+
       <Router
         user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
         userRole={userDocument?.role}
@@ -204,7 +210,7 @@ const App: React.FC = () => {
     return (
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>
-          <PublicWebsitePreview 
+          <PublicWebsitePreview
             userId={customDomain.userId}
             projectId={customDomain.projectId}
           />

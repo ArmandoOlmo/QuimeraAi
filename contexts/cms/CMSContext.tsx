@@ -19,6 +19,7 @@ import {
     query,
     orderBy,
     onSnapshot,
+    setDoc,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
@@ -31,11 +32,11 @@ interface CMSContextType {
     loadCMSPosts: () => Promise<void>;
     saveCMSPost: (post: CMSPost) => Promise<void>;
     deleteCMSPost: (postId: string) => Promise<void>;
-    
+
     // Project info for CMS
     hasActiveProject: boolean;
     activeProjectName: string | null;
-    
+
     // Navigation Menus
     menus: Menu[];
     saveMenu: (menu: Menu) => Promise<void>;
@@ -45,17 +46,17 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const defaultMenus: Menu[] = [
-    { 
-        id: 'main', 
-        title: 'Main Menu', 
-        handle: 'main-menu', 
-        items: [{ id: '1', text: 'Home', href: '/', type: 'section' }] 
+    {
+        id: 'main',
+        title: 'Main Menu',
+        handle: 'main-menu',
+        items: [{ id: '1', text: 'Home', href: '/', type: 'section' }]
     },
-    { 
-        id: 'footer', 
-        title: 'Footer Menu', 
-        handle: 'footer-menu', 
-        items: [{ id: '1', text: 'Contact', href: '/#contact', type: 'section' }] 
+    {
+        id: 'footer',
+        title: 'Footer Menu',
+        handle: 'footer-menu',
+        items: [{ id: '1', text: 'Contact', href: '/#contact', type: 'section' }]
     }
 ];
 
@@ -75,11 +76,11 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const activeProjectId = projectContext?.activeProjectId || null;
     const tenantContext = useSafeTenant();
     const currentTenantId = tenantContext?.currentTenant?.id || null;
-    
+
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
     const [isLoadingCMS, setIsLoadingCMS] = useState(false);
-    
+
     // Menus State - Load from active project
     const [menus, setMenus] = useState<Menu[]>([]);
 
@@ -102,7 +103,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
                 const projectRef = doc(db, ...pathSegments, activeProject.id);
                 const projectSnap = await getDoc(projectRef);
-                
+
                 if (projectSnap.exists()) {
                     const projectData = projectSnap.data();
                     if (projectData.menus && Array.isArray(projectData.menus)) {
@@ -189,20 +190,60 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             const { id, ...data } = post;
             const now = new Date().toISOString();
+            let savedPostId = id;
 
             if (id && id.length > 0) {
                 const postRef = doc(db, collectionPath, id);
                 await updateDoc(postRef, { ...data, updatedAt: now });
             } else {
                 const postsCol = collection(db, collectionPath);
-                await addDoc(postsCol, { 
-                    ...data, 
+                const docRef = await addDoc(postsCol, {
+                    ...data,
                     authorId: user.uid,
                     projectId: activeProject.id,
-                    createdAt: now, 
-                    updatedAt: now 
+                    createdAt: now,
+                    updatedAt: now
                 });
+                savedPostId = docRef.id;
             }
+
+            // --- INSTANT PUBLISH LOGIC ---
+            // Sync with publicStores immediately if status is 'published'
+            if (activeProject.id && savedPostId) {
+                // If the post is published, sync it to publicStores
+                if (data.status === 'published') {
+                    console.log('[CMSContext] Attempting to sync published post to public store:', {
+                        projectId: activeProject.id,
+                        postId: savedPostId,
+                        slug: data.slug,
+                        status: data.status
+                    });
+
+                    const publicPostRef = doc(db, 'publicStores', activeProject.id, 'posts', savedPostId);
+                    await setDoc(publicPostRef, {
+                        ...data,
+                        id: savedPostId,
+                        authorId: post.authorId || user.uid,
+                        projectId: activeProject.id,
+                        updatedAt: now,
+                        publishedAt: now // Update published timestamp
+                    }, { merge: true });
+                    console.log('[CMSContext] ✅ Synced published post to public store');
+                } else {
+                    // If it's a draft, ensure it's removed from publicStores (unpublish)
+                    console.log('[CMSContext] Removing draft post from public store:', savedPostId);
+                    const publicPostRef = doc(db, 'publicStores', activeProject.id, 'posts', savedPostId);
+                    try {
+                        await deleteDoc(publicPostRef);
+                        console.log('[CMSContext] ℹ️ Removed draft post from public store');
+                    } catch (e) {
+                        console.warn('[CMSContext] Failed to remove draft post (may not exist):', e);
+                    }
+                }
+            } else {
+                console.warn('[CMSContext] Skipping public sync: Missing activeProject.id or savedPostId');
+            }
+
         } catch (error) {
             console.error("Error saving post:", error);
             throw error;
@@ -211,16 +252,39 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Delete CMS post (from current project)
     const deleteCMSPost = async (postId: string) => {
-        if (!user || !activeProject) return;
+        console.log('[CMSContext] deleteCMSPost called with postId:', postId);
+
+        if (!user || !activeProject) {
+            console.error('[CMSContext] Cannot delete: No user or active project');
+            throw new Error('No user logged in or active project selected');
+        }
 
         const collectionPath = getPostsCollectionPath();
-        if (!collectionPath) return;
+        if (!collectionPath) {
+            throw new Error('Cannot determine posts collection path');
+        }
 
         try {
+            // 1. Delete from private project collection
             const postRef = doc(db, collectionPath, postId);
             await deleteDoc(postRef);
+            console.log('[CMSContext] ✅ Private post deleted successfully');
+
+            // 2. Delete from public store (if it exists there)
+            if (activeProject.id) {
+                const publicPostRef = doc(db, 'publicStores', activeProject.id, 'posts', postId);
+                // We use a try-catch for the public delete just in case it doesn't exist or permissions issue
+                // but we don't want to fail the whole operation if this fails (though it should succeed for owner)
+                try {
+                    await deleteDoc(publicPostRef);
+                    console.log('[CMSContext] ✅ Public post deleted successfully');
+                } catch (publicError) {
+                    console.warn('[CMSContext] Warning: Could not delete from public store (might not exist):', publicError);
+                }
+            }
+
         } catch (error) {
-            console.error("Error deleting post:", error);
+            console.error('[CMSContext] ❌ Error deleting post:', error);
             throw error;
         }
     };
@@ -236,7 +300,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             // Calculate updated menus list
             let updatedMenusList: Menu[];
             const currentMenus = [...menus];
-            
+
             if (currentMenus.some(m => m.id === menu.id)) {
                 updatedMenusList = currentMenus.map(m => m.id === menu.id ? menu : m);
             } else {
@@ -250,7 +314,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
             const projectDocRef = doc(db, ...pathSegments, activeProjectId);
             await updateDoc(projectDocRef, { menus: updatedMenusList });
-            
+
             console.log('[CMSContext] ✅ Menu saved successfully to Firebase');
         } catch (error) {
             console.error('[CMSContext] Error saving menu:', error);
@@ -276,7 +340,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
             const projectDocRef = doc(db, ...pathSegments, activeProjectId);
             await updateDoc(projectDocRef, { menus: updatedMenusList });
-            
+
             console.log('[CMSContext] ✅ Menu deleted successfully from Firebase');
         } catch (error) {
             console.error('[CMSContext] Error deleting menu:', error);

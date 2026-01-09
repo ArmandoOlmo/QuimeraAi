@@ -179,7 +179,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-    
+
     // Initialize activeProjectId from localStorage if available
     const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
         try {
@@ -190,7 +190,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     });
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
-    
+
     // Persist activeProjectId to localStorage when it changes
     useEffect(() => {
         try {
@@ -222,7 +222,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [pages, setPages] = useState<SitePage[]>([]);
     const [activePageId, setActivePageId] = useState<string | null>(null);
     const activePage = pages.find(p => p.id === activePageId) || null;
-    
+
     // Check if project uses multi-page architecture
     const isMultiPage = pages.length > 0;
 
@@ -362,36 +362,66 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             setIsLoadingProjects(false);
         }
     }, [user, currentTenantId, loadUserProjects]);
-    
+
     // Restore active project from localStorage after projects load
     useEffect(() => {
-        if (!isLoadingProjects && projects.length > 0 && activeProjectId && !activeProject) {
-            // We have a stored activeProjectId but the project isn't loaded yet
-            const storedProject = projects.find(p => p.id === activeProjectId);
-            if (storedProject && !data) {
-                // Project exists and we don't have data loaded - restore it
-                console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
-                setData(storedProject.data);
-                setTheme(storedProject.theme);
-                setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
-                setComponentOrder(storedProject.componentOrder || initialData.componentOrder as PageSection[]);
-                setSectionVisibility(storedProject.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
-            } else if (!storedProject) {
-                // Stored project no longer exists - clear it
-                console.log('[ProjectContext] Stored project no longer exists, clearing');
-                setActiveProjectId(null);
+        const restoreProject = async () => {
+            if (!isLoadingProjects && projects.length > 0 && activeProjectId && !activeProject) {
+                // We have a stored activeProjectId but the project isn't loaded yet
+                const storedProject = projects.find(p => p.id === activeProjectId);
+                if (storedProject && !data) {
+                    // Project exists and we don't have data loaded - restore it
+                    console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
+                    setData(storedProject.data);
+                    setTheme(storedProject.theme);
+                    setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
+                    setComponentOrder(storedProject.componentOrder || initialData.componentOrder as PageSection[]);
+                    setSectionVisibility(storedProject.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
+
+                    // CRITICAL FIX: Also restore pages for multi-page architecture
+                    if (storedProject.pages && storedProject.pages.length > 0) {
+                        console.log('[ProjectContext] Restoring pages:', storedProject.pages.length, 'pages');
+                        setPages(storedProject.pages);
+                        // Set home page as active by default
+                        const homePage = storedProject.pages.find(p => p.isHomePage) || storedProject.pages[0];
+                        setActivePageId(homePage?.id || null);
+                    } else {
+                        // Legacy project - migrate to multi-page architecture
+                        console.log('[ProjectContext] Migrating legacy project to multi-page architecture during restore');
+                        try {
+                            const { generatePagesFromLegacyProject } = await import('../../utils/legacyMigration');
+                            const migratedPages = generatePagesFromLegacyProject(
+                                storedProject.componentOrder || [],
+                                storedProject.sectionVisibility || {},
+                                storedProject.data || {}
+                            );
+                            setPages(migratedPages);
+                            // Set home page as active by default
+                            const homePage = migratedPages.find(p => p.isHomePage) || migratedPages[0];
+                            setActivePageId(homePage?.id || null);
+                        } catch (error) {
+                            console.error('[ProjectContext] Error migrating legacy project:', error);
+                        }
+                    }
+                } else if (!storedProject) {
+                    // Stored project no longer exists - clear it
+                    console.log('[ProjectContext] Stored project no longer exists, clearing');
+                    setActiveProjectId(null);
+                }
             }
-        }
+        };
+
+        restoreProject();
     }, [isLoadingProjects, projects, activeProjectId, activeProject, data]);
 
     // Load project by ID
     const loadProject = useCallback(async (projectId: string, fromAdmin = false, navigateToEditor = true, projectOverride?: Project) => {
         console.log('[ProjectContext] loadProject called with:', { projectId, fromAdmin, navigateToEditor, hasOverride: !!projectOverride });
         console.log('[ProjectContext] Available projects:', projectsRef.current.map(p => ({ id: p.id, name: p.name })));
-        
+
         // Use projectOverride if provided (useful for newly created projects not yet in state)
         let project = projectOverride || projectsRef.current.find(p => p.id === projectId);
-        
+
         // If project not found locally, try to load it from Firebase
         if (!project && user) {
             console.log('[ProjectContext] Project not in state, attempting to load from Firebase...');
@@ -400,7 +430,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
                 const projectRef = doc(db, ...pathSegments, projectId);
                 const projectSnap = await getDoc(projectRef);
-                
+
                 if (projectSnap.exists()) {
                     project = { id: projectSnap.id, ...projectSnap.data() } as Project;
                     console.log('[ProjectContext] Loaded project from Firebase:', project.name);
@@ -426,19 +456,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 console.error('[ProjectContext] Error loading project from Firebase:', error);
             }
         }
-        
+
         if (!project) {
             console.error("[ProjectContext] Project not found:", projectId);
             console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
             return;
         }
-        
+
         // If using projectOverride, add it to projects list if not already there
         if (projectOverride && !projectsRef.current.find(p => p.id === projectId)) {
             console.log('[ProjectContext] Adding projectOverride to projects list');
             setProjects(prev => [projectOverride, ...prev]);
         }
-        
+
         console.log('[ProjectContext] Loading project:', project.name);
 
         setActiveProjectId(projectId);
@@ -513,30 +543,30 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             componentOrder,
             sectionVisibility,
             lastUpdated: now,
-            
+
             // Multi-page architecture
             ...(pages.length > 0 && { pages }),
-            
+
             // NOTE: Navigation menus are managed by CMSContext directly
             // DO NOT include them here to avoid overwriting CMSContext changes
             // The menus are saved/loaded via CMSContext.saveMenu/loadMenus
-            
+
             // SEO configuration (only include if exists)
             ...(project.seoConfig && { seoConfig: project.seoConfig }),
-            
+
             // Design system (only include if exists)
             ...(project.designTokens && { designTokens: project.designTokens }),
             ...(project.responsiveStyles && { responsiveStyles: project.responsiveStyles }),
             ...(project.componentStyles && { componentStyles: project.componentStyles }),
             ...(project.componentStatus && { componentStatus: project.componentStatus }),
-            
+
             // AI Assistant configuration (only include if exists)
             ...(project.aiAssistantConfig && { aiAssistantConfig: project.aiAssistantConfig }),
-            
+
             // Assets (only include if exists)
             ...(project.faviconUrl && { faviconUrl: project.faviconUrl }),
             ...(project.thumbnailUrl && { thumbnailUrl: project.thumbnailUrl }),
-            
+
             // A/B Testing (only include if exists)
             ...(project.abTests && { abTests: project.abTests }),
         });
@@ -564,10 +594,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // This is the SINGLE SOURCE OF TRUTH for publishing
     const getProjectSnapshot = useCallback((): Partial<Project> | null => {
         if (!user || !activeProjectId || !data) return null;
-        
+
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return null;
-        
+
         // Return complete snapshot of current editor state
         // This includes ALL fields that should be published
         // All values must be defined (not undefined) for Firestore compatibility
@@ -575,20 +605,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             id: activeProjectId,
             name: project.name,
             userId: project.userId || user.uid, // Fallback to current user
-            
+
             // Core page data (from React state - most up to date)
             data,
             theme,
             brandIdentity,
             componentOrder,
             sectionVisibility,
-            
+
             // Multi-page architecture
             pages: pages.length > 0 ? pages : (project.pages || []),
-            
+
             // Navigation
             menus: project.menus || [],
-            
+
             // Status
             status: project.status,
             lastUpdated: new Date().toISOString(),
@@ -598,12 +628,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (project.seoConfig) snapshot.seoConfig = project.seoConfig;
         if (project.designTokens) snapshot.designTokens = project.designTokens;
         if (project.responsiveStyles) snapshot.responsiveStyles = project.responsiveStyles;
-        
+
         // CRITICAL FIX: Use componentStyles from AdminContext if project doesn't have them
         // The editor uses AdminContext's componentStyles, so we need to include them in the snapshot
         const effectiveComponentStyles = project.componentStyles || adminContext?.componentStyles;
         if (effectiveComponentStyles) snapshot.componentStyles = effectiveComponentStyles;
-        
+
         if (project.componentStatus) snapshot.componentStatus = project.componentStatus;
         if (project.aiAssistantConfig) snapshot.aiAssistantConfig = project.aiAssistantConfig;
         if (project.faviconUrl) snapshot.faviconUrl = project.faviconUrl;
@@ -617,7 +647,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Uses centralized publishService with editor snapshot (single source of truth)
     const publishProject = useCallback(async (): Promise<boolean> => {
         console.log('[ProjectContext] publishProject called');
-        
+
         if (!user || !activeProjectId || !data) {
             console.error('[ProjectContext] Cannot publish: missing user, project, or data');
             return false;
@@ -637,7 +667,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
                 const projectRef = doc(db, ...pathSegments, activeProjectId);
                 const projectSnap = await getDoc(projectRef);
-                
+
                 if (projectSnap.exists()) {
                     const projectData = projectSnap.data();
                     if (projectData.menus && Array.isArray(projectData.menus)) {
@@ -650,7 +680,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
 
             console.log(`📸 [ProjectContext] Using editor snapshot for project: ${snapshot.name}`);
-            
+
             // Debug: Log hero data to verify it's correct
             console.log(`🔍 [ProjectContext] Hero data in snapshot:`, {
                 heroVariant: snapshot.data?.hero?.heroVariant,
@@ -666,12 +696,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Import and use the centralized publish service
             const { publishProject: publishToService } = await import('../../services/publishService');
-            
+
+            // CRITICAL FIX: Handle personal tenant mapping
+            // Personal tenants (tenant_{userId}) should be treated as null tenantId 
+            // so publishService writes to users/{uid}/projects instead of tenants/{id}/projects
+            let targetTenantId = currentTenantId;
+            if (currentTenantId && currentTenantId.startsWith(`tenant_${user.uid}`)) {
+                console.log('[ProjectContext] Detected personal tenant, setting targetTenantId to null for publishing');
+                targetTenantId = null;
+            }
+
             // Publish using the centralized service with the editor snapshot
             const result = await publishToService({
                 userId: user.uid,
                 projectId: activeProjectId,
-                tenantId: currentTenantId || null,
+                tenantId: targetTenantId || null,
                 projectSnapshot: snapshot,
                 saveDraftFirst: true, // Save to Firestore first, then publish
                 includeEcommerce: true,
@@ -700,10 +739,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
                 if (projectDomains.length > 0) {
                     console.log(`📡 [ProjectContext] Syncing ${projectDomains.length} domains...`);
-                    
+
                     for (const domain of projectDomains) {
                         const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
-                        
+
                         await setDoc(doc(db, 'customDomains', normalizedDomain), {
                             domain: normalizedDomain,
                             projectId: activeProjectId,
@@ -900,7 +939,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Update project thumbnail
     const updateProjectThumbnail = async (projectId: string, file: File) => {
         console.log('[ProjectContext] updateProjectThumbnail called for projectId:', projectId);
-        
+
         if (!user) {
             console.error('[ProjectContext] No user, cannot update thumbnail');
             return;
@@ -908,11 +947,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const project = projects.find(p => p.id === projectId);
         console.log('[ProjectContext] Found project in state:', project?.name, 'status:', project?.status);
-        
+
         // Check if it's a template by looking in templates collection directly if not found in projects
         const isTemplate = project?.status === 'Template' || !project;
         console.log('[ProjectContext] isTemplate:', isTemplate);
-        
+
         const storagePath = isTemplate
             ? `templates/${projectId}/thumbnail.png`
             : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/thumbnail.png`;
@@ -929,17 +968,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             : doc(db, ...pathSegments, projectId);
 
         console.log('[ProjectContext] Updating Firestore doc:', isTemplate ? `templates/${projectId}` : pathSegments.join('/') + '/' + projectId);
-        
+
         // Templates use 'thumbnailUrl', regular projects use 'thumbnail'
         const updateField = isTemplate ? 'thumbnailUrl' : 'thumbnailUrl'; // Using thumbnailUrl for consistency
         const updateData = {
             [updateField]: downloadURL,
             lastUpdated: new Date().toISOString()
         };
-        
+
         await updateDoc(docRef, updateData);
         console.log('[ProjectContext] Firestore updated successfully with field:', updateField);
-        
+
         setProjects(prev => prev.map(p =>
             p.id === projectId ? { ...p, thumbnailUrl: downloadURL, lastUpdated: updateData.lastUpdated } : p
         ));
@@ -1077,7 +1116,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
      */
     const addPage = useCallback(async (pageInput: Partial<SitePage> | PageTemplateId): Promise<string> => {
         let newPage: SitePage;
-        
+
         if (typeof pageInput === 'string') {
             // It's a PageTemplateId, create from template
             newPage = createPageFromTemplate(pageInput as PageTemplateId, activeProject?.name);
@@ -1108,12 +1147,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
      * Update an existing page
      */
     const updatePage = useCallback(async (pageId: string, updates: Partial<SitePage>): Promise<void> => {
-        setPages(prev => prev.map(p => 
-            p.id === pageId 
+        setPages(prev => prev.map(p =>
+            p.id === pageId
                 ? { ...p, ...updates, updatedAt: new Date().toISOString() }
                 : p
         ));
-        
+
         // If this is the active page, also update the legacy state
         if (pageId === activePageId) {
             if (updates.sectionData) {
@@ -1131,14 +1170,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const deletePage = useCallback(async (pageId: string): Promise<void> => {
         const page = pages.find(p => p.id === pageId);
         if (!page) return;
-        
+
         // Don't allow deleting the home page
         if (page.isHomePage) {
             throw new Error('No se puede eliminar la página de inicio');
         }
-        
+
         setPages(prev => prev.filter(p => p.id !== pageId));
-        
+
         // If this was the active page, switch to home page
         if (pageId === activePageId) {
             const homePage = pages.find(p => p.isHomePage);
@@ -1160,7 +1199,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     return null;
                 })
                 .filter(Boolean) as SitePage[];
-            
+
             // Add any pages that weren't in the pageIds array
             const remaining = prev.filter(p => !pageIds.includes(p.id));
             return [...reordered, ...remaining];
@@ -1218,11 +1257,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
      */
     const migrateToMultiPage = useCallback(async (): Promise<void> => {
         if (!activeProject || !data) return;
-        
+
         // Create default pages with current project data
         const defaultPages = createDefaultPages({
             businessName: activeProject.name,
-            hasEcommerce: componentOrder.some(s => 
+            hasEcommerce: componentOrder.some(s =>
                 ['products', 'featuredProducts', 'categoryGrid', 'storeSettings'].includes(s)
             ),
         });
@@ -1230,14 +1269,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Update the home page with current data
         const homePage = defaultPages.find(p => p.isHomePage);
         if (homePage) {
-            homePage.sections = componentOrder.filter(s => 
+            homePage.sections = componentOrder.filter(s =>
                 !['colors', 'typography'].includes(s) && sectionVisibility[s]
             );
             homePage.sectionData = data;
         }
 
         setPages(defaultPages);
-        
+
         // Set home page as active
         if (homePage) {
             setActivePageId(homePage.id);
@@ -1250,7 +1289,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         isLoadingProjects,
         activeProjectId,
         activeProject,
-        
+
         // Legacy single-page data
         data,
         setData,
@@ -1262,7 +1301,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setComponentOrder,
         sectionVisibility,
         setSectionVisibility,
-        
+
         // Multi-page architecture
         pages,
         setPages,
@@ -1276,7 +1315,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         getPageBySlug,
         isMultiPage,
         migrateToMultiPage,
-        
+
         // Project Operations
         loadProject,
         saveProject,
@@ -1289,7 +1328,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         exportProjectAsHtml,
         updateProjectThumbnail,
         updateProjectFavicon,
-        
+
         // Template Management
         isEditingTemplate,
         exitTemplateEditor,
@@ -1297,7 +1336,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         archiveTemplate,
         duplicateTemplate,
         updateTemplateInState,
-        
+
         // Refresh
         refreshProjects,
     };

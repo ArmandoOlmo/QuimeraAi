@@ -19,6 +19,13 @@ import StorefrontHome from './pages/StorefrontHome';
 import StorefrontCategory from './pages/StorefrontCategory';
 import ProductSearchPage from './search/ProductSearchPage';
 
+// List of recognized ecommerce sections to check against componentOrder
+const ECOMMERCE_SECTIONS = [
+    'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
+    'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
+    'productBundle', 'announcementBar'
+];
+
 interface StorefrontAppProps {
     projectId: string;
     initialData?: any;
@@ -42,30 +49,30 @@ interface RouteState {
  */
 function parseUrl(url: string): RouteState {
     const path = url.replace(/^\/store\/[^\/]+/, '').replace(/^\//, '') || '/';
-    
+
     // Product page: /product/:slug
     const productMatch = path.match(/^product\/([^\/]+)/);
     if (productMatch) {
         return { view: 'product', params: { productSlug: productMatch[1] } };
     }
-    
+
     // Category page: /category/:slug
     const categoryMatch = path.match(/^category\/([^\/]+)/);
     if (categoryMatch) {
         return { view: 'category', params: { categorySlug: categoryMatch[1] } };
     }
-    
+
     // Checkout
     if (path.startsWith('checkout')) {
         return { view: 'checkout', params: {} };
     }
-    
+
     // Order confirmation: /order/:orderId
     const orderMatch = path.match(/^order\/([^\/]+)/);
     if (orderMatch) {
         return { view: 'order-confirmation', params: { orderId: orderMatch[1] } };
     }
-    
+
     // Default: home
     return { view: 'home', params: {} };
 }
@@ -190,10 +197,37 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
             case 'home':
             default:
+                // Check if user has configured specific storefront sections
+                const hasConfiguredHome = projectData?.componentOrder?.some((key: string) =>
+                    ECOMMERCE_SECTIONS.includes(key)
+                );
+
+                if (hasConfiguredHome) {
+                    return (
+                        <StorefrontHome
+                            storeId={projectId}
+                            projectData={projectData}
+                            onNavigateToProduct={navigateToProduct}
+                            onNavigateToCategory={navigateToCategory}
+                            themeColors={{
+                                background: projectData?.theme?.pageBackground || '#ffffff',
+                                text: projectData?.theme?.globalColors?.text || '#334155',
+                                heading: projectData?.theme?.globalColors?.heading || '#0f172a',
+                                cardBackground: projectData?.theme?.globalColors?.surface || '#ffffff',
+                                cardText: projectData?.theme?.globalColors?.text || '#334155',
+                                border: projectData?.theme?.globalColors?.border || '#e2e8f0',
+                                priceColor: projectData?.theme?.globalColors?.primary || '#4f46e5',
+                                salePriceColor: '#ef4444',
+                                mutedText: '#64748b'
+                            }}
+                        />
+                    );
+                }
+
                 // Use ProductSearchPage for full store experience with filters, search, etc.
-                const primaryColor = projectData?.theme?.globalColors?.primary || 
-                                   projectData?.data?.header?.colors?.background || 
-                                   '#6366f1';
+                const primaryColor = projectData?.theme?.globalColors?.primary ||
+                    projectData?.data?.header?.colors?.background ||
+                    '#6366f1';
                 return (
                     <ProductSearchPage
                         storeId={projectId}
@@ -222,6 +256,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             storeId={projectId}
             onNavigateHome={navigateHome}
             onNavigateToCheckout={navigateToCheckout}
+            projectData={projectData}
         >
             {renderContent()}
         </StorefrontLayout>

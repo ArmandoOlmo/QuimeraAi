@@ -16,6 +16,7 @@ import {
     serverTimestamp,
     where,
     getDocs,
+    setDoc,
 } from 'firebase/firestore';
 import { db } from '../../../../firebase';
 import { Category } from '../../../../types/ecommerce';
@@ -27,6 +28,33 @@ export const useCategories = (userId: string, storeId?: string) => {
 
     const effectiveStoreId = storeId || '';
     const categoriesPath = `users/${userId}/stores/${effectiveStoreId}/categories`;
+
+    // Helper to sync with public store
+    const syncToPublicStore = useCallback(async (categoryId: string, categoryData: any, isDelete = false) => {
+        if (!effectiveStoreId) return;
+
+        try {
+            const publicCategoryRef = doc(db, 'publicStores', effectiveStoreId, 'categories', categoryId);
+
+            if (isDelete) {
+                await deleteDoc(publicCategoryRef);
+                console.log(`[useCategories] 🗑️ Deleted category ${categoryId} from publicStores`);
+                return;
+            }
+
+            // Ensure we don't save undefined values
+            const publicData = { ...categoryData };
+
+            await setDoc(publicCategoryRef, {
+                ...publicData,
+                publishedAt: new Date().toISOString(),
+            }, { merge: true });
+            console.log(`[useCategories] ✅ Synced category ${categoryId} to publicStores`);
+
+        } catch (err) {
+            console.error('[useCategories] Error syncing to public store:', err);
+        }
+    }, [effectiveStoreId]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -72,29 +100,41 @@ export const useCategories = (userId: string, storeId?: string) => {
     const addCategory = useCallback(
         async (categoryData: Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'position'>): Promise<string> => {
             const categoriesRef = collection(db, categoriesPath);
-            
+
             // Get next position
             const position = categories.length;
             const slug = generateSlug(categoryData.name);
+            const timestamp = serverTimestamp();
 
-            const docRef = await addDoc(categoriesRef, {
+            const newCategoryData = {
                 ...categoryData,
                 slug,
                 position,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            };
+
+            const docRef = await addDoc(categoriesRef, newCategoryData);
+
+            // Sync to public store
+            const publicSyncData = {
+                ...newCategoryData,
+                id: docRef.id,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            await syncToPublicStore(docRef.id, publicSyncData);
 
             return docRef.id;
         },
-        [categoriesPath, categories.length]
+        [categoriesPath, categories.length, syncToPublicStore]
     );
 
     // Update category
     const updateCategory = useCallback(
         async (categoryId: string, updates: Partial<Category>) => {
             const categoryRef = doc(db, categoriesPath, categoryId);
-            
+
             const updateData: any = {
                 ...updates,
                 updatedAt: serverTimestamp(),
@@ -105,8 +145,25 @@ export const useCategories = (userId: string, storeId?: string) => {
             }
 
             await updateDoc(categoryRef, updateData);
+
+            // Sync to public store
+            // We need to merge with existing data to ensure completeness if needed,
+            // or just merge what we have if the public store already has the rest.
+            // Using merge: true in syncToPublicStore handles partial updates safely.
+            // But to be safe, let's grab the current category from state to ensure we have a full picture if needed,
+            // though for updates just sending changed fields + updatedAt is usually enough with merge: true.
+            const currentCategory = categories.find(c => c.id === categoryId);
+
+            if (currentCategory) {
+                const finalDataForSync = {
+                    ...currentCategory,
+                    ...updateData,
+                    updatedAt: new Date().toISOString()
+                };
+                await syncToPublicStore(categoryId, finalDataForSync);
+            }
         },
-        [categoriesPath]
+        [categoriesPath, categories, syncToPublicStore]
     );
 
     // Delete category
@@ -114,8 +171,11 @@ export const useCategories = (userId: string, storeId?: string) => {
         async (categoryId: string) => {
             const categoryRef = doc(db, categoriesPath, categoryId);
             await deleteDoc(categoryRef);
+
+            // Sync delete to public store
+            await syncToPublicStore(categoryId, null, true);
         },
-        [categoriesPath]
+        [categoriesPath, syncToPublicStore]
     );
 
     // Reorder categories
@@ -130,8 +190,17 @@ export const useCategories = (userId: string, storeId?: string) => {
             });
 
             await Promise.all(promises);
+
+            // Sync reorder to public store (updates positions)
+            for (let index = 0; index < orderedIds.length; index++) {
+                const id = orderedIds[index];
+                await syncToPublicStore(id, {
+                    position: index,
+                    updatedAt: new Date().toISOString()
+                });
+            }
         },
-        [categoriesPath]
+        [categoriesPath, syncToPublicStore]
     );
 
     // Get category by ID

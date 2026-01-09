@@ -320,14 +320,27 @@ service cloud.firestore {
     // ============================================
     match /publicStores/{storeId} {
       allow read: if true;
+      
+      // Helper: Check if user owns the source project
+      // This allows publishing even if publicStore has stale userId
+      function ownsSourceProject() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+      
       // Only the store owner or superadmin can write
+      // Also allow if user owns the source project (fixes stale ownership)
       allow create: if request.auth != null && (
         isSuperAdminOrOwner() || 
-        request.resource.data.userId == request.auth.uid
+        request.resource.data.userId == request.auth.uid ||
+        ownsSourceProject()
       );
+      
+      // For update: allow if user owns existing doc, OR owns source project, OR is superadmin
+      // The ownsSourceProject check handles cases where publicStore has incorrect userId
       allow update, delete: if request.auth != null && (
         isSuperAdminOrOwner() || 
-        resource.data.userId == request.auth.uid
+        resource.data.userId == request.auth.uid ||
+        ownsSourceProject()
       );
       
       // Subcollections (products, orders, etc.)
@@ -335,7 +348,8 @@ service cloud.firestore {
         allow read: if true; 
         allow write: if request.auth != null && (
           isSuperAdminOrOwner() || 
-          get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid
+          get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
         ); 
       }
     }

@@ -17,6 +17,8 @@ import {
     where,
     getDocs,
     writeBatch,
+    setDoc,
+    getDoc,
 } from 'firebase/firestore';
 import {
     ref,
@@ -41,6 +43,44 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
     // Use provided storeId (projectId)
     const effectiveStoreId = storeId || '';
     const productsPath = `users/${userId}/stores/${effectiveStoreId}/products`;
+
+    // Helper to sync with public store
+    const syncToPublicStore = useCallback(async (productId: string, productData: any, isDelete = false) => {
+        if (!effectiveStoreId) return;
+
+        try {
+            const publicProductRef = doc(db, 'publicStores', effectiveStoreId, 'products', productId);
+
+            if (isDelete) {
+                await deleteDoc(publicProductRef);
+                console.log(`[useProducts] 🗑️ Deleted product ${productId} from publicStores`);
+                return;
+            }
+
+            // Only publish if active
+            if (productData.status === 'active') {
+                // Ensure we don't save undefined values
+                const publicData = { ...productData };
+
+                // Remove serverTimestamp placeholders effectively for client-side usage if needed, 
+                // but for sync we want consistent data. 
+                // However, we should be careful not to pass function objects if any.
+
+                await setDoc(publicProductRef, {
+                    ...publicData,
+                    publishedAt: new Date().toISOString(),
+                }, { merge: true });
+                console.log(`[useProducts] ✅ Synced active product ${productId} to publicStores`);
+            } else {
+                // If not active, ensure it's removed from public store (e.g. status changed to draft)
+                // Check if it exists first or just delete it
+                await deleteDoc(publicProductRef);
+                console.log(`[useProducts] 🔒 Removed non-active product ${productId} from publicStores`);
+            }
+        } catch (err) {
+            console.error('[useProducts] Error syncing to public store:', err);
+        }
+    }, [effectiveStoreId]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -123,7 +163,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         async (productId: string, imageId: string) => {
             const imagePath = `users/${userId}/stores/${effectiveStoreId}/products/${productId}/${imageId}`;
             const imageRef = ref(storage, imagePath);
-            
+
             try {
                 await deleteObject(imageRef);
             } catch (err) {
@@ -140,19 +180,23 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             imageFiles?: File[]
         ): Promise<string> => {
             const productsRef = collection(db, productsPath);
-            
+
             // Extract library image URLs from productData
             const { libraryImageUrls, ...cleanProductData } = productData;
-            
+
             const slug = generateSlug(cleanProductData.name);
-            
-            const docRef = await addDoc(productsRef, {
+            const timestamp = serverTimestamp() as any;
+
+            const newProductData = {
                 ...cleanProductData,
                 slug,
                 images: [],
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            };
+
+            const docRef = await addDoc(productsRef, newProductData);
+            let finalProductData = { ...newProductData, id: docRef.id } as Product;
 
             const allImages: ProductImage[] = [];
             let position = 0;
@@ -181,11 +225,21 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             // Update product with all images
             if (allImages.length > 0) {
                 await updateDoc(docRef, { images: allImages });
+                finalProductData.images = allImages;
             }
+
+            // Sync to public store
+            // Convert serverTimestamp to date for public store immediate sync (approximate)
+            const publicSyncData = {
+                ...finalProductData,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            await syncToPublicStore(docRef.id, publicSyncData);
 
             return docRef.id;
         },
-        [productsPath, uploadImage]
+        [productsPath, uploadImage, syncToPublicStore]
     );
 
     // Update product
@@ -196,10 +250,10 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             newImageFiles?: File[]
         ) => {
             const productRef = doc(db, productsPath, productId);
-            
+
             // Extract library image URLs from updates
             const { libraryImageUrls, ...cleanUpdates } = updates;
-            
+
             const updateData: any = {
                 ...cleanUpdates,
                 updatedAt: serverTimestamp(),
@@ -210,8 +264,11 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 updateData.slug = generateSlug(cleanUpdates.name);
             }
 
+            // Fetch current product to merge for sync
             const currentProduct = products.find((p) => p.id === productId);
-            const existingImages = currentProduct?.images || [];
+            if (!currentProduct) return; // Should not happen
+
+            const existingImages = currentProduct.images || [];
             let position = existingImages.length;
             const newImages: ProductImage[] = [];
 
@@ -224,7 +281,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                         newImages.push({
                             id: `library-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                             url,
-                            altText: cleanUpdates.name || currentProduct?.name || '',
+                            altText: cleanUpdates.name || currentProduct.name || '',
                             position: position++,
                         });
                     }
@@ -246,15 +303,23 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             }
 
             await updateDoc(productRef, updateData);
+
+            // Sync to public store
+            const finalDataForSync = {
+                ...currentProduct,
+                ...updateData,
+                updatedAt: new Date().toISOString() // Use ISO string for public sync
+            };
+            await syncToPublicStore(productId, finalDataForSync);
         },
-        [productsPath, products, uploadImage]
+        [productsPath, products, uploadImage, syncToPublicStore]
     );
 
     // Delete product
     const deleteProduct = useCallback(
         async (productId: string) => {
             const product = products.find((p) => p.id === productId);
-            
+
             // Delete all product images from storage
             if (product?.images) {
                 for (const image of product.images) {
@@ -264,8 +329,11 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
             const productRef = doc(db, productsPath, productId);
             await deleteDoc(productRef);
+
+            // Sync delete to public store
+            await syncToPublicStore(productId, null, true);
         },
-        [productsPath, products, deleteImage]
+        [productsPath, products, deleteImage, syncToPublicStore]
     );
 
     // Update inventory
@@ -276,15 +344,25 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 quantity,
                 updatedAt: serverTimestamp(),
             });
+
+            // Sync inventory to public store
+            const currentProduct = products.find(p => p.id === productId);
+            if (currentProduct) {
+                await syncToPublicStore(productId, {
+                    ...currentProduct,
+                    quantity,
+                    updatedAt: new Date().toISOString()
+                });
+            }
         },
-        [productsPath]
+        [productsPath, products, syncToPublicStore]
     );
 
     // Bulk update status
     const bulkUpdateStatus = useCallback(
         async (productIds: string[], status: ProductStatus) => {
             const batch = writeBatch(db);
-            
+
             productIds.forEach((productId) => {
                 const productRef = doc(db, productsPath, productId);
                 batch.update(productRef, {
@@ -294,8 +372,24 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             });
 
             await batch.commit();
+
+            // Sync all affected products to public store
+            // We need to loop because each might have different data, 
+            // but we can optimize by just syncing the status if we trust consistency.
+            // Better safely: read current, update status, sync.
+            // Since we have `products` in memory:
+            for (const productId of productIds) {
+                const currentProduct = products.find(p => p.id === productId);
+                if (currentProduct) {
+                    await syncToPublicStore(productId, {
+                        ...currentProduct,
+                        status,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+            }
         },
-        [productsPath]
+        [productsPath, products, syncToPublicStore]
     );
 
     // Get product by ID

@@ -123,51 +123,57 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
         );
     }
 
-    // Dashboard Views (websites, dashboard)
-    if (view === 'dashboard' || view === 'websites' || !activeProjectId || !data) {
+    // Editor View - Show loading if data is not yet ready
+    if (view === 'editor') {
+        // If we're in editor mode but data isn't ready yet, show loading
+        if (!activeProjectId || !data) {
+            return <ViewLoading />;
+        }
+
+        // Editor View (data is loaded)
         return (
-            <Suspense fallback={<ViewLoading />}>
-                <Dashboard />
-            </Suspense>
+            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+                {/* Sidebar - Desktop: always visible collapsed, Mobile: controlled by isMobileMenuOpen */}
+                <DashboardSidebar
+                    isMobileOpen={isMobileMenuOpen}
+                    onClose={() => setIsMobileMenuOpen(false)}
+                    defaultCollapsed={true}
+                />
+
+                {/* Main Editor Content */}
+                <div className="flex flex-col flex-1 min-w-0">
+                    <Suspense fallback={<ViewLoading />}>
+                        <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+                    </Suspense>
+
+                    <div className="flex flex-1 overflow-hidden relative">
+                        {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
+                        <Suspense fallback={<ViewLoading />}>
+                            <Controls />
+                        </Suspense>
+
+                        {/* Preview Area - Hidden on mobile when Controls sidebar is open */}
+                        <main className={`
+                            flex-1 p-4 sm:p-8 flex justify-center overflow-auto
+                            ${isSidebarOpen ? 'hidden md:flex' : 'flex'}
+                        `}>
+                            <Suspense fallback={<ViewLoading />}>
+                                <BrowserPreview ref={previewRef}>
+                                    <LandingPage />
+                                </BrowserPreview>
+                            </Suspense>
+                        </main>
+                    </div>
+                </div>
+            </div>
         );
     }
 
-    // Editor View (default)
+    // Dashboard Views (websites, dashboard, or no project selected)
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
-            {/* Sidebar - Desktop: always visible collapsed, Mobile: controlled by isMobileMenuOpen */}
-            <DashboardSidebar 
-                isMobileOpen={isMobileMenuOpen} 
-                onClose={() => setIsMobileMenuOpen(false)}
-                defaultCollapsed={true}
-            />
-            
-            {/* Main Editor Content */}
-            <div className="flex flex-col flex-1 min-w-0">
-                <Suspense fallback={<ViewLoading />}>
-                    <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
-                </Suspense>
-                
-                <div className="flex flex-1 overflow-hidden relative">
-                    {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
-                    <Suspense fallback={<ViewLoading />}>
-                        <Controls />
-                    </Suspense>
-                    
-                    {/* Preview Area - Hidden on mobile when Controls sidebar is open */}
-                    <main className={`
-                        flex-1 p-4 sm:p-8 flex justify-center overflow-auto
-                        ${isSidebarOpen ? 'hidden md:flex' : 'flex'}
-                    `}>
-                        <Suspense fallback={<ViewLoading />}>
-                            <BrowserPreview ref={previewRef}>
-                                <LandingPage />
-                            </BrowserPreview>
-                        </Suspense>
-                    </main>
-                </div>
-            </div>
-        </div>
+        <Suspense fallback={<ViewLoading />}>
+            <Dashboard />
+        </Suspense>
     );
 };
 

@@ -68,9 +68,9 @@ export interface PublishOptions {
  * @returns Resultado de la publicación
  */
 export async function publishProject(options: PublishOptions): Promise<PublishResult> {
-    const { 
-        userId, 
-        projectId, 
+    const {
+        userId,
+        projectId,
         tenantId = null,
         includeEcommerce = true,
         includeCMS = true,
@@ -86,21 +86,21 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
 
     try {
         console.log(`📤 [PublishService] Publishing project ${projectId}...`);
-        
+
         // =========================================================================
         // PASO 1: Obtener el proyecto (desde snapshot o Firestore)
         // =========================================================================
-        const projectPath = tenantId 
+        const projectPath = tenantId
             ? ['tenants', tenantId, 'projects', projectId]
             : ['users', userId, 'projects', projectId];
-        
+
         let project: Project;
-        
+
         if (projectSnapshot) {
             // USE SNAPSHOT DIRECTLY (from editor - single source of truth)
             console.log(`📸 [PublishService] Using snapshot from editor (not reading from Firestore)`);
             project = projectSnapshot as Project;
-            
+
             // Optionally save the snapshot to Firestore first (as draft)
             if (saveDraftFirst) {
                 console.log(`💾 [PublishService] Saving draft to Firestore first...`);
@@ -122,16 +122,16 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             console.log(`📂 [PublishService] Reading project from Firestore (no snapshot provided)`);
             const projectRef = doc(db, ...projectPath);
             const projectSnap = await getDoc(projectRef);
-            
+
             if (!projectSnap.exists()) {
                 throw new Error(`Project ${projectId} not found at path: ${projectPath.join('/')}`);
             }
-            
+
             project = { id: projectSnap.id, ...projectSnap.data() } as Project;
         }
-        
+
         console.log(`📋 [PublishService] Project ready: "${project.name}"`);
-        
+
         // Debug: Log the hero data we're about to publish
         console.log(`🔍 [PublishService] Hero data to publish:`, {
             heroVariant: project.data?.hero?.heroVariant,
@@ -139,76 +139,137 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             hasBackgroundImage: !!project.data?.hero?.backgroundImage,
             imageUrl: project.data?.hero?.imageUrl?.substring(0, 50),
         });
-        
+
         // =========================================================================
         // PASO 2: Crear el snapshot COMPLETO para publicStores
         // =========================================================================
         const publishedAt = new Date().toISOString();
-        
+
         const publishData = {
             // === IDENTIFICACIÓN ===
             id: project.id || projectId,
             name: project.name,
             userId: userId,
             tenantId: tenantId || null,
-            
+
             // === CONTENIDO PRINCIPAL (PageData) ===
             data: project.data,
-            
+
             // === HEADER/FOOTER (duplicados en raíz para StorefrontLayout) ===
             header: project.data?.header || null,
             footer: project.data?.footer || null,
-            
+
             // === TEMA Y ESTILOS ===
             theme: project.theme,
             brandIdentity: project.brandIdentity,
-            
+
             // === ARQUITECTURA MULTI-PÁGINA (CRÍTICO) ===
             pages: project.pages || [],
-            
+
             // === CONFIGURACIÓN DE COMPONENTES ===
             componentOrder: project.componentOrder || [],
             sectionVisibility: project.sectionVisibility || {},
             componentStatus: project.componentStatus || null,
             // Use project componentStyles, or fallback to default componentStyles
             componentStyles: project.componentStyles || defaultComponentStyles,
-            
+
             // === NAVEGACIÓN ===
             menus: project.menus || [],
-            
+
             // === SEO ===
             seoConfig: project.seoConfig || null,
-            
+
             // === AI ASSISTANT ===
             aiAssistantConfig: project.aiAssistantConfig || null,
-            
+
             // === DESIGN TOKENS ===
             designTokens: project.designTokens || null,
-            
+
             // === RESPONSIVE STYLES ===
             responsiveStyles: project.responsiveStyles || null,
-            
+
             // === A/B TESTING ===
             abTests: project.abTests || null,
-            
+
             // === METADATA DE PUBLICACIÓN ===
             publishedAt,
             updatedAt: publishedAt,
             sourceProjectPath: projectPath.join('/'),
-            
+
             // === FAVICON ===
             faviconUrl: project.faviconUrl || null,
             thumbnailUrl: project.thumbnailUrl || null,
         };
-        
+
         // =========================================================================
         // PASO 3: Escribir a publicStores (atómico)
         // =========================================================================
+        console.log(`🔐 [PublishService] About to write to publicStores/${projectId}`, {
+            userId: publishData.userId,
+            tenantId: publishData.tenantId,
+            projectName: publishData.name,
+        });
+
         const publicStoreRef = doc(db, 'publicStores', projectId);
-        await setDoc(publicStoreRef, publishData);
-        
+
+        // Check if document already exists and verify ownership
+        const existingPublicDoc = await getDoc(publicStoreRef);
+        if (existingPublicDoc.exists()) {
+            const existingData = existingPublicDoc.data();
+            const existingUserId = existingData?.userId;
+
+            if (existingUserId && existingUserId !== userId) {
+                console.warn(`⚠️ [PublishService] publicStores/${projectId} has different userId:`);
+                console.warn(`   Existing: ${existingUserId}`);
+                console.warn(`   Current:  ${userId}`);
+                console.warn(`   Will attempt to update with current user as owner...`);
+
+                // The document exists with a different userId
+                // This could happen if:
+                // 1. The project was transferred to another user
+                // 2. There's a data inconsistency
+                // 3. The userId was changed in the source project
+                // 
+                // Since we verified the user owns the source project (saved draft successfully),
+                // we should be able to update. But Firestore rules check resource.data.userId.
+                // 
+                // Solution: Use a Cloud Function or Admin SDK for cross-user updates.
+                // For now, let's try a workaround by deleting and recreating if we're the actual owner.
+
+                // First, check if this is actually our project in the source collection
+                const sourceProjectRef = doc(db, ...projectPath);
+                const sourceProjectSnap = await getDoc(sourceProjectRef);
+
+                if (sourceProjectSnap.exists()) {
+                    // We own the source project, so we should own the public store
+                    // The public store has stale data - we need to handle this
+                    console.log(`🔄 [PublishService] User owns source project, attempting to fix publicStore ownership...`);
+
+                    // Try to write anyway - if Firestore rules allow based on source ownership
+                    // we'll add a rule exception, otherwise we need admin intervention
+                    try {
+                        await setDoc(publicStoreRef, publishData);
+                    } catch (permError) {
+                        console.error(`❌ [PublishService] Cannot update publicStore - userId mismatch`);
+                        console.error(`   Source project is owned by ${userId}`);
+                        console.error(`   publicStores/${projectId} is owned by ${existingUserId}`);
+                        console.error(`   This may require admin intervention to fix.`);
+                        throw new Error(`Permission denied: The published store has a different owner. Please contact support to resolve this issue.`);
+                    }
+                } else {
+                    throw new Error(`Cannot publish: source project not found and publicStore belongs to another user.`);
+                }
+            } else {
+                // Same userId or no userId in existing doc - proceed normally
+                await setDoc(publicStoreRef, publishData);
+            }
+        } else {
+            // Document doesn't exist - create new
+            await setDoc(publicStoreRef, publishData);
+        }
+
         console.log(`✅ [PublishService] Main project data published`);
-        
+
         // =========================================================================
         // PASO 4: Publicar datos de ecommerce (productos y categorías)
         // =========================================================================
@@ -217,25 +278,25 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             stats.productsPublished = ecommerceStats.products;
             stats.categoriesPublished = ecommerceStats.categories;
         }
-        
+
         // =========================================================================
         // PASO 5: Publicar artículos del CMS
         // =========================================================================
         if (includeCMS) {
             stats.postsPublished = await publishCMSData(userId, projectId, tenantId);
         }
-        
+
         console.log(`🎉 [PublishService] Project "${project.name}" published successfully!`);
         console.log(`   📦 Products: ${stats.productsPublished}`);
         console.log(`   📂 Categories: ${stats.categoriesPublished}`);
         console.log(`   📝 Posts: ${stats.postsPublished}`);
-        
+
         return {
             success: true,
             publishedAt,
             stats,
         };
-        
+
     } catch (error) {
         console.error(`❌ [PublishService] Error publishing project:`, error);
         return {
@@ -261,15 +322,15 @@ interface EcommerceStats {
  */
 async function publishEcommerceData(userId: string, projectId: string): Promise<EcommerceStats> {
     const stats: EcommerceStats = { products: 0, categories: 0 };
-    
+
     try {
         // === PRODUCTOS ===
         const privateProductsRef = collection(db, 'users', userId, 'stores', projectId, 'products');
         const productsSnapshot = await getDocs(privateProductsRef);
-        
+
         if (!productsSnapshot.empty) {
             console.log(`📦 [PublishService] Publishing ${productsSnapshot.size} products...`);
-            
+
             for (const productDoc of productsSnapshot.docs) {
                 const productData = productDoc.data();
                 // Solo publicar productos activos
@@ -283,14 +344,14 @@ async function publishEcommerceData(userId: string, projectId: string): Promise<
                 }
             }
         }
-        
+
         // === CATEGORÍAS ===
         const privateCategoriesRef = collection(db, 'users', userId, 'stores', projectId, 'categories');
         const categoriesSnapshot = await getDocs(privateCategoriesRef);
-        
+
         if (!categoriesSnapshot.empty) {
             console.log(`📂 [PublishService] Publishing ${categoriesSnapshot.size} categories...`);
-            
+
             for (const categoryDoc of categoriesSnapshot.docs) {
                 const publicCategoryRef = doc(db, 'publicStores', projectId, 'categories', categoryDoc.id);
                 await setDoc(publicCategoryRef, {
@@ -300,13 +361,13 @@ async function publishEcommerceData(userId: string, projectId: string): Promise<
                 stats.categories++;
             }
         }
-        
+
         console.log(`✅ [PublishService] Ecommerce data published: ${stats.products} products, ${stats.categories} categories`);
-        
+
     } catch (error) {
         console.warn('[PublishService] Ecommerce publish warning (non-critical):', error);
     }
-    
+
     return stats;
 }
 
@@ -318,24 +379,24 @@ async function publishEcommerceData(userId: string, projectId: string): Promise<
  * Publica los artículos del CMS
  */
 async function publishCMSData(
-    userId: string, 
+    userId: string,
     projectId: string,
     tenantId?: string | null
 ): Promise<number> {
     let postsPublished = 0;
-    
+
     try {
         // Intentar obtener posts desde la ruta del proyecto
         const projectPostsPath = tenantId
             ? ['tenants', tenantId, 'projects', projectId, 'posts']
             : ['users', userId, 'projects', projectId, 'posts'];
-        
+
         const privatePostsRef = collection(db, ...projectPostsPath);
         const postsSnapshot = await getDocs(privatePostsRef);
-        
+
         if (!postsSnapshot.empty) {
             console.log(`📝 [PublishService] Publishing ${postsSnapshot.size} CMS posts...`);
-            
+
             for (const postDoc of postsSnapshot.docs) {
                 const postData = postDoc.data();
                 // Solo publicar posts con status 'published'
@@ -349,13 +410,13 @@ async function publishCMSData(
                 }
             }
         }
-        
+
         console.log(`✅ [PublishService] CMS data published: ${postsPublished} posts`);
-        
+
     } catch (error) {
         console.warn('[PublishService] CMS publish warning (non-critical):', error);
     }
-    
+
     return postsPublished;
 }
 

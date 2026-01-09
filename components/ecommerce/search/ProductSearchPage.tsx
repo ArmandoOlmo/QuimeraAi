@@ -222,36 +222,41 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
         (filters.onSale ? 1 : 0) +
         (filters.featured ? 1 : 0);
 
-    // Use theme colors when embedded, otherwise use defaults
-    const colors = embedded && themeColors ? {
-        text: themeColors.text || '#94a3b8',
-        heading: themeColors.heading || '#ffffff',
-        cardBg: themeColors.cardBackground || '#1e293b',
-        cardText: themeColors.cardText || themeColors.text || '#94a3b8',
-        border: themeColors.border || '#334155',
+    // Use theme colors if provided, otherwise use defaults
+    const colors = themeColors ? {
+        text: themeColors.text || '#0f172a',
+        heading: themeColors.heading || '#0f172a',
+        background: themeColors.background || '#ffffff',
+        cardBg: themeColors.cardBackground || '#ffffff',
+        cardText: themeColors.cardText || themeColors.text || '#0f172a',
+        border: themeColors.border || '#e2e8f0',
         priceColor: themeColors.priceColor || primaryColor,
         salePriceColor: themeColors.salePriceColor || '#ef4444',
         mutedText: themeColors.mutedText || themeColors.text || '#64748b',
     } : {
-        text: '',
-        heading: '',
-        cardBg: '',
-        cardText: '',
-        border: '',
-        priceColor: '',
-        salePriceColor: '',
-        mutedText: '',
+        text: '#0f172a',
+        heading: '#0f172a',
+        background: '#f9fafb',
+        cardBg: '#ffffff',
+        cardText: '#0f172a',
+        border: '#e2e8f0',
+        priceColor: primaryColor,
+        salePriceColor: '#ef4444',
+        mutedText: '#64748b',
     };
 
     return (
-        <div 
-            className={embedded ? `${paddingYClass}` : "min-h-screen bg-gray-50 dark:bg-gray-900"}
-            style={embedded ? { backgroundColor: themeColors?.background || 'transparent' } : undefined}
+        <div
+            className={embedded ? `${paddingYClass}` : "min-h-screen transition-colors duration-300"}
+            style={{
+                backgroundColor: embedded ? (colors.background || 'transparent') : (colors.background || '#f9fafb'),
+                color: colors.text
+            }}
         >
             {/* Title for embedded mode */}
             {embedded && title && (
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
-                    <h1 
+                    <h1
                         className="text-3xl font-bold"
                         style={{ color: colors?.heading || undefined }}
                     >
@@ -259,10 +264,16 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                     </h1>
                 </div>
             )}
-            
+
             {/* Header - Only show when NOT embedded */}
             {!embedded && (
-                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+                <div
+                    className="border-b sticky top-0 z-30 transition-colors duration-300"
+                    style={{
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.border
+                    }}
+                >
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         {/* Top Row */}
                         <div className="py-4 flex items-center gap-4">
@@ -310,7 +321,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 )}
 
                                 {/* Results Count */}
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                <span className="text-sm" style={{ color: colors.mutedText }}>
                                     {totalCount} producto{totalCount !== 1 ? 's' : ''}
                                 </span>
                             </div>
@@ -322,42 +333,56 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                         <select
                                             value={sortBy}
                                             onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                                            className="appearance-none px-3 py-2 pr-8 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-sm focus:outline-none focus:ring-2"
-                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
-                                    >
-                                        {sortOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                                        size={16}
-                                    />
-                                </div>
+                                            className="appearance-none px-3 py-2 pr-8 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors"
+                                            style={{
+                                                backgroundColor: colors.cardBg,
+                                                borderColor: colors.border,
+                                                color: colors.text,
+                                                '--tw-ring-color': primaryColor
+                                            } as React.CSSProperties}
+                                        >
+                                            {sortOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                                            size={16}
+                                        />
+                                    </div>
                                 )}
 
                                 {/* View Mode */}
                                 {showViewModeToggle && (
-                                    <div className="hidden sm:flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                                    <div
+                                        className="hidden sm:flex items-center rounded-lg p-1"
+                                        style={{ backgroundColor: colors.background }}
+                                    >
                                         <button
                                             onClick={() => setViewMode('grid')}
-                                            className={`p-2 rounded-md transition-colors ${
-                                                viewMode === 'grid'
-                                                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                                                    : 'text-gray-500 dark:text-gray-400'
-                                            }`}
+                                            className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+                                                ? 'shadow-sm'
+                                                : 'text-opacity-70 hover:text-opacity-100'
+                                                }`}
+                                            style={{
+                                                backgroundColor: viewMode === 'grid' ? primaryColor : 'transparent',
+                                                color: viewMode === 'grid' ? '#ffffff' : colors.text
+                                            }}
                                         >
                                             <Grid size={18} />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`p-2 rounded-md transition-colors ${
-                                                viewMode === 'list'
-                                                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                                                    : 'text-gray-500 dark:text-gray-400'
-                                            }`}
+                                            className={`p-2 rounded-md transition-colors ${viewMode === 'list'
+                                                ? 'shadow-sm'
+                                                : 'text-opacity-70 hover:text-opacity-100'
+                                                }`}
+                                            style={{
+                                                backgroundColor: viewMode === 'list' ? primaryColor : 'transparent',
+                                                color: viewMode === 'list' ? '#ffffff' : colors.text
+                                            }}
                                         >
                                             <List size={18} />
                                         </button>
@@ -372,7 +397,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
             {/* Embedded mode toolbar */}
             {embedded && (
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
-                    <div 
+                    <div
                         className="flex items-center justify-between gap-4 pb-4 border-b"
                         style={{ borderColor: colors?.border || undefined }}
                     >
@@ -381,7 +406,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
-                                style={{ 
+                                style={{
                                     backgroundColor: colors?.cardBg || undefined,
                                     color: colors?.text || undefined,
                                 }}
@@ -399,7 +424,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             </button>
 
                             {/* Results Count */}
-                            <span 
+                            <span
                                 className="text-sm"
                                 style={{ color: colors?.text || undefined }}
                             >
@@ -415,11 +440,11 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                         value={sortBy}
                                         onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                         className="appearance-none px-3 py-2 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: colors?.cardBg || undefined,
                                             borderColor: colors?.border || undefined,
                                             color: colors?.text || undefined,
-                                            '--tw-ring-color': primaryColor 
+                                            '--tw-ring-color': primaryColor
                                         } as React.CSSProperties}
                                     >
                                         {sortOptions.map((option) => (
@@ -438,14 +463,14 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
 
                             {/* View Mode */}
                             {showViewModeToggle && (
-                                <div 
+                                <div
                                     className="hidden sm:flex items-center rounded-lg p-1"
                                     style={{ backgroundColor: colors?.cardBg || undefined }}
                                 >
                                     <button
                                         onClick={() => setViewMode('grid')}
                                         className="p-2 rounded-md transition-colors"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: viewMode === 'grid' ? primaryColor : 'transparent',
                                             color: viewMode === 'grid' ? '#ffffff' : colors?.text || undefined,
                                         }}
@@ -455,7 +480,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                     <button
                                         onClick={() => setViewMode('list')}
                                         className="p-2 rounded-md transition-colors"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: viewMode === 'list' ? primaryColor : 'transparent',
                                             color: viewMode === 'list' ? '#ffffff' : colors?.text || undefined,
                                         }}
@@ -514,10 +539,10 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                         ) : products.length === 0 ? (
                             <div className="text-center py-16">
                                 <Package className="mx-auto text-gray-300 dark:text-gray-600 mb-4" size={64} />
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                <h3 className="text-xl font-bold mb-2" style={{ color: colors.heading }}>
                                     No se encontraron productos
                                 </h3>
-                                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                                <p className="mb-6" style={{ color: colors.mutedText }}>
                                     Intenta con otros filtros o términos de búsqueda
                                 </p>
                                 <button
@@ -668,7 +693,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     // Overlay style - full image with text on top
     if (cardStyle === 'overlay') {
         return (
-            <div 
+            <div
                 className={`${borderRadiusClass} overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer`}
                 onClick={onClick}
             >
@@ -681,7 +706,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                     ) : (
-                        <div 
+                        <div
                             className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700"
                             style={{ color: cardColors.mutedText }}
                         >
@@ -695,7 +720,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {hasDiscount && (
-                            <span 
+                            <span
                                 className="px-2 py-1 text-white text-xs font-bold rounded-full"
                                 style={{ backgroundColor: cardColors.salePriceColor }}
                             >
@@ -772,10 +797,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     // Card style variations - use theme colors if provided (for non-overlay styles)
     const getCardStyle = () => {
         if (cardColors.cardBackground) {
-            const baseStyle = cardStyle === 'minimal' 
-                ? 'border-0 shadow-none' 
-                : cardStyle === 'elegant' 
-                    ? 'shadow-lg border-0' 
+            const baseStyle = cardStyle === 'minimal'
+                ? 'border-0 shadow-none'
+                : cardStyle === 'elegant'
+                    ? 'shadow-lg border-0'
                     : 'shadow-sm';
             return baseStyle;
         }
@@ -789,7 +814,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
     // Default styles (minimal, modern, elegant)
     return (
-        <div 
+        <div
             className={`${getCardStyle()} ${borderRadiusClass} overflow-hidden group transition-all duration-300 hover:-translate-y-1`}
             style={{
                 backgroundColor: cardColors.cardBackground,
@@ -811,7 +836,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                 ) : (
-                    <div 
+                    <div
                         className="w-full h-full flex items-center justify-center"
                         style={{ color: cardColors.mutedText }}
                     >
@@ -822,7 +847,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {hasDiscount && (
-                        <span 
+                        <span
                             className="px-2 py-1 text-white text-xs font-bold rounded-full"
                             style={{ backgroundColor: cardColors.salePriceColor }}
                         >
@@ -864,7 +889,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {product.reviewStats && product.reviewStats.totalReviews > 0 && (
                     <div className="flex items-center gap-1 mt-1">
                         <RatingStars rating={product.reviewStats.averageRating} size="sm" />
-                        <span 
+                        <span
                             className="text-xs"
                             style={{ color: cardColors.mutedText }}
                         >
@@ -879,7 +904,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         {currencySymbol}{product.price.toFixed(2)}
                     </span>
                     {hasDiscount && (
-                        <span 
+                        <span
                             className="text-sm line-through"
                             style={{ color: cardColors.mutedText }}
                         >
@@ -929,7 +954,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
     };
 
     return (
-        <div 
+        <div
             className={`${borderRadiusClass} overflow-hidden shadow-sm flex`}
             style={{
                 backgroundColor: cardColors.cardBackground,
@@ -951,7 +976,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div 
+                    <div
                         className="w-full h-full flex items-center justify-center"
                         style={{ color: cardColors.mutedText }}
                     >
@@ -971,7 +996,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         {product.name}
                     </h3>
                     {product.shortDescription && (
-                        <p 
+                        <p
                             className="text-sm mt-1 line-clamp-2"
                             style={{ color: cardColors.cardText || cardColors.mutedText }}
                         >
@@ -981,7 +1006,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                     {product.reviewStats && product.reviewStats.totalReviews > 0 && (
                         <div className="flex items-center gap-1 mt-2">
                             <RatingStars rating={product.reviewStats.averageRating} size="sm" />
-                            <span 
+                            <span
                                 className="text-xs"
                                 style={{ color: cardColors.mutedText }}
                             >
@@ -997,7 +1022,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                             {currencySymbol}{product.price.toFixed(2)}
                         </span>
                         {hasDiscount && (
-                            <span 
+                            <span
                                 className="text-sm line-through"
                                 style={{ color: cardColors.mutedText }}
                             >
