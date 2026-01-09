@@ -57,26 +57,14 @@ const ALLOWED_ORIGIN_PATTERNS = [
  * SECURITY: Validate and set CORS headers
  */
 function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
-    const origin = req.headers.origin || '';
-
-    // Check if origin is in allowed list
-    const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
-        ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
-
-    if (isAllowed) {
-        res.set('Access-Control-Allow-Origin', origin);
-    } else {
-        // For non-matching origins, don't set CORS headers (browser will block)
-        // In production, you might want to log this for monitoring
-        console.warn(`CORS: Blocked request from origin: ${origin}`);
-    }
-
+    // For a website builder platform, we need to support user's custom domains.
+    // We allow all origins, but rely on projectId/API key validation for security.
+    res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');
-    res.set('Vary', 'Origin');
 
-    return isAllowed;
+    return true;
 }
 
 /**
