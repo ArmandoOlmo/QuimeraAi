@@ -536,6 +536,12 @@
     "ecommerceSection": "Ecommerce",
     "toolsSection": "Herramientas"
   },
+  "project": {
+    "selectProject": "Seleccionar Proyecto",
+    "noProject": "Sin proyecto",
+    "createNew": "Crear nuevo proyecto",
+    "search": "Buscar proyectos..."
+  },
   "bulk": {
     "selected": "seleccionados",
     "export": "Exportar",

@@ -1490,10 +1490,10 @@ const GlobalAiAssistant: React.FC = () => {
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 }
-                
+
                 // Views that require an active project
                 const viewsRequiringProject = ['email', 'ecommerce', 'finance', 'cms', 'seo', 'editor', 'navigation'];
-                
+
                 // If navigating to a view that requires a project and none is active, load one
                 if (viewsRequiringProject.includes(newView) && !activeProjectRef.current) {
                     const availableProjects = projectsRef.current.filter(p => (p as any).status !== 'Template');
@@ -1509,7 +1509,7 @@ const GlobalAiAssistant: React.FC = () => {
                         return result;
                     }
                 }
-                
+
                 // Map view names to routes
                 const viewToRoute: Record<string, string> = {
                     dashboard: ROUTES.DASHBOARD,
@@ -2722,7 +2722,7 @@ You: "✓ Made the hero button green and increased its size"
         const hasNavIntent = /\b(ir a|ve a|abre|abrir|open|go to|llevame|muestrame|show)\b/.test(norm);
         if (hasNavIntent) {
             // Email Marketing - highest priority
-            if (norm.includes('marketing') || norm.includes('campana') || norm.includes('campaign') || 
+            if (norm.includes('marketing') || norm.includes('campana') || norm.includes('campaign') ||
                 (norm.includes('email') && !norm.includes('newsletter'))) {
                 console.log('[InferTool] Priority match: email view');
                 return { name: 'change_view', args: { viewName: 'email' } };
@@ -2762,7 +2762,7 @@ You: "✓ Made the hero button green and increased its size"
                 console.log('[InferTool] Priority match: dashboard view');
                 return { name: 'change_view', args: { viewName: 'dashboard' } };
             }
-            
+
             // PROJECT LOADING: "abre proyecto X", "carga proyecto X", "usa proyecto X"
             const projectMatch = raw.match(/(?:proyecto|project|sitio|website)\s+["']?([^"']+)["']?/i);
             if (projectMatch && projectMatch[1]) {
@@ -2770,7 +2770,7 @@ You: "✓ Made the hero button green and increased its size"
                 console.log('[InferTool] Priority match: load_project', projectName);
                 return { name: 'load_project', args: { identifier: projectName } };
             }
-            
+
             // PROJECT LOADING BY NAME: "abre Boricua", "abre Mi Tienda"
             // Check if the word after "abre/open" matches any project name
             const openMatch = raw.match(/(?:abre|abrir|open|carga|cargar|usa|usar)\s+["']?([^"']+)["']?$/i);
@@ -2893,7 +2893,7 @@ You: "✓ Made the hero button green and increased its size"
         const isDisable = /\b(desactiva|desactivar|disable|deshabilita|deshabilitar)\b/.test(norm);
 
         // EMAIL CAMPAIGNS
-        if ((norm.includes('campana') || norm.includes('campaign') || norm.includes('email')) && 
+        if ((norm.includes('campana') || norm.includes('campaign') || norm.includes('email')) &&
             !norm.includes('tienda') && !norm.includes('producto')) {
             if (isCreate) {
                 console.log('[InferTool] Fast-path: email_campaign create');
@@ -2918,7 +2918,7 @@ You: "✓ Made the hero button green and increased its size"
         }
 
         // PRODUCTS / PRODUCTOS
-        if ((norm.includes('producto') || norm.includes('product')) && 
+        if ((norm.includes('producto') || norm.includes('product')) &&
             (norm.includes('tienda') || norm.includes('ecommerce') || norm.includes('vender') || norm.includes('precio'))) {
             if (isCreate) {
                 console.log('[InferTool] Fast-path: ecommerce_product create');
@@ -3008,7 +3008,7 @@ You: "✓ Made the hero button green and increased its size"
         }
 
         // IMAGE GENERATION
-        if ((norm.includes('imagen') || norm.includes('image') || norm.includes('foto')) && 
+        if ((norm.includes('imagen') || norm.includes('image') || norm.includes('foto')) &&
             (norm.includes('genera') || norm.includes('generate') || norm.includes('crea') || norm.includes('create'))) {
             console.log('[InferTool] Fast-path: generate_image_asset');
             return { name: 'generate_image_asset', args: { prompt: raw } };
@@ -3047,11 +3047,10 @@ You: "✓ Made the hero button green and increased its size"
                 // FAST PATH: Check if we can infer the tool call directly from
                 // the user's message BEFORE calling the LLM. This is more reliable
                 // and faster for simple commands like "abre hero", "open features", etc.
-                // ============================================================
                 console.log('[Global Assistant] === FAST PATH CHECK ===', { userMsg });
                 const directInferred = inferToolCallFromUserText(userMsg);
                 console.log('[Global Assistant] inferToolCallFromUserText result:', directInferred);
-                
+
                 if (directInferred?.name) {
                     console.log('[Global Assistant] FAST PATH - Executing:', directInferred);
                     setIsExecutingCommands(true);
@@ -3081,14 +3080,14 @@ You: "✓ Made the hero button green and increased its size"
                 // Build current context information
                 const currentView = viewRef.current || 'dashboard';
                 const currentProject = activeProjectRef.current;
-                const projectInfo = currentProject 
+                const projectInfo = currentProject
                     ? `Active Project: "${currentProject.name}" (ID: ${currentProject.id})`
                     : 'No project loaded - user needs to select a project first';
-                
+
                 // Build detailed view-specific context with available data
                 let viewContext = '';
                 let availableData = '';
-                
+
                 switch (currentView) {
                     case 'editor':
                         const visibleSections = Object.entries(sectionVisibilityRef.current || {})
@@ -3103,35 +3102,35 @@ AVAILABLE ACTIONS: edit text, change colors, show/hide sections, add items to li
 Hero headline: "${heroData?.headline || 'not set'}"
 Hero subheadline: "${heroData?.subheadline || 'not set'}"`;
                         break;
-                        
+
                     case 'email':
                         viewContext = `User is in EMAIL MARKETING for "${currentProject?.name || 'unknown'}".
 They can create campaigns, manage audiences, send emails, and view analytics.
 AVAILABLE ACTIONS: create campaign, edit campaign, send campaign, create audience, view stats`;
                         availableData = `To help: Ask what they want to do - create a new campaign, send to an audience, or check analytics.`;
                         break;
-                        
+
                     case 'ecommerce':
                         viewContext = `User is in ECOMMERCE/STORE for "${currentProject?.name || 'unknown'}".
 They can manage products, view orders, configure store settings, and track sales.
 AVAILABLE ACTIONS: add product, edit product, view orders, update order status, enable/disable store`;
                         availableData = `To help: Ask what they want to do - add products, check orders, or configure store.`;
                         break;
-                        
+
                     case 'finance':
                         viewContext = `User is in FINANCE for "${currentProject?.name || 'unknown'}".
 They can track expenses, manage invoices, and view financial reports.
 AVAILABLE ACTIONS: add expense, edit expense, delete expense, view reports`;
                         availableData = `To help: Ask what expense they want to add or what financial info they need.`;
                         break;
-                        
+
                     case 'appointments':
                         viewContext = `User is in APPOINTMENTS/CALENDAR.
 They can schedule appointments, manage bookings, and view their calendar.
 AVAILABLE ACTIONS: create appointment, edit appointment, cancel appointment, view schedule`;
                         availableData = `To help: Ask what appointment they want to create or manage.`;
                         break;
-                        
+
                     case 'cms':
                         const postsCount = cmsPostsRef.current?.length || 0;
                         const recentPosts = cmsPostsRef.current?.slice(0, 3).map(p => p.title).join(', ') || 'none';
@@ -3141,7 +3140,7 @@ AVAILABLE ACTIONS: create post, edit post, publish post, delete post`;
                         availableData = `Total posts: ${postsCount}
 Recent posts: ${recentPosts}`;
                         break;
-                        
+
                     case 'leads':
                         const leadsCount = leadsRef.current?.length || 0;
                         const recentLeads = leadsRef.current?.slice(0, 3).map(l => l.name).join(', ') || 'none';
@@ -3151,19 +3150,19 @@ AVAILABLE ACTIONS: add lead, edit lead, change lead status, delete lead`;
                         availableData = `Total leads: ${leadsCount}
 Recent leads: ${recentLeads}`;
                         break;
-                        
+
                     case 'domains':
                         viewContext = `User is in DOMAINS management.
 They can connect custom domains, verify DNS, and manage domain settings.
 AVAILABLE ACTIONS: add domain, verify domain, delete domain`;
                         break;
-                        
+
                     case 'seo':
                         viewContext = `User is in SEO settings for "${currentProject?.name || 'unknown'}".
 They can configure meta tags, titles, descriptions, and search optimization.
 AVAILABLE ACTIONS: update SEO title, description, keywords, social sharing settings`;
                         break;
-                        
+
                     case 'dashboard':
                     case 'websites':
                         const projectsList = projectsRef.current?.slice(0, 5).map(p => p.name).join(', ') || 'none';
@@ -3174,13 +3173,13 @@ AVAILABLE ACTIONS: open project, create new website, view project list`;
                         availableData = `Total projects: ${totalProjects}
 Available projects: ${projectsList}${totalProjects > 5 ? '...' : ''}`;
                         break;
-                        
+
                     case 'templates':
                         viewContext = `User is in TEMPLATES.
 They can browse, create, and manage website templates.
 AVAILABLE ACTIONS: create template, duplicate template, use template`;
                         break;
-                        
+
                     default:
                         viewContext = `User is in ${currentView.toUpperCase()} view.`;
                 }
@@ -3222,6 +3221,7 @@ User: ${userMsg}`;
                 const chatModel = promptConfig?.model || 'gemini-2.5-flash';
                 // Ensure minimum 2048 tokens to avoid MAX_TOKENS truncation with empty content
                 const configuredMaxTokens = Math.max(2048, typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 2048);
+
                 const response = await generateContentViaProxy(proxyProjectId, fullPrompt, chatModel, {
                     temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
                     maxOutputTokens: configuredMaxTokens

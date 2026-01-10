@@ -711,7 +711,7 @@ Please provide only the new text as a response, without any extra formatting or 
     model: 'gemini-3-pro-preview',
     version: 2,
   },
-  
+
   // CMS State of the Art - Brand Aware Generation
   {
     name: 'cms-brand-rewrite',
@@ -751,7 +751,7 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     model: 'gemini-3-pro-image-preview',
     version: 12,
   },
-  
+
   // Image Prompt Enhancer
   {
     name: 'image-prompt-enhancer',
@@ -784,15 +784,15 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     model: 'gemini-2.0-flash',
     version: 2,
   },
-  
+
   // File Management
   {
-      name: 'file-summary',
-      area: 'File Management',
-      description: 'Summarizes content of an uploaded file.',
-      template: `Summarize the following file content:\n\n{{fileContent}}`,
-      model: 'gemini-2.5-flash',
-      version: 1,
+    name: 'file-summary',
+    area: 'File Management',
+    description: 'Summarizes content of an uploaded file.',
+    template: `Summarize the following file content:\n\n{{fileContent}}`,
+    model: 'gemini-2.5-flash',
+    version: 1,
   },
 
   // CMS Editor Prompts
@@ -1127,6 +1127,15 @@ YOUR TOOLS:
 • finance_expense - Create/update/delete finance expenses
 
 LANGUAGES: You understand Spanish, English, Spanglish, typos, informal commands.
+
+🖼️ **IMAGE/VISION CAPABILITY:**
+You CAN see and analyze images that users attach to their messages.
+- Describe what you see in images
+- Answer questions about image content  
+- Suggest design improvements based on screenshots
+- Help users understand visual content
+When a user sends an image, analyze it and respond helpfully. NEVER say "I cannot see images" - you CAN see them.
+
 REMEMBER: ALWAYS respond with structured markdown. Use headers, lists, and bold text.
 
 SPECIAL CASE: If NO project loaded and user wants to edit content → ask which project to load first.

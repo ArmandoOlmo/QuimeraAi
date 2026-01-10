@@ -4,12 +4,12 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { 
-    UserDocument, 
-    UserRole, 
-    Tenant, 
-    TenantStatus, 
-    TenantLimits, 
+import {
+    UserDocument,
+    UserRole,
+    Tenant,
+    TenantStatus,
+    TenantLimits,
     LLMPrompt,
     GlobalAssistantConfig,
     ComponentStyles,
@@ -21,6 +21,7 @@ import {
     AppTokens,
     LandingChatbotConfig,
     defaultLandingChatbotConfig,
+    GlobalChatbotPrompts,
     AdPixelConfig,
 } from '../../types';
 import { defaultAppTokens, getAppTokensWithDefaults, applyAppTokensToCSS } from '../../utils/appTokenApplier';
@@ -61,7 +62,7 @@ interface AdminContextType {
     createAdmin: (email: string, name: string, role: UserRole) => Promise<void>;
     updateUserProfile: (name: string, photoURL: string) => Promise<void>;
     updateUserDetails: (userId: string, data: Partial<UserDocument>) => Promise<void>;
-    
+
     // Tenant Management
     tenants: Tenant[];
     fetchTenants: () => Promise<void>;
@@ -70,7 +71,7 @@ interface AdminContextType {
     deleteTenant: (tenantId: string) => Promise<void>;
     updateTenantStatus: (tenantId: string, status: TenantStatus) => Promise<void>;
     updateTenantLimits: (tenantId: string, limits: Partial<TenantLimits>) => Promise<void>;
-    
+
     // Prompts Management
     prompts: LLMPrompt[];
     getPrompt: (name: string) => LLMPrompt | undefined;
@@ -78,19 +79,24 @@ interface AdminContextType {
     savePrompt: (prompt: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => Promise<void>;
     deletePrompt: (promptId: string) => Promise<void>;
     syncPrompts: () => Promise<void>;
-    
+
     // Global Assistant Config
     globalAssistantConfig: GlobalAssistantConfig;
     saveGlobalAssistantConfig: (config: GlobalAssistantConfig) => Promise<void>;
-    
+
     // Landing Chatbot Config
     landingChatbotConfig: LandingChatbotConfig;
     saveLandingChatbotConfig: (config: LandingChatbotConfig) => Promise<void>;
-    
+
     // Global Ad Tracking Pixels (App-wide analytics)
     globalAdPixels: AdPixelConfig | null;
     saveGlobalAdPixels: (config: AdPixelConfig) => Promise<void>;
-    
+
+    // Global Chatbot Prompts (System prompts for all project chatbots)
+    globalChatbotPrompts: GlobalChatbotPrompts | null;
+    fetchGlobalChatbotPrompts: () => Promise<void>;
+    saveGlobalChatbotPrompts: (prompts: GlobalChatbotPrompts) => Promise<void>;
+
     // Component Studio
     componentStyles: ComponentStyles;
     customComponents: CustomComponent[];
@@ -105,19 +111,19 @@ interface AdminContextType {
     importComponent: (jsonString: string) => Promise<CustomComponent>;
     revertToVersion: (componentId: string, versionNumber: number) => Promise<void>;
     trackComponentUsage: (projectId: string, componentIds: string[]) => Promise<void>;
-    
+
     // Design Tokens
     designTokens: DesignTokens | null;
     updateDesignTokens: (tokens: DesignTokens) => Promise<void>;
-    
+
     // App Tokens (Dashboard/Admin theming)
     appTokens: AppTokens;
     updateAppTokens: (tokens: AppTokens) => Promise<void>;
-    
+
     // Global Component Status
     componentStatus: Record<PageSection, boolean>;
     updateComponentStatus: (componentId: PageSection, isEnabled: boolean) => Promise<void>;
-    
+
     // Usage & Billing
     usage: { used: number; limit: number; plan: string } | null;
     isLoadingUsage: boolean;
@@ -127,16 +133,16 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, userDocument } = useAuth();
-    
+
     // User Management State
     const [allUsers, setAllUsers] = useState<UserDocument[]>([]);
-    
+
     // Tenant State
     const [tenants, setTenants] = useState<Tenant[]>([]);
-    
+
     // Prompts State
     const [prompts, setPrompts] = useState<LLMPrompt[]>([]);
-    
+
     // Global Assistant Config
     const [globalAssistantConfig, setGlobalAssistantConfig] = useState<GlobalAssistantConfig>({
         isEnabled: true,
@@ -152,26 +158,29 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         autoDetectLanguage: true,
         supportedLanguages: 'English, Spanish, French'
     });
-    
+
     // Landing Chatbot Config
     const [landingChatbotConfig, setLandingChatbotConfig] = useState<LandingChatbotConfig>(defaultLandingChatbotConfig);
-    
+
     // Global Ad Tracking Pixels State
     const [globalAdPixels, setGlobalAdPixels] = useState<AdPixelConfig | null>(null);
-    
+
+    // Global Chatbot Prompts State
+    const [globalChatbotPrompts, setGlobalChatbotPrompts] = useState<GlobalChatbotPrompts | null>(null);
+
     // Component Studio State
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);
     const [customComponents, setCustomComponents] = useState<CustomComponent[]>([]);
-    
+
     // Design Tokens
     const [designTokens, setDesignTokens] = useState<DesignTokens | null>(null);
-    
+
     // App Tokens (Dashboard/Admin theming)
     const [appTokens, setAppTokens] = useState<AppTokens>(defaultAppTokens);
-    
+
     // Component Status
     const [componentStatus, setComponentStatus] = useState<Record<PageSection, boolean>>(defaultComponentStatus);
-    
+
     // Usage State
     const [usage, setUsage] = useState<{ used: number; limit: number; plan: string } | null>(null);
     const [isLoadingUsage, setIsLoadingUsage] = useState(true);
@@ -198,7 +207,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 if (assistantDoc.exists()) {
                     setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
                 }
-                
+
                 // Landing chatbot config
                 const landingChatbotDoc = await getDoc(doc(db, 'settings', 'landingChatbot'));
                 if (landingChatbotDoc.exists()) {
@@ -216,7 +225,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 if (tokensDoc.exists()) {
                     setDesignTokens(tokensDoc.data() as DesignTokens);
                 }
-                
+
                 // App tokens
                 const appTokensDoc = await getDoc(doc(db, 'settings', 'appTokens'));
                 if (appTokensDoc.exists()) {
@@ -241,9 +250,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         const q = query(collection(db, 'customComponents'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const components = snapshot.docs.map(docSnapshot => ({ 
-                id: docSnapshot.id, 
-                ...docSnapshot.data() 
+            const components = snapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
             } as CustomComponent));
             setCustomComponents(components);
         }, (error) => {
@@ -256,7 +265,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             unsubscribe();
         };
     }, [user]);
-    
+
     // Setup landing chatbot config listener for real-time updates
     // This runs for ALL users (authenticated or not) since it's for the public landing page
     useEffect(() => {
@@ -298,7 +307,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updateUserRole = async (userId: string, role: UserRole) => {
         try {
             await updateDoc(doc(db, 'users', userId), { role });
-            setAllUsers(prev => prev.map(u => 
+            setAllUsers(prev => prev.map(u =>
                 u.id === userId ? { ...u, role } : u
             ));
         } catch (error) {
@@ -370,12 +379,12 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    const createTenant = async (data: { 
-        type: 'individual' | 'agency'; 
-        name: string; 
-        email: string; 
-        plan: string; 
-        companyName?: string 
+    const createTenant = async (data: {
+        type: 'individual' | 'agency';
+        name: string;
+        email: string;
+        plan: string;
+        companyName?: string
     }): Promise<string> => {
         try {
             // Definir límites según el plan y tipo
@@ -386,9 +395,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 agency: { maxProjects: 50, maxUsers: 20, maxStorageGB: 50, maxAiCredits: 5000 },
                 enterprise: { maxProjects: -1, maxUsers: -1, maxStorageGB: 100, maxAiCredits: 10000 }, // -1 = unlimited
             };
-            
+
             const limits = planLimits[data.plan as keyof typeof planLimits] || planLimits.free;
-            
+
             // Ajustar límites para agencias
             if (data.type === 'agency' && data.plan !== 'agency' && data.plan !== 'enterprise') {
                 limits.maxUsers = Math.max(limits.maxUsers, 5);
@@ -424,7 +433,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     paymentMethod: undefined,
                 },
             };
-            
+
             const docRef = await addDoc(collection(db, 'tenants'), tenantData);
             const newTenant = { ...tenantData, id: docRef.id } as Tenant;
             setTenants(prev => [...prev, newTenant]);
@@ -464,8 +473,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updateTenantLimits = async (tenantId: string, limits: Partial<TenantLimits>) => {
         const tenant = tenants.find(t => t.id === tenantId);
         if (tenant) {
-            await updateTenant(tenantId, { 
-                limits: { ...tenant.limits, ...limits } 
+            await updateTenant(tenantId, {
+                limits: { ...tenant.limits, ...limits }
             });
         }
     };
@@ -535,7 +544,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             throw error;
         }
     };
-    
+
     // Landing Chatbot Config Functions
     const saveLandingChatbotConfig = async (config: LandingChatbotConfig) => {
         try {
@@ -558,13 +567,13 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             };
 
             const cleanConfig = removeUndefined(config);
-            
+
             const configToSave = {
                 ...cleanConfig,
                 lastUpdated: serverTimestamp(),
                 updatedBy: user?.uid || '',
             };
-            
+
             console.log('AdminContext: Saving config to Firestore:', configToSave);
             await setDoc(doc(db, 'settings', 'landingChatbot'), configToSave);
             console.log('AdminContext: Config saved successfully');
@@ -582,19 +591,48 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const cleanConfig = Object.fromEntries(
                 Object.entries(config).filter(([_, v]) => v !== undefined)
             );
-            
+
             const configToSave = {
                 ...cleanConfig,
                 lastUpdated: serverTimestamp(),
                 updatedBy: user?.uid || '',
             };
-            
+
             console.log('AdminContext: Saving global ad pixels to Firestore:', configToSave);
             await setDoc(doc(db, 'settings', 'globalAdPixels'), configToSave);
             console.log('AdminContext: Global ad pixels saved successfully');
             setGlobalAdPixels(config);
         } catch (error) {
             console.error("Error saving global ad pixels:", error);
+            throw error;
+        }
+    };
+
+    // Global Chatbot Prompts Functions
+    const fetchGlobalChatbotPrompts = async () => {
+        try {
+            const docRef = doc(db, 'globalSettings', 'chatbotPrompts');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setGlobalChatbotPrompts(docSnap.data() as GlobalChatbotPrompts);
+            }
+        } catch (error) {
+            console.error('Error fetching global chatbot prompts:', error);
+        }
+    };
+
+    const saveGlobalChatbotPrompts = async (prompts: GlobalChatbotPrompts) => {
+        try {
+            const configToSave = {
+                ...prompts,
+                updatedAt: new Date().toISOString(),
+                updatedBy: user?.uid || '',
+            };
+            await setDoc(doc(db, 'globalSettings', 'chatbotPrompts'), configToSave);
+            setGlobalChatbotPrompts(configToSave);
+            console.log('Global chatbot prompts saved successfully');
+        } catch (error) {
+            console.error('Error saving global chatbot prompts:', error);
             throw error;
         }
     };
@@ -655,8 +693,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string) => {
-        await updateDoc(doc(db, 'customComponents', componentId), { 
-            variants, 
+        await updateDoc(doc(db, 'customComponents', componentId), {
+            variants,
             activeVariant,
             updatedAt: new Date().toISOString(),
         });
@@ -767,6 +805,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         saveLandingChatbotConfig,
         globalAdPixels,
         saveGlobalAdPixels,
+        globalChatbotPrompts,
+        fetchGlobalChatbotPrompts,
+        saveGlobalChatbotPrompts,
         componentStyles,
         customComponents,
         updateComponentStyle,

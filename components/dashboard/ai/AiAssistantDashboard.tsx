@@ -58,6 +58,14 @@ const AiAssistantDashboard: React.FC = () => {
         }
     }, [activeProject?.id, activeProject?.aiAssistantConfig]);
 
+    // Sync formData with context changes (for live preview from Customization tab)
+    useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            appearance: aiAssistantConfig.appearance
+        }));
+    }, [aiAssistantConfig.appearance]);
+
     const handleSave = async () => {
         if (!activeProject?.id) return;
         setIsSaving(true);
@@ -79,14 +87,14 @@ const AiAssistantDashboard: React.FC = () => {
 
     const userProjects = projects.filter(p => p.status !== 'Template');
     const projectIds = useMemo(() => userProjects.map(p => p.id), [userProjects]);
-    
+
     // Chat stats hook
-    const { 
-        stats: chatStats, 
-        globalStats, 
-        isLoading: isLoadingStats, 
+    const {
+        stats: chatStats,
+        globalStats,
+        isLoading: isLoadingStats,
         getStatsForProject,
-        refresh: refreshStats 
+        refresh: refreshStats
     } = useProjectChatStats(projectIds);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -95,7 +103,7 @@ const AiAssistantDashboard: React.FC = () => {
     const filteredProjects = useMemo(() => {
         if (!searchQuery.trim()) return userProjects;
         const query = searchQuery.toLowerCase();
-        return userProjects.filter(p => 
+        return userProjects.filter(p =>
             p.name.toLowerCase().includes(query)
         );
     }, [userProjects, searchQuery]);
@@ -131,7 +139,7 @@ const AiAssistantDashboard: React.FC = () => {
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
-        
+
         if (minutes < 1) return 'Ahora mismo';
         if (minutes < 60) return `Hace ${minutes}m`;
         if (hours < 24) return `Hace ${hours}h`;
@@ -186,7 +194,7 @@ const AiAssistantDashboard: React.FC = () => {
 
                     <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-secondary/20">
                         <div className="max-w-7xl mx-auto p-6 lg:p-8 space-y-8">
-                            
+
                             {/* Global Stats Banner */}
                             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -205,7 +213,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <Loader2 size={20} className="animate-spin text-primary" />
                                         )}
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
@@ -219,7 +227,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                 En todos los proyectos
                                             </div>
                                         </div>
-                                        
+
                                         <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                                                 <Zap size={14} />
@@ -232,7 +240,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                 Últimas 24 horas
                                             </div>
                                         </div>
-                                        
+
                                         <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                                                 <Users size={14} />
@@ -245,7 +253,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                 Generados por chat
                                             </div>
                                         </div>
-                                        
+
                                         <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                                                 <Clock size={14} />
@@ -293,7 +301,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     {sortedProjects.map(project => {
                                         const projectStats = getStatsForProject(project.id);
                                         const hasActivity = projectStats && projectStats.activeConversations > 0;
-                                        
+
                                         return (
                                             <button
                                                 key={project.id}
@@ -309,7 +317,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                         </span>
                                                     </div>
                                                 )}
-                                                
+
                                                 {/* Thumbnail Section */}
                                                 <div className="relative h-40 overflow-hidden">
                                                     <img
@@ -367,8 +375,8 @@ const AiAssistantDashboard: React.FC = () => {
                                                         {/* Active Channels */}
                                                         <div className="flex items-center gap-1">
                                                             {projectStats?.channelBreakdown.slice(0, 3).map(({ channel }) => (
-                                                                <div 
-                                                                    key={channel} 
+                                                                <div
+                                                                    key={channel}
                                                                     className="w-6 h-6 rounded-full bg-secondary/80 flex items-center justify-center"
                                                                     title={channel}
                                                                 >
@@ -379,14 +387,13 @@ const AiAssistantDashboard: React.FC = () => {
                                                                 <span className="text-xs text-muted-foreground">Sin canales</span>
                                                             )}
                                                         </div>
-                                                        
+
                                                         {/* Trend Indicator */}
                                                         {projectStats?.trend && projectStats.trend !== 'stable' && (
-                                                            <div className={`flex items-center gap-1 text-xs font-medium ${
-                                                                projectStats.trend === 'up' 
-                                                                    ? 'text-green-500' 
+                                                            <div className={`flex items-center gap-1 text-xs font-medium ${projectStats.trend === 'up'
+                                                                    ? 'text-green-500'
                                                                     : 'text-red-500'
-                                                            }`}>
+                                                                }`}>
                                                                 {projectStats.trend === 'up' ? (
                                                                     <TrendingUp size={14} />
                                                                 ) : (
@@ -395,11 +402,11 @@ const AiAssistantDashboard: React.FC = () => {
                                                                 <span>{projectStats.trendPercentage.toFixed(0)}%</span>
                                                             </div>
                                                         )}
-                                                        
+
                                                         {/* Arrow */}
-                                                        <ArrowUpRight 
-                                                            size={18} 
-                                                            className="text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" 
+                                                        <ArrowUpRight
+                                                            size={18}
+                                                            className="text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
                                                         />
                                                     </div>
                                                 </div>
@@ -705,10 +712,10 @@ const AiAssistantDashboard: React.FC = () => {
                 );
 
             case 'voice':
-                const filteredVoices = voiceGenderFilter === 'all' 
-                    ? voices 
+                const filteredVoices = voiceGenderFilter === 'all'
+                    ? voices
                     : voices.filter(v => v.gender === voiceGenderFilter);
-                
+
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
@@ -727,25 +734,24 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="bg-card border border-border p-6 rounded-xl">
                             <div className="flex items-center justify-between mb-4">
                                 <label className="block text-sm font-bold text-foreground flex items-center"><Radio className="mr-2 text-primary" /> {t('aiAssistant.dashboard.selectVoice')}</label>
-                                
+
                                 {/* Gender Filter */}
                                 <div className="flex gap-1 bg-secondary/30 p-1 rounded-lg">
                                     {(['all', 'Male', 'Female'] as const).map((filter) => (
                                         <button
                                             key={filter}
                                             onClick={() => setVoiceGenderFilter(filter)}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                                                voiceGenderFilter === filter
+                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${voiceGenderFilter === filter
                                                     ? 'bg-primary text-primary-foreground shadow-sm'
                                                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                                            }`}
+                                                }`}
                                         >
                                             {filter === 'all' ? 'Todos' : filter === 'Male' ? '♂ Masculino' : '♀ Femenino'}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {filteredVoices.map(v => (
                                     <button
@@ -763,7 +769,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     </button>
                                 ))}
                             </div>
-                            
+
                             {filteredVoices.length === 0 && (
                                 <div className="text-center py-8 text-muted-foreground">
                                     <p className="text-sm">No hay voces disponibles con este filtro</p>
@@ -919,119 +925,119 @@ const AiAssistantDashboard: React.FC = () => {
 
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) - Hidden when Inbox is active */}
                     {activeTab !== 'socialInbox' && (
-                    <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
-                        {/* Dot pattern - visible in both themes */}
-                        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                        <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
+                            {/* Dot pattern - visible in both themes */}
+                            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-                        <div className="relative z-10 flex flex-col items-center">
-                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">{t('aiAssistant.dashboard.liveSimulator')}</h3>
+                            <div className="relative z-10 flex flex-col items-center">
+                                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">{t('aiAssistant.dashboard.liveSimulator')}</h3>
 
-                            {/* iPhone-style Phone Mockup */}
-                            <div className="relative">
-                                {/* Phone Frame */}
-                                <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
-                                    {/* Inner bezel highlight */}
-                                    <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
-                                    
-                                    {/* Screen */}
-                                    <div className="relative w-full h-full bg-card rounded-[40px] overflow-hidden flex flex-col">
-                                        {/* Dynamic Island */}
-                                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
-                                            <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700"></div>
-                                        </div>
+                                {/* iPhone-style Phone Mockup */}
+                                <div className="relative">
+                                    {/* Phone Frame */}
+                                    <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
+                                        {/* Inner bezel highlight */}
+                                        <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
 
-                                        {/* Status Bar */}
-                                        <div className="h-12 px-6 flex items-end justify-between pb-1 text-[11px] font-semibold text-foreground z-20">
-                                            <span>9:41</span>
-                                            <div className="flex items-center gap-1">
-                                                {/* Signal */}
-                                                <div className="flex items-end gap-[2px] h-3">
-                                                    <div className="w-[3px] h-[4px] bg-foreground rounded-sm"></div>
-                                                    <div className="w-[3px] h-[6px] bg-foreground rounded-sm"></div>
-                                                    <div className="w-[3px] h-[8px] bg-foreground rounded-sm"></div>
-                                                    <div className="w-[3px] h-[10px] bg-foreground rounded-sm"></div>
-                                                </div>
-                                                {/* WiFi */}
-                                                <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.1l1.4 1.4C9.4 18.1 10.6 18.5 12 18.5s2.6-.4 3.5-1.2l1.4-1.4c-1.3-1.2-3-1.9-4.9-1.9s-3.6.7-4.9 1.9zm-2.8-2.8l1.4 1.4c1.8-1.8 4.3-2.8 6.9-2.8s5.1 1 6.9 2.8l1.4-1.4C18.7 11 15.5 9.7 12 9.7s-6.7 1.3-8.7 3.4zm-2.8-2.8l1.4 1.4C5.3 9.3 8.5 7.7 12 7.7s6.7 1.6 9.1 4l1.4-1.4C19.8 7.5 16.1 5.7 12 5.7S4.2 7.5 1.5 10.3z"/>
-                                                </svg>
-                                                {/* Battery */}
-                                                <div className="flex items-center gap-[2px]">
-                                                    <div className="w-6 h-3 border border-foreground rounded-sm flex items-center p-[2px]">
-                                                        <div className="w-full h-full bg-foreground rounded-[1px]"></div>
+                                        {/* Screen */}
+                                        <div className="relative w-full h-full bg-card rounded-[40px] overflow-hidden flex flex-col">
+                                            {/* Dynamic Island */}
+                                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
+                                                <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700"></div>
+                                            </div>
+
+                                            {/* Status Bar */}
+                                            <div className="h-12 px-6 flex items-end justify-between pb-1 text-[11px] font-semibold text-foreground z-20">
+                                                <span>9:41</span>
+                                                <div className="flex items-center gap-1">
+                                                    {/* Signal */}
+                                                    <div className="flex items-end gap-[2px] h-3">
+                                                        <div className="w-[3px] h-[4px] bg-foreground rounded-sm"></div>
+                                                        <div className="w-[3px] h-[6px] bg-foreground rounded-sm"></div>
+                                                        <div className="w-[3px] h-[8px] bg-foreground rounded-sm"></div>
+                                                        <div className="w-[3px] h-[10px] bg-foreground rounded-sm"></div>
                                                     </div>
-                                                    <div className="w-[2px] h-[5px] bg-foreground rounded-r-sm"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Browser URL Bar */}
-                                        <div className="px-3 pb-2">
-                                            <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
-                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                <span className="text-[10px] text-muted-foreground truncate">{activeProject.name.toLowerCase().replace(/\s+/g, '')}.com</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Website Content */}
-                                        <div className="flex-1 overflow-hidden bg-background">
-                                            {/* Hero Section */}
-                                            <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative overflow-hidden">
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="text-center">
-                                                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-primary/20 flex items-center justify-center">
-                                                            <span className="text-lg">🏪</span>
+                                                    {/* WiFi */}
+                                                    <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.1l1.4 1.4C9.4 18.1 10.6 18.5 12 18.5s2.6-.4 3.5-1.2l1.4-1.4c-1.3-1.2-3-1.9-4.9-1.9s-3.6.7-4.9 1.9zm-2.8-2.8l1.4 1.4c1.8-1.8 4.3-2.8 6.9-2.8s5.1 1 6.9 2.8l1.4-1.4C18.7 11 15.5 9.7 12 9.7s-6.7 1.3-8.7 3.4zm-2.8-2.8l1.4 1.4C5.3 9.3 8.5 7.7 12 7.7s6.7 1.6 9.1 4l1.4-1.4C19.8 7.5 16.1 5.7 12 5.7S4.2 7.5 1.5 10.3z" />
+                                                    </svg>
+                                                    {/* Battery */}
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <div className="w-6 h-3 border border-foreground rounded-sm flex items-center p-[2px]">
+                                                            <div className="w-full h-full bg-foreground rounded-[1px]"></div>
                                                         </div>
-                                                        <span className="text-xs font-bold text-foreground">{activeProject.name}</span>
+                                                        <div className="w-[2px] h-[5px] bg-foreground rounded-r-sm"></div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
-                                            {/* Content Skeleton */}
-                                            <div className="p-4 space-y-4">
-                                                {/* Product Cards */}
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="bg-muted/50 rounded-xl p-2 space-y-2">
-                                                        <div className="h-16 bg-secondary/60 rounded-lg"></div>
-                                                        <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
-                                                        <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
-                                                    </div>
-                                                    <div className="bg-muted/50 rounded-xl p-2 space-y-2">
-                                                        <div className="h-16 bg-secondary/60 rounded-lg"></div>
-                                                        <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
-                                                        <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
-                                                    </div>
+
+                                            {/* Browser URL Bar */}
+                                            <div className="px-3 pb-2">
+                                                <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
+                                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                    <span className="text-[10px] text-muted-foreground truncate">{activeProject.name.toLowerCase().replace(/\s+/g, '')}.com</span>
                                                 </div>
-                                                
-                                                {/* Text Skeleton */}
-                                                <div className="space-y-2">
-                                                    <div className="h-2 bg-secondary/40 rounded w-full"></div>
-                                                    <div className="h-2 bg-secondary/40 rounded w-5/6"></div>
-                                                    <div className="h-2 bg-secondary/40 rounded w-4/6"></div>
+                                            </div>
+
+                                            {/* Website Content */}
+                                            <div className="flex-1 overflow-hidden bg-background">
+                                                {/* Hero Section */}
+                                                <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative overflow-hidden">
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="text-center">
+                                                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-primary/20 flex items-center justify-center">
+                                                                <span className="text-lg">🏪</span>
+                                                            </div>
+                                                            <span className="text-xs font-bold text-foreground">{activeProject.name}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                {/* CTA Button Skeleton */}
-                                                <div className="h-10 bg-primary/20 rounded-full w-3/4 mx-auto"></div>
+                                                {/* Content Skeleton */}
+                                                <div className="p-4 space-y-4">
+                                                    {/* Product Cards */}
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="bg-muted/50 rounded-xl p-2 space-y-2">
+                                                            <div className="h-16 bg-secondary/60 rounded-lg"></div>
+                                                            <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
+                                                            <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
+                                                        </div>
+                                                        <div className="bg-muted/50 rounded-xl p-2 space-y-2">
+                                                            <div className="h-16 bg-secondary/60 rounded-lg"></div>
+                                                            <div className="h-2 bg-secondary/60 rounded w-3/4"></div>
+                                                            <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Text Skeleton */}
+                                                    <div className="space-y-2">
+                                                        <div className="h-2 bg-secondary/40 rounded w-full"></div>
+                                                        <div className="h-2 bg-secondary/40 rounded w-5/6"></div>
+                                                        <div className="h-2 bg-secondary/40 rounded w-4/6"></div>
+                                                    </div>
+
+                                                    {/* CTA Button Skeleton */}
+                                                    <div className="h-10 bg-primary/20 rounded-full w-3/4 mx-auto"></div>
+                                                </div>
+
+                                                {/* The Real Chat Widget Simulator - Inside content area to respect bars */}
+                                                <ChatSimulator config={formData} project={activeProject} />
                                             </div>
+
+                                            {/* Home Indicator */}
+                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/30 rounded-full"></div>
                                         </div>
-
-                                        {/* The Real Chat Widget */}
-                                        <ChatSimulator config={formData} project={activeProject} />
-                                        
-                                        {/* Home Indicator */}
-                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/30 rounded-full"></div>
                                     </div>
+
+                                    {/* Side buttons */}
+                                    <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
+                                    <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
+                                    <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
+                                    <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-zinc-700 rounded-r-sm"></div>
                                 </div>
-                                
-                                {/* Side buttons */}
-                                <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-zinc-700 rounded-r-sm"></div>
                             </div>
                         </div>
-                    </div>
                     )}
                 </div>
             </div>

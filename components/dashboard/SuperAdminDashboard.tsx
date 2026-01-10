@@ -8,7 +8,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
-    Navigation, Star, Settings, Grid3x3, List, X, Sparkles
+    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -32,6 +32,8 @@ import SubscriptionManagement from './admin/SubscriptionManagement';
 import LandingChatbotAdmin from './admin/LandingChatbotAdmin';
 import ChangelogManagement from './admin/ChangelogManagement';
 import GlobalTrackingPixels from './admin/GlobalTrackingPixels';
+import GlobalChatbotPromptsSettings from './admin/GlobalChatbotPromptsSettings';
+import ExecutionModeToggle from './admin/ExecutionModeToggle';
 
 // Types
 type AdminFeature = {
@@ -180,8 +182,8 @@ const CategoryChip: React.FC<{
             {count !== undefined && (
                 <span className={`
                     px-1.5 py-0.5 sm:px-2 rounded-full text-[10px] sm:text-xs font-bold min-w-[20px] text-center
-                    ${active 
-                        ? 'bg-white/20' 
+                    ${active
+                        ? 'bg-white/20'
                         : 'bg-editor-border/50'
                     }
                 `}>
@@ -245,7 +247,9 @@ const SuperAdminDashboard = () => {
         { id: 'global-assistant', title: t('superadmin.globalAssistant.title'), description: t('superadmin.globalAssistantDesc'), icon: <MessageSquare size={24} />, category: 'core', route: ROUTES.ADMIN_GLOBAL_ASSISTANT, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-chatbot', title: t('superadmin.landingChatbot', 'Landing Chatbot'), description: t('superadmin.landingChatbotDesc', 'Configurar chatbot para la landing page pública'), icon: <Bot size={24} />, category: 'core', route: ROUTES.ADMIN_LANDING_CHATBOT, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'chatbot-prompts', title: 'Prompts de Chatbot', description: 'Configurar instrucciones globales para todos los chatbots de proyectos', icon: <MessageSquare size={24} />, category: 'system', route: ROUTES.ADMIN_CHATBOT_PROMPTS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'execution-mode', title: '⚡ Execution Mode (Coming Soon)', description: 'Configure assistant execution behavior (feature in development)', icon: <Zap size={24} />, category: 'system', route: ROUTES.ADMIN_EXECUTION_MODE, isNew: true, allowedRoles: ['owner', 'superadmin'] },
     ];
 
     // Filter features based on user role
@@ -291,6 +295,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'tenants') return <TenantManagement onBack={handleBack} />;
     if (adminView === 'languages') return <LanguageManagement onBack={handleBack} />;
     if (adminView === 'prompts') return <LLMPromptManagement onBack={handleBack} />;
+    if (adminView === 'chatbot-prompts') return <GlobalChatbotPromptsSettings onBack={handleBack} />;
     if (adminView === 'stats') return <UsageStatistics onBack={handleBack} />;
     if (adminView === 'subscriptions') return <SubscriptionManagement onBack={handleBack} />;
     if (adminView === 'templates') return <TemplateManagement onBack={handleBack} />;
@@ -304,6 +309,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
     if (adminView === 'landing-chatbot') return <LandingChatbotAdmin onBack={handleBack} />;
     if (adminView === 'global-tracking-pixels') return <GlobalTrackingPixels onBack={handleBack} />;
+    if (adminView === 'execution-mode') return <ExecutionModeToggle onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 
@@ -380,16 +386,16 @@ const SuperAdminDashboard = () => {
 
                         {/* Categories - Horizontal scroll on mobile */}
                         <div className="mb-4 sm:mb-6">
-                            <div 
+                            <div
                                 className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap -mx-4 px-4 sm:mx-0 sm:px-0"
                                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                             >
                                 {categories.map(cat => (
-                                    <CategoryChip 
-                                        key={cat.id} 
-                                        label={cat.label} 
-                                        count={cat.count} 
-                                        active={selectedCategory === cat.id} 
+                                    <CategoryChip
+                                        key={cat.id}
+                                        label={cat.label}
+                                        count={cat.count}
+                                        active={selectedCategory === cat.id}
                                         onClick={() => setSelectedCategory(cat.id)}
                                         color={cat.color}
                                     />

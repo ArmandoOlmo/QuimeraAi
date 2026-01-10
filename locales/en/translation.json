@@ -553,6 +553,12 @@
     "ecommerceSection": "Ecommerce",
     "toolsSection": "Tools"
   },
+  "project": {
+    "selectProject": "Select Project",
+    "noProject": "No project",
+    "createNew": "Create new project",
+    "search": "Search projects..."
+  },
   "editor": {
     "title": "Editor",
     "preview": "Preview",

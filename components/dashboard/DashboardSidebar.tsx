@@ -10,6 +10,7 @@ import { auth, signOut } from '../../firebase';
 import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
+import ProjectSwitcher from './ProjectSwitcher';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
@@ -58,7 +59,7 @@ interface NavItemData {
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
   const { user, userDocument, openProfileModal, canAccessSuperAdmin, isUserOwner, loadingAuth } = useAuth();
-  const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
+  const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder, setIsOnboardingOpen } = useUI();
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
 
   const isOwner = isUserOwner || userDocument?.role === 'owner';
@@ -527,6 +528,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               />
             </div>
           )}
+
+          {/* Project Switcher - Global project selection */}
+          <div className={`px-3 lg:px-4 py-2 border-b border-border/50 ${isCollapsed && !isMobileOpen ? 'hidden lg:block' : ''}`}>
+            <ProjectSwitcher
+              collapsed={isCollapsed && !isMobileOpen}
+              onCreateProject={() => {
+                // Open onboarding wizard for new project
+                setIsOnboardingOpen(true);
+                onClose();
+              }}
+            />
+          </div>
 
           {/* Navigation - Optimized for mobile with momentum scroll */}
           <nav

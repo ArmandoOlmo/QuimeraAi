@@ -12,6 +12,8 @@ import { generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
 import { useEcommerceChat } from './hooks/useEcommerceChat';
 import { useWebChatConversation } from './hooks/useWebChatConversation';
+import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
+import type { GlobalChatbotPrompts } from '../../types';
 
 // =============================================================================
 // INTERFACES
@@ -192,7 +194,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const aiContext = useSafeAI();
     const hasApiKey = aiContext?.hasApiKey ?? null;
     const promptForKeySelection = aiContext?.promptForKeySelection ?? (() => Promise.resolve());
-    const handleApiError = aiContext?.handleApiError ?? (() => {});
+    const handleApiError = aiContext?.handleApiError ?? (() => { });
     const projectContext = useSafeProject();
     const activeProject = projectContext?.activeProject ?? project; // Use prop project if context not available
     const { t } = useTranslation();
@@ -242,7 +244,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [preChatData, setPreChatData] = useState<PreChatFormData>({ name: '', email: '', phone: '' });
     const [quickLeadEmail, setQuickLeadEmail] = useState('');
-    
+
     // Appointment Form State
     const [showAppointmentForm, setShowAppointmentForm] = useState(false);
     const [appointmentForm, setAppointmentForm] = useState({
@@ -274,13 +276,23 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const sessionRef = useRef<any>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const isConnectedRef = useRef(false);
-    
+
     // Voice Transcription Refs
     const voiceTranscriptRef = useRef<{ role: 'user' | 'model'; text: string }[]>([]);
     const currentModelResponseRef = useRef<string>('');
-    
+
     // Lead tracking ref
     const capturedLeadIdRef = useRef<string | null>(null);
+
+    // Global chatbot prompts (from SuperAdmin configuration)
+    const [globalPrompts, setGlobalPrompts] = useState<GlobalChatbotPrompts>(getDefaultPrompts());
+
+    // Load global prompts on mount
+    useEffect(() => {
+        getGlobalChatbotPrompts().then(prompts => {
+            setGlobalPrompts(prompts);
+        }).catch(console.error);
+    }, []);
 
     // =============================================================================
     // SYSTEM INSTRUCTION BUILDER
@@ -298,7 +310,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             knowledgeDocsCount: config.knowledgeDocuments?.length || 0,
             hasSpecialInstructions: !!config.specialInstructions
         });
-        
+
         // Log current viewing section
         if (currentPageContext?.section) {
             console.log(`[ChatCore] 📍 Building instruction for section: ${currentPageContext.section}`);
@@ -308,14 +320,14 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         const now = new Date();
         const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const monthsOfYear = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        
+
         // Get upcoming appointments for the next 14 days
         const twoWeeksFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
         const upcomingAppointments = existingAppointments
             .filter(apt => apt.startDate >= now && apt.startDate <= twoWeeksFromNow && apt.status !== 'cancelled')
             .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
             .slice(0, 20); // Limit to 20 appointments
-        
+
         // Format busy slots
         const busySlots = upcomingAppointments.map(apt => {
             const startDay = daysOfWeek[apt.startDate.getDay()];
@@ -325,39 +337,39 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             const endTime = `${apt.endDate.getHours().toString().padStart(2, '0')}:${apt.endDate.getMinutes().toString().padStart(2, '0')}`;
             return `- ${startDay} ${startDate} de ${startMonth}: ${startTime} - ${endTime} (${apt.title})`;
         }).join('\n');
-        
+
         // Generate available time suggestions (business hours: 9 AM - 6 PM, Mon-Sat)
         const suggestAvailableSlots = () => {
             const suggestions: string[] = [];
             const businessHours = { start: 9, end: 18 }; // 9 AM to 6 PM
-            
+
             for (let dayOffset = 1; dayOffset <= 7 && suggestions.length < 5; dayOffset++) {
                 const checkDate = new Date(now);
                 checkDate.setDate(now.getDate() + dayOffset);
-                
+
                 // Skip Sundays (day 0)
                 if (checkDate.getDay() === 0) continue;
-                
+
                 const dayName = daysOfWeek[checkDate.getDay()];
                 const dateNum = checkDate.getDate();
                 const monthName = monthsOfYear[checkDate.getMonth()];
-                
+
                 // Check morning slot (10 AM)
                 const morningSlot = new Date(checkDate);
                 morningSlot.setHours(10, 0, 0, 0);
-                const morningBusy = upcomingAppointments.some(apt => 
-                    apt.startDate.getTime() <= morningSlot.getTime() && 
+                const morningBusy = upcomingAppointments.some(apt =>
+                    apt.startDate.getTime() <= morningSlot.getTime() &&
                     apt.endDate.getTime() > morningSlot.getTime()
                 );
-                
+
                 // Check afternoon slot (3 PM)
                 const afternoonSlot = new Date(checkDate);
                 afternoonSlot.setHours(15, 0, 0, 0);
-                const afternoonBusy = upcomingAppointments.some(apt => 
-                    apt.startDate.getTime() <= afternoonSlot.getTime() && 
+                const afternoonBusy = upcomingAppointments.some(apt =>
+                    apt.startDate.getTime() <= afternoonSlot.getTime() &&
                     apt.endDate.getTime() > afternoonSlot.getTime()
                 );
-                
+
                 if (!morningBusy) {
                     suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 10:00 AM`);
                 }
@@ -365,12 +377,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
                     suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 3:00 PM`);
                 }
             }
-            
-            return suggestions.length > 0 
+
+            return suggestions.length > 0
                 ? suggestions.map(s => `- ${s}`).join('\n')
                 : '- Consulta disponibilidad directamente';
         };
-        
+
         const currentDateTime = `
             === FECHA Y HORA ACTUAL ===
             Hoy es: ${daysOfWeek[now.getDay()]}, ${now.getDate()} de ${monthsOfYear[now.getMonth()]} de ${now.getFullYear()}
@@ -427,87 +439,35 @@ ${suggestAvailableSlots()}
         const brandName = project?.brandIdentity?.name || project?.name || 'our business';
         const brandIndustry = project?.brandIdentity?.industry || 'various services';
 
+        // Apply global prompts with template substitution
+        const promptVariables = {
+            agentName: config.agentName || 'AI Assistant',
+            tone: (config.tone || 'Professional').toLowerCase(),
+            businessName: brandName,
+            industry: brandIndustry,
+            visibleSections: currentPageContext?.visibleSections?.join(', ') || 'various sections',
+        };
+
+        const identityInstruction = applyPromptTemplate(globalPrompts.identityTemplate, promptVariables);
+        const coreInstructions = applyPromptTemplate(globalPrompts.coreInstructions, promptVariables);
+        const formattingGuidelines = globalPrompts.formattingGuidelines;
+        const appointmentInstructions = globalPrompts.appointmentInstructions;
+        const ecommerceInstructions = isEcommerceEnabled ? globalPrompts.ecommerceInstructions : '';
+
         const systemInstruction = `
-            You are ${config.agentName || 'AI Assistant'}, a ${(config.tone || 'Professional').toLowerCase()} AI assistant for ${brandName} (${brandIndustry}).
+            ${identityInstruction}
             
             ${currentDateTime}
             
             YOUR KNOWLEDGE BASE:
             ${businessContext}
 
-            INSTRUCTIONS:
-            1. Always respond in the SAME language the user is using
-            2. When you receive [SYSTEM CONTEXT] in a message, use that information to answer about what the user is viewing
-            3. Be ${(config.tone || 'Professional').toLowerCase()}, helpful, and conversational
-            4. When asked "what am I seeing?" or "what's this section?", describe the specific content from the SYSTEM CONTEXT
-            5. Available sections: ${currentPageContext?.visibleSections?.join(', ') || 'various sections'}
+            ${coreInstructions}
             
-            FORMATTING:
-            - Use **bold** for emphasis on important points
-            - Use bullet points (- or *) for lists
-            - Use numbered lists (1. 2. 3.) when order matters
-            - Keep paragraphs short and readable
-            - Use line breaks between different topics
-            - Structure your responses clearly with headings if needed (## Heading)
+            ${formattingGuidelines}
             
-            === APPOINTMENT SCHEDULING (VERY IMPORTANT) ===
-            You CAN and SHOULD help users schedule appointments/meetings/citas.
-            
-            When a user mentions wanting to:
-            - Schedule a meeting/appointment/cita
-            - Book a consultation/demo/call
-            - Set up a time to talk
-            - Agendar una cita/reunión
-            
-            STEP 1: Ask for the following information:
-            - Their name (nombre)
-            - Their email (correo)
-            - Preferred date (fecha preferida)
-            - Preferred time (hora preferida)
-            - Type of meeting (tipo de reunión)
-            
-            STEP 2: Once you have ALL the required info (name, email, date, time), you MUST include this EXACT block in your response:
-            
-            [APPOINTMENT_REQUEST]
-            title: Cita con [client name]
-            date: YYYY-MM-DD
-            time: HH:MM
-            duration: 60
-            type: consultation
-            name: [Client name]
-            email: [Client email]
-            phone: [Client phone if provided]
-            notes: [Any notes about the appointment]
-            [/APPOINTMENT_REQUEST]
-            
-            STEP 3: After the block, confirm: "¡Perfecto! Tu cita ha sido agendada para [date] a las [time]."
-            
-            IMPORTANT: Always include the [APPOINTMENT_REQUEST] block when you have all required info.
-            ${isEcommerceEnabled ? `
-            
-            === ECOMMERCE CAPABILITIES ===
-            This business has an online store. You can help customers with:
-            
-            ORDER INQUIRIES:
-            - When a customer asks about their order, ask for their order number OR email
-            - Once you have the information, provide: current status, tracking number (if available), estimated delivery
-            - If there are issues, offer to escalate to human support
-            
-            PRODUCT INFORMATION:
-            - Help customers find products by name or description
-            - Provide pricing and availability information
-            - Explain product features and specifications
-            
-            SHIPPING & RETURNS:
-            - Explain shipping options and delivery times
-            - Inform about return policies and processes
-            - Help with questions about exchanges
-            
-            IMPORTANT:
-            - Always be helpful and transparent about order status
-            - If you don't have real-time data, acknowledge it and offer alternatives
-            - For complex issues (refunds, cancellations), recommend contacting support directly
-            ` : ''}
+            ${appointmentInstructions}
+            ${ecommerceInstructions}
         `;
 
         return systemInstruction;
@@ -585,9 +545,9 @@ ${suggestAvailableSlots()}
         if (capturedLeadIdRef.current && onUpdateLeadTranscript && messages.length > 0) {
             const fullTranscript = messages.map(m => {
                 const prefix = m.isVoiceMessage ? '🎙️ ' : '';
-                return `${prefix}${m.role === 'user' ? 'Usuario' : config.agentName || 'Asistente'}: ${m.text}`;
+                return `${prefix}${m.role === 'user' ? 'Usuario' : config.agentName || 'Asistente'}: ${m.text} `;
             }).join('\n\n');
-            
+
             try {
                 await onUpdateLeadTranscript(capturedLeadIdRef.current, fullTranscript);
                 console.log('[ChatCore] ✅ Final transcript saved to lead');
@@ -614,7 +574,7 @@ ${suggestAvailableSlots()}
         if (!preChatData.email || !preChatData.name) return;
 
         try {
-            const conversationText = messages.map(m => `${m.role}: ${m.text}`).join('\n');
+            const conversationText = messages.map(m => `${m.role}: ${m.text} `).join('\n');
             const leadScore = calculateLeadScore(preChatData, messages, false);
 
             // Create conversation for Inbox with participant info
@@ -650,7 +610,7 @@ ${suggestAvailableSlots()}
             // Start chat with personalized welcome
             const welcomeMsg = t('chatbotWidget.welcomePersonalized', { name: preChatData.name, agentName: config.agentName });
             setMessages([{ role: 'model', text: welcomeMsg }]);
-            
+
             // Save welcome message to conversation for Inbox
             if (convId) await saveConversationMessage({ role: 'model', text: welcomeMsg });
         } catch (error) {
@@ -663,7 +623,7 @@ ${suggestAvailableSlots()}
         if (!quickLeadEmail) return;
 
         try {
-            const conversationText = messages.map(m => `${m.role}: ${m.text}`).join('\n');
+            const conversationText = messages.map(m => `${m.role}: ${m.text} `).join('\n');
             const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text));
             const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
 
@@ -701,7 +661,7 @@ ${suggestAvailableSlots()}
                 role: 'model',
                 text: thankYouMsg
             }]);
-            
+
             // Save message to conversation for Inbox
             await saveConversationMessage({ role: 'model', text: thankYouMsg });
         } catch (error) {
@@ -726,22 +686,22 @@ ${suggestAvailableSlots()}
     // =============================================================================
     // APPOINTMENT FORM HANDLER
     // =============================================================================
-    
+
     const handleAppointmentFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('[ChatCore] 📅 Form submit clicked', { 
-            name: appointmentForm.name, 
-            email: appointmentForm.email, 
+        console.log('[ChatCore] 📅 Form submit clicked', {
+            name: appointmentForm.name,
+            email: appointmentForm.email,
             date: appointmentForm.date,
             time: appointmentForm.time,
-            hasOnCreateAppointment: !!onCreateAppointment 
+            hasOnCreateAppointment: !!onCreateAppointment
         });
-        
+
         if (!appointmentForm.name || !appointmentForm.email || !appointmentForm.date) {
             console.log('[ChatCore] ⚠️ Missing required fields');
             return;
         }
-        
+
         if (!onCreateAppointment) {
             console.log('[ChatCore] ⚠️ No onCreateAppointment handler');
             return;
@@ -759,7 +719,7 @@ ${suggestAvailableSlots()}
             const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
             const appointmentData: ChatAppointmentData = {
-                title: `Cita - ${appointmentForm.name}`,
+                title: `Cita - ${appointmentForm.name} `,
                 description: appointmentForm.notes || `Cita agendada por ${appointmentForm.name} a través del chat`,
                 type: appointmentForm.appointmentType as any,
                 startDate,
@@ -769,7 +729,7 @@ ${suggestAvailableSlots()}
                 participantPhone: appointmentForm.phone || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
             };
-            
+
             console.log('[ChatCore] 📅 Calling onCreateAppointment...');
             const appointmentId = await onCreateAppointment(appointmentData);
             console.log('[ChatCore] 📅 onCreateAppointment returned:', appointmentId);
@@ -784,18 +744,18 @@ ${suggestAvailableSlots()}
                 });
                 const formattedTime = startDate.toLocaleTimeString('es-ES', {
                     hour: '2-digit',
-                    minute: '2-digit' 
+                    minute: '2-digit'
                 });
-                
-                const durationText = parseInt(appointmentForm.duration) >= 60 
-                    ? `${parseInt(appointmentForm.duration) / 60} hora${parseInt(appointmentForm.duration) > 60 ? 's' : ''}`
+
+                const durationText = parseInt(appointmentForm.duration) >= 60
+                    ? `${parseInt(appointmentForm.duration) / 60} hora${parseInt(appointmentForm.duration) > 60 ? 's' : ''} `
                     : `${appointmentForm.duration} minutos`;
-                
+
                 setMessages(prev => [...prev, {
                     role: 'model',
-                    text: `✅ **¡Cita agendada exitosamente!**\n\n📅 **Fecha:** ${formattedDate}\n⏰ **Hora:** ${formattedTime}\n⏱️ **Duración:** ${durationText}\n👤 **Nombre:** ${appointmentForm.name}\n📧 **Email:** ${appointmentForm.email}\n\n¡Te esperamos! Si necesitas cambiar o cancelar tu cita, por favor contáctanos.`
+                    text: `✅ **¡Cita agendada exitosamente! **\n\n📅 ** Fecha:** ${formattedDate} \n⏰ ** Hora:** ${formattedTime} \n⏱️ ** Duración:** ${durationText} \n👤 ** Nombre:** ${appointmentForm.name} \n📧 ** Email:** ${appointmentForm.email} \n\n¡Te esperamos! Si necesitas cambiar o cancelar tu cita, por favor contáctanos.`
                 }]);
-                
+
                 setShowAppointmentForm(false);
                 setAppointmentForm({ name: '', email: '', phone: '', date: '', time: '10:00', duration: '60', appointmentType: 'consultation', notes: '' });
             }
@@ -817,7 +777,7 @@ ${suggestAvailableSlots()}
     const processAppointmentRequest = async (response: string): Promise<{ cleanedResponse: string; appointmentCreated: boolean }> => {
         console.log('[ChatCore] 📅 processAppointmentRequest called');
         console.log('[ChatCore] 📅 onCreateAppointment available:', !!onCreateAppointment);
-        
+
         if (!onCreateAppointment) {
             console.log('[ChatCore] ⚠️ No onCreateAppointment handler - skipping');
             return { cleanedResponse: response, appointmentCreated: false };
@@ -826,9 +786,9 @@ ${suggestAvailableSlots()}
         // First try: Look for the structured block
         const appointmentRegex = /\[APPOINTMENT_REQUEST\]([\s\S]*?)\[\/APPOINTMENT_REQUEST\]/;
         let match = response.match(appointmentRegex);
-        
+
         console.log('[ChatCore] 📅 Structured block found:', !!match);
-        
+
         // Second try: Detect if AI CONFIRMED scheduling (not just offering)
         const confirmationPhrases = [
             /(?:tu|su|la) cita (?:ha sido |está |queda |fue )agendada/i,
@@ -844,9 +804,9 @@ ${suggestAvailableSlots()}
             /reserv(?:amos|é|ado).*(?:para|el)/i,
             /confirm(?:amos|o|ado).*cita/i,
         ];
-        
+
         const appointmentConfirmed = confirmationPhrases.some(regex => regex.test(response));
-        
+
         // Make sure it's not just an offer (question or suggestion)
         const offerPhrases = [
             /podemos agendar/i,
@@ -857,57 +817,57 @@ ${suggestAvailableSlots()}
             /\?[^.]*cita/i,
             /si (?:gustas|prefieres|quieres).*agendar/i,
         ];
-        
+
         const isJustOffer = offerPhrases.some(regex => regex.test(response));
-        
+
         const appointmentMentioned = appointmentConfirmed && !isJustOffer;
-        
+
         console.log('[ChatCore] 📅 Appointment confirmed phrase found:', appointmentConfirmed);
         console.log('[ChatCore] 📅 Is just an offer:', isJustOffer);
         console.log('[ChatCore] 📅 Will attempt extraction:', appointmentMentioned && !match);
-        
+
         // If no structured block but AI mentioned scheduling, try to extract from conversation
         if (!match && appointmentMentioned) {
             console.log('[ChatCore] 📅 AI confirmed appointment - extracting data from response...');
             console.log('[ChatCore] 📅 Response text:', response.substring(0, 300));
-            
+
             // Try to extract date patterns
             const datePatterns = [
                 /(\d{1,2})\s*de\s*(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
                 /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*(\d{1,2})/i,
                 /(\d{4}-\d{2}-\d{2})/,
             ];
-            
+
             const timePatterns = [
                 /(\d{1,2}):(\d{2})\s*(am|pm)?/i,
                 /(\d{1,2})\s*(am|pm)/i,
                 /a las?\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|de la tarde|de la mañana)?/i,
             ];
-            
+
             // Extract name from previous messages
             let clientName = '';
             let clientEmail = '';
             const recentUserMessages = messages.filter(m => m.role === 'user').slice(-5);
-            
+
             for (const msg of recentUserMessages) {
                 // Look for name patterns
                 const nameMatch = msg.text.match(/(?:me llamo|soy|mi nombre es)\s+([A-Za-záéíóúñÁÉÍÓÚÑ]+)/i);
                 if (nameMatch) clientName = nameMatch[1];
-                
+
                 // Look for email
                 const emailMatch = msg.text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
                 if (emailMatch) clientEmail = emailMatch[1];
             }
-            
+
             // Extract date from response
             let extractedDate = new Date();
             extractedDate.setDate(extractedDate.getDate() + 1); // Default to tomorrow
-            
+
             const monthMap: Record<string, number> = {
                 'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
                 'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
             };
-            
+
             for (const pattern of datePatterns) {
                 const dateMatch = response.match(pattern);
                 if (dateMatch) {
@@ -920,11 +880,11 @@ ${suggestAvailableSlots()}
                     break;
                 }
             }
-            
+
             // Extract time from response
             let hours = 10;
             let minutes = 0;
-            
+
             for (const pattern of timePatterns) {
                 const timeMatch = response.match(pattern);
                 if (timeMatch) {
@@ -936,13 +896,13 @@ ${suggestAvailableSlots()}
                     break;
                 }
             }
-            
+
             extractedDate.setHours(hours, minutes, 0, 0);
-            
+
             // Create appointment with extracted data
             const appointmentData: ChatAppointmentData = {
-                title: `Cita - ${clientName || 'Cliente'}`,
-                description: `Cita agendada a través del chat. Contexto: ${response.substring(0, 200)}`,
+                title: `Cita - ${clientName || 'Cliente'} `,
+                description: `Cita agendada a través del chat.Contexto: ${response.substring(0, 200)} `,
                 type: 'consultation',
                 startDate: extractedDate,
                 endDate: new Date(extractedDate.getTime() + 60 * 60000),
@@ -950,7 +910,7 @@ ${suggestAvailableSlots()}
                 participantEmail: clientEmail || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
             };
-            
+
             console.log('[ChatCore] 📅 Attempting to create appointment with data:', {
                 title: appointmentData.title,
                 startDate: appointmentData.startDate.toISOString(),
@@ -958,29 +918,29 @@ ${suggestAvailableSlots()}
                 participantName: appointmentData.participantName,
                 participantEmail: appointmentData.participantEmail
             });
-            
+
             try {
                 const appointmentId = await onCreateAppointment(appointmentData);
                 console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
-                return { 
-                    cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**', 
-                    appointmentCreated: true 
+                return {
+                    cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**',
+                    appointmentCreated: true
                 };
             } catch (error) {
                 console.error('[ChatCore] ❌ Error creating appointment:', error);
                 return { cleanedResponse: response, appointmentCreated: false };
             }
         }
-        
+
         if (!match) {
             return { cleanedResponse: response, appointmentCreated: false };
         }
-        
+
         // Process structured block
         const appointmentBlock = match[1];
         const lines = appointmentBlock.trim().split('\n');
         const data: Record<string, string> = {};
-        
+
         lines.forEach(line => {
             const colonIndex = line.indexOf(':');
             if (colonIndex > 0) {
@@ -989,15 +949,15 @@ ${suggestAvailableSlots()}
                 data[key] = value;
             }
         });
-        
+
         // Parse date and time
         const dateStr = data.date || '';
         const timeStr = data.time || '10:00';
         const duration = parseInt(data.duration) || 60;
-        
+
         let startDate: Date;
         let endDate: Date;
-        
+
         try {
             const [year, month, day] = dateStr.split('-').map(Number);
             const [hours, minutes] = timeStr.split(':').map(Number);
@@ -1009,7 +969,7 @@ ${suggestAvailableSlots()}
             startDate.setHours(10, 0, 0, 0);
             endDate = new Date(startDate.getTime() + duration * 60000);
         }
-        
+
         const appointmentData: ChatAppointmentData = {
             title: data.title || 'Cita desde Chat',
             description: data.notes || `Cita agendada por ${data.name || 'cliente'} a través del chat`,
@@ -1021,22 +981,22 @@ ${suggestAvailableSlots()}
             participantPhone: data.phone,
             linkedLeadId: capturedLeadIdRef.current || undefined,
         };
-        
+
         try {
             const appointmentId = await onCreateAppointment(appointmentData);
             console.log('[ChatCore] 📅 Appointment created:', appointmentId);
-            
+
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
-            return { 
-                cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**', 
-                appointmentCreated: true 
+            return {
+                cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**',
+                appointmentCreated: true
             };
         } catch (error) {
             console.error('[ChatCore] ❌ Error creating appointment:', error);
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
-            return { 
-                cleanedResponse: cleanedResponse + '\n\n⚠️ *No se pudo agendar la cita automáticamente. Por favor contacta directamente.*', 
-                appointmentCreated: false 
+            return {
+                cleanedResponse: cleanedResponse + '\n\n⚠️ *No se pudo agendar la cita automáticamente. Por favor contacta directamente.*',
+                appointmentCreated: false
             };
         }
     };
@@ -1100,7 +1060,7 @@ ${suggestAvailableSlots()}
             if (currentPageContext?.pageData && currentPageContext.section) {
                 const sectionData = (currentPageContext.pageData as any)[currentPageContext.section];
                 if (sectionData) {
-                    const contextMessage = `[SYSTEM CONTEXT] The user is currently viewing the "${currentPageContext.section}" section. Content: ${JSON.stringify(sectionData).slice(0, 1500)}`;
+                    const contextMessage = `[SYSTEM CONTEXT] The user is currently viewing the "${currentPageContext.section}" section.Content: ${JSON.stringify(sectionData).slice(0, 1500)} `;
 
                     // Prepend context to the latest user message
                     const lastMessageIndex = conversationHistory.length - 1;
@@ -1122,7 +1082,7 @@ ${suggestAvailableSlots()}
                 // Build full prompt with system context and conversation history
                 const fullPrompt = systemContext + '\n\n' +
                     conversationHistory.map(msg =>
-                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
+                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text} `
                     ).join('\n\n');
 
                 const proxyResponse = await generateContentViaProxy(
@@ -1146,7 +1106,7 @@ ${suggestAvailableSlots()}
 
                 const fullPrompt = systemContext + '\n\n' +
                     conversationHistory.map(msg =>
-                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
+                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text} `
                     ).join('\n\n');
 
                 const proxyResponse = await generateContentViaProxy(
@@ -1176,15 +1136,15 @@ ${suggestAvailableSlots()}
                     success: true
                 });
             }
-            
+
             // Process appointment requests in the response
             const { cleanedResponse, appointmentCreated } = await processAppointmentRequest(botResponse);
-            
+
             setMessages(prev => [...prev, { role: 'model', text: cleanedResponse }]);
-            
+
             // Save bot response to conversation for Inbox
             await saveConversationMessage({ role: 'model', text: cleanedResponse });
-            
+
             // If appointment was created, mark lead as captured
             if (appointmentCreated && !leadCaptured) {
                 setLeadCaptured(true);
@@ -1207,7 +1167,7 @@ ${suggestAvailableSlots()}
             }
             handleApiError(error);
             console.error('ChatCore Error:', error?.message || error);
-            
+
             // Provide more helpful error messages
             let errorMessage = t('chatbotWidget.genericError');
             if (error?.message?.includes('rate limit') || error?.message?.includes('429')) {
@@ -1215,7 +1175,7 @@ ${suggestAvailableSlots()}
             } else if (error?.message?.includes('API') || error?.message?.includes('configuration')) {
                 errorMessage = t('chatbotWidget.configError', 'Service temporarily unavailable. Please try again later.');
             }
-            
+
             setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
         } finally {
             setIsLoading(false);
@@ -1233,11 +1193,11 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     const startLiveSession = async () => {
-        if (hasApiKey === false) { 
-            promptForKeySelection(); 
-            return; 
+        if (hasApiKey === false) {
+            promptForKeySelection();
+            return;
         }
-        
+
         if (!config.enableLiveVoice) {
             alert(t('chatbotWidget.liveVoiceDisabled'));
             return;
@@ -1258,8 +1218,8 @@ ${suggestAvailableSlots()}
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
-                    speechConfig: { 
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } } 
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
                     },
                     systemInstruction: buildSystemInstruction(),
                     // Enable transcription for both user input and model output
@@ -1284,30 +1244,30 @@ ${suggestAvailableSlots()}
                                 const base64Data = bytesToBase64(new Uint8Array(pcm16));
                                 sessionPromise.then(session => {
                                     if (!isConnectedRef.current) return;
-                                    try { 
-                                        session.sendRealtimeInput({ 
-                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } 
-                                        }); 
+                                    try {
+                                        session.sendRealtimeInput({
+                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data }
+                                        });
                                     } catch (err) { }
                                 });
                             };
                             source.connect(processor);
                             processor.connect(inputCtx.destination);
-                        } catch (micErr) { 
-                            stopLiveSession(); 
-                            alert("No se pudo acceder al micrófono. Permite el acceso y recarga la página."); 
+                        } catch (micErr) {
+                            stopLiveSession();
+                            alert("No se pudo acceder al micrófono. Permite el acceso y recarga la página.");
                         }
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         const msg = message as any;
-                        
+
                         if (message.serverContent?.interrupted) {
                             activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
                             activeSourcesRef.current = [];
                             if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
                             return;
                         }
-                        
+
                         // Capture user input transcription (from inputAudioTranscription config)
                         if (msg.serverContent?.inputTranscript) {
                             const userText = msg.serverContent.inputTranscript;
@@ -1315,7 +1275,7 @@ ${suggestAvailableSlots()}
                                 voiceTranscriptRef.current.push({ role: 'user', text: userText.trim() });
                             }
                         }
-                        
+
                         // Capture model output transcription (from outputAudioTranscription config)
                         if (msg.serverContent?.outputTranscript) {
                             const modelText = msg.serverContent.outputTranscript;
@@ -1323,7 +1283,7 @@ ${suggestAvailableSlots()}
                                 voiceTranscriptRef.current.push({ role: 'model', text: modelText.trim() });
                             }
                         }
-                        
+
                         // Also check for text in modelTurn parts (fallback)
                         const modelParts = message.serverContent?.modelTurn?.parts;
                         if (modelParts) {
@@ -1333,13 +1293,13 @@ ${suggestAvailableSlots()}
                                 }
                             }
                         }
-                        
+
                         // Check if turn is complete to save accumulated model response
                         if (msg.serverContent?.turnComplete && currentModelResponseRef.current.trim()) {
                             voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
                             currentModelResponseRef.current = '';
                         }
-                        
+
                         // Handle Audio Output
                         const audioData = modelParts?.[0]?.inlineData?.data;
                         if (audioData && audioContextRef.current) {
@@ -1445,7 +1405,7 @@ ${suggestAvailableSlots()}
         // Combine all model responses to check for appointment confirmation
         const modelResponses = transcript.filter(t => t.role === 'model').map(t => t.text).join(' ');
         const userResponses = transcript.filter(t => t.role === 'user').map(t => t.text).join(' ');
-        const fullConversation = transcript.map(t => `${t.role}: ${t.text}`).join('\n');
+        const fullConversation = transcript.map(t => `${t.role}: ${t.text} `).join('\n');
 
         // Check if appointment was confirmed in voice conversation
         const appointmentConfirmed = /(?:cita|appointment|reunión|meeting).*(?:agendada|confirmada|programada|scheduled|confirmed|registrada)/i.test(modelResponses) ||
@@ -1509,12 +1469,12 @@ ${suggestAvailableSlots()}
                 if (match) {
                     let hours = parseInt(match[1]) || 10;
                     const minutes = parseInt(match[2]) || 0;
-                    
+
                     // Adjust for AM/PM or time of day
                     if (/pm/i.test(match[0]) && hours < 12) hours += 12;
                     if (/tarde/i.test(match[0]) && hours < 12) hours += 12;
                     if (/noche/i.test(match[0]) && hours < 18) hours += 12;
-                    
+
                     extractedTime = { hours, minutes };
                     break;
                 }
@@ -1537,7 +1497,7 @@ ${suggestAvailableSlots()}
                 const endDate = new Date(startDate.getTime() + 60 * 60000); // 1 hour
 
                 const appointmentData: ChatAppointmentData = {
-                    title: `Cita por voz - ${nameMatch?.[1]?.trim() || 'Cliente'}`,
+                    title: `Cita por voz - ${nameMatch?.[1]?.trim() || 'Cliente'} `,
                     description: `Cita agendada durante llamada de voz`,
                     type: 'consultation',
                     startDate,
@@ -1553,7 +1513,7 @@ ${suggestAvailableSlots()}
                         console.log('[ChatCore] 🎙️📅 ✅ Voice appointment created:', appointmentId);
                         setMessages(prev => [...prev, {
                             role: 'model',
-                            text: `✅ **Cita registrada desde llamada de voz**\n📅 ${startDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}\n⏰ ${startDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`,
+                            text: `✅ ** Cita registrada desde llamada de voz **\n📅 ${startDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} \n⏰ ${startDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} `,
                             isVoiceMessage: true
                         }]);
                     }
@@ -1571,7 +1531,7 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     return (
-        <div className={`flex flex-col h-full ${className}`}>
+        <div className={`flex flex-col h-full ${className} `}>
             {/* Header */}
             {showHeader && (
                 <div
@@ -1581,30 +1541,30 @@ ${suggestAvailableSlots()}
                         color: appearance.colors?.headerText
                     }}
                 >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                         {isLiveActive ? (
-                            <div className="p-2 rounded-full bg-white/20 animate-pulse">
+                            <div className="p-2 rounded-full bg-white/20 animate-pulse flex-shrink-0">
                                 <Mic size={20} />
                             </div>
                         ) : appearance.branding.logoType === 'emoji' ? (
-                            <div className="w-10 h-10 flex items-center justify-center text-2xl">
+                            <div className="w-10 h-10 flex items-center justify-center text-2xl flex-shrink-0">
                                 {appearance.branding.logoEmoji}
                             </div>
                         ) : appearance.branding.logoType === 'image' && appearance.branding.logoUrl ? (
-                            <img src={appearance.branding.logoUrl} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+                            <img src={appearance.branding.logoUrl} alt="Logo" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                         ) : (
-                            <div className="p-2 rounded-full bg-white/20">
+                            <div className="p-2 rounded-full bg-white/20 flex-shrink-0">
                                 <MessageSquare size={20} />
                             </div>
                         )}
-                        <div>
-                            <span className="font-bold text-sm block leading-tight">{config.agentName}</span>
-                            <span className="text-[10px] opacity-80 block leading-tight">
+                        <div className="min-w-0 flex-1">
+                            <span className="font-bold text-sm block leading-tight truncate">{config.agentName}</span>
+                            <span className="text-[10px] opacity-80 block leading-tight truncate">
                                 {isLiveActive ? t('chatbotWidget.liveSession') : t('chatbotWidget.chatOnline')}
                             </span>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                         {headerActions}
                         {onClose && (
                             <button
@@ -1625,12 +1585,12 @@ ${suggestAvailableSlots()}
 
                 {/* Pre-Chat Form - Compact */}
                 {showPreChatForm && (
-                    <div 
+                    <div
                         className="absolute inset-0 flex flex-col z-20"
                         style={{ backgroundColor: appearance.colors?.backgroundColor }}
                     >
                         {/* Compact Header */}
-                        <div 
+                        <div
                             className="px-4 py-5 text-center"
                             style={{ background: `linear-gradient(135deg, ${appearance.colors?.primaryColor}, ${appearance.colors?.accentColor || appearance.colors?.primaryColor}dd)` }}
                         >
@@ -1644,7 +1604,7 @@ ${suggestAvailableSlots()}
                                 {t('chatbotWidget.preChatSubtitle', 'Cuéntanos sobre ti')}
                             </p>
                         </div>
-                        
+
                         {/* Compact Form */}
                         <div className="flex-1 p-4 overflow-y-auto">
                             <form onSubmit={handlePreChatSubmit} className="space-y-2.5">
@@ -1686,23 +1646,23 @@ ${suggestAvailableSlots()}
                                         color: appearance.colors?.inputText,
                                     }}
                                 />
-                                
+
                                 <button
                                     type="submit"
                                     className="w-full py-2.5 px-4 text-xs font-semibold rounded-lg transition-all hover:opacity-90 mt-1"
-                                    style={{ 
+                                    style={{
                                         backgroundColor: appearance.colors?.primaryColor,
                                         color: '#ffffff'
                                     }}
                                 >
                                     {t('chatbotWidget.preChatStart', 'Iniciar Chat')} →
                                 </button>
-                                
+
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setShowPreChatForm(false);
-                                        const welcomeMsg = appearance.messages?.welcomeMessage || `${t('chatbotWidget.welcomeMessageDefault', { agentName: config.agentName })}`;
+                                        const welcomeMsg = appearance.messages?.welcomeMessage || `${t('chatbotWidget.welcomeMessageDefault', { agentName: config.agentName })} `;
                                         setMessages([{ role: 'model', text: welcomeMsg }]);
                                     }}
                                     className="w-full py-1.5 text-[10px] opacity-50 hover:opacity-100 transition-opacity"
@@ -1718,16 +1678,16 @@ ${suggestAvailableSlots()}
                 {/* Quick Lead Capture Modal - Compact */}
                 {showLeadCaptureModal && (
                     <div className="absolute inset-0 flex items-end justify-center bg-black/40 backdrop-blur-sm z-20 p-3">
-                        <div 
+                        <div
                             className="w-full rounded-2xl overflow-hidden border"
-                            style={{ 
+                            style={{
                                 backgroundColor: appearance.colors?.botBubbleColor,
-                                borderColor: appearance.colors?.inputBorder 
+                                borderColor: appearance.colors?.inputBorder
                             }}
                         >
                             {/* Compact Header */}
                             <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-                                <div 
+                                <div
                                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                     style={{ backgroundColor: appearance.colors?.primaryColor + '20' }}
                                 >
@@ -1748,7 +1708,7 @@ ${suggestAvailableSlots()}
                                     <X size={14} style={{ color: appearance.colors?.botTextColor }} />
                                 </button>
                             </div>
-                            
+
                             {/* Compact Form */}
                             <form onSubmit={handleQuickLeadCapture} className="px-4 pb-4">
                                 <div className="flex gap-2">
@@ -1769,7 +1729,7 @@ ${suggestAvailableSlots()}
                                     <button
                                         type="submit"
                                         className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90 flex-shrink-0"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: appearance.colors?.primaryColor,
                                             color: '#ffffff'
                                         }}
@@ -1798,7 +1758,7 @@ ${suggestAvailableSlots()}
                                 <div
                                     key={i}
                                     className="w-1.5 bg-white rounded-full transition-all duration-100"
-                                    style={{ height: `${height}px`, opacity: 0.6 + (height / 50) }}
+                                    style={{ height: `${height} px`, opacity: 0.6 + (height / 50) }}
                                 />
                             ))}
                         </div>
@@ -1829,7 +1789,7 @@ ${suggestAvailableSlots()}
                                     className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${msg.role === 'user'
                                         ? 'rounded-tr-sm'
                                         : 'rounded-tl-sm markdown-content'
-                                        } ${msg.isVoiceMessage ? 'border border-purple-300/30' : ''}`}
+                                        } ${msg.isVoiceMessage ? 'border border-purple-300/30' : ''} `}
                                     style={
                                         msg.role === 'user'
                                             ? {
@@ -1880,7 +1840,7 @@ ${suggestAvailableSlots()}
                         ))}
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div 
+                                <div
                                     className="p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2"
                                     style={{
                                         backgroundColor: appearance.colors?.botBubbleColor,
@@ -1888,23 +1848,23 @@ ${suggestAvailableSlots()}
                                     }}
                                 >
                                     <div className="flex gap-1">
-                                        <span 
-                                            className="w-2 h-2 rounded-full animate-bounce" 
-                                            style={{ 
+                                        <span
+                                            className="w-2 h-2 rounded-full animate-bounce"
+                                            style={{
                                                 backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '0ms'
                                             }}
                                         />
-                                        <span 
-                                            className="w-2 h-2 rounded-full animate-bounce" 
-                                            style={{ 
+                                        <span
+                                            className="w-2 h-2 rounded-full animate-bounce"
+                                            style={{
                                                 backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '150ms'
                                             }}
                                         />
-                                        <span 
-                                            className="w-2 h-2 rounded-full animate-bounce" 
-                                            style={{ 
+                                        <span
+                                            className="w-2 h-2 rounded-full animate-bounce"
+                                            style={{
                                                 backgroundColor: appearance.colors?.primaryColor,
                                                 animationDelay: '300ms'
                                             }}
@@ -1929,7 +1889,7 @@ ${suggestAvailableSlots()}
                                         style={{
                                             backgroundColor: appearance.colors?.primaryColor + '15',
                                             color: appearance.colors?.primaryColor,
-                                            border: `1px solid ${appearance.colors?.primaryColor}40`
+                                            border: `1px solid ${appearance.colors?.primaryColor} 40`
                                         }}
                                     >
                                         {qr.emoji && <span>{qr.emoji}</span>}
@@ -1948,11 +1908,11 @@ ${suggestAvailableSlots()}
                     <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors?.inputBorder, color: appearance.colors?.inputText }}>
                         <Sparkles size={8} /> {t('chatbotWidget.poweredBy')}
                     </div>
-                    <div 
-                        className="px-2 py-2 border-t flex items-center gap-1.5" 
-                        style={{ 
+                    <div
+                        className="px-2 py-2 border-t flex items-center gap-1.5"
+                        style={{
                             backgroundColor: appearance.colors?.inputBackground,
-                            borderColor: appearance.colors?.inputBorder 
+                            borderColor: appearance.colors?.inputBorder
                         }}
                     >
                         {config.enableLiveVoice && (
@@ -2001,7 +1961,7 @@ ${suggestAvailableSlots()}
             {/* Appointment Form Modal */}
             {showAppointmentForm && (
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 flex items-center justify-center p-4">
-                    <div 
+                    <div
                         className="w-full max-w-sm rounded-2xl shadow-2xl p-5 animate-fade-in-up"
                         style={{ backgroundColor: appearance.colors?.backgroundColor }}
                     >
@@ -2010,14 +1970,14 @@ ${suggestAvailableSlots()}
                                 <Calendar size={18} style={{ color: appearance.colors?.primaryColor }} />
                                 Agendar Cita
                             </h3>
-                            <button 
+                            <button
                                 onClick={() => setShowAppointmentForm(false)}
                                 className="p-1 rounded-full hover:bg-black/10 transition-colors"
                             >
                                 <X size={16} style={{ color: appearance.colors?.botTextColor }} />
                             </button>
                         </div>
-                        
+
                         <form onSubmit={handleAppointmentFormSubmit} className="space-y-3">
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
@@ -2038,7 +1998,7 @@ ${suggestAvailableSlots()}
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Email *
@@ -2058,7 +2018,7 @@ ${suggestAvailableSlots()}
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                     Teléfono
@@ -2077,7 +2037,7 @@ ${suggestAvailableSlots()}
                                     placeholder="(opcional)"
                                 />
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
@@ -2185,7 +2145,7 @@ ${suggestAvailableSlots()}
                                     rows={2}
                                 />
                             </div>
-                            
+
                             <button
                                 type="submit"
                                 disabled={isCreatingAppointment || !appointmentForm.name || !appointmentForm.email || !appointmentForm.date}

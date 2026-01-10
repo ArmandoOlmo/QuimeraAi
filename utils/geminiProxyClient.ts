@@ -89,6 +89,60 @@ export async function generateContentViaProxy(
 }
 
 /**
+ * Image data for multimodal requests
+ */
+export interface ImageInput {
+    mimeType: string;  // e.g., 'image/jpeg', 'image/png'
+    data: string;      // base64 encoded image data (without data URL prefix)
+}
+
+/**
+ * Generate content with images using the Gemini proxy (multimodal)
+ * Supports sending images alongside text for vision analysis
+ */
+export async function generateMultimodalContentViaProxy(
+    projectId: string,
+    prompt: string,
+    images: ImageInput[],
+    model: string = 'gemini-2.5-flash',
+    config: GeminiProxyConfig = {},
+    userId?: string
+): Promise<GeminiProxyResponse> {
+    try {
+        // Validate images
+        if (images.length > 10) {
+            throw new Error('Maximum 10 images allowed per request');
+        }
+
+        const response = await fetch(`${PROXY_BASE_URL}-generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                projectId,
+                prompt,
+                images,  // Send images array to proxy
+                userId,
+                model,
+                config
+            })
+        });
+
+        if (!response.ok) {
+            const errorData: GeminiProxyError = await response.json();
+            throw new Error(errorData.error || `Proxy error: ${response.status}`);
+        }
+
+        const data: GeminiProxyResponse = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Gemini multimodal proxy error:', error);
+        throw error;
+    }
+}
+
+/**
  * Stream content using the Gemini proxy
  * Returns an async generator that yields text chunks
  */
@@ -266,7 +320,7 @@ export async function generateImageViaProxy(
         }
 
         const data: ImageProxyResponse = await response.json();
-        
+
         if (!data.success || !data.image) {
             throw new Error('No image returned from proxy');
         }
@@ -288,18 +342,18 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
             console.warn('extractTextFromResponse: response is null/undefined');
             return '';
         }
-        
+
         // Already a string
         if (typeof response === 'string') {
             return response;
         }
-        
+
         // Check for errors in response
         if (response.error) {
             console.error('API returned error:', response.error);
             return '';
         }
-        
+
         // Debug: Log the actual response structure
         console.log('🔍 extractTextFromResponse input:', {
             topLevelKeys: Object.keys(response),
@@ -309,26 +363,26 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
             hasCandidates: !!response.response?.candidates,
             candidatesLength: response.response?.candidates?.length || 0,
         });
-        
+
         // Check for blocked content (safety filters)
         const candidates = response.response?.candidates || response.candidates;
         if (candidates?.[0]?.finishReason === 'SAFETY') {
             console.warn('Content blocked by safety filters');
             return '';
         }
-        
+
         // Handle MAX_TOKENS - response was truncated, try to extract partial text anyway
         if (candidates?.[0]?.finishReason === 'MAX_TOKENS') {
             console.warn('⚠️ Response truncated due to MAX_TOKENS, attempting to extract partial text');
         }
-        
+
         // Standard proxy response format: { response: { candidates: [...] }, metadata: {...} }
         if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
             const text = response.response.candidates[0].content.parts[0].text;
             console.log('✅ Extracted text (standard format):', text.substring(0, 100) + '...');
             return text;
         }
-        
+
         // Try to find text in any part of response.response.candidates
         if (response.response?.candidates) {
             for (const candidate of response.response.candidates) {
@@ -342,14 +396,14 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
                 }
             }
         }
-        
+
         // Direct candidates format (fallback)
         if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
             const text = response.candidates[0].content.parts[0].text;
             console.log('✅ Extracted text (direct format):', text.substring(0, 100) + '...');
             return text;
         }
-        
+
         // Try to find text in any part of direct candidates
         if (response.candidates) {
             for (const candidate of response.candidates) {
@@ -363,19 +417,19 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
                 }
             }
         }
-        
+
         // Text directly in response
         if (typeof response.text === 'string') {
             console.log('✅ Extracted text (direct text):', response.text.substring(0, 100) + '...');
             return response.text;
         }
-        
+
         // Text in response.response directly
         if (typeof response.response?.text === 'string') {
             console.log('✅ Extracted text (response.text):', response.response.text.substring(0, 100) + '...');
             return response.response.text;
         }
-        
+
         // Log detailed structure for debugging
         console.error('❌ Could not extract text. Full response structure:', JSON.stringify(response, null, 2).substring(0, 2000));
         return '';

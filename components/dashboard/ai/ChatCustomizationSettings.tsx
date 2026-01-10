@@ -5,11 +5,13 @@ import { useProject } from '../../../contexts/project';
 import {
     Palette, MessageSquare,
     Settings as SettingsIcon, Smile, Image as ImageIcon, Zap,
-    ChevronDown, X
+    ChevronDown, X, Upload, Trash2
 } from 'lucide-react';
 import { ChatAppearanceConfig } from '../../../types';
 import { getDefaultAppearanceConfig, THEME_PRESETS, applyThemePreset } from '../../../utils/chatThemes';
 import ChatbotWidget from '../../ChatbotWidget';
+import EcommerceImagePicker from '../ecommerce/components/EcommerceImagePicker';
+import { useToast } from '../../../contexts/ToastContext';
 
 // Emoji picker simple
 const COMMON_EMOJIS = [
@@ -21,6 +23,8 @@ const COMMON_EMOJIS = [
 const ChatCustomizationSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject } = useProject();
+    const { t } = useTranslation();
+    const { success, error: showError } = useToast();
 
     const [config, setConfig] = useState<ChatAppearanceConfig>(
         aiAssistantConfig.appearance || getDefaultAppearanceConfig()
@@ -35,6 +39,7 @@ const ChatCustomizationSettings: React.FC = () => {
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
     const [newQuickReply, setNewQuickReply] = useState({ text: '', emoji: '' });
+    const [showImagePicker, setShowImagePicker] = useState(false);
 
     useEffect(() => {
         if (aiAssistantConfig.appearance) {
@@ -68,6 +73,11 @@ const ChatCustomizationSettings: React.FC = () => {
         };
         setConfig(newConfig);
         saveConfig(newConfig);
+    };
+
+    const handleImageSelect = (url: string) => {
+        updateBranding('logoUrl', url);
+        setShowImagePicker(false);
     };
 
     const updateBehavior = (key: string, value: any) => {
@@ -226,8 +236,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={type}
                                             onClick={() => updateBranding('logoType', type)}
                                             className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.branding.logoType === type
-                                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {type}
@@ -268,13 +278,52 @@ const ChatCustomizationSettings: React.FC = () => {
 
                             {config.branding.logoType === 'image' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo URL</label>
-                                    <input
-                                        type="text"
-                                        value={config.branding.logoUrl || ''}
-                                        onChange={(e) => updateBranding('logoUrl', e.target.value)}
-                                        placeholder="https://example.com/logo.png"
-                                        className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Logo Image</label>
+
+                                    <div className="border border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-3 bg-card/30">
+                                        {config.branding.logoUrl ? (
+                                            <div className="relative group">
+                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-border shadow-sm bg-white/5">
+                                                    <img
+                                                        src={config.branding.logoUrl}
+                                                        alt="Chat Logo"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => updateBranding('logoUrl', '')}
+                                                    className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-md hover:scale-110"
+                                                    title="Remove logo"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-20 h-20 rounded-xl border border-border bg-secondary/20 flex items-center justify-center text-muted-foreground">
+                                                <ImageIcon size={24} className="opacity-50" />
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col items-center gap-2">
+                                            <button
+                                                onClick={() => setShowImagePicker(true)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90 transition-all"
+                                            >
+                                                <ImageIcon size={14} />
+                                                {config.branding.logoUrl ? 'Change Image' : 'Select Image'}
+                                            </button>
+                                            <p className="text-[10px] text-muted-foreground">
+                                                Select from library or upload new
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <EcommerceImagePicker
+                                        isOpen={showImagePicker}
+                                        onClose={() => setShowImagePicker(false)}
+                                        onSelect={handleImageSelect}
+                                        multiple={false}
+                                        currentImages={config.branding.logoUrl ? [config.branding.logoUrl] : []}
                                     />
                                 </div>
                             )}
@@ -333,8 +382,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={pos}
                                             onClick={() => updateBehavior('position', pos)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.behavior.position === pos
-                                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {pos.replace('-', ' ')}
@@ -351,8 +400,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={size}
                                             onClick={() => updateBehavior('width', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.behavior.width === size
-                                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {size}
@@ -461,8 +510,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={style}
                                             onClick={() => updateButton('buttonStyle', style)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.button.buttonStyle === style
-                                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {style}
@@ -479,8 +528,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                             key={size}
                                             onClick={() => updateButton('buttonSize', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.button.buttonSize === size
-                                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                                    : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {size}
@@ -513,9 +562,9 @@ const ChatCustomizationSettings: React.FC = () => {
                             </div>
                         </div>
                     </AccordionSection>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };
 

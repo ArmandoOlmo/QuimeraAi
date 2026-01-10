@@ -590,6 +590,29 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         const model = sanitizeString(req.body.model, 50) || 'gemini-2.5-flash';
         const config = req.body.config || {};
 
+        // MULTIMODAL: Get images array if provided
+        const images: Array<{ mimeType: string; data: string }> = [];
+        if (Array.isArray(req.body.images)) {
+            const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            const MAX_IMAGES = 10;
+
+            for (const img of req.body.images.slice(0, MAX_IMAGES)) {
+                if (img && typeof img.mimeType === 'string' && typeof img.data === 'string') {
+                    // Validate MIME type
+                    if (!ALLOWED_MIME_TYPES.includes(img.mimeType)) {
+                        continue; // Skip invalid MIME types
+                    }
+                    // Validate base64 data (basic check)
+                    if (img.data.length > 0 && img.data.length < 20 * 1024 * 1024) { // Max ~15MB per image
+                        images.push({ mimeType: img.mimeType, data: img.data });
+                    }
+                }
+            }
+            if (images.length > 0) {
+                console.log(`[gemini-generate] Multimodal request with ${images.length} image(s)`);
+            }
+        }
+
         // Validate required fields
         if (!projectId || !prompt) {
             res.status(400).json({
@@ -653,13 +676,27 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         // Make request to Gemini API
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}`);
+        console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}, images: ${images.length}`);
+
+        // Build content parts (text + optional images)
+        const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+
+        // Add text prompt first
+        parts.push({ text: prompt });
+
+        // Add images if provided (multimodal request)
+        for (const img of images) {
+            parts.push({
+                inlineData: {
+                    mimeType: img.mimeType,
+                    data: img.data
+                }
+            });
+        }
 
         const requestBody = {
             contents: [{
-                parts: [{
-                    text: prompt
-                }]
+                parts
             }],
             generationConfig: {
                 temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),

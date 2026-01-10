@@ -25,33 +25,33 @@ export type ImageStyle = 'default' | 'rounded-full' | 'glow' | 'float' | 'hexago
 export type AnimationType = 'none' | 'fade-in' | 'fade-in-up' | 'fade-in-down' | 'slide-up' | 'slide-down' | 'scale-in' | 'bounce-in';
 
 // Font Families
-export type FontFamily = 
-  'roboto' | 'open-sans' | 'lato' | 'slabo-27px' | 'oswald' | 'source-sans-pro' |
-  'montserrat' | 'raleway' | 'pt-sans' | 'merriweather' | 'lora' | 'ubuntu' |
-  'playfair-display' | 'crimson-text' | 'poppins' | 'arvo' | 'mulish' |
-  'noto-sans' | 'noto-serif' | 'inconsolata' | 'indie-flower' | 'cabin' |
-  'fira-sans' | 'pacifico' | 'josefin-sans' | 'anton' | 'yanone-kaffeesatz' |
-  'arimo' | 'lobster' | 'bree-serif' | 'vollkorn' | 'abel' | 'archivo-narrow' |
-  'francois-one' | 'signika' | 'oxygen' | 'quicksand' | 'pt-serif' | 'bitter' |
-  'exo-2' | 'varela-round' | 'dosis' | 'noticia-text' | 'titillium-web' |
-  'nobile' | 'cardo' | 'asap' | 'questrial' | 'dancing-script' | 'amatic-sc';
+export type FontFamily =
+    'roboto' | 'open-sans' | 'lato' | 'slabo-27px' | 'oswald' | 'source-sans-pro' |
+    'montserrat' | 'raleway' | 'pt-sans' | 'merriweather' | 'lora' | 'ubuntu' |
+    'playfair-display' | 'crimson-text' | 'poppins' | 'arvo' | 'mulish' |
+    'noto-sans' | 'noto-serif' | 'inconsolata' | 'indie-flower' | 'cabin' |
+    'fira-sans' | 'pacifico' | 'josefin-sans' | 'anton' | 'yanone-kaffeesatz' |
+    'arimo' | 'lobster' | 'bree-serif' | 'vollkorn' | 'abel' | 'archivo-narrow' |
+    'francois-one' | 'signika' | 'oxygen' | 'quicksand' | 'pt-serif' | 'bitter' |
+    'exo-2' | 'varela-round' | 'dosis' | 'noticia-text' | 'titillium-web' |
+    'nobile' | 'cardo' | 'asap' | 'questrial' | 'dancing-script' | 'amatic-sc';
 
 // View Types
 export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings';
-export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation';
+export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode';
 
 // Page Section Types
-export type PageSection = 
+export type PageSection =
     // Original sections
-    | 'hero' | 'heroSplit' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta' 
-    | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter' 
-    | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map' 
+    | 'hero' | 'heroSplit' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
+    | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter'
+    | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
     | 'menu' | 'banner' | 'products'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)
-    | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' 
-    | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' 
+    | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown'
+    | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner'
     | 'productBundle' | 'announcementBar'
     // Dynamic page sections (new multi-page architecture)
     | 'productDetail'      // Section for product detail page (/producto/:slug)

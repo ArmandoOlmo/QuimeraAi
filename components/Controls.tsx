@@ -417,15 +417,15 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 const Controls: React.FC = () => {
   const { t } = useTranslation();
   const { activeSection, onSectionSelect, activeSectionItem, isSidebarOpen, setIsSidebarOpen } = useUI();
-  const { 
-    data, setData, sectionVisibility, setSectionVisibility, 
+  const {
+    data, setData, sectionVisibility, setSectionVisibility,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
     // Page management
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage
   } = useProject();
   const { uploadImageAndGetURL } = useFiles();
   const { menus } = useCMS();
-  
+
   // Page settings modal state
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus, componentStyles } = useAdmin();
@@ -580,11 +580,11 @@ const Controls: React.FC = () => {
   // Helper to update nested data safely with functional updates
   // Uses a ref to track the last updated section for page sync
   const lastUpdatedSectionRef = useRef<string | null>(null);
-  
+
   const setNestedData = (path: string, value: any) => {
     const sectionKey = path.split('.')[0]; // e.g., 'hero' from 'hero.headline'
     lastUpdatedSectionRef.current = sectionKey;
-    
+
     setData(prevData => {
       if (!prevData) return null;
       // Create a deep copy to avoid mutation and ensure React detects changes
@@ -615,12 +615,12 @@ const Controls: React.FC = () => {
       return newData;
     });
   };
-  
+
   // Multi-page sync: Sync project data changes to active page's sectionData
   // This effect runs after data changes and updates the active page
   useEffect(() => {
     if (!activePage || !updatePage || !data || !lastUpdatedSectionRef.current) return;
-    
+
     const sectionKey = lastUpdatedSectionRef.current;
     // Only sync if this section is part of the active page
     if (activePage.sections.includes(sectionKey as any)) {
@@ -636,7 +636,7 @@ const Controls: React.FC = () => {
           });
           lastUpdatedSectionRef.current = null;
         }, 500); // 500ms debounce
-        
+
         return () => clearTimeout(timeoutId);
       }
     }
@@ -2754,50 +2754,50 @@ const Controls: React.FC = () => {
             <MapPin size={14} className="text-editor-accent" />
             Contact Information
           </h4>
-          <Input 
-            label="Address" 
-            value={data.footer.contactInfo?.address || ''} 
-            onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)} 
+          <Input
+            label="Address"
+            value={data.footer.contactInfo?.address || ''}
+            onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)}
             placeholder="123 Main Street"
           />
           <div className="grid grid-cols-2 gap-2">
-            <Input 
-              label="City" 
-              value={data.footer.contactInfo?.city || ''} 
-              onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)} 
+            <Input
+              label="City"
+              value={data.footer.contactInfo?.city || ''}
+              onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)}
               placeholder="City"
             />
-            <Input 
-              label="State" 
-              value={data.footer.contactInfo?.state || ''} 
-              onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)} 
+            <Input
+              label="State"
+              value={data.footer.contactInfo?.state || ''}
+              onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)}
               placeholder="State"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Input 
-              label="ZIP Code" 
-              value={data.footer.contactInfo?.zipCode || ''} 
-              onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)} 
+            <Input
+              label="ZIP Code"
+              value={data.footer.contactInfo?.zipCode || ''}
+              onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)}
               placeholder="12345"
             />
-            <Input 
-              label="Country" 
-              value={data.footer.contactInfo?.country || ''} 
-              onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)} 
+            <Input
+              label="Country"
+              value={data.footer.contactInfo?.country || ''}
+              onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)}
               placeholder="Country"
             />
           </div>
-          <Input 
-            label="Phone" 
-            value={data.footer.contactInfo?.phone || ''} 
-            onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)} 
+          <Input
+            label="Phone"
+            value={data.footer.contactInfo?.phone || ''}
+            onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)}
             placeholder="+1 (555) 123-4567"
           />
-          <Input 
-            label="Email" 
-            value={data.footer.contactInfo?.email || ''} 
-            onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)} 
+          <Input
+            label="Email"
+            value={data.footer.contactInfo?.email || ''}
+            onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)}
             placeholder="contact@example.com"
           />
         </div>
@@ -2810,7 +2810,7 @@ const Controls: React.FC = () => {
             <Clock size={14} className="text-editor-accent" />
             Business Hours
           </h4>
-          
+
           {/* Quick copy buttons */}
           <div className="flex gap-2 flex-wrap">
             <button
@@ -2869,14 +2869,12 @@ const Controls: React.FC = () => {
                         setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
                       }
                     }}
-                    className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${
-                      dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
-                    }`}
+                    className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
+                      }`}
                   >
                     <span
-                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                        dayHours.isOpen ? 'left-5' : 'left-0.5'
-                      }`}
+                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${dayHours.isOpen ? 'left-5' : 'left-0.5'
+                        }`}
                     />
                   </button>
                   {dayHours.isOpen ? (
@@ -4674,7 +4672,7 @@ const Controls: React.FC = () => {
   const handleAddComponent = (section: PageSection) => {
     // Add component to the order (before footer)
     const newOrder = [...effectiveComponentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
-    
+
     // Update active page sections if we have an active page
     if (activePage) {
       updatePage(activePage.id, { sections: newOrder });
@@ -4728,7 +4726,7 @@ const Controls: React.FC = () => {
   const handleRemoveComponent = (section: PageSection) => {
     // Remove component from the order
     const newOrder = effectiveComponentOrder.filter(k => k !== section);
-    
+
     // Update active page sections if we have an active page
     if (activePage) {
       updatePage(activePage.id, { sections: newOrder });
@@ -8130,22 +8128,8 @@ const Controls: React.FC = () => {
         w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300 flex flex-col
         ${activeSection && isTreeHiddenMobile ? 'hidden md:block' : ''}
       `}>
-          {/* Page Selector - Always visible at top */}
-          {pages.length > 0 && (
-            <div className="p-3 border-b border-editor-border bg-editor-panel-bg/30">
-              <PageSelector
-                pages={pages}
-                activePage={activePage}
-                onSelectPage={handleSelectPage}
-                onAddPage={handleAddPage}
-                onDuplicatePage={handleDuplicatePage}
-                onDeletePage={handleDeletePage}
-                onPageSettings={handlePageSettings}
-                compact={true}
-              />
-            </div>
-          )}
-          
+
+
           {/* Component Tree for active page */}
           <div className="flex-1 min-h-0">
             <ComponentTree

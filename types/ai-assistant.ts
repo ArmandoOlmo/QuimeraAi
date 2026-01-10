@@ -192,6 +192,29 @@ export interface GlobalAssistantConfig {
     supportedLanguages?: string;
 }
 
+// =============================================================================
+// GLOBAL CHATBOT PROMPTS (SuperAdmin configuration for all project chatbots)
+// =============================================================================
+export interface GlobalChatbotPrompts {
+    /** Template for how the bot introduces itself, e.g., "You are {{agentName}}, a {{tone}} AI assistant..." */
+    identityTemplate: string;
+    /** Core instructions for behavior, language matching, etc. */
+    coreInstructions: string;
+    /** Formatting guidelines (markdown, lists, etc.) */
+    formattingGuidelines: string;
+    /** Instructions for appointment scheduling */
+    appointmentInstructions: string;
+    /** Instructions for e-commerce support (order lookup, products, etc.) */
+    ecommerceInstructions: string;
+    /** Instructions for lead capture behavior */
+    leadCaptureInstructions: string;
+    /** Last update timestamp */
+    updatedAt?: string;
+    /** User ID who made the last update */
+    updatedBy?: string;
+}
+
+
 
 
 

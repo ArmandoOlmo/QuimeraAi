@@ -41,7 +41,7 @@ export const ROUTES = {
   REGISTER: '/register',
   BLOG: '/blog',
   BLOG_ARTICLE: '/blog/:slug',
-  
+
   // Legal Pages (Public)
   PRIVACY_POLICY: '/privacy-policy',
   DATA_DELETION: '/data-deletion',
@@ -49,29 +49,29 @@ export const ROUTES = {
   COOKIE_POLICY: '/cookie-policy',
   HELP_CENTER: '/help-center',
   CHANGELOG: '/changelog',
-  
+
   // OAuth Callback Routes
   META_OAUTH_ERROR: '/auth/meta/error',
-  
+
   // Preview Routes
   PREVIEW: '/preview/:projectId',
-  
+
   // Storefront Routes (Public ecommerce)
   STORE: '/store/:storeId',
   STORE_PRODUCT: '/store/:storeId/product/:slug',
   STORE_CATEGORY: '/store/:storeId/category/:categorySlug',
   STORE_CHECKOUT: '/store/:storeId/checkout',
   STORE_ORDER_CONFIRMATION: '/store/:storeId/order/:orderId',
-  
+
   // Dashboard Routes
   DASHBOARD: '/dashboard',
   WEBSITES: '/websites',
   ASSETS: '/assets',
   TEMPLATES: '/templates',
-  
+
   // Editor Routes
   EDITOR: '/editor/:projectId',
-  
+
   // Feature Routes
   CMS: '/cms',
   NAVIGATION: '/navigation',
@@ -83,16 +83,16 @@ export const ROUTES = {
   FINANCE: '/finance',
   ECOMMERCE: '/ecommerce',
   EMAIL: '/email',
-  
+
   // Settings Routes (Workspace/Team)
   SETTINGS: '/settings',
   SETTINGS_TEAM: '/settings/team',
   SETTINGS_BRANDING: '/settings/branding',
   SETTINGS_SUBSCRIPTION: '/settings/subscription',
-  
+
   // Invite Route (Public)
   INVITE: '/invite/:token',
-  
+
   // Admin Routes
   SUPERADMIN: '/admin',
   ADMIN_ADMINS: '/admin/admins',
@@ -115,6 +115,8 @@ export const ROUTES = {
   ADMIN_LANDING_CHATBOT: '/admin/landing-chatbot',
   ADMIN_CHANGELOG: '/admin/changelog',
   ADMIN_GLOBAL_TRACKING_PIXELS: '/admin/global-tracking-pixels',
+  ADMIN_CHATBOT_PROMPTS: '/admin/chatbot-prompts',
+  ADMIN_EXECUTION_MODE: '/admin/execution-mode',
 } as const;
 
 // =============================================================================
@@ -197,7 +199,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Article',
     requiresAuth: false,
   },
-  
+
   // =========================================================================
   // PREVIEW ROUTES (Public but require project ID)
   // =========================================================================
@@ -207,7 +209,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Preview',
     requiresAuth: false,
   },
-  
+
   // =========================================================================
   // STOREFRONT ROUTES (Public ecommerce pages)
   // =========================================================================
@@ -241,7 +243,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Order Confirmation',
     requiresAuth: false,
   },
-  
+
   // =========================================================================
   // DASHBOARD ROUTES (Private - Authenticated Users)
   // =========================================================================
@@ -285,7 +287,7 @@ export const routeConfigs: RouteConfig[] = [
     showInNav: true,
     icon: 'FileCode',
   },
-  
+
   // =========================================================================
   // EDITOR ROUTES (Private - Requires Project)
   // =========================================================================
@@ -297,7 +299,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
   },
-  
+
   // =========================================================================
   // FEATURE ROUTES (Private - Authenticated Users)
   // =========================================================================
@@ -401,7 +403,7 @@ export const routeConfigs: RouteConfig[] = [
     showInNav: true,
     icon: 'Mail',
   },
-  
+
   // =========================================================================
   // SETTINGS ROUTES (Private - Workspace/Team Management)
   // =========================================================================
@@ -442,7 +444,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     parent: ROUTES.SETTINGS,
   },
-  
+
   // =========================================================================
   // INVITE ROUTE (Public - Accept Team Invitations)
   // =========================================================================
@@ -452,7 +454,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Accept Invitation',
     requiresAuth: false,
   },
-  
+
   // =========================================================================
   // ADMIN ROUTES (Private - Requires Admin Role)
   // =========================================================================
@@ -688,6 +690,28 @@ export const routeConfigs: RouteConfig[] = [
     roles: ['owner', 'superadmin'],
     parent: ROUTES.SUPERADMIN,
   },
+  {
+    path: ROUTES.ADMIN_CHATBOT_PROMPTS,
+    view: 'superadmin',
+    adminView: 'chatbot-prompts',
+    type: 'admin',
+    title: 'Global Chatbot Prompts',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_EXECUTION_MODE,
+    view: 'superadmin',
+    adminView: 'execution-mode',
+    type: 'admin',
+    title: 'Execution Mode',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
 ];
 
 // =============================================================================
@@ -701,7 +725,7 @@ export function getRouteConfig(path: string): RouteConfig | undefined {
   // First try exact match
   const exactMatch = routeConfigs.find(r => r.path === path);
   if (exactMatch) return exactMatch;
-  
+
   // Then try pattern match (for routes with params)
   return routeConfigs.find(route => {
     const pattern = route.path.replace(/:[^/]+/g, '[^/]+');
@@ -725,7 +749,7 @@ export function getRouteByView(view: View, adminView?: AdminView): RouteConfig |
  */
 export function buildPath(path: string, params?: RouteParams): string {
   if (!params) return path;
-  
+
   let result = path;
   Object.entries(params).forEach(([key, value]) => {
     if (value) {
@@ -742,14 +766,14 @@ export function parseParams(pattern: string, path: string): RouteParams {
   const params: RouteParams = {};
   const patternParts = pattern.split('/');
   const pathParts = path.split('/');
-  
+
   patternParts.forEach((part, index) => {
     if (part.startsWith(':')) {
       const key = part.slice(1);
       params[key] = pathParts[index];
     }
   });
-  
+
   return params;
 }
 
@@ -757,25 +781,25 @@ export function parseParams(pattern: string, path: string): RouteParams {
  * Check if user has access to route
  */
 export function hasRouteAccess(
-  route: RouteConfig, 
-  userRole?: string, 
+  route: RouteConfig,
+  userRole?: string,
   isAuthenticated: boolean = false,
   isEmailVerified: boolean = false
 ): boolean {
   // Public routes
   if (!route.requiresAuth) return true;
-  
+
   // Must be authenticated
   if (!isAuthenticated) return false;
-  
+
   // Check email verification
   if (route.requiresEmailVerified && !isEmailVerified) return false;
-  
+
   // Check role permissions
   if (route.roles && route.roles.length > 0) {
     return route.roles.includes(userRole || '');
   }
-  
+
   return true;
 }
 
