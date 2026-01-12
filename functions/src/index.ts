@@ -14,12 +14,12 @@ if (!admin.apps.length) {
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
 import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
-import { 
-    createPaymentIntent, 
-    createCheckoutSession, 
-    stripeWebhook, 
-    createRefund, 
-    getPaymentStatus 
+import {
+    createPaymentIntent,
+    createCheckoutSession,
+    stripeWebhook,
+    createRefund,
+    getPaymentStatus
 } from './stripeApi';
 
 import {
@@ -93,6 +93,8 @@ import {
     processScheduledCampaigns,
     sendTestEmail
 } from './email/marketing/campaignService';
+
+import { sendDirectEmail } from './email/marketing/directEmail';
 
 // Domain management functions
 import {
@@ -266,6 +268,8 @@ export const email = {
     sendCampaignToSegment,
     processScheduledCampaigns,
     sendTestEmail,
+    // Direct Email
+    sendDirectEmail,
     // Stock alert (from ecommerceSync)
     onProductUpdateCheckStock
 };
@@ -358,9 +362,9 @@ export const userRoles = {
 };
 
 // Alternative flat exports for easier routing
-export { 
-    getWidgetConfig, 
-    submitWidgetLead, 
+export {
+    getWidgetConfig,
+    submitWidgetLead,
     trackWidgetAnalytics,
     generateContent,
     streamContent,

@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
 import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
+import { EmailSettings, TransactionalEmailSettings, MarketingEmailSettings } from '../types/email';
 import { useUI } from './core/UIContext';
 import { useSafeProject } from './project/ProjectContext';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
@@ -337,12 +338,44 @@ const defaultComponentStatus = allComponents.reduce((acc, comp) => {
     return acc;
 }, {} as Record<PageSection, boolean>);
 
+// Default Email Settings (copied from useEmailSettings to ensure consistency)
+const defaultTransactionalSettings: TransactionalEmailSettings = {
+    orderConfirmation: true,
+    orderShipped: true,
+    orderDelivered: true,
+    orderCancelled: true,
+    orderRefunded: true,
+    reviewRequest: true,
+    reviewRequestDelayDays: 3,
+    newOrderNotification: true,
+    lowStockNotification: true,
+};
+
+const defaultMarketingSettings: MarketingEmailSettings = {
+    enabled: false,
+    welcomeEmail: true,
+    abandonedCartEnabled: false,
+    abandonedCartDelayHours: 1,
+    winBackEnabled: false,
+    winBackDelayDays: 30,
+};
+
+const defaultEmailSettings: Partial<EmailSettings> = {
+    provider: 'resend',
+    apiKeyConfigured: false,
+    fromEmail: '',
+    fromName: '',
+    primaryColor: '#4f46e5',
+    transactional: defaultTransactionalSettings,
+    marketing: defaultMarketingSettings,
+};
+
 
 export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Get project context for project-scoped data operations
     const projectContext = useSafeProject();
     const projectActiveId = projectContext?.activeProjectId || null;
-    
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDashboardSidebarCollapsed, setIsDashboardSidebarCollapsed] = useState(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -630,7 +663,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 // We don't need a local API key - the proxy handles authentication
                 // Import shouldUseProxy to check if proxy is active
                 const { shouldUseProxy } = await import('../utils/geminiProxyClient');
-                
+
                 if (shouldUseProxy()) {
                     console.log('✅ [checkApiKey] Using secure proxy - API key managed by server');
                     setHasApiKey(true);
@@ -850,7 +883,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         setIsFilesLoading(true);
         try {
             // Project-scoped path if projectId is provided, otherwise user-level (legacy)
-            const filesPath = projectId 
+            const filesPath = projectId
                 ? `users/${userId}/projects/${projectId}/files`
                 : `users/${userId}/files`;
             const filesCol = collection(db, filesPath);
@@ -872,9 +905,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const q = query(domainsCol, orderBy('createdAt', 'desc'));
             const snap = await getDocs(q);
             // IMPORTANT: docSnapshot.id must come AFTER ...data to override any "id" field
-            const userDomains = snap.docs.map(docSnapshot => ({ 
-                ...docSnapshot.data(), 
-                id: docSnapshot.id 
+            const userDomains = snap.docs.map(docSnapshot => ({
+                ...docSnapshot.data(),
+                id: docSnapshot.id
             } as Domain));
             setDomains(userDomains);
         } catch (error) {
@@ -1349,7 +1382,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (obj === null || obj === undefined) return null;
         if (typeof obj !== 'object') return obj;
         if (Array.isArray(obj)) return obj.map(removeUndefinedValues);
-        
+
         const cleaned: any = {};
         for (const key in obj) {
             if (obj[key] !== undefined) {
@@ -1487,7 +1520,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         if (section) {
             setIsSidebarOpen(true);
         }
-        
+
         // Scroll to section in preview - use setTimeout to ensure DOM is ready
         setTimeout(() => {
             const element = document.getElementById(section);
@@ -1496,10 +1529,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const container = previewRef.current;
                 const elementRect = element.getBoundingClientRect();
                 const containerRect = container.getBoundingClientRect();
-                
+
                 // Calculate scroll position to center the element
                 const scrollTop = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
-                
+
                 container.scrollTo({
                     top: Math.max(0, scrollTop),
                     behavior: 'smooth'
@@ -2293,6 +2326,27 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // Use the object directly to avoid race condition with state update
             loadProject(newProjectWithId.id, false, true, newProjectWithId);
 
+            // Initialize Email Settings with Project Colors
+            try {
+                console.log("📧 [addNewProject] Initializing email settings with project colors...");
+                const settingsPath = `users/${user.uid}/projects/${newProjectWithId.id}/settings/email`;
+                const settingsRef = doc(db, settingsPath);
+
+                // Construct default settings with project colors
+                const emailSettings: Partial<EmailSettings> = {
+                    ...defaultEmailSettings,
+                    primaryColor: project.theme?.globalColors?.primary || defaultEmailSettings.primaryColor,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                };
+
+                await setDoc(settingsRef, emailSettings);
+                console.log("✅ [addNewProject] Initialized email settings with primary color:", emailSettings.primaryColor);
+            } catch (emailError) {
+                console.warn("⚠️ [addNewProject] Failed to initialize email settings:", emailError);
+                // Non-blocking error, allow project creation to complete
+            }
+
             // Trigger Image Auto-Generation for Wizard-created projects
             if (newProjectWithId.imagePrompts && Object.keys(newProjectWithId.imagePrompts).length > 0) {
                 console.log("🖼️ [addNewProject] Starting image generation...", {
@@ -2679,7 +2733,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const promptForKeySelection = async () => {
         console.log('🔑 [promptForKeySelection] Attempting to get API key...');
         const aiStudio = typeof window !== 'undefined' ? (window as any).aistudio : undefined;
-        
+
         if (typeof aiStudio?.openSelectKey === 'function') {
             console.log('🔑 [promptForKeySelection] AI Studio available, opening key selector...');
             await aiStudio.openSelectKey();
@@ -3506,9 +3560,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             try {
                 const publicStoreRef = doc(db, 'publicStores', activeProjectId);
                 const publicStoreSnap = await getDoc(publicStoreRef);
-                
+
                 if (publicStoreSnap.exists()) {
-                    await updateDoc(publicStoreRef, { 
+                    await updateDoc(publicStoreRef, {
                         seoConfig: newConfig,
                         updatedAt: new Date().toISOString()
                     });
@@ -3535,10 +3589,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
             const leadsCol = collection(db, leadsPath);
             const now = serverTimestamp();
-            const docRef = await addDoc(leadsCol, { 
-                ...leadData, 
+            const docRef = await addDoc(leadsCol, {
+                ...leadData,
                 projectId: activeProjectId,
-                createdAt: now 
+                createdAt: now
             });
             // Optimistic update via listener
             return docRef.id;
@@ -3678,10 +3732,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Domain Logic - Enhanced with Cloud Functions for custom domains
     const addDomain = async (domainData: Domain) => {
         if (!user) return;
-        
+
         const newDomain = { ...domainData, createdAt: new Date().toISOString() };
         setDomains(prev => [newDomain, ...prev]); // Optimistic update
-        
+
         try {
             // If this is an external domain being connected to a project,
             // also register it in the global customDomains collection via Cloud Function
@@ -3689,7 +3743,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 try {
                     const { addCustomDomainToProject } = await import('../services/domainService');
                     const result = await addCustomDomainToProject(domainData.name, domainData.projectId);
-                    
+
                     if (result.success && result.dnsRecords) {
                         // Update with DNS records from Cloud Function
                         newDomain.dnsRecords = result.dnsRecords;
@@ -3701,14 +3755,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // Continue with local storage even if Cloud Function fails
                 }
             }
-            
+
             // Always save to user's domains collection
             const domainsCol = collection(db, 'users', user.uid, 'domains');
             await setDoc(doc(domainsCol, domainData.id), newDomain);
-            
+
             // Update state with final data
             setDomains(prev => prev.map(d => d.id === domainData.id ? newDomain : d));
-            
+
         } catch (e) {
             console.error("Error adding domain", e);
             // Revert optimistic update on error
@@ -3729,10 +3783,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
     const deleteDomain = async (id: string) => {
         if (!user) return;
-        
+
         const domain = domains.find(d => d.id === id);
         setDomains(prev => prev.filter(d => d.id !== id));
-        
+
         try {
             // If it's an external domain, also remove from global collection
             if (domain?.provider === 'External') {
@@ -3743,7 +3797,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     console.warn('Cloud Function call failed:', cfError);
                 }
             }
-            
+
             const docRef = doc(db, 'users', user.uid, 'domains', id);
             await deleteDoc(docRef);
         } catch (e) {
@@ -3849,7 +3903,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // Handle Cloud Run / SSR Mapping (Direct Firestore Write)
             if (provider === 'cloud_run' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
-                
+
                 // Direct write to customDomains collection
                 await setDoc(doc(db, 'customDomains', normalizedDomain), {
                     domain: normalizedDomain,

@@ -36,6 +36,7 @@ export interface ChatAppointmentData {
     participantEmail?: string;
     participantPhone?: string;
     linkedLeadId?: string;
+    conversationTranscript?: string; // Full chat transcript to include in lead
 }
 
 // Simplified appointment info for availability checking
@@ -170,6 +171,107 @@ const calculateLeadScore = (
 };
 
 // =============================================================================
+// CUSTOMER INTENT ANALYSIS (for Lead Capture)
+// =============================================================================
+
+interface CustomerIntentAnalysis {
+    customerInterest: string;  // What the customer wants/needs
+    urgency: 'low' | 'medium' | 'high';
+    recommendedAction: string;
+    intentScore: number;
+}
+
+/**
+ * Analyzes conversation to extract customer intent using LLM
+ * This provides valuable context for sales team when following up leads
+ */
+const analyzeCustomerIntent = async (
+    messages: Message[],
+    projectName: string,
+    userId?: string
+): Promise<CustomerIntentAnalysis | null> => {
+    // Skip if conversation is too short
+    if (messages.filter(m => m.role === 'user').length < 1) {
+        return null;
+    }
+
+    try {
+        const conversationText = messages
+            .map(m => `${m.role === 'user' ? 'Cliente' : 'Asistente'}: ${m.text}`)
+            .join('\n');
+
+        const prompt = `Analiza esta conversación de chatbot y extrae información clave del cliente.
+
+CONVERSACIÓN:
+${conversationText}
+
+Responde SOLO en formato JSON válido:
+{
+    "customerInterest": "Resumen breve de qué producto/servicio busca el cliente o qué problema quiere resolver (máximo 150 caracteres)",
+    "urgency": "low" | "medium" | "high",
+    "recommendedAction": "Acción específica recomendada para el equipo de ventas (ej: 'Llamar para ofrecer demo', 'Enviar cotización', etc.)",
+    "intentScore": número del 0-100 indicando qué tan listo está para comprar
+}
+
+CRITERIOS DE URGENCIA:
+- high: Menciona precios, quiere comprar pronto, pide cotización
+- medium: Hace preguntas específicas sobre productos/servicios
+- low: Solo explorando o haciendo preguntas generales`;
+
+        const response = await generateContentViaProxy(
+            projectName || 'lead-intent-analysis',
+            prompt,
+            'gemini-2.0-flash-exp',
+            { temperature: 0.3, maxOutputTokens: 500 },
+            userId
+        );
+
+        // Extract text from response
+        let responseText = '';
+        if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            responseText = response.candidates[0].content.parts[0].text;
+        }
+
+        if (!responseText) {
+            console.warn('[ChatCore] Empty response from intent analysis');
+            return null;
+        }
+
+        // Clean and parse JSON
+        const cleanedText = responseText
+            .replace(/```json\n?/gi, '')
+            .replace(/```\n?/g, '')
+            .trim();
+
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            console.warn('[ChatCore] Could not extract JSON from intent analysis');
+            return null;
+        }
+
+        const analysis = JSON.parse(jsonMatch[0]);
+
+        // Validate required fields
+        if (!analysis.customerInterest || !analysis.recommendedAction) {
+            console.warn('[ChatCore] Missing required fields in intent analysis');
+            return null;
+        }
+
+        console.log('[ChatCore] ✅ Customer intent analyzed:', analysis);
+        return {
+            customerInterest: analysis.customerInterest.slice(0, 200),
+            urgency: ['low', 'medium', 'high'].includes(analysis.urgency) ? analysis.urgency : 'medium',
+            recommendedAction: analysis.recommendedAction.slice(0, 150),
+            intentScore: Math.min(100, Math.max(0, Number(analysis.intentScore) || 50))
+        };
+
+    } catch (error) {
+        console.error('[ChatCore] Error analyzing customer intent:', error);
+        return null;
+    }
+};
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
@@ -235,6 +337,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Chat State
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
+    const messagesRef = useRef<Message[]>([]); // Ref to always have current messages
     const [isLoading, setIsLoading] = useState(false);
 
     // Lead Capture State
@@ -293,6 +396,11 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             setGlobalPrompts(prompts);
         }).catch(console.error);
     }, []);
+
+    // Keep messagesRef in sync with messages state (for use in callbacks)
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
 
     // =============================================================================
     // SYSTEM INSTRUCTION BUILDER
@@ -565,6 +673,18 @@ ${suggestAvailableSlots()}
         };
     }, [messages, capturedLeadIdRef.current]);
 
+    // Auto-save transcript after each message exchange (if lead is captured)
+    useEffect(() => {
+        if (capturedLeadIdRef.current && messages.length > 0) {
+            // Debounce: save after 3 seconds of the last message
+            const timeoutId = setTimeout(() => {
+                saveFinalTranscriptToLead();
+            }, 3000);
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [messages]);
+
     // =============================================================================
     // LEAD CAPTURE HANDLERS
     // =============================================================================
@@ -574,8 +694,19 @@ ${suggestAvailableSlots()}
         if (!preChatData.email || !preChatData.name) return;
 
         try {
-            const conversationText = messages.map(m => `${m.role}: ${m.text} `).join('\n');
+            const conversationText = messages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
+            console.log('[ChatCore] 📝 handlePreChatSubmit - Transcript generated:', {
+                messageCount: messages.length,
+                transcriptLength: conversationText.length,
+                transcriptPreview: conversationText.substring(0, 300)
+            });
             const leadScore = calculateLeadScore(preChatData, messages, false);
+
+            // Analyze customer intent using LLM (if there's conversation history)
+            const intentAnalysis = messages.length > 0
+                ? await analyzeCustomerIntent(messages, project?.name || 'chatbot', user?.uid)
+                : null;
 
             // Create conversation for Inbox with participant info
             const convId = await getOrCreateConversation({
@@ -592,10 +723,14 @@ ${suggestAvailableSlots()}
                     status: 'new',
                     message: t('chatbotWidget.leadSourcePreChat'),
                     value: 0,
-                    leadScore,
+                    leadScore: intentAnalysis?.intentScore || leadScore,
                     conversationTranscript: conversationText,
                     tags: ['chatbot', 'pre-chat-form'],
-                    notes: t('chatbotWidget.leadNotesPreChat')
+                    notes: t('chatbotWidget.leadNotesPreChat'),
+                    // Include AI-analyzed customer intent
+                    aiAnalysis: intentAnalysis?.customerInterest || undefined,
+                    recommendedAction: intentAnalysis?.recommendedAction || undefined,
+                    aiScore: intentAnalysis?.intentScore || undefined,
                 });
                 if (leadId) {
                     capturedLeadIdRef.current = leadId;
@@ -623,9 +758,22 @@ ${suggestAvailableSlots()}
         if (!quickLeadEmail) return;
 
         try {
-            const conversationText = messages.map(m => `${m.role}: ${m.text} `).join('\n');
+            const conversationText = messages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
+            console.log('[ChatCore] 📝 handleQuickLeadCapture - Transcript generated:', {
+                messageCount: messages.length,
+                transcriptLength: conversationText.length,
+                transcriptPreview: conversationText.substring(0, 300)
+            });
             const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text));
             const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
+
+            // Analyze customer intent using LLM
+            const intentAnalysis = await analyzeCustomerIntent(
+                messages,
+                project?.name || 'chatbot',
+                user?.uid
+            );
 
             // Update participant info in conversation for Inbox
             await updateParticipantInfo({
@@ -640,10 +788,14 @@ ${suggestAvailableSlots()}
                     status: 'new',
                     message: t('chatbotWidget.leadSourceConversation'),
                     value: 0,
-                    leadScore,
+                    leadScore: intentAnalysis?.intentScore || leadScore,
                     conversationTranscript: conversationText,
                     tags: ['chatbot', 'mid-conversation', hasHighIntent ? 'high-intent' : 'low-intent'],
-                    notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length })
+                    notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length }),
+                    // Include AI-analyzed customer intent
+                    aiAnalysis: intentAnalysis?.customerInterest || undefined,
+                    recommendedAction: intentAnalysis?.recommendedAction || undefined,
+                    aiScore: intentAnalysis?.intentScore || undefined,
                 });
                 if (leadId) {
                     capturedLeadIdRef.current = leadId;
@@ -718,6 +870,15 @@ ${suggestAvailableSlots()}
             const durationMinutes = parseInt(appointmentForm.duration) || 60;
             const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
+            // Generate transcript for the lead
+            const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
+            console.log('[ChatCore] 📝 Generating transcript for appointment:', {
+                messagesCount: messagesRef.current.length,
+                transcriptLength: transcriptForLead.length,
+                transcriptPreview: transcriptForLead.substring(0, 500)
+            });
+
             const appointmentData: ChatAppointmentData = {
                 title: `Cita - ${appointmentForm.name} `,
                 description: appointmentForm.notes || `Cita agendada por ${appointmentForm.name} a través del chat`,
@@ -728,6 +889,7 @@ ${suggestAvailableSlots()}
                 participantEmail: appointmentForm.email,
                 participantPhone: appointmentForm.phone || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
+                conversationTranscript: transcriptForLead, // Include full chat history
             };
 
             console.log('[ChatCore] 📅 Calling onCreateAppointment...');
@@ -900,6 +1062,8 @@ ${suggestAvailableSlots()}
             extractedDate.setHours(hours, minutes, 0, 0);
 
             // Create appointment with extracted data
+            const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
             const appointmentData: ChatAppointmentData = {
                 title: `Cita - ${clientName || 'Cliente'} `,
                 description: `Cita agendada a través del chat.Contexto: ${response.substring(0, 200)} `,
@@ -909,6 +1073,7 @@ ${suggestAvailableSlots()}
                 participantName: clientName || undefined,
                 participantEmail: clientEmail || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
+                conversationTranscript: transcriptForLead,
             };
 
             console.log('[ChatCore] 📅 Attempting to create appointment with data:', {
@@ -970,6 +1135,8 @@ ${suggestAvailableSlots()}
             endDate = new Date(startDate.getTime() + duration * 60000);
         }
 
+        const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
         const appointmentData: ChatAppointmentData = {
             title: data.title || 'Cita desde Chat',
             description: data.notes || `Cita agendada por ${data.name || 'cliente'} a través del chat`,
@@ -980,6 +1147,7 @@ ${suggestAvailableSlots()}
             participantEmail: data.email,
             participantPhone: data.phone,
             linkedLeadId: capturedLeadIdRef.current || undefined,
+            conversationTranscript: transcriptForLead,
         };
 
         try {
@@ -1496,6 +1664,8 @@ ${suggestAvailableSlots()}
 
                 const endDate = new Date(startDate.getTime() + 60 * 60000); // 1 hour
 
+                const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+
                 const appointmentData: ChatAppointmentData = {
                     title: `Cita por voz - ${nameMatch?.[1]?.trim() || 'Cliente'} `,
                     description: `Cita agendada durante llamada de voz`,
@@ -1505,6 +1675,7 @@ ${suggestAvailableSlots()}
                     participantName: nameMatch?.[1]?.trim() || 'Cliente de llamada',
                     participantEmail: emailMatch?.[1] || '',
                     linkedLeadId: capturedLeadIdRef.current || undefined,
+                    conversationTranscript: transcriptForLead,
                 };
 
                 try {

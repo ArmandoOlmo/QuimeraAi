@@ -180,7 +180,9 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     // Use global upgrade context if available
     const upgradeContext = useSafeUpgrade();
     const { isUserOwner, userDocument, loadingAuth } = useAuth();
-    const isOwner = isUserOwner || userDocument?.role === 'owner';
+    // Check role first (most reliable), then email-based owner check as fallback
+    const userRole = userDocument?.role;
+    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);

@@ -44,7 +44,9 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const isOwner = isUserOwner || userDocument?.role === 'owner';
+    // Check role first (most reliable), then email-based owner check as fallback
+    const userRole = userDocument?.role;
+    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     const tenantId = tenantContext?.currentTenant?.id;
 

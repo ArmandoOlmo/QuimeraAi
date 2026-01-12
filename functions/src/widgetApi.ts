@@ -48,13 +48,14 @@ async function checkRateLimit(projectId: string, identifier: string): Promise<Ra
             const ownerId = data?.userId;
 
             // Check by ID or if the role in the owner doc is 'owner'
-            if (ownerId && (isOwner(ownerId) || ownerId === 'armandoolmomiranda@gmail.com')) {
+            if (ownerId && isOwner(ownerId)) {
                 return { allowed: true, remaining: 1000 };
             }
 
             if (ownerId) {
                 const ownerDoc = await db.collection('users').doc(ownerId).get();
-                if (ownerDoc.exists && ownerDoc.data()?.role === 'owner') {
+                const ownerRole = ownerDoc.exists ? ownerDoc.data()?.role : null;
+                if (ownerRole === 'owner' || ownerRole === 'superadmin') {
                     return { allowed: true, remaining: 1000 };
                 }
             }
@@ -378,29 +379,31 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
 
         let leadRef;
 
-        // Save to the project owner's libraryLeads collection (preferred)
-        // This ensures leads appear in the user's dashboard
-        if (userId) {
+        // Save to the project owner's CRM leads collection
+        // Path: users/{userId}/projects/{projectId}/leads
+        // This ensures leads appear correctly in the LeadsDashboard
+        if (userId && projectId) {
             leadRef = await db.collection('users').doc(userId)
-                .collection('libraryLeads').add(lead);
+                .collection('projects').doc(projectId)
+                .collection('leads').add(lead);
 
-            // Successfully saved to user's library
+            console.log(`[WidgetAPI] Lead saved to users/${userId}/projects/${projectId}/leads/${leadRef.id}`);
         } else {
             // Fallback: save to top-level leads collection
             leadRef = await db.collection('leads').add({
                 ...lead,
-                _warning: 'Could not determine project owner, saved to top-level collection'
+                _warning: 'Could not determine project owner or projectId, saved to top-level collection'
             });
 
             // Log activity in subcollection
             await db.collection('leads').doc(leadRef.id).collection('activities').add({
                 type: 'note',
-                description: 'Lead captured from embedded widget',
+                description: 'Lead captured from embedded widget (fallback path)',
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 user: 'system'
             });
 
-            // Saved to fallback collection
+            console.warn('[WidgetAPI] Lead saved to fallback collection - userId or projectId missing');
         }
 
         res.status(201).json({

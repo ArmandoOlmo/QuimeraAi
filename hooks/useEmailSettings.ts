@@ -364,6 +364,10 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         type: string;
         content?: string;
         audienceType?: string;
+        previewText?: string;
+        htmlContent?: string;
+        emailDocument?: any;
+        audienceSegmentId?: string;
     }) => {
         if (!userId || !projectId || projectId === 'default') return null;
 
@@ -371,8 +375,17 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         try {
             const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
             const campaignsRef = collection(db, campaignsPath);
-            const newCampaign = {
-                ...campaignData,
+            // Sanitize to remove undefined values which Firestore rejects
+            const sanitizedData: any = {};
+            Object.keys(campaignData).forEach(key => {
+                const val = (campaignData as any)[key];
+                if (val !== undefined) {
+                    sanitizedData[key] = val;
+                }
+            });
+
+            const finalCampaign = {
+                ...sanitizedData,
                 status: 'draft',
                 stats: {
                     totalRecipients: 0,
@@ -390,8 +403,8 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
                 updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(campaignsRef, newCampaign);
-            return { id: docRef.id, ...newCampaign };
+            const docRef = await addDoc(campaignsRef, finalCampaign);
+            return { id: docRef.id, ...finalCampaign };
         } catch (err) {
             console.error('Error creating campaign:', err);
             throw err;
@@ -408,8 +421,17 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         try {
             const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
             const campaignRef = doc(db, campaignsPath, campaignId);
+
+            // Sanitize updates to remove undefined values
+            const sanitizedUpdates: any = {};
+            Object.keys(updates).forEach(key => {
+                if (updates[key] !== undefined) {
+                    sanitizedUpdates[key] = updates[key];
+                }
+            });
+
             await updateDoc(campaignRef, {
-                ...updates,
+                ...sanitizedUpdates,
                 updatedAt: serverTimestamp(),
             });
         } catch (err) {
@@ -653,7 +675,7 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         try {
             const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
             const audiencesRef = collection(db, audiencesPath);
-            
+
             const newAudience = {
                 ...audienceData,
                 estimatedCount: 0,
@@ -700,7 +722,7 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         try {
             const audiencePath = `users/${userId}/projects/${projectId}/emailAudiences`;
             const audienceRef = doc(db, audiencePath, audienceId);
-            
+
             await updateDoc(audienceRef, {
                 ...updates,
                 updatedAt: serverTimestamp(),

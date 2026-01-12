@@ -66,12 +66,22 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
     // Handle lead capture
     const handleLeadCapture = async (leadData: Partial<any>): Promise<string | undefined> => {
+        console.log('[ChatSimulator] 📝 handleLeadCapture called with:', {
+            name: leadData.name,
+            email: leadData.email,
+            hasTranscript: !!leadData.conversationTranscript,
+            transcriptLength: leadData.conversationTranscript?.length || 0,
+            transcriptPreview: leadData.conversationTranscript?.substring(0, 200)
+        });
+
         const leadId = await addLead({
             ...leadData,
             source: 'quimera-chat',
             status: 'new',
             tags: ['quimera-chat', ...(leadData.tags || [])]
         });
+
+        console.log('[ChatSimulator] ✅ Lead created with ID:', leadId);
         return leadId;
     };
 
@@ -170,14 +180,23 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                         status: 'new',
                         message: `Cita agendada: ${appointmentData.title}`,
                         tags: ['quimera-chat', 'appointment-scheduled'],
-                        notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()}`
+                        notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()}`,
                     };
+                    // Only add conversationTranscript if it has content
+                    if (appointmentData.conversationTranscript && appointmentData.conversationTranscript.length > 0) {
+                        leadData.conversationTranscript = appointmentData.conversationTranscript;
+                    }
                     // Only add email/phone if they have values (Firebase doesn't accept undefined)
                     if (appointmentData.participantEmail) leadData.email = appointmentData.participantEmail;
                     if (appointmentData.participantPhone) leadData.phone = appointmentData.participantPhone;
 
+                    console.log('[ChatSimulator] 📝 Creating lead from appointment with transcript:', {
+                        hasTranscript: !!appointmentData.conversationTranscript,
+                        transcriptLength: appointmentData.conversationTranscript?.length || 0
+                    });
+
                     await addLead(leadData);
-                    console.log('[ChatSimulator] ✅ Lead created for appointment');
+                    console.log('[ChatSimulator] ✅ Lead created for appointment with transcript');
                 } catch (leadError) {
                     console.error('[ChatSimulator] ⚠️ Error creating lead (appointment still created):', leadError);
                 }

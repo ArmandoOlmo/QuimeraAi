@@ -149,13 +149,14 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
     try {
         // Fast direct check if userId is the email (sometimes happens in certain flows)
         // or if we can verify the role quickly.
-        if (userId && (isOwner(userId) || userId === 'armandoolmomiranda@gmail.com')) {
+        if (userId && isOwner(userId)) {
             return { allowed: true, remaining: 1000 };
         }
 
         if (userId && userId !== 'unknown' && userId !== 'anonymous' && userId !== 'system') {
             const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists && userDoc.data()?.role === 'owner') {
+            const userRole = userDoc.exists ? userDoc.data()?.role : null;
+            if (userRole === 'owner' || userRole === 'superadmin') {
                 return { allowed: true, remaining: 1000 };
             }
         }
@@ -410,15 +411,16 @@ async function trackUsage(
         const effectiveTenantId = tenantId || await getTenantIdForUser(userId);
 
         if (effectiveTenantId) {
-            // SECURITY: Skip credit consumption for the OWNER (Armando)
-            if (userId && (isOwner(userId) || userId === 'armandoolmomiranda@gmail.com')) {
+            // SECURITY: Skip credit consumption for the OWNER
+            if (userId && isOwner(userId)) {
                 console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);
                 return;
             }
 
             const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists && userDoc.data()?.role === 'owner') {
-                console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);
+            const userRole = userDoc.exists ? userDoc.data()?.role : null;
+            if (userRole === 'owner' || userRole === 'superadmin') {
+                console.log(`[trackUsage] Bypassing credit consumption for owner/superadmin: ${userId}`);
                 return;
             }
 

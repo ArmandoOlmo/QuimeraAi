@@ -5,60 +5,60 @@
    QUIMERA THEME CSS VARIABLES
    ============================================ */
 
-/* Light Mode (Default) */
+/* Light Mode (Default) - Claude-inspired palette with Cadmium Yellow accent */
 :root,
 html.light {
-  /* Background & Foreground */
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
+  /* Background & Foreground - Pampas (#F4F3EE) inspired */
+  --background: 40 33% 95%;
+  --foreground: 30 10% 20%;
   
-  /* Card */
+  /* Card - Pure White */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 30 10% 20%;
   
-  /* Popover */
+  /* Popover - Pure White */
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 30 10% 20%;
   
-  /* Primary - Cadmium Yellow */
+  /* Primary - Cadmium Yellow (preserved) */
   --primary: 41 96% 58%;
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 30 10% 15%;
   
-  /* Secondary */
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222 47% 11.2%;
+  /* Secondary - Cloudy (#B1ADA1) inspired */
+  --secondary: 36 8% 90%;
+  --secondary-foreground: 30 10% 20%;
   
-  /* Muted */
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215 16% 47%;
+  /* Muted - Cloudy tones */
+  --muted: 36 8% 90%;
+  --muted-foreground: 36 8% 50%;
   
-  /* Accent */
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222 47% 11.2%;
+  /* Accent - Cadmium Yellow tint (preserved yellow theme) */
+  --accent: 41 40% 94%;
+  --accent-foreground: 30 10% 20%;
   
   /* Destructive */
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
   
-  /* Border & Input */
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
+  /* Border & Input - Cloudy inspired */
+  --border: 36 12% 85%;
+  --input: 36 12% 85%;
   --ring: 41 96% 58%;
   
   /* Radius */
   --radius: 0.375rem;
 
-  /* Editor Specific */
-  --editor-bg: #F3F4F6;
+  /* Editor Specific - Updated for Claude aesthetic */
+  --editor-bg: #F4F3EE;
   --editor-panel-bg: #FFFFFF;
-  --editor-border: #E5E7EB;
+  --editor-border: #D9D6CE;
   --editor-accent: #FBB92B;
-  --editor-text-primary: #111827;
-  --editor-text-secondary: #6B7280;
+  --editor-text-primary: #33302B;
+  --editor-text-secondary: #7A746A;
 
   /* Site Content Colors */
-  --site-heading-color: #111827;
-  --site-body-color: #4B5563;
+  --site-heading-color: #33302B;
+  --site-body-color: #5C5750;
 
   /* Blue Violet Palette */
   --color-blue-violet-50: #f2e9fc;

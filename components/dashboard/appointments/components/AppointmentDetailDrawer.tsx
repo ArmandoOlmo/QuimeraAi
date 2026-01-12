@@ -153,9 +153,9 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
     if (!appointment) return null;
 
-    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
-    const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status];
-    const priorityConfig = APPOINTMENT_PRIORITY_CONFIGS[appointment.priority];
+    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type] || APPOINTMENT_TYPE_CONFIGS.video_call;
+    const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status] || APPOINTMENT_STATUS_CONFIGS.scheduled;
+    const priorityConfig = APPOINTMENT_PRIORITY_CONFIGS[appointment.priority] || APPOINTMENT_PRIORITY_CONFIGS.medium;
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
     const duration = calculateDuration(appointment.startDate, appointment.endDate);

@@ -30,26 +30,26 @@ interface CRMContextType {
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
-    
+
     // Lead Activities
     leadActivities: LeadActivity[];
     addLeadActivity: (leadId: string, activity: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId' | 'projectId'>) => Promise<void>;
     getLeadActivities: (leadId: string) => LeadActivity[];
-    
+
     // Lead Tasks
     leadTasks: LeadTask[];
     addLeadTask: (leadId: string, task: Omit<LeadTask, 'id' | 'createdAt' | 'leadId' | 'projectId'>) => Promise<void>;
     updateLeadTask: (taskId: string, data: Partial<LeadTask>) => Promise<void>;
     deleteLeadTask: (taskId: string) => Promise<void>;
     getLeadTasks: (leadId: string) => LeadTask[];
-    
+
     // Leads Library
     libraryLeads: LibraryLead[];
     isLoadingLibraryLeads: boolean;
     addLibraryLead: (lead: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported' | 'projectId'>) => Promise<void>;
     deleteLibraryLead: (leadId: string) => Promise<void>;
     importLibraryLead: (leadId: string) => Promise<void>;
-    
+
     // Project info
     hasActiveProject: boolean;
     activeProjectId: string | null;
@@ -61,17 +61,17 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { user } = useAuth();
     const projectContext = useSafeProject();
     const activeProjectId = projectContext?.activeProjectId || null;
-    
+
     // Leads State
     const [leads, setLeads] = useState<Lead[]>([]);
     const [isLoadingLeads, setIsLoadingLeads] = useState(false);
-    
+
     // Activities State
     const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
-    
+
     // Tasks State
     const [leadTasks, setLeadTasks] = useState<LeadTask[]>([]);
-    
+
     // Library Leads State
     const [libraryLeads, setLibraryLeads] = useState<LibraryLead[]>([]);
     const [isLoadingLibraryLeads, setIsLoadingLibraryLeads] = useState(false);
@@ -213,14 +213,28 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             return undefined;
         }
 
+        // Debug: Log what we're saving
+        console.log('[CRMContext] 📝 addLead called with:', {
+            name: leadData.name,
+            email: leadData.email,
+            source: leadData.source,
+            hasTranscript: !!leadData.conversationTranscript,
+            transcriptLength: leadData.conversationTranscript?.length || 0,
+            transcriptPreview: leadData.conversationTranscript?.substring(0, 200)
+        });
+
         try {
             const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
+            console.log('[CRMContext] 📍 Saving to path:', leadsPath);
+
             const docRef = await addDoc(collection(db, leadsPath), {
                 ...leadData,
                 projectId: activeProjectId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
+
+            console.log('[CRMContext] ✅ Lead saved with ID:', docRef.id);
             return docRef.id;
         } catch (error) {
             console.error("[CRMContext] Error adding lead:", error);

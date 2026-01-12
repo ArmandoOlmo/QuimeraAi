@@ -105,7 +105,9 @@ export interface UseAiCreditsResult {
 export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     const { tenantId, userId, autoRefresh = true, refreshInterval = 60000 } = options;
     const { userDocument, isUserOwner, loadingAuth } = useAuth();
-    const isOwner = isUserOwner || userDocument?.role === 'owner';
+    // Check role first (most reliable), then email-based owner check as fallback
+    const userRole = userDocument?.role;
+    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     // State
     const [isLoading, setIsLoading] = useState(true);

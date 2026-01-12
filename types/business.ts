@@ -177,6 +177,7 @@ export interface Lead {
     expectedCloseDate?: { seconds: number; nanoseconds: number };
     leadScore?: number;
     conversationTranscript?: string;
+    emailDraft?: string; // Persisted email draft
 
     // Notes & Tags
     notes?: string;

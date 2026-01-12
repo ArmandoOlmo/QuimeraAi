@@ -85,6 +85,14 @@
         "function": "gemini-usage"
       },
       {
+        "source": "/api/widget/*/leads",
+        "function": "submitWidgetLead"
+      },
+      {
+        "source": "/api/widget/*/analytics",
+        "function": "trackWidgetAnalytics"
+      },
+      {
         "source": "/api/widget/**",
         "function": "getWidgetConfig"
       },
@@ -95,4 +103,3 @@
     ]
   }
 }
-

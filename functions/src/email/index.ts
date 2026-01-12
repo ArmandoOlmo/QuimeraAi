@@ -40,12 +40,14 @@ export { onLeadCreatedSendEmail, onLeadScoreUpdate } from './triggers/leadTrigge
 export { onUserCreatedSendWelcomeEmail, onUserEmailVerified } from './triggers/userTriggers';
 
 // Marketing
-export { 
-    sendCampaign, 
+export {
+    sendCampaign,
     sendCampaignToSegment,
     processScheduledCampaigns,
-    sendTestEmail 
+    sendTestEmail
 } from './marketing/campaignService';
+
+export { sendDirectEmail } from './marketing/directEmail';
 
 
 

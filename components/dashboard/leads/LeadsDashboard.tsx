@@ -1,6 +1,8 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useUI } from '../../../contexts/core/UIContext';
 import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
@@ -13,7 +15,7 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X
+    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
@@ -29,22 +31,24 @@ import AddLeadModal from './AddLeadModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 import { useTranslation } from 'react-i18next';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 
 // Helper to clean JSON from markdown code blocks and fix common issues
 const cleanJsonResponse = (text: string): string => {
     if (!text) return '{}';
-    
+
     // Remove markdown code blocks
     let cleaned = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '');
     // Trim whitespace
     cleaned = cleaned.trim();
-    
+
     // Find JSON array or object
     const jsonMatch = cleaned.match(/[\[{][\s\S]*[\]}]/);
     if (jsonMatch) {
         cleaned = jsonMatch[0];
     }
-    
+
     // Fix common JSON issues from LLM
     // Remove trailing commas before } or ]
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
@@ -54,7 +58,7 @@ const cleanJsonResponse = (text: string): string => {
     cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, '"$1 $2"');
     // Remove any control characters except tab, newline, carriage return
     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ');
-    
+
     return cleaned;
 };
 
@@ -105,9 +109,10 @@ interface LeadCardProps {
     lead: Lead;
     onDragStart: (e: React.DragEvent, id: string) => void;
     onClick: (lead: Lead) => void;
+    onDelete: (leadId: string) => void;
 }
 
-const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
+const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelete }) => {
     const { t } = useTranslation();
     const { updateLead } = useCRM();
     const [showPalette, setShowPalette] = useState(false);
@@ -135,6 +140,20 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
             onClick={() => onClick(lead)}
             className={`${currentTheme.bg} ${currentTheme.border} group relative p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-lg transition-all cursor-grab active:cursor-grabbing mb-2 sm:mb-3`}
         >
+            {/* Delete Button - Top Right */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('¿Estás seguro de que deseas eliminar este lead?')) {
+                        onDelete(lead.id);
+                    }
+                }}
+                className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                title="Eliminar lead"
+            >
+                <Trash2 size={12} className="sm:hidden" />
+                <Trash2 size={14} className="hidden sm:block" />
+            </button>
             {/* Color Picker Popover */}
             {showPalette && (
                 <div
@@ -190,7 +209,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
                 </div>
             )}
 
-            <div className="flex justify-between items-start mb-1.5 sm:mb-2 flex-wrap gap-1.5 sm:gap-2">
+            <div className="flex justify-between items-start mb-1.5 sm:mb-2 flex-wrap gap-1.5 sm:gap-2 pr-7 sm:pr-8">
                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                     {/* Source Badge */}
                     {(() => {
@@ -229,7 +248,49 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick }) => {
             </div>
 
             <h4 className="font-bold text-foreground text-xs sm:text-sm mb-0.5 line-clamp-1">{lead.name}</h4>
-            {lead.company && <p className="text-[10px] sm:text-xs text-muted-foreground mb-1.5 sm:mb-2 line-clamp-1">{lead.company}</p>}
+            {lead.company && <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 sm:mb-1.5 line-clamp-1">{lead.company}</p>}
+
+            {/* Customer Interest Preview - from AI Analysis */}
+            {lead.aiAnalysis && (
+                <p className="text-[9px] sm:text-[10px] text-purple-500/80 bg-purple-500/10 px-1.5 py-0.5 rounded mb-1.5 sm:mb-2 line-clamp-2 italic" title={lead.aiAnalysis}>
+                    💡 {lead.aiAnalysis.length > 60 ? lead.aiAnalysis.slice(0, 60) + '...' : lead.aiAnalysis}
+                </p>
+            )}
+
+            {/* Conversation Transcript Preview */}
+            {(() => {
+                // Debug: log para ver qué leads tienen conversación
+                if ((lead.source === 'chatbot' || lead.source === 'chatbot-widget' || lead.source === 'quimera-chat') && !lead.conversationTranscript) {
+                    console.log(`[DEBUG] Lead ${lead.name} (${lead.source}) NO tiene conversationTranscript:`, lead);
+                }
+                return null;
+            })()}
+            {lead.conversationTranscript && (() => {
+                console.log(`[DEBUG] Lead ${lead.name} TIENE conversación con ${lead.conversationTranscript.length} caracteres`);
+                const messages = lead.conversationTranscript.split('\n').filter(line => line.trim());
+                const messageCount = messages.length;
+                const lastUserMessage = messages.reverse().find(msg =>
+                    msg.toLowerCase().includes('user:') ||
+                    msg.toLowerCase().includes('usuario:')
+                );
+                const preview = lastUserMessage
+                    ? lastUserMessage.replace(/^(user:|usuario:)/i, '').trim()
+                    : messages[0] || '';
+
+                return (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 mb-1.5 sm:mb-2">
+                        <div className="flex items-center gap-1 mb-1">
+                            <MessageSquare size={10} className="text-blue-500 shrink-0" />
+                            <span className="text-[9px] sm:text-[10px] text-blue-500 font-semibold">
+                                Conversación ({messageCount} mensajes)
+                            </span>
+                        </div>
+                        <p className="text-[8px] sm:text-[9px] text-muted-foreground line-clamp-2 italic pl-3.5">
+                            "{preview.length > 80 ? preview.slice(0, 80) + '...' : preview}"
+                        </p>
+                    </div>
+                );
+            })()}
 
             <div className="flex items-center justify-between mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border/50">
                 <span className="text-[8px] sm:text-[10px] text-muted-foreground flex items-center">
@@ -272,6 +333,8 @@ const LeadsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
+    const { setView } = useUI();
+    const { navigate } = useRouter();
     const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, hasActiveProject, isLoadingLeads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
@@ -309,7 +372,87 @@ const LeadsDashboard: React.FC = () => {
     // AI States
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isDrafting, setIsDrafting] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [emailDraft, setEmailDraft] = useState('');
+    const [isAnalyzingConversation, setIsAnalyzingConversation] = useState(false);
+    const [conversationAnalysis, setConversationAnalysis] = useState<string>('');
+
+    // Persistence Effect: Load saved data when opening a lead
+    useEffect(() => {
+        if (selectedLead) {
+            // Load saved analysis if exists
+            setConversationAnalysis(selectedLead.aiAnalysis || '');
+            // Load saved email draft if exists
+            setEmailDraft(selectedLead.emailDraft || '');
+        } else {
+            setConversationAnalysis('');
+            setEmailDraft('');
+        }
+    }, [selectedLead?.id]); // Only run when switching leads
+
+    // Calculate derived state
+
+    // Create test lead with conversation - SOLO PARA DEMOSTRACIÓN
+    useEffect(() => {
+        const createTestLead = async () => {
+            // Solo crear si hay menos de 3 leads para no saturar
+            if (leads.length < 15 && addLead) {
+                const testLeadExists = leads.some(l => l.email === 'demo-chatbot@quimera.com');
+
+                if (!testLeadExists) {
+                    await addLead({
+                        name: "María González",
+                        email: "demo-chatbot@quimera.com",
+                        phone: "+1 (555) 123-4567",
+                        company: "Tech Solutions Inc",
+                        status: 'new',
+                        source: 'chatbot-widget',
+                        value: 15000,
+                        leadScore: 85,
+                        conversationTranscript: `Usuario: Hola, buenos días
+
+Bot: ¡Hola María! 👋 Bienvenida a Quimera. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
+
+Usuario: Necesito un sitio web para mi empresa de tecnología
+
+Bot: ¡Excelente! Me encantaría ayudarte con eso. Cuéntame más sobre tu empresa y qué tipo de sitio web tienes en mente.
+
+Usuario: Somos una empresa de desarrollo de software y necesitamos un sitio corporativo moderno con portafolio de proyectos
+
+Bot: Perfecto, entiendo. Un sitio corporativo con portafolio es una excelente forma de mostrar tu trabajo. ¿Tienes alguna idea sobre el diseño o funcionalidades específicas que necesitas?
+
+Usuario: Sí, necesitamos que tenga una sección de blog, formulario de contacto, y que sea responsive. También queremos integrar nuestro sistema CRM
+
+Bot: Genial, esas son características muy importantes. La integración con CRM es clave para gestionar leads. ¿Qué presupuesto tienes estimado para este proyecto?
+
+Usuario: Tenemos un presupuesto de alrededor de $15,000
+
+Bot: Perfecto, ese presupuesto es adecuado para un proyecto de esta envergadura. ¿Cuándo te gustaría tener el sitio listo?
+
+Usuario: Idealmente en 2-3 meses. ¿Es posible?
+
+Bot: Sí, definitivamente es un timeline razonable. Te conectaré con uno de nuestros especialistas para que podamos discutir los detalles específicos y crear una propuesta personalizada. ¿Te parece bien si te contactamos mañana?
+
+Usuario: Perfecto, me parece bien
+
+Bot: ¡Excelente! Hemos registrado tu información. Un miembro de nuestro equipo se pondrá en contacto contigo mañana. ¿Hay algo más en lo que pueda ayudarte?
+
+Usuario: No, eso es todo por ahora. Gracias
+
+Bot: ¡Gracias a ti María! Que tengas un excelente día. 🚀`,
+                        tags: ['chatbot-widget', 'high-priority', 'demo'],
+                        notes: 'Lead demo creado automáticamente para mostrar funcionalidad de conversación del chatbot',
+                        aiAnalysis: 'Cliente interesado en sitio web corporativo con integración CRM. Presupuesto confirmado de $15,000. Timeline de 2-3 meses. Alto potencial de conversión.',
+                        aiScore: 85,
+                        recommendedAction: 'Contact within 24 hours'
+                    });
+                    console.log('✅ Lead de demostración creado con conversación del chatbot');
+                }
+            }
+        };
+
+        createTestLead();
+    }, [leads, addLead]);
 
     // --- Analytics Calculations ---
     const stats = useMemo(() => {
@@ -543,18 +686,30 @@ const LeadsDashboard: React.FC = () => {
 
         setIsAnalyzing(true);
         try {
+            const chatContext = selectedLead.conversationTranscript
+                ? `\nChatbot Conversation with this lead:\n${selectedLead.conversationTranscript}\n`
+                : '';
+            const previousAnalysis = selectedLead.aiAnalysis
+                ? `\nPrevious AI Analysis of this lead:\n${selectedLead.aiAnalysis}\n`
+                : '';
+
             const prompt = `
-                Analyze this sales lead based on professional criteria.
+                Analyze this sales lead based on professional criteria. Consider ALL available information.
+                
                 Lead Name: ${selectedLead.name}
+                Email: ${selectedLead.email || 'Unknown'}
+                Phone: ${selectedLead.phone || 'Unknown'}
                 Company: ${selectedLead.company || 'Unknown'}
-                Value: $${selectedLead.value}
-                Notes: ${selectedLead.notes}
+                Value: $${selectedLead.value || 0}
+                Notes: ${selectedLead.notes || 'None'}
+                ${chatContext}${previousAnalysis}
+                Based on ALL this information, provide a comprehensive analysis.
                 
                 Output ONLY valid JSON format:
                 {
-                    "score": number (0-100),
-                    "analysis": "1 sentence summary of potential",
-                    "action": "Recommended next step (Email, Call, Meeting, or Discard)"
+                    "score": number (0-100, based on engagement and interest level),
+                    "analysis": "1-2 sentence summary of potential including key insights from conversation",
+                    "action": "Recommended next step (Email, Call, Meeting, Demo, or Discard)"
                 }
             `;
 
@@ -609,12 +764,30 @@ const LeadsDashboard: React.FC = () => {
 
         setIsDrafting(true);
         try {
+            // Build context from conversation and previous analysis
+            const chatContext = selectedLead.conversationTranscript
+                ? `\nRecent conversation with this lead:\n${selectedLead.conversationTranscript}\n`
+                : '';
+            const analysisContext = selectedLead.aiAnalysis
+                ? `\nInsights about this lead:\n${selectedLead.aiAnalysis}\n`
+                : '';
+
             const prompt = `
-                Write a short, professional intro email to this lead.
+                Write a personalized, professional follow-up email to this lead.
+                
+                Lead Information:
                 Name: ${selectedLead.name}
-                Company: ${selectedLead.company}
-                Context: ${selectedLead.notes}
+                Email: ${selectedLead.email || 'N/A'}
+                Company: ${selectedLead.company || 'N/A'}
+                Notes: ${selectedLead.notes || 'None'}
+                ${chatContext}${analysisContext}
+                IMPORTANT: Use specific details from the conversation to make the email feel personal and relevant.
+                Reference topics they discussed, questions they asked, or interests they showed.
+                
                 My Goal: Move them to the next stage of the pipeline.
+                
+                Write a concise, warm, and action-oriented email (max 150 words).
+                Include a clear call to action.
             `;
 
             const projectId = activeProject?.id || 'leads-email-draft';
@@ -632,6 +805,12 @@ const LeadsDashboard: React.FC = () => {
             }
 
             setEmailDraft(responseText);
+
+            // Persist the draft to the database
+            await updateLead(selectedLead.id, { emailDraft: responseText });
+
+            // Update local state to include the new draft
+            setSelectedLead({ ...selectedLead, emailDraft: responseText });
         } catch (e: any) {
             // Log failed API call
             if (user) {
@@ -647,6 +826,99 @@ const LeadsDashboard: React.FC = () => {
             console.error("Drafting failed", e);
         } finally {
             setIsDrafting(false);
+        }
+    };
+
+    const handleSendEmail = async () => {
+        if (!selectedLead || !emailDraft) return;
+
+        // Save intention to open editor with this draft
+        try {
+            const draftIntent = {
+                subject: `Follow up from ${selectedLead.company || 'Quimera AI'}`,
+                content: emailDraft,
+                recipient: {
+                    email: selectedLead.email,
+                    name: selectedLead.name
+                },
+                leadId: selectedLead.id
+            };
+            localStorage.setItem('pendingEmailDraft', JSON.stringify(draftIntent));
+
+            // Navigate to Email Marketing using URL-based routing to prevent synchronization conflicts in App.tsx
+            navigate(ROUTES.EMAIL);
+
+            // Log action
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'ui-navigation',
+                    feature: 'leads-to-email-editor',
+                    success: true
+                });
+            }
+        } catch (e) {
+            console.error("Error redirecting to email marketing", e);
+            alert("Error opening email editor");
+        }
+    };
+
+
+    const handleAnalyzeConversation = async () => {
+        if (!selectedLead || !selectedLead.conversationTranscript) return;
+        if (hasApiKey === false) { await promptForKeySelection(); return; }
+
+        setIsAnalyzingConversation(true);
+        setConversationAnalysis('');
+        try {
+            const prompt = `
+                Analiza la siguiente conversación entre un cliente y un chatbot de servicio.
+                Extrae y presenta los puntos clave de lo que el cliente requiere o necesita.
+                Presenta la información de forma clara y concisa en una lista de puntos.
+
+                Conversación:
+                ${selectedLead.conversationTranscript}
+
+                Por favor, extrae:
+                1. Servicio o producto que solicita el cliente
+                2. Necesidades específicas mencionadas
+                3. Presupuesto o urgencia (si se menciona)
+                4. Información de contacto proporcionada
+                5. Siguiente paso recomendado
+
+                Presenta cada punto de forma clara y directa.
+            `;
+
+            const projectId = activeProject?.id || 'leads-conversation-analysis';
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const responseText = extractTextFromResponse(response);
+
+            // Log API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-conversation-analysis',
+                    success: true
+                });
+            }
+
+            setConversationAnalysis(responseText);
+        } catch (e: any) {
+            // Log failed API call
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    model: 'gemini-2.5-flash',
+                    feature: 'leads-conversation-analysis',
+                    success: false,
+                    errorMessage: e.message || 'Unknown error'
+                });
+            }
+            handleApiError(e);
+            console.error("Conversation analysis failed", e);
+        } finally {
+            setIsAnalyzingConversation(false);
         }
     };
 
@@ -1019,7 +1291,8 @@ const LeadsDashboard: React.FC = () => {
                                                                 key={lead.id}
                                                                 lead={lead}
                                                                 onDragStart={handleDragStart}
-                                                                onClick={() => { setEmailDraft(''); setSelectedLead(lead); }}
+                                                                onClick={() => { setSelectedLead(lead); }}
+                                                                onDelete={deleteLead}
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
@@ -1065,7 +1338,8 @@ const LeadsDashboard: React.FC = () => {
                                                                 key={lead.id}
                                                                 lead={lead}
                                                                 onDragStart={handleDragStart}
-                                                                onClick={() => { setEmailDraft(''); setSelectedLead(lead); }}
+                                                                onClick={() => { setSelectedLead(lead); }}
+                                                                onDelete={deleteLead}
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
@@ -1084,7 +1358,7 @@ const LeadsDashboard: React.FC = () => {
                             {viewMode === 'table' && (
                                 <LeadsTableView
                                     leads={filteredLeads}
-                                    onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
+                                    onLeadClick={(lead) => { setSelectedLead(lead); }}
                                     onDelete={deleteLead}
                                     selectedLeadIds={selectedLeadIds}
                                     onToggleSelect={handleToggleSelect}
@@ -1097,7 +1371,7 @@ const LeadsDashboard: React.FC = () => {
                                     <LeadsListView
                                         leads={filteredLeads}
                                         selectedLeadId={selectedLead?.id || null}
-                                        onLeadClick={(lead) => { setEmailDraft(''); setSelectedLead(lead); }}
+                                        onLeadClick={(lead) => { setSelectedLead(lead); }}
                                         selectedLeadIds={selectedLeadIds}
                                         onToggleSelect={handleToggleSelect}
                                     />
@@ -1157,7 +1431,7 @@ const LeadsDashboard: React.FC = () => {
                 {/* Lead Detail Modal - Mobile optimized */}
                 <Modal
                     isOpen={!!selectedLead}
-                    onClose={() => setSelectedLead(null)}
+                    onClose={() => { setSelectedLead(null); }}
                     maxWidth="max-w-3xl"
                     className="bg-card !p-0"
                 >
@@ -1205,10 +1479,16 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                                         {!isEditMode && (
-                                            <button onClick={handleEnterEditMode} className="p-1.5 sm:p-2 hover:bg-border rounded-full text-primary transition-colors" title="Edit Lead">
-                                                <Edit size={16} className="sm:hidden" />
-                                                <Edit size={20} className="hidden sm:block" />
-                                            </button>
+                                            <>
+                                                <button onClick={handleEnterEditMode} className="p-1.5 sm:p-2 hover:bg-border rounded-full text-primary transition-colors" title="Edit Lead">
+                                                    <Edit size={16} className="sm:hidden" />
+                                                    <Edit size={20} className="hidden sm:block" />
+                                                </button>
+                                                <button onClick={handleDelete} className="p-1.5 sm:p-2 hover:bg-red-500/20 rounded-full text-red-500 transition-colors" title="Delete Lead">
+                                                    <Trash2 size={16} className="sm:hidden" />
+                                                    <Trash2 size={20} className="hidden sm:block" />
+                                                </button>
+                                            </>
                                         )}
                                         <button onClick={() => { setSelectedLead(null); setIsEditMode(false); }} className="p-1.5 sm:p-2 hover:bg-border rounded-full text-muted-foreground transition-colors">
                                             <XCircle size={20} className="sm:hidden" />
@@ -1629,6 +1909,237 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
                                 )}
 
+                                {/* Chatbot Conversation Section */}
+                                {!isEditMode && selectedLead.conversationTranscript && (
+                                    <div className="border-t border-border pt-6">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                                <MessageSquare size={14} />
+                                                Conversación del Chatbot
+                                            </h3>
+                                            <button
+                                                onClick={handleAnalyzeConversation}
+                                                disabled={isAnalyzingConversation}
+                                                className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:opacity-90 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                            >
+                                                {isAnalyzingConversation ? (
+                                                    <>
+                                                        <Loader2 size={12} className="animate-spin" />
+                                                        Analizando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Sparkles size={12} />
+                                                        Analizar con IA
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        {/* AI Analysis Results - Show saved or fresh analysis */}
+                                        {(() => {
+                                            const analysisToShow = conversationAnalysis || selectedLead.aiAnalysis;
+                                            const isNewAnalysis = !!conversationAnalysis && conversationAnalysis !== selectedLead.aiAnalysis;
+
+                                            if (!analysisToShow) return null;
+
+                                            return (
+                                                <div className="mb-6">
+                                                    {/* Header with Save Button */}
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md">
+                                                                <Sparkles size={18} className="text-white" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-bold text-foreground">Análisis de IA</h4>
+                                                                <p className="text-xs text-muted-foreground">Resumen de la conversación</p>
+                                                            </div>
+                                                        </div>
+                                                        {isNewAnalysis && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (selectedLead) {
+                                                                        const btn = document.activeElement as HTMLButtonElement;
+                                                                        const originalText = btn.innerHTML;
+                                                                        btn.disabled = true;
+                                                                        btn.innerHTML = '<span class="animate-spin">⏳</span> Guardando...';
+
+                                                                        try {
+                                                                            console.log('[LeadsDashboard] 💾 Saving AI analysis to lead:', selectedLead.id);
+                                                                            await updateLead(selectedLead.id, { aiAnalysis: analysisToShow });
+                                                                            setSelectedLead({ ...selectedLead, aiAnalysis: analysisToShow });
+                                                                            console.log('[LeadsDashboard] ✅ AI analysis saved successfully');
+
+                                                                            btn.innerHTML = '✅ Guardado';
+                                                                            btn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                                                                            btn.classList.add('bg-green-500');
+
+                                                                            setTimeout(() => {
+                                                                                btn.innerHTML = originalText;
+                                                                                btn.disabled = false;
+                                                                                btn.classList.remove('bg-green-500');
+                                                                                btn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                                                                            }, 2000);
+                                                                        } catch (error) {
+                                                                            console.error('[LeadsDashboard] ❌ Error saving AI analysis:', error);
+                                                                            btn.innerHTML = '❌ Error';
+                                                                            btn.classList.remove('bg-purple-500');
+                                                                            btn.classList.add('bg-red-500');
+
+                                                                            setTimeout(() => {
+                                                                                btn.innerHTML = originalText;
+                                                                                btn.disabled = false;
+                                                                                btn.classList.remove('bg-red-500');
+                                                                                btn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                                                                            }, 2000);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+                                                            >
+                                                                <Save size={14} />
+                                                                Guardar
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Analysis Cards */}
+                                                    <div className="grid gap-3">
+                                                        {(() => {
+                                                            // Clean and parse the analysis
+                                                            const cleanMarkdown = (text: string) => {
+                                                                return text
+                                                                    .replace(/\*\*/g, '')  // Remove **
+                                                                    .replace(/^\d+\.\s*/, '') // Remove numbered list prefix
+                                                                    .replace(/^[-•*]\s*/, '') // Remove bullet points
+                                                                    .trim();
+                                                            };
+
+                                                            const lines = analysisToShow.split('\n').filter(line => line.trim());
+                                                            const sections: { title: string; content: string }[] = [];
+                                                            let currentTitle = '';
+                                                            let currentContent: string[] = [];
+
+                                                            lines.forEach(line => {
+                                                                const cleanLine = line.trim();
+                                                                // Detect section headers: numbered with **, starts with **, or has : at end
+                                                                const isHeader = /^\d+\.\s*\*\*/.test(cleanLine) ||
+                                                                    cleanLine.startsWith('**') ||
+                                                                    /^[A-ZÁÉÍÓÚÑ][^:]+:\*?\*?$/.test(cleanLine);
+
+                                                                if (isHeader) {
+                                                                    if (currentTitle && currentContent.length > 0) {
+                                                                        sections.push({
+                                                                            title: cleanMarkdown(currentTitle),
+                                                                            content: currentContent.map(cleanMarkdown).join(' | ')
+                                                                        });
+                                                                    }
+                                                                    currentTitle = cleanLine;
+                                                                    currentContent = [];
+                                                                } else if (cleanLine && !cleanLine.toLowerCase().includes('a continuación')) {
+                                                                    currentContent.push(cleanLine);
+                                                                }
+                                                            });
+
+                                                            // Don't forget the last section
+                                                            if (currentTitle && currentContent.length > 0) {
+                                                                sections.push({
+                                                                    title: cleanMarkdown(currentTitle),
+                                                                    content: currentContent.map(cleanMarkdown).join(' | ')
+                                                                });
+                                                            }
+
+                                                            // If no sections, show as single block
+                                                            if (sections.length === 0) {
+                                                                return (
+                                                                    <div className="bg-card border border-border rounded-xl p-4">
+                                                                        <p className="text-sm text-foreground/90 leading-relaxed">
+                                                                            {cleanMarkdown(analysisToShow)}
+                                                                        </p>
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            // Render sections as cards
+                                                            return sections.map((section, idx) => (
+                                                                <div
+                                                                    key={idx}
+                                                                    className="bg-card hover:bg-card/80 border border-border rounded-xl p-4 transition-colors"
+                                                                >
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                                                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400">{idx + 1}</span>
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <h5 className="text-sm font-semibold text-foreground mb-1">
+                                                                                {section.title}
+                                                                            </h5>
+                                                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                                                                {section.content}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ));
+                                                        })()}
+                                                    </div>
+
+                                                    {/* Subtle footer */}
+                                                    <p className="text-xs text-muted-foreground text-center mt-3">
+                                                        Generado por IA • {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })()}
+                                        {/* Conversation Transcript */}
+                                        <div className="bg-gradient-to-b from-secondary/10 to-secondary/5 border border-border rounded-xl p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                            <div className="space-y-4">
+                                                {selectedLead.conversationTranscript.split('\n').map((line, idx) => {
+                                                    const isUser = line.toLowerCase().startsWith('user:') || line.toLowerCase().startsWith('usuario:');
+                                                    const isBot = line.toLowerCase().startsWith('bot:') || line.toLowerCase().startsWith('assistant:') || line.toLowerCase().startsWith('asistente:');
+
+                                                    if (!line.trim()) return null;
+
+                                                    if (isUser) {
+                                                        const messageText = line.replace(/^(user:|usuario:)/i, '').trim();
+                                                        return (
+                                                            <div key={idx} className="flex justify-end animate-in slide-in-from-right-2 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
+                                                                <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] shadow-sm">
+                                                                    <p className="text-sm leading-relaxed">{messageText}</p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    } else if (isBot) {
+                                                        const messageText = line.replace(/^(bot:|assistant:|asistente:)/i, '').trim();
+                                                        return (
+                                                            <div key={idx} className="flex justify-start animate-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
+                                                                <div className="bg-card border border-border/50 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] shadow-sm">
+                                                                    <div className="flex items-start gap-2.5">
+                                                                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                                                                            <Bot size={14} className="text-primary" />
+                                                                        </div>
+                                                                        <p className="text-sm text-foreground leading-relaxed">{messageText}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    } else {
+                                                        // System messages or unformatted lines
+                                                        return (
+                                                            <div key={idx} className="flex justify-center">
+                                                                <div className="bg-muted/50 text-muted-foreground text-xs italic px-3 py-1 rounded-full">
+                                                                    {line}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Activity Timeline */}
                                 {!isEditMode && (
                                     <div className="border-t border-border pt-6">
@@ -1682,9 +2193,35 @@ const LeadsDashboard: React.FC = () => {
                                                 className="w-full bg-transparent text-sm text-foreground outline-none resize-y min-h-[150px]"
                                                 value={emailDraft}
                                                 onChange={(e) => setEmailDraft(e.target.value)}
+                                                onBlur={() => {
+                                                    // Save draft on blur
+                                                    if (selectedLead && emailDraft !== selectedLead.emailDraft) {
+                                                        updateLead(selectedLead.id, { emailDraft });
+                                                        // Update local state to avoid re-saving same value
+                                                        setSelectedLead({ ...selectedLead, emailDraft });
+                                                    }
+                                                }}
+                                                placeholder="Escribe tu email aquí..."
                                             />
                                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-bold shadow-sm" onClick={() => { navigator.clipboard.writeText(emailDraft); alert("Copied!") }}>Copy</button>
+                                                {/* Auto-saved indicator */}
+                                                <div className="flex items-center text-[10px] text-muted-foreground mr-2 italic">
+                                                    Saved
+                                                </div>
+                                                <button
+                                                    className="bg-secondary text-foreground text-xs px-2 py-1 rounded font-bold shadow-sm hover:bg-secondary/80"
+                                                    onClick={() => { navigator.clipboard.writeText(emailDraft); alert("Copied!") }}
+                                                >
+                                                    Copy
+                                                </button>
+                                                <button
+                                                    className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-bold shadow-sm flex items-center gap-1 hover:bg-primary/90"
+                                                    onClick={handleSendEmail}
+                                                    disabled={isSendingEmail}
+                                                >
+                                                    {isSendingEmail ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
+                                                    Send
+                                                </button>
                                             </div>
                                         </div>
                                     ) : (
@@ -1716,10 +2253,11 @@ const LeadsDashboard: React.FC = () => {
                                             {/* Mobile: Stack buttons vertically */}
                                             <div className="flex flex-col sm:flex-row gap-2">
                                                 <button
-                                                    onClick={() => window.location.href = `mailto:${selectedLead.email}`}
+                                                    onClick={handleSendEmail}
                                                     className="flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-bold hover:opacity-90 transition-colors shadow-md"
                                                 >
-                                                    <Mail size={14} className="mr-1.5 sm:mr-2" /> Send Email
+                                                    <Palette size={14} className="mr-1.5 sm:mr-2" />
+                                                    Open in Email Editor
                                                 </button>
                                                 <button className="flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-xs sm:text-sm font-bold transition-colors">
                                                     <Calendar size={14} className="mr-1.5 sm:mr-2" /> Schedule Meeting

@@ -62,7 +62,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder, setIsOnboardingOpen } = useUI();
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
 
-  const isOwner = isUserOwner || userDocument?.role === 'owner';
+  // Check role first (most reliable), then email-based owner check as fallback
+  const userRole = userDocument?.role;
+  const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+
+  // Debug log to verify role detection
+  console.log('[DashboardSidebar] User role check:', { userRole, isOwner, isUserOwner, userEmail: user?.email });
   const { navigate, path } = useRouter();
   const tenantContext = useSafeTenant();
   const upgradeContext = useSafeUpgrade();

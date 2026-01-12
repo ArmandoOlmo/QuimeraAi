@@ -52,35 +52,35 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Get appearance config with defaults
     const defaultAppearance = getDefaultAppearanceConfig();
     const baseAppearance = aiAssistantConfig.appearance || defaultAppearance;
-    
+
     // Get project theme colors as fallback - check multiple sources
     const projectTheme = standaloneProject?.theme || projectContext?.theme;
     const globalColors = projectTheme?.globalColors || {};
-    
+
     // Also get colors from Hero component - this is often the best source for primary color
     const heroColors = data?.hero?.colors || {};
     const heroButtonColor = heroColors.buttonBackground || heroColors.primary;
-    
+
     // Also check the theme for design tokens
     const themeColors = projectTheme?.colors || {};
     const themePrimaryColor = themeColors.primary || themeColors.brand;
-    
+
     // Default chat colors (to compare if user customized)
     const defaultPrimaryColor = '#4F46E5'; // indigo
     const defaultWidgetColor = '#4f46e5'; // widget default (same but lowercase)
-    
+
     // Check if user has explicitly customized widget color
     const widgetColor = aiAssistantConfig.widgetColor;
-    const hasCustomWidgetColor = widgetColor && 
+    const hasCustomWidgetColor = widgetColor &&
         widgetColor.toLowerCase() !== defaultWidgetColor &&
         widgetColor.toLowerCase() !== '#6366f1';
-    
+
     // Check if user has explicitly customized colors in AI Assistant Dashboard
     const aiConfigPrimaryColor = aiAssistantConfig.appearance?.colors?.primaryColor;
-    const hasCustomAiColors = aiConfigPrimaryColor && 
-        aiConfigPrimaryColor.toLowerCase() !== defaultPrimaryColor.toLowerCase() && 
+    const hasCustomAiColors = aiConfigPrimaryColor &&
+        aiConfigPrimaryColor.toLowerCase() !== defaultPrimaryColor.toLowerCase() &&
         aiConfigPrimaryColor.toLowerCase() !== '#6366f1';
-    
+
     // Determine the best primary color to use
     // Priority: 
     // 1. Custom widget color (explicitly set in AI Dashboard)
@@ -90,9 +90,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // 5. Theme primary color
     // 6. Default
     const effectivePrimaryColor = hasCustomWidgetColor ? widgetColor!
-        : hasCustomAiColors ? aiConfigPrimaryColor! 
-        : (globalColors.primary || heroButtonColor || themePrimaryColor || defaultPrimaryColor);
-    
+        : hasCustomAiColors ? aiConfigPrimaryColor!
+            : (globalColors.primary || heroButtonColor || themePrimaryColor || defaultPrimaryColor);
+
     // Merge colors from Web Editor (data.chatbot.colors) with appearance colors
     const chatbotColors = (data?.chatbot?.colors || {}) as Partial<{
         primaryColor: string;
@@ -109,7 +109,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         headerBackground: string;
         headerText: string;
     }>;
-    
+
     // Final appearance with project colors taking precedence over defaults
     const appearance = {
         ...baseAppearance,
@@ -131,7 +131,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             headerText: chatbotColors.headerText || baseAppearance.colors?.headerText,
         }
     };
-    
+
     // Debug log - always log in standalone mode for debugging
     if (standaloneProject || standaloneConfig) {
         console.log('[ChatbotWidget] Color resolution:', {
@@ -169,24 +169,24 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     useEffect(() => {
         const loadAppointments = async () => {
             if (!user || !activeProject?.id || !isOpen) return;
-            
+
             try {
                 const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProject.id, 'appointments');
                 const q = query(appointmentsRef, orderBy('startDate', 'asc'));
                 const snapshot = await getDocs(q);
-                
+
                 const appointmentSlots: AppointmentSlot[] = [];
                 const now = new Date();
-                
+
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    const startDate = data.startDate?.seconds 
-                        ? new Date(data.startDate.seconds * 1000) 
+                    const startDate = data.startDate?.seconds
+                        ? new Date(data.startDate.seconds * 1000)
                         : new Date();
-                    const endDate = data.endDate?.seconds 
-                        ? new Date(data.endDate.seconds * 1000) 
+                    const endDate = data.endDate?.seconds
+                        ? new Date(data.endDate.seconds * 1000)
                         : new Date(startDate.getTime() + 60 * 60000);
-                    
+
                     // Only include future appointments
                     if (startDate >= now && data.status !== 'cancelled') {
                         appointmentSlots.push({
@@ -198,14 +198,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         });
                     }
                 });
-                
+
                 setAppointments(appointmentSlots);
                 console.log('[ChatbotWidget] 📅 Loaded appointments:', appointmentSlots.length);
             } catch (error) {
                 console.error('[ChatbotWidget] Error loading appointments:', error);
             }
         };
-        
+
         loadAppointments();
     }, [user, activeProject?.id, isOpen]);
 
@@ -257,21 +257,70 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Handle lead capture
     const handleLeadCapture = async (leadData: Partial<Lead>): Promise<string | undefined> => {
-        const leadId = await addLead?.({
+        const fullLeadData = {
             ...leadData,
-            source: 'chatbot-widget',
-            status: 'new',
+            source: 'chatbot-widget' as const,
+            status: 'new' as const,
             tags: ['chatbot-widget', ...(leadData.tags || [])]
-        });
-        setLeadCaptured(true);
-        return leadId;
+        };
+
+        // If addLead is available (editor context), use it
+        if (addLead) {
+            const leadId = await addLead(fullLeadData);
+            setLeadCaptured(true);
+            return leadId;
+        }
+
+        // Fallback: Save via API when in standalone mode (public site)
+        // This matches EmbedWidget behavior and avoids Firestore permission issues
+        const projectId = activeProject?.id || standaloneProject?.id;
+
+        if (projectId) {
+            try {
+                console.log('[ChatbotWidget] 🌐 specific API lead capture (standalone mode)');
+
+                // Always use production API for reliability across domains
+                const apiUrl = 'https://quimera.ai/api/widget';
+
+                const response = await fetch(`${apiUrl}/${projectId}/leads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(fullLeadData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('[ChatbotWidget] ✅ Lead saved successfully via API:', data.leadId);
+                    setLeadCaptured(true);
+                    return data.leadId;
+                } else {
+                    console.error('[ChatbotWidget] ❌ API Error:', await response.text());
+                }
+            } catch (error) {
+                console.error('[ChatbotWidget] ❌ Error saving lead to API:', error);
+            }
+        } else {
+            console.warn('[ChatbotWidget] ⚠️ Cannot save lead: no addLead function and no projectId available');
+        }
+
+        return undefined;
     };
 
     // Handle updating lead transcript at conversation end
     const handleUpdateLeadTranscript = async (leadId: string, transcript: string) => {
+        // If updateLead is available (editor context), use it
         if (updateLead) {
             await updateLead(leadId, { conversationTranscript: transcript });
+            console.log('[ChatbotWidget] ✅ Transcript updated via context');
+            return;
         }
+
+        // Note: The Widget API currently does not support updating leads/transcripts.
+        // The initial transcript is captured in handleLeadCapture.
+        // Future improvement: Add update endpoint to Widget API.
+        console.log('[ChatbotWidget] ℹ️ Transcript update skipped in standalone mode (API does not support updates yet)');
     };
 
     // Handle creating appointment from chat
@@ -388,7 +437,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     const sizeClasses = getSizeClasses(appearance.behavior.width);
-    
+
     // Extract numeric height values for proper max-height constraint (reduced by 30%)
     const heightMap: Record<string, number> = {
         sm: 350,

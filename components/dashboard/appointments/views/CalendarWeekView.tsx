@@ -80,6 +80,9 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
         green: 'from-green-500 to-emerald-600',
     };
 
+    // Fallback to blue if typeConfig is undefined
+    const color = typeConfig?.color || 'blue';
+
     const isShort = height < 50;
 
     return (
@@ -87,7 +90,7 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             className={`
                 absolute left-1 right-1 z-10
-                bg-gradient-to-br ${gradientClasses[typeConfig.color]}
+                bg-gradient-to-br ${gradientClasses[color]}
                 rounded-lg overflow-hidden
                 cursor-pointer group
                 transition-all duration-200

@@ -290,13 +290,16 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     green: 'from-green-500 to-emerald-600',
                                 };
 
+                                // Fallback to blue if typeConfig is undefined
+                                const color = typeConfig?.color || 'blue';
+
                                 return (
                                     <div
                                         key={apt.id}
                                         onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
                                         className={`
                                             absolute left-4 right-4 z-10
-                                            bg-gradient-to-br ${gradientClasses[typeConfig.color]}
+                                            bg-gradient-to-br ${gradientClasses[color]}
                                             rounded-xl overflow-hidden
                                             cursor-pointer
                                             transition-all duration-200

@@ -98,9 +98,9 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     const [showMenu, setShowMenu] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
-    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
-    const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status];
-    const TypeIcon = TYPE_ICONS[appointment.type];
+    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type] || APPOINTMENT_TYPE_CONFIGS.video_call;
+    const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status] || APPOINTMENT_STATUS_CONFIGS.scheduled;
+    const TypeIcon = TYPE_ICONS[appointment.type] || Video;
 
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);

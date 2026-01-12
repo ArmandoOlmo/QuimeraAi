@@ -57,12 +57,15 @@ const DayAppointmentChip: React.FC<DayAppointmentChipProps> = ({ appointment, on
         green: 'bg-green-500',
     };
 
+    // Fallback to blue if typeConfig is undefined
+    const color = typeConfig?.color || 'blue';
+
     return (
         <button
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             className={`
                 w-full text-left text-xs px-2 py-1 rounded-md
-                ${colorClasses[typeConfig.color]} text-white
+                ${colorClasses[color]} text-white
                 truncate hover:opacity-90 transition-opacity
                 font-medium
             `}

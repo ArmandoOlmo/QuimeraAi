@@ -119,7 +119,9 @@ export function usePlanAccess(): PlanAccessData {
 
     const planId = (usage?.planId || 'free') as SubscriptionPlanId;
     // Owner and superadmin always have full access to all features
-    const isOwner = isUserOwner || userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+    // Check role first (most reliable), then email-based owner check as fallback
+    const userRole = userDocument?.role;
+    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     // Get plan data from context or fallback
     const planData = useMemo(() => {
@@ -145,9 +147,14 @@ export function usePlanAccess(): PlanAccessData {
     // Check if user has access to a feature
     const hasAccess = useCallback((feature?: keyof PlanFeatures): boolean => {
         if (!feature) return true;
-        if (isOwner) return true; // Direct bypass for owner
-        return isFeatureEnabled(planData.features[feature]);
-    }, [planData.features, isOwner]);
+        if (isOwner) {
+            console.log('[usePlanAccess] Owner/SuperAdmin bypass activated for feature:', feature, 'userRole:', userRole);
+            return true; // Direct bypass for owner
+        }
+        const access = isFeatureEnabled(planData.features[feature]);
+        console.log('[usePlanAccess] Feature access check:', feature, 'hasAccess:', access, 'userRole:', userRole, 'isOwner:', isOwner);
+        return access;
+    }, [planData.features, isOwner, userRole]);
 
     // Get minimum plan name for a feature
     const getMinPlan = useCallback((feature: keyof PlanFeatures): string => {

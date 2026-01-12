@@ -57,18 +57,27 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { setView } = useUI();
     const { projects, activeProject, activeProjectId } = useProject();
     const userId = user?.uid || '';
-    
+
     // State for selected project (similar to ecommerce)
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
-    
+    const [createCampaignTrigger, setCreateCampaignTrigger] = useState(0);
+    // Removed complex state: const [autoOpenDraft, setAutoOpenDraft] = useState(false);
+
     // Determine effective project
     const effectiveProjectId = propProjectId || selectedProjectId || activeProjectId || '';
     const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
     const projectId = effectiveProjectId;
 
-    const [activeView, setActiveView] = useState<EmailView>('overview');
+    const [activeView, setActiveView] = useState<EmailView>(() => {
+        // Sync check for pending draft to set initial view
+        if (typeof window !== 'undefined' && localStorage.getItem('pendingEmailDraft')) {
+            console.log("EmailDashboard: Initializing with 'campaigns' view due to pending draft");
+            return 'campaigns';
+        }
+        return 'overview';
+    });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { settings, isLoading: settingsLoading } = useEmailSettings(userId, projectId);
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId, { limit: 100 });
@@ -79,6 +88,8 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
             setSelectedProjectId(activeProjectId);
         }
     }, [activeProjectId]);
+
+    // Removed useEffect for view switching as it is handled in state initialization
 
     const isLoading = settingsLoading || logsLoading;
     const hasValidProject = Boolean(userId && projectId && projectId !== 'default');
@@ -142,7 +153,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const renderContent = () => {
         switch (activeView) {
             case 'campaigns':
-                return <CampaignsView />;
+                return <CampaignsView onCreateTrigger={createCampaignTrigger} />;
             case 'audiences':
                 return <AudiencesView />;
             case 'analytics':
@@ -162,8 +173,8 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                     {/* Header - Simplified */}
                     <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
                         <div className="flex items-center gap-4">
-                            <button 
-                                onClick={() => setIsMobileMenuOpen(true)} 
+                            <button
+                                onClick={() => setIsMobileMenuOpen(true)}
                                 className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
                                 <Menu className="w-5 h-5" />
@@ -174,7 +185,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                     {t('email.dashboard', 'Email Marketing')}
                                 </h1>
                             </div>
-                            
+
                             {/* Project Selector */}
                             <div className="relative">
                                 <button
@@ -276,8 +287,8 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                             key={item.id}
                                             onClick={() => setActiveView(item.id)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                                 }`}
                                         >
                                             <Icon size={18} />
@@ -286,10 +297,13 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                     );
                                 })}
                             </div>
-                            
+
                             {/* Nueva Campaña button moved here */}
                             <button
-                                onClick={() => setActiveView('campaigns')}
+                                onClick={() => {
+                                    setActiveView('campaigns');
+                                    setCreateCampaignTrigger(prev => prev + 1);
+                                }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-xs sm:text-sm font-medium ml-4 flex-shrink-0"
                             >
                                 <PlusCircle size={16} />
@@ -390,7 +404,7 @@ const OverviewContent: React.FC<OverviewContentProps> = ({ stats, onNavigate }) 
                     <p className="text-muted-foreground text-sm mb-4">
                         {t('email.createCampaignDesc', 'Envía newsletters, promociones o anuncios a tus suscriptores.')}
                     </p>
-                    <button 
+                    <button
                         onClick={() => onNavigate('campaigns')}
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                     >
@@ -407,7 +421,7 @@ const OverviewContent: React.FC<OverviewContentProps> = ({ stats, onNavigate }) 
                     <p className="text-muted-foreground text-sm mb-4">
                         {t('email.manageAudiencesDesc', 'Crea segmentos para enviar emails más personalizados.')}
                     </p>
-                    <button 
+                    <button
                         onClick={() => onNavigate('audiences')}
                         className="flex items-center gap-2 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted/50 transition-colors"
                     >
