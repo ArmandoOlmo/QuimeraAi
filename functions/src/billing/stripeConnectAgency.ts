@@ -8,9 +8,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 
 const db = admin.firestore();
-const stripe = new Stripe(functions.config().stripe.secret_key, {
-  apiVersion: '2023-10-16',
-});
+const stripe = new Stripe(functions.config().stripe.secret_key);
 
 const BASE_URL = functions.config().app?.base_url || 'https://quimera.ai';
 
@@ -266,24 +264,25 @@ export const setupClientBilling = functions.https.onCall(async (data, context) =
     });
 
     // Save billing info to Firestore
+    const subscriptionData = subscription as any;
     await db.collection('tenants').doc(clientTenantId).update({
       'billing.stripeCustomerId': customerId,
-      'billing.stripeSubscriptionId': subscription.id,
+      'billing.stripeSubscriptionId': subscriptionData.id,
       'billing.monthlyPrice': monthlyPrice,
       'billing.billingMode': 'direct',
       'billing.status': 'active',
       'billing.nextBillingDate': admin.firestore.Timestamp.fromDate(
-        new Date(subscription.current_period_end * 1000)
+        new Date(subscriptionData.current_period_end * 1000)
       ),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    functions.logger.info('Client billing setup complete', { clientTenantId, subscriptionId: subscription.id });
+    functions.logger.info('Client billing setup complete', { clientTenantId, subscriptionId: subscriptionData.id });
 
     return {
       success: true,
-      subscriptionId: subscription.id,
-      nextBillingDate: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscriptionId: subscriptionData.id,
+      nextBillingDate: new Date(subscriptionData.current_period_end * 1000).toISOString(),
     };
   } catch (error: any) {
     functions.logger.error('Error setting up client billing', { error: error.message, clientTenantId });

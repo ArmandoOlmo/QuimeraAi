@@ -8,9 +8,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 
 const db = admin.firestore();
-const stripe = new Stripe(functions.config().stripe.secret_key, {
-  apiVersion: '2023-10-16',
-});
+const stripe = new Stripe(functions.config().stripe.secret_key);
 
 const webhookSecret = functions.config().stripe.webhook_secret;
 
@@ -240,12 +238,13 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   // Update subscription info
+  const subscriptionData = subscription as any;
   await db.collection('tenants').doc(clientTenantId).update({
-    'billing.status': subscription.status,
+    'billing.status': subscriptionData.status,
     'billing.nextBillingDate': admin.firestore.Timestamp.fromDate(
-      new Date(subscription.current_period_end * 1000)
+      new Date(subscriptionData.current_period_end * 1000)
     ),
-    'billing.cancelAtPeriodEnd': subscription.cancel_at_period_end,
+    'billing.cancelAtPeriodEnd': subscriptionData.cancel_at_period_end,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 }

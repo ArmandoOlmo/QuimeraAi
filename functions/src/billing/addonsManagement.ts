@@ -8,9 +8,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 
 const db = admin.firestore();
-const stripe = new Stripe(functions.config().stripe.secret_key, {
-  apiVersion: '2023-10-16',
-});
+const stripe = new Stripe(functions.config().stripe.secret_key);
 
 // ============================================================================
 // ADDON PRICING
@@ -221,23 +219,24 @@ export const updateSubscriptionAddons = functions.https.onCall(async (data, cont
       });
 
       // Add add-on items
-      for (const [addonKey, quantity] of Object.entries(addons)) {
-        if (quantity > 0) {
+      for (const [addonKey, qty] of Object.entries(addons)) {
+        const quantityNum = qty as number;
+        if (quantityNum > 0) {
           items.push({
             price_data: {
               currency: 'usd',
               product: `addon_${addonKey}`,
-              recurring: { interval: 'month' },
+              recurring: { interval: 'month' as const },
               unit_amount: ADDON_PRICES[addonKey as keyof typeof ADDON_PRICES] * 100,
             },
-            quantity: quantity as number,
+            quantity: quantityNum,
           });
         }
       }
 
       // Update subscription with new items
       await stripe.subscriptions.update(subscriptionId, {
-        items,
+        items: items as Stripe.SubscriptionUpdateParams.Item[],
         proration_behavior: 'create_prorations',
       });
     }

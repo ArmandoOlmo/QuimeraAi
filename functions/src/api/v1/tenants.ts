@@ -521,4 +521,8 @@ router.use(errorHandler);
 // EXPORT
 // ============================================================================
 
-export const tenantsApi = functions.https.onRequest(router);
+// Create Express app and mount router
+const app = express.default ? express.default() : (express as any)();
+app.use('/api/v1', router);
+
+export const tenantsApi = functions.https.onRequest(app);

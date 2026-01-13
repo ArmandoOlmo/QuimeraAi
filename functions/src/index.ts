@@ -179,6 +179,47 @@ import {
     batchSyncAllUserClaims
 } from './userRoleClaims';
 
+// Agency Plan - Billing functions (Stripe Connect for Agencies)
+import {
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice
+} from './billing/stripeConnectAgency';
+
+import { stripeConnectWebhook as agencyStripeWebhook } from './billing/stripeWebhooks';
+
+import {
+    getAddonsPricing,
+    calculateAddonsPrice,
+    checkAddonsEligibility,
+    updateSubscriptionAddons
+} from './billing/addonsManagement';
+
+// Agency Plan - Reports functions
+import {
+    generateConsolidatedReport,
+    getSavedReport,
+    deleteSavedReport
+} from './reports/generateConsolidatedReport';
+
+import {
+    sendMonthlyReports,
+    sendWeeklyReports,
+    triggerManualReport
+} from './reports/scheduledReports';
+
+// Agency Plan - Onboarding functions
+import {
+    autoProvisionClient,
+    getOnboardingStatus
+} from './onboarding/autoProvisionClient';
+
+// Agency Plan - REST API
+import { tenantsApi } from './api/v1/tenants';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -361,6 +402,48 @@ export const userRoles = {
     batchSyncAll: batchSyncAllUserClaims
 };
 
+// Export Agency Plan - Billing functions (Stripe Connect for Agencies)
+export const agencyBilling = {
+    // Stripe Connect Setup
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    // Client Billing Management
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice,
+    // Webhooks
+    webhook: agencyStripeWebhook,
+    // Add-ons
+    getAddonsPricing,
+    calculateAddonsPrice,
+    checkAddonsEligibility,
+    updateSubscriptionAddons
+};
+
+// Export Agency Plan - Reports functions
+export const agencyReports = {
+    // Manual Reports
+    generate: generateConsolidatedReport,
+    getSaved: getSavedReport,
+    deleteSaved: deleteSavedReport,
+    // Scheduled Reports
+    sendMonthly: sendMonthlyReports,
+    sendWeekly: sendWeeklyReports,
+    triggerManual: triggerManualReport
+};
+
+// Export Agency Plan - Onboarding functions
+export const agencyOnboarding = {
+    autoProvision: autoProvisionClient,
+    getStatus: getOnboardingStatus
+};
+
+// Export Agency Plan - REST API
+export const agencyApi = {
+    tenants: tenantsApi
+};
+
 // Alternative flat exports for easier routing
 export {
     getWidgetConfig,
@@ -493,6 +576,30 @@ export {
     // User Role Claims exports (Security)
     onUserRoleChange,
     syncUserRoleClaims,
-    batchSyncAllUserClaims
+    batchSyncAllUserClaims,
+    // Agency Plan - Billing exports (Stripe Connect for Agencies)
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice,
+    agencyStripeWebhook,
+    getAddonsPricing,
+    calculateAddonsPrice,
+    checkAddonsEligibility,
+    updateSubscriptionAddons,
+    // Agency Plan - Reports exports
+    generateConsolidatedReport,
+    getSavedReport,
+    deleteSavedReport,
+    sendMonthlyReports,
+    sendWeeklyReports,
+    triggerManualReport,
+    // Agency Plan - Onboarding exports
+    autoProvisionClient,
+    getOnboardingStatus,
+    // Agency Plan - REST API exports
+    tenantsApi
 };
 
