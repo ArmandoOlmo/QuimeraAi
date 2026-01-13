@@ -1,0 +1,182 @@
+{
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "projects": "Proyectos",
+    "leads": "Leads",
+    "products": "Productos",
+    "orders": "Pedidos",
+    "analytics": "Análisis",
+    "settings": "Configuración",
+    "help": "Ayuda",
+    "logout": "Cerrar Sesión"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido, {{name}}",
+    "overview": "Resumen General",
+    "quickActions": "Acciones Rápidas",
+    "recentActivity": "Actividad Reciente",
+    "stats": {
+      "totalProjects": "Proyectos Totales",
+      "activeLeads": "Leads Activos",
+      "totalRevenue": "Ingresos Totales",
+      "conversionRate": "Tasa de Conversión"
+    }
+  },
+  "projects": {
+    "title": "Mis Proyectos",
+    "createNew": "Crear Proyecto",
+    "editProject": "Editar Proyecto",
+    "deleteProject": "Eliminar Proyecto",
+    "publishProject": "Publicar Proyecto",
+    "status": {
+      "draft": "Borrador",
+      "published": "Publicado",
+      "archived": "Archivado"
+    },
+    "empty": "No tienes proyectos aún",
+    "emptyDescription": "Crea tu primer proyecto para comenzar"
+  },
+  "leads": {
+    "title": "Gestión de Leads",
+    "newLead": "Nuevo Lead",
+    "exportLeads": "Exportar Leads",
+    "importLeads": "Importar Leads",
+    "filters": {
+      "all": "Todos",
+      "new": "Nuevos",
+      "contacted": "Contactados",
+      "qualified": "Calificados",
+      "converted": "Convertidos",
+      "lost": "Perdidos"
+    },
+    "columns": {
+      "name": "Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "status": "Estado",
+      "source": "Origen",
+      "createdAt": "Fecha de Creación",
+      "actions": "Acciones"
+    }
+  },
+  "ecommerce": {
+    "products": {
+      "title": "Productos",
+      "addProduct": "Agregar Producto",
+      "editProduct": "Editar Producto",
+      "categories": "Categorías",
+      "inventory": "Inventario",
+      "pricing": "Precios"
+    },
+    "orders": {
+      "title": "Pedidos",
+      "orderDetails": "Detalles del Pedido",
+      "status": {
+        "pending": "Pendiente",
+        "processing": "Procesando",
+        "shipped": "Enviado",
+        "delivered": "Entregado",
+        "cancelled": "Cancelado"
+      }
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "tabs": {
+      "general": "General",
+      "profile": "Perfil",
+      "security": "Seguridad",
+      "notifications": "Notificaciones",
+      "billing": "Facturación",
+      "integrations": "Integraciones"
+    },
+    "language": {
+      "label": "Idioma",
+      "description": "Selecciona tu idioma preferido"
+    },
+    "timezone": {
+      "label": "Zona Horaria",
+      "description": "Configura tu zona horaria local"
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "create": "Crear",
+    "update": "Actualizar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "export": "Exportar",
+    "import": "Importar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar"
+  },
+  "messages": {
+    "saveSuccess": "Cambios guardados exitosamente",
+    "saveError": "Error al guardar los cambios",
+    "deleteSuccess": "Eliminado exitosamente",
+    "deleteError": "Error al eliminar",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar esto?",
+    "noData": "No hay datos disponibles",
+    "unauthorized": "No tienes permiso para realizar esta acción",
+    "networkError": "Error de conexión. Por favor, intenta nuevamente."
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "register": "Registrarse",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer Contraseña",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "rememberMe": "Recordarme",
+    "loginSuccess": "Inicio de sesión exitoso",
+    "logoutSuccess": "Sesión cerrada exitosamente",
+    "invalidCredentials": "Credenciales inválidas"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{companyName}}. Todos los derechos reservados.",
+    "poweredBy": "Powered by",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "contact": "Contacto"
+  },
+  "portalLanguageSettings": {
+    "title": "Idioma del Portal",
+    "description": "Configura el idioma predeterminado para tu portal white-label",
+    "successMessage": "Configuración de idioma actualizada correctamente",
+    "errorMessage": "Error al actualizar la configuración. Intenta nuevamente.",
+    "saved": "¡Guardado!",
+    "error": "Error",
+    "defaultLanguageLabel": "Idioma Predeterminado del Portal",
+    "autoTranslateTitle": "Traducción Automática de Contenido",
+    "autoTranslateBadge": "BETA",
+    "autoTranslateDescription": "Traduce automáticamente el contenido del portal al idioma del usuario usando Google Translate API",
+    "autoTranslateFeature1": "Traduce páginas, proyectos y componentes",
+    "autoTranslateFeature2": "Soporte para español, inglés, portugués y francés",
+    "autoTranslateFeature3": "Los usuarios pueden elegir su idioma preferido",
+    "autoTranslateWarning": "Nota:",
+    "autoTranslateWarningText": "La traducción automática puede no ser perfecta. Se recomienda revisar manualmente las traducciones importantes.",
+    "previewTitle": "Vista Previa del Portal",
+    "previewDescription": "El portal se mostrará en",
+    "previewDescriptionDefault": "por defecto para todos los usuarios.",
+    "previewDescriptionWithTranslate": "Los usuarios podrán cambiar el idioma y el contenido se traducirá automáticamente.",
+    "cancelButton": "Cancelar",
+    "saveButton": "Guardar Cambios",
+    "saving": "Guardando..."
+  }
+}

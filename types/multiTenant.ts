@@ -18,6 +18,8 @@ export interface TenantLimits {
     maxStorageGB: number;
     maxAiCredits: number;
     maxSubClients?: number;        // For agency plans
+    maxReports?: number;           // Monthly report generation limit
+    maxApiCalls?: number;          // Monthly API calls limit
 }
 
 export interface TenantUsage {
@@ -43,6 +45,15 @@ export interface TenantBranding {
     supportUrl?: string;
 }
 
+export interface AutoReportsConfig {
+    enabled: boolean;
+    frequency: 'weekly' | 'monthly' | 'quarterly';
+    recipients: string[];          // Email addresses
+    includeAllClients?: boolean;   // For agencies: include all sub-clients
+    dayOfMonth?: number;           // For monthly: 1-28
+    dayOfWeek?: number;            // For weekly: 0-6 (Sunday-Saturday)
+}
+
 export interface TenantSettings {
     allowMemberInvites: boolean;
     defaultMemberRole: AgencyRole;
@@ -51,6 +62,9 @@ export interface TenantSettings {
     allowGuestCheckout?: boolean;  // For ecommerce
     defaultLanguage: string;
     timezone: string;
+    autoReports?: AutoReportsConfig;  // Automated report generation
+    portalLanguage?: string;       // Language for white-label portal
+    autoTranslateContent?: boolean;   // Auto-translate portal content
 }
 
 export type TenantFeature = 
@@ -64,16 +78,26 @@ export type TenantFeature =
     | 'analytics'
     | 'api';
 
+export interface SubscriptionAddons {
+    extraSubClients?: number;      // Additional sub-clients beyond plan limit
+    extraStorageGB?: number;       // Additional storage in GB
+    extraAiCredits?: number;       // Additional AI credits per month
+}
+
 export interface TenantBilling {
     mode: 'included_in_parent' | 'direct';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
+    stripeConnectAccountId?: string;  // For agencies using Stripe Connect
     stripePriceId?: string;
     currentPeriodEnd?: { seconds: number; nanoseconds: number };
     cancelAtPeriodEnd?: boolean;
     mrr?: number;
     nextBillingDate?: string;
     paymentMethod?: string;
+    monthlyPrice?: number;         // For sub-clients billed by agency
+    addons?: SubscriptionAddons;   // Add-ons purchased
+    addonsMonthlyPrice?: number;   // Total cost of add-ons
 }
 
 export interface Tenant {
@@ -314,61 +338,67 @@ export function getDefaultLimitsForPlan(plan: Tenant['subscriptionPlan']): Tenan
     switch (plan) {
         case 'free':
             // Free: Para explorar - 1 proyecto, 30 AI credits
-            return { 
-                maxProjects: 1, 
-                maxUsers: 1, 
-                maxStorageGB: 0.5, 
-                maxAiCredits: 30 
+            return {
+                maxProjects: 1,
+                maxUsers: 1,
+                maxStorageGB: 0.5,
+                maxAiCredits: 30
             };
         case 'starter':
             // Starter $19/mes: Emprendedores - 5 proyectos, 300 AI credits
-            return { 
-                maxProjects: 5, 
-                maxUsers: 2, 
-                maxStorageGB: 5, 
-                maxAiCredits: 300 
+            return {
+                maxProjects: 5,
+                maxUsers: 2,
+                maxStorageGB: 5,
+                maxAiCredits: 300
             };
         case 'pro':
             // Pro $49/mes: Negocios en crecimiento - 20 proyectos, 1500 AI credits
-            return { 
-                maxProjects: 20, 
-                maxUsers: 10, 
-                maxStorageGB: 50, 
-                maxAiCredits: 1500 
+            return {
+                maxProjects: 20,
+                maxUsers: 10,
+                maxStorageGB: 50,
+                maxAiCredits: 1500
             };
         case 'agency':
             // Agency $129/mes: Agencias digitales - 50 proyectos, 5000 AI credits
-            return { 
-                maxProjects: 50, 
-                maxUsers: 25, 
-                maxStorageGB: 200, 
-                maxAiCredits: 5000, 
-                maxSubClients: 10 
+            return {
+                maxProjects: 50,
+                maxUsers: 25,
+                maxStorageGB: 200,
+                maxAiCredits: 5000,
+                maxSubClients: 10,
+                maxReports: 50,
+                maxApiCalls: 10000
             };
         case 'agency_plus':
-            // Agency Plus (legacy) - Mapea a Agency con más recursos
-            return { 
-                maxProjects: 100, 
-                maxUsers: 50, 
-                maxStorageGB: 500, 
-                maxAiCredits: 10000, 
-                maxSubClients: 25 
+            // Agency Plus $199/mes: Premium para agencias con alto volumen
+            return {
+                maxProjects: 100,
+                maxUsers: 50,
+                maxStorageGB: 500,
+                maxAiCredits: 10000,
+                maxSubClients: 25,
+                maxReports: 200,
+                maxApiCalls: 50000
             };
         case 'enterprise':
             // Enterprise $299+/mes: Grandes organizaciones - Ilimitado
-            return { 
-                maxProjects: 1000, 
-                maxUsers: 500, 
-                maxStorageGB: 2000, 
-                maxAiCredits: 25000, 
-                maxSubClients: 100 
+            return {
+                maxProjects: 1000,
+                maxUsers: 500,
+                maxStorageGB: 2000,
+                maxAiCredits: 25000,
+                maxSubClients: 100,
+                maxReports: -1,
+                maxApiCalls: -1
             };
         default:
-            return { 
-                maxProjects: 1, 
-                maxUsers: 1, 
-                maxStorageGB: 0.5, 
-                maxAiCredits: 30 
+            return {
+                maxProjects: 1,
+                maxUsers: 1,
+                maxStorageGB: 0.5,
+                maxAiCredits: 30
             };
     }
 }
@@ -468,6 +498,50 @@ export const FEATURE_LABELS: Record<TenantFeature, string> = {
     analytics: 'Analytics',
     api: 'API Access',
 };
+
+/**
+ * Calculate effective limits including add-ons
+ */
+export function getEffectiveLimits(
+    baseLimits: TenantLimits,
+    addons?: SubscriptionAddons
+): TenantLimits {
+    if (!addons) return baseLimits;
+
+    return {
+        ...baseLimits,
+        maxSubClients: (baseLimits.maxSubClients || 0) + (addons.extraSubClients || 0),
+        maxStorageGB: baseLimits.maxStorageGB + (addons.extraStorageGB || 0),
+        maxAiCredits: baseLimits.maxAiCredits + (addons.extraAiCredits || 0),
+    };
+}
+
+/**
+ * Calculate monthly cost of add-ons
+ */
+export function calculateAddonsCost(addons: SubscriptionAddons): number {
+    const ADDON_PRICES = {
+        extraSubClients: 15,  // $15 per additional sub-client
+        extraStorageGB: 0.10, // $0.10 per GB
+        extraAiCredits: 0.02, // $0.02 per credit
+    };
+
+    let totalCost = 0;
+
+    if (addons.extraSubClients) {
+        totalCost += addons.extraSubClients * ADDON_PRICES.extraSubClients;
+    }
+
+    if (addons.extraStorageGB) {
+        totalCost += addons.extraStorageGB * ADDON_PRICES.extraStorageGB;
+    }
+
+    if (addons.extraAiCredits) {
+        totalCost += addons.extraAiCredits * ADDON_PRICES.extraAiCredits;
+    }
+
+    return totalCost;
+}
 
 
 

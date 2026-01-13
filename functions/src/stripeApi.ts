@@ -564,13 +564,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Handle subscription checkout completion
     if (session.mode === 'subscription' && tenantId && planId) {
         console.log(`[Stripe Webhook] Subscription checkout completed for tenant: ${tenantId}, plan: ${planId}`);
-        
+
         await updateTenantSubscription(tenantId, planId, {
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: session.subscription as string,
             status: 'active',
         });
-        
+
         return;
     }
 
@@ -582,7 +582,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Handle domain purchases
     if (type === 'domain_purchase') {
         const { domainName, years, orderId } = metadata;
-        
+
         if (!domainName || !orderId) {
             console.error('Missing domain metadata in checkout session');
             return;
@@ -592,7 +592,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
         // Import and call the domain registration function
         const { registerDomainAfterPayment } = await import('./domains/nameComApi');
-        
+
         const result = await registerDomainAfterPayment(
             orderId,
             domainName,
@@ -624,8 +624,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
         return;
     }
 
-    const status = subscription.status === 'active' || subscription.status === 'trialing' 
-        ? 'active' 
+    const status = subscription.status === 'active' || subscription.status === 'trialing'
+        ? 'active'
         : subscription.status;
 
     console.log(`[Stripe Webhook] Subscription ${subscription.id} changed for tenant: ${tenantId}, status: ${status}`);
@@ -634,8 +634,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
         stripeSubscriptionId: subscription.id,
         stripeCustomerId: subscription.customer as string,
         status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
 }
@@ -666,14 +666,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
     // Only process subscription invoices
-    if (!invoice.subscription) {
+    if (!(invoice as any).subscription) {
         console.log('[Stripe Webhook] Invoice not related to subscription, skipping');
         return;
     }
 
-    const subscriptionId = typeof invoice.subscription === 'string' 
-        ? invoice.subscription 
-        : invoice.subscription.id;
+    const subscriptionId = typeof (invoice as any).subscription === 'string'
+        ? (invoice as any).subscription
+        : (invoice as any).subscription.id;
 
     console.log(`[Stripe Webhook] Invoice paid for subscription: ${subscriptionId}`);
 
@@ -692,10 +692,10 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         await db.doc(`subscriptions/${tenantId}`).update({
             status: 'active',
             currentPeriodStart: admin.firestore.Timestamp.fromDate(
-                new Date(subscription.current_period_start * 1000)
+                new Date((subscription as any).current_period_start * 1000)
             ),
             currentPeriodEnd: admin.firestore.Timestamp.fromDate(
-                new Date(subscription.current_period_end * 1000)
+                new Date((subscription as any).current_period_end * 1000)
             ),
             lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
             lastInvoiceId: invoice.id,
@@ -717,13 +717,13 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
  * Handles failed invoice payment
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-    if (!invoice.subscription) {
+    if (!(invoice as any).subscription) {
         return;
     }
 
-    const subscriptionId = typeof invoice.subscription === 'string' 
-        ? invoice.subscription 
-        : invoice.subscription.id;
+    const subscriptionId = typeof (invoice as any).subscription === 'string'
+        ? (invoice as any).subscription
+        : (invoice as any).subscription.id;
 
     console.log(`[Stripe Webhook] Invoice payment FAILED for subscription: ${subscriptionId}`);
 
@@ -828,14 +828,14 @@ async function updateTenantSubscription(
             await subscriptionRef.update({
                 planId,
                 ...updates,
-                currentPeriodStart: updates.currentPeriodStart 
-                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart) 
+                currentPeriodStart: updates.currentPeriodStart
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart)
                     : undefined,
-                currentPeriodEnd: updates.currentPeriodEnd 
-                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd) 
+                currentPeriodEnd: updates.currentPeriodEnd
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd)
                     : undefined,
-                cancelledAt: updates.cancelledAt 
-                    ? admin.firestore.Timestamp.fromDate(updates.cancelledAt) 
+                cancelledAt: updates.cancelledAt
+                    ? admin.firestore.Timestamp.fromDate(updates.cancelledAt)
                     : undefined,
                 lastUpdated: now,
             });
@@ -852,11 +852,11 @@ async function updateTenantSubscription(
                 stripeCustomerId: updates.stripeCustomerId,
                 stripeSubscriptionId: updates.stripeSubscriptionId,
                 startDate: now,
-                currentPeriodStart: updates.currentPeriodStart 
-                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart) 
+                currentPeriodStart: updates.currentPeriodStart
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodStart)
                     : now,
-                currentPeriodEnd: updates.currentPeriodEnd 
-                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd) 
+                currentPeriodEnd: updates.currentPeriodEnd
+                    ? admin.firestore.Timestamp.fromDate(updates.currentPeriodEnd)
                     : admin.firestore.Timestamp.fromDate(periodEnd),
                 cancelAtPeriodEnd: updates.cancelAtPeriodEnd || false,
                 addOns: [],
@@ -920,11 +920,11 @@ async function sendSubscriptionUpgradeEmail(tenantId: string, planId: string) {
 
         // Import email service and template
         const { sendEmail } = await import('./email/emailService');
-        const { 
-            getSubscriptionUpgradeTemplate, 
-            getPlanFeatures, 
-            getPlanPrice, 
-            getPlanCredits 
+        const {
+            getSubscriptionUpgradeTemplate,
+            getPlanFeatures,
+            getPlanPrice,
+            getPlanCredits
         } = await import('./email/templates/subscriptionUpgrade');
 
         // Get plan details
@@ -961,7 +961,7 @@ async function sendSubscriptionUpgradeEmail(tenantId: string, planId: string) {
 
         if (result.success) {
             console.log(`[Stripe Webhook] Subscription upgrade email sent to ${userEmail}`);
-            
+
             // Log the email
             await db.collection('emailLogs').add({
                 type: 'subscription-upgrade',
@@ -1077,7 +1077,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
  */
 async function handleDisputeCreated(dispute: Stripe.Dispute) {
     const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
-    
+
     if (!chargeId) {
         console.error('No charge associated with dispute');
         return;
@@ -1085,7 +1085,7 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
 
     const stripe = getStripe();
     const charge = await stripe.charges.retrieve(chargeId);
-    
+
     if (!charge.payment_intent) {
         console.log('No payment intent associated with disputed charge');
         return;

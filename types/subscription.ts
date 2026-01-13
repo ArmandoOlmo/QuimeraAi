@@ -7,7 +7,7 @@
 // PLAN TYPES
 // =============================================================================
 
-export type SubscriptionPlanId = 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
+export type SubscriptionPlanId = 'free' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
 export type BillingCycle = 'monthly' | 'annually';
 export type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'cancelled' | 'expired';
 
@@ -24,6 +24,8 @@ export interface PlanLimits {
     maxLeads: number;
     maxProducts: number;              // Para e-commerce
     maxEmailsPerMonth: number;
+    maxReports?: number;              // Límite de reportes mensuales (Agency+)
+    maxApiCalls?: number;             // Límite de llamadas API por mes
 }
 
 /**
@@ -444,6 +446,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             maxLeads: 25000,
             maxProducts: 1000,
             maxEmailsPerMonth: 25000,
+            maxReports: 50,
+            maxApiCalls: 10000,
         },
         features: {
             aiWebBuilder: true,
@@ -476,7 +480,57 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         color: '#10b981',
         icon: 'Building2',
     },
-    
+
+    agency_plus: {
+        id: 'agency_plus',
+        name: 'Agency Plus',
+        description: 'Premium para agencias con alto volumen de clientes',
+        price: { monthly: 199, annually: 149 },
+        limits: {
+            maxProjects: 100,
+            maxUsers: 50,
+            maxStorageGB: 500,
+            maxAiCredits: 10000,
+            maxSubClients: 25,
+            maxDomains: 100,
+            maxLeads: 50000,
+            maxProducts: 2500,
+            maxEmailsPerMonth: 50000,
+            maxReports: 200,
+            maxApiCalls: 50000,
+        },
+        features: {
+            aiWebBuilder: true,
+            visualEditor: true,
+            templates: true,
+            cmsEnabled: true,
+            cmsAdvanced: true,
+            crmEnabled: true,
+            crmPipelines: true,
+            crmAutomations: true,
+            ecommerceEnabled: true,
+            ecommerceTransactionFee: 0.5,
+            chatbotEnabled: true,
+            chatbotCustomization: true,
+            aiAssistant: true,
+            aiImageGeneration: true,
+            emailMarketing: true,
+            emailAutomation: true,
+            customDomains: true,
+            removeBranding: true,
+            whiteLabel: true,
+            analyticsBasic: true,
+            analyticsAdvanced: true,
+            supportLevel: 'priority',
+            apiAccess: true,
+            webhooks: true,
+        },
+        isFeatured: true,
+        isPopular: false,
+        color: '#8b5cf6',
+        icon: 'Crown',
+    },
+
     enterprise: {
         id: 'enterprise',
         name: 'Enterprise',
@@ -492,6 +546,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             maxLeads: -1,             // Ilimitado (-1)
             maxProducts: -1,          // Ilimitado
             maxEmailsPerMonth: -1,    // Ilimitado
+            maxReports: -1,           // Ilimitado
+            maxApiCalls: -1,          // Ilimitado
         },
         features: {
             aiWebBuilder: true,
