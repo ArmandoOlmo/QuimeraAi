@@ -6,7 +6,7 @@
 import React from 'react';
 import { UpcomingRenewal } from '../../../hooks/useAgencyMetrics';
 import { Calendar, Clock, DollarSign, AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from '../../../hooks/useRouter';
 
 interface UpcomingRenewalsPanelProps {
     renewals: UpcomingRenewal[];
@@ -17,12 +17,12 @@ export function UpcomingRenewalsPanel({
     renewals,
     maxVisible = 5,
 }: UpcomingRenewalsPanelProps) {
-    const navigate = useNavigate();
+    const { navigate } = useRouter();
     const visibleRenewals = renewals.slice(0, maxVisible);
     const hasMore = renewals.length > maxVisible;
 
     const formatDate = (date: Date): string => {
-        return new Intl.DateFormat('es-MX', {
+        return new Intl.DateTimeFormat('es-MX', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -49,16 +49,16 @@ export function UpcomingRenewalsPanel({
 
     if (renewals.length === 0) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                     Renovaciones Próximas
                 </h3>
                 <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                         No hay renovaciones próximas
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         Las renovaciones de los próximos 30 días aparecerán aquí
                     </p>
                 </div>
@@ -67,9 +67,9 @@ export function UpcomingRenewalsPanel({
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                     Renovaciones Próximas
                 </h3>
                 <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
@@ -82,13 +82,13 @@ export function UpcomingRenewalsPanel({
                     <button
                         key={renewal.clientId}
                         onClick={() => handleRenewalClick(renewal)}
-                        className="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md"
+                        className="w-full text-left p-4 rounded-lg border border-border hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                                 {/* Client Name */}
                                 <div className="flex items-center gap-2 mb-2">
-                                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                                    <p className="font-medium text-foreground truncate">
                                         {renewal.clientName}
                                     </p>
                                     {renewal.status === 'trial' && (
@@ -100,14 +100,14 @@ export function UpcomingRenewalsPanel({
                                 </div>
 
                                 {/* Renewal Date */}
-                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <Calendar className="h-4 w-4 flex-shrink-0" />
                                     <span>{formatDate(renewal.renewalDate)}</span>
                                 </div>
 
                                 {/* Monthly Price */}
                                 {renewal.monthlyPrice && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                                         <DollarSign className="h-4 w-4 flex-shrink-0" />
                                         <span>${renewal.monthlyPrice}/mes</span>
                                     </div>

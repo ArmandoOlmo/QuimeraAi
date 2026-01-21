@@ -9,9 +9,10 @@ import { PageSection } from './ui';
 // STEP TYPES
 // =============================================================================
 
-export type OnboardingWizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type OnboardingWizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export const ONBOARDING_STEPS = {
+    WEBSITE_ANALYZER: 0 as OnboardingWizardStep,
     BUSINESS_INFO: 1 as OnboardingWizardStep,
     DESCRIPTION: 2 as OnboardingWizardStep,
     SERVICES: 3 as OnboardingWizardStep,
@@ -153,44 +154,44 @@ export interface GenerationProgress {
 export interface OnboardingProgress {
     // Current step
     step: OnboardingWizardStep;
-    
+
     // Step 1: Business Info
     businessName: string;
     industry: string;
     subIndustry?: string;
-    
+
     // Step 1: Ecommerce Option
     hasEcommerce?: boolean;
     ecommerceType?: EcommerceType;
-    
+
     // Step 2: Description
     description?: string;
     tagline?: string;
-    
+
     // Step 3: Services
     services?: OnboardingService[];
-    
+
     // Step 4: Template Selection
     selectedTemplateId?: string;
     selectedTemplateName?: string;
     enabledComponents?: PageSection[];
     disabledComponents?: PageSection[];
     aiRecommendation?: TemplateRecommendation;
-    
+
     // Step 5: Contact Info
     contactInfo?: OnboardingContactInfo;
-    
+
     // Step 6: Store Setup (only if hasEcommerce = true)
     storeSetup?: OnboardingStoreSetup;
-    
+
     // Step 7: Generation
     generationProgress?: GenerationProgress;
     generatedProjectId?: string;
-    
+
     // AI Generated Content (cached for preview)
     generatedContent?: Record<string, any>;
     imagePrompts?: Record<string, string>;
-    
+
     // Metadata
     createdAt: { seconds: number; nanoseconds: number };
     updatedAt: { seconds: number; nanoseconds: number };
@@ -208,39 +209,39 @@ export interface OnboardingContextType {
     isLoading: boolean;
     isSaving: boolean;
     error: string | null;
-    
+
     // Actions
     openOnboarding: () => void;
     closeOnboarding: () => void;
     resetOnboarding: () => Promise<void>;
-    
+
     // Navigation
     goToStep: (step: OnboardingWizardStep) => void;
     nextStep: () => void;
     previousStep: () => void;
     canGoNext: () => boolean;
     canGoPrevious: () => boolean;
-    
+
     // Data Updates
     updateBusinessInfo: (name: string, industry: string, subIndustry?: string) => void;
     updateDescription: (description: string, tagline?: string) => void;
     updateServices: (services: OnboardingService[]) => void;
     updateTemplateSelection: (templateId: string, templateName: string, enabledComponents: PageSection[], disabledComponents: PageSection[]) => void;
     updateContactInfo: (contactInfo: OnboardingContactInfo) => void;
-    
+
     // Ecommerce Updates
     updateEcommerceSettings: (hasEcommerce: boolean, ecommerceType?: EcommerceType) => void;
     updateStoreSetup: (storeSetup: OnboardingStoreSetup) => void;
-    
+
     // AI Assistance
     generateDescription: () => Promise<string>;
     generateServices: () => Promise<OnboardingService[]>;
     getTemplateRecommendation: () => Promise<TemplateRecommendation>;
     generateSuggestedCategories: () => Promise<string[]>;
-    
+
     // Final Generation
     startGeneration: () => Promise<void>;
-    
+
     // Persistence
     saveProgress: () => Promise<void>;
     loadProgress: () => Promise<void>;
@@ -375,7 +376,7 @@ import { SitePage } from './project';
  * Each industry gets a set of default pages with pre-configured sections.
  */
 
-export type PageTemplateId = 
+export type PageTemplateId =
     | 'home'
     | 'store'
     | 'product-detail'
@@ -619,11 +620,11 @@ export const PAGE_TEMPLATES: Record<PageTemplateId, PageTemplate> = {
 export const getIndustryPageDefaults = (industry: string, hasEcommerce: boolean = false) => {
     const defaults = INDUSTRY_PAGE_DEFAULTS[industry] || INDUSTRY_PAGE_DEFAULTS['default'];
     let pages = [...defaults.pages];
-    
+
     if (hasEcommerce && defaults.ecommercePages) {
         pages = [...pages, ...defaults.ecommercePages];
     }
-    
+
     return pages;
 };
 
@@ -633,7 +634,7 @@ export const getIndustryPageDefaults = (industry: string, hasEcommerce: boolean 
 export const generatePagesFromTemplates = (templateIds: PageTemplateId[]): Partial<SitePage>[] => {
     return templateIds.map((templateId, index) => {
         const sections = PAGE_TEMPLATE_SECTIONS[templateId] || PAGE_TEMPLATE_SECTIONS['home'];
-        
+
         // Determine page properties based on template
         const pageConfig: Partial<SitePage> = {
             id: `page-${templateId}-${Date.now()}-${index}`,
@@ -649,12 +650,12 @@ export const generatePagesFromTemplates = (templateIds: PageTemplateId[]): Parti
             showInNavigation: shouldShowInNav(templateId),
             navigationOrder: index * 10,
         };
-        
+
         // Add dynamic source for dynamic pages
         if (isDynamicPage(templateId)) {
             pageConfig.dynamicSource = getDynamicSource(templateId);
         }
-        
+
         return pageConfig;
     });
 };

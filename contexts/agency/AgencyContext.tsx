@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../core/AuthContext';
 import { useTenant } from '../tenant/TenantContext';
 import { useAgencyMetrics } from '../../hooks/useAgencyMetrics';
 import type { Tenant } from '../../types/multiTenant';
@@ -60,7 +60,7 @@ interface AgencyProviderProps {
 
 export function AgencyProvider({ children }: AgencyProviderProps) {
     const { user } = useAuth();
-    const { currentTenant, membership } = useTenant();
+    const { currentTenant } = useTenant();
     const [isAgencyPlan, setIsAgencyPlan] = useState(false);
 
     // Check if current tenant is an agency plan
@@ -131,11 +131,8 @@ export function AgencyProvider({ children }: AgencyProviderProps) {
         error,
     };
 
-    // Only provide context if user is on an agency plan
-    if (!isAgencyPlan) {
-        return <>{children}</>;
-    }
-
+    // Always provide context, even if not on agency plan
+    // The routing system will handle access control
     return (
         <AgencyContext.Provider value={value}>
             {children}

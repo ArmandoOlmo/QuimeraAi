@@ -47,14 +47,42 @@ export function AddonsManager() {
 
   useEffect(() => {
     loadPricing();
-    loadCurrentAddons();
+    // loadCurrentAddons is now handled inside loadPricing
   }, [currentTenant]);
 
   const loadPricing = async () => {
+    if (!currentTenant) return;
+
     try {
       const getPricing = httpsCallable(functions, 'agencyBilling-getAddonsPricing');
-      const result = await getPricing() as any;
-      setPricing(result.data);
+      const result = await getPricing({ tenantId: currentTenant.id }) as any;
+      const data = result.data;
+
+      // Extract pricing from availableAddons array
+      if (data.availableAddons) {
+        const pricingObj: AddonPricing = {
+          extraSubClients: 15, // default values
+          extraStorageGB: 10,
+          extraAiCredits: 20,
+        };
+
+        const currentAddonsFromBackend: Record<string, number> = {
+          extraSubClients: 0,
+          extraStorageGB: 0,
+          extraAiCredits: 0,
+        };
+
+        data.availableAddons.forEach((addon: any) => {
+          if (addon.id in pricingObj) {
+            pricingObj[addon.id as keyof AddonPricing] = addon.pricePerUnit;
+            currentAddonsFromBackend[addon.id] = addon.currentQuantity || 0;
+          }
+        });
+
+        setPricing(pricingObj);
+        setAddons(currentAddonsFromBackend);
+        setPendingAddons(currentAddonsFromBackend);
+      }
     } catch (error: any) {
       console.error('Error loading pricing:', error);
       toast.error('Error al cargar precios');

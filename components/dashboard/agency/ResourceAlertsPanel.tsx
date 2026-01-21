@@ -11,7 +11,7 @@ import {
     formatResourceName,
 } from '../../../contexts/agency/AgencyContext';
 import { AlertTriangle, AlertCircle, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from '../../../hooks/useRouter';
 
 interface ResourceAlertsPanelProps {
     alerts: ResourceAlert[];
@@ -19,7 +19,7 @@ interface ResourceAlertsPanelProps {
 }
 
 export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPanelProps) {
-    const navigate = useNavigate();
+    const { navigate } = useRouter();
     const visibleAlerts = alerts.slice(0, maxVisible);
     const hasMore = alerts.length > maxVisible;
 
@@ -38,8 +38,8 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
 
     if (alerts.length === 0) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                     Alertas de Recursos
                 </h3>
                 <div className="text-center py-8">
@@ -58,10 +58,10 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
                             />
                         </svg>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                         No hay alertas de recursos
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         Todos los clientes están dentro de sus límites
                     </p>
                 </div>
@@ -70,9 +70,9 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                     Alertas de Recursos
                 </h3>
                 <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400">

@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Tenant } from '../../../types/multiTenant';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from '../../../hooks/useRouter';
 import {
     ExternalLink,
     AlertTriangle,
@@ -22,7 +22,7 @@ interface ClientListTableProps {
 }
 
 export function ClientListTable({ clients }: ClientListTableProps) {
-    const navigate = useNavigate();
+    const { navigate } = useRouter();
     const { getClientMetrics, exportClientData } = useAgency();
     const [exportingClientId, setExportingClientId] = useState<string | null>(null);
 
@@ -46,12 +46,13 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                 label: 'Suspendido',
                 icon: <AlertTriangle className="h-3.5 w-3.5" />,
             },
-            cancelled: {
-                bg: 'bg-red-100 dark:bg-red-900/20',
-                text: 'text-red-800 dark:text-red-400',
-                label: 'Cancelado',
-                icon: <XCircle className="h-3.5 w-3.5" />,
+            expired: {
+                bg: 'bg-gray-100 dark:bg-gray-800',
+                text: 'text-gray-600 dark:text-gray-400',
+                label: 'Expirado',
+                icon: <Clock className="h-3.5 w-3.5" />,
             },
+
         };
 
         const style = styles[status];
@@ -89,7 +90,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
 
     if (clients.length === 0) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12">
+            <div className="bg-card rounded-lg border border-border p-12">
                 <div className="text-center">
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                         <svg
@@ -109,7 +110,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         No hay clientes todavía
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    <p className="text-muted-foreground mt-1">
                         Comienza agregando tu primer sub-cliente
                     </p>
                     <button
@@ -124,18 +125,18 @@ export function ClientListTable({ clients }: ClientListTableProps) {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-foreground">
                     Clientes ({clients.length})
-                </h3>
+                </h1>
             </div>
 
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-900/50">
+                    <thead className="bg-muted">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                 Cliente
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -175,10 +176,10 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-2">
                                             <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
+                                                <div className="font-medium text-foreground">
                                                     {client.name}
                                                 </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="text-sm text-muted-foreground">
                                                     {client.slug}
                                                 </div>
                                             </div>
@@ -191,7 +192,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                         {getStatusBadge(client.status)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm text-gray-900 dark:text-white capitalize">
+                                        <span className="text-sm text-foreground capitalize">
                                             {client.subscriptionPlan.replace('_', ' ')}
                                         </span>
                                     </td>

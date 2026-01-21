@@ -93,6 +93,14 @@ export const ROUTES = {
   // Invite Route (Public)
   INVITE: '/invite/:token',
 
+  // Agency Routes (Private - Agency Owners/Admins only)
+  AGENCY: '/agency',
+  AGENCY_OVERVIEW: '/agency/overview',
+  AGENCY_BILLING: '/agency/billing',
+  AGENCY_REPORTS: '/agency/reports',
+  AGENCY_NEW_CLIENT: '/agency/new-client',
+  AGENCY_ADDONS: '/agency/addons',
+
   // Admin Routes
   SUPERADMIN: '/admin',
   ADMIN_ADMINS: '/admin/admins',
@@ -453,6 +461,71 @@ export const routeConfigs: RouteConfig[] = [
     type: 'public',
     title: 'Accept Invitation',
     requiresAuth: false,
+  },
+
+  // =========================================================================
+  // AGENCY ROUTES (Private - Requires Agency Owner/Admin Role)
+  // =========================================================================
+  {
+    path: ROUTES.AGENCY,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Dashboard',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    showInNav: true,
+    icon: 'Building2',
+  },
+  {
+    path: ROUTES.AGENCY_OVERVIEW,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Overview',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_BILLING,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Billing',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_REPORTS,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Reports',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_NEW_CLIENT,
+    view: 'agency',
+    type: 'private',
+    title: 'New Client',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_ADDONS,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Add-ons',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
   },
 
   // =========================================================================

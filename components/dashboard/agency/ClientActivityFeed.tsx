@@ -47,13 +47,13 @@ export function ClientActivityFeed({
 
     if (activities.length === 0) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                     Actividad Reciente
                 </h3>
                 <div className="text-center py-8">
                     <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                         No hay actividad reciente
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
@@ -65,12 +65,12 @@ export function ClientActivityFeed({
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                     Actividad Reciente
                 </h3>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground">
                     Últimas {activities.length} actividades
                 </span>
             </div>
@@ -79,21 +79,20 @@ export function ClientActivityFeed({
                 {visibleActivities.map((activity) => (
                     <div
                         key={activity.id}
-                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
                         {/* Icon */}
                         <div
-                            className={`flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0 ${
-                                activity.type === 'client_created'
-                                    ? 'bg-green-100 dark:bg-green-900/20'
-                                    : activity.type === 'payment_received'
+                            className={`flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0 ${activity.type === 'client_created'
+                                ? 'bg-green-100 dark:bg-green-900/20'
+                                : activity.type === 'payment_received'
                                     ? 'bg-emerald-100 dark:bg-emerald-900/20'
                                     : activity.type === 'report_generated'
-                                    ? 'bg-purple-100 dark:bg-purple-900/20'
-                                    : activity.type === 'project_published'
-                                    ? 'bg-orange-100 dark:bg-orange-900/20'
-                                    : 'bg-blue-100 dark:bg-blue-900/20'
-                            }`}
+                                        ? 'bg-purple-100 dark:bg-purple-900/20'
+                                        : activity.type === 'project_published'
+                                            ? 'bg-orange-100 dark:bg-orange-900/20'
+                                            : 'bg-blue-100 dark:bg-blue-900/20'
+                                }`}
                         >
                             <span className={getActivityColor(activity.type)}>
                                 {getIconComponent(activity.type)}
@@ -102,19 +101,19 @@ export function ClientActivityFeed({
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900 dark:text-white">
+                            <p className="text-sm text-foreground">
                                 {activity.description}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                                 {activity.clientName && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    <span className="text-xs text-muted-foreground">
                                         {activity.clientName}
                                     </span>
                                 )}
                                 {activity.userName && (
                                     <>
                                         <span className="text-xs text-gray-400">•</span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="text-xs text-muted-foreground">
                                             por {activity.userName}
                                         </span>
                                     </>
@@ -123,7 +122,7 @@ export function ClientActivityFeed({
                         </div>
 
                         {/* Timestamp */}
-                        <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex-shrink-0 text-xs text-muted-foreground">
                             {formatTimeAgo(activity.timestamp)}
                         </div>
                     </div>
@@ -142,7 +141,7 @@ export function ClientActivityFeed({
             {showAll && (
                 <button
                     onClick={() => setShowAll(false)}
-                    className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
+                    className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground font-medium"
                 >
                     Mostrar menos
                 </button>

@@ -83,6 +83,7 @@ export interface Tenant {
 
     // Associated Users
     ownerUserId: string;
+    ownerTenantId?: string; // If this is a sub-client of an agency
     memberUserIds: string[];
 
     // Projects

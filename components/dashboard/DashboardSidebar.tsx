@@ -7,7 +7,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2 } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
@@ -93,6 +93,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     websites: true,
     ecommerce: true,
     tools: true,
+    agency: true,
   });
 
   // State for footer collapse (true = collapsed, only user visible)
@@ -202,8 +203,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración'), view: 'settings', route: ROUTES.SETTINGS },
   ];
 
+  // Agency section items (sección independiente con árbol de componentes para gestión de agencia)
+  const agencyItems: NavItemData[] = [
+    { id: 'agency-overview', icon: BarChart3, label: t('agency.overview', 'Vista General'), view: 'agency', route: ROUTES.AGENCY },
+    { id: 'agency-billing', icon: DollarSign, label: t('agency.billing', 'Facturación'), view: 'agency', route: ROUTES.AGENCY_BILLING },
+    { id: 'agency-reports', icon: TrendingUp, label: t('agency.reports', 'Reportes'), view: 'agency', route: ROUTES.AGENCY_REPORTS },
+    { id: 'agency-new-client', icon: UserCheck, label: t('agency.newClient', 'Nuevo Cliente'), view: 'agency', route: ROUTES.AGENCY_NEW_CLIENT },
+    { id: 'agency-addons', icon: Package, label: t('agency.addons', 'Add-ons'), view: 'agency', route: ROUTES.AGENCY_ADDONS },
+  ];
+
   // All items combined for backwards compatibility with drag-and-drop
-  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems];
+  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems, ...agencyItems];
 
   // Helper function to reorder items based on saved order
   const getOrderedItems = (orderIds: string[]): NavItemData[] => {
@@ -572,7 +582,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {/* Separator */}
                     <div className="my-2 border-t border-border mx-2" />
                     {/* Show all items directly with drag and drop */}
-                    {[...websiteItems, ...ecommerceItems, ...toolsItems].map((item, index) => (
+                    {[...websiteItems, ...ecommerceItems, ...toolsItems, ...agencyItems].map((item, index) => (
                       <SortableNavItem key={item.id} item={item} index={index + 1} />
                     ))}
                   </>
@@ -657,6 +667,34 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                         <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
                           {toolsItems.map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Agency Section - Collapsible Drawer */}
+                    <div className="mt-3">
+                      <button
+                        onClick={() => toggleSection('agency')}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                        aria-expanded={!collapsedSections.agency}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Building2 size={18} className="flex-shrink-0" />
+                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.agencySection', 'Agencia')}</span>
+                        </div>
+                        <ChevronDown
+                          size={16}
+                          className={`transition-transform duration-200 ${collapsedSections.agency ? '-rotate-90' : 'rotate-0'}`}
+                        />
+                      </button>
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.agency ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+                          }`}
+                      >
+                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                          {agencyItems.map((item, index) => (
+                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
                           ))}
                         </div>
                       </div>

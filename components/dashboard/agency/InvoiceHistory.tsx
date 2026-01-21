@@ -218,7 +218,7 @@ export function InvoiceHistory() {
     };
 
     const formatDate = (date: Date) => {
-        return new Intl.DateFormat('es-MX', {
+        return new Intl.DateTimeFormat('es-MX', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -261,47 +261,47 @@ export function InvoiceHistory() {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <DollarSign className="h-5 w-5 text-green-600" />
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-medium text-muted-foreground">
                             Ingresos Totales
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-3xl font-bold text-foreground">
                         {formatCurrency(calculateTotalRevenue())}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {dateRange === 'all'
                             ? 'Todo el tiempo'
                             : `Últimos ${dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90'} días`}
                     </p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <TrendingUp className="h-5 w-5 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-medium text-muted-foreground">
                             Pago Promedio
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-3xl font-bold text-foreground">
                         {formatCurrency(calculateAveragePayment())}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Por transacción</p>
+                    <p className="text-sm text-muted-foreground mt-1">Por transacción</p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <CheckCircle className="h-5 w-5 text-purple-600" />
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-medium text-muted-foreground">
                             Transacciones
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-3xl font-bold text-foreground">
                         {payments.filter((p) => p.status === 'succeeded').length}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         Exitosas de {payments.length} totales
                     </p>
                 </div>
@@ -314,21 +314,19 @@ export function InvoiceHistory() {
                     <div className="flex gap-2">
                         <button
                             onClick={() => setActiveView('payments')}
-                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                                activeView === 'payments'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeView === 'payments'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
                         >
                             Pagos
                         </button>
                         <button
                             onClick={() => setActiveView('invoices')}
-                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                                activeView === 'invoices'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeView === 'invoices'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
                         >
                             Invoices
                         </button>
@@ -338,7 +336,7 @@ export function InvoiceHistory() {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-card text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="all">Todos los estados</option>
                         <option value="succeeded">Exitoso</option>
@@ -354,7 +352,7 @@ export function InvoiceHistory() {
                     <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value as any)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-card text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="7d">Últimos 7 días</option>
                         <option value="30d">Últimos 30 días</option>
@@ -366,24 +364,24 @@ export function InvoiceHistory() {
 
             {/* Content */}
             {activeView === 'payments' ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 dark:bg-gray-900/50">
+                            <thead className="bg-muted">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Monto
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         ID Transacción
                                     </th>
                                 </tr>
@@ -394,19 +392,19 @@ export function InvoiceHistory() {
                                         key={payment.id}
                                         className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                     >
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {formatDate(payment.createdAt)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                             {payment.clientName || 'Cliente'}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
                                             {formatCurrency(payment.amount)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {getStatusBadge(payment.status)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-500 font-mono">
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-muted-foreground font-mono">
                                             {payment.stripePaymentIntentId?.substring(0, 20)}...
                                         </td>
                                     </tr>
@@ -418,37 +416,37 @@ export function InvoiceHistory() {
                     {filteredPayments.length === 0 && (
                         <div className="text-center py-12">
                             <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <p className="text-muted-foreground">
                                 No hay pagos para mostrar
                             </p>
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 dark:bg-gray-900/50">
+                            <thead className="bg-muted">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Período
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Base
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Overages
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Total
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
                                         Acciones
                                     </th>
                                 </tr>
@@ -459,22 +457,22 @@ export function InvoiceHistory() {
                                         key={invoice.id}
                                         className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                     >
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {new Date(invoice.year, invoice.month - 1).toLocaleDateString(
                                                 'es-MX',
                                                 { month: 'long', year: 'numeric' }
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                             {invoice.clientName}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {formatCurrency(invoice.baseCharge)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {formatCurrency(invoice.totalOverage)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
                                             {formatCurrency(invoice.totalAmount)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -498,7 +496,7 @@ export function InvoiceHistory() {
                     {filteredInvoices.length === 0 && (
                         <div className="text-center py-12">
                             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <p className="text-muted-foreground">
                                 No hay invoices para mostrar
                             </p>
                         </div>

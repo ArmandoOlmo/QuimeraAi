@@ -60,18 +60,18 @@ const logOnboardingApiCall = (
 // Helper to clean JSON from markdown code blocks and fix common issues
 const cleanJsonResponse = (text: string): string => {
     if (!text) return '{}';
-    
+
     // Remove markdown code blocks
     let cleaned = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '');
     // Trim whitespace
     cleaned = cleaned.trim();
-    
+
     // Find JSON array or object
     const jsonMatch = cleaned.match(/[\[{][\s\S]*[\]}]/);
     if (jsonMatch) {
         cleaned = jsonMatch[0];
     }
-    
+
     // Fix common JSON issues from LLM
     // Remove trailing commas before } or ]
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
@@ -81,14 +81,14 @@ const cleanJsonResponse = (text: string): string => {
     cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, '"$1 $2"');
     // Remove any control characters except tab, newline, carriage return
     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ');
-    
+
     return cleaned;
 };
 
 // Geocode address using Nominatim (OpenStreetMap - free, no API key needed)
 const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     if (!address || address.trim() === '') return null;
-    
+
     try {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
@@ -99,13 +99,13 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
             }
         );
         const results = await response.json();
-        
+
         if (results && results.length > 0) {
             const { lat, lon } = results[0];
             if (isDev) console.log('📍 Geocoded address:', address, '→', lat, lon);
             return { lat: parseFloat(lat), lng: parseFloat(lon) };
         }
-        
+
         if (isDev) console.warn('📍 Could not geocode address:', address);
         return null;
     } catch (error) {
@@ -117,7 +117,7 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
 // Safe JSON parse with fallback
 const safeJsonParse = (text: string, fallback: any = {}): any => {
     if (!text || text.trim() === '') return fallback;
-    
+
     // First attempt with cleaned text
     try {
         const cleaned = cleanJsonResponse(text);
@@ -125,7 +125,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     } catch (e1) {
         console.warn('JSON parse attempt 1 failed:', e1);
     }
-    
+
     // Second attempt: more aggressive cleaning
     try {
         let cleaned = text
@@ -137,7 +137,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
             .replace(/\t/g, ' ') // Replace tabs
             .replace(/\s+/g, ' ') // Collapse multiple spaces
             .trim();
-        
+
         const jsonMatch = cleaned.match(/[\[{][\s\S]*[\]}]/);
         if (jsonMatch) {
             let jsonStr = jsonMatch[0]
@@ -148,7 +148,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     } catch (e2) {
         console.warn('JSON parse attempt 2 failed:', e2);
     }
-    
+
     // Third attempt: try to manually extract array items for services
     try {
         if (text.includes('"name"') && text.includes('"description"')) {
@@ -157,14 +157,14 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
             const descMatches = text.matchAll(/"description"\s*:\s*"([^"]+)"/g);
             const names = Array.from(nameMatches).map(m => m[1]);
             const descs = Array.from(descMatches).map(m => m[1]);
-            
+
             for (let i = 0; i < names.length; i++) {
                 items.push({
                     name: names[i],
                     description: descs[i] || ''
                 });
             }
-            
+
             if (items.length > 0) {
                 if (isDev) console.log('Extracted items manually:', items);
                 return items;
@@ -173,7 +173,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     } catch (e3) {
         console.warn('Manual extraction failed:', e3);
     }
-    
+
     return fallback;
 };
 
@@ -182,7 +182,7 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
 // =============================================================================
 
 const createInitialProgress = (language: string): OnboardingProgress => ({
-    step: ONBOARDING_STEPS.BUSINESS_INFO,
+    step: ONBOARDING_STEPS.WEBSITE_ANALYZER,
     businessName: '',
     industry: '',
     createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
@@ -204,7 +204,7 @@ export const useOnboarding = () => {
         loadProject,
         generateImage,
     } = useEditor();
-    
+
     // Get setIsOnboardingOpen from UIContext (same context that OnboardingModal uses)
     const { setIsOnboardingOpen } = useUI();
 
@@ -213,7 +213,7 @@ export const useOnboarding = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Ecommerce state
     const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -223,7 +223,7 @@ export const useOnboarding = () => {
 
     // Ref to track if we've loaded progress
     const hasLoadedProgress = useRef(false);
-    
+
     // Ref to prevent duplicate generation (declared here so resetOnboarding can access it)
     const isGeneratingRef = useRef(false);
 
@@ -263,13 +263,13 @@ export const useOnboarding = () => {
 
         try {
             setIsSaving(true);
-            
+
             // Remove undefined values (Firestore doesn't allow them)
             const cleanData = JSON.parse(JSON.stringify({
                 ...dataToSave,
                 updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
             }));
-            
+
             await setDoc(docRef, cleanData);
             if (!newProgress) {
                 setProgress(cleanData);
@@ -350,21 +350,21 @@ export const useOnboarding = () => {
         if (!progress) return;
         const maxStep = getMaxStep();
         if (progress.step >= maxStep) return;
-        
+
         let nextStepNum = progress.step + 1;
-        
+
         // Skip step 6 (Store Setup) if ecommerce is not enabled
         // When hasEcommerce is false, step 5 goes directly to step 6 (which shows Generation)
         // When hasEcommerce is true, step 5 goes to step 6 (Store Setup), then to step 7 (Generation)
-        
+
         goToStep(nextStepNum as OnboardingStep);
     }, [progress, goToStep, getMaxStep]);
 
     const previousStep = useCallback(() => {
-        if (!progress || progress.step <= 1) return;
-        
+        if (!progress || progress.step <= 0) return;
+
         let prevStepNum = progress.step - 1;
-        
+
         goToStep(prevStepNum as OnboardingStep);
     }, [progress, goToStep]);
 
@@ -372,8 +372,10 @@ export const useOnboarding = () => {
         if (!progress) return false;
         const maxStep = getMaxStep();
         const generationStep = maxStep; // 6 or 7
-        
+
         switch (progress.step) {
+            case 0:
+                return true; // Can always skip to step 1
             case 1:
                 return !!(progress.businessName?.trim() && progress.industry);
             case 2:
@@ -400,7 +402,7 @@ export const useOnboarding = () => {
 
     const canGoPrevious = useCallback(() => {
         if (!progress) return false;
-        return progress.step > 1;
+        return progress.step > 0;
     }, [progress]);
 
     // =============================================================================
@@ -499,10 +501,10 @@ export const useOnboarding = () => {
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
-            
+
             if (Array.isArray(parsed) && parsed.length > 0) {
                 // Extract category names if they are objects
-                const categories = parsed.map((item: any) => 
+                const categories = parsed.map((item: any) =>
                     typeof item === 'string' ? item : item.name || item.category || String(item)
                 );
                 setSuggestedCategories(categories);
@@ -539,6 +541,88 @@ export const useOnboarding = () => {
     };
 
     // =============================================================================
+    // WEBSITE ANALYSIS (Step 0)
+    // =============================================================================
+
+    const [isAnalyzingWebsite, setIsAnalyzingWebsite] = useState(false);
+
+    const analyzeWebsite = useCallback(async (url: string) => {
+        if (!user) {
+            throw new Error('User must be authenticated');
+        }
+
+        setIsAnalyzingWebsite(true);
+        setError(null);
+
+        try {
+            // Import Firebase functions
+            const { getFunctions, httpsCallable } = await import('firebase/functions');
+            const functions = getFunctions();
+            const analyzeWebsiteFn = httpsCallable(functions, 'agencyOnboarding-analyzeWebsite');
+
+            const response = await analyzeWebsiteFn({ url });
+            const data = response.data as { success: boolean; result: any };
+
+            if (!data.success || !data.result) {
+                throw new Error('Analysis failed');
+            }
+
+            const result = data.result;
+
+            // Auto-populate onboarding progress with analyzed data
+            const updates: Partial<OnboardingProgress> = {
+                businessName: result.businessName || '',
+                industry: result.industry || '',
+                description: result.description || '',
+                tagline: result.tagline || '',
+            };
+
+            // Add services if available
+            if (result.services && Array.isArray(result.services)) {
+                updates.services = result.services.map((s: any, idx: number) => ({
+                    id: `service-analyzed-${Date.now()}-${idx}`,
+                    name: s.name || '',
+                    description: s.description || '',
+                    isAIGenerated: true,
+                }));
+            }
+
+            // Add contact info if available
+            if (result.contactInfo) {
+                updates.contactInfo = {
+                    email: result.contactInfo.email,
+                    phone: result.contactInfo.phone,
+                    address: result.contactInfo.address,
+                    facebook: result.contactInfo.facebook,
+                    instagram: result.contactInfo.instagram,
+                    twitter: result.contactInfo.twitter,
+                    linkedin: result.contactInfo.linkedin,
+                    youtube: result.contactInfo.youtube,
+                };
+            }
+
+            // Update progress with analyzed data
+            updateProgress(updates);
+
+            // Log successful analysis
+            logOnboardingApiCall(user.uid, 'gemini-2.5-flash', 'website_analysis', true);
+
+            return result;
+        } catch (err: any) {
+            console.error('Website analysis failed:', err);
+            logOnboardingApiCall(user?.uid, 'gemini-2.5-flash', 'website_analysis', false, err.message);
+            setError(err.message || 'Failed to analyze website');
+            throw err;
+        } finally {
+            setIsAnalyzingWebsite(false);
+        }
+    }, [user, updateProgress]);
+
+    const skipWebsiteAnalysis = useCallback(() => {
+        goToStep(ONBOARDING_STEPS.BUSINESS_INFO);
+    }, [goToStep]);
+
+    // =============================================================================
     // AI ASSISTANCE
     // =============================================================================
 
@@ -566,10 +650,10 @@ export const useOnboarding = () => {
                 {},
                 user?.uid
             );
-            
+
             // Log successful API call
             logOnboardingApiCall(user?.uid, promptConfig.model, 'description', true);
-            
+
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, null);
 
@@ -580,7 +664,7 @@ export const useOnboarding = () => {
                     tagline: parsed.tagline || '',
                 };
             }
-            
+
             // Fallback: try to extract just the text content (remove JSON formatting)
             let cleanText = text
                 .replace(/```json\s*/gi, '')
@@ -589,7 +673,7 @@ export const useOnboarding = () => {
                 .replace(/"\s*,?\s*"tagline"\s*:\s*"[^"]*"\s*\}\s*$/i, '')
                 .replace(/"\s*\}\s*$/i, '')
                 .trim();
-            
+
             return {
                 description: cleanText || text.trim(),
                 tagline: '',
@@ -625,10 +709,10 @@ export const useOnboarding = () => {
                 {},
                 user?.uid
             );
-            
+
             // Log successful API call
             logOnboardingApiCall(user?.uid, promptConfig.model, 'services', true);
-            
+
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
 
@@ -636,7 +720,7 @@ export const useOnboarding = () => {
                 console.warn('Services response is not an array, returning empty');
                 return [];
             }
-            
+
             return parsed.map((item: any, index: number) => ({
                 id: `service-${Date.now()}-${index}`,
                 name: item.name || `Service ${index + 1}`,
@@ -673,11 +757,11 @@ export const useOnboarding = () => {
             if (theme.secondaryColor) colors.push(`secondary: ${theme.secondaryColor}`);
             if (theme.backgroundColor) colors.push(`background: ${theme.backgroundColor}`);
             if (theme.accentColor) colors.push(`accent: ${theme.accentColor}`);
-            
+
             // Also check hero colors if available
             const heroColors = t.data?.hero?.colors;
             if (heroColors?.primary) colors.push(`hero: ${heroColors.primary}`);
-            
+
             return colors.length > 0 ? colors.join(', ') : 'default colors';
         };
 
@@ -715,7 +799,7 @@ export const useOnboarding = () => {
             const sections = Object.keys(t.sectionVisibility || {}).filter(
                 k => t.sectionVisibility?.[k as keyof typeof t.sectionVisibility]
             );
-            
+
             return {
                 index: index + 1,
                 id: t.id,
@@ -754,7 +838,7 @@ export const useOnboarding = () => {
         };
 
         const colorPref = industryColorPrefs[progress.industry] || 'professional, balanced';
-        
+
         // Shuffle templates to avoid always picking the first one
         const shuffledSummary = [...templateSummary].sort(() => Math.random() - 0.5);
 
@@ -766,13 +850,13 @@ TEMPLATE #${t.index}: "${t.name}"
   Color Mood: ${t.colorMood}
   Color Scheme: ${t.colorScheme}
   Components: ${[
-      t.hasHero ? 'Hero' : '',
-      t.hasServices ? 'Services' : '',
-      t.hasTeam ? 'Team' : '',
-      t.hasPortfolio ? 'Portfolio' : '',
-      t.hasPricing ? 'Pricing' : '',
-      t.hasMenu ? 'Menu' : ''
-  ].filter(Boolean).join(', ') || 'Basic'}
+                t.hasHero ? 'Hero' : '',
+                t.hasServices ? 'Services' : '',
+                t.hasTeam ? 'Team' : '',
+                t.hasPortfolio ? 'Portfolio' : '',
+                t.hasPricing ? 'Pricing' : '',
+                t.hasMenu ? 'Menu' : ''
+            ].filter(Boolean).join(', ') || 'Basic'}
 `).join('');
 
         // Get prompt from centralized system (editable in Super Admin)
@@ -806,10 +890,10 @@ TEMPLATE #${t.index}: "${t.name}"
                 { temperature: 0.7, maxOutputTokens: 600 },
                 user?.uid                    // userId (optional)
             );
-            
+
             // Log successful API call
             logOnboardingApiCall(user?.uid, promptConfig.model, 'template-rec', true);
-            
+
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
 
@@ -817,7 +901,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
             // Verify the template exists
             const selectedTemplate = templates.find((t: Project) => t.id === parsed.templateId);
-            
+
             if (selectedTemplate) {
                 if (isDev) console.log('🎨 AI recommended template:', parsed.templateName, 'Score:', parsed.matchScore);
                 return {
@@ -829,13 +913,13 @@ TEMPLATE #${t.index}: "${t.name}"
                     disabledComponents: componentDefaults.disabled,
                 };
             }
-            
+
             // Fallback to first matching industry or first template
-            const industryMatch = templates.find((t: Project) => 
+            const industryMatch = templates.find((t: Project) =>
                 t.industries?.some((i: string) => i.toLowerCase().includes(progress.industry.toLowerCase()))
             );
             const fallbackTemplate = industryMatch || templates[0];
-            
+
             if (isDev) console.log('⚠️ Using fallback template:', fallbackTemplate?.name);
             return {
                 templateId: fallbackTemplate?.id || 'default',
@@ -896,7 +980,7 @@ TEMPLATE #${t.index}: "${t.name}"
             'travel': 'vibrant scenic, adventure inspiring, wanderlust, natural beauty',
             'event-planning': 'elegant celebration, festive glamorous, joyful, memorable moments',
         };
-        
+
         const key = industry?.toLowerCase().replace(/\s+/g, '-') || 'default';
         return styles[key] || 'professional modern, clean aesthetic, high quality, balanced lighting';
     };
@@ -905,32 +989,32 @@ TEMPLATE #${t.index}: "${t.name}"
     // aiContent contains AI-generated data (menu items, team members, portfolio projects, etc.)
     // This is the FALLBACK method - now more specific with full business context
     const generateImagePrompts = useCallback((
-        templateData: any, 
-        businessName: string, 
-        industry: string, 
+        templateData: any,
+        businessName: string,
+        industry: string,
         enabledComponents: string[],
         aiContent: Record<string, any> = {},
         businessDescription: string = ''
     ): Record<string, { prompt: string; aspectRatio: string; style: string }> => {
         const prompts: Record<string, { prompt: string; aspectRatio: string; style: string }> = {};
         const ind = industry?.replace(/-/g, ' ') || 'business';
-        
+
         // Use FULL description for more specific images (up to 300 chars)
-        const businessContext = businessDescription 
+        const businessContext = businessDescription
             ? `, representing "${businessName}" - ${businessDescription.substring(0, 300)}`
             : `, for "${businessName}"`;
-        
+
         // Consistent style for ALL images in this project
         const visualStyle = getIndustryStyle(industry);
         const noText = 'no text, no words, no letters, no watermark, no logos';
         const consistency = `consistent style, ${visualStyle}, cohesive visual identity`;
-        
+
         // Specific business identifier for all prompts
         const businessId = `"${businessName}" ${ind} business`;
-        
+
         // Helper to check if component is enabled
         const isEnabled = (comp: string) => enabledComponents.includes(comp);
-        
+
         // HERO - main image (16:9 wide) - SPECIFIC to business
         if (templateData.hero && isEnabled('hero')) {
             prompts['hero.imageUrl'] = {
@@ -939,7 +1023,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 style: 'Photorealistic'
             };
         }
-        
+
         // HERO SPLIT (3:4 vertical) - SPECIFIC to business
         if (templateData.heroSplit && isEnabled('heroSplit')) {
             prompts['heroSplit.imageUrl'] = {
@@ -948,7 +1032,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 style: 'Photorealistic'
             };
         }
-        
+
         // BANNER (21:9 ultra-wide) - SPECIFIC to business
         if (templateData.banner && isEnabled('banner')) {
             prompts['banner.backgroundImageUrl'] = {
@@ -957,7 +1041,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 style: 'Photorealistic'
             };
         }
-        
+
         // CTA background (16:9)
         if (templateData.cta?.backgroundImage !== undefined && isEnabled('cta')) {
             prompts['cta.backgroundImage'] = {
@@ -966,7 +1050,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 style: 'Photorealistic'
             };
         }
-        
+
         // FEATURES items (1:1 square) - Use AI-generated feature titles for context
         if (templateData.features?.items && isEnabled('features')) {
             const featuresItems = aiContent.features || [];
@@ -982,13 +1066,13 @@ TEMPLATE #${t.index}: "${t.name}"
                 };
             }
         }
-        
+
         // TEAM members - SKIP image generation for faster onboarding
         // Team images will use SVG placeholders by default. Users can generate images later if needed.
         if (templateData.team?.items && isEnabled('team') && isDev) {
             console.log('📝 Team images: Using SVG placeholders (skipping generation for speed)');
         }
-        
+
         // PORTFOLIO items (4:3 landscape) - Use AI-generated portfolio titles and descriptions
         if (templateData.portfolio?.items && isEnabled('portfolio')) {
             const portfolioItems = aiContent.portfolio || [];
@@ -1005,7 +1089,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 };
             }
         }
-        
+
         // MENU items (1:1 food photos) - Use AI-generated menu item names and descriptions
         // Limited to 3 images for faster onboarding (users can generate more later)
         if (templateData.menu?.items && isEnabled('menu')) {
@@ -1023,7 +1107,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 };
             }
         }
-        
+
         // SLIDESHOW/GALLERY items (16:9 wide) - Use AI-generated slide titles for context
         // Limited to 1 image for faster onboarding (users can generate more later)
         if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
@@ -1041,7 +1125,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 };
             }
         }
-        
+
         // Ensure at least hero
         if (Object.keys(prompts).length === 0) {
             prompts['hero.imageUrl'] = {
@@ -1050,7 +1134,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 style: 'Photorealistic'
             };
         }
-        
+
         if (isDev) {
             console.log('📝 Image prompts with consistent style:', Object.keys(prompts).length);
             console.log('   Visual style:', visualStyle);
@@ -1071,81 +1155,81 @@ TEMPLATE #${t.index}: "${t.name}"
         services: string[] = [],
         storeCategories: string[] = []
     ): Promise<Record<string, { prompt: string; aspectRatio: string; style: string }>> => {
-        
+
         // Helper to check if component is enabled
         const isEnabled = (comp: string) => enabledComponents.includes(comp);
-        
+
         // Build the list of images needed with their aspect ratios
         const imagesToGenerate: { key: string; aspectRatio: string; description: string }[] = [];
-        
+
         // HERO
         if (templateData.hero && isEnabled('hero')) {
             imagesToGenerate.push({ key: 'hero.imageUrl', aspectRatio: '16:9', description: 'Main hero banner image' });
         }
-        
+
         // HERO SPLIT
         if (templateData.heroSplit && isEnabled('heroSplit')) {
             imagesToGenerate.push({ key: 'heroSplit.imageUrl', aspectRatio: '3:4', description: 'Vertical split hero image' });
         }
-        
+
         // BANNER
         if (templateData.banner && isEnabled('banner')) {
             imagesToGenerate.push({ key: 'banner.backgroundImageUrl', aspectRatio: '21:9', description: 'Wide panoramic banner' });
         }
-        
+
         // CTA
         if (templateData.cta?.backgroundImage !== undefined && isEnabled('cta')) {
             imagesToGenerate.push({ key: 'cta.backgroundImage', aspectRatio: '16:9', description: 'Call to action background' });
         }
-        
+
         // FEATURES
         if (templateData.features?.items && isEnabled('features')) {
             const featuresItems = aiContent.features || [];
             const count = Math.min(featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length, 6);
             for (let i = 0; i < count; i++) {
                 const feature = featuresItems[i];
-                imagesToGenerate.push({ 
-                    key: `features.items[${i}].imageUrl`, 
-                    aspectRatio: '1:1', 
-                    description: `Feature: ${feature?.title || `Feature ${i + 1}`}` 
+                imagesToGenerate.push({
+                    key: `features.items[${i}].imageUrl`,
+                    aspectRatio: '1:1',
+                    description: `Feature: ${feature?.title || `Feature ${i + 1}`}`
                 });
             }
         }
-        
+
         // TEAM - SKIP image generation for faster onboarding
         // Team images will use SVG placeholders. Users can generate images later if needed.
         if (templateData.team?.items && isEnabled('team')) {
             if (isDev) console.log('📝 Team images: Using SVG placeholders (skipping generation for speed)');
         }
-        
+
         // PORTFOLIO
         if (templateData.portfolio?.items && isEnabled('portfolio')) {
             const portfolioItems = aiContent.portfolio || [];
             const count = Math.min(portfolioItems.length > 0 ? portfolioItems.length : templateData.portfolio.items.length, 6);
             for (let i = 0; i < count; i++) {
                 const project = portfolioItems[i];
-                imagesToGenerate.push({ 
-                    key: `portfolio.items[${i}].imageUrl`, 
-                    aspectRatio: '4:3', 
-                    description: `Portfolio: ${project?.title || `Project ${i + 1}`} - ${project?.description || ''}` 
+                imagesToGenerate.push({
+                    key: `portfolio.items[${i}].imageUrl`,
+                    aspectRatio: '4:3',
+                    description: `Portfolio: ${project?.title || `Project ${i + 1}`} - ${project?.description || ''}`
                 });
             }
         }
-        
+
         // MENU - Limited to 3 images for faster onboarding
         if (templateData.menu?.items && isEnabled('menu')) {
             const menuItems = aiContent.menu || [];
             const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 3); // Max 3 for faster generation
             for (let i = 0; i < count; i++) {
                 const dish = menuItems[i];
-                imagesToGenerate.push({ 
-                    key: `menu.items[${i}].imageUrl`, 
-                    aspectRatio: '1:1', 
-                    description: `Menu dish: ${dish?.name || 'Dish'} - ${dish?.description || ''}` 
+                imagesToGenerate.push({
+                    key: `menu.items[${i}].imageUrl`,
+                    aspectRatio: '1:1',
+                    description: `Menu dish: ${dish?.name || 'Dish'} - ${dish?.description || ''}`
                 });
             }
         }
-        
+
         // SLIDESHOW/GALLERY - Limited to 1 image for faster onboarding
         if ((templateData.slideshow?.items || templateData.slideshow?.slides) && isEnabled('slideshow')) {
             const slideshowItems = aiContent.slideshow || [];
@@ -1153,44 +1237,44 @@ TEMPLATE #${t.index}: "${t.name}"
             const count = Math.min(slideshowItems.length > 0 ? slideshowItems.length : templateItems.length, 1); // Max 1 for faster generation
             for (let i = 0; i < count; i++) {
                 const slide = slideshowItems[i];
-                imagesToGenerate.push({ 
-                    key: `slideshow.items[${i}].imageUrl`, 
-                    aspectRatio: '16:9', 
-                    description: `Gallery/Slideshow: ${slide?.title || `Image ${i + 1}`} - ${slide?.subtitle || ''}` 
+                imagesToGenerate.push({
+                    key: `slideshow.items[${i}].imageUrl`,
+                    aspectRatio: '16:9',
+                    description: `Gallery/Slideshow: ${slide?.title || `Image ${i + 1}`} - ${slide?.subtitle || ''}`
                 });
             }
         }
-        
+
         if (imagesToGenerate.length === 0) {
             // Fallback to at least hero
             imagesToGenerate.push({ key: 'hero.imageUrl', aspectRatio: '16:9', description: 'Main hero banner image' });
         }
-        
+
         // Get the LLM prompt
         const promptConfig = getPrompt('onboarding-generate-image-prompts');
         if (!promptConfig) {
             console.warn('⚠️ LLM image prompt not found, falling back to static generation');
             return generateImagePrompts(templateData, businessName, industry, enabledComponents, aiContent, description);
         }
-        
+
         // Format generated content for the prompt
         const generatedContentStr = JSON.stringify(aiContent, null, 2);
-        
+
         // Format images needed for the prompt
-        const imagesNeededStr = imagesToGenerate.map(img => 
+        const imagesNeededStr = imagesToGenerate.map(img =>
             `- ${img.key} (${img.aspectRatio}): ${img.description}`
         ).join('\n');
-        
+
         // Format services list
-        const servicesStr = services.length > 0 
+        const servicesStr = services.length > 0
             ? services.map(s => typeof s === 'object' ? (s as any).name || JSON.stringify(s) : s).join(', ')
             : 'Not specified';
-        
+
         // Format store categories
-        const storeCategoriesStr = storeCategories.length > 0 
+        const storeCategoriesStr = storeCategories.length > 0
             ? storeCategories.join(', ')
             : 'Not applicable';
-        
+
         // Build the prompt with all business context
         const prompt = promptConfig.template
             .replace(/\{\{businessName\}\}/g, businessName)
@@ -1202,7 +1286,7 @@ TEMPLATE #${t.index}: "${t.name}"
             .replace('{{language}}', language === 'es' ? 'Spanish' : 'English')
             .replace('{{generatedContent}}', generatedContentStr)
             .replace('{{imagesToGenerate}}', imagesNeededStr);
-        
+
         try {
             if (isDev) console.log('🎨 Generating image prompts with LLM...');
             if (isDev) console.log('   Images needed:', imagesToGenerate.length);
@@ -1220,15 +1304,15 @@ TEMPLATE #${t.index}: "${t.name}"
 
             const text = extractTextFromResponse(response);
             const llmPrompts = safeJsonParse(text, null);
-            
+
             if (!llmPrompts || typeof llmPrompts !== 'object') {
                 console.warn('⚠️ LLM returned invalid response, falling back to static generation');
                 return generateImagePrompts(templateData, businessName, industry, enabledComponents, aiContent, description);
             }
-            
+
             // Convert LLM response to our format with aspect ratios
             const result: Record<string, { prompt: string; aspectRatio: string; style: string }> = {};
-            
+
             for (const img of imagesToGenerate) {
                 const llmPrompt = llmPrompts[img.key];
                 if (llmPrompt && typeof llmPrompt === 'string') {
@@ -1246,10 +1330,10 @@ TEMPLATE #${t.index}: "${t.name}"
                     };
                 }
             }
-            
+
             if (isDev) console.log('✅ LLM generated', Object.keys(result).length, 'image prompts');
             return result;
-            
+
         } catch (error) {
             console.error('❌ LLM image prompt generation failed:', error);
             console.warn('⚠️ Falling back to static generation');
@@ -1273,11 +1357,11 @@ TEMPLATE #${t.index}: "${t.name}"
         }
 
         // Get enabled components (use template defaults if not set)
-        const enabledComponents = progress.enabledComponents || 
+        const enabledComponents = progress.enabledComponents ||
             Object.keys(selectedTemplate.sectionVisibility || {}).filter(
                 k => selectedTemplate.sectionVisibility?.[k as keyof typeof selectedTemplate.sectionVisibility]
             );
-        
+
         if (isDev) console.log('📋 Enabled components for generation:', enabledComponents);
 
         // Generate image prompts using LLM for better context understanding
@@ -1285,7 +1369,7 @@ TEMPLATE #${t.index}: "${t.name}"
         // Now includes tagline, services, and store categories for more specific images
         const serviceNames = progress.services?.map(s => s.name) || [];
         const storeCategories = progress.storeSetup?.selectedCategories || [];
-        
+
         const imagePrompts = await generateImagePromptsWithLLM(
             selectedTemplate.data,
             progress.businessName,
@@ -1298,7 +1382,7 @@ TEMPLATE #${t.index}: "${t.name}"
             serviceNames,
             storeCategories
         );
-        
+
         if (isDev) console.log('📸 Image prompts to generate:', Object.keys(imagePrompts).length);
 
         return {
@@ -1318,18 +1402,18 @@ TEMPLATE #${t.index}: "${t.name}"
         const content: Record<string, any> = {};
         const isSpanish = language === 'es';
         const ind = industry?.replace(/-/g, ' ') || 'business';
-        
+
         // Only generate for enabled components that need content
         const needsGeneration = ['testimonials', 'team', 'portfolio', 'pricing', 'howItWorks', 'menu', 'faq', 'slideshow', 'features'];
         const toGenerate = needsGeneration.filter(c => enabledComponents.includes(c));
-        
+
         if (toGenerate.length === 0) {
             if (isDev) console.log('📝 No components need AI content generation');
             return content;
         }
-        
+
         if (isDev) console.log('📝 Generating AI content for:', toGenerate);
-        
+
         // Get prompt from centralized system (editable in Super Admin)
         const promptConfig = getPrompt('onboarding-generate-component-content');
         if (!promptConfig) {
@@ -1358,7 +1442,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
-            
+
             if (isDev) console.log('📝 AI generated content:', Object.keys(parsed));
             return parsed;
         } catch (err) {
@@ -1370,10 +1454,10 @@ TEMPLATE #${t.index}: "${t.name}"
     // =============================================================================
     // APPLY BUSINESS DATA TO TEMPLATE (only enabled components)
     // =============================================================================
-    
+
     const applyBusinessDataToTemplate = useCallback((
-        templateData: any, 
-        prog: OnboardingProgress, 
+        templateData: any,
+        prog: OnboardingProgress,
         generatedImages: Record<string, string>,
         aiContent: Record<string, any> = {}
     ) => {
@@ -1385,20 +1469,20 @@ TEMPLATE #${t.index}: "${t.name}"
         const services = prog.services || [];
         const contact = prog.contactInfo || {};
         const enabled = prog.enabledComponents || [];
-        
+
         // Helper for bilingual text
         const t = (spanish: string, english: string) => es ? spanish : english;
-        
+
         // Check if component is enabled
         const isOn = (comp: string) => enabled.length === 0 || enabled.includes(comp as any);
-        
+
         // ============ HEADER (always apply - keep template colors) ============
         if (data.header) {
             data.header.companyName = name;
             if (data.header.logoText !== undefined) data.header.logoText = name;
             // Keep template colors and style - don't override
             // Logo not in onboarding - keep template logo
-            
+
             // Build simple navigation links (using anchor scroll format /#section)
             data.header.links = [
                 { text: t('Inicio', 'Home'), href: '/' },
@@ -1407,7 +1491,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 { text: t('Contacto', 'Contact'), href: '/#contact' },
             ];
         }
-        
+
         // ============ HERO (default: modern) ============
         if (data.hero && isOn('hero')) {
             data.hero.heroVariant = 'modern'; // Default style: Modern
@@ -1418,7 +1502,7 @@ TEMPLATE #${t.index}: "${t.name}"
             if (data.hero.badgeText !== undefined) data.hero.badgeText = '';
             if (generatedImages['hero.imageUrl']) data.hero.imageUrl = generatedImages['hero.imageUrl'];
         }
-        
+
         // ============ HERO SPLIT ============
         if (data.heroSplit && isOn('heroSplit')) {
             data.heroSplit.headline = name;
@@ -1426,7 +1510,7 @@ TEMPLATE #${t.index}: "${t.name}"
             if (data.heroSplit.buttonText !== undefined) data.heroSplit.buttonText = t('Contactar', 'Contact');
             if (generatedImages['heroSplit.imageUrl']) data.heroSplit.imageUrl = generatedImages['heroSplit.imageUrl'];
         }
-        
+
         // ============ SERVICES (default: minimal) ============
         if (data.services && isOn('services') && services.length > 0) {
             data.services.servicesVariant = 'minimal'; // Default style: Minimal
@@ -1439,7 +1523,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 icon: data.services.items?.[i]?.icon || 'star',
             }));
         }
-        
+
         // ============ FEATURES (default: classic) - AI Generated ============
         if (data.features && isOn('features')) {
             data.features.featuresVariant = 'classic'; // Default style: Classic
@@ -1464,7 +1548,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 }));
             }
         }
-        
+
         // ============ TESTIMONIALS (AI Generated) ============
         if (data.testimonials && isOn('testimonials')) {
             data.testimonials.title = t('Testimonios', 'Testimonials');
@@ -1480,7 +1564,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 }));
             }
         }
-        
+
         // ============ TEAM (AI Generated) ============
         if (data.team && isOn('team')) {
             data.team.title = t('Equipo', 'Team');
@@ -1502,7 +1586,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 });
             }
         }
-        
+
         // ============ PORTFOLIO (AI Generated) ============
         if (data.portfolio && isOn('portfolio')) {
             data.portfolio.title = t('Portafolio', 'Portfolio');
@@ -1525,7 +1609,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 });
             }
         }
-        
+
         // ============ HOW IT WORKS (AI Generated) ============
         if (data.howItWorks && isOn('howItWorks')) {
             data.howItWorks.title = t('Cómo Funciona', 'How It Works');
@@ -1541,7 +1625,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 }));
             }
         }
-        
+
         // ============ PRICING (default: classic) ============
         if (data.pricing && isOn('pricing')) {
             data.pricing.pricingVariant = 'classic'; // Default style: Classic
@@ -1563,7 +1647,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 }));
             }
         }
-        
+
         // ============ FAQ (default: classic) - AI Generated ============
         if (data.faq && isOn('faq')) {
             data.faq.faqVariant = 'classic'; // Default style: Classic
@@ -1579,7 +1663,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 }));
             }
         }
-        
+
         // ============ CTA ============
         if (data.cta && isOn('cta')) {
             data.cta.headline = t('¿Listo para empezar?', 'Ready to start?');
@@ -1587,7 +1671,7 @@ TEMPLATE #${t.index}: "${t.name}"
             if (data.cta.buttonText !== undefined) data.cta.buttonText = t('Comenzar', 'Get Started');
             if (generatedImages['cta.backgroundImage']) data.cta.backgroundImage = generatedImages['cta.backgroundImage'];
         }
-        
+
         // ============ BANNER ============
         if (data.banner && isOn('banner')) {
             data.banner.headline = name;
@@ -1595,27 +1679,27 @@ TEMPLATE #${t.index}: "${t.name}"
             if (data.banner.buttonText !== undefined) data.banner.buttonText = t('Ver Más', 'Learn More');
             if (generatedImages['banner.backgroundImageUrl']) data.banner.backgroundImageUrl = generatedImages['banner.backgroundImageUrl'];
         }
-        
+
         // ============ LEADS (default: floating-glass / Vidrio Flotante) ============
         if (data.leads && isOn('leads')) {
             data.leads.leadsVariant = 'floating-glass'; // Default style: Vidrio Flotante
             data.leads.title = t('Contacto', 'Contact');
             data.leads.description = t('Escríbenos', 'Write to us');
         }
-        
+
         // ============ NEWSLETTER ============
         if (data.newsletter && isOn('newsletter')) {
             data.newsletter.title = t('Newsletter', 'Newsletter');
             data.newsletter.description = t('Suscríbete', 'Subscribe');
         }
-        
+
         // ============ MAP ============
         if (data.map && isOn('map') && contact.address) {
             data.map.title = t('Ubicación', 'Location');
             data.map.description = t('Visítanos', 'Visit us');
             data.map.address = [contact.address, contact.city, contact.state].filter(Boolean).join(', ');
         }
-        
+
         // ============ MENU (default: classic) ============
         if (data.menu && isOn('menu')) {
             data.menu.menuVariant = 'classic'; // Default style: Classic
@@ -1640,12 +1724,12 @@ TEMPLATE #${t.index}: "${t.name}"
                 });
             }
         }
-        
+
         // ============ SLIDESHOW/GALLERY - AI Generated ============
         if (data.slideshow && isOn('slideshow')) {
             // Use items (correct property name) or slides as fallback
             const existingItems = data.slideshow.items || data.slideshow.slides || [];
-            
+
             // Apply AI-generated slideshow content with images
             if (aiContent.slideshow && aiContent.slideshow.length > 0) {
                 const maxSlides = Math.min(aiContent.slideshow.length, existingItems.length || 5, 5);
@@ -1670,14 +1754,14 @@ TEMPLATE #${t.index}: "${t.name}"
                 delete data.slideshow.slides;
             }
         }
-        
+
         // ============ FOOTER (keep template colors) ============
         if (data.footer) {
             // Keep template colors and style - don't override colors
             data.footer.title = name;
             data.footer.description = desc.substring(0, 150);
             data.footer.copyrightText = `© ${new Date().getFullYear()} ${name}`;
-            
+
             // Social links
             if (data.footer.socialLinks && contact) {
                 const socialLinks: any[] = [];
@@ -1687,7 +1771,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 if (contact.linkedin) socialLinks.push({ platform: 'linkedin', href: contact.linkedin });
                 if (socialLinks.length > 0) data.footer.socialLinks = socialLinks;
             }
-            
+
             // Contact information (address, phone, email, business hours)
             // Use empty strings instead of undefined to avoid Firestore errors
             if (contact) {
@@ -1703,7 +1787,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 };
             }
         }
-        
+
         return data;
     }, []);
 
@@ -1717,7 +1801,7 @@ TEMPLATE #${t.index}: "${t.name}"
             console.warn('⚠️ Generation already in progress, ignoring duplicate call');
             return;
         }
-        
+
         if (!progress?.selectedTemplateId) {
             setError(t('onboarding.errorNoTemplate'));
             return;
@@ -1754,7 +1838,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
         try {
             // Get enabled components
-            const enabledComponents = progress.enabledComponents || 
+            const enabledComponents = progress.enabledComponents ||
                 Object.keys(selectedTemplate.sectionVisibility || {}).filter(
                     k => selectedTemplate.sectionVisibility?.[k as keyof typeof selectedTemplate.sectionVisibility]
                 );
@@ -1781,9 +1865,9 @@ TEMPLATE #${t.index}: "${t.name}"
             // Now prompts will include specific dish names, project titles, team roles, etc.
             if (isDev) console.log('🖼️ Phase 2: Generating contextual image prompts...');
             const { imagePrompts } = await generateWebsiteContent(aiContent);
-            
+
             if (isDev) console.log('🖼️ Image prompts:', Object.keys(imagePrompts).length);
-            
+
             if (Object.keys(imagePrompts).length === 0) {
                 console.warn('⚠️ No image prompts! Sections:', Object.keys(selectedTemplate.data || {}));
             }
@@ -1793,7 +1877,7 @@ TEMPLATE #${t.index}: "${t.name}"
 
             // Phase 2: Generate ALL images with correct aspect ratios
             generationProgress.phase = 'images';
-            
+
             // Create image items with their specific aspect ratios
             const priorityOrder = ['hero', 'heroSplit', 'banner', 'cta'];
             const imageItems: (ImageGenerationItem & { aspectRatio: string; style: string })[] = Object.entries(imagePrompts)
@@ -1814,9 +1898,9 @@ TEMPLATE #${t.index}: "${t.name}"
                     if (bIdx === -1) return -1;
                     return aIdx - bIdx;
                 });
-            
+
             if (isDev) console.log(`📸 Generating ${imageItems.length} images...`);
-            
+
             generationProgress.imagesTotal = imageItems.length;
             generationProgress.allImages = imageItems;
             updateProgress({ generationProgress: { ...generationProgress } });
@@ -1835,7 +1919,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 updateProgress({ generationProgress: { ...generationProgress } });
 
                 if (i > 0) {
-                    if (isDev) console.log(`⏳ Waiting ${DELAY_BETWEEN/1000}s...`);
+                    if (isDev) console.log(`⏳ Waiting ${DELAY_BETWEEN / 1000}s...`);
                     await delay(DELAY_BETWEEN);
                 }
 
@@ -1846,7 +1930,7 @@ TEMPLATE #${t.index}: "${t.name}"
                     attempts++;
                     try {
                         console.log(`🎨 [Onboarding] [${i + 1}/${imageItems.length}] Generating: ${item.promptKey} (${item.aspectRatio})`);
-                        
+
                         // Use Imagen 3.0 for onboarding - it's more reliable for pure image generation
                         // Also specify model explicitly to avoid issues with default model
                         const imageUrl = await generateImage(item.prompt, {
@@ -1870,10 +1954,10 @@ TEMPLATE #${t.index}: "${t.name}"
                     } catch (err: any) {
                         const msg = err.message || String(err);
                         console.error(`❌ [Onboarding] Attempt ${attempts} failed for ${item.promptKey}:`, msg);
-                        
+
                         if (msg.includes('429') || msg.includes('exceeded') || msg.includes('rate') || msg.includes('quota')) {
                             if (attempts < 2) {
-                                console.log(`⏳ [Onboarding] Rate limited. Waiting ${RATE_LIMIT_WAIT/1000}s before retry...`);
+                                console.log(`⏳ [Onboarding] Rate limited. Waiting ${RATE_LIMIT_WAIT / 1000}s before retry...`);
                                 await delay(RATE_LIMIT_WAIT);
                             } else {
                                 item.status = 'failed';
@@ -1893,7 +1977,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 generationProgress.allImages = [...imageItems];
                 updateProgress({ generationProgress: { ...generationProgress } });
             }
-            
+
             const successCount = imageItems.filter(img => img.status === 'completed').length;
             if (isDev) console.log(`📊 Images: ${successCount}/${imageItems.length} generated`);
 
@@ -1911,12 +1995,12 @@ TEMPLATE #${t.index}: "${t.name}"
 
             // Apply all business data + AI content + images to template
             const mergedData = applyBusinessDataToTemplate(selectedTemplate.data, progress, generatedImages, aiContent);
-            
+
             // Apply global colors to ALL components (including ecommerce and chatbot)
             // This ensures consistent styling across the entire project
             const globalColors = selectedTemplate.theme?.globalColors || getDefaultGlobalColors();
             const componentColorMappings = generateComponentColorMappings(globalColors);
-            
+
             // Apply color mappings to each component in mergedData
             for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
                 if (mergedData[componentId] && typeof mergedData[componentId] === 'object') {
@@ -1928,18 +2012,18 @@ TEMPLATE #${t.index}: "${t.name}"
                             ...componentColors
                         }
                     };
-                } else if (['chatbot', 'featuredProducts', 'categoryGrid', 'productHero', 'trustBadges', 
-                            'saleCountdown', 'announcementBar', 'collectionBanner', 'recentlyViewed', 
-                            'productReviews', 'productBundle', 'storeSettings', 'productDetailPage'].includes(componentId)) {
+                } else if (['chatbot', 'featuredProducts', 'categoryGrid', 'productHero', 'trustBadges',
+                    'saleCountdown', 'announcementBar', 'collectionBanner', 'recentlyViewed',
+                    'productReviews', 'productBundle', 'storeSettings', 'productDetailPage'].includes(componentId)) {
                     // Create component with colors even if not in template (important for ecommerce and chatbot)
                     mergedData[componentId] = {
                         colors: componentColors
                     };
                 }
             }
-            
+
             if (isDev) console.log('🎨 Applied global colors to all components including ecommerce and chatbot');
-            
+
             // Geocode the map address if map is enabled and has an address
             if (mergedData.map && mergedData.map.address) {
                 if (isDev) console.log('📍 Geocoding map address:', mergedData.map.address);
@@ -1950,7 +2034,7 @@ TEMPLATE #${t.index}: "${t.name}"
                     if (isDev) console.log('📍 Map coordinates set:', coords.lat, coords.lng);
                 }
             }
-            
+
             console.log('✅ All data applied. Images:', Object.keys(generatedImages).length, 'AI sections:', Object.keys(aiContent).length);
 
             // Create section visibility based on enabled/disabled components
@@ -1971,16 +2055,20 @@ TEMPLATE #${t.index}: "${t.name}"
             // Build simple navigation menus (using anchor scroll format /#section)
             const isSpanish = progress.language === 'es';
             const projectMenus = [
-                { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [
-                    { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
-                    { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '/#services', type: 'section' as const },
-                    { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '/#about', type: 'section' as const },
-                    { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
-                ]},
-                { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [
-                    { id: 'f-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
-                    { id: 'f-2', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
-                ]}
+                {
+                    id: 'main', title: 'Main Menu', handle: 'main-menu', items: [
+                        { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
+                        { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '/#services', type: 'section' as const },
+                        { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '/#about', type: 'section' as const },
+                        { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
+                    ]
+                },
+                {
+                    id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [
+                        { id: 'f-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
+                        { id: 'f-2', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
+                    ]
+                }
             ];
 
             // Generate AI Assistant Configuration based on industry and business data
@@ -2036,7 +2124,7 @@ TEMPLATE #${t.index}: "${t.name}"
             // Setup ecommerce if enabled
             if (progress.hasEcommerce && progress.storeSetup && user?.uid) {
                 if (isDev) console.log('🛒 Setting up ecommerce store...');
-                
+
                 try {
                     // Enable ecommerce for the project (correct path: users/{userId}/projects/{projectId}/ecommerce/config)
                     const ecommerceConfigRef = doc(db, 'users', user.uid, 'projects', newProject.id, 'ecommerce', 'config');
@@ -2049,7 +2137,7 @@ TEMPLATE #${t.index}: "${t.name}"
                         createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                         updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                     });
-                    
+
                     // Create the main store document (required by useProjectEcommerce)
                     const storeRef = doc(db, 'users', user.uid, 'stores', newProject.id);
                     await setDoc(storeRef, {
@@ -2061,7 +2149,7 @@ TEMPLATE #${t.index}: "${t.name}"
                         ownerId: user.uid,
                     });
                     if (isDev) console.log('🏪 Created main store document');
-                    
+
                     // Build storefrontTheme from project's globalColors
                     const storefrontTheme = {
                         // Core Colors - from project's globalColors
@@ -2113,7 +2201,7 @@ TEMPLATE #${t.index}: "${t.name}"
                         fontFamily: selectedTemplate.theme?.fontFamilyBody || 'Inter, system-ui, sans-serif',
                         headingFontFamily: selectedTemplate.theme?.fontFamilyHeader || 'Inter, system-ui, sans-serif',
                     };
-                    
+
                     // Initialize store settings with storefrontTheme
                     const storeSettingsRef = doc(db, 'users', user.uid, 'stores', newProject.id, 'settings', 'store');
                     await setDoc(storeSettingsRef, {
@@ -2142,7 +2230,7 @@ TEMPLATE #${t.index}: "${t.name}"
                         createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                         updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                     });
-                    
+
                     // Create categories
                     if (progress.storeSetup.selectedCategories && progress.storeSetup.selectedCategories.length > 0) {
                         for (let i = 0; i < progress.storeSetup.selectedCategories.length; i++) {
@@ -2163,7 +2251,7 @@ TEMPLATE #${t.index}: "${t.name}"
                         }
                         if (isDev) console.log(`🏷️ Created ${progress.storeSetup.selectedCategories.length} categories`);
                     }
-                    
+
                     // Create publicStores document with storefrontTheme from project's globalColors
                     // This enables the storefront to use the same colors as the project
                     const publicStoreRef = doc(db, 'publicStores', newProject.id);
@@ -2186,9 +2274,9 @@ TEMPLATE #${t.index}: "${t.name}"
                         createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                         updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
                     });
-                    
+
                     if (isDev) console.log('🎨 Created publicStores document with storefrontTheme from project globalColors');
-                    
+
                     if (isDev) console.log('✅ Ecommerce store setup complete');
                 } catch (ecommerceErr) {
                     console.error('❌ Failed to setup ecommerce:', ecommerceErr);
@@ -2199,7 +2287,7 @@ TEMPLATE #${t.index}: "${t.name}"
             // Complete
             generationProgress.phase = 'completed';
             generationProgress.completedAt = Date.now();
-            updateProgress({ 
+            updateProgress({
                 generationProgress: { ...generationProgress },
                 generatedProjectId: newProject.id,
             });
@@ -2212,10 +2300,10 @@ TEMPLATE #${t.index}: "${t.name}"
 
             // Close onboarding modal first to prevent re-renders when progress is cleared
             setIsOnboardingOpen(false);
-            
+
             // Clear onboarding progress
             await clearProgress();
-            
+
             // The project is already loaded and navigated to by addNewProject()
             // but we call it again just to be absolutely sure and handle any edge cases
             await loadProject(newProject.id, false, true);
@@ -2225,7 +2313,7 @@ TEMPLATE #${t.index}: "${t.name}"
             generationProgress.error = err.message || 'Generation failed';
             updateProgress({ generationProgress: { ...generationProgress } });
             setError(t('onboarding.errorGeneration'));
-            
+
             // Unlock generation on error
             isGeneratingRef.current = false;
         }
@@ -2242,10 +2330,13 @@ TEMPLATE #${t.index}: "${t.name}"
         isSaving,
         error,
         templates,
-        
+
         // Ecommerce State
         suggestedCategories,
         isLoadingCategories,
+
+        // Website Analysis State
+        isAnalyzingWebsite,
 
         // Actions
         openOnboarding,
@@ -2264,10 +2355,14 @@ TEMPLATE #${t.index}: "${t.name}"
         updateServices,
         updateTemplateSelection,
         updateContactInfo,
-        
+
         // Ecommerce Updates
         updateEcommerceSettings,
         updateStoreSetup,
+
+        // Website Analysis (Step 0)
+        analyzeWebsite,
+        skipWebsiteAnalysis,
 
         // AI Assistance
         generateDescription,

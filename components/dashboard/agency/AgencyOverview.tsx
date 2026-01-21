@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { AggregatedMetrics } from '../../../hooks/useAgencyMetrics';
+import { useAgency } from '../../../contexts/agency/AgencyContext';
 import {
     Users,
     FolderKanban,
@@ -14,12 +14,8 @@ import {
     Sparkles,
     TrendingUp,
     TrendingDown,
+    Loader2,
 } from 'lucide-react';
-
-interface AgencyOverviewProps {
-    metrics: AggregatedMetrics;
-    totalClients: number;
-}
 
 interface MetricCardProps {
     title: string;
@@ -47,17 +43,17 @@ function MetricCard({ title, value, subtitle, icon, trend, color }: MetricCardPr
     const colorClass = colorClasses[color];
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
+        <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
                         {title}
                     </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-3xl font-bold text-foreground">
                         {value}
                     </p>
                     {subtitle && (
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                             {subtitle}
                         </p>
                     )}
@@ -69,14 +65,13 @@ function MetricCard({ title, value, subtitle, icon, trend, color }: MetricCardPr
                                 <TrendingDown className="h-4 w-4 text-red-500" />
                             )}
                             <span
-                                className={`text-sm font-medium ${
-                                    trend.value >= 0 ? 'text-green-600' : 'text-red-600'
-                                }`}
+                                className={`text-sm font-medium ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}
                             >
                                 {trend.value >= 0 ? '+' : ''}
                                 {trend.value}%
                             </span>
-                            <span className="text-xs text-gray-500">{trend.label}</span>
+                            <span className="text-xs text-muted-foreground">{trend.label}</span>
                         </div>
                     )}
                 </div>
@@ -90,7 +85,31 @@ function MetricCard({ title, value, subtitle, icon, trend, color }: MetricCardPr
     );
 }
 
-export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
+export function AgencyOverview() {
+    const { aggregatedMetrics: metrics, subClients, loadingClients } = useAgency();
+
+    // Loading state
+    if (loadingClients) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    // Default values if metrics are not available
+    const safeMetrics = metrics || {
+        mrr: 0,
+        activeSubClients: 0,
+        totalProjects: 0,
+        totalLeads: 0,
+        totalUsers: 0,
+        storageUsedGB: 0,
+        aiCreditsUsed: 0,
+        totalRevenue: 0,
+    };
+
+    const totalClients = subClients?.length || 0;
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('es-MX', {
             style: 'currency',
@@ -116,8 +135,8 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* MRR */}
             <MetricCard
                 title="MRR (Ingreso Mensual Recurrente)"
-                value={formatCurrency(metrics.mrr)}
-                subtitle={`${metrics.activeSubClients} clientes activos`}
+                value={formatCurrency(safeMetrics.mrr)}
+                subtitle={`${safeMetrics.activeSubClients} clientes activos`}
                 icon={<DollarSign className="h-6 w-6" />}
                 color="emerald"
             />
@@ -126,7 +145,7 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             <MetricCard
                 title="Clientes Totales"
                 value={totalClients}
-                subtitle={`${metrics.activeSubClients} activos`}
+                subtitle={`${safeMetrics.activeSubClients} activos`}
                 icon={<Users className="h-6 w-6" />}
                 color="blue"
             />
@@ -134,7 +153,7 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* Total Projects */}
             <MetricCard
                 title="Proyectos Totales"
-                value={formatNumber(metrics.totalProjects)}
+                value={formatNumber(safeMetrics.totalProjects)}
                 subtitle="Todos los clientes"
                 icon={<FolderKanban className="h-6 w-6" />}
                 color="purple"
@@ -143,7 +162,7 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* Total Leads */}
             <MetricCard
                 title="Leads Totales"
-                value={formatNumber(metrics.totalLeads)}
+                value={formatNumber(safeMetrics.totalLeads)}
                 subtitle="Todos los clientes"
                 icon={<Contact className="h-6 w-6" />}
                 color="orange"
@@ -152,7 +171,7 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* Total Users */}
             <MetricCard
                 title="Usuarios Totales"
-                value={formatNumber(metrics.totalUsers)}
+                value={formatNumber(safeMetrics.totalUsers)}
                 subtitle="Miembros de equipos"
                 icon={<Users className="h-6 w-6" />}
                 color="cyan"
@@ -161,7 +180,7 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* Storage Used */}
             <MetricCard
                 title="Almacenamiento Usado"
-                value={formatStorage(metrics.storageUsedGB)}
+                value={formatStorage(safeMetrics.storageUsedGB)}
                 subtitle="Todos los clientes"
                 icon={<HardDrive className="h-6 w-6" />}
                 color="pink"
@@ -170,17 +189,17 @@ export function AgencyOverview({ metrics, totalClients }: AgencyOverviewProps) {
             {/* AI Credits Used */}
             <MetricCard
                 title="AI Credits Consumidos"
-                value={formatNumber(metrics.aiCreditsUsed)}
+                value={formatNumber(safeMetrics.aiCreditsUsed)}
                 subtitle="Último mes"
                 icon={<Sparkles className="h-6 w-6" />}
                 color="purple"
             />
 
             {/* Revenue (if available) */}
-            {metrics.totalRevenue > 0 && (
+            {safeMetrics.totalRevenue > 0 && (
                 <MetricCard
                     title="Ingresos Generados"
-                    value={formatCurrency(metrics.totalRevenue)}
+                    value={formatCurrency(safeMetrics.totalRevenue)}
                     subtitle="E-commerce de clientes"
                     icon={<DollarSign className="h-6 w-6" />}
                     color="green"

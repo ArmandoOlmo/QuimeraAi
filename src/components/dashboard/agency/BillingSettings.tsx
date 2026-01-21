@@ -12,6 +12,7 @@ import { Badge } from '../../ui/Badge';
 import { Input } from '../../ui/Input';
 import { toast } from 'react-hot-toast';
 import { Loader2, ExternalLink, DollarSign, CreditCard, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface StripeConnectStatus {
   isConnected: boolean;
@@ -33,6 +34,7 @@ interface SubClient {
 }
 
 export function BillingSettings() {
+  const { t } = useTranslation();
   const { currentTenant } = useTenant();
   const functions = getFunctions();
 
@@ -71,7 +73,7 @@ export function BillingSettings() {
 
     } catch (error: any) {
       console.error('Error loading billing data:', error);
-      toast.error('Error al cargar datos de facturación');
+      toast.error(t('dashboard.agency.errorLoadingData'));
     } finally {
       setLoading(false);
     }
@@ -87,12 +89,12 @@ export function BillingSettings() {
         // Redirect to Stripe onboarding
         window.location.href = result.data.onboardingUrl;
       } else {
-        toast.success('Cuenta de Stripe Connect creada exitosamente');
+        toast.success(t('dashboard.agency.billingPage.configuring'));
         await loadBillingData();
       }
     } catch (error: any) {
       console.error('Error connecting Stripe:', error);
-      toast.error('Error al conectar Stripe: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -108,7 +110,7 @@ export function BillingSettings() {
       }
     } catch (error: any) {
       console.error('Error opening Stripe dashboard:', error);
-      toast.error('Error al abrir dashboard de Stripe');
+      toast.error('Error al abrir dashboard');
     }
   };
 
@@ -127,7 +129,7 @@ export function BillingSettings() {
       await loadBillingData();
     } catch (error: any) {
       console.error('Error setting up billing:', error);
-      toast.error('Error al configurar facturación: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -147,14 +149,14 @@ export function BillingSettings() {
       await loadBillingData();
     } catch (error: any) {
       console.error('Error updating price:', error);
-      toast.error('Error al actualizar precio: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancelSubscription = async (clientId: string) => {
-    if (!confirm('¿Estás seguro de cancelar la facturación para este cliente?')) {
+    if (!confirm(t('common.confirm'))) {
       return;
     }
 
@@ -167,7 +169,7 @@ export function BillingSettings() {
       await loadBillingData();
     } catch (error: any) {
       console.error('Error canceling subscription:', error);
-      toast.error('Error al cancelar facturación: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -185,7 +187,7 @@ export function BillingSettings() {
       }
     } catch (error: any) {
       console.error('Error generating invoice:', error);
-      toast.error('Error al generar invoice: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -207,15 +209,15 @@ export function BillingSettings() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Stripe Connect
+                {t('dashboard.agency.billingPage.stripeConnectTitle')}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Configura tu cuenta de Stripe para cobrar a tus clientes
+                {t('dashboard.agency.billingPage.stripeConnectSubtitle')}
               </p>
             </div>
             {stripeStatus.isConnected && (
               <Badge variant="success">
-                Conectado
+                {t('dashboard.agency.billingPage.accountActive')}
               </Badge>
             )}
           </div>
@@ -223,12 +225,11 @@ export function BillingSettings() {
           {!stripeStatus.isConnected ? (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
-                Para facturar a tus sub-clientes, necesitas conectar una cuenta de Stripe Connect.
-                Esto te permitirá recibir pagos directamente.
+                {t('dashboard.agency.billingPage.completeStripeSetupDesc')}
               </p>
               <Button onClick={handleConnectStripe} disabled={loading}>
                 <CreditCard className="w-4 h-4 mr-2" />
-                Conectar Stripe
+                {t('dashboard.agency.billingPage.connectWithStripe')}
               </Button>
             </div>
           ) : (
@@ -244,11 +245,11 @@ export function BillingSettings() {
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Estado</p>
                   <div className="flex items-center gap-2">
                     <Badge variant={stripeStatus.chargesEnabled ? 'success' : 'warning'}>
-                      {stripeStatus.chargesEnabled ? 'Activo' : 'Pendiente'}
+                      {stripeStatus.chargesEnabled ? t('dashboard.agency.billingPage.enabled') : t('dashboard.agency.billingPage.pending')}
                     </Badge>
                     {!stripeStatus.detailsSubmitted && (
                       <span className="text-xs text-yellow-600 dark:text-yellow-400">
-                        Completar onboarding
+                        {t('dashboard.agency.billingPage.completeInStripe')}
                       </span>
                     )}
                   </div>
@@ -258,11 +259,11 @@ export function BillingSettings() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleOpenStripeDashboard}>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Abrir Dashboard de Stripe
+                  {t('dashboard.agency.billingPage.viewInStripe')}
                 </Button>
                 {!stripeStatus.detailsSubmitted && (
                   <Button onClick={handleConnectStripe}>
-                    Completar Configuración
+                    {t('dashboard.agency.billingPage.completeStripeSetup')}
                   </Button>
                 )}
               </div>
@@ -276,14 +277,14 @@ export function BillingSettings() {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Facturación de Sub-clientes
+              {t('dashboard.agency.billingPage.tabClients')}
             </h3>
 
             {subClients.length === 0 ? (
               <div className="text-center py-8">
                 <DollarSign className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  No hay sub-clientes aún
+                  {t('common.noResults')}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                   Crea tu primer sub-cliente para configurar facturación
@@ -295,19 +296,19 @@ export function BillingSettings() {
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Cliente
+                        {t('dashboard.agency.reports.table.client')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Precio Mensual
+                        {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Estado
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Próxima Factura
+                        {t('dashboard.agency.billingPage.nextPayout')}
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Acciones
+                        {t('common.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -334,20 +335,20 @@ export function BillingSettings() {
                                 size="sm"
                                 onClick={() => handleUpdatePrice(client.id, editingPrice)}
                               >
-                                Guardar
+                                {t('common.save')}
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setEditingClientId(null)}
                               >
-                                Cancelar
+                                {t('common.cancel')}
                               </Button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-900 dark:text-white">
-                                ${client.billing?.monthlyPrice || 0}/mes
+                                ${client.billing?.monthlyPrice || 0}{t('dashboard.agency.billingPage.perMonth')}
                               </span>
                               {client.billing?.monthlyPrice && (
                                 <button
@@ -357,7 +358,7 @@ export function BillingSettings() {
                                   }}
                                   className="text-xs text-primary-600 hover:text-primary-700"
                                 >
-                                  Editar
+                                  {t('common.edit')}
                                 </button>
                               )}
                             </div>
@@ -369,11 +370,11 @@ export function BillingSettings() {
                               client.billing?.status === 'active'
                                 ? 'success'
                                 : client.billing?.status === 'payment_failed'
-                                ? 'error'
-                                : 'default'
+                                  ? 'error'
+                                  : 'default'
                             }
                           >
-                            {client.billing?.status || 'No configurado'}
+                            {client.billing?.status || t('dashboard.agency.billingPage.notConfigured')}
                           </Badge>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
@@ -392,7 +393,7 @@ export function BillingSettings() {
                                 }}
                               >
                                 <Plus className="w-3 h-3 mr-1" />
-                                Configurar
+                                {t('common.add')}
                               </Button>
                             ) : (
                               <>
@@ -408,7 +409,7 @@ export function BillingSettings() {
                                   variant="outline"
                                   onClick={() => handleCancelSubscription(client.id)}
                                 >
-                                  Cancelar
+                                  {t('common.cancel')}
                                 </Button>
                               </>
                             )}
@@ -428,13 +429,12 @@ export function BillingSettings() {
       <Card>
         <div className="p-6">
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            Información Importante
+            {t('dashboard.agency.addonsPage.importantInfo')}
           </h4>
           <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-            <li>• Quimera cobra una comisión del 10% sobre cada pago</li>
-            <li>• Los pagos se procesan automáticamente cada mes</li>
-            <li>• Puedes generar invoices manualmente en cualquier momento</li>
-            <li>• Los clientes con pagos fallidos se suspenden automáticamente</li>
+            <li>• {t('dashboard.agency.billingPage.benefit1')}</li>
+            <li>• {t('dashboard.agency.billingPage.benefit3')}</li>
+            <li>• {t('dashboard.agency.billingPage.benefit2')}</li>
           </ul>
         </div>
       </Card>

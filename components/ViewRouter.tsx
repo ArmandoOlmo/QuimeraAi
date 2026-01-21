@@ -45,6 +45,7 @@ const EcommerceDashboard = lazy(() => import('./dashboard/ecommerce/EcommerceDas
 const EmailDashboard = lazy(() => import('./dashboard/email/EmailDashboard'));
 const AssetsDashboard = lazy(() => import('./dashboard/assets/AssetsDashboard'));
 const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
+const AgencyDashboard = lazy(() => import('./dashboard/agency/AgencyDashboardMain'));
 
 // Editor components
 const Controls = lazy(() => import('./Controls'));
@@ -87,6 +88,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'assets': AssetsDashboard,
     'templates': UserTemplates,
     'settings': SettingsPage,
+    'agency': AgencyDashboard,
 };
 
 /**

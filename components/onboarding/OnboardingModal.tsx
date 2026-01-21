@@ -11,6 +11,7 @@ import { useOnboarding } from './hooks/useOnboarding';
 import StepIndicator from './components/StepIndicator';
 
 // Step Components
+import Step0WebsiteAnalyzer from './steps/Step0WebsiteAnalyzer';
 import Step1BusinessInfo from './steps/Step1BusinessInfo';
 import Step2Description from './steps/Step2Description';
 import Step3Services from './steps/Step3Services';
@@ -51,6 +52,10 @@ const OnboardingModal: React.FC = () => {
         saveProgress,
         suggestedCategories,
         isLoadingCategories,
+        // Website Analysis
+        isAnalyzingWebsite,
+        analyzeWebsite,
+        skipWebsiteAnalysis,
     } = useOnboarding();
 
     // State for emergency cancel confirmation
@@ -98,11 +103,11 @@ const OnboardingModal: React.FC = () => {
     // Track generation duration for emergency cancel option
     useEffect(() => {
         const generationStep = progress?.hasEcommerce ? 7 : 6;
-        const isCurrentlyGenerating = progress?.step === generationStep && 
-            progress?.generationProgress?.phase !== 'idle' && 
+        const isCurrentlyGenerating = progress?.step === generationStep &&
+            progress?.generationProgress?.phase !== 'idle' &&
             progress?.generationProgress?.phase !== 'completed' &&
             progress?.generationProgress?.phase !== 'error';
-        
+
         if (isCurrentlyGenerating && progress?.generationProgress?.startedAt) {
             const startTime = progress.generationProgress.startedAt;
             const interval = setInterval(() => {
@@ -138,6 +143,18 @@ const OnboardingModal: React.FC = () => {
 
     const renderCurrentStep = () => {
         switch (progress.step) {
+            case 0:
+                return (
+                    <Step0WebsiteAnalyzer
+                        onAnalysisComplete={(result) => {
+                            // Analysis auto-populates progress, just go to next step
+                            nextStep();
+                        }}
+                        onSkip={skipWebsiteAnalysis}
+                        isAnalyzing={isAnalyzingWebsite}
+                        onStartAnalysis={analyzeWebsite}
+                    />
+                );
             case 1:
                 return (
                     <Step1BusinessInfo
@@ -237,7 +254,7 @@ const OnboardingModal: React.FC = () => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={() => !isGenerating && closeOnboarding()}
             />
@@ -247,9 +264,9 @@ const OnboardingModal: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-card md:rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-2 md:gap-3">
-                        <img 
-                            src={QUIMERA_LOGO} 
-                            alt="Quimera" 
+                        <img
+                            src={QUIMERA_LOGO}
+                            alt="Quimera"
                             className="w-7 h-7 md:w-8 md:h-8 object-contain"
                         />
                         <div>
@@ -296,8 +313,8 @@ const OnboardingModal: React.FC = () => {
 
                 {/* Step Indicator */}
                 <div className="border-b border-border bg-card/50 flex-shrink-0">
-                    <StepIndicator 
-                        currentStep={progress.step} 
+                    <StepIndicator
+                        currentStep={progress.step}
                         totalSteps={totalSteps}
                         hasEcommerce={progress.hasEcommerce}
                     />
@@ -366,9 +383,9 @@ const OnboardingModal: React.FC = () => {
             {/* Emergency Cancel Confirmation Dialog */}
             {showCancelConfirm && (
                 <div className="absolute inset-0 z-[60] flex items-center justify-center">
-                    <div 
-                        className="absolute inset-0 bg-black/50" 
-                        onClick={() => setShowCancelConfirm(false)} 
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setShowCancelConfirm(false)}
                     />
                     <div className="relative bg-card border border-border rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
                         <div className="flex items-center gap-3 mb-4">

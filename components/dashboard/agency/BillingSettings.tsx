@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import {
     CreditCard,
     ExternalLink,
@@ -30,6 +31,7 @@ interface StripeConnectStatus {
 }
 
 export function BillingSettings() {
+    const { t } = useTranslation();
     const { currentTenant } = useTenant();
     const { user } = useAuth();
 
@@ -55,7 +57,7 @@ export function BillingSettings() {
         try {
             const getStatus = httpsCallable(functions, 'getStripeConnectStatus');
             const result = await getStatus({ tenantId: currentTenant.id });
-            setConnectStatus((result.data as any).status);
+            setConnectStatus(result.data as any);
         } catch (err: any) {
             console.error('Error loading Connect status:', err);
             setError(err.message);
@@ -114,11 +116,11 @@ export function BillingSettings() {
         <div className="max-w-7xl mx-auto space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Configuración de Facturación
+                <h1 className="text-3xl font-bold text-foreground">
+                    {t('dashboard.agency.billingPage.title')}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    Gestiona pagos y facturación de tus clientes
+                <p className="text-muted-foreground mt-1">
+                    {t('dashboard.agency.billingPage.subtitle')}
                 </p>
             </div>
 
@@ -137,39 +139,38 @@ export function BillingSettings() {
 
             {/* Stripe Connect Setup */}
             {connectStatus.status === 'not_configured' ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+                <div className="bg-card rounded-lg border border-border p-8">
                     <div className="max-w-2xl mx-auto text-center">
                         <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
                             <CreditCard className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Conecta con Stripe
+                        <h2 className="text-2xl font-bold text-foreground mb-2">
+                            {t('dashboard.agency.billingPage.stripeConnectTitle')}
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            Configura Stripe Connect para comenzar a facturar a tus clientes
-                            directamente. Recibe pagos automáticos cada mes.
+                        <p className="text-muted-foreground mb-6">
+                            {t('dashboard.agency.billingPage.stripeConnectSubtitle')}
                         </p>
 
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 mb-6 text-left">
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                Beneficios:
+                        <div className="bg-muted/50 rounded-lg p-6 mb-6 text-left">
+                            <h3 className="font-semibold text-foreground mb-3">
+                                {t('dashboard.agency.billingPage.benefits')}
                             </h3>
-                            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <ul className="space-y-2 text-sm text-muted-foreground">
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <span>Cobros automáticos mensuales</span>
+                                    <span>{t('dashboard.agency.billingPage.benefit1')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <span>Gestión de métodos de pago</span>
+                                    <span>{t('dashboard.agency.billingPage.benefit2')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <span>Generación automática de invoices</span>
+                                    <span>{t('dashboard.agency.billingPage.benefit3')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <span>Reportes de ingresos en tiempo real</span>
+                                    <span>{t('dashboard.agency.billingPage.benefit4')}</span>
                                 </li>
                             </ul>
                         </div>
@@ -182,33 +183,32 @@ export function BillingSettings() {
                             {loading ? (
                                 <>
                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                    Configurando...
+                                    {t('dashboard.agency.billingPage.configuring')}
                                 </>
                             ) : (
                                 <>
                                     <CreditCard className="h-5 w-5" />
-                                    Conectar con Stripe
+                                    {t('dashboard.agency.billingPage.connectWithStripe')}
                                 </>
                             )}
                         </button>
 
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
-                            Serás redirigido a Stripe para completar la configuración
+                        <p className="text-xs text-muted-foreground mt-4">
+                            {t('dashboard.agency.billingPage.redirectNotice')}
                         </p>
                     </div>
                 </div>
             ) : (
                 <>
                     {/* Stripe Connect Status Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="bg-card rounded-lg border border-border p-6">
                         <div className="flex items-start justify-between">
                             <div className="flex items-start gap-4">
                                 <div
-                                    className={`inline-flex items-center justify-center h-12 w-12 rounded-lg ${
-                                        connectStatus.charges_enabled
-                                            ? 'bg-green-100 dark:bg-green-900/20'
-                                            : 'bg-yellow-100 dark:bg-yellow-900/20'
-                                    }`}
+                                    className={`inline-flex items-center justify-center h-12 w-12 rounded-lg ${connectStatus.charges_enabled
+                                        ? 'bg-green-100 dark:bg-green-900/20'
+                                        : 'bg-yellow-100 dark:bg-yellow-900/20'
+                                        }`}
                                 >
                                     {connectStatus.charges_enabled ? (
                                         <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -217,45 +217,43 @@ export function BillingSettings() {
                                     )}
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        Stripe Connect
+                                    <h3 className="text-lg font-semibold text-foreground">
+                                        {t('dashboard.agency.billingPage.stripeConnect')}
                                     </h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         {connectStatus.charges_enabled
-                                            ? 'Cuenta activa - Puedes facturar a clientes'
-                                            : 'Configuración pendiente - Completa tu perfil en Stripe'}
+                                            ? t('dashboard.agency.billingPage.accountActive')
+                                            : t('dashboard.agency.billingPage.pendingSetup')}
                                     </p>
                                     <div className="flex items-center gap-4 mt-3">
                                         <div className="flex items-center gap-2 text-sm">
                                             <span className="text-gray-600 dark:text-gray-400">
-                                                Cobros:
+                                                {t('dashboard.agency.billingPage.charges')}
                                             </span>
                                             <span
-                                                className={`font-medium ${
-                                                    connectStatus.charges_enabled
-                                                        ? 'text-green-600'
-                                                        : 'text-gray-400'
-                                                }`}
+                                                className={`font-medium ${connectStatus.charges_enabled
+                                                    ? 'text-green-600'
+                                                    : 'text-gray-400'
+                                                    }`}
                                             >
                                                 {connectStatus.charges_enabled
-                                                    ? 'Habilitado'
-                                                    : 'Deshabilitado'}
+                                                    ? t('dashboard.agency.billingPage.enabled')
+                                                    : t('dashboard.agency.billingPage.disabled')}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">
-                                                Pagos:
+                                            <span className="text-muted-foreground">
+                                                {t('dashboard.agency.billingPage.payouts')}
                                             </span>
                                             <span
-                                                className={`font-medium ${
-                                                    connectStatus.payouts_enabled
-                                                        ? 'text-green-600'
-                                                        : 'text-gray-400'
-                                                }`}
+                                                className={`font-medium ${connectStatus.payouts_enabled
+                                                    ? 'text-green-600'
+                                                    : 'text-gray-400'
+                                                    }`}
                                             >
                                                 {connectStatus.payouts_enabled
-                                                    ? 'Habilitado'
-                                                    : 'Deshabilitado'}
+                                                    ? t('dashboard.agency.billingPage.enabled')
+                                                    : t('dashboard.agency.billingPage.disabled')}
                                             </span>
                                         </div>
                                     </div>
@@ -265,7 +263,7 @@ export function BillingSettings() {
                                 onClick={openStripeDashboard}
                                 className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                             >
-                                Ver en Stripe
+                                {t('dashboard.agency.billingPage.viewInStripe')}
                                 <ExternalLink className="h-4 w-4" />
                             </button>
                         </div>
@@ -274,7 +272,7 @@ export function BillingSettings() {
                         {connectStatus.requirements?.currently_due?.length > 0 && (
                             <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                                 <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
-                                    Información requerida:
+                                    {t('dashboard.agency.billingPage.requiredInfo')}
                                 </p>
                                 <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
                                     {connectStatus.requirements.currently_due.map(
@@ -287,44 +285,41 @@ export function BillingSettings() {
                                     onClick={openStripeDashboard}
                                     className="mt-3 text-sm font-medium text-yellow-900 dark:text-yellow-200 hover:underline"
                                 >
-                                    Completar en Stripe →
+                                    {t('dashboard.agency.billingPage.completeInStripe')}
                                 </button>
                             </div>
                         )}
                     </div>
 
                     {/* Tabs */}
-                    <div className="border-b border-gray-200 dark:border-gray-700">
+                    <div className="border-b border-border">
                         <nav className="flex gap-8">
                             <button
                                 onClick={() => setActiveTab('overview')}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                                    activeTab === 'overview'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'overview'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                    }`}
                             >
-                                Vista General
+                                {t('dashboard.agency.billingPage.tabOverview')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('clients')}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                                    activeTab === 'clients'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'clients'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    }`}
                             >
-                                Gestión de Clientes
+                                {t('dashboard.agency.billingPage.tabClients')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('history')}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                                    activeTab === 'history'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    }`}
                             >
-                                Historial de Pagos
+                                {t('dashboard.agency.billingPage.tabHistory')}
                             </button>
                         </nav>
                     </div>
@@ -333,50 +328,50 @@ export function BillingSettings() {
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* MRR Card */}
-                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-card rounded-lg border border-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <DollarSign className="h-5 w-5 text-green-600" />
                                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        MRR Total
+                                        {t('dashboard.agency.billingPage.mrrTotal')}
                                     </span>
                                 </div>
                                 <p className="text-3xl font-bold text-gray-900 dark:text-white">
                                     ${currentTenant?.billing?.mrr?.toLocaleString() || '0'}
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                    Ingreso mensual recurrente
+                                    {t('dashboard.agency.billingPage.mrrDescription')}
                                 </p>
                             </div>
 
                             {/* Active Subscriptions */}
-                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-card rounded-lg border border-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <TrendingUp className="h-5 w-5 text-blue-600" />
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Suscripciones Activas
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        {t('dashboard.agency.billingPage.activeSubscriptions')}
                                     </span>
                                 </div>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                <p className="text-3xl font-bold text-foreground">
                                     0
                                 </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                    Clientes con facturación activa
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {t('dashboard.agency.billingPage.activeSubsDescription')}
                                 </p>
                             </div>
 
                             {/* Next Payout */}
-                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-card rounded-lg border border-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <CreditCard className="h-5 w-5 text-purple-600" />
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Próximo Pago
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        {t('dashboard.agency.billingPage.nextPayout')}
                                     </span>
                                 </div>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                <p className="text-3xl font-bold text-foreground">
                                     $0
                                 </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                    Disponible en Stripe
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {t('dashboard.agency.billingPage.availableInStripe')}
                                 </p>
                             </div>
                         </div>
@@ -392,17 +387,16 @@ export function BillingSettings() {
                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center">
                             <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400 mx-auto mb-3" />
                             <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-2">
-                                Completa la configuración de Stripe
+                                {t('dashboard.agency.billingPage.completeStripeSetup')}
                             </h3>
                             <p className="text-yellow-800 dark:text-yellow-300 mb-4">
-                                Necesitas completar la configuración de tu cuenta de Stripe para
-                                acceder a esta sección.
+                                {t('dashboard.agency.billingPage.completeStripeSetupDesc')}
                             </p>
                             <button
                                 onClick={openStripeDashboard}
                                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                             >
-                                Ir a Stripe
+                                {t('dashboard.agency.billingPage.goToStripe')}
                             </button>
                         </div>
                     )}

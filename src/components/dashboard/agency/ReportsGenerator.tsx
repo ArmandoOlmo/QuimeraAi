@@ -122,14 +122,6 @@ export function ReportsGenerator() {
 
     try {
       // TODO: Replace with actual query from Firestore
-      // const clientsQuery = query(
-      //   collection(db, 'tenants'),
-      //   where('ownerTenantId', '==', currentTenant.id),
-      //   where('status', 'in', ['active', 'trial'])
-      // );
-      // const clientsSnapshot = await getDocs(clientsQuery);
-      // setSubClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
       // Mock data for now
       setSubClients([]);
     } catch (error: any) {
@@ -191,16 +183,12 @@ export function ReportsGenerator() {
 
   const handleDownloadPDF = () => {
     if (!generatedReport) return;
-
-    // TODO: Implement PDF download
-    // This would typically call a separate function to generate PDF from the report data
     toast.info('Descarga de PDF no implementada aún');
   };
 
   const handleExportCSV = () => {
     if (!generatedReport) return;
 
-    // Convert report data to CSV
     const csvContent = convertReportToCSV(generatedReport.reportData);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -240,312 +228,314 @@ export function ReportsGenerator() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Generador de Reportes
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-muted-foreground mt-1">
           Genera reportes consolidados de tus sub-clientes
         </p>
       </div>
 
-      {/* Configuration */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Client Selection */}
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Clientes
-            </h3>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Left Column: Configuration (Sidebar) */}
+        <div className="xl:col-span-1 space-y-6">
+          <Card>
+            <div className="p-4 space-y-6">
 
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectAll}
-                  onChange={handleToggleSelectAll}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  Todos los clientes ({subClients.length})
-                </span>
-              </label>
-
-              {!selectAll && (
-                <div className="pl-6 space-y-2 max-h-64 overflow-y-auto">
-                  {subClients.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      No hay sub-clientes disponibles
-                    </p>
-                  ) : (
-                    subClients.map((client) => (
-                      <label key={client.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedClients.includes(client.id)}
-                          onChange={() => handleToggleClient(client.id)}
-                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                          {client.name}
-                        </span>
-                      </label>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Date Range */}
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Período
-            </h3>
-
-            <div className="space-y-4">
+              {/* Date Range Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Fecha Inicio
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.start}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, start: e.target.value })
-                  }
-                  className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Fecha Fin
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.end}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, end: e.target.value })
-                  }
-                  className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              {/* Quick select buttons */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const end = new Date();
-                    const start = new Date(end);
-                    start.setDate(end.getDate() - 7);
-                    setDateRange({
-                      start: start.toISOString().split('T')[0],
-                      end: end.toISOString().split('T')[0],
-                    });
-                  }}
-                >
-                  Última semana
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const end = new Date();
-                    const start = new Date(end);
-                    start.setMonth(end.getMonth() - 1);
-                    setDateRange({
-                      start: start.toISOString().split('T')[0],
-                      end: end.toISOString().split('T')[0],
-                    });
-                  }}
-                >
-                  Último mes
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Metrics Selection */}
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Métricas
-            </h3>
-
-            <div className="space-y-3">
-              {AVAILABLE_METRICS.map((metric) => (
-                <label
-                  key={metric.id}
-                  className="flex items-start cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-2 -mx-2 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedMetrics.includes(metric.id)}
-                    onChange={() => handleToggleMetric(metric.id)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 mt-1"
-                  />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center">
-                      {metric.icon}
-                      <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {metric.label}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {metric.description}
-                    </p>
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center uppercase tracking-wider">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Período
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                      Desde
+                    </label>
+                    <input
+                      type="date"
+                      value={dateRange.start}
+                      onChange={(e) =>
+                        setDateRange({ ...dateRange, start: e.target.value })
+                      }
+                      className="w-full text-sm rounded-md border-input bg-background text-foreground focus:ring-ring focus:border-ring"
+                    />
                   </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Template Selection */}
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Plantilla de Reporte
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {REPORT_TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => setSelectedTemplate(template.id)}
-                className={`p-4 rounded-lg border-2 text-left transition-all ${
-                  selectedTemplate === template.id
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {template.name}
-                  </h4>
-                  {selectedTemplate === template.id && (
-                    <Badge variant="primary">Seleccionado</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {template.description}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Generate Button */}
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={handleGenerateReport}
-          disabled={loading || selectedMetrics.length === 0}
-          className="flex-1 md:flex-initial"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Generando...
-            </>
-          ) : (
-            <>
-              <FileText className="w-4 h-4 mr-2" />
-              Generar Reporte
-            </>
-          )}
-        </Button>
-
-        {generatedReport && (
-          <>
-            <Button variant="outline" onClick={handleDownloadPDF}>
-              <Download className="w-4 h-4 mr-2" />
-              Descargar PDF
-            </Button>
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
-            </Button>
-          </>
-        )}
-      </div>
-
-      {/* Report Preview */}
-      {generatedReport && (
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Vista Previa del Reporte
-            </h3>
-
-            <div className="space-y-6">
-              {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">
-                    Total Clientes
-                  </p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {generatedReport.reportData?.summary?.totalClients || 0}
-                  </p>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                  <p className="text-sm text-green-600 dark:text-green-400 mb-1">
-                    Total Leads
-                  </p>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                    {generatedReport.reportData?.summary?.totalLeads || 0}
-                  </p>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-                  <p className="text-sm text-purple-600 dark:text-purple-400 mb-1">
-                    Total Visitas
-                  </p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {generatedReport.reportData?.summary?.totalVisits || 0}
-                  </p>
-                </div>
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-1">
-                    Total Ingresos
-                  </p>
-                  <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                    ${generatedReport.reportData?.summary?.totalRevenue?.toLocaleString() || 0}
-                  </p>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                      Hasta
+                    </label>
+                    <input
+                      type="date"
+                      value={dateRange.end}
+                      onChange={(e) =>
+                        setDateRange({ ...dateRange, end: e.target.value })
+                      }
+                      className="w-full text-sm rounded-md border-input bg-background text-foreground focus:ring-ring focus:border-ring"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        const end = new Date();
+                        const start = new Date(end);
+                        start.setDate(end.getDate() - 7);
+                        setDateRange({
+                          start: start.toISOString().split('T')[0],
+                          end: end.toISOString().split('T')[0],
+                        });
+                      }}
+                      className="flex-1 text-xs py-1.5 px-2 bg-muted hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      7 días
+                    </button>
+                    <button
+                      onClick={() => {
+                        const end = new Date();
+                        const start = new Date(end);
+                        start.setMonth(end.getMonth() - 1);
+                        setDateRange({
+                          start: start.toISOString().split('T')[0],
+                          end: end.toISOString().split('T')[0],
+                        });
+                      }}
+                      className="flex-1 text-xs py-1.5 px-2 bg-muted hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      30 días
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Recommendations */}
-              {generatedReport.reportData?.recommendations?.length > 0 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
-                    Recomendaciones
-                  </h4>
-                  <ul className="space-y-2">
-                    {generatedReport.reportData.recommendations.map(
-                      (rec: string, index: number) => (
-                        <li
-                          key={index}
-                          className="text-sm text-amber-800 dark:text-amber-200"
-                        >
-                          • {rec}
-                        </li>
-                      )
-                    )}
-                  </ul>
+              <div className="h-px bg-border" />
+
+              {/* Template Selection Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">
+                  Plantilla
+                </h3>
+                <div className="space-y-2">
+                  {REPORT_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={`w-full text-left p-3 rounded-md border transition-all ${selectedTemplate === template.id
+                          ? 'border-ring bg-accent text-accent-foreground ring-1 ring-ring'
+                          : 'border-border hover:border-input text-foreground hover:bg-muted'
+                        }`}
+                    >
+                      <div className="text-sm font-medium">
+                        {template.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                        {template.description}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <div className="h-px bg-border" />
+
+              {/* Metrics Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">
+                  Métricas
+                </h3>
+                <div className="space-y-2">
+                  {AVAILABLE_METRICS.map((metric) => (
+                    <label
+                      key={metric.id}
+                      className="flex items-start p-2 rounded hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMetrics.includes(metric.id)}
+                        onChange={() => handleToggleMetric(metric.id)}
+                        className="mt-1 rounded border-input text-primary focus:ring-ring"
+                      />
+                      <div className="ml-3">
+                        <div className="flex items-center text-sm font-medium text-foreground">
+                          <span className="mr-2 text-muted-foreground">{metric.icon}</span>
+                          {metric.label}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px bg-border" />
+
+              {/* Client Selection Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">
+                  Clientes
+                </h3>
+                <div className="space-y-2">
+                  <label className="flex items-center p-2 rounded hover:bg-accent cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-input text-primary focus:ring-ring"
+                    />
+                    <span className="ml-2 text-sm text-foreground font-medium">
+                      Todos ({subClients.length})
+                    </span>
+                  </label>
+
+                  {!selectAll && (
+                    <div className="pl-4 space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                      {subClients.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic p-2">
+                          No hay clientes disponibles
+                        </p>
+                      ) : (
+                        subClients.map((client) => (
+                          <label key={client.id} className="flex items-center p-1.5 rounded hover:bg-accent cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedClients.includes(client.id)}
+                              onChange={() => handleToggleClient(client.id)}
+                              className="rounded border-input text-primary focus:ring-ring"
+                            />
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              {client.name}
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        </div>
+
+        {/* Right Column: Content & Preview */}
+        <div className="xl:col-span-3 space-y-6">
+
+          {/* Main Action Bar */}
+          <Card className="border-border bg-card/50">
+            <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-medium text-foreground">
+                  Listo para generar?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Se generará un reporte {REPORT_TEMPLATES.find(t => t.id === selectedTemplate)?.name.toLowerCase()} para {selectAll ? 'todos los clientes' : `${selectedClients.length} clientes`}.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <Button
+                  onClick={handleGenerateReport}
+                  disabled={loading || selectedMetrics.length === 0}
+                  className="w-full md:w-auto shadow-lg"
+                  size="lg"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-5 h-5 mr-2" />
+                      Generar Reporte
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Report Display Area */}
+          {generatedReport ? (
+            <div className="space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
+
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-foreground">
+                  Resultados del Reporte
+                </h3>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                    <Download className="w-4 h-4 mr-2" />
+                    PDF
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Download className="w-4 h-4 mr-2" />
+                    CSV
+                  </Button>
+                </div>
+              </div>
+
+              <Card>
+                <div className="p-6">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="p-4 rounded-xl bg-accent/20 border border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Total Clientes</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {generatedReport.reportData?.summary?.totalClients || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-accent/20 border border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Total Leads</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {generatedReport.reportData?.summary?.totalLeads || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-accent/20 border border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Total Visitas</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {generatedReport.reportData?.summary?.totalVisits || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-accent/20 border border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Ingresos</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-500">
+                        ${generatedReport.reportData?.summary?.totalRevenue?.toLocaleString() || 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recommendations */}
+                  {generatedReport.reportData?.recommendations?.length > 0 && (
+                    <div className="bg-accent/30 border border-border rounded-lg p-6">
+                      <h4 className="font-semibold text-foreground mb-3 flex items-center">
+                        <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+                        Insights & Recomendaciones
+                      </h4>
+                      <ul className="space-y-2">
+                        {generatedReport.reportData.recommendations.map(
+                          (rec: string, index: number) => (
+                            <li
+                              key={index}
+                              className="flex items-start text-sm text-foreground"
+                            >
+                              <span className="mr-2 text-primary">•</span>
+                              {rec}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          ) : (
+            <div className="h-64 flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed border-border transition-colors hover:bg-muted/30">
+              <FileText className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm">Configura los parámetros y genera tu reporte</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

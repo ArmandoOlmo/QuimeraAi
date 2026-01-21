@@ -11,6 +11,7 @@ import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { toast } from 'react-hot-toast';
 import { Loader2, Plus, Trash2, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface InitialUser {
   name: string;
@@ -34,33 +35,34 @@ interface ClientIntakeData {
 }
 
 const INDUSTRIES = [
-  { value: 'restaurant', label: 'Restaurante' },
-  { value: 'retail', label: 'Retail / Tienda' },
-  { value: 'professional_services', label: 'Servicios Profesionales' },
-  { value: 'healthcare', label: 'Salud' },
-  { value: 'education', label: 'Educación' },
-  { value: 'real_estate', label: 'Bienes Raíces' },
-  { value: 'hospitality', label: 'Hotelería' },
-  { value: 'construction', label: 'Construcción' },
-  { value: 'automotive', label: 'Automotriz' },
-  { value: 'other', label: 'Otro' },
+  { value: 'restaurant', label: 'industries.restaurant' },
+  { value: 'retail', label: 'industries.retail' },
+  { value: 'professional_services', label: 'industries.professional_services' },
+  { value: 'healthcare', label: 'industries.healthcare' },
+  { value: 'education', label: 'industries.education' },
+  { value: 'real_estate', label: 'industries.real_estate' },
+  { value: 'hospitality', label: 'industries.hospitality' },
+  { value: 'construction', label: 'industries.construction' },
+  { value: 'automotive', label: 'industries.automotive' },
+  { value: 'other', label: 'industries.other' },
 ];
 
 const FEATURES = [
-  { id: 'cms', label: 'CMS / Blog', description: 'Gestor de contenidos' },
-  { id: 'leads', label: 'CRM / Leads', description: 'Captura y gestión de leads' },
-  { id: 'ecommerce', label: 'E-commerce', description: 'Tienda online' },
-  { id: 'chatbot', label: 'Chatbot AI', description: 'Chatbot inteligente' },
-  { id: 'email', label: 'Email Marketing', description: 'Campañas de email' },
+  { id: 'cms', label: 'features.cms', description: 'features.cmsDesc' },
+  { id: 'leads', label: 'features.leads', description: 'features.leadsDesc' },
+  { id: 'ecommerce', label: 'features.ecommerce', description: 'features.ecommerceDesc' },
+  { id: 'chatbot', label: 'features.chatbot', description: 'features.chatbotDesc' },
+  { id: 'email', label: 'features.email', description: 'features.emailDesc' },
 ];
 
 const USER_ROLES = [
-  { value: 'client', label: 'Cliente (Owner)' },
-  { value: 'client_admin', label: 'Admin' },
-  { value: 'client_editor', label: 'Editor' },
+  { value: 'client', label: 'roles.client' },
+  { value: 'client_admin', label: 'roles.client_admin' },
+  { value: 'client_editor', label: 'roles.client_editor' },
 ];
 
 export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
+  const { t } = useTranslation();
   const { currentTenant } = useTenant();
   const functions = getFunctions();
 
@@ -121,19 +123,19 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
     // Validation
     if (!formData.businessName || !formData.contactEmail) {
-      toast.error('Completa los campos requeridos');
+      toast.error(t('dashboard.agency.newClientPage.completeRequiredFields'));
       return;
     }
 
     if (formData.initialUsers.length === 0) {
-      toast.error('Agrega al menos un usuario');
+      toast.error(t('dashboard.agency.newClientPage.addAtLeastOneUser'));
       return;
     }
 
     // Validate users
     for (const user of formData.initialUsers) {
       if (!user.name || !user.email) {
-        toast.error('Completa la información de todos los usuarios');
+        toast.error(t('dashboard.agency.newClientPage.completeUserInformation'));
         return;
       }
     }
@@ -144,7 +146,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
       const result = await provision(formData) as any;
 
       toast.success(
-        `Cliente ${result.data.clientTenantId} creado exitosamente! ${result.data.invitesSent} invitaciones enviadas.`
+        t('dashboard.agency.billingPage.success') + ` ${result.data.clientTenantId} ` + t('dashboard.agency.billingPage.created')
       );
 
       // Reset form
@@ -191,23 +193,21 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
         {[1, 2, 3, 4].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
-              className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                step === currentStep
-                  ? 'bg-primary-600 text-white'
-                  : step < currentStep
+              className={`flex items-center justify-center w-10 h-10 rounded-full ${step === currentStep
+                ? 'bg-primary-600 text-white'
+                : step < currentStep
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
-              }`}
+                }`}
             >
               {step < currentStep ? <Check className="w-5 h-5" /> : step}
             </div>
             {step < 4 && (
               <div
-                className={`flex-1 h-1 mx-2 ${
-                  step < currentStep
-                    ? 'bg-green-500'
-                    : 'bg-gray-200 dark:bg-gray-700'
-                }`}
+                className={`flex-1 h-1 mx-2 ${step < currentStep
+                  ? 'bg-green-500'
+                  : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
               />
             )}
           </div>
@@ -219,25 +219,25 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Información del Cliente
+              {t('dashboard.agency.newClientPage.clientInfo')}
             </h3>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nombre del Negocio *
+                  {t('dashboard.agency.newClientPage.businessName')} *
                 </label>
                 <Input
                   value={formData.businessName}
                   onChange={(e) => updateFormData({ businessName: e.target.value })}
-                  placeholder="Ej: Restaurante El Buen Sabor"
+                  placeholder={t('dashboard.agency.newClientPage.businessNamePlaceholder')}
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Industria *
+                  {t('dashboard.agency.newClientPage.industry')} *
                 </label>
                 <select
                   value={formData.industry}
@@ -247,7 +247,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                 >
                   {INDUSTRIES.map((industry) => (
                     <option key={industry.value} value={industry.value}>
-                      {industry.label}
+                      {t(`dashboard.agency.newClientPage.${industry.label}`)}
                     </option>
                   ))}
                 </select>
@@ -255,7 +255,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email de Contacto *
+                  {t('dashboard.agency.newClientPage.contactEmail')} *
                 </label>
                 <Input
                   type="email"
@@ -268,7 +268,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Teléfono (Opcional)
+                  {t('dashboard.agency.newClientPage.contactPhone')}
                 </label>
                 <Input
                   type="tel"
@@ -287,11 +287,11 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Funcionalidades
+              {t('dashboard.agency.newClientPage.stepFeatures')}
             </h3>
 
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Selecciona las funcionalidades que estarán disponibles para este cliente
+              {t('dashboard.agency.newClientPage.selectFeatures')}
             </p>
 
             <div className="space-y-3">
@@ -308,10 +308,10 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                   />
                   <div className="ml-3">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {feature.label}
+                      {t(`dashboard.agency.newClientPage.${feature.label}`)}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {feature.description}
+                      {t(`dashboard.agency.newClientPage.${feature.description}`)}
                     </div>
                   </div>
                 </label>
@@ -326,17 +326,17 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Branding (Opcional)
+              {t('dashboard.agency.newClientPage.brandingOptional')}
             </h3>
 
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Personaliza los colores del portal del cliente
+              {t('dashboard.agency.newClientPage.customizePortal')}
             </p>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Color Primario
+                  {t('dashboard.agency.newClientPage.primaryColor')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -356,7 +356,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Color Secundario
+                  {t('dashboard.agency.newClientPage.secondaryColor')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -381,7 +381,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
               {/* Logo upload would go here */}
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-2 border-dashed border-gray-300 dark:border-gray-600">
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                  Carga de logo disponible próximamente
+                  {t('common.comingSoon')}
                 </p>
               </div>
             </div>
@@ -396,15 +396,15 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Usuarios Iniciales
+                  {t('dashboard.agency.newClientPage.initialUsers')}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Agrega los usuarios que tendrán acceso al portal del cliente
+                  {t('dashboard.agency.newClientPage.addUsersDesc')}
                 </p>
               </div>
               <Button type="button" variant="outline" onClick={handleAddUser}>
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar Usuario
+                {t('dashboard.agency.newClientPage.addUser')}
               </Button>
             </div>
 
@@ -416,7 +416,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Usuario {index + 1}
+                      {t('dashboard.agency.newClientPage.userNumber')} {index + 1}
                     </span>
                     {formData.initialUsers.length > 1 && (
                       <button
@@ -435,7 +435,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                       onChange={(e) =>
                         handleUpdateUser(index, { name: e.target.value })
                       }
-                      placeholder="Nombre completo"
+                      placeholder={t('dashboard.agency.newClientPage.namePlaceholder')}
                       required
                     />
                     <Input
@@ -456,7 +456,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                     >
                       {USER_ROLES.map((role) => (
                         <option key={role.value} value={role.value}>
-                          {role.label}
+                          {t(`dashboard.agency.newClientPage.${role.label}`)}
                         </option>
                       ))}
                     </select>
@@ -467,8 +467,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
             <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                Se enviará un email de bienvenida a cada usuario con un link para acceder
-                a su portal personalizado.
+                {t('dashboard.agency.newClientPage.welcomeEmailInfo')}
               </p>
             </div>
           </div>
@@ -483,7 +482,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
           onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
           disabled={currentStep === 1 || loading}
         >
-          Anterior
+          {t('common.back')}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -493,19 +492,19 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
               onClick={() => setCurrentStep((prev) => prev + 1)}
               disabled={!canProceed() || loading}
             >
-              Siguiente
+              {t('common.next')}
             </Button>
           ) : (
             <Button type="submit" disabled={!canProceed() || loading}>
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creando Cliente...
+                  {t('dashboard.agency.newClientPage.creatingClient')}
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  Crear Cliente
+                  {t('dashboard.agency.newClientPage.createClient')}
                 </>
               )}
             </Button>

@@ -217,6 +217,8 @@ import {
     getOnboardingStatus
 } from './onboarding/autoProvisionClient';
 
+import { analyzeWebsite } from './onboarding/websiteAnalyzer';
+
 // Agency Plan - REST API
 import { tenantsApi } from './api/v1/tenants';
 
@@ -436,7 +438,8 @@ export const agencyReports = {
 // Export Agency Plan - Onboarding functions
 export const agencyOnboarding = {
     autoProvision: autoProvisionClient,
-    getStatus: getOnboardingStatus
+    getStatus: getOnboardingStatus,
+    analyzeWebsite: analyzeWebsite
 };
 
 // Export Agency Plan - REST API
@@ -599,6 +602,7 @@ export {
     // Agency Plan - Onboarding exports
     autoProvisionClient,
     getOnboardingStatus,
+    analyzeWebsite,
     // Agency Plan - REST API exports
     tenantsApi
 };

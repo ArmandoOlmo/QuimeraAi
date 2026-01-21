@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Building2,
   Mail,
@@ -53,65 +54,43 @@ interface ClientIntakeFormProps {
 }
 
 // ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const INDUSTRIES = [
-  { value: 'restaurant', label: 'Restaurante' },
-  { value: 'retail', label: 'Retail / Tienda' },
-  { value: 'professional_services', label: 'Servicios Profesionales' },
-  { value: 'healthcare', label: 'Salud y Bienestar' },
-  { value: 'real_estate', label: 'Bienes Raíces' },
-  { value: 'education', label: 'Educación' },
-  { value: 'technology', label: 'Tecnología' },
-  { value: 'hospitality', label: 'Hospitalidad / Hoteles' },
-  { value: 'fitness', label: 'Fitness y Deportes' },
-  { value: 'other', label: 'Otro' },
-];
-
-const AVAILABLE_FEATURES = [
-  { id: 'cms', label: 'CMS / Blog', description: 'Editor de contenido y blog' },
-  {
-    id: 'leads',
-    label: 'Leads y CRM',
-    description: 'Gestión de leads y contactos',
-  },
-  {
-    id: 'ecommerce',
-    label: 'E-commerce',
-    description: 'Tienda online y productos',
-  },
-  {
-    id: 'chatbot',
-    label: 'Chatbot con IA',
-    description: 'Asistente virtual inteligente',
-  },
-  {
-    id: 'email',
-    label: 'Email Marketing',
-    description: 'Campañas de email automatizadas',
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    description: 'Métricas y análisis web',
-  },
-];
-
-const USER_ROLES = [
-  { value: 'client_admin', label: 'Administrador', description: 'Acceso completo' },
-  { value: 'client', label: 'Usuario', description: 'Acceso estándar' },
-  { value: 'client_user', label: 'Viewer', description: 'Solo lectura' },
-];
-
-// ============================================================================
 // COMPONENT
 // ============================================================================
 
 export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Translation-based constants - moved inside component to access t()
+  const INDUSTRIES = [
+    { value: 'restaurant', label: t('dashboard.agency.newClientPage.industries.restaurant') },
+    { value: 'retail', label: t('dashboard.agency.newClientPage.industries.retail') },
+    { value: 'professional_services', label: t('dashboard.agency.newClientPage.industries.professional_services') },
+    { value: 'healthcare', label: t('dashboard.agency.newClientPage.industries.healthcare') },
+    { value: 'real_estate', label: t('dashboard.agency.newClientPage.industries.real_estate') },
+    { value: 'education', label: t('dashboard.agency.newClientPage.industries.education') },
+    { value: 'technology', label: t('dashboard.agency.newClientPage.industries.technology') },
+    { value: 'hospitality', label: t('dashboard.agency.newClientPage.industries.hospitality') },
+    { value: 'fitness', label: t('dashboard.agency.newClientPage.industries.fitness') },
+    { value: 'other', label: t('dashboard.agency.newClientPage.industries.other') },
+  ];
+
+  const AVAILABLE_FEATURES = [
+    { id: 'cms', label: t('dashboard.agency.newClientPage.features.cms'), description: t('dashboard.agency.newClientPage.features.cmsDesc') },
+    { id: 'leads', label: t('dashboard.agency.newClientPage.features.leads'), description: t('dashboard.agency.newClientPage.features.leadsDesc') },
+    { id: 'ecommerce', label: t('dashboard.agency.newClientPage.features.ecommerce'), description: t('dashboard.agency.newClientPage.features.ecommerceDesc') },
+    { id: 'chatbot', label: t('dashboard.agency.newClientPage.features.chatbot'), description: t('dashboard.agency.newClientPage.features.chatbotDesc') },
+    { id: 'email', label: t('dashboard.agency.newClientPage.features.email'), description: t('dashboard.agency.newClientPage.features.emailDesc') },
+    { id: 'analytics', label: t('dashboard.agency.newClientPage.features.analytics'), description: t('dashboard.agency.newClientPage.features.analyticsDesc') },
+  ];
+
+  const USER_ROLES = [
+    { value: 'client_admin', label: t('dashboard.agency.newClientPage.roles.client_admin'), description: t('dashboard.agency.newClientPage.roles.client_adminDesc') },
+    { value: 'client', label: t('dashboard.agency.newClientPage.roles.client'), description: t('dashboard.agency.newClientPage.roles.clientDesc') },
+    { value: 'client_user', label: t('dashboard.agency.newClientPage.roles.client_user'), description: t('dashboard.agency.newClientPage.roles.client_userDesc') },
+  ];
 
   const [formData, setFormData] = useState<ClientIntakeData>({
     businessName: '',
@@ -139,27 +118,27 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
     if (step === 1) {
       if (!formData.businessName.trim()) {
-        newErrors.businessName = 'El nombre del negocio es requerido';
+        newErrors.businessName = t('dashboard.agency.newClientPage.businessNameRequired');
       }
       if (!formData.industry) {
-        newErrors.industry = 'Selecciona una industria';
+        newErrors.industry = t('dashboard.agency.newClientPage.industryRequired');
       }
       if (!formData.contactEmail.trim()) {
-        newErrors.contactEmail = 'El email de contacto es requerido';
+        newErrors.contactEmail = t('dashboard.agency.newClientPage.contactEmailRequired');
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
-        newErrors.contactEmail = 'Email inválido';
+        newErrors.contactEmail = t('dashboard.agency.newClientPage.invalidEmail');
       }
     }
 
     if (step === 2) {
       if (formData.enabledFeatures.length === 0) {
-        newErrors.enabledFeatures = 'Selecciona al menos una funcionalidad';
+        newErrors.enabledFeatures = t('dashboard.agency.newClientPage.selectAtLeastOneFeature');
       }
     }
 
     if (step === 4) {
       if (formData.initialUsers.length === 0) {
-        newErrors.initialUsers = 'Agrega al menos un usuario';
+        newErrors.initialUsers = t('dashboard.agency.newClientPage.addAtLeastOneUser');
       }
     }
 
@@ -189,7 +168,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       await onSubmit(formData);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setErrors({ submit: 'Error al crear el cliente. Intenta nuevamente.' });
+      setErrors({ submit: t('dashboard.agency.newClientPage.errorCreating') });
     } finally {
       setIsSubmitting(false);
     }
@@ -240,15 +219,15 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-blue-600" />
-          Información del Cliente
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          {t('dashboard.agency.newClientPage.clientInfo')}
         </h3>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nombre del Negocio *
+          {t('dashboard.agency.newClientPage.businessName')} *
         </label>
         <input
           type="text"
@@ -256,10 +235,9 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           onChange={(e) =>
             setFormData({ ...formData, businessName: e.target.value })
           }
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            errors.businessName ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="Ej: Café del Centro"
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.businessName ? 'border-red-500' : 'border-border'
+            }`}
+          placeholder={t('dashboard.agency.newClientPage.businessNamePlaceholder')}
         />
         {errors.businessName && (
           <p className="text-sm text-red-600 mt-1">{errors.businessName}</p>
@@ -268,16 +246,15 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Industria *
+          {t('dashboard.agency.newClientPage.industry')} *
         </label>
         <select
           value={formData.industry}
           onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            errors.industry ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-red-500' : 'border-border'
+            }`}
         >
-          <option value="">Selecciona una industria</option>
+          <option value="">{t('dashboard.agency.newClientPage.selectIndustry')}</option>
           {INDUSTRIES.map((industry) => (
             <option key={industry.value} value={industry.value}>
               {industry.label}
@@ -293,7 +270,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            Email de Contacto *
+            {t('dashboard.agency.newClientPage.contactEmail')} *
           </label>
           <input
             type="email"
@@ -301,10 +278,9 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onChange={(e) =>
               setFormData({ ...formData, contactEmail: e.target.value })
             }
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors.contactEmail ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="contacto@ejemplo.com"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.contactEmail ? 'border-red-500' : 'border-border'
+              }`}
+            placeholder={t('dashboard.agency.newClientPage.contactEmailPlaceholder')}
           />
           {errors.contactEmail && (
             <p className="text-sm text-red-600 mt-1">{errors.contactEmail}</p>
@@ -314,7 +290,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             <Phone className="h-4 w-4" />
-            Teléfono (opcional)
+            {t('dashboard.agency.newClientPage.contactPhone')}
           </label>
           <input
             type="tel"
@@ -322,8 +298,8 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onChange={(e) =>
               setFormData({ ...formData, contactPhone: e.target.value })
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="+52 55 1234 5678"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            placeholder={t('dashboard.agency.newClientPage.contactPhonePlaceholder')}
           />
         </div>
       </div>
@@ -333,11 +309,11 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Funcionalidades Iniciales
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          {t('dashboard.agency.newClientPage.initialFeatures')}
         </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Selecciona las herramientas que necesita este cliente
+        <p className="text-sm text-muted-foreground mb-6">
+          {t('dashboard.agency.newClientPage.selectFeatures')}
         </p>
       </div>
 
@@ -346,23 +322,22 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           <div
             key={feature.id}
             onClick={() => toggleFeature(feature.id)}
-            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-              formData.enabledFeatures.includes(feature.id)
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.enabledFeatures.includes(feature.id)
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-border'
+              }`}
           >
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 {formData.enabledFeatures.includes(feature.id) ? (
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
                 ) : (
-                  <div className="h-5 w-5 border-2 border-gray-300 rounded-full" />
+                  <div className="h-5 w-5 border-2 border-border rounded-full" />
                 )}
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">{feature.label}</h4>
-                <p className="text-sm text-gray-600">{feature.description}</p>
+                <h4 className="font-medium text-foreground">{feature.label}</h4>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
             </div>
           </div>
@@ -381,30 +356,30 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
   const renderStep3 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Palette className="h-5 w-5 text-blue-600" />
-          Branding (Opcional)
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Palette className="h-5 w-5 text-primary" />
+          {t('dashboard.agency.newClientPage.brandingOptional')}
         </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Personaliza la apariencia del portal del cliente
+        <p className="text-sm text-muted-foreground mb-6">
+          {t('dashboard.agency.newClientPage.customizePortal')}
         </p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Logo del Cliente
+          {t('dashboard.agency.newClientPage.clientLogo')}
         </label>
         <div className="flex items-center gap-4">
           <input
             type="file"
             accept="image/*"
             onChange={handleLogoUpload}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
           />
           {formData.logo && (
             <span className="text-sm text-green-600 flex items-center gap-1">
               <CheckCircle2 className="h-4 w-4" />
-              Subido
+              {t('dashboard.agency.newClientPage.uploaded')}
             </span>
           )}
         </div>
@@ -413,7 +388,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Color Primario
+            {t('dashboard.agency.newClientPage.primaryColor')}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -430,15 +405,15 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, primaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="#3B82F6"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Color Secundario
+          <label className="block text-sm font-medium text-foreground mb-2">
+            {t('dashboard.agency.newClientPage.secondaryColor')}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -455,7 +430,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, secondaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="#10B981"
             />
           </div>
@@ -463,15 +438,15 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       {/* Preview */}
-      <div className="p-6 border border-gray-200 rounded-lg">
-        <p className="text-sm font-medium text-gray-700 mb-3">Vista Previa:</p>
+      <div className="p-6 border border-border rounded-lg">
+        <p className="text-sm font-medium text-foreground mb-3">{t('dashboard.agency.newClientPage.preview')}</p>
         <div
           className="h-24 rounded-lg flex items-center justify-center text-white font-semibold"
           style={{
             background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
           }}
         >
-          {formData.businessName || 'Nombre del Negocio'}
+          {formData.businessName || t('dashboard.agency.newClientPage.businessName')}
         </div>
       </div>
     </div>
@@ -480,66 +455,66 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5 text-blue-600" />
-          Usuarios Iniciales
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          {t('dashboard.agency.newClientPage.initialUsers')}
         </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Agrega los usuarios que tendrán acceso al portal del cliente
+        <p className="text-sm text-muted-foreground mb-6">
+          {t('dashboard.agency.newClientPage.addUsersDesc')}
         </p>
       </div>
 
       {formData.initialUsers.map((user, index) => (
-        <div key={index} className="p-4 border border-gray-200 rounded-lg">
+        <div key={index} className="p-4 border border-border rounded-lg">
           <div className="flex justify-between items-start mb-4">
-            <h4 className="font-medium text-gray-900">Usuario {index + 1}</h4>
+            <h4 className="font-medium text-foreground">{t('dashboard.agency.newClientPage.userNumber')} {index + 1}</h4>
             <button
               type="button"
               onClick={() => removeUser(index)}
               className="text-red-600 text-sm hover:text-red-700"
             >
-              Eliminar
+              {t('dashboard.agency.newClientPage.removeUser')}
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre
+                {t('dashboard.agency.newClientPage.name')}
               </label>
               <input
                 type="text"
                 value={user.name}
                 onChange={(e) => updateUser(index, 'name', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Juan Pérez"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                placeholder={t('dashboard.agency.newClientPage.namePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                {t('dashboard.agency.newClientPage.email')}
               </label>
               <input
                 type="email"
                 value={user.email}
                 onChange={(e) => updateUser(index, 'email', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="juan@ejemplo.com"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                placeholder={t('dashboard.agency.newClientPage.emailPlaceholder')}
               />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rol
+              {t('dashboard.agency.newClientPage.role')}
             </label>
             <select
               value={user.role}
               onChange={(e) =>
                 updateUser(index, 'role', e.target.value as InitialUser['role'])
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               {USER_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
@@ -554,9 +529,9 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       <button
         type="button"
         onClick={addUser}
-        className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+        className="w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:border-primary hover:text-primary transition-colors"
       >
-        + Agregar Usuario
+        {t('dashboard.agency.newClientPage.addUser')}
       </button>
 
       {errors.initialUsers && (
@@ -569,13 +544,13 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       {/* Billing Section */}
       <div className="border-t pt-6 mt-6">
         <div className="flex items-center gap-3 mb-4">
-          <CreditCard className="h-5 w-5 text-blue-600" />
-          <h4 className="font-semibold text-gray-900">
-            Configuración de Facturación (Opcional)
+          <CreditCard className="h-5 w-5 text-primary" />
+          <h4 className="font-semibold text-foreground">
+            {t('dashboard.agency.newClientPage.billingSetupOptional')}
           </h4>
         </div>
 
-        <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+        <label className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-gray-50">
           <input
             type="checkbox"
             checked={formData.setupBilling}
@@ -585,11 +560,11 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             className="mt-1"
           />
           <div>
-            <p className="font-medium text-gray-900">
-              Configurar facturación ahora
+            <p className="font-medium text-foreground">
+              {t('dashboard.agency.newClientPage.setupBillingNow')}
             </p>
-            <p className="text-sm text-gray-600">
-              Define el precio mensual para este cliente
+            <p className="text-sm text-muted-foreground">
+              {t('dashboard.agency.newClientPage.defineMonthlyPrice')}
             </p>
           </div>
         </label>
@@ -597,7 +572,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         {formData.setupBilling && (
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Precio Mensual (USD)
+              {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
             </label>
             <input
               type="number"
@@ -610,7 +585,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                   monthlyPrice: parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="99"
             />
           </div>
@@ -634,21 +609,19 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               className={`flex items-center ${step < totalSteps ? 'flex-1' : ''}`}
             >
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${
-                  step < currentStep
-                    ? 'bg-green-500 text-white'
-                    : step === currentStep
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
+                className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${step < currentStep
+                  ? 'bg-green-500 text-white'
+                  : step === currentStep
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-gray-200 text-muted-foreground'
+                  }`}
               >
                 {step < currentStep ? <CheckCircle2 className="h-5 w-5" /> : step}
               </div>
               {step < totalSteps && (
                 <div
-                  className={`flex-1 h-1 mx-2 ${
-                    step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                  }`}
+                  className={`flex-1 h-1 mx-2 ${step < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                    }`}
                 />
               )}
             </div>
@@ -658,37 +631,37 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <div className="flex justify-between text-sm">
           <span
             className={
-              currentStep === 1 ? 'font-semibold text-blue-600' : 'text-gray-600'
+              currentStep === 1 ? 'font-semibold text-primary' : 'text-muted-foreground'
             }
           >
-            Información
+            {t('dashboard.agency.newClientPage.stepInfo')}
           </span>
           <span
             className={
-              currentStep === 2 ? 'font-semibold text-blue-600' : 'text-gray-600'
+              currentStep === 2 ? 'font-semibold text-primary' : 'text-muted-foreground'
             }
           >
-            Funcionalidades
+            {t('dashboard.agency.newClientPage.stepFeatures')}
           </span>
           <span
             className={
-              currentStep === 3 ? 'font-semibold text-blue-600' : 'text-gray-600'
+              currentStep === 3 ? 'font-semibold text-primary' : 'text-muted-foreground'
             }
           >
-            Branding
+            {t('dashboard.agency.newClientPage.stepBranding')}
           </span>
           <span
             className={
-              currentStep === 4 ? 'font-semibold text-blue-600' : 'text-gray-600'
+              currentStep === 4 ? 'font-semibold text-primary' : 'text-muted-foreground'
             }
           >
-            Usuarios
+            {t('dashboard.agency.newClientPage.stepUsers')}
           </span>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8">
+      <form onSubmit={handleSubmit} className="bg-card rounded-lg shadow-sm p-8">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
@@ -709,20 +682,20 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-6 py-2 text-gray-700 hover:text-gray-900"
+                className="px-6 py-2 text-muted-foreground hover:text-foreground"
                 disabled={isSubmitting}
               >
-                ← Atrás
+                {t('dashboard.agency.newClientPage.back')}
               </button>
             )}
             {onCancel && currentStep === 1 && (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-2 text-gray-700 hover:text-gray-900"
+                className="px-6 py-2 text-muted-foreground hover:text-foreground"
                 disabled={isSubmitting}
               >
-                Cancelar
+                {t('dashboard.agency.newClientPage.cancel')}
               </button>
             )}
           </div>
@@ -732,10 +705,10 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                 disabled={isSubmitting}
               >
-                Siguiente →
+                {t('dashboard.agency.newClientPage.next')}
               </button>
             ) : (
               <button
@@ -746,12 +719,12 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                    Creando Cliente...
+                    {t('dashboard.agency.newClientPage.creatingClient')}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-5 w-5" />
-                    Crear Cliente
+                    {t('dashboard.agency.newClientPage.createClient')}
                   </>
                 )}
               </button>

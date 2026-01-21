@@ -25,6 +25,7 @@ import { TenantProvider } from './tenant';
 import { AppContentProvider } from './appContent';
 import { UpgradeProvider } from './UpgradeContext';
 import { PlansProvider } from './PlansContext';
+import { AgencyProvider } from './agency/AgencyContext';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -50,9 +51,11 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                         <CMSProvider>
                                                             <DomainsProvider>
                                                                 <AIProvider>
-                                                                    <UpgradeProvider>
-                                                                        {children}
-                                                                    </UpgradeProvider>
+                                                                    <AgencyProvider>
+                                                                        <UpgradeProvider>
+                                                                            {children}
+                                                                        </UpgradeProvider>
+                                                                    </AgencyProvider>
                                                                 </AIProvider>
                                                             </DomainsProvider>
                                                         </CMSProvider>

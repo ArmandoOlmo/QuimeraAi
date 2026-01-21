@@ -50,7 +50,7 @@ export function ClientBillingManager() {
             clientId: client.id,
             clientName: client.name,
             monthlyPrice: client.billing?.monthlyPrice,
-            status: client.billing?.status,
+            status: (client.billing as any)?.status,
             paymentMethod: client.billing?.stripeCustomerId ? 'configured' : undefined,
             nextBillingDate: client.billing?.nextBillingDate
                 ? new Date((client.billing.nextBillingDate as any).seconds * 1000)
@@ -201,7 +201,7 @@ export function ClientBillingManager() {
 
     const formatDate = (date?: Date) => {
         if (!date) return '-';
-        return new Intl.DateFormat('es-MX', {
+        return new Intl.DateTimeFormat('es-MX', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -224,43 +224,43 @@ export function ClientBillingManager() {
             )}
 
             {/* Clients Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
+                <div className="px-6 py-4 border-b border-border">
+                    <h3 className="text-lg font-semibold text-foreground">
                         Configuración de Precios por Cliente
                     </h3>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-900/50">
+                        <thead className="bg-muted">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Cliente
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Precio Mensual
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Estado
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Método de Pago
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Próxima Factura
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
                                     Acciones
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {clientsBilling.map((client) => (
-                                <tr key={client.clientId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <tr key={client.clientId} className="hover:bg-muted/50">
                                     {/* Client Name */}
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="font-medium text-gray-900 dark:text-white">
+                                        <div className="font-medium text-foreground">
                                             {client.clientName}
                                         </div>
                                     </td>
@@ -277,7 +277,7 @@ export function ClientBillingManager() {
                                                         type="number"
                                                         value={editPrice}
                                                         onChange={(e) => setEditPrice(e.target.value)}
-                                                        className="w-32 pl-6 pr-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                                                        className="w-32 pl-6 pr-3 py-1 border border-border rounded bg-background text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                                                         placeholder="0.00"
                                                         step="0.01"
                                                         min="0"
@@ -306,7 +306,7 @@ export function ClientBillingManager() {
                                             </div>
                                         ) : client.monthlyPrice ? (
                                             <div className="flex items-center gap-2">
-                                                <span className="font-semibold text-gray-900 dark:text-white">
+                                                <span className="font-semibold text-foreground">
                                                     ${client.monthlyPrice.toFixed(2)}
                                                 </span>
                                                 <span className="text-sm text-gray-500">/mes</span>
@@ -324,7 +324,7 @@ export function ClientBillingManager() {
                                     {/* Payment Method */}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {client.paymentMethod ? (
-                                            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <div className="flex items-center gap-2 text-sm text-foreground">
                                                 <CreditCard className="h-4 w-4" />
                                                 <span>Configurado</span>
                                             </div>
@@ -334,7 +334,7 @@ export function ClientBillingManager() {
                                     </td>
 
                                     {/* Next Billing Date */}
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                         {formatDate(client.nextBillingDate)}
                                     </td>
 
@@ -399,7 +399,7 @@ export function ClientBillingManager() {
                 {clientsBilling.length === 0 && (
                     <div className="text-center py-12">
                         <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-muted-foreground">
                             No hay clientes para facturar
                         </p>
                     </div>
@@ -409,21 +409,21 @@ export function ClientBillingManager() {
             {/* Setup Modal */}
             {setupModalClient && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-4 border-b border-border">
+                            <h3 className="text-lg font-semibold text-foreground">
                                 Configurar Facturación
                             </h3>
                         </div>
 
                         <div className="px-6 py-4 space-y-4">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-muted-foreground">
                                 Configura el precio mensual para{' '}
                                 {clientsBilling.find((c) => c.clientId === setupModalClient)?.clientName}
                             </p>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground mb-2">
                                     Precio Mensual (USD)
                                 </label>
                                 <div className="relative">
@@ -434,7 +434,7 @@ export function ClientBillingManager() {
                                         type="number"
                                         value={setupPrice}
                                         onChange={(e) => setSetupPrice(e.target.value)}
-                                        className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-8 pr-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500"
                                         placeholder="0.00"
                                         step="0.01"
                                         min="0"
@@ -453,13 +453,13 @@ export function ClientBillingManager() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
                             <button
                                 onClick={() => {
                                     setSetupModalClient(null);
                                     setSetupPrice('');
                                 }}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                className="px-4 py-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                             >
                                 Cancelar
                             </button>

@@ -529,41 +529,194 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 </div>
             )}
 
-            {/* Modal de detalles (placeholder) */}
+            {/* Modal de detalles */}
             {selectedTenant && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold text-editor-text-primary mb-4">Detalles del Tenant</h2>
+                <TenantDetailsModal
+                    tenant={selectedTenant}
+                    allTenants={tenants}
+                    onClose={() => setSelectedTenant(null)}
+                    onSelectTenant={setSelectedTenant}
+                />
+            )}
+        </div>
+    );
+};
+
+// Sub-componente para el modal de detalles para manejar mejor el estado y la lógica de pestañas
+const TenantDetailsModal: React.FC<{
+    tenant: Tenant;
+    allTenants: Tenant[];
+    onClose: () => void;
+    onSelectTenant: (tenant: Tenant) => void;
+}> = ({ tenant, allTenants, onClose, onSelectTenant }) => {
+    const { t } = useTranslation();
+    const [activeTab, setActiveTab] = useState<'general' | 'clients'>('general');
+
+    // Filtrar sub-clientes si es una agencia
+    const agencyClients = allTenants.filter(t => t.ownerTenantId === tenant.id);
+
+    const getStatusIcon = (status: TenantStatus) => {
+        switch (status) {
+            case 'active': return <CheckCircle size={16} className="text-green-500" />;
+            case 'trial': return <Clock size={16} className="text-blue-500" />;
+            case 'suspended': return <AlertCircle size={16} className="text-yellow-500" />;
+            case 'expired': return <XCircle size={16} className="text-red-500" />;
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto flex flex-col">
+                <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                    <h2 className="text-xl font-bold text-editor-text-primary">
+                        {tenant.type === 'agency' ? 'Detalles de Agencia' : 'Detalles del Tenant'}
+                    </h2>
+                    <button onClick={onClose} className="text-editor-text-secondary hover:text-editor-text-primary">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Tabs para agencias */}
+                {tenant.type === 'agency' && (
+                    <div className="flex border-b border-editor-border mb-6 flex-shrink-0">
+                        <button
+                            onClick={() => setActiveTab('general')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'general'
+                                ? 'border-editor-accent text-editor-accent'
+                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                }`}
+                        >
+                            General
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('clients')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'clients'
+                                ? 'border-editor-accent text-editor-accent'
+                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                }`}
+                        >
+                            Clientes ({agencyClients.length})
+                        </button>
+                    </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto min-h-0">
+                    {activeTab === 'general' ? (
                         <div className="space-y-4">
-                            <div>
-                                <label className="text-sm text-editor-text-secondary">Nombre</label>
-                                <p className="text-editor-text-primary font-semibold">{selectedTenant.name}</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Nombre</label>
+                                    <p className="text-editor-text-primary font-semibold">{tenant.name}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Empresa</label>
+                                    <p className="text-editor-text-primary">{tenant.companyName || '-'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Email</label>
+                                    <p className="text-editor-text-primary">{tenant.email}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Tipo</label>
+                                    <div className="flex items-center gap-2">
+                                        {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
+                                        <p className="text-editor-text-primary capitalize">{tenant.type}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Estado</label>
+                                    <div className="flex items-center gap-2">
+                                        {getStatusIcon(tenant.status)}
+                                        <span className="capitalize text-editor-text-primary">{tenant.status}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Plan</label>
+                                    <span className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded text-sm border border-purple-500/20">
+                                        {tenant.subscriptionPlan}
+                                    </span>
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-sm text-editor-text-secondary">Email</label>
-                                <p className="text-editor-text-primary">{selectedTenant.email}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm text-editor-text-secondary">Tipo</label>
-                                <p className="text-editor-text-primary capitalize">{selectedTenant.type}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm text-editor-text-secondary">Estado</label>
-                                <div className="flex items-center gap-2 mt-1">
-                                    {getStatusIcon(selectedTenant.status)}
-                                    <span className="capitalize">{selectedTenant.status}</span>
+
+                            <div className="pt-4 border-t border-editor-border mt-4">
+                                <h3 className="font-semibold text-editor-text-primary mb-3">Métricas de Uso</h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                                        <div className="text-xs text-editor-text-secondary mb-1">Proyectos</div>
+                                        <div className="font-semibold text-editor-text-primary">
+                                            {tenant.usage.projectCount} <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxProjects}</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                                        <div className="text-xs text-editor-text-secondary mb-1">Usuarios</div>
+                                        <div className="font-semibold text-editor-text-primary">
+                                            {tenant.usage.userCount} <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxUsers}</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                                        <div className="text-xs text-editor-text-secondary mb-1">Almacenamiento</div>
+                                        <div className="font-semibold text-editor-text-primary">
+                                            {tenant.usage.storageUsedGB.toFixed(1)} GB <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxStorageGB} GB</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setSelectedTenant(null)}
-                            className="w-full mt-6 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
-                        >
-                            Cerrar
-                        </button>
-                    </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {agencyClients.length > 0 ? (
+                                agencyClients.map(client => (
+                                    <div
+                                        key={client.id}
+                                        onClick={() => onSelectTenant(client)}
+                                        className="flex items-center justify-between p-3 bg-editor-bg border border-editor-border rounded-lg hover:border-editor-accent/50 cursor-pointer transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-editor-panel-bg rounded text-purple-400">
+                                                <User size={18} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium text-editor-text-primary group-hover:text-editor-accent transition-colors">
+                                                    {client.name}
+                                                </h4>
+                                                <p className="text-xs text-editor-text-secondary">{client.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <div className="text-xs text-editor-text-secondary">Plan</div>
+                                                <div className="text-sm font-medium text-editor-text-primary capitalize">{client.subscriptionPlan}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs text-editor-text-secondary">Estado</div>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {getStatusIcon(client.status)}
+                                                    <span className="text-sm text-editor-text-primary capitalize">{client.status}</span>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={16} className="text-editor-text-secondary" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 bg-editor-bg border border-editor-border rounded-lg border-dashed">
+                                    <Users size={32} className="mx-auto text-editor-text-secondary mb-2 opacity-50" />
+                                    <p className="text-editor-text-secondary">Esta agencia no tiene clientes registrados aún.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
-            )}
+
+                <div className="mt-6 flex justify-end pt-4 border-t border-editor-border flex-shrink-0">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
